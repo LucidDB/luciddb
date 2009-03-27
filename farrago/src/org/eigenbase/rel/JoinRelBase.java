@@ -59,6 +59,7 @@ public abstract class JoinRelBase
      * Creates a JoinRelBase.
      *
      * @param cluster Cluster
+     * @param traits Traits
      * @param left Left input
      * @param right Right input
      * @param condition Join condition
@@ -162,10 +163,16 @@ public abstract class JoinRelBase
 
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(
-            this,
-            new String[] { "left", "right", "condition", "joinType" },
-            new Object[] { joinType.name().toLowerCase() });
+        final List<String> nameList =
+            new ArrayList<String>(Arrays.asList("left", "right", "condition"));
+        final List<Object> valueList = new ArrayList<Object>();
+        nameList.add("joinType");
+        valueList.add(joinType.name().toLowerCase());
+        if (!getSystemFieldList().isEmpty()) {
+            nameList.add("systemFields");
+            valueList.add(getSystemFieldList());
+        }
+        pw.explain(this, nameList, valueList);
     }
 
     public void registerStoppedVariable(String name)
@@ -199,16 +206,43 @@ public abstract class JoinRelBase
             right.getRowType(),
             joinType,
             getCluster().getTypeFactory(),
-            null);
+            null,
+            getSystemFieldList());
     }
 
+    /**
+     * Returns a list of system fields that will be prefixed to
+     * output row type.
+     *
+     * @return list of system fields
+     */
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Derives the type of a join relational expression.
+     *
+     * @param leftType Row type of left input to join
+     * @param rightType Row type of right input to join
+     * @param joinType Type of join
+     * @param typeFactory Type factory
+     * @param fieldNameList List of names of fields; if null, field names are
+     * inherited and made unique
+     * @param systemFieldList List of system fields that will be prefixed to
+     * output row type; typically empty but must not be null
+     * @return join type
+     */
     public static RelDataType deriveJoinRowType(
         RelDataType leftType,
         RelDataType rightType,
         JoinRelType joinType,
         RelDataTypeFactory typeFactory,
-        List<String> fieldNameList)
+        List<String> fieldNameList,
+        List<RelDataTypeField> systemFieldList)
     {
+        assert systemFieldList != null;
         switch (joinType) {
         case LEFT:
             rightType = typeFactory.createTypeWithNullability(rightType, true);
@@ -223,7 +257,8 @@ public abstract class JoinRelBase
         default:
             break;
         }
-        return createJoinType(typeFactory, leftType, rightType, fieldNameList);
+        return createJoinType(
+            typeFactory, leftType, rightType, fieldNameList, systemFieldList);
     }
 
     /**
@@ -238,7 +273,8 @@ public abstract class JoinRelBase
      * @param rightType Type of right input to join
      * @param fieldNameList If not null, overrides the original names of the
      * fields
-     *
+     * @param systemFieldList List of system fields that will be prefixed to
+     * output row type; typically empty but must not be null
      * @return type of row which results when two relations are joined
      *
      * @pre fieldNameList == null || fieldNameList.size() ==
@@ -248,11 +284,13 @@ public abstract class JoinRelBase
         RelDataTypeFactory typeFactory,
         RelDataType leftType,
         RelDataType rightType,
-        List<String> fieldNameList)
+        List<String> fieldNameList,
+        List<RelDataTypeField> systemFieldList)
     {
         assert (fieldNameList == null)
             || (fieldNameList.size()
-                == (leftType.getFields().length
+                == (systemFieldList.size()
+                    + leftType.getFields().length
                     + rightType.getFields().length));
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
@@ -262,9 +300,11 @@ public abstract class JoinRelBase
         // runs in constant time; otherwise, if the number of fields is large,
         // doing a contains() on a list can be expensive
         HashSet<String> uniqueNameList = new HashSet<String>();
-        addFields(leftType, typeList, nameList, uniqueNameList);
+        addFields(systemFieldList, typeList, nameList, uniqueNameList);
+        addFields(leftType.getFieldList(), typeList, nameList, uniqueNameList);
         if (rightType != null) {
-            addFields(rightType, typeList, nameList, uniqueNameList);
+            addFields(
+                rightType.getFieldList(), typeList, nameList, uniqueNameList);
         }
         if (fieldNameList != null) {
             assert fieldNameList.size() == nameList.size();
@@ -274,20 +314,18 @@ public abstract class JoinRelBase
     }
 
     private static void addFields(
-        RelDataType type,
+        List<RelDataTypeField> fieldList,
         List<RelDataType> typeList,
         List<String> nameList,
         HashSet<String> uniqueNameList)
     {
-        final RelDataTypeField [] fields = type.getFields();
-        for (int i = 0; i < fields.length; i++) {
-            RelDataTypeField field = fields[i];
+        for (RelDataTypeField field : fieldList) {
             String name = field.getName();
 
             // Ensure that name is unique from all previous field names
             if (uniqueNameList.contains(name)) {
                 String nameBase = name;
-                for (int j = 0;; j++) {
+                for (int j = 0; ; j++) {
                     name = nameBase + j;
                     if (!uniqueNameList.contains(name)) {
                         break;

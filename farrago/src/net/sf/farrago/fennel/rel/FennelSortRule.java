@@ -42,9 +42,9 @@ public class FennelSortRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelSortRule.
      */
-    public FennelSortRule()
+    private FennelSortRule()
     {
         super(
             new RelOptRuleOperand(

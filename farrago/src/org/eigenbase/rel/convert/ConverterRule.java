@@ -61,7 +61,11 @@ public abstract class ConverterRule
         RelTrait out,
         String description)
     {
-        super(new ConverterRelOptRuleOperand(clazz, in));
+        super(
+            new ConverterRelOptRuleOperand(clazz, in),
+            description == null
+                ? "ConverterRule<in=" + in + ",out=" + out + ">"
+                : description);
         assert (in != null);
         assert (out != null);
 
@@ -70,10 +74,6 @@ public abstract class ConverterRule
 
         this.inTrait = in;
         this.outTrait = out;
-        if (description == null) {
-            description = "ConverterRule<in=" + in + ",out=" + out + ">";
-        }
-        this.description = description;
     }
 
     //~ Methods ----------------------------------------------------------------

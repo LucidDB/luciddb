@@ -69,8 +69,9 @@ public class LucidDbSessionPersonality
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String LOG_DIR = FarragoSessionVariables.LOG_DIR;
-    public static final String [] LOG_DIR_DEFAULT =
-    { "log", "testlog", "trace" };
+    public static final String [] LOG_DIR_DEFAULT = {
+        "log", "testlog", "trace"
+    };
     public static final String ETL_PROCESS_ID = "etlProcessId";
     public static final String ETL_PROCESS_ID_DEFAULT = null;
     public static final String ETL_ACTION_ID = "etlActionId";
@@ -741,7 +742,8 @@ public class LucidDbSessionPersonality
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+                new PushProjector.OperatorExprCondition(
+                    LucidDbOperatorTable.ldbInstance().getSpecialOperators())));
 
         // Rules to push projects past filters.  There are two rule
         // patterns because the second is needed to handle the case where

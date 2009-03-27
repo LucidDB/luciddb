@@ -48,9 +48,9 @@ public class FennelCartesianJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelCartesianJoinRule.
      */
-    public FennelCartesianJoinRule()
+    private FennelCartesianJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -70,6 +70,11 @@ public class FennelCartesianJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
+
+        if (!joinRel.getSystemFieldList().isEmpty()) {
+            // Cannot convert joins that generate system fields.
+            return;
+        }
 
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
@@ -150,7 +155,8 @@ public class FennelCartesianJoinRule
                     rightRel.getRowType(),
                     joinType,
                     joinRel.getCluster().getTypeFactory(),
-                    null);
+                    null,
+                    Collections.<RelDataTypeField>emptyList());
         } else {
             joinRowType = joinRel.getRowType();
         }

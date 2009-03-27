@@ -29,6 +29,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.PushProjector;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -51,9 +52,9 @@ public class LcsTableProjectionRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LcsTableProjectionRule.
      */
-    public LcsTableProjectionRule()
+    private LcsTableProjectionRule()
     {
         super(
             new RelOptRuleOperand(
@@ -92,7 +93,8 @@ public class LcsTableProjectionRule
                 origScan,
                 origProject,
                 projectedColumnList,
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                new PushProjector.OperatorExprCondition(
+                    LucidDbOperatorTable.ldbInstance().getSpecialOperators()),
                 defaultExpr,
                 newProjList);
 

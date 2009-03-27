@@ -35,6 +35,16 @@ import org.eigenbase.sql.*;
  * PushProjector is a utility class used to perform operations used in push
  * projection rules.
  *
+ * <p>Pushing is particularly interesting in the case of join, because there
+ * are multiple inputs. Generally an expression can be pushed down to a
+ * particular input if it depends upon no other inputs. If it can be pushed
+ * down to both sides, it is pushed down to the left.
+ *
+ * <p>Sometimes an expression needs to be split before it can be pushed down.
+ * To flag that an expression cannot be split, specify a rule that it must be
+ * <dfn>preserved</dfn>. Such an expression will be pushed down intact to one
+ * of the inputs, or not pushed down at all.</p>
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
@@ -45,34 +55,34 @@ public class PushProjector
     final private ProjectRel origProj;
     final private RexNode origFilter;
     final private RelNode childRel;
-    final private Set<SqlOperator> preserveExprs;
+    final private ExprCondition preserveExprCondition;
 
     /**
      * Original projection expressions
      */
-    RexNode [] origProjExprs;
+    final RexNode [] origProjExprs;
 
     /**
      * Fields from the RelNode that the projection is being pushed past
      */
-    RelDataTypeField [] childFields;
+    final RelDataTypeField [] childFields;
 
     /**
      * Number of fields in the RelNode that the projection is being pushed past
      */
-    int nChildFields;
+    final int nChildFields;
 
     /**
      * Bitmap containing the references in the original projection
      */
-    BitSet projRefs;
+    final BitSet projRefs;
 
     /**
      * Bitmap containing the fields in the RelNode that the projection is being
      * pushed past, if the RelNode is not a join. If the RelNode is a join, then
      * the fields correspond to the left hand side of the join.
      */
-    BitSet childBitmap;
+    final BitSet childBitmap;
 
     /**
      * Bitmap containing the fields in the right hand side of a join, in the
@@ -85,14 +95,35 @@ public class PushProjector
      * Number of fields in the RelNode that the projection is being pushed past,
      * if the RelNode is not a join. If the RelNode is a join, then this is the
      * number of fields in the left hand side of the join.
+     *
+     * <p>The identity
+     * {@code nChildFields == nSysFields + nFields + nFieldsRight}
+     * holds. {@code nFields} does not include {@code nSysFields}.
+     * The output of a join looks like this:
+     *
+     * <blockquote><pre>
+     * | nSysFields | nFields | nFieldsRight |
+     * </pre></blockquote>
+     *
+     * The output of a single-input rel looks like this:
+     *
+     * <blockquote><pre>
+     * | nSysFields | nFields |
+     * </pre></blockquote>
      */
-    int nFields;
+    final int nFields;
 
     /**
      * Number of fields in the right hand side of a join, in the case where the
      * projection is being pushed past a join. Always 0 otherwise.
      */
-    int nFieldsRight;
+    final int nFieldsRight;
+
+    /**
+     * Number of system fields. System fields appear at the start of a join,
+     * before the first field from the left input.
+     */
+    private final int nSysFields;
 
     /**
      * Expressions referenced in the projection/filter that should be preserved.
@@ -100,14 +131,19 @@ public class PushProjector
      * list only contains the expressions corresponding to the left hand side of
      * the join.
      */
-    List<RexNode> childPreserveExprs;
+    final List<RexNode> childPreserveExprs;
 
     /**
      * Expressions referenced in the projection/filter that should be preserved,
      * corresponding to expressions on the right hand side of the join, if the
      * projection is being pushed past a join. Empty list otherwise.
      */
-    List<RexNode> rightPreserveExprs;
+    final List<RexNode> rightPreserveExprs;
+
+    /**
+     * Number of system fields being projected.
+     */
+    int nSystemProject;
 
     /**
      * Number of fields being projected. In the case where the projection is
@@ -125,7 +161,7 @@ public class PushProjector
     /**
      * Rex builder used to create new expressions.
      */
-    RexBuilder rexBuilder;
+    final RexBuilder rexBuilder;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -138,19 +174,19 @@ public class PushProjector
      * @param origFilter the filter that the projection must also be pushed
      * past, if applicable
      * @param childRel the RelNode that the projection is being pushed past
-     * @param preserveExprs list of expressions that should be preserved in the
-     * projection
+     * @param preserveExprCondition condition for whether an expression should
+     * be preserved in the projection
      */
     public PushProjector(
         ProjectRel origProj,
         RexNode origFilter,
         RelNode childRel,
-        Set<SqlOperator> preserveExprs)
+        ExprCondition preserveExprCondition)
     {
         this.origProj = origProj;
         this.origFilter = origFilter;
         this.childRel = childRel;
-        this.preserveExprs = preserveExprs;
+        this.preserveExprCondition = preserveExprCondition;
 
         if (origProj == null) {
             origProjExprs = new RexNode[] {};
@@ -172,21 +208,42 @@ public class PushProjector
             nFieldsRight = rightFields.length;
             childBitmap = new BitSet(nFields);
             rightBitmap = new BitSet(nFieldsRight);
-            RelOptUtil.setRexInputBitmap(childBitmap, 0, nFields);
+            nSysFields = joinRel.getSystemFieldList().size();
+            RelOptUtil.setRexInputBitmap(
+                childBitmap,
+                nSysFields,
+                nFields + nSysFields);
             RelOptUtil.setRexInputBitmap(
                 rightBitmap,
-                nFields,
+                nFields + nSysFields,
                 nChildFields);
         } else {
             nFields = nChildFields;
             nFieldsRight = 0;
             childBitmap = new BitSet(nChildFields);
+            nSysFields = 0;
             RelOptUtil.setRexInputBitmap(childBitmap, 0, nChildFields);
         }
+        assert nChildFields == nSysFields + nFields + nFieldsRight;
+
         childPreserveExprs = new ArrayList<RexNode>();
         rightPreserveExprs = new ArrayList<RexNode>();
 
         rexBuilder = childRel.getCluster().getRexBuilder();
+    }
+
+    /**
+     * @deprecated LucidEra please remove
+     */
+    public PushProjector(
+        ProjectRel origProj,
+        RexNode origFilter,
+        RelNode childRel,
+        final Set<SqlOperator> preserveExprs)
+    {
+        this(
+            origProj, origFilter, childRel,
+            new OperatorExprCondition(preserveExprs));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -290,19 +347,28 @@ public class PushProjector
             projRefs,
             childBitmap,
             rightBitmap,
-            preserveExprs,
+            preserveExprCondition,
             childPreserveExprs,
             rightPreserveExprs).apply(origProjExprs, origFilter);
+        nSystemProject = 0;
         nProject = 0;
+        nRightProject = 0;
         for (
             int bit = projRefs.nextSetBit(0);
-            (bit >= 0)
-            && (bit < nFields);
+            bit >= 0;
             bit = projRefs.nextSetBit(bit + 1))
         {
-            nProject++;
+            if (bit < nSysFields) {
+                nSystemProject++;
+            } else if (bit < nSysFields + nFields) {
+                nProject++;
+            } else {
+                nRightProject++;
+            }
         }
-        nRightProject = projRefs.cardinality() - nProject;
+
+        assert nSystemProject + nProject + nRightProject
+            == projRefs.cardinality();
 
         if ((childRel instanceof JoinRelBase)
             || (childRel instanceof SetOpRel))
@@ -357,14 +423,15 @@ public class PushProjector
         List<RexNode> preserveExprs;
         int nInputRefs;
         int offset;
+
         if (rightSide) {
             preserveExprs = rightPreserveExprs;
             nInputRefs = nRightProject;
-            offset = nFields;
+            offset = nSysFields + nFields;
         } else {
             preserveExprs = childPreserveExprs;
             nInputRefs = nProject;
-            offset = 0;
+            offset = nSysFields;
         }
         int refIdx = offset - 1;
         int projLength = nInputRefs + preserveExprs.size();
@@ -435,7 +502,7 @@ public class PushProjector
             pos = projRefs.nextSetBit(pos + 1))
         {
             adjustments[pos] = -(pos - newIdx);
-            if (pos >= nFields) {
+            if (pos >= nSysFields + nFields) {
                 adjustments[pos] += rightOffset;
             }
             newIdx++;
@@ -539,7 +606,7 @@ public class PushProjector
         private final BitSet rexRefs;
         private final BitSet leftFields;
         private final BitSet rightFields;
-        private final Set<SqlOperator> preserveExprs;
+        private final ExprCondition preserveExprCondition;
         private final List<RexNode> preserveLeft;
         private final List<RexNode> preserveRight;
 
@@ -547,7 +614,7 @@ public class PushProjector
             BitSet rexRefs,
             BitSet leftFields,
             BitSet rightFields,
-            Set<SqlOperator> preserveExprs,
+            ExprCondition preserveExprCondition,
             List<RexNode> preserveLeft,
             List<RexNode> preserveRight)
         {
@@ -555,14 +622,23 @@ public class PushProjector
             this.rexRefs = rexRefs;
             this.leftFields = leftFields;
             this.rightFields = rightFields;
-            this.preserveExprs = preserveExprs;
+            this.preserveExprCondition = preserveExprCondition;
             this.preserveLeft = preserveLeft;
             this.preserveRight = preserveRight;
         }
 
         public Void visitCall(RexCall call)
         {
-            if (preserveExprs.contains(call.getOperator())) {
+            if (preserve(call)) {
+                return null;
+            }
+            super.visitCall(call);
+            return null;
+        }
+
+        private boolean preserve(RexNode call)
+        {
+            if (preserveExprCondition.test(call)) {
                 // if the arguments of the expression only reference the
                 // left hand side, preserve it on the left; similarly, if
                 // it only references expressions on the right
@@ -575,11 +651,11 @@ public class PushProjector
                 if (exprArgs.cardinality() > 0) {
                     if (RelOptUtil.contains(leftFields, exprArgs)) {
                         addExpr(preserveLeft, call);
-                        return null;
+                        return true;
                     } else if (RelOptUtil.contains(rightFields, exprArgs)) {
                         assert (preserveRight != null);
                         addExpr(preserveRight, call);
-                        return null;
+                        return true;
                     }
                 }
                 // if the expression arguments reference both the left and
@@ -587,12 +663,12 @@ public class PushProjector
                 // expression, but instead locate references and special
                 // ops in the call operands
             }
-            super.visitCall(call);
-            return null;
+            return false;
         }
 
         public Void visitInputRef(RexInputRef inputRef)
         {
+//            if ()
             rexRefs.set(inputRef.getIndex());
             return null;
         }
@@ -721,6 +797,60 @@ public class PushProjector
                 match++;
             }
             return -1;
+        }
+    }
+
+    /**
+     * A functor that replies true or false for a given expression.
+     *
+     * @see org.eigenbase.rel.rules.PushProjector.OperatorExprCondition
+     */
+    public interface ExprCondition
+    {
+        /**
+         * Evaluates a condition for a given expression.
+         *
+         * @param expr Expression
+         * @return result of evaluating the condition
+         */
+        boolean test(RexNode expr);
+
+        /**
+         * Constant condition that replies {@code false} for all expressions.
+         */
+        public static final ExprCondition FALSE =
+            new ExprCondition()
+            {
+                public boolean test(RexNode expr)
+                {
+                    return false;
+                }
+            };
+    }
+
+    /**
+     * An expression condition that evaluates to true if the expression is
+     * a call to one of a set of operators.
+     */
+    public static class OperatorExprCondition implements ExprCondition
+    {
+        private final Set<SqlOperator> operatorSet;
+
+        /**
+         * Creates an OperatorExprCondition.
+         *
+         * @param operatorSet Set of operators
+         */
+        public OperatorExprCondition(Set<SqlOperator> operatorSet)
+        {
+            this.operatorSet = operatorSet;
+        }
+
+        public boolean test(RexNode expr)
+        {
+            return expr instanceof RexCall
+                && operatorSet.contains(
+                ((RexCall) expr).getOperator());
         }
     }
 }

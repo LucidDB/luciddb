@@ -46,9 +46,9 @@ public class LcsTableDeleteRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LcsTableDeleteRule.
      */
-    public LcsTableDeleteRule()
+    private LcsTableDeleteRule()
     {
         super(
             new RelOptRuleOperand(

@@ -120,9 +120,9 @@ public class AbstractConverter
             new ExpandConversionRule();
 
         /**
-         * @deprecated use {@link #instance} instead
+         * Creates an ExpandConversionRule.
          */
-        public ExpandConversionRule()
+        private ExpandConversionRule()
         {
             super(
                 new RelOptRuleOperand(

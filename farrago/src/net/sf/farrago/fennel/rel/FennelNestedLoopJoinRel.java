@@ -97,7 +97,8 @@ public class FennelNestedLoopJoinRel
                 inputs[1].getRowType(),
                 joinType,
                 cluster.getTypeFactory(),
-                fieldNameList);
+                fieldNameList,
+                Collections.<RelDataTypeField>emptyList());
     }
 
     //~ Methods ----------------------------------------------------------------

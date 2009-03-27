@@ -1167,7 +1167,16 @@ public class SqlValidatorTest
     public void testRowtype()
     {
         check("values (1),(2),(1)");
+        checkResultType(
+            "values (1),(2),(1)",
+            "RecordType(INTEGER NOT NULL EXPR$0) NOT NULL");
         check("values (1,'1'),(2,'2')");
+        checkResultType(
+            "values (1,'1'),(2,'2')",
+            "RecordType(INTEGER NOT NULL EXPR$0, CHAR(1) NOT NULL EXPR$1) NOT NULL");
+        checkResultType(
+            "values true",
+            "RecordType(BOOLEAN NOT NULL EXPR$0) NOT NULL");
         checkFails(
             "^values ('1'),(2)^",
             "Values passed to VALUES operator must have compatible types");

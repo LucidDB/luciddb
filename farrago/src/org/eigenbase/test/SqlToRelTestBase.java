@@ -54,7 +54,7 @@ import org.eigenbase.util.*;
  * @author jhyde
  * @version $Id$
  */
-public class SqlToRelTestBase
+public abstract class SqlToRelTestBase
     extends TestCase
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -67,9 +67,39 @@ public class SqlToRelTestBase
 
     //~ Methods ----------------------------------------------------------------
 
+    public SqlToRelTestBase()
+    {
+        super();
+    }
+
+    public SqlToRelTestBase(String name)
+    {
+        super(name);
+    }
+
     protected Tester createTester()
     {
-        return new TesterImpl();
+        return new TesterImpl(getDiffRepos());
+    }
+
+    /**
+     * Returns the default diff repository for this test, or null if there is
+     * no repository.
+     *
+     * <p>The default implementation returns null.
+     *
+     * <p>Sub-classes that want to use a diff repository can override.
+     * Sub-sub-classes can override again, inheriting test cases and overriding
+     * selected test results.
+     *
+     * <p>And individual test cases can override by providing a different
+     * tester object.
+     *
+     * @return Diff repository
+     */
+    protected DiffRepository getDiffRepos()
+    {
+        return null;
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -123,6 +153,18 @@ public class SqlToRelTestBase
          * Returns the SQL dialect to test.
          */
         SqlConformance getConformance();
+
+        /**
+         * Checks that a SQL statement converts to a given plan.
+         *
+         * @param sql SQL query
+         * @param plan Expected plan
+         */
+        void assertConvertsTo(
+            String sql,
+            String plan);
+
+        DiffRepository getDiffRepos();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -180,7 +222,7 @@ public class SqlToRelTestBase
                     names.length);
                 names = newNames;
             }
-            return createColumnSet(names, rowType, collationList);
+            return createColumnSet(table, names, rowType, collationList);
         }
 
         public RelOptTable getTableForMember(
@@ -211,6 +253,7 @@ public class SqlToRelTestBase
         }
 
         protected MockColumnSet createColumnSet(
+            SqlValidatorTable table,
             String [] names,
             final RelDataType rowType,
             final List<RelCollation> collationList)
@@ -365,9 +408,16 @@ public class SqlToRelTestBase
     {
         private RelOptPlanner planner;
         private SqlOperatorTable opTab;
+        private final DiffRepository diffRepos;
 
-        protected TesterImpl()
+        /**
+         * Creates a TesterImpl.
+         *
+         * @param diffRepos Diff repository
+         */
+        protected TesterImpl(DiffRepository diffRepos)
         {
+            this.diffRepos = diffRepos;
         }
 
         public RelNode convertSqlToRel(String sql)
@@ -489,6 +539,33 @@ public class SqlToRelTestBase
         public RelOptPlanner createPlanner()
         {
             return new MockRelOptPlanner();
+        }
+
+        public void assertConvertsTo(
+            String sql,
+            String plan)
+        {
+            String sql2 = getDiffRepos().expand("sql", sql);
+            final RelNode rel = convertSqlToRel(sql2);
+
+            assertTrue(rel != null);
+
+            // Check that every node is valid.
+            SqlToRelConverterTest.RelValidityChecker checker =
+                new SqlToRelConverterTest.RelValidityChecker();
+            checker.go(rel);
+            assertEquals(0, checker.invalidCount);
+
+            // NOTE jvs 28-Mar-2006:  insert leading newline so
+            // that plans come out nicely stacked instead of first
+            // line immediately after CDATA start
+            String actual = NL + RelOptUtil.toString(rel);
+            diffRepos.assertEquals("plan", plan, actual);
+        }
+
+        public DiffRepository getDiffRepos()
+        {
+            return diffRepos;
         }
     }
 

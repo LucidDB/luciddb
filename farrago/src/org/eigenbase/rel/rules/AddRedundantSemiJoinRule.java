@@ -45,9 +45,9 @@ public class AddRedundantSemiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates an AddRedundantSemiJoinRule.
      */
-    public AddRedundantSemiJoinRule()
+    private AddRedundantSemiJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -99,7 +99,8 @@ public class AddRedundantSemiJoinRule
                 origJoinRel.getCondition(),
                 JoinRelType.INNER,
                 Collections.<String>emptySet(),
-                true);
+                true,
+                origJoinRel.getSystemFieldList());
 
         call.transformTo(newJoinRel);
     }

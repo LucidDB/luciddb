@@ -52,9 +52,9 @@ public class FennelOneRowRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelOneRowRule.
      */
-    public FennelOneRowRule()
+    private FennelOneRowRule()
     {
         super(
             OneRowRel.class,

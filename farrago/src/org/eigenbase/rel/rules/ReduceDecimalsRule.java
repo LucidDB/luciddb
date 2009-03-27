@@ -62,12 +62,11 @@ public class ReduceDecimalsRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a ReduceDecimalsRule.
      */
-    public ReduceDecimalsRule()
+    private ReduceDecimalsRule()
     {
         super(new RelOptRuleOperand(CalcRel.class, ANY));
-        description = "ReduceDecimalsRule";
     }
 
     //~ Methods ----------------------------------------------------------------

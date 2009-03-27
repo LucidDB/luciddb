@@ -42,14 +42,11 @@ public class FarragoJdbcParamDefFactory
     public static final FarragoJdbcParamDefFactory instance =
         new FarragoJdbcParamDefFactory();
 
-    /**
-     * @deprecated use {@link #instance} instead
-     */
-    public static final FarragoJdbcParamDefFactory INSTANCE = instance;
-
     //~ Constructors -----------------------------------------------------------
 
-    // use the singleton
+    /**
+     * Creates a FarragoJdbcParamDefFactory.
+     */
     private FarragoJdbcParamDefFactory()
     {
     }

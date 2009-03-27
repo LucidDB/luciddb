@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -53,6 +54,9 @@ public final class ExtractJoinFilterRule
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an ExtractJoinFilterRule.
+     */
     private ExtractJoinFilterRule()
     {
         super(new RelOptRuleOperand(JoinRel.class, ANY));
@@ -72,6 +76,11 @@ public final class ExtractJoinFilterRule
             return;
         }
 
+        if (!joinRel.getSystemFieldList().isEmpty()) {
+            // FIXME Enable this rule for joins with system fields
+            return;
+        }
+
         // NOTE jvs 14-Mar-2006:  See SwapJoinRule for why we
         // preserve attribute semiJoinDone here.
 
@@ -83,7 +92,8 @@ public final class ExtractJoinFilterRule
                 joinRel.getCluster().getRexBuilder().makeLiteral(true),
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                Collections.<RelDataTypeField>emptyList());
 
         RelNode filterRel =
             CalcRel.createFilter(

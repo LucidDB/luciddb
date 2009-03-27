@@ -68,14 +68,17 @@ public class LcsAddDeletionScanRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsAddDeletionScanRule object.
+     * Creates an LcsAddDeletionScanRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
      */
     public LcsAddDeletionScanRule(
         RelOptRuleOperand operand,
         String id)
     {
-        super(operand);
-        description = "LcsAddDeletionScanRule: " + id;
+        super(operand, "LcsAddDeletionScanRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------

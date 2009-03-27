@@ -75,9 +75,9 @@ public class LcsTableMergeRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LcsTableMergeRule.
      */
-    public LcsTableMergeRule()
+    private LcsTableMergeRule()
     {
         super(
             new RelOptRuleOperand(

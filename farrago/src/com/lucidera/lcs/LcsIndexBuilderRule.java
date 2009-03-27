@@ -20,14 +20,10 @@
 */
 package com.lucidera.lcs;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
-
 
 /**
  * LcsModificationRule is a rule for converting an abstract {@link
@@ -48,9 +44,9 @@ class LcsIndexBuilderRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LcsIndexBuilderRule.
      */
-    public LcsIndexBuilderRule()
+    private LcsIndexBuilderRule()
     {
         super(
             new RelOptRuleOperand(

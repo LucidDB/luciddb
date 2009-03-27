@@ -47,9 +47,9 @@ public class LoptOptimizeJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LoptOptimizeJoinRule.
      */
-    public LoptOptimizeJoinRule()
+    private LoptOptimizeJoinRule()
     {
         super(new RelOptRuleOperand(MultiJoinRel.class, ANY));
     }
@@ -749,7 +749,7 @@ outerForLoop:
             prevFactor = nextFactor;
         }
 
-        assert (filtersToAdd.size() == 0);
+        assert filtersToAdd.size() == 0;
         return joinTree;
     }
 
@@ -1576,7 +1576,7 @@ outerForLoop:
         int factIdx = multiJoin.getJoinRemovalFactor(dimIdx);
         List<Integer> joinOrder = new ArrayList<Integer>();
         factTree.getTreeOrder(joinOrder);
-        assert (joinOrder.contains(factIdx));
+        assert joinOrder.contains(factIdx);
 
         // figure out the position of the fact table in the current jointree
         int adjustment = 0;
@@ -1827,7 +1827,8 @@ outerForLoop:
                 condition,
                 joinType,
                 Collections.<String>emptySet(),
-                true);
+                true,
+                Collections.<RelDataTypeField>emptyList());
 
         // if this is a left or right outer join, and additional filters can
         // be applied to the resulting join, then they need to be applied
@@ -1851,9 +1852,9 @@ outerForLoop:
     }
 
     /**
-     * Determines if any additional filters are applicable to a jointree. If
-     * there are any, then create a filter node on top of the join tree with the
-     * additional filters
+     * Determines whether any additional filters are applicable to a jointree.
+     * If there are any, creates a filter node on top of the join tree with the
+     * additional filters.
      *
      * @param joinTree current join tree
      * @param multiJoin join factors being optimized

@@ -58,11 +58,16 @@ import org.eigenbase.rex.*;
 public class LcsIndexSemiJoinRule
     extends RelOptRule
 {
-    // ~ Constructors ----------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
-    public LcsIndexSemiJoinRule(RelOptRuleOperand rule, String id)
+    /**
+     * Creates an LcsIndexSemiJoinRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
+     */
+    public LcsIndexSemiJoinRule(RelOptRuleOperand operand, String id)
     {
         // This rule is fired for either of the following 4 patterns:
         //
@@ -94,8 +99,7 @@ public class LcsIndexSemiJoinRule
         //                 new RelOptRuleOperand(LcsIndexSearchRel.class,
         // ANY))))
 
-        super(rule);
-        description = "LcsIndexSemiJoinRule: " + id;
+        super(operand, "LcsIndexSemiJoinRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -224,8 +228,8 @@ public class LcsIndexSemiJoinRule
         // keys, unless they're already unique
         RelNode distinctRel;
         BitSet rightJoinCols = new BitSet();
-        for (int i = 0; i < rightOrdinals.length; i++) {
-            rightJoinCols.set(rightOrdinals[i]);
+        for (Integer rightOrdinal : rightOrdinals) {
+            rightJoinCols.set(rightOrdinal);
         }
         if (RelMdUtil.areColumnsDefinitelyUnique(rightRel, rightJoinCols)) {
             distinctRel = distInput;

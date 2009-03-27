@@ -254,8 +254,9 @@ public class RelSubset
             assert set.variablesUsed.containsAll(variablesUsed);
         }
         propagateCostImprovements(
-            (VolcanoPlanner) (rel.getCluster().getPlanner()),
-            rel);
+            (VolcanoPlanner) rel.getCluster().getPlanner(),
+            rel,
+            new HashSet<RelSubset>());
     }
 
     /**
@@ -280,32 +281,49 @@ public class RelSubset
     /**
      * Checks whether a relexp has made its subset cheaper, and if it so,
      * recursively checks whether that subset's parents have gotten cheaper.
+     *
+     * @param planner Planner
+     * @param rel Relational expression whose cost has improved
+     * @param activeSet Set of active subsets, for cycle detection
      */
     void propagateCostImprovements(
         VolcanoPlanner planner,
-        RelNode rel)
+        RelNode rel,
+        Set<RelSubset> activeSet)
     {
         ++timestamp;
 
-        final RelOptCost cost = planner.getCost(rel);
-        if (cost.isLt(bestCost)) {
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer(
-                    "Subset cost improved: subset [" + this
-                    + "] cost was " + bestCost + " now " + cost);
-            }
+        if (!activeSet.add(this)) {
+            // This subset is already in the chain being propagated to. This
+            // means that the graph is cyclic, and therefore the cost of this
+            // relational expression - not this subset - must be infinite.
+            tracer.finer("cyclic: " + this);
+            return;
+        }
+        try {
+            final RelOptCost cost = planner.getCost(rel);
+            if (cost.isLt(bestCost)) {
+                if (tracer.isLoggable(Level.FINER)) {
+                    tracer.finer(
+                        "Subset cost improved: subset [" + this
+                            + "] cost was " + bestCost + " now " + cost);
+                }
 
-            bestCost = cost;
-            best = rel;
+                bestCost = cost;
+                best = rel;
 
-            // Lower cost means lower importance. Other nodes will change
-            // too, but we'll get to them later.
-            planner.ruleQueue.recompute(this);
-            for (RelNode parent : parents) {
-                final RelSubset parentSubset = planner.getSubset(parent);
-                parentSubset.propagateCostImprovements(planner, parent);
+                // Lower cost means lower importance. Other nodes will change
+                // too, but we'll get to them later.
+                planner.ruleQueue.recompute(this);
+                for (RelNode parent : parents) {
+                    final RelSubset parentSubset = planner.getSubset(parent);
+                    parentSubset.propagateCostImprovements(
+                        planner, parent, activeSet);
+                }
+                planner.checkForSatisfiedConverters(set, rel);
             }
-            planner.checkForSatisfiedConverters(set, rel);
+        } finally {
+            activeSet.remove(this);
         }
     }
 

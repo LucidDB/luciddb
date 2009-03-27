@@ -71,7 +71,7 @@ public class PullUpProjectsOnTopOfMultiJoinRule
                     new RelOptRuleOperand(
                         ProjectRel.class,
                         new RelOptRuleOperand(MultiJoinRel.class, ANY))),
-                "with two ProjectRel children");
+                "PullUpProjectsOnTopOfMultiJoinRule: with two ProjectRel children");
 
     public static final PullUpProjectsOnTopOfMultiJoinRule
         instanceLeftProjectChild =
@@ -81,7 +81,7 @@ public class PullUpProjectsOnTopOfMultiJoinRule
                     new RelOptRuleOperand(
                         ProjectRel.class,
                         new RelOptRuleOperand(MultiJoinRel.class, ANY))),
-                "with ProjectRel on left");
+                "PullUpProjectsOnTopOfMultiJoinRule: with ProjectRel on left");
 
     public static final PullUpProjectsOnTopOfMultiJoinRule
         instanceRightProjectChild =
@@ -92,14 +92,15 @@ public class PullUpProjectsOnTopOfMultiJoinRule
                     new RelOptRuleOperand(
                         ProjectRel.class,
                         new RelOptRuleOperand(MultiJoinRel.class, ANY))),
-                "with ProjectRel on right");
+                "PullUpProjectsOnTopOfMultiJoinRule: with ProjectRel on right");
 
     //~ Constructors -----------------------------------------------------------
 
-    public PullUpProjectsOnTopOfMultiJoinRule(RelOptRuleOperand rule, String id)
+    public PullUpProjectsOnTopOfMultiJoinRule(
+        RelOptRuleOperand operand,
+        String description)
     {
-        super(rule, id);
-        description = "PullUpProjectsOnTopOfMultiJoinRule: " + id;
+        super(operand, description);
     }
 
     //~ Methods ----------------------------------------------------------------

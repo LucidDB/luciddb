@@ -49,29 +49,44 @@ public class PushProjectPastSetOpRule
     /**
      * Expressions that should be preserved in the projection
      */
-    private Set<SqlOperator> preserveExprs;
+    private PushProjector.ExprCondition preserveExprCondition;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance}
+     * Creates a PushProjectPastSetOpRule.
      */
-    public PushProjectPastSetOpRule()
+    private PushProjectPastSetOpRule()
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand(SetOpRel.class, ANY)));
-        this.preserveExprs = Collections.emptySet();
+        this.preserveExprCondition = PushProjector.ExprCondition.FALSE;
     }
 
+    /**
+     * @deprecated LucidEra please remove
+     */
     public PushProjectPastSetOpRule(Set<SqlOperator> preserveExprs)
+    {
+        this(new PushProjector.OperatorExprCondition(preserveExprs));
+    }
+
+    /**
+     * Creates a PushProjectPastSetOpRule with an explicit condition whether
+     * to preserve expressions.
+     *
+     * @param preserveExprCondition Condition whether to preserve expressions
+     */
+    public PushProjectPastSetOpRule(
+        PushProjector.ExprCondition preserveExprCondition)
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand(SetOpRel.class, ANY)));
-        this.preserveExprs = preserveExprs;
+        this.preserveExprCondition = preserveExprCondition;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -89,7 +104,7 @@ public class PushProjectPastSetOpRule
 
         // locate all fields referenced in the projection
         PushProjector pushProject =
-            new PushProjector(origProj, null, setOpRel, preserveExprs);
+            new PushProjector(origProj, null, setOpRel, preserveExprCondition);
         pushProject.locateAllRefs();
 
         RelNode [] setOpInputs = setOpRel.getInputs();

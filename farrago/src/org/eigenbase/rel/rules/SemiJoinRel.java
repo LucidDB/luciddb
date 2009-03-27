@@ -118,7 +118,8 @@ public final class SemiJoinRel
             null,
             JoinRelType.INNER,
             getCluster().getTypeFactory(),
-            null);
+            null,
+            Collections.<RelDataTypeField>emptyList());
     }
 
     public List<Integer> getLeftKeys()

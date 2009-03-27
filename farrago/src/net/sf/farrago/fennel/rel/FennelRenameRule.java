@@ -43,9 +43,9 @@ public class FennelRenameRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelRenameRule.
      */
-    public FennelRenameRule()
+    private FennelRenameRule()
     {
         super(
             new RelOptRuleOperand(
@@ -53,9 +53,14 @@ public class FennelRenameRule
                 ANY));
     }
 
-    public FennelRenameRule(RelOptRuleOperand rule)
+    /**
+     * Creates a FennelRenameRule with an explicit root operand.
+     *
+     * @param operand root operand, must not be null
+     */
+    protected FennelRenameRule(RelOptRuleOperand operand)
     {
-        super(rule);
+        super(operand);
     }
 
     //~ Methods ----------------------------------------------------------------

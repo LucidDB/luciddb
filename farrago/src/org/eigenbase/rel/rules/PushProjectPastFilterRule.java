@@ -48,30 +48,58 @@ public class PushProjectPastFilterRule
     /**
      * Expressions that should be preserved in the projection
      */
-    private final Set<SqlOperator> preserveExprs;
+    private final PushProjector.ExprCondition preserveExprCondition;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushProjectPastFilterRule.
      */
-    public PushProjectPastFilterRule()
+    private PushProjectPastFilterRule()
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand(FilterRel.class, ANY)));
-        this.preserveExprs = Collections.emptySet();
+        this.preserveExprCondition = PushProjector.ExprCondition.FALSE;
     }
 
+    /**
+     * Creates a PushProjectPastFilterRule with an explicit root operand
+     * and set of operators which are to be preserved.
+     *
+     * @deprecated LucidEra, please remove
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param id Part of description
+     */
     public PushProjectPastFilterRule(
-        RelOptRuleOperand rule,
+        RelOptRuleOperand operand,
         Set<SqlOperator> preserveExprs,
         String id)
     {
-        super(rule);
-        this.preserveExprs = preserveExprs;
-        description = "PushProjectPastFilterRule: " + id;
+        this(
+            operand,
+            new PushProjector.OperatorExprCondition(preserveExprs),
+            id);
+    }
+
+    /**
+     * Creates a PushProjectPastFilterRule with an explicit root operand
+     * and condition to preserve operands.
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param id Part of description
+     */
+    public PushProjectPastFilterRule(
+        RelOptRuleOperand operand,
+        PushProjector.ExprCondition preserveExprCondition,
+        String id)
+    {
+        super(operand, "PushProjectPastFilterRule: " + id);
+        this.preserveExprCondition = preserveExprCondition;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -106,7 +134,8 @@ public class PushProjectPastFilterRule
         }
 
         PushProjector pushProjector =
-            new PushProjector(origProj, origFilter, rel, preserveExprs);
+            new PushProjector(
+                origProj, origFilter, rel, preserveExprCondition);
         ProjectRel topProject = pushProjector.convertProject(null);
 
         if (topProject != null) {

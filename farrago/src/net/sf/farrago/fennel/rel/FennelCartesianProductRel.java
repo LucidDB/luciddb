@@ -76,7 +76,8 @@ public class FennelCartesianProductRel
                 right.getRowType(),
                 joinType,
                 cluster.getTypeFactory(),
-                fieldNameList);
+                fieldNameList,
+                Collections.<RelDataTypeField>emptyList());
     }
 
     //~ Methods ----------------------------------------------------------------

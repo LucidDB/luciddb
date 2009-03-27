@@ -45,9 +45,9 @@ public class LhxAggRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LhxAggRule.
      */
-    public LhxAggRule()
+    private LhxAggRule()
     {
         super(
             new RelOptRuleOperand(

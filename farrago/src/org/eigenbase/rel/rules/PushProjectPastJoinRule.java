@@ -28,7 +28,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -48,31 +47,34 @@ public class PushProjectPastJoinRule
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Expressions that should be preserved in the projection
+     * Condition for expressions that should be preserved in the projection.
      */
-    private Set<SqlOperator> preserveExprs;
+    private final PushProjector.ExprCondition preserveExprCondition;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushProjectPastJoinRule.
      */
-    public PushProjectPastJoinRule()
+    private PushProjectPastJoinRule()
     {
-        super(
-            new RelOptRuleOperand(
-                ProjectRel.class,
-                new RelOptRuleOperand(JoinRel.class, ANY)));
-        this.preserveExprs = Collections.emptySet();
+        this(PushProjector.ExprCondition.FALSE);
     }
 
-    public PushProjectPastJoinRule(Set<SqlOperator> preserveExprs)
+    /**
+     * Creates a PushProjectPastJoinRule with an explicit condition.
+     *
+     * @param preserveExprCondition Condition for expressions that should be
+     * preserved in the projection
+     */
+    public PushProjectPastJoinRule(
+        PushProjector.ExprCondition preserveExprCondition)
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand(JoinRel.class, ANY)));
-        this.preserveExprs = preserveExprs;
+        this.preserveExprCondition = preserveExprCondition;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,7 +94,7 @@ public class PushProjectPastJoinRule
                 origProj,
                 joinRel.getCondition(),
                 joinRel,
-                preserveExprs);
+                preserveExprCondition);
         if (pushProject.locateAllRefs()) {
             return;
         }
@@ -114,25 +116,17 @@ public class PushProjectPastJoinRule
         RexNode newJoinFilter = null;
         int [] adjustments = pushProject.getAdjustments();
         if (joinRel.getCondition() != null) {
-            RelDataTypeField [] projLeftFields =
-                leftProjRel.getRowType().getFields();
-            RelDataTypeField [] projRightFields =
-                rightProjRel.getRowType().getFields();
+            List<RelDataTypeField> projJoinFieldList =
+                new ArrayList<RelDataTypeField>();
+            projJoinFieldList.addAll(
+                joinRel.getSystemFieldList());
+            projJoinFieldList.addAll(
+                leftProjRel.getRowType().getFieldList());
+            projJoinFieldList.addAll(
+                rightProjRel.getRowType().getFieldList());
             RelDataTypeField [] projJoinFields =
-                new RelDataTypeField[projLeftFields.length
-                    + projRightFields.length];
-            System.arraycopy(
-                leftProjRel.getRowType().getFields(),
-                0,
-                projJoinFields,
-                0,
-                projLeftFields.length);
-            System.arraycopy(
-                rightProjRel.getRowType().getFields(),
-                0,
-                projJoinFields,
-                projLeftFields.length,
-                projRightFields.length);
+                projJoinFieldList.toArray(
+                    new RelDataTypeField[projJoinFieldList.size()]);
             newJoinFilter =
                 pushProject.convertRefsAndExprs(
                     joinRel.getCondition(),
@@ -149,7 +143,8 @@ public class PushProjectPastJoinRule
                 newJoinFilter,
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                joinRel.getSystemFieldList());
 
         // put the original project on top of the join, converting it to
         // reference the modified projection list

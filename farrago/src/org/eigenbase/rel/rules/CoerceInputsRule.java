@@ -58,10 +58,10 @@ public class CoerceInputsRule
         boolean coerceNames)
     {
         super(
-            new RelOptRuleOperand(consumerRelClass, ANY));
+            new RelOptRuleOperand(consumerRelClass, ANY),
+            "CoerceInputsRule:" + consumerRelClass.getName());
         this.consumerRelClass = consumerRelClass;
         this.coerceNames = coerceNames;
-        description = "CoerceInputsRule:" + consumerRelClass.getName();
     }
 
     //~ Methods ----------------------------------------------------------------

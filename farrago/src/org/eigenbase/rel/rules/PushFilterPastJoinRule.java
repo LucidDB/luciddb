@@ -45,9 +45,9 @@ public class PushFilterPastJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushFilterPastJoinRule.
      */
-    public PushFilterPastJoinRule()
+    private PushFilterPastJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -55,7 +55,12 @@ public class PushFilterPastJoinRule
                 new RelOptRuleOperand(JoinRel.class, ANY)));
     }
 
-    public PushFilterPastJoinRule(RelOptRuleOperand rule, String id)
+    /**
+     * Creates a PushFilterPastJoinRule with an explicit root operand.
+     */
+    public PushFilterPastJoinRule(
+        RelOptRuleOperand operand,
+        String id)
     {
         // This rule is fired for either of the following two patterns:
         //
@@ -65,8 +70,7 @@ public class PushFilterPastJoinRule
         //
         // RelOptRuleOperand(JoinRel.class, null)
         //
-        super(rule);
-        description = "PushFilterRule: " + id;
+        super(operand, "PushFilterRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -202,7 +206,8 @@ public class PushFilterPastJoinRule
                 joinFilter,
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                joinRel.getSystemFieldList());
 
         // create a FilterRel on top of the join if needed
         RelNode newRel =

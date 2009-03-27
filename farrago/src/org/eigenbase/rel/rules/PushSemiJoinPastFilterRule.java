@@ -43,9 +43,9 @@ public class PushSemiJoinPastFilterRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushSemiJoinPastFilterRule.
      */
-    public PushSemiJoinPastFilterRule()
+    private PushSemiJoinPastFilterRule()
     {
         super(
             new RelOptRuleOperand(

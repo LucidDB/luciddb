@@ -77,12 +77,6 @@ public abstract class FarragoReduceValuesRule
         };
 
     /**
-     * @deprecated use {@link #filterInstance} instead
-     */
-    public static final FarragoReduceValuesRule FILTER_INSTANCE =
-        filterInstance;
-
-    /**
      * Singleton instance of this rule which applies to the pattern
      * Project(Values).
      */
@@ -102,12 +96,6 @@ public abstract class FarragoReduceValuesRule
                     (ValuesRel) call.rels[1]);
             }
         };
-
-    /**
-     * @deprecated use {@link #projectInstance} instead
-     */
-    public static final FarragoReduceValuesRule PROJECT_INSTANCE =
-        projectInstance;
 
     /**
      * Singleton instance of this rule which applies to the pattern
@@ -132,12 +120,6 @@ public abstract class FarragoReduceValuesRule
             }
         };
 
-    /**
-     * @deprecated use {@link #projectFilterInstance} instead
-     */
-    public static final FarragoReduceValuesRule PROJECT_FILTER_INSTANCE =
-        projectFilterInstance;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -147,8 +129,7 @@ public abstract class FarragoReduceValuesRule
      */
     private FarragoReduceValuesRule(RelOptRuleOperand operand, String desc)
     {
-        super(operand);
-        description = "FarragoReduceValuesRule:" + desc;
+        super(operand, "FarragoReduceValuesRule:" + desc);
         Util.discard(tracer);
     }
 

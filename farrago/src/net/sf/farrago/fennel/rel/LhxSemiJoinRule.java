@@ -48,9 +48,9 @@ public class LhxSemiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LhxSemiJoinRule.
      */
-    public LhxSemiJoinRule()
+    private LhxSemiJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -93,6 +93,7 @@ public class LhxSemiJoinRule
         // match for any key pos.
         residualCondition =
             RelOptUtil.splitJoinCondition(
+                Collections.<RelDataTypeField>emptyList(),
                 leftRel,
                 rightRel,
                 joinRel.getCondition(),

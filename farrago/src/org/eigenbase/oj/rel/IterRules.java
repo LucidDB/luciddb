@@ -25,7 +25,6 @@ package org.eigenbase.oj.rel;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
@@ -105,9 +104,9 @@ public abstract class IterRules
             new HomogeneousUnionToIteratorRule();
 
         /**
-         * @deprecated use {@link #instance} instead
+         * Creates a HomogeneousUnionToIteratorRule.
          */
-        public HomogeneousUnionToIteratorRule()
+        private HomogeneousUnionToIteratorRule()
         {
             this("HomogeneousUnionToIteratorRule");
         }
@@ -134,9 +133,9 @@ public abstract class IterRules
             new OneRowToIteratorRule();
 
         /**
-         * @deprecated use {@link #instance} instead
+         * Creates a OneRowToIteratorRule.
          */
-        public OneRowToIteratorRule()
+        private OneRowToIteratorRule()
         {
             super(
                 OneRowRel.class,

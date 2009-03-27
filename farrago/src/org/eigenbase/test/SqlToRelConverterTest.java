@@ -41,26 +41,26 @@ public class SqlToRelConverterTest
 {
     //~ Methods ----------------------------------------------------------------
 
+    public SqlToRelConverterTest()
+    {
+        super();
+    }
+
+    public SqlToRelConverterTest(String name)
+    {
+        super(name);
+    }
+
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(SqlToRelConverterTest.class);
     }
 
-    protected void check(
+    protected final void check(
         String sql,
         String plan)
     {
-        final DiffRepository diffRepos = getDiffRepos();
-        String sql2 = diffRepos.expand("sql", sql);
-        final RelNode rel = tester.convertSqlToRel(sql2);
-
-        assertTrue(rel != null);
-
-        // NOTE jvs 28-Mar-2006:  insert leading newline so
-        // that plans come out nicely stacked instead of first
-        // line immediately after CDATA start
-        String actual = NL + RelOptUtil.toString(rel);
-        diffRepos.assertEquals("plan", plan, actual);
+        tester.assertConvertsTo(sql, plan);
     }
 
     public void testIntegerLiteral()
@@ -763,6 +763,24 @@ public class SqlToRelConverterTest
                 + "</RelNode>\n"
                 + ""),
             sw.toString());
+    }
+
+    /**
+     * Visitor that checks that every {@link RelNode} in a tree is valid.
+     *
+     * @see RelNode#isValid(boolean)
+     */
+    public static class RelValidityChecker extends RelVisitor
+    {
+        int invalidCount;
+
+        public void visit(RelNode node, int ordinal, RelNode parent)
+        {
+            if (!node.isValid(true)) {
+                ++invalidCount;
+            }
+            super.visit(node, ordinal, parent);
+        }
     }
 }
 

@@ -52,9 +52,9 @@ public class SwapJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a SwapJoinRule.
      */
-    public SwapJoinRule()
+    private SwapJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -119,7 +119,8 @@ public class SwapJoinRule
                 condition,
                 joinType,
                 Collections.<String>emptySet(),
-                join.isSemiJoinDone());
+                join.isSemiJoinDone(),
+                join.getSystemFieldList());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(
                 new HashSet<String>(join.getVariablesStopped()));
@@ -136,6 +137,11 @@ public class SwapJoinRule
     public void onMatch(final RelOptRuleCall call)
     {
         JoinRel join = (JoinRel) call.rels[0];
+
+        if (!join.getSystemFieldList().isEmpty()) {
+            // FIXME Enable this rule for joins with system fields
+            return;
+        }
 
         final RelNode swapped = swap(join);
         if (swapped == null) {

@@ -50,9 +50,9 @@ public class PushSemiJoinPastJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushSemiJoinPastJoinRule.
      */
-    public PushSemiJoinPastJoinRule()
+    private PushSemiJoinPastJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -180,7 +180,8 @@ public class PushSemiJoinPastJoinRule
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                joinRel.getSystemFieldList());
 
         call.transformTo(newJoinRel);
     }

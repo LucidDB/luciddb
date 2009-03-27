@@ -33,8 +33,9 @@ import java.util.*;
  * org.eigenbase.relopt.RelOptRule#toString()}. By default they are the class's
  * simple name (e.g. class name sans package), unless the class is an inner
  * class, in which case the default is the inner class's simple name. Some rules
- * explicitly provide alternate descriptions by setting {@link
- * org.eigenbase.relopt.RelOptRule#description} directly.
+ * explicitly provide alternate descriptions by calling the
+ * {@link org.eigenbase.relopt.RelOptRule#RelOptRule(org.eigenbase.relopt.RelOptRuleOperand, String)}
+ * constructor.
  *
  * @author Stephan Zuercher
  */

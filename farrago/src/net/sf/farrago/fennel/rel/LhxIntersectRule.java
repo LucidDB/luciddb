@@ -46,9 +46,9 @@ public class LhxIntersectRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LhxIntersectRule.
      */
-    public LhxIntersectRule()
+    private LhxIntersectRule()
     {
         super(
             new RelOptRuleOperand(

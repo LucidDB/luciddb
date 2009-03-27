@@ -44,9 +44,9 @@ public class FennelBernoulliSamplingRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelBernoulliSamplingRule.
      */
-    public FennelBernoulliSamplingRule()
+    private FennelBernoulliSamplingRule()
     {
         super(new RelOptRuleOperand(SamplingRel.class, ANY));
     }

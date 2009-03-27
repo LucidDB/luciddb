@@ -64,9 +64,9 @@ public class FennelReshapeRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelReshapeRule.
      */
-    public FennelReshapeRule()
+    private FennelReshapeRule()
     {
         super(
             new RelOptRuleOperand(

@@ -32,7 +32,6 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -76,8 +75,8 @@ public abstract class MedAbstractFennelProjectionRule
      * @param projRel ProjectRel that we will be creating the projection for
      * @param projectedColumns returns a list of the projected column ordinals,
      * if it is possible to project
-     * @param preserveExprs special expressions that should be preserved in the
-     * projection
+     * @param preserveExprCondition condition that identifies special
+     * expressions that should be preserved in the projection
      * @param defaultExpr expression to be used in the projection if no fields
      * or special columns are selected
      * @param newProjList returns a new projection RelNode corresponding to a
@@ -93,7 +92,7 @@ public abstract class MedAbstractFennelProjectionRule
         FennelRel origScan,
         ProjectRel projRel,
         List<Integer> projectedColumns,
-        Set<SqlOperator> preserveExprs,
+        PushProjector.ExprCondition preserveExprCondition,
         RexNode defaultExpr,
         List<ProjectRel> newProjList)
     {
@@ -113,7 +112,9 @@ public abstract class MedAbstractFennelProjectionRule
                 // all input references and any special expressions from the
                 // projection
                 PushProjector pushProject =
-                    new PushProjector(projRel, null, origScan, preserveExprs);
+                    new PushProjector(
+                        projRel, null, origScan,
+                        preserveExprCondition);
                 ProjectRel newProject = pushProject.convertProject(defaultExpr);
                 if (newProject == null) {
                     // can't do any further projection
@@ -128,7 +129,7 @@ public abstract class MedAbstractFennelProjectionRule
                         origScan,
                         (ProjectRel) newProject.getChild(),
                         projectedColumns,
-                        preserveExprs,
+                        preserveExprCondition,
                         defaultExpr,
                         newProjList);
                 assert (projectedColumns.size() > 0);

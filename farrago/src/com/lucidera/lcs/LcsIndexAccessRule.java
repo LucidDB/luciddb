@@ -52,7 +52,14 @@ public class LcsIndexAccessRule
 {
     //~ Constructors -----------------------------------------------------------
 
-    public LcsIndexAccessRule(RelOptRuleOperand rule, String id)
+    /**
+     * Creates an LcsIndexAccessRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
+     */
+    public LcsIndexAccessRule(RelOptRuleOperand operand, String id)
     {
         // This rule is fired for either of the following 4 patterns:
         //
@@ -97,8 +104,7 @@ public class LcsIndexAccessRule
         // that would have generated an index scan should become a residual
         // filter or not.
 
-        super(rule);
-        description = "LcsIndexAccessRule: " + id;
+        super(operand, "LcsIndexAccessRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------

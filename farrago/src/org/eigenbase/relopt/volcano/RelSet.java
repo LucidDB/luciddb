@@ -171,6 +171,8 @@ class RelSet
      * Adds an expression <code>rel</code> to this set, without creating a
      * {@link org.eigenbase.relopt.volcano.RelSubset}. (Called only from
      * {@link org.eigenbase.relopt.volcano.RelSubset#add}.
+     *
+     * @param rel Relational expression
      */
     void addInternal(RelNode rel)
     {
@@ -230,6 +232,7 @@ class RelSet
 
         // merge subsets
         for (RelSubset otherSubset : otherSet.subsets) {
+            planner.ruleQueue.subsetImportances.remove(otherSubset);
             RelSubset subset =
                 getOrCreateSubset(
                     otherSubset.getCluster(),
@@ -260,16 +263,18 @@ class RelSet
         }
 
         // Make sure the cost changes as a result of merging are propagated.
+        Set<RelSubset> activeSet = new HashSet<RelSubset>();
         for (RelSubset relSubset : subsets) {
             for (RelSubset parentSubset : relSubset.getParentSubsets()) {
                 for (RelNode parentRel : parentSubset.rels) {
                     parentSubset.propagateCostImprovements(
                         planner,
-                        parentRel);
+                        parentRel,
+                        activeSet);
                 }
             }
         }
-
+        assert activeSet.isEmpty();
         assert equivalentSet == null;
 
         // Each of the relations in the old set now has new parents, so

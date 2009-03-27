@@ -52,6 +52,9 @@ public abstract class RelOptRule
      * Description of rule, must be unique within planner. Default is the name
      * of the class sans package name, but derived classes are encouraged to
      * override.
+     *
+     * @deprecated LucidEra, please make this 'final'. The only assignments
+     * to this field should be in the constructor
      */
     protected String description;
 
@@ -71,14 +74,27 @@ public abstract class RelOptRule
      * Creates a rule.
      *
      * @param operand root operand, must not be null
-     *
-     * @pre operand != null
      */
     public RelOptRule(RelOptRuleOperand operand)
     {
-        Util.pre(operand != null, "operand != null");
+        this(operand, null);
+    }
+
+    /**
+     * Creates a rule with an explicit description.
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param description Description, or null to guess description
+     */
+    public RelOptRule(RelOptRuleOperand operand, String description)
+    {
+        assert operand != null;
         this.operand = operand;
-        this.description = guessDescription(getClass().getName());
+        if (description == null) {
+            description = guessDescription(getClass().getName());
+        }
+        this.description = description;
         this.operands = flattenOperands(operand);
         assignSolveOrder();
     }
@@ -387,11 +403,20 @@ public abstract class RelOptRule
      * Deduces a name for a rule by taking the name of its class and returning
      * the segment after the last '.' or '$'.
      *
+     * <p>Examples:
+     * <ul>
+     * <li>"com.foo.Bar" yields "Bar";</li>
+     * <li>"com.flatten.Bar$Baz" yields "Baz";</li>
+     * <li>"com.foo.Bar$1" yields "1" (which as an integer is an invalid
+     *      name, and writer of the rule is encouraged to give it an
+     *      explicit name).</li>
+     * </ul>
+     *
      * @param className Name of the rule's class
      *
      * @return Last segment of the class
      */
-    private static String guessDescription(String className)
+    static String guessDescription(String className)
     {
         String description = className;
         int punc =
@@ -399,13 +424,18 @@ public abstract class RelOptRule
                 className.lastIndexOf('.'),
                 className.lastIndexOf('$'));
         if (punc >= 0) {
-            // Examples:  * "com.foo.Bar" yields "Bar"  * "com.flatten.Bar$Baz"
-            // yields "Baz";  * "com.foo.Bar$1" yields "1" (which as an integer
-            // is an invalid     name, and writer of the rule is encouraged to
-            // give it an     explicit name)
             description = className.substring(punc + 1);
         }
-        return description;
+        try {
+            Integer.valueOf(description);
+            throw new RuntimeException(
+                "Derived description of rule class " + className +
+                    " is an integer, not valid. " +
+                    "Supply a description manually.");
+        } catch (NumberFormatException e) {
+            // Good, the description is not a number.
+            return description;
+        }
     }
 }
 

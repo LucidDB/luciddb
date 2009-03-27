@@ -114,12 +114,6 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    /**
-     * @deprecated use {@link #filterInstance} instead
-     */
-    public static final FarragoReduceExpressionsRule FILTER_INSTANCE =
-        filterInstance;
-
     public static final FarragoReduceExpressionsRule projectInstance =
         new FarragoReduceExpressionsRule(ProjectRel.class) {
             public void onMatch(RelOptRuleCall call)
@@ -144,12 +138,6 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    /**
-     * @deprecated use {@link #projectInstance} instead
-     */
-    public static final FarragoReduceExpressionsRule PROJECT_INSTANCE =
-        projectInstance;
-
     public static final FarragoReduceExpressionsRule joinInstance =
         new FarragoReduceExpressionsRule(JoinRel.class) {
             public void onMatch(RelOptRuleCall call)
@@ -173,12 +161,6 @@ public abstract class FarragoReduceExpressionsRule
                 }
             }
         };
-
-    /**
-     * @deprecated use {@link #joinInstance} instead
-     */
-    public static final FarragoReduceExpressionsRule JOIN_INSTANCE =
-        joinInstance;
 
     public static final FarragoReduceExpressionsRule calcInstance =
         new FarragoReduceExpressionsRule(CalcRel.class) {
@@ -264,12 +246,6 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    /**
-     * @deprecated use {@link #calcInstance} instead
-     */
-    public static final FarragoReduceExpressionsRule CALC_INSTANCE =
-        calcInstance;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -282,10 +258,9 @@ public abstract class FarragoReduceExpressionsRule
         super(
             new RelOptRuleOperand(
                 relClass,
-                ANY));
-        description =
+                ANY),
             "FarragoReduceExpressionsRule:"
-            + ReflectUtil.getUnqualifiedClassName(relClass);
+            + ReflectUtil.getUnqualifiedClassName(relClass));
     }
 
     //~ Methods ----------------------------------------------------------------

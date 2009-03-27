@@ -60,9 +60,9 @@ public class FennelNestedLoopJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelNestedLoopJoinRule.
      */
-    public FennelNestedLoopJoinRule()
+    private FennelNestedLoopJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -104,7 +104,7 @@ public class FennelNestedLoopJoinRule
         boolean swapped = false;
         if (joinType == JoinRelType.RIGHT) {
             RelNode swappedRelNode = SwapJoinRule.swap(joinRel, true);
-            assert (swappedRelNode != null);
+            assert swappedRelNode != null;
             JoinRel swappedJoinRel = (JoinRel) swappedRelNode.getInput(0);
             swapped = true;
             joinType = swappedJoinRel.getJoinType();
@@ -305,9 +305,10 @@ public class FennelNestedLoopJoinRule
                 rightRel.getRowType(),
                 joinType,
                 origJoinRel.getCluster().getTypeFactory(),
-                null);
+                null,
+                Collections.<RelDataTypeField>emptyList());
         Double rowCount = RelMetadataQuery.getRowCount(origJoinRel);
-        assert (rowCount != null);
+        assert rowCount != null;
         FennelNestedLoopJoinRel nestedLoopRel =
             new FennelNestedLoopJoinRel(
                 origJoinRel.getCluster(),
@@ -379,6 +380,7 @@ public class FennelNestedLoopJoinRule
         List<SqlOperator> indexOpList = new ArrayList<SqlOperator>();
         RexNode nonIndexablePreds =
             RelOptUtil.splitJoinCondition(
+                Collections.<RelDataTypeField>emptyList(),
                 joinInputs[0],
                 joinInputs[1],
                 joinCondition,
@@ -402,6 +404,7 @@ public class FennelNestedLoopJoinRule
         if (nonIndexablePreds != null) {
             extraPreds =
                 RelOptUtil.splitJoinCondition(
+                    Collections.<RelDataTypeField>emptyList(),
                     joinInputs[0],
                     joinInputs[1],
                     nonIndexablePreds,
@@ -442,7 +445,7 @@ public class FennelNestedLoopJoinRule
             indexCols.add(cols.get(keyIdx));
             indexOperands.add(operands.get(keyIdx));
         }
-        assert (leftFilterKeys.size() <= 1);
+        assert leftFilterKeys.size() <= 1;
         if (leftFilterKeys.size() == 1) {
             filterCol.add(cols.get(keyIdx));
             filterOperand.add(operands.get(keyIdx));
@@ -467,7 +470,8 @@ public class FennelNestedLoopJoinRule
                         joinInputs[0].getCluster().getTypeFactory(),
                         joinInputs[0].getRowType(),
                         joinInputs[1].getRowType(),
-                        null);
+                        null,
+                        Collections.<RelDataTypeField>emptyList());
                 extraPreds =
                     extraPreds.accept(
                         new RelOptUtil.RexInputConverter(
@@ -495,7 +499,7 @@ public class FennelNestedLoopJoinRule
         if (sqlOpList.isEmpty()) {
             compOpList.add(CompOperatorEnum.COMP_EQ);
         } else {
-            assert (sqlOpList.size() == 1);
+            assert sqlOpList.size() == 1;
             SqlOperator sqlOp = sqlOpList.get(0);
             if (sqlOp == SqlStdOperatorTable.greaterThanOperator) {
                 compOpList.add(CompOperatorEnum.COMP_LT);
@@ -625,7 +629,7 @@ public class FennelNestedLoopJoinRule
         List<Integer> residualRefs,
         RexNode residualCondition)
     {
-        RelNode secondInput = null;
+        RelNode secondInput;
         if (indexCols.isEmpty()) {
             // Since we're not using a temporary index, see if it makes
             // sense to buffer the RHS
@@ -667,7 +671,8 @@ public class FennelNestedLoopJoinRule
                     rightRel.getRowType(),
                     JoinRelType.INNER,
                     leftRel.getCluster().getTypeFactory(),
-                    null);
+                    null,
+                    Collections.<RelDataTypeField>emptyList());
             secondInput =
                 createResidualFilter(
                     joinRowType.getFields(),
@@ -836,7 +841,7 @@ public class FennelNestedLoopJoinRule
             new FennelValuesRel(
                 rightRel.getCluster(),
                 keyRowType,
-                (List) inputTuples);
+                inputTuples);
 
         // Finally, create the temp index search RelNode
         return new FennelTempIdxSearchRel(

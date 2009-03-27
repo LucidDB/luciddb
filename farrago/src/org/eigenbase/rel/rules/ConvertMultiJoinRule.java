@@ -80,9 +80,9 @@ public class ConvertMultiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a ConvertMultiJoinRule.
      */
-    public ConvertMultiJoinRule()
+    private ConvertMultiJoinRule()
     {
         super(
             new RelOptRuleOperand(

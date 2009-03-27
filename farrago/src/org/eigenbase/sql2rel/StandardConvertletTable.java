@@ -133,7 +133,7 @@ public class StandardConvertletTable
             new SqlRexConvertlet() {
                 public RexNode convertCall(SqlRexContext cx, SqlCall call)
                 {
-                    SqlNode expanded = ((SqlCall) call).getOperands()[0];
+                    SqlNode expanded = call.getOperands()[0];
                     return cx.convertExpression(expanded);
                 }
             });

@@ -52,14 +52,14 @@ public class PullUpProjectsAboveJoinRule
                 JoinRel.class,
                 new RelOptRuleOperand(ProjectRel.class, ANY),
                 new RelOptRuleOperand(ProjectRel.class, ANY)),
-            "with two ProjectRel children");
+            "PullUpProjectsAboveJoinRule: with two ProjectRel children");
 
     public static final PullUpProjectsAboveJoinRule instanceLeftProjectChild =
         new PullUpProjectsAboveJoinRule(
             new RelOptRuleOperand(
                 JoinRel.class,
                 new RelOptRuleOperand(ProjectRel.class, ANY)),
-            "with ProjectRel on left");
+            "PullUpProjectsAboveJoinRule: with ProjectRel on left");
 
     public static final PullUpProjectsAboveJoinRule instanceRightProjectChild =
         new PullUpProjectsAboveJoinRule(
@@ -67,14 +67,15 @@ public class PullUpProjectsAboveJoinRule
                 JoinRel.class,
                 new RelOptRuleOperand(RelNode.class, ANY),
                 new RelOptRuleOperand(ProjectRel.class, ANY)),
-            "with ProjectRel on right");
+            "PullUpProjectsAboveJoinRule: with ProjectRel on right");
 
     //~ Constructors -----------------------------------------------------------
 
-    public PullUpProjectsAboveJoinRule(RelOptRuleOperand rule, String id)
+    public PullUpProjectsAboveJoinRule(
+        RelOptRuleOperand operand,
+        String description)
     {
-        super(rule);
-        description = "PullUpProjectsAboveJoinRule: " + id;
+        super(operand, description);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,7 +100,7 @@ public class PullUpProjectsAboveJoinRule
             leftJoinChild = call.rels[1];
         }
         if (hasRightChild(call) && !joinType.generatesNullsOnRight()) {
-            rightProj = (ProjectRel) getRightChild(call);
+            rightProj = getRightChild(call);
             rightJoinChild = getProjectChild(call, rightProj, false);
         } else {
             rightProj = null;
@@ -124,7 +125,8 @@ public class PullUpProjectsAboveJoinRule
                 rightJoinChild.getRowType(),
                 JoinRelType.INNER,
                 joinRel.getCluster().getTypeFactory(),
-                null);
+                null,
+                Collections.<RelDataTypeField>emptyList());
 
         // Create projection expressions, combining the projection expressions
         // from the projects that feed into the join.  For the RHS projection
@@ -273,6 +275,8 @@ public class PullUpProjectsAboveJoinRule
      * @param call RelOptRuleCall
      * @param project project RelNode
      * @param leftChild true if the project corresponds to the left projection
+     * @return child of the project that will be used as input into the new
+     * JoinRel once the projects are pulled above the JoinRel
      */
     protected RelNode getProjectChild(
         RelOptRuleCall call,

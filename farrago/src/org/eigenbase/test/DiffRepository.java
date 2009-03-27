@@ -149,15 +149,26 @@ public class DiffRepository
     private final Element root;
     private final File refFile;
     private final File logFile;
+    private final Filter filter;
 
     //~ Constructors -----------------------------------------------------------
 
-    public DiffRepository(
+    /**
+     * Creates a DiffRepository.
+     *
+     * @param refFile Reference file
+     * @param logFile Log file
+     * @param baseRepos Parent repository or null
+     * @param filter Filter or null
+     */
+    private DiffRepository(
         File refFile,
         File logFile,
-        DiffRepository baseRepos)
+        DiffRepository baseRepos,
+        Filter filter)
     {
         this.baseRepos = baseRepos;
+        this.filter = filter;
         if (refFile == null) {
             throw new IllegalArgumentException("url must not be null");
         }
@@ -285,12 +296,16 @@ public class DiffRepository
             }
             assert token.startsWith(tag) : "token '" + token
                 + "' does not match tag '" + tag + "'";
-            final String expanded = get(testCaseName, token);
+            String expanded = get(testCaseName, token);
             if (expanded == null) {
                 // Token is not specified. Return the original text: this will
                 // cause a diff, and the actual value will be written to the
                 // log file.
                 return text;
+            }
+            if (filter != null) {
+                expanded =
+                    filter.filter(this, testCaseName, tag, text, expanded);
             }
             return expanded;
         } else {
@@ -579,9 +594,9 @@ public class DiffRepository
      * <p>This method is synchronized, in case two threads are running test
      * cases of this test at the same time.
      *
-     * @param testCaseName
-     * @param resourceName
-     * @param value
+     * @param testCaseName Test case name
+     * @param resourceName Resource name
+     * @param value        New value of resource
      */
     private synchronized void update(
         String testCaseName,
@@ -775,9 +790,33 @@ public class DiffRepository
         return true;
     }
 
+     /**
+      * Finds the repository instance for a given class, with no base
+      * repository or filter.
+      *
+      * @param clazz Testcase class
+      *
+      * @return The diff repository shared between testcases in this class.
+      */
     public static DiffRepository lookup(Class clazz)
     {
         return lookup(clazz, null);
+    }
+
+    /**
+     * Finds the repository instance for a given class and inheriting from
+     * a given repository.
+     *
+     * @param clazz Testcase class
+     * @param baseRepos Base class of test class
+     *
+     * @return The diff repository shared between testcases in this class.
+     */
+    public static DiffRepository lookup(
+        Class clazz,
+        DiffRepository baseRepos)
+    {
+        return lookup(clazz, baseRepos, null);
     }
 
     /**
@@ -795,21 +834,53 @@ public class DiffRepository
      * missing or incorrect, it will not write them to the log file -- you
      * probably need to fix the base test.
      *
+     * <p>Use the <code>filter</code> parameter if you expect the test to
+     * return results slightly different than in the repository. This happens
+     * if the behavior of a derived test is slightly different than a base
+     * test. If you do not specify a filter, no filtering will happen.
+     *
      * @param clazz Testcase class
-     * @param baseRepos Base class of test class
+     * @param baseRepos Base repository
+     * @param filter Filters each string returned by the repository
      *
      * @return The diff repository shared between testcases in this class.
      */
-    public static DiffRepository lookup(Class clazz, DiffRepository baseRepos)
+    public static DiffRepository lookup(
+        Class clazz,
+        DiffRepository baseRepos,
+        Filter filter)
     {
         DiffRepository diffRepos = mapClassToRepos.get(clazz);
         if (diffRepos == null) {
             final File refFile = findFile(clazz, ".ref.xml");
             final File logFile = findFile(clazz, ".log.xml");
-            diffRepos = new DiffRepository(refFile, logFile, baseRepos);
+            diffRepos =
+                new DiffRepository(
+                    refFile, logFile, baseRepos, filter);
             mapClassToRepos.put(clazz, diffRepos);
         }
         return diffRepos;
+    }
+
+    /**
+     * Callback to filter strings before returning them.
+     */
+    public interface Filter {
+        /**
+         * Filters a string.
+         *
+         * @param diffRepository Repository
+         * @param testCaseName Test case name
+         * @param tag Tag being expanded
+         * @param text Text being expanded
+         * @param expanded Expanded text @return Expanded text after filtering
+         */
+        String filter(
+            DiffRepository diffRepository,
+            String testCaseName,
+            String tag,
+            String text,
+            String expanded);
     }
 }
 

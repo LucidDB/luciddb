@@ -39,8 +39,6 @@ abstract class RelOptTestBase
 {
     //~ Methods ----------------------------------------------------------------
 
-    protected abstract DiffRepository getDiffRepos();
-
     /**
      * Checks the plan for a SQL statement before/after executing a given rule.
      *
