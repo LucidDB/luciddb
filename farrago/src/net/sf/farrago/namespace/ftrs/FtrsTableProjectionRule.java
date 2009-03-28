@@ -31,8 +31,8 @@ import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.PushProjector;
 import org.eigenbase.relopt.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -51,9 +51,9 @@ class FtrsTableProjectionRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FtrsTableProjectionRule.
      */
-    public FtrsTableProjectionRule()
+    private FtrsTableProjectionRule()
     {
         super(
             new RelOptRuleOperand(
@@ -91,7 +91,7 @@ class FtrsTableProjectionRule
                 origScan,
                 origProject,
                 projectedColumnList,
-                Collections.<SqlOperator>emptySet(),
+                PushProjector.ExprCondition.FALSE,
                 null,
                 newProjList);
 

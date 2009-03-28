@@ -40,9 +40,9 @@ public class UnionToDistinctRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a UnionToDistinctRule.
      */
-    public UnionToDistinctRule()
+    private UnionToDistinctRule()
     {
         super(new RelOptRuleOperand(UnionRel.class, ANY));
     }

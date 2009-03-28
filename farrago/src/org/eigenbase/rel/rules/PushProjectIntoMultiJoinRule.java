@@ -43,9 +43,9 @@ public class PushProjectIntoMultiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushProjectIntoMultiJoinRule.
      */
-    public PushProjectIntoMultiJoinRule()
+    private PushProjectIntoMultiJoinRule()
     {
         super(
             new RelOptRuleOperand(

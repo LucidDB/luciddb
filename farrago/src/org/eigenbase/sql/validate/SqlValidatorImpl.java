@@ -3978,10 +3978,28 @@ public class SqlValidatorImpl
     //~ Inner Classes ----------------------------------------------------------
 
     /**
+     * Common base class for DML statement namespaces.
+     */
+    public static class DmlNamespace
+        extends IdentifierNamespace
+    {
+        protected DmlNamespace(
+            SqlValidatorImpl validator,
+            SqlIdentifier id,
+            SqlNode enclosingNode)
+        {
+            super(
+                validator,
+                id,
+                enclosingNode);
+        }
+    }
+
+    /**
      * Namespace for an INSERT statement.
      */
     private static class InsertNamespace
-        extends IdentifierNamespace
+        extends DmlNamespace
     {
         private final SqlInsert node;
 
@@ -3998,7 +4016,7 @@ public class SqlValidatorImpl
             assert node != null;
         }
 
-        public SqlNode getNode()
+        public SqlInsert getNode()
         {
             return node;
         }
@@ -4008,7 +4026,7 @@ public class SqlValidatorImpl
      * Namespace for an UPDATE statement.
      */
     private static class UpdateNamespace
-        extends IdentifierNamespace
+        extends DmlNamespace
     {
         private final SqlUpdate node;
 
@@ -4025,7 +4043,7 @@ public class SqlValidatorImpl
             assert node != null;
         }
 
-        public SqlNode getNode()
+        public SqlUpdate getNode()
         {
             return node;
         }
@@ -4035,7 +4053,7 @@ public class SqlValidatorImpl
      * Namespace for a DELETE statement.
      */
     private static class DeleteNamespace
-        extends IdentifierNamespace
+        extends DmlNamespace
     {
         private final SqlDelete node;
 
@@ -4052,7 +4070,7 @@ public class SqlValidatorImpl
             assert node != null;
         }
 
-        public SqlNode getNode()
+        public SqlDelete getNode()
         {
             return node;
         }
@@ -4062,7 +4080,7 @@ public class SqlValidatorImpl
      * Namespace for a MERGE statement.
      */
     private static class MergeNamespace
-        extends IdentifierNamespace
+        extends DmlNamespace
     {
         private final SqlMerge node;
 
@@ -4079,7 +4097,7 @@ public class SqlValidatorImpl
             assert node != null;
         }
 
-        public SqlNode getNode()
+        public SqlMerge getNode()
         {
             return node;
         }

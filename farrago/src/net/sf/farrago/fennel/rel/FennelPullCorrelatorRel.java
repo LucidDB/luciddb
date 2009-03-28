@@ -117,7 +117,8 @@ public class FennelPullCorrelatorRel
             right.getRowType(),
             JoinRelType.INNER,
             getCluster().getTypeFactory(),
-            null);
+            null,
+            Collections.<RelDataTypeField>emptyList());
     }
 
     // implement FennelRel

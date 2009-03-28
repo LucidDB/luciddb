@@ -52,13 +52,41 @@ public class MockCatalogReader
         new HashMap<List<String>, MockTable>();
     protected final Map<String, MockSchema> schemas =
         new HashMap<String, MockSchema>();
-    private final RelDataType addressType;
+    private RelDataType addressType;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a MockCatalogReader.
+     *
+     * @param typeFactory Type factory
+     */
     public MockCatalogReader(RelDataTypeFactory typeFactory)
     {
+        this(typeFactory, false);
+        init();
+    }
+
+    /**
+     * Creates a MockCatalogReader but does not initialize.
+     *
+     * <p>Protected constructor for use by subclasses, which must call
+     * {@link #init} at the end of their public constructor.
+     *
+     * @param typeFactory Type factory
+     * @param dummy Dummy parameter to distinguish from public constructor
+     */
+    protected MockCatalogReader(RelDataTypeFactory typeFactory, boolean dummy)
+    {
         this.typeFactory = typeFactory;
+        assert !dummy;
+    }
+
+    /**
+     * Initializes this catalog reader.
+     */
+    protected void init()
+    {
         final RelDataType intType =
             typeFactory.createSqlType(SqlTypeName.INTEGER);
         final RelDataType varchar10Type =
@@ -294,6 +322,12 @@ public class MockCatalogReader
         public SqlAccessType getAllowedAccess()
         {
             return SqlAccessType.ALL;
+        }
+
+        public void addColumn(int index, String name, RelDataType type)
+        {
+            columnNameList.add(index, name);
+            columnTypeList.add(index, type);
         }
 
         public void addColumn(String name, RelDataType type)

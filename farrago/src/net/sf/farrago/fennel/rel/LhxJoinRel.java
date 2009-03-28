@@ -146,7 +146,8 @@ public class LhxJoinRel
                     right.getRowType(),
                     joinType.getLogicalJoinType(),
                     cluster.getTypeFactory(),
-                    fieldNameList);
+                    fieldNameList,
+                    Collections.<RelDataTypeField>emptyList());
         }
         this.numBuildRows = numBuildRows;
         this.cndBuildKey = cndBuildKey;

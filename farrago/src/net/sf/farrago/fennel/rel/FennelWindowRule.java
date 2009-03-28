@@ -63,11 +63,9 @@ public abstract class FennelWindowRule
                     WindowedAggregateRel.class,
                     new RelOptRuleOperand(
                         CalcRel.class,
-                        ANY)))) {
-            {
-                description = "FennelWindowRule.CalcOnWinOnCalc";
-            }
-
+                        ANY))),
+            "FennelWindowRule.CalcOnWinOnCalc")
+        {
             // implement RelOptRule
             public void onMatch(RelOptRuleCall call)
             {
@@ -97,11 +95,9 @@ public abstract class FennelWindowRule
                     WindowedAggregateRel.class,
                     new RelOptRuleOperand(
                         RelNode.class,
-                        ANY)))) {
-            {
-                description = "FennelWindowRule.CalcOnWin";
-            }
-
+                        ANY))),
+            "FennelWindowRule.CalcOnWin")
+        {
             // implement RelOptRule
             public void onMatch(RelOptRuleCall call)
             {
@@ -137,11 +133,9 @@ public abstract class FennelWindowRule
                 WindowedAggregateRel.class,
                 new RelOptRuleOperand(
                     CalcRel.class,
-                    ANY))) {
-            {
-                description = "FennelWindowRule.WinOnCalc";
-            }
-
+                    ANY)),
+            "FennelWindowRule.WinOnCalc")
+        {
             // implement RelOptRule
             public void onMatch(RelOptRuleCall call)
             {
@@ -166,11 +160,9 @@ public abstract class FennelWindowRule
                 WindowedAggregateRel.class,
                 new RelOptRuleOperand(
                     RelNode.class,
-                    ANY))) {
-            {
-                description = "FennelWindowRule.Win";
-            }
-
+                    ANY)),
+            "FennelWindowRule.Win")
+        {
             // implement RelOptRule
             public void onMatch(RelOptRuleCall call)
             {
@@ -188,11 +180,17 @@ public abstract class FennelWindowRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a rule.
+     * Creates a FennelWindowRule.
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param description Description, or null to guess description
      */
-    private FennelWindowRule(RelOptRuleOperand operand)
+    private FennelWindowRule(
+        RelOptRuleOperand operand,
+        String description)
     {
-        super(operand);
+        super(operand, description);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -210,7 +208,7 @@ public abstract class FennelWindowRule
         CalcRel inCalc,
         final RelNode child)
     {
-        Util.pre(winAggRel != null, "winAggRel != null");
+        assert winAggRel != null;
         final RelOptCluster cluster = winAggRel.getCluster();
         final RelTraitSet traits =
             (inCalc != null) ? inCalc.getTraits() : winAggRel.getTraits();
@@ -479,7 +477,7 @@ public abstract class FennelWindowRule
         for (FennelWindowRel.Window window : windowList) {
             for (FennelWindowRel.Partition p : window.getPartitionList()) {
                 for (Integer partitionKey : p.partitionKeys) {
-                    if (partitionKey.intValue() >= inputFieldCount) {
+                    if (partitionKey >= inputFieldCount) {
                         return true;
                     }
                 }
@@ -558,8 +556,7 @@ public abstract class FennelWindowRule
         SqlNode upperBound,
         Integer [] orderKeys)
     {
-        for (int i = 0; i < windowList.size(); i++) {
-            FennelWindowRel.Window window = windowList.get(i);
+        for (FennelWindowRel.Window window : windowList) {
             if ((physical == window.physical)
                 && Util.equal(lowerBound, window.lowerBound)
                 && Util.equal(upperBound, window.upperBound)

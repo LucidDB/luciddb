@@ -74,9 +74,9 @@ public class FarragoMultisetSplitterRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FarragoMultisetSplitterRule.
      */
-    public FarragoMultisetSplitterRule()
+    private FarragoMultisetSplitterRule()
     {
         super(
             new RelOptRuleOperand(

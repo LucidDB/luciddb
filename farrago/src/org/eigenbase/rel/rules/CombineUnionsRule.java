@@ -42,9 +42,9 @@ public class CombineUnionsRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a CombineUnionsRule.
      */
-    public CombineUnionsRule()
+    private CombineUnionsRule()
     {
         super(
             new RelOptRuleOperand(

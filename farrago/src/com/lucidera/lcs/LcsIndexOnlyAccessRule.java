@@ -65,14 +65,17 @@ public class LcsIndexOnlyAccessRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsIndexOnlyAccessRule object.
+     * Creates an LcsIndexOnlyAccessRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
      */
     public LcsIndexOnlyAccessRule(
         RelOptRuleOperand operand,
         String id)
     {
-        super(operand);
-        description = "LcsIndexOnlyRule: " + id;
+        super(operand, "LcsIndexOnlyRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------

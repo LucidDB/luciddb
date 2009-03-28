@@ -103,11 +103,6 @@ public abstract class RemoveEmptyRule
         };
 
     /**
-     * @deprecated use  {@link #unionInstance} instead
-     */
-    public static final RemoveEmptyRule UNION_INSTANCE = unionInstance;
-
-    /**
      * Singleton instance of rule which converts a {@link ProjectRel} to empty
      * if its child is empty.
      *
@@ -134,11 +129,6 @@ public abstract class RemoveEmptyRule
                         project.getRowType()));
             }
         };
-
-    /**
-     * @deprecated use {@link #projectInstance} instead
-     */
-    public static final RemoveEmptyRule PROJECT_INSTANCE = projectInstance;
 
     /**
      * Singleton instance of rule which converts a {@link FilterRel} to empty if
@@ -168,11 +158,6 @@ public abstract class RemoveEmptyRule
             }
         };
 
-    /**
-     * @deprecated use {@link #filterInstance} instead
-     */
-    public static final RemoveEmptyRule FILTER_INSTANCE = filterInstance;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -183,8 +168,7 @@ public abstract class RemoveEmptyRule
      */
     private RemoveEmptyRule(RelOptRuleOperand operand, String desc)
     {
-        super(operand);
-        this.description = "RemoveEmptyRule:" + desc;
+        super(operand, "RemoveEmptyRule:" + desc);
     }
 }
 

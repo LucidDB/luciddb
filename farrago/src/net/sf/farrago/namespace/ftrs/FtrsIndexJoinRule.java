@@ -25,20 +25,16 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -57,9 +53,9 @@ class FtrsIndexJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FtrsIndexJoinRule.
      */
-    public FtrsIndexJoinRule()
+    private FtrsIndexJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -193,16 +189,6 @@ class FtrsIndexJoinRule
             // no cast required
             castRel = nullFilterRel;
         } else {
-            RelDataType rightStructType =
-                typeFactory.createStructType(
-                    new RelDataType[] { rightType },
-                    new String[] { "rightColumn" });
-
-            RelDataType castRowType =
-                typeFactory.createJoinType(
-                    new RelDataType[] {
-                        leftRel.getRowType(), rightStructType
-                    });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];
             RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();

@@ -100,7 +100,9 @@ public class FarragoTypeFactoryImpl
     public RelDataType createJoinType(RelDataType [] types)
     {
         assert (types.length == 2);
-        return JoinRel.createJoinType(this, types[0], types[1], null);
+        return JoinRel.createJoinType(
+            this, types[0], types[1], null,
+            Collections.<RelDataTypeField>emptyList());
     }
 
     // implement FarragoTypeFactory
@@ -358,7 +360,7 @@ public class FarragoTypeFactoryImpl
                             (metaData.isNullable(iOneBased)
                                 != ResultSetMetaData.columnNoNulls);
                         try {
-                            RelDataType type =
+                            return
                                 createJdbcType(
                                     typeOrdinal,
                                     dbSpecTypeName,
@@ -367,7 +369,6 @@ public class FarragoTypeFactoryImpl
                                     isNullable,
                                     substitute,
                                     typeMapping);
-                            return (RelDataType) type;
                         } catch (Throwable ex) {
                             throw newUnsupportedJdbcType(
                                 metaData.getTableName(iOneBased),
@@ -412,7 +413,7 @@ public class FarragoTypeFactoryImpl
                 getColumnsResultSet.getInt(11)
                 != DatabaseMetaData.columnNoNulls;
             try {
-                RelDataType type =
+                return
                     createJdbcType(
                         typeOrdinal,
                         dbSpecTypeName,
@@ -421,7 +422,6 @@ public class FarragoTypeFactoryImpl
                         isNullable,
                         substitute,
                         typeMapping);
-                return (RelDataType) type;
             } catch (Throwable ex) {
                 throw newUnsupportedJdbcType(
                     getColumnsResultSet.getString(3),
@@ -663,7 +663,7 @@ public class FarragoTypeFactoryImpl
         if (type.getSqlTypeName() == SqlTypeName.NULL) {
             return OJSystem.OBJECT;
         } else if (type instanceof AbstractSqlType) {
-            OJClass ojClass = (OJClass) mapTypeToOJClass.get(type);
+            OJClass ojClass = mapTypeToOJClass.get(type);
             if (ojClass != null) {
                 return ojClass;
             }
@@ -861,6 +861,9 @@ public class FarragoTypeFactoryImpl
     /**
      * Generates an expression for a {@link
      * org.eigenbase.sql.SqlIntervalQualifier.TimeUnit}.
+     *
+     * @param timeUnit Time unit
+     * @return expression for time unit
      */
     private Expression lookupTimeUnit(SqlIntervalQualifier.TimeUnit timeUnit)
     {
@@ -1129,8 +1132,7 @@ public class FarragoTypeFactoryImpl
     public Charset getDefaultCharset()
     {
         String charsetName = repos.getDefaultCharsetName();
-        Charset charset = Charset.forName(charsetName);
-        return charset;
+        return Charset.forName(charsetName);
     }
 
     private int [] getMappedDataType(

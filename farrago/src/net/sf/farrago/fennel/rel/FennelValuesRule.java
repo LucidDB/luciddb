@@ -44,9 +44,9 @@ public class FennelValuesRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelValuesRule.
      */
-    public FennelValuesRule()
+    private FennelValuesRule()
     {
         super(
             ValuesRel.class,

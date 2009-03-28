@@ -44,9 +44,9 @@ public class FtrsIndexBuilderRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FtrsIndexBuilderRule.
      */
-    public FtrsIndexBuilderRule()
+    private FtrsIndexBuilderRule()
     {
         super(
             new RelOptRuleOperand(

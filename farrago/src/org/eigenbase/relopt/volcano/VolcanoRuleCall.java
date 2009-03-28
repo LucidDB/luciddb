@@ -175,7 +175,8 @@ public class VolcanoRuleCall
                     if (tracer.isLoggable(Level.FINE)) {
                         tracer.fine(
                             "Rule [" + getRule() + "] not fired because"
-                            + " operand has no subset");
+                            + " operand #" + i + " (" + rel
+                            + ") has no subset");
                     }
                     return;
                 }
@@ -184,7 +185,8 @@ public class VolcanoRuleCall
                     if (tracer.isLoggable(Level.FINE)) {
                         tracer.fine(
                             "Rule [" + getRule() + "] not fired because"
-                            + " operand belongs to obsolete set");
+                            + " operand #" + i + " (" + rel
+                            + ") belongs to obsolete set");
                     }
                     return;
                 }
@@ -195,7 +197,8 @@ public class VolcanoRuleCall
                     if (tracer.isLoggable(Level.FINE)) {
                         tracer.fine(
                             "Rule [" + getRule() + "] not fired because"
-                            + " operand has importance=0");
+                            + " operand #" + i + " (" + rel
+                            + ") has importance=0");
                     }
                     return;
                 }

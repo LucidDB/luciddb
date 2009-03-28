@@ -45,9 +45,9 @@ public class LhxMinusRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LhxMinusRule.
      */
-    public LhxMinusRule()
+    private LhxMinusRule()
     {
         super(
             new RelOptRuleOperand(

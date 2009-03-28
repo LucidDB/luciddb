@@ -90,6 +90,26 @@ public class RelOptUtilTest
                 }),
             RelOptUtil.dumpType(t2));
     }
+
+    /**
+     * Tests the rules for how we name rules.
+     */
+    public void testRuleGuessDescription()
+    {
+        assertEquals("Bar", RelOptRule.guessDescription("com.foo.Bar"));
+        assertEquals("Baz", RelOptRule.guessDescription("com.flatten.Bar$Baz"));
+
+        // yields "1" (which as an integer is an invalid
+        try {
+            Util.discard(RelOptRule.guessDescription("com.foo.Bar$1"));
+            fail("expected exception");
+        } catch (RuntimeException e) {
+            assertEquals(
+                "Derived description of rule class com.foo.Bar$1 is an " +
+                    "integer, not valid. Supply a description manually.",
+                e.getMessage());
+        }
+    }
 }
 
 // End RelOptUtilTest.java

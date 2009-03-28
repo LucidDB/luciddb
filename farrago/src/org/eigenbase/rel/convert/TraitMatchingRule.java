@@ -56,9 +56,9 @@ public class TraitMatchingRule
                 converterRule.getOperand().getMatchedClass(),
                 new RelOptRuleOperand(
                     RelNode.class,
-                    ANY)));
+                    ANY)),
+            "TraitMatchingRule: " + converterRule);
         assert (converterRule.getOperand().getChildOperands() == null);
-        description = "TraitMatchingRule: " + converterRule;
         this.converter = converterRule;
     }
 

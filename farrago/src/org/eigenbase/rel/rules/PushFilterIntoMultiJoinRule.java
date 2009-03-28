@@ -42,9 +42,9 @@ public class PushFilterIntoMultiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushFilterIntoMultiJoinRule.
      */
-    public PushFilterIntoMultiJoinRule()
+    private PushFilterIntoMultiJoinRule()
     {
         super(
             new RelOptRuleOperand(

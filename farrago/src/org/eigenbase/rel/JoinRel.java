@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -52,6 +53,8 @@ public final class JoinRel
     // to control rule firing, but due to the non-local nature of
     // semijoin optimizations, it's pretty much required.
     private final boolean semiJoinDone;
+
+    private List<RelDataTypeField> systemFieldList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -82,7 +85,8 @@ public final class JoinRel
             condition,
             joinType,
             variablesStopped,
-            false);
+            false,
+            Collections.<RelDataTypeField>emptyList());
     }
 
     /**
@@ -98,6 +102,8 @@ public final class JoinRel
      * LHS and used by the RHS and are not available to nodes above this JoinRel
      * in the tree
      * @param semiJoinDone Whether this join has been translated to a semi-join
+     * @param systemFieldList List of system fields that will be prefixed to
+     * output row type; typically empty but must not be null
      *
      * @see #isSemiJoinDone()
      */
@@ -108,7 +114,8 @@ public final class JoinRel
         RexNode condition,
         JoinRelType joinType,
         Set<String> variablesStopped,
-        boolean semiJoinDone)
+        boolean semiJoinDone,
+        List<RelDataTypeField> systemFieldList)
     {
         super(
             cluster,
@@ -118,11 +125,14 @@ public final class JoinRel
             condition,
             joinType,
             variablesStopped);
+        assert systemFieldList != null;
         this.semiJoinDone = semiJoinDone;
+        this.systemFieldList = systemFieldList;
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    @SuppressWarnings({"CloneDoesntCallSuperClone"})
     public JoinRel clone()
     {
         JoinRel clone =
@@ -133,7 +143,8 @@ public final class JoinRel
                 condition.clone(),
                 joinType,
                 new HashSet<String>(variablesStopped),
-                isSemiJoinDone());
+                isSemiJoinDone(),
+                systemFieldList);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -160,10 +171,17 @@ public final class JoinRel
      * Returns whether this JoinRel has already spawned a {@link
      * org.eigenbase.rel.rules.SemiJoinRel} via {@link
      * org.eigenbase.rel.rules.AddRedundantSemiJoinRule}.
+     *
+     * @return whether this join has already spawned a semi join
      */
     public boolean isSemiJoinDone()
     {
         return semiJoinDone;
+    }
+
+    public List<RelDataTypeField> getSystemFieldList()
+    {
+        return systemFieldList;
     }
 }
 

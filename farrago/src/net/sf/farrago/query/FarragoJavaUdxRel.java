@@ -26,6 +26,7 @@ import java.util.List;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.FarragoSessionRuntimeContext;
 
 import openjava.mop.*;
 
@@ -33,6 +34,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -254,8 +256,24 @@ public class FarragoJavaUdxRel
             OJUtil.typeToOJClass(
                 outputRowType,
                 implementor.getTypeFactory());
-
         StatementList executeMethodBody = new StatementList();
+        MemberDeclarationList memberList = new MemberDeclarationList();
+
+        // Hack to workaround the fact that janino 2.5.15 cannot see the
+        // "connection" variable from an inner class nested two deep:
+        //   final FarragoRuntimeContext connection =
+        //       (FarragoRuntimeContext) runtimeContext;
+        if (true)
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.FINAL),
+                TypeName.forOJClass(
+                    OJClass.forClass(FarragoRuntimeContext.class)),
+                OJPreparingStmt.connectionVariable,
+                new CastExpression(
+                    TypeName.forOJClass(
+                        OJClass.forClass(FarragoRuntimeContext.class)),
+                    new Variable("runtimeContext"))));
 
         // Translate relational inputs to ResultSet expressions.
         final Expression [] childExprs = new Expression[inputs.length];
@@ -264,8 +282,8 @@ public class FarragoJavaUdxRel
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
 
             Variable varChild = implementor.newVariable();
-            executeMethodBody.add(
-                new VariableDeclaration(
+            memberList.add(
+                new FieldDeclaration(
                     new ModifierList(ModifierList.FINAL),
                     TypeName.forOJClass(OJClass.forClass(TupleIter.class)),
                     varChild.toString(),
@@ -298,6 +316,15 @@ public class FarragoJavaUdxRel
                 new AllocationExpression(
                     OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
                     resultSetParams);
+
+            Variable varChild2 = implementor.newVariable();
+            memberList.add(
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.FINAL),
+                    OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
+                    varChild2.toString(),
+                    childExprs[i]));
+            childExprs[i] = varChild2;
         }
 
         // Rebind RexInputRefs accordingly.
@@ -315,8 +342,6 @@ public class FarragoJavaUdxRel
 
         RexNode rewrittenCall = getCall().accept(shuttle);
 
-        MemberDeclarationList memberList = new MemberDeclarationList();
-
         // Set up server MOFID context while generating method call
         // so that it will be available to the UDX at runtime in case
         // it needs to call back to the foreign data server.
@@ -329,6 +354,16 @@ public class FarragoJavaUdxRel
             executeMethodBody,
             memberList);
         farragoImplementor.setServerMofId(null);
+
+        // Call QueueIterator's done method to indicate end-of-stream:
+        //     done(null);
+        executeMethodBody.add(
+            new ExpressionStatement(
+                new MethodCall(
+                    (Expression) null,
+                    "done",
+                    new ExpressionList(
+                        Literal.constantNull()))));
 
         MemberDeclaration executeMethodDecl =
             new MethodDeclaration(
@@ -345,7 +380,8 @@ public class FarragoJavaUdxRel
                 implementor,
                 this);
 
-        Expression iteratorExp =
+        // both an Iterator and a TupleIter
+        Expression iterExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
@@ -354,12 +390,7 @@ public class FarragoJavaUdxRel
                     typeLookupCall),
                 memberList);
 
-        Expression tupleIterExp =
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
-                new ExpressionList(
-                    iteratorExp));
-        return tupleIterExp;
+        return iterExp;
     }
 
     /**

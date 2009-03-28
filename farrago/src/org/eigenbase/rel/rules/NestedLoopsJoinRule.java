@@ -62,11 +62,6 @@ public class NestedLoopsJoinRule
     public static final NestedLoopsJoinRule instance =
         new NestedLoopsJoinRule();
 
-    /**
-     * @deprecated use {@link #instance} instead
-     */
-    public static final NestedLoopsJoinRule INSTANCE = instance;
-
     //~ Constructors -----------------------------------------------------------
 
     /**

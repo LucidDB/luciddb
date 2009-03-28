@@ -67,7 +67,7 @@ public class Rex2CalcPlanTest
 
     protected Tester createTester()
     {
-        return new TesterImpl();
+        return new TesterImpl(getDiffRepos());
     }
 
     protected DiffRepository getDiffRepos()
@@ -512,6 +512,16 @@ public class Rex2CalcPlanTest
         extends SqlToRelTestBase.TesterImpl
         implements Tester
     {
+        /**
+         * Creates a TesterImpl.
+         *
+         * @param diffRepos Diff repository
+         */
+        TesterImpl(DiffRepository diffRepos)
+        {
+            super(diffRepos);
+        }
+
         public void check(
             String sql,
             boolean nullSemantics,

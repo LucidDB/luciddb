@@ -47,9 +47,9 @@ public class PullUpAggregateAboveUnionRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PullUpAggregateAboveUnionRule.
      */
-    public PullUpAggregateAboveUnionRule()
+    private PullUpAggregateAboveUnionRule()
     {
         super(
             new RelOptRuleOperand(

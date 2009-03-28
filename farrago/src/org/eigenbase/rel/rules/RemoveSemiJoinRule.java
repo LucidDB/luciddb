@@ -44,9 +44,9 @@ public class RemoveSemiJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a RemoveSemiJoinRule.
      */
-    public RemoveSemiJoinRule()
+    private RemoveSemiJoinRule()
     {
         super(new RelOptRuleOperand(SemiJoinRel.class, ANY));
     }

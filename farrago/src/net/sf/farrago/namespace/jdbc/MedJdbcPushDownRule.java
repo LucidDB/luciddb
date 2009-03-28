@@ -48,12 +48,17 @@ class MedJdbcPushDownRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new MedJdbcPushDownRule object.
+     * Creates a MedJdbcPushDownRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
      */
     public MedJdbcPushDownRule(RelOptRuleOperand operand, String id)
     {
-        super(operand);
-        description = "MedJdbcPushDownRule: " + id;
+        super(
+            operand,
+            "MedJdbcPushDownRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,7 +104,7 @@ class MedJdbcPushDownRule
                     topProj,
                     null,
                     filter.getChild(),
-                    Collections.<SqlOperator>emptySet());
+                    PushProjector.ExprCondition.FALSE);
             ProjectRel newProj = pushProject.convertProject(null);
             if (newProj != null) {
                 topProj = (ProjectRel) newProj.getChild();
@@ -120,7 +125,7 @@ class MedJdbcPushDownRule
                         bottomProj,
                         null,
                         queryRel,
-                        Collections.<SqlOperator>emptySet());
+                        PushProjector.ExprCondition.FALSE);
                 ProjectRel newProj = pushProject.convertProject(null);
                 if (newProj != null) {
                     bottomProj = (ProjectRel) newProj.getChild();

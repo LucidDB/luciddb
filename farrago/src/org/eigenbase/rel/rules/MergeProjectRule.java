@@ -47,27 +47,31 @@ public class MergeProjectRule
     /**
      * if true, always merge projects
      */
-    private boolean force;
+    private final boolean force;
 
     //~ Constructors -----------------------------------------------------------
 
-    public MergeProjectRule(boolean force)
+    /**
+     * Creates a MergeProjectRule.
+     */
+    private MergeProjectRule()
     {
-        this();
-        this.force = force;
-        description = "MergeProjectRule: force mode";
+        this(false);
     }
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a MergeProjectRule, specifying whether to always merge projects.
+     *
+     * @param force Whether to always merge projects
      */
-    public MergeProjectRule()
+    public MergeProjectRule(boolean force)
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand(ProjectRel.class, ANY)));
-        force = false;
+                new RelOptRuleOperand(ProjectRel.class, ANY)),
+            "MergeProjectRule" + (force ? ": force mode" : ""));
+        this.force = force;
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -37,6 +37,10 @@ import org.eigenbase.util.*;
  * <p>The result is usually 'boxed' as a record with one named field for each
  * column; if there is precisely one expression, the result may be 'unboxed',
  * and consist of the raw value type.</p>
+ *
+ * @version $Id$
+ * @author jhyde
+ * @since March, 2004
  */
 public final class ProjectRel
     extends ProjectRelBase
@@ -44,10 +48,9 @@ public final class ProjectRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a ProjectRel.
+     * Creates a ProjectRel with no sort keys.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param fieldNames aliases of the expressions
@@ -75,13 +78,12 @@ public final class ProjectRel
     /**
      * Creates a ProjectRel.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param rowType output row type
      * @param flags values as in {@link ProjectRelBase.Flags}
-     * @param collationList
+     * @param collationList List of sort keys
      */
     public ProjectRel(
         RelOptCluster cluster,

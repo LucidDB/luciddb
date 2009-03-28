@@ -390,6 +390,7 @@ public class LoptMetadataProvider
         // handled by hash join
         RexNode nonEquiCondition =
             RelOptUtil.splitJoinCondition(
+                Collections.<RelDataTypeField>emptyList(),
                 joinRel.getLeft(),
                 joinRel.getRight(),
                 joinRel.getCondition(),

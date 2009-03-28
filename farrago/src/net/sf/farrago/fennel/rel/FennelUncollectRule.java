@@ -44,9 +44,9 @@ public class FennelUncollectRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelUncollectRule.
      */
-    public FennelUncollectRule()
+    private FennelUncollectRule()
     {
         super(
             new RelOptRuleOperand(

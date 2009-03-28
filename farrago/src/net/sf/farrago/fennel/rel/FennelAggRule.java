@@ -43,9 +43,9 @@ public class FennelAggRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelAggRule.
      */
-    public FennelAggRule()
+    private FennelAggRule()
     {
         super(
             new RelOptRuleOperand(

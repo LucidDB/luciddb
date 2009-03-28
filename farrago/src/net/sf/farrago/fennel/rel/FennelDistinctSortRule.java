@@ -22,21 +22,16 @@
 */
 package net.sf.farrago.fennel.rel;
 
-import java.util.*;
-
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
-
-import openjava.ptree.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FennelDistinctSortRule is a rule for implementing DISTINCT via a Fennel sort.
- * A DISTINCT is recognized as an Aggregate with no AggCalls and the same number
+ *
+ * <p>A DISTINCT is recognized as an {@link AggregateRel} with no
+ * {@link org.eigenbase.rel.AggregateCall}s and the same number
  * of outputs as inputs.
  *
  * @author John V. Sichi
@@ -51,9 +46,9 @@ public class FennelDistinctSortRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelDistinctSortRule.
      */
-    public FennelDistinctSortRule()
+    private FennelDistinctSortRule()
     {
         super(
             new RelOptRuleOperand(

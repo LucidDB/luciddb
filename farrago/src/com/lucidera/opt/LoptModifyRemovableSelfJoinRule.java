@@ -106,10 +106,20 @@ public class LoptModifyRemovableSelfJoinRule
 
     //~ Constructors -----------------------------------------------------------
 
-    public LoptModifyRemovableSelfJoinRule(RelOptRuleOperand rule, String id)
+    /**
+     * Creates a LoptModifyRemovableSelfJoinRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
+     */
+    public LoptModifyRemovableSelfJoinRule(
+        RelOptRuleOperand operand,
+        String id)
     {
-        super(rule);
-        description = "LoptModifyRemovableSelfJoinRule: " + id;
+        super(
+            operand,
+            "LoptModifyRemovableSelfJoinRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -181,7 +191,8 @@ public class LoptModifyRemovableSelfJoinRule
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
                 joinRel.getVariablesStopped(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                joinRel.getSystemFieldList());
         call.transformTo(newSelfJoin);
     }
 

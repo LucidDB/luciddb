@@ -54,9 +54,9 @@ public class LoptRemoveSelfJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LoptRemoveSelfJoinRule.
      */
-    public LoptRemoveSelfJoinRule()
+    private LoptRemoveSelfJoinRule()
     {
         super(
             new RelOptRuleOperand(

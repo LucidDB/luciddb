@@ -41,9 +41,9 @@ public class MergeFilterRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance instead}
+     * Creates a MergeFilterRule.
      */
-    public MergeFilterRule()
+    private MergeFilterRule()
     {
         super(
             new RelOptRuleOperand(

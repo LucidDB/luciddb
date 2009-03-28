@@ -43,9 +43,9 @@ public class PushFilterPastProjectRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushFilterPastProjectRule.
      */
-    public PushFilterPastProjectRule()
+    private PushFilterPastProjectRule()
     {
         super(
             new RelOptRuleOperand(

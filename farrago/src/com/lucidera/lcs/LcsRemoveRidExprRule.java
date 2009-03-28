@@ -48,16 +48,14 @@ public class LcsRemoveRidExprRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LcsRemoveRidExprRule.
      */
-    public LcsRemoveRidExprRule()
+    private LcsRemoveRidExprRule()
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(EmptyRel.class, RelOptRule.ANY)
-                }));
+                new RelOptRuleOperand(EmptyRel.class, RelOptRule.ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

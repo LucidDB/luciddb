@@ -155,6 +155,12 @@ public class VolcanoPlanner
      */
     RelOptListener listener;
 
+    /**
+     * Dump of the root relational expression, as it was before any rules were
+     * applied. For debugging.
+     */
+    private String originalRootString;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -223,6 +229,7 @@ public class VolcanoPlanner
     public void setRoot(RelNode rel)
     {
         this.root = registerImpl(rel, null);
+        this.originalRootString = RelOptUtil.toString(root);
 
         // Making a node the root changes its importance.
         this.ruleQueue.recompute(this.root);
@@ -234,10 +241,13 @@ public class VolcanoPlanner
     }
 
     /**
-     * Find an expression's equivalence set. If the expression is not
-     * registered, return null.
+     * Finds an expression's equivalence set. If the expression is not
+     * registered, returns null.
      *
+     * @param rel Relational expression
      * @pre rel != null
+     * @return Equivalence set that expression belongs to, or null if it is not
+     * registered
      */
     public RelSet getSet(RelNode rel)
     {
@@ -680,9 +690,7 @@ SUBSET_LOOP:
                             "rel [" + rel.getDescription()
                             + "] is in wrong subset [" + subset2 + "]");
                     }
-                    final RelNode [] inputRels = rel.getInputs();
-                    for (int i = 0; i < inputRels.length; i++) {
-                        RelNode inputRel = inputRels[i];
+                    for (RelNode inputRel : rel.getInputs()) {
                         final RelSubset inputSubset = getSubset(inputRel);
                         if (!inputSubset.parents.contains(rel)) {
                             throw new AssertionError(
@@ -782,7 +790,7 @@ SUBSET_LOOP:
         RelTraitSet traits)
     {
         if ((rel instanceof RelSubset)
-            && (((RelSubset) rel).getTraits().equals(traits)))
+            && (rel.getTraits().equals(traits)))
         {
             return (RelSubset) rel;
         }
@@ -865,22 +873,20 @@ SUBSET_LOOP:
         RelSet set,
         RelNode rel)
     {
-        if (!set.abstractConverters.isEmpty()) {
-            int i = 0;
-            while (i < set.abstractConverters.size()) {
-                AbstractConverter converter = set.abstractConverters.get(i);
-                RelNode converted =
-                    changeTraitsUsingConverters(
-                        rel,
-                        converter.getTraits());
-                if (converted == null) {
-                    i++; // couldn't convert this; move on to the next
-                } else {
-                    if (!isRegistered(converted)) {
-                        registerImpl(converted, set);
-                    }
-                    set.abstractConverters.remove(converter); // success
+        int i = 0;
+        while (i < set.abstractConverters.size()) {
+            AbstractConverter converter = set.abstractConverters.get(i);
+            RelNode converted =
+                changeTraitsUsingConverters(
+                    rel,
+                    converter.getTraits());
+            if (converted == null) {
+                i++; // couldn't convert this; move on to the next
+            } else {
+                if (!isRegistered(converted)) {
+                    registerImpl(converted, set);
                 }
+                set.abstractConverters.remove(converter); // success
             }
         }
     }
@@ -902,6 +908,8 @@ SUBSET_LOOP:
     void dump(PrintWriter pw)
     {
         pw.println("Root: " + root.getDescription());
+        pw.println("Original rel:");
+        pw.println(originalRootString);
         pw.println("Sets:");
         RelSet [] sets = allSets.toArray(new RelSet[allSets.size()]);
         Arrays.sort(
@@ -914,8 +922,7 @@ SUBSET_LOOP:
                     return o1.id - o2.id;
                 }
             });
-        for (int i = 0; i < sets.length; i++) {
-            RelSet set = sets[i];
+        for (RelSet set : sets) {
             pw.println(
                 "Set#" + set.id
                 + ", type: " + set.subsets.get(0).getRowType());
@@ -935,9 +942,7 @@ SUBSET_LOOP:
                 for (RelNode rel : subset.rels) {
                     // "\t\trel#34:JavaProject(rel#32:JavaFilter(...), ...)"
                     pw.print("\t\t" + rel.getDescription());
-                    RelNode [] inputs = rel.getInputs();
-                    for (int m = 0; m < inputs.length; m++) {
-                        RelNode input = inputs[m];
+                    for (RelNode input : rel.getInputs()) {
                         RelSubset inputSubset =
                             getSubset(
                                 input,
@@ -951,6 +956,10 @@ SUBSET_LOOP:
                             assert inputSet.rels.contains(input);
                             assert inputSet.subsets.contains(inputSubset);
                         }
+                    }
+                    Double importance = relImportances.get(rel);
+                    if (importance != null) {
+                        pw.print(", importance=" + importance);
                     }
                     pw.print(", rowcount=" + RelMetadataQuery.getRowCount(rel));
                     pw.println(", cumulative cost=" + getCost(rel));
@@ -995,10 +1004,8 @@ SUBSET_LOOP:
                 ruleQueue.recompute(equivRelSubset, true);
 
                 // Remove backlinks from children.
-                final RelNode [] inputs = rel.getInputs();
-                for (int i = 0; i < inputs.length; i++) {
-                    RelSubset input = (RelSubset) inputs[i];
-                    input.parents.remove(rel);
+                for (RelNode input : rel.getInputs()) {
+                    ((RelSubset) input).parents.remove(rel);
                 }
 
                 // Remove rel from its subset. (This may leave the subset
@@ -1326,9 +1333,8 @@ SUBSET_LOOP:
                 subset,
                 1.0); // todo: remove
         }
-        RelNode [] inputs = rel.getInputs();
-        for (int i = 0; i < inputs.length; i++) {
-            RelSubset childSubset = (RelSubset) inputs[i];
+        for (RelNode input : rel.getInputs()) {
+            RelSubset childSubset = (RelSubset) input;
             childSubset.parents.add(rel);
 
             // Child subset is more important now a new parent uses it.

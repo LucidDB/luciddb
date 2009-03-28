@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -47,9 +48,9 @@ public class LhxJoinRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a LhxJoinRule.
      */
-    public LhxJoinRule()
+    private LhxJoinRule()
     {
         super(new RelOptRuleOperand(JoinRel.class, ANY));
     }
@@ -81,6 +82,7 @@ public class LhxJoinRule
 
         nonEquiCondition =
             RelOptUtil.splitJoinCondition(
+                Collections.<RelDataTypeField>emptyList(),
                 leftRel,
                 rightRel,
                 joinRel.getCondition(),

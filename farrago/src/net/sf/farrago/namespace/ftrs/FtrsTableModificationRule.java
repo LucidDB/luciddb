@@ -26,7 +26,6 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -45,9 +44,9 @@ class FtrsTableModificationRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FtrsTableModificationRule.
      */
-    public FtrsTableModificationRule()
+    private FtrsTableModificationRule()
     {
         super(
             new RelOptRuleOperand(

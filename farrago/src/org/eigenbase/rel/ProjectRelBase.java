@@ -35,6 +35,10 @@ import org.eigenbase.sql.*;
 /**
  * <code>ProjectRelBase</code> is an abstract base class for implementations of
  * {@link ProjectRel}.
+ *
+ * @version $Id$
+ * @author jhyde
+ * @since March, 2004
  */
 public abstract class ProjectRelBase
     extends SingleRel
@@ -55,13 +59,13 @@ public abstract class ProjectRelBase
     /**
      * Creates a Project.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param traits traits of this rel
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param rowType output row type
      * @param flags values as in {@link Flags}
+     * @param collationList List of sort keys
      */
     protected ProjectRelBase(
         RelOptCluster cluster,
@@ -234,7 +238,13 @@ public abstract class ProjectRelBase
         private final RelNode child;
         int failCount = 0;
 
-        public Checker(boolean fail, RelNode child)
+        /**
+         * Creates a Checker.
+         *
+         * @param fail Whether to throw if checker finds an error
+         * @param child Relational expression which is input to program
+         */
+        Checker(boolean fail, RelNode child)
         {
             super(true);
             this.fail = fail;

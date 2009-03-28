@@ -44,9 +44,9 @@ public class UnionEliminatorRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a UnionEliminatorRule.
      */
-    public UnionEliminatorRule()
+    private UnionEliminatorRule()
     {
         super(
             new RelOptRuleOperand(

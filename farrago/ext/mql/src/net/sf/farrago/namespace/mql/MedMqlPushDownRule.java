@@ -48,12 +48,11 @@ import org.eigenbase.util.*;
 class MedMqlPushDownRule extends RelOptRule
 {
     /**
-     * Creates a new MedMqlPushDownRule object.
+     * Creates a MedMqlPushDownRule.
      */
-    public MedMqlPushDownRule(RelOptRuleOperand rule, String id)
+    public MedMqlPushDownRule(RelOptRuleOperand operand, String id)
     {
-        super(rule);
-        description = "MedMqlPushDownRule: " + id;
+        super(operand, "MedMqlPushDownRule: " + id);
     }
 
     // implement RelOptRule
@@ -104,7 +103,8 @@ class MedMqlPushDownRule extends RelOptRule
             origTopProj = topProj;
             // handle any expressions in the projection
             PushProjector pushProject = new PushProjector(
-                topProj, null, filter.getChild(), Collections.EMPTY_SET);
+                topProj, null, filter.getChild(),
+                PushProjector.ExprCondition.FALSE);
             ProjectRel newProj = pushProject.convertProject(null);
             if (newProj != null) {
                 topProj = (ProjectRel) newProj.getChild();
@@ -122,7 +122,8 @@ class MedMqlPushDownRule extends RelOptRule
             origBottomProj = bottomProj;
             if (projectOnly) {
                 PushProjector pushProject = new PushProjector(
-                    bottomProj, null, tableRel, Collections.EMPTY_SET);
+                    bottomProj, null, tableRel,
+                    PushProjector.ExprCondition.FALSE);
                 ProjectRel newProj = pushProject.convertProject(null);
                 if (newProj != null) {
                     bottomProj = (ProjectRel) newProj.getChild();

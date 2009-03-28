@@ -49,9 +49,9 @@ public class PushSemiJoinPastProjectRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushSemiJoinPastProjectRule.
      */
-    public PushSemiJoinPastProjectRule()
+    private PushSemiJoinPastProjectRule()
     {
         super(
             new RelOptRuleOperand(

@@ -39,9 +39,9 @@ public class RemoveDistinctRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a RemoveDistinctRule.
      */
-    public RemoveDistinctRule()
+    private RemoveDistinctRule()
     {
         // REVIEW jvs 14-Mar-2006: We have to explicitly mention the child here
         // to make sure the rule re-fires after the child changes (e.g. via

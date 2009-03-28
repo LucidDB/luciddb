@@ -44,9 +44,9 @@ public class PushFilterPastSetOpRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a PushFilterPastSetOpRule.
      */
-    public PushFilterPastSetOpRule()
+    private PushFilterPastSetOpRule()
     {
         super(
             new RelOptRuleOperand(

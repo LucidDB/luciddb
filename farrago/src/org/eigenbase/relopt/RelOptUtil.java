@@ -278,10 +278,9 @@ public abstract class RelOptUtil
      */
     public static List<String> getFieldNameList(RelDataType type)
     {
-        RelDataTypeField [] fields = type.getFields();
-        List<String> nameList = new ArrayList<String>();
-        for (int i = 0; i < fields.length; ++i) {
-            nameList.add(fields[i].getName());
+        List<String> nameList = new ArrayList<String>(type.getFields().length);
+        for (RelDataTypeField field : type.getFields()) {
+            nameList.add(field.getName());
         }
         return nameList;
     }
@@ -932,8 +931,54 @@ public abstract class RelOptUtil
      * key lists returned
      *
      * @return What's left
+     *
+     * @deprecated LucidEra, please remove!
      */
     public static RexNode splitJoinCondition(
+        RelNode leftRel,
+        RelNode rightRel,
+        RexNode condition,
+        List<RexNode> leftJoinKeys,
+        List<RexNode> rightJoinKeys,
+        List<Integer> filterNulls,
+        List<SqlOperator> rangeOp)
+    {
+        return splitJoinCondition(
+            Collections.<RelDataTypeField>emptyList(),
+            leftRel,
+            rightRel,
+            condition,
+            leftJoinKeys,
+            rightJoinKeys,
+            filterNulls,
+            rangeOp);
+    }
+
+    /**
+     * Splits out the equi-join (and optionally, a single non-equi) components
+     * of a join condition, and returns what's left. Projection might be
+     * required by the caller to provide join keys that are not direct field
+     * references.
+     *
+     * @param sysFieldList list of system fields
+     * @param leftRel left join input
+     * @param rightRel right join input
+     * @param condition join condition
+     * @param leftJoinKeys The join keys from the left input which are equi-join
+     * keys
+     * @param rightJoinKeys The join keys from the right input which are
+     * equi-join keys
+     * @param filterNulls The join key positions for which null values will not
+     * match. null values only match for the "is not distinct from" condition.
+     * @param rangeOp if null, only locate equi-joins; otherwise, locate a
+     * single non-equi join predicate and return its operator in this list;
+     * join keys associated with the non-equi join predicate are at the end
+     * of the key lists returned
+     *
+     * @return What's left
+     */
+    public static RexNode splitJoinCondition(
+        List<RelDataTypeField> sysFieldList,
         RelNode leftRel,
         RelNode rightRel,
         RexNode condition,
@@ -945,6 +990,7 @@ public abstract class RelOptUtil
         List<RexNode> nonEquiList = new ArrayList<RexNode>();
 
         splitJoinCondition(
+            sysFieldList,
             leftRel,
             rightRel,
             condition,
@@ -1024,6 +1070,7 @@ public abstract class RelOptUtil
     }
 
     private static void splitJoinCondition(
+        List<RelDataTypeField> sysFieldList,
         RelNode leftRel,
         RelNode rightRel,
         RexNode condition,
@@ -1033,22 +1080,28 @@ public abstract class RelOptUtil
         List<SqlOperator> rangeOp,
         List<RexNode> nonEquiList)
     {
-        int leftFieldCount = leftRel.getRowType().getFieldCount();
-        int rightFieldCount = rightRel.getRowType().getFieldCount();
-        int totalFieldCount = leftFieldCount + rightFieldCount;
+        final int sysFieldCount = sysFieldList.size();
+        final int leftFieldCount = leftRel.getRowType().getFieldCount();
+        final int rightFieldCount = rightRel.getRowType().getFieldCount();
+        final int firstLeftField = sysFieldCount;
+        final int firstRightField = sysFieldCount + leftFieldCount;
+        final int totalFieldCount = firstRightField + rightFieldCount;
 
-        RelDataTypeField [] rightFields = rightRel.getRowType().getFields();
+        final RelDataTypeField [] leftFields =
+            leftRel.getRowType().getFields();
+        final RelDataTypeField [] rightFields =
+            rightRel.getRowType().getFields();
 
         RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
         RelDataTypeFactory typeFactory = leftRel.getCluster().getTypeFactory();
 
         // adjustment array
         int [] adjustments = new int[totalFieldCount];
-        for (int i = 0; i < leftFieldCount; i++) {
-            adjustments[i] = 0;
+        for (int i = firstLeftField; i < firstRightField; i++) {
+            adjustments[i] = -firstLeftField;
         }
-        for (int i = leftFieldCount; i < totalFieldCount; i++) {
-            adjustments[i] = -leftFieldCount;
+        for (int i = firstRightField; i < totalFieldCount; i++) {
+            adjustments[i] = -firstRightField;
         }
 
         if (condition instanceof RexCall) {
@@ -1056,6 +1109,7 @@ public abstract class RelOptUtil
             if (call.getOperator() == SqlStdOperatorTable.andOperator) {
                 for (RexNode operand : call.getOperands()) {
                     splitJoinCondition(
+                        sysFieldList,
                         leftRel,
                         rightRel,
                         operand,
@@ -1102,14 +1156,14 @@ public abstract class RelOptUtil
                 op0.accept(inputFinder0);
                 op1.accept(inputFinder1);
 
-                if ((projRefs0.nextSetBit(leftFieldCount) < 0)
-                    && (projRefs1.nextSetBit(0) >= leftFieldCount))
+                if ((projRefs0.nextSetBit(firstRightField) < 0)
+                    && (projRefs1.nextSetBit(firstLeftField) >= firstRightField))
                 {
                     leftKey = op0;
                     rightKey = op1;
                 } else if (
-                    (projRefs1.nextSetBit(leftFieldCount) < 0)
-                    && (projRefs0.nextSetBit(0) >= leftFieldCount))
+                    (projRefs1.nextSetBit(firstRightField) < 0)
+                    && (projRefs0.nextSetBit(firstLeftField) >= firstRightField))
                 {
                     leftKey = op1;
                     rightKey = op0;
@@ -1126,6 +1180,16 @@ public abstract class RelOptUtil
                                 rightFields,
                                 adjustments));
 
+                    // left key only needs to be adjusted if there are system
+                    // fields, but do it for uniformity
+                    leftKey =
+                        leftKey.accept(
+                            new RelOptUtil.RexInputConverter(
+                                rexBuilder,
+                                leftFields,
+                                leftFields,
+                                adjustments));
+
                     RelDataType leftKeyType = leftKey.getType();
                     RelDataType rightKeyType = rightKey.getType();
 
@@ -1136,6 +1200,13 @@ public abstract class RelOptUtil
                                 new RelDataType[] {
                                     leftKeyType, rightKeyType
                                 });
+
+                        if (targetKeyType == null) {
+                            throw Util.newInternal(
+                                "Cannot find common type for join keys "
+                                + leftKey + " (type " + leftKeyType + ") and "
+                                + rightKey + " (type " + rightKeyType + ")");
+                        }
 
                         if (leftKeyType != targetKeyType) {
                             leftKey =
@@ -1167,13 +1238,19 @@ public abstract class RelOptUtil
                 leftKey = null;
                 rightKey = null;
 
-                if (projRefs.nextSetBit(leftFieldCount) < 0) {
-                    leftKey = condition;
+                if (projRefs.nextSetBit(firstRightField) < 0) {
+                    leftKey = condition.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder,
+                            leftFields,
+                            leftFields,
+                            adjustments));
+
                     rightKey = rexBuilder.makeLiteral(true);
 
                     // effectively performing an equality comparison
                     operator = SqlStdOperatorTable.equalsOperator;
-                } else if (projRefs.nextSetBit(0) >= leftFieldCount) {
+                } else if (projRefs.nextSetBit(firstLeftField) >= firstRightField) {
                     leftKey = rexBuilder.makeLiteral(true);
 
                     // replace right Key input ref

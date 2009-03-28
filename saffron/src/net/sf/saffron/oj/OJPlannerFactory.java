@@ -200,7 +200,7 @@ public class OJPlannerFactory
     public static void registerIterRels(VolcanoPlanner planner)
     {
         planner.addRule(new IterRules.UnionToIteratorRule());
-        planner.addRule(new IterRules.OneRowToIteratorRule());
+        planner.addRule(IterRules.OneRowToIteratorRule.instance);
     }
 
     /**

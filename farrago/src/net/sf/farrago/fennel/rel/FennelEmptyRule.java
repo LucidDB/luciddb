@@ -49,11 +49,6 @@ public class FennelEmptyRule
      */
     public static final FennelEmptyRule instance = new FennelEmptyRule();
 
-    /**
-     * @deprecated use {@link #instance} instead
-     */
-    public static final FennelEmptyRule INSTANCE = instance;
-
     //~ Constructors -----------------------------------------------------------
 
     /**

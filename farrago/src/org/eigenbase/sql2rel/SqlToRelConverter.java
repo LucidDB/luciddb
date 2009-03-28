@@ -69,7 +69,6 @@ public class SqlToRelConverter
 
     protected final SqlValidator validator;
     protected final RexBuilder rexBuilder;
-    private final RelOptPlanner planner;
     private final RelOptConnection connection;
     protected final RelOptSchema schema;
     protected final RelOptCluster cluster;
@@ -157,13 +156,13 @@ public class SqlToRelConverter
             : validator.getOperatorTable();
         this.validator = validator;
         this.schema = schema;
-        this.planner = planner;
         this.connection = connection;
         this.defaultValueFactory = new NullDefaultValueFactory();
         this.subqueryConverter = new NoOpSubqueryConverter();
         this.rexBuilder = rexBuilder;
         this.typeFactory = rexBuilder.getTypeFactory();
-        this.cluster = createCluster(env);
+        RelOptQuery query = new RelOptQuery(planner);
+        this.cluster = query.createCluster(env, typeFactory, rexBuilder);
         this.shouldConvertTableAccess = true;
         this.exprConverter =
             new SqlNodeToRexConverterImpl(new StandardConvertletTable());
@@ -453,7 +452,7 @@ public class SqlToRelConverter
         convertSelectImpl(bb, select);
         mapScopeToLux.put(
             bb.scope,
-            new LookupContext(bb.root));
+            new LookupContext(bb.root, bb.systemFieldList.size()));
         return bb.root;
     }
 
@@ -1977,14 +1976,12 @@ public class SqlToRelConverter
             }
         }
 
-        final Set<String> variablesStopped = Collections.emptySet();
-        return new JoinRel(
-            cluster,
+        return createJoin(
             leftRel,
             rightRel,
             joinCond,
             joinType,
-            variablesStopped);
+            Collections.<String>emptySet());
     }
 
     /**
@@ -2034,6 +2031,16 @@ public class SqlToRelConverter
             } while (parentScope != null);
         }
         return true;
+    }
+
+    /**
+     * Returns a list of fields to be prefixed to each relational expression.
+     *
+     * @return List of system fields
+     */
+    protected List<RelDataTypeField> getSystemFields()
+    {
+        return Collections.emptyList();
     }
 
     private RexNode convertJoinCondition(
@@ -2570,7 +2577,6 @@ public class SqlToRelConverter
      */
     protected RelNode convertQueryRecursive(SqlNode query, boolean top)
     {
-        final int kind = query.getKind().getOrdinal();
         if (query instanceof SqlSelect) {
             return convertSelect((SqlSelect) query);
         } else if (query.isA(SqlKind.Insert)) {
@@ -2587,50 +2593,63 @@ public class SqlToRelConverter
             return convertMerge(call);
         } else if (query instanceof SqlCall) {
             final SqlCall call = (SqlCall) query;
-            final SqlNode [] operands = call.getOperands();
-            final RelNode left = convertQueryRecursive(operands[0], false);
-            final RelNode right = convertQueryRecursive(operands[1], false);
-            boolean all = false;
-            if (call.getOperator() instanceof SqlSetOperator) {
-                all = ((SqlSetOperator) (call.getOperator())).isAll();
-            }
-            switch (kind) {
-            case SqlKind.UnionORDINAL:
-                return new UnionRel(
+            return convertSetOp(call);
+        } else {
+            throw Util.newInternal("not a query: " + query);
+        }
+    }
+
+    /**
+     * Converts a set operation (UNION, INTERSECT, MINUS) into relational
+     * expressions.
+     *
+     * @param call Call to set operator
+     * @return Relational expression
+     */
+    protected RelNode convertSetOp(SqlCall call)
+    {
+        final SqlNode[] operands = call.getOperands();
+        final RelNode left = convertQueryRecursive(operands[0], false);
+        final RelNode right = convertQueryRecursive(operands[1], false);
+        boolean all = false;
+        if (call.getOperator() instanceof SqlSetOperator) {
+            all = ((SqlSetOperator) (call.getOperator())).isAll();
+        }
+        final int kind = call.getKind().getOrdinal();
+        switch (kind) {
+        case SqlKind.UnionORDINAL:
+            return new UnionRel(
+                cluster,
+                new RelNode[] { left, right },
+                all);
+        case SqlKind.IntersectORDINAL:
+
+            // TODO:  all
+            if (!all) {
+                return new IntersectRel(
                     cluster,
                     new RelNode[] { left, right },
                     all);
-            case SqlKind.IntersectORDINAL:
-
-                // TODO:  all
-                if (!all) {
-                    return new IntersectRel(
-                        cluster,
-                        new RelNode[] { left, right },
-                        all);
-                } else {
-                    throw Util.newInternal(
-                        "set operator INTERSECT ALL not suported");
-                }
-            case SqlKind.ExceptORDINAL:
-
-                // TODO:  all
-                if (!all) {
-                    return new MinusRel(
-                        cluster,
-                        new RelNode[] { left, right },
-                        all);
-                } else {
-                    throw Util.newInternal(
-                        "set operator EXCEPT ALL not suported");
-                }
-            default:
+            } else {
                 throw Util.newInternal(
-                    "not a set operator "
-                    + SqlKind.enumeration.getName(kind));
+                    "set operator INTERSECT ALL not suported");
             }
-        } else {
-            throw Util.newInternal("not a query: " + query);
+        case SqlKind.ExceptORDINAL:
+
+            // TODO:  all
+            if (!all) {
+                return new MinusRel(
+                    cluster,
+                    new RelNode[] { left, right },
+                    all);
+            } else {
+                throw Util.newInternal(
+                    "set operator EXCEPT ALL not suported");
+            }
+        default:
+            throw Util.newInternal(
+                "not a set operator "
+                + SqlKind.enumeration.getName(kind));
         }
     }
 
@@ -2954,6 +2973,8 @@ public class SqlToRelConverter
         }
 
         if (null != correlationName) {
+            // REVIEW: make mapCorrelateVariableToRexNode map to RexFieldAccess
+            assert e instanceof RexFieldAccess;
             final RexNode prev =
                 bb.mapCorrelateVariableToRexNode.put(correlationName, e);
             assert prev == null;
@@ -3128,17 +3149,44 @@ public class SqlToRelConverter
         RelNode ret = (RelNode) joinList.get(0);
         for (int i = 1; i < joinList.size(); i++) {
             RelNode relNode = (RelNode) joinList.get(i);
-            final Set<String> variablesStopped = Collections.emptySet();
             ret =
-                new JoinRel(
-                    cluster,
+                createJoin(
                     ret,
                     relNode,
                     rexBuilder.makeLiteral(true),
                     JoinRelType.INNER,
-                    variablesStopped);
+                    Collections.<String>emptySet());
         }
         return ret;
+    }
+
+    /**
+     * Factory method that creates a join.
+     * A subclass can override to use a different kind of join.
+     *
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
+     * @return A relational expression representing a join
+     */
+    protected RelNode createJoin(
+        RelNode left,
+        RelNode right,
+        RexNode condition,
+        JoinRelType joinType,
+        Set<String> variablesStopped)
+    {
+        return new JoinRel(
+            cluster,
+            left,
+            right,
+            condition,
+            joinType,
+            variablesStopped);
     }
 
     private void convertSelectList(
@@ -3316,18 +3364,6 @@ public class SqlToRelConverter
         // ?
     }
 
-    RelOptCluster createCluster(Environment env)
-    {
-        RelOptQuery query;
-        if (cluster == null) {
-            query = new RelOptQuery(planner);
-        } else {
-            query = cluster.getQuery();
-        }
-        final RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        return query.createCluster(env, typeFactory, rexBuilder);
-    }
-
     public RexNode convertField(
         RelDataType inputRowType,
         RelDataTypeField field)
@@ -3482,6 +3518,9 @@ public class SqlToRelConverter
 
         private final List<SqlMonotonicity> columnMonotonicities =
             new ArrayList<SqlMonotonicity>();
+
+        private final List<RelDataTypeField> systemFieldList =
+            new ArrayList<RelDataTypeField>();
 
         /**
          * Creates a Blackboard.
@@ -3653,12 +3692,24 @@ public class SqlToRelConverter
          */
         public void setRoot(RelNode root, boolean leaf)
         {
-            this.root = root;
-            this.inputs = new RelNode[] { root };
+            setRoot(new RelNode[] { root }, root, root instanceof JoinRel);
             if (leaf) {
                 leaves.add(root);
             }
             this.columnMonotonicities.clear();
+        }
+
+        private void setRoot(
+            RelNode[] inputs,
+            RelNode root,
+            boolean hasSystemFields)
+        {
+            this.inputs = inputs;
+            this.root = root;
+            this.systemFieldList.clear();
+            if (hasSystemFields) {
+                this.systemFieldList.addAll(getSystemFields());
+            }
         }
 
         /**
@@ -3676,8 +3727,7 @@ public class SqlToRelConverter
 
         void setRoot(RelNode [] inputs)
         {
-            this.inputs = inputs;
-            this.root = null;
+            setRoot(inputs, null, false);
         }
 
         /**
@@ -3713,13 +3763,11 @@ public class SqlToRelConverter
             // preserved.
             SqlValidatorScope ancestorScope = ancestorScopes[0];
             boolean isParent = ancestorScope != scope;
-            int offset = offsets[0];
-            RexNode result;
             if ((inputs != null) && !isParent) {
+                int offset = offsets[0];
                 final LookupContext rels =
-                    isParent ? mapScopeToLux.get(ancestorScope)
-                    : new LookupContext(this, inputs);
-                result = lookup(offset, rels, isParent, null);
+                    new LookupContext(this, inputs, systemFieldList.size());
+                return lookup(offset, rels);
             } else {
                 // We're referencing a relational expression which has not been
                 // converted yet. This occurs when from items are correlated,
@@ -3730,45 +3778,23 @@ public class SqlToRelConverter
                 String correlName = createCorrel();
                 mapCorrelToDeferred.put(correlName, lookup);
                 final RelDataType rowType = foundNs.getRowType();
-                result = rexBuilder.makeCorrel(rowType, correlName);
+                return rexBuilder.makeCorrel(rowType, correlName);
             }
-            return result;
         }
 
         /**
-         * Creates an expression with which to reference <code>
-         * expression</code>, whose offset in its from-list is <code>
-         * offset</code>.
+         * Creates an expression with which to reference the expression whose
+         * offset in its from-list is {@code offset}.
          */
         RexNode lookup(
             int offset,
-            LookupContext lookupContext,
-            boolean isParent,
-            String varName)
+            LookupContext lookupContext)
         {
-            int [] fieldOffsets = { 0 };
-            RelNode rel = lookupContext.findRel(offset, fieldOffsets);
-            if (isParent) {
-                /*
-                 *  REVIEW rchen 2006-08-28
-                 *  The only caller of this method has isParent == false
-                 *  Is this section required at all?
-                 */
-                if (varName == null) {
-                    varName = rel.getOrCreateCorrelVariable();
-                } else {
-                    // we are resolving a forward reference
-                    rel.registerCorrelVariable(varName);
-                }
-                return rexBuilder.makeCorrel(
-                    rel.getRowType(),
-                    varName);
-            } else {
-                return rexBuilder.makeRangeReference(
-                    rel.getRowType(),
-                    fieldOffsets[0],
-                    false);
-            }
+            Pair<RelNode, Integer> pair = lookupContext.findRel(offset);
+            return rexBuilder.makeRangeReference(
+                pair.left.getRowType(),
+                pair.right,
+                false);
         }
 
         RelDataTypeField getRootField(RexInputRef inputRef)
@@ -3790,16 +3816,25 @@ public class SqlToRelConverter
         }
 
         public void flatten(
-            RelNode [] rels,
-            List<RelNode> list)
+            RelNode[] rels,
+            int systemFieldCount,
+            int[] start,
+            List<Pair<RelNode, Integer>> relOffsetList)
         {
             for (RelNode rel : rels) {
                 if (leaves.contains(rel)) {
-                    list.add(rel);
+                    relOffsetList.add(
+                        new Pair<RelNode, Integer>(rel, start[0]));
+                    start[0] += rel.getRowType().getFieldCount();
                 } else {
+                    if (rel instanceof JoinRel) {
+                        start[0] += systemFieldCount;
+                    }
                     flatten(
                         rel.getInputs(),
-                        list);
+                        systemFieldCount,
+                        start,
+                        relOffsetList);
                 }
             }
         }
@@ -4500,33 +4535,55 @@ public class SqlToRelConverter
         }
     }
 
+    /**
+     * Context to find a relational expression to a field offset.
+     */
     private static class LookupContext
     {
-        private final List<RelNode> relList = new ArrayList<RelNode>();
+        private final List<Pair<RelNode, Integer>> relOffsetList;
 
-        LookupContext(RelNode rel)
+        /**
+         * Creates a LookupContext with a single input relational expression.
+         *
+         * @param rel Relational expression
+         * @param systemFieldCount Number of system fields
+         */
+        LookupContext(RelNode rel, int systemFieldCount)
         {
-            relList.add(rel);
+            relOffsetList =
+                Collections.singletonList(
+                    new Pair<RelNode, Integer>(rel, systemFieldCount));
         }
 
-        LookupContext(Blackboard bb, RelNode [] rels)
+        /**
+         * Creates a LookupContext with multiple input relational expressions.
+         *
+         * @param bb Context for translating this subquery
+         * @param rels Relational expressions
+         * @param systemFieldCount Number of system fields
+         */
+        LookupContext(Blackboard bb, RelNode[] rels, int systemFieldCount)
         {
-            bb.flatten(rels, relList);
+            relOffsetList = new ArrayList<Pair<RelNode, Integer>>();
+            int[] start = {0};
+            bb.flatten(rels, systemFieldCount, start, relOffsetList);
         }
 
-        RelNode findRel(int offset, int [] fieldOffsets)
+        /**
+         * Returns the relational expression with a given offset, and the
+         * ordinal in the combined row of its first field.
+         *
+         * <p>For example, in {@code Emp JOIN Dept}, findRel(1) returns the
+         * relational expression for {@code Dept} and offset 6 (because
+         * {@code Emp} has 6 fields, therefore the first field of {@code Dept}
+         * is field 6.
+         *
+         * @param offset Offset of relational expression in FROM clause
+         * @return Relational expression and the ordinal of its first field
+         */
+        Pair<RelNode, Integer> findRel(int offset)
         {
-            if ((offset < 0) || (offset >= relList.size())) {
-                throw Util.newInternal("could not find input " + offset);
-            }
-            int fieldOffset = 0;
-            for (int i = 0; i < offset; i++) {
-                final RelNode rel = relList.get(i);
-                fieldOffset += rel.getRowType().getFieldCount();
-            }
-            RelNode rel = relList.get(offset);
-            fieldOffsets[0] = fieldOffset;
-            return rel;
+            return relOffsetList.get(offset);
         }
     }
 

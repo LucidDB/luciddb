@@ -42,9 +42,9 @@ public class FennelInsertRenameRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelInsertRenameRule.
      */
-    public FennelInsertRenameRule()
+    private FennelInsertRenameRule()
     {
         super(
             new RelOptRuleOperand(

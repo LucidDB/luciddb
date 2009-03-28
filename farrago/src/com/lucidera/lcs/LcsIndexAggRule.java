@@ -67,14 +67,17 @@ public class LcsIndexAggRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsIndexOnlyAccessRule object.
+     * Creates an LcsIndexAggRule.
+     *
+     * @param operand Root operand, must not be null
+     *
+     * @param id Description of rule
      */
     public LcsIndexAggRule(
         RelOptRuleOperand operand,
         String id)
     {
-        super(operand);
-        description = "LcsIndexAggRule: " + id;
+        super(operand, "LcsIndexAggRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -46,9 +46,9 @@ public class FennelCorrelatorRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FennelCorrelatorRule.
      */
-    public FennelCorrelatorRule()
+    private FennelCorrelatorRule()
     {
         super(
             new RelOptRuleOperand(

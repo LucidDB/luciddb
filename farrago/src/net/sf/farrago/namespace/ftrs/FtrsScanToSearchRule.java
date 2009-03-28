@@ -63,9 +63,9 @@ class FtrsScanToSearchRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated use {@link #instance} instead
+     * Creates a FtrsScanToSearchRule.
      */
-    public FtrsScanToSearchRule()
+    private FtrsScanToSearchRule()
     {
         super(
             new RelOptRuleOperand(
