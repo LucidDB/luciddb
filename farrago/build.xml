@@ -575,7 +575,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">
