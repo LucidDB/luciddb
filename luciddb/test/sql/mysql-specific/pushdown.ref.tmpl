@@ -30,15 +30,15 @@
 . . . . . . . . > (object '@DATATYPE_TABLE@');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from mysql_no_pushdown.test.@DATATYPE_TABLE@ order by 1,2,3,4,5;
-+---------------------+-------------+-----------+------------------------+--------+
-|      c_varchar      |   c_date    |  c_time   |      c_timestamp       | c_int  |
-+---------------------+-------------+-----------+------------------------+--------+
-| varchar the fifth   | 2005-10-12  |           | 2005-10-12 03:00:00.0  | 5      |
-| varchar the first   |             |           | 2005-10-12 03:00:00.0  | 1      |
-| varchar the fourth  | 2005-10-12  | 04:00:00  | 2005-10-12 04:00:00.0  | 4      |
-| varchar the second  |             |           | 2005-10-12 04:00:00.0  | 2      |
-| varchar the third   |             | 03:00:00  | 2005-10-12 03:00:00.0  | 3      |
-+---------------------+-------------+-----------+------------------------+--------+
++---------------------+-------------+-----------+----------------------+--------+
+|      c_varchar      |   c_date    |  c_time   |     c_timestamp      | c_int  |
++---------------------+-------------+-----------+----------------------+--------+
+| varchar the fifth   | 2005-10-12  |           | 2005-10-12 03:00:00  | 5      |
+| varchar the first   |             |           | 2005-10-12 03:00:00  | 1      |
+| varchar the fourth  | 2005-10-12  | 04:00:00  | 2005-10-12 04:00:00  | 4      |
+| varchar the second  |             |           | 2005-10-12 04:00:00  | 2      |
+| varchar the third   |             | 03:00:00  | 2005-10-12 03:00:00  | 3      |
++---------------------+-------------+-----------+----------------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call applib.create_var('context1', null, 'context');
 0: jdbc:luciddb:> call applib.create_var('context1', 'last_extract_timestamp', 'appvariable');
@@ -51,15 +51,15 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+-------+---------------------+
-|      c_timestamp       |   c_date    | blah  |      c_varchar      |
-+------------------------+-------------+-------+---------------------+
-| 2005-10-12 03:00:00.0  |             |       | varchar the first   |
-| 2005-10-12 03:00:00.0  |             |       | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  |       | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             |       | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  |       | varchar the fourth  |
-+------------------------+-------------+-------+---------------------+
++----------------------+-------------+-------+---------------------+
+|     c_timestamp      |   c_date    | blah  |      c_varchar      |
++----------------------+-------------+-------+---------------------+
+| 2005-10-12 03:00:00  |             |       | varchar the first   |
+| 2005-10-12 03:00:00  |             |       | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  |       | varchar the fifth   |
+| 2005-10-12 04:00:00  |             |       | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  |       | varchar the fourth  |
++----------------------+-------------+-------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" >=
@@ -68,17 +68,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                    column0                                                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                                      |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                    |
-|     IteratorToFennelConverter                                                                                                                                                                                  |
-|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-10-07 03:00:00.0], expr#4=[>=($t0, $t3)], expr#5=[null], expr#6=[CAST($t5):INTEGER], proj#0..1=[{exprs}], blah=[$t6], c_varchar=[$t2], $condition=[$t4])  |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                                                    |
-|           MedJdbcQueryRel(foreignSql=[SELECT `c_timestamp`, `c_date`, `c_varchar`                                                                                                                              |
-| FROM `DATATYPES`])                                                                                                                                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                   column0                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                  |
+|     IteratorToFennelConverter                                                                                                                                                                                |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-10-07 03:00:00], expr#4=[>=($t0, $t3)], expr#5=[null], expr#6=[CAST($t5):INTEGER], proj#0..1=[{exprs}], blah=[$t6], c_varchar=[$t2], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT `c_timestamp`, `c_date`, `c_varchar`                                                                                                                            |
+| FROM `DATATYPES`])                                                                                                                                                                                           |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- ENABLED PUSHDOWN
@@ -115,15 +115,15 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first   |
-| 2005-10-12 03:00:00.0  |             | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  |             | varchar the first   |
+| 2005-10-12 03:00:00  |             | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" >=
@@ -151,15 +151,15 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first   |
-| 2005-10-12 03:00:00.0  |             | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  |             | varchar the first   |
+| 2005-10-12 03:00:00  |             | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" >
@@ -280,15 +280,15 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first   |
-| 2005-10-12 03:00:00.0  |             | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  |             | varchar the first   |
+| 2005-10-12 03:00:00  |             | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" <>
@@ -311,12 +311,12 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT LIKE
 0: jdbc:luciddb:> select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char the f%' order by 1,2;
-+---------------------+------------------------+
-|      c_varchar      |      c_timestamp       |
-+---------------------+------------------------+
-| varchar the second  | 2005-10-12 04:00:00.0  |
-| varchar the third   | 2005-10-12 03:00:00.0  |
-+---------------------+------------------------+
++---------------------+----------------------+
+|      c_varchar      |     c_timestamp      |
++---------------------+----------------------+
+| varchar the second  | 2005-10-12 04:00:00  |
+| varchar the third   | 2005-10-12 03:00:00  |
++---------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char the f%' order by 1,2
@@ -369,12 +369,12 @@
 . . . . . . . . >   AND
 . . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" NOT BETWEEN
@@ -406,13 +406,13 @@
 . . . . . . . . >   AND
 . . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+--------------------+
-|      c_timestamp       |   c_date    |     c_varchar      |
-+------------------------+-------------+--------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first  |
-| 2005-10-12 03:00:00.0  |             | varchar the third  |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth  |
-+------------------------+-------------+--------------------+
++----------------------+-------------+--------------------+
+|     c_timestamp      |   c_date    |     c_varchar      |
++----------------------+-------------+--------------------+
+| 2005-10-12 03:00:00  |             | varchar the first  |
+| 2005-10-12 03:00:00  |             | varchar the third  |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth  |
++----------------------+-------------+--------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_timestamp" BETWEEN
@@ -490,15 +490,15 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NOT NULL
 0: jdbc:luciddb:> select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first   |
-| 2005-10-12 03:00:00.0  |             | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  |             | varchar the first   |
+| 2005-10-12 03:00:00  |             | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3
@@ -549,12 +549,12 @@
 . . . . . . . . >   AND
 . . . . . . . . > "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select "c_timestamp", "c_date", "c_varchar" from test.datatype
@@ -587,15 +587,15 @@
 . . . . . . . . >   OR
 . . . . . . . . > "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . > order by 1,2,3;
-+------------------------+-------------+---------------------+
-|      c_timestamp       |   c_date    |      c_varchar      |
-+------------------------+-------------+---------------------+
-| 2005-10-12 03:00:00.0  |             | varchar the first   |
-| 2005-10-12 03:00:00.0  |             | varchar the third   |
-| 2005-10-12 03:00:00.0  | 2005-10-12  | varchar the fifth   |
-| 2005-10-12 04:00:00.0  |             | varchar the second  |
-| 2005-10-12 04:00:00.0  | 2005-10-12  | varchar the fourth  |
-+------------------------+-------------+---------------------+
++----------------------+-------------+---------------------+
+|     c_timestamp      |   c_date    |      c_varchar      |
++----------------------+-------------+---------------------+
+| 2005-10-12 03:00:00  |             | varchar the first   |
+| 2005-10-12 03:00:00  |             | varchar the third   |
+| 2005-10-12 03:00:00  | 2005-10-12  | varchar the fifth   |
+| 2005-10-12 04:00:00  |             | varchar the second  |
+| 2005-10-12 04:00:00  | 2005-10-12  | varchar the fourth  |
++----------------------+-------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select "c_timestamp", "c_date", "c_varchar" from test.datatype 
@@ -701,15 +701,15 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- date pushdown
 0: jdbc:luciddb:> select "c_timestamp" from test.datatype where "c_timestamp" >= TIMESTAMP '2005-01-01 00:00:00' order by 1;
-+------------------------+
-|      c_timestamp       |
-+------------------------+
-| 2005-10-12 03:00:00.0  |
-| 2005-10-12 03:00:00.0  |
-| 2005-10-12 03:00:00.0  |
-| 2005-10-12 04:00:00.0  |
-| 2005-10-12 04:00:00.0  |
-+------------------------+
++----------------------+
+|     c_timestamp      |
++----------------------+
+| 2005-10-12 03:00:00  |
+| 2005-10-12 03:00:00  |
+| 2005-10-12 03:00:00  |
+| 2005-10-12 04:00:00  |
+| 2005-10-12 04:00:00  |
++----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for select "c_timestamp" from test.datatype where "c_timestamp" >= TIMESTAMP '2005-01-01 00:00:00' order by 1;
 +-----------------------------------------------------------+
@@ -750,11 +750,11 @@
 . . . . . . . . > (object '@DATATYPE_TABLE@');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select d from test.datatype where a = 'varchar the third' order by 1;
-+------------------------+
-|           D            |
-+------------------------+
-| 2005-10-12 03:00:00.0  |
-+------------------------+
++----------------------+
+|          D           |
++----------------------+
+| 2005-10-12 03:00:00  |
++----------------------+
 0: jdbc:luciddb:> explain plan for select d from test.datatype where a = 'varchar the third' order by 1;
 +----------------------------------------------------------------------------------------------+
 |                                           column0                                            |
@@ -789,13 +789,13 @@
 +---------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select a,b,c,d,e from test.datatype where a = 'varchar the third' OR e > 2 OR a like '%fifth%' order by 1,2,3,4,5;
-+---------------------+-------------+-----------+------------------------+----+
-|          A          |      B      |     C     |           D            | E  |
-+---------------------+-------------+-----------+------------------------+----+
-| varchar the fifth   | 2005-10-12  |           | 2005-10-12 03:00:00.0  | 5  |
-| varchar the fourth  | 2005-10-12  | 04:00:00  | 2005-10-12 04:00:00.0  | 4  |
-| varchar the third   |             | 03:00:00  | 2005-10-12 03:00:00.0  | 3  |
-+---------------------+-------------+-----------+------------------------+----+
++---------------------+-------------+-----------+----------------------+----+
+|          A          |      B      |     C     |          D           | E  |
++---------------------+-------------+-----------+----------------------+----+
+| varchar the fifth   | 2005-10-12  |           | 2005-10-12 03:00:00  | 5  |
+| varchar the fourth  | 2005-10-12  | 04:00:00  | 2005-10-12 04:00:00  | 4  |
+| varchar the third   |             | 03:00:00  | 2005-10-12 03:00:00  | 3  |
++---------------------+-------------+-----------+----------------------+----+
 0: jdbc:luciddb:> explain plan for select a,b,c,d,e from test.datatype where a = 'varchar the third' OR e > 2 OR a like '%fifth%' order by 1,2,3,4,5;
 +-----------------------------------------------------------------------------------------+
 |                                         column0                                         |
