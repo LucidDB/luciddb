@@ -95,6 +95,13 @@ public class FarragoRelImplementor
     private Map<String, FarragoTransformDef> transformMap;
     private int nextTransformId;
 
+    // Maps a RelNode to the stream definitions that have been registered to
+    // that RelNode
+    private Map<RelNode, List<FemExecutionStreamDef>> relToStreamDefMap;
+
+    // Maps a RelNode to its RelPathEntry list when the
+    // isFirstTranslationInstance method was first called on the RelNode
+    private Map<RelNode, List<RelPathEntry>> relToFirstRelPathEntryMap;
     //~ Constructors -----------------------------------------------------------
 
     public FarragoRelImplementor(
@@ -125,6 +132,8 @@ public class FarragoRelImplementor
         transformDefs = new ArrayList<FarragoTransformDef>();
         transformStreamDefs = new ArrayList<FemJavaTransformStreamDef>();
         transformMap = new HashMap<String, FarragoTransformDef>();
+        relToStreamDefMap = new HashMap<RelNode, List<FemExecutionStreamDef>>();
+        relToFirstRelPathEntryMap = new HashMap<RelNode, List<RelPathEntry>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -461,6 +470,13 @@ public class FarragoRelImplementor
             streamDef.setName(streamName);
         }
         streamDefSet.add(streamDef);
+        List<FemExecutionStreamDef> streamDefList =
+            relToStreamDefMap.get(rel);
+        if (streamDefList == null) {
+            streamDefList = new ArrayList<FemExecutionStreamDef>();
+        }
+        streamDefList.add(streamDef);
+        relToStreamDefMap.put(rel, streamDefList);
 
         // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType
         // may not be correct all the way down.
@@ -472,6 +488,30 @@ public class FarragoRelImplementor
         for (FemExecStreamDataFlow flow : streamDef.getInputFlow()) {
             FemExecutionStreamDef producer = flow.getProducer();
             registerStreamDef(producer, null, rowType);
+        }
+    }
+
+    // implement FennelRelImplementor
+    public List<FemExecutionStreamDef> getRegisteredStreamDefs(RelNode rel)
+    {
+        return relToStreamDefMap.get(rel);
+    }
+
+    // implement FennelRelImplementor
+    public boolean isFirstTranslationInstance(RelNode rel)
+    {
+        List<RelPathEntry> relPathEntry = relToFirstRelPathEntryMap.get(rel);
+        if (relPathEntry == null) {
+            // This is the first translation instance, so make a copy of the
+            // current RelPathEntry, and save it in the map
+            relPathEntry = new LinkedList<RelPathEntry>(currRelPathList);
+            relToFirstRelPathEntryMap.put(rel, relPathEntry);
+            return true;
+        } else if (relPathEntry.equals(currRelPathList)) {
+            // This matches the previously saved first instance
+            return true;
+        } else {
+            return false;
         }
     }
 

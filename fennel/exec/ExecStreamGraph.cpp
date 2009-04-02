@@ -533,7 +533,6 @@ void ExecStreamGraphImpl::openStream(SharedExecStream pStream)
 void ExecStreamGraphImpl::closeImpl()
 {
     isOpen = false;
-    pDynamicParamManager->deleteAllParams();
     if (sortedStreams.empty()) {
         // in case prepare was never called
         sortStreams();
@@ -549,6 +548,7 @@ void ExecStreamGraphImpl::closeImpl()
             sortedStreams.rend(),
             boost::bind(&ClosableObject::close,_1));
     }
+    pDynamicParamManager->deleteAllParams();
     SharedExecStreamGovernor pGov = getResourceGovernor();
     if (pGov) {
         pGov->returnResources(*this);
@@ -748,9 +748,12 @@ void ExecStreamGraphImpl::closeProducers(ExecStreamId streamId)
         // move streamId upstream
         streamId = boost::source(edge,graphRep);
         // close the producers of this stream before closing the stream
-        // itself
-        closeProducers(streamId);
+        // itself, but only if it's possible to early close the stream
         SharedExecStream pStream = getStreamFromVertex(streamId);
+        if (!pStream->canEarlyClose()) {
+            continue;
+        }
+        closeProducers(streamId);
         pStream->close();
     }
 }

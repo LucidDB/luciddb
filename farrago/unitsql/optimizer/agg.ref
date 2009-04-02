@@ -811,14 +811,16 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0, 0]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '        LhxAggRel(groupCount=[1])'
 '          FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0) NOT NULL])'
-'            LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan without implementation for
 > select count(*)
@@ -848,15 +850,17 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[2, 0]], rightKeys=[[2, 1]], joinType=[LEFTSEMI])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()], agg#1=[MIN($1)])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LhxAggRel(groupCount=[1], EXPR$0=[COUNT()], agg#1=[MIN($1)])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 '      FennelReshapeRel(projection=[[0, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '          LhxAggRel(groupCount=[1])'
 '            FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0) NOT NULL])'
-'              LhxAggRel(groupCount=[1], EXPR$0=[COUNT()], agg#1=[MIN($1)])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'              FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                LhxAggRel(groupCount=[1], EXPR$0=[COUNT()], agg#1=[MIN($1)])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan without implementation for 
 > select *
@@ -892,8 +896,9 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])'
@@ -902,8 +907,9 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 '                FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '                LhxAggRel(groupCount=[1])'
 '                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0) NOT NULL])'
-'                    LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'                    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'                        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > -- fixed with hack to look up group expr projected from agg
 > explain plan without implementation for 
@@ -933,8 +939,9 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])'
@@ -943,8 +950,9 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 '                FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '                LhxAggRel(groupCount=[1])'
 '                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0) NOT NULL])'
-'                    LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
-'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'                    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'                        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > -- this will fail in parsing
 > explain plan for
@@ -1099,16 +1107,18 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 '        IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t3)], EXPR$0=[$t1], EXPR$00=[$t3], $condition=[$t4])'
 '          FennelToIteratorConverter'
 '            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'              LhxAggRel(groupCount=[1], EXPR$0=[SUM($1)])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'              FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                LhxAggRel(groupCount=[1], EXPR$0=[SUM($1)])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
 '              LhxAggRel(groupCount=[1], EXPR$0=[MAX($1)])'
 '                FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])'
 '                  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '                    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])'
-'                        LhxAggRel(groupCount=[1], EXPR$0=[SUM($1)])'
-'                          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'                        FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                          LhxAggRel(groupCount=[1], EXPR$0=[SUM($1)])'
+'                            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > SELECT 
 >     sum(empno) a,

@@ -15,6 +15,12 @@ typedef JniProxyIter<ProxyBeginTxnCmd> SharedProxyBeginTxnCmd;
 class ProxyBernoulliSamplingStreamDef;
 typedef JniProxyIter<ProxyBernoulliSamplingStreamDef> SharedProxyBernoulliSamplingStreamDef;
 
+class ProxyBufferReaderStreamDef;
+typedef JniProxyIter<ProxyBufferReaderStreamDef> SharedProxyBufferReaderStreamDef;
+
+class ProxyBufferWriterStreamDef;
+typedef JniProxyIter<ProxyBufferWriterStreamDef> SharedProxyBufferWriterStreamDef;
+
 class ProxyBufferingTupleStreamDef;
 typedef JniProxyIter<ProxyBufferingTupleStreamDef> SharedProxyBufferingTupleStreamDef;
 
@@ -237,6 +243,9 @@ typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 class ProxyMockTupleStreamDef;
 typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
 
+class ProxyMultiUseBufferingStreamDef;
+typedef JniProxyIter<ProxyMultiUseBufferingStreamDef> SharedProxyMultiUseBufferingStreamDef;
+
 class ProxyNestedLoopJoinStreamDef;
 typedef JniProxyIter<ProxyNestedLoopJoinStreamDef> SharedProxyNestedLoopJoinStreamDef;
 
@@ -422,6 +431,26 @@ bool isMultipass();
 static jmethodID meth_isMultipass;
 };
 
+class ProxyMultiUseBufferingStreamDef
+: virtual public JniProxy, virtual public ProxyBufferingTupleStreamDef
+{
+public:
+int32_t getReaderRefCountParamId();
+static jmethodID meth_getReaderRefCountParamId;
+};
+
+class ProxyBufferReaderStreamDef
+: virtual public JniProxy, virtual public ProxyMultiUseBufferingStreamDef
+{
+public:
+};
+
+class ProxyBufferWriterStreamDef
+: virtual public JniProxy, virtual public ProxyMultiUseBufferingStreamDef
+{
+public:
+};
+
 class ProxyCalcTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -591,19 +620,19 @@ static jmethodID meth_getResultHandle;
 };
 
 class ProxyCmdGetLastCommittedTxnId
-: virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyDatabaseCmd
+: virtual public JniProxy, virtual public ProxyDatabaseCmd, virtual public ProxyCsnHandleReturningCmd
 {
 public:
 };
 
 class ProxyCmdGetTxnCsn
-: virtual public JniProxy, virtual public ProxyTxnCmd, virtual public ProxyCsnHandleReturningCmd
+: virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyTxnCmd
 {
 public:
 };
 
 class ProxyCmdInitiateBackup
-: virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyDatabaseCmd
+: virtual public JniProxy, virtual public ProxyDatabaseCmd, virtual public ProxyCsnHandleReturningCmd
 {
 public:
 std::string getBackupPathname();
@@ -901,7 +930,7 @@ static jmethodID meth_getTupleDesc;
 };
 
 class ProxyIndexStreamDef
-: virtual public JniProxy, virtual public ProxyIndexAccessorDef, virtual public ProxyTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef, virtual public ProxyIndexAccessorDef
 {
 public:
 };
@@ -1025,7 +1054,7 @@ static jmethodID meth_getSamplingRowCount;
 };
 
 class ProxyLbmGeneratorStreamDef
-: virtual public JniProxy, virtual public ProxyLcsRowScanStreamDef, virtual public ProxyIndexAccessorDef
+: virtual public JniProxy, virtual public ProxyIndexAccessorDef, virtual public ProxyLcsRowScanStreamDef
 {
 public:
 bool isCreateIndex();
@@ -1219,7 +1248,7 @@ static jmethodID meth_getTupleCompareBytesBase64;
 };
 
 class ProxySortingStreamDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef, virtual public ProxyKeyAccessorDef
+: virtual public JniProxy, virtual public ProxyKeyAccessorDef, virtual public ProxyTupleStreamDef
 {
 public:
 SharedProxyTupleProjection getDescendingProj();
@@ -1438,6 +1467,10 @@ virtual void visit(ProxyBeginTxnCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyBernoulliSamplingStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyBufferReaderStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyBufferWriterStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyBufferingTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyCalcTupleStreamDef &)
@@ -1585,6 +1618,8 @@ virtual void visit(ProxyLhxJoinStreamDef &)
 virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMockTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyMultiUseBufferingStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyNestedLoopJoinStreamDef &)
 { unhandledVisit(); }

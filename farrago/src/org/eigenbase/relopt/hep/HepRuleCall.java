@@ -48,9 +48,10 @@ public class HepRuleCall
         RelOptPlanner planner,
         RelOptRuleOperand operand,
         RelNode [] rels,
-        Map<RelNode, List<RelNode>> nodeChildren)
+        Map<RelNode, List<RelNode>> nodeChildren,
+        List<RelNode> parents)
     {
-        super(planner, operand, rels, nodeChildren);
+        super(planner, operand, rels, nodeChildren, parents);
 
         results = new ArrayList<RelNode>();
     }

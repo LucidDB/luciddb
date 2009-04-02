@@ -232,20 +232,6 @@ public class PushProjector
         rexBuilder = childRel.getCluster().getRexBuilder();
     }
 
-    /**
-     * @deprecated LucidEra please remove
-     */
-    public PushProjector(
-        ProjectRel origProj,
-        RexNode origFilter,
-        RelNode childRel,
-        final Set<SqlOperator> preserveExprs)
-    {
-        this(
-            origProj, origFilter, childRel,
-            new OperatorExprCondition(preserveExprs));
-    }
-
     //~ Methods ----------------------------------------------------------------
 
     /**

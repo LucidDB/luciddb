@@ -294,6 +294,21 @@ public class HepPlanner
         applyRules(instruction.ruleSet, instruction.guaranteed);
     }
 
+    void executeInstruction(HepInstruction.CommonRelSubExprRules instruction)
+    {
+        assert (currentProgram.group == null);
+        if (instruction.ruleSet == null) {
+            instruction.ruleSet = new LinkedHashSet<RelOptRule>();
+            for (RelOptRule rule : allRules) {
+                if (!(rule instanceof CommonRelSubExprRule)) {
+                    continue;
+                }
+                instruction.ruleSet.add(rule);
+            }
+        }
+        applyRules(instruction.ruleSet, true);
+    }
+
     void executeInstruction(
         HepInstruction.Subprogram instruction)
     {
@@ -428,6 +443,7 @@ public class HepPlanner
         boolean forceConversions)
     {
         RelTrait parentTrait = null;
+        List<RelNode> parents = null;
         if (rule instanceof ConverterRule) {
             // Guaranteed converter rules require special casing to make sure
             // they only fire where actually needed, otherwise they tend to
@@ -438,6 +454,17 @@ public class HepPlanner
                     return null;
                 }
                 parentTrait = converterRule.getOutTrait();
+            }
+        } else if (rule instanceof CommonRelSubExprRule) {
+            // Only fire CommonRelSubExprRules if the vertex is a common
+            // subexpression.
+            List<HepRelVertex> parentVertices = getVertexParents(vertex);
+            if (parentVertices.size() < 2) {
+                return null;
+            }
+            parents = new ArrayList<RelNode>();
+            for (HepRelVertex pVertex : parentVertices) {
+                parents.add(pVertex.getCurrentRel());
             }
         }
 
@@ -460,7 +487,8 @@ public class HepPlanner
                 this,
                 rule.getOperand(),
                 bindings.toArray(new RelNode[bindings.size()]),
-                nodeChildren);
+                nodeChildren,
+                parents);
 
         // Allow the rule to apply its own side-conditions.
         if (!rule.matches(call)) {
@@ -499,6 +527,33 @@ public class HepPlanner
         return (vertex == root)
             && (requestedRootTraits != null)
             && requestedRootTraits.contains(outTrait);
+    }
+
+    /**
+     * Retrieves the parent vertices of a vertex.  If a vertex appears multiple
+     * times as an input into a parent, then that counts as multiple parents,
+     * one per input reference.
+     *
+     * @param vertex the vertex
+     *
+     * @return the list of parents for the vertex
+     */
+    private List<HepRelVertex> getVertexParents(HepRelVertex vertex)
+    {
+        List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
+        List<HepRelVertex> parentVertices =
+            Graphs.predecessorListOf(graph, vertex);
+
+        for (HepRelVertex pVertex : parentVertices) {
+            RelNode parent = pVertex.getCurrentRel();
+            for (int i = 0; i < parent.getInputs().length; i++) {
+                HepRelVertex child = (HepRelVertex) parent.getInputs()[i];
+                if (child == vertex) {
+                    parents.add(pVertex);
+                }
+            }
+        }
+        return parents;
     }
 
     private boolean matchOperands(

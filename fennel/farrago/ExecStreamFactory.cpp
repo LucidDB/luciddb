@@ -34,6 +34,8 @@
 #include "fennel/ftrs/BTreeSortExecStream.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
+#include "fennel/exec/SegBufferReaderExecStream.h"
+#include "fennel/exec/SegBufferWriterExecStream.h"
 #include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/BarrierExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
@@ -167,6 +169,35 @@ void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
         params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
     }
     embryo.init(new SegBufferExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyBufferWriterStreamDef &streamDef)
+{
+    SegBufferWriterExecStreamParams params;
+    readExecStreamParams(params, streamDef);
+    readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
+    if (!streamDef.isInMemory()) {
+        params.scratchAccessor.pSegment = pDatabase->getTempSegment();
+        params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
+    }
+    assert(streamDef.isMultipass());
+    params.readerRefCountParamId =
+        readDynamicParamId(streamDef.getReaderRefCountParamId());
+    embryo.init(new SegBufferWriterExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyBufferReaderStreamDef &streamDef)
+{
+    SegBufferReaderExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    if (!streamDef.isInMemory()) {
+        params.scratchAccessor.pSegment = pDatabase->getTempSegment();
+        params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
+    }
+    assert(streamDef.isMultipass());
+    params.readerRefCountParamId =
+        readDynamicParamId(streamDef.getReaderRefCountParamId());
+    embryo.init(new SegBufferReaderExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)

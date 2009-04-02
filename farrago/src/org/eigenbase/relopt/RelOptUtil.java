@@ -24,8 +24,6 @@ package org.eigenbase.relopt;
 
 import java.io.*;
 
-import java.math.*;
-
 import java.util.*;
 
 import openjava.ptree.Expression;
@@ -908,50 +906,6 @@ public abstract class RelOptUtil
                 left.getCluster().getRexBuilder(),
                 residualList);
         }
-    }
-
-    /**
-     * Splits out the equi-join (and optionally, a single non-equi) components
-     * of a join condition, and returns what's left. Projection might be
-     * required by the caller to provide join keys that are not direct field
-     * references.
-     *
-     * @param leftRel left join input
-     * @param rightRel right join input
-     * @param condition join condition
-     * @param leftJoinKeys The join keys from the left input which are equi-join
-     * keys
-     * @param rightJoinKeys The join keys from the right input which are
-     * equi-join keys
-     * @param filterNulls The join key positions for which null values will not
-     * match. null values only match for the "is not distinct from" condition.
-     * @param rangeOp if null, only locate equi-joins; otherwise, locate a
-     * single non-equi join predicate and return its operator in this list; join
-     * keys associated with the non-equi join predicate are at the end of the
-     * key lists returned
-     *
-     * @return What's left
-     *
-     * @deprecated LucidEra, please remove!
-     */
-    public static RexNode splitJoinCondition(
-        RelNode leftRel,
-        RelNode rightRel,
-        RexNode condition,
-        List<RexNode> leftJoinKeys,
-        List<RexNode> rightJoinKeys,
-        List<Integer> filterNulls,
-        List<SqlOperator> rangeOp)
-    {
-        return splitJoinCondition(
-            Collections.<RelDataTypeField>emptyList(),
-            leftRel,
-            rightRel,
-            condition,
-            leftJoinKeys,
-            rightJoinKeys,
-            filterNulls,
-            rangeOp);
     }
 
     /**

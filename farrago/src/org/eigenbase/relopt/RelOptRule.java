@@ -25,7 +25,6 @@ package org.eigenbase.relopt;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -52,11 +51,8 @@ public abstract class RelOptRule
      * Description of rule, must be unique within planner. Default is the name
      * of the class sans package name, but derived classes are encouraged to
      * override.
-     *
-     * @deprecated LucidEra, please make this 'final'. The only assignments
-     * to this field should be in the constructor
      */
-    protected String description;
+    protected final String description;
 
     /**
      * Root of operand tree.

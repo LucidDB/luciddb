@@ -623,10 +623,21 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
     // insert/update a single rid
     if (nKeyRows == 0) {
         assert(getUpsertRidPtr() == NULL);
-        setUpsertRid(inputRidReader.getNext());
+        // Loop until we find a non-deleted rid.  Deleted rids should only
+        // occur when rebuilding an existing index.  I.e., the index started
+        // out empty.
+        do {
+            LcsRid rid = inputRidReader.getNext();
+            if (!isEmpty() || !deletionReader.searchForRid(rid)) {
+                setUpsertRid(rid);
+                break;
+            }
+        } while (inputRidReader.hasNext());
         nKeyRows++;
     }
-    // all other rids are rejected as duplicate keys
+
+    // all other rids are rejected as duplicate keys, unless they're deleted
+    // rids
     while (inputRidReader.hasNext()) {
         if (!violationTuple.size()) {
             // if there is a possibility of violations, the splicer should
@@ -634,6 +645,10 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
             permAssert(false);
         }
         LcsRid rid = inputRidReader.peek();
+        if (isEmpty() && deletionReader.searchForRid(rid)) {
+            inputRidReader.advance();
+            continue;
+        }
         violationTuple[0].pData = reinterpret_cast<PConstBuffer>(&rid);
         violationTuple[0].cbData = 8;
         if (!violationAccessor->produceTuple(violationTuple)) {
@@ -656,8 +671,8 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         return EXECRC_YIELD;
     }
 
-    // otherwise every rid of the current tuple was rejected and we
-    // continue to the next tuple
+    // otherwise every rid of the current tuple was either rejected or
+    // already deleted, so continue to the next tuple
     pInAccessor->consumeTuple();
     return getValidatedTuple();
 }

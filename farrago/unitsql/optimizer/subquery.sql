@@ -664,7 +664,8 @@ where exists (
 select depts.name, emps.deptno from emps, depts
 where exists (
     select * from depts2
-    where depts2.name = depts.name and depts2.deptno = emps.deptno);
+    where depts2.name = depts.name and depts2.deptno = emps.deptno)
+order by 1, 2;
 
 -- 4.4 correlations from one relation to two outer relations at different level
 explain plan without implementation for 

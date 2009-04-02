@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
@@ -155,6 +157,28 @@ public interface FennelRelImplementor
         FennelRel rel,
         FemExecutionStreamDef streamDef,
         RelDataType errorType);
+
+    /**
+     * Returns the list of stream definitions that have been registered for
+     * a RelNode.
+     *
+     * @param rel the RelNode
+     *
+     * @return the list of registered stream definitions; null if no stream
+     * definitions have been registered yet to the RelNode
+     */
+    public List<FemExecutionStreamDef> getRegisteredStreamDefs(RelNode rel);
+
+    /**
+     * Determines if this is the instance of a RelNode such that the instance
+     * corresponds to the one at the time this method was first called.
+     *
+     * @param rel the RelNode
+     *
+     * @return true if the RelNode instance is the one encountered the first
+     * time this method was called
+     */
+    public boolean isFirstTranslationInstance(RelNode rel);
 }
 
 // End FennelRelImplementor.java

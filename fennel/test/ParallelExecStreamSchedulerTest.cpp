@@ -104,6 +104,19 @@ public:
         FENNEL_UNIT_TEST_CASE(
             ExecStreamTestSuite,
             testSplitterPlusBarrier);
+
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSegBufferReaderWriterExecStream1);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSegBufferReaderWriterExecStream2);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSegBufferReaderWriterExecStream3);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSegBufferReaderWriterExecStream4);
     }
 };
 

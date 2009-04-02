@@ -142,6 +142,32 @@
 | 5       | 150    | betty   | 20      | f       | San Francisco                   | 40   | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Executes the updates using actual update statements
+0: jdbc:luciddb:> update emps set gender = upper(gender) where gender = lower(gender);
+0: jdbc:luciddb:> select lcs_rid(empno), * from emps order by empno;
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+| EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+| 0       | 100    | Fred    | 10      |         |                                 | 25   | 22500.00  |
+| 1       | 110    | eric    | 20      | M       | San Francisco                   | 80   | 72000.00  |
+| 2       | 120    | Wilma   | 20      | F       |                                 | 50   | 45000.00  |
+| 3       | 130    | john    | 40      | M       | Vancouver                       |      |           |
+| 4       | 140    | barney  | 10      | M       | San Mateo                       | 41   | 50000.00  |
+| 5       | 150    | betty   | 20      | F       | San Francisco                   | 40   | 90000.00  |
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+0: jdbc:luciddb:> update emps set gender = lower(gender) where gender = 'M';
+0: jdbc:luciddb:> select lcs_rid(empno), * from emps order by empno;
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+| EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+| 0       | 100    | Fred    | 10      |         |                                 | 25   | 22500.00  |
+| 1       | 110    | eric    | 20      | m       | San Francisco                   | 80   | 72000.00  |
+| 2       | 120    | Wilma   | 20      | F       |                                 | 50   | 45000.00  |
+| 3       | 130    | john    | 40      | m       | Vancouver                       |      |           |
+| 4       | 140    | barney  | 10      | m       | San Mateo                       | 41   | 50000.00  |
+| 5       | 150    | betty   | 20      | F       | San Francisco                   | 40   | 90000.00  |
++---------+--------+---------+---------+---------+---------------------------------+------+-----------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Update columns that are indexed.  Verify that the indexes are still usable.
 0: jdbc:luciddb:> -- (Double check via explain plan that the indexes are in fact being used.)
 0: jdbc:luciddb:> 
@@ -160,7 +186,7 @@
 | 2       | 120    | Wilma   | 20      | F       |                                 | 100  | 45000.00  |
 | 3       | 130    | john    | 40      | m       | Vancouver                       |      |           |
 | 4       | 140    | barney  | 10      | m       | San Mateo                       | 82   | 50000.00  |
-| 5       | 150    | betty   | 20      | f       | San Francisco                   | 80   | 90000.00  |
+| 5       | 150    | betty   | 20      | F       | San Francisco                   | 80   | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:luciddb:> !set outputformat csv
 0: jdbc:luciddb:> explain plan for
@@ -209,7 +235,7 @@
 | 2       | 120    | Wilma   | 20      | F       |                                 | 200  | 45000.00  |
 | 3       | 130    | john    | 40      | m       | Vancouver                       |      |           |
 | 4       | 140    | barney  | 10      | m       | San Mateo                       | 164  | 50000.00  |
-| 5       | 150    | betty   | 20      | f       | San Francisco                   | 160  | 90000.00  |
+| 5       | 150    | betty   | 20      | F       | San Francisco                   | 160  | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:luciddb:> select city, age from emps where city >= 'A' union
 . . . . . . . . >     select city, age from emps where city is null
@@ -240,7 +266,7 @@
 | 2       | 120    | Wilma   | 21      | F       |                                 | 100  | 45000.00  |
 | 3       | 130    | john    | 41      | m       | Vancouver                       |      |           |
 | 4       | 140    | barney  | 11      | m       | San Mateo                       | 82   | 50000.00  |
-| 5       | 150    | betty   | 21      | f       | San Francisco                   | 80   | 90000.00  |
+| 5       | 150    | betty   | 21      | F       | San Francisco                   | 80   | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:luciddb:> !set outputformat csv
 0: jdbc:luciddb:> explain plan for select deptno from emps where deptno > 0 order by deptno;
@@ -294,7 +320,7 @@
 | 2       | 120    | Wilma   | 21      | F       |                                 | 100    | 45000.00  |
 | 3       | 130    | john    | 41      | m       | Vancouver                       |        |           |
 | 4       | 140    | barney  | 11      | m       | San Mateo                       | 32750  | 50000.00  |
-| 5       | 150    | betty   | 21      | f       | San Francisco                   | 32748  | 90000.00  |
+| 5       | 150    | betty   | 21      | F       | San Francisco                   | 32748  | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
 0: jdbc:luciddb:> alter session set "errorMax" = 0;
 0: jdbc:luciddb:> 
@@ -314,7 +340,7 @@ Error: Unique constraint violation (state=,code=0)
 | 2       | 120    | Wilma   | 21      | F       |                                 | 100    | 45000.00  |
 | 3       | 130    | john    | 41      | m       | Vancouver                       |        |           |
 | 4       | 140    | barney  | 11      | m       | San Mateo                       | 32750  | 50000.00  |
-| 5       | 150    | betty   | 21      | f       | San Francisco                   | 32748  | 90000.00  |
+| 5       | 150    | betty   | 21      | F       | San Francisco                   | 32748  | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Update that is a "real" update, i.e., doesn't need to join with the source.
@@ -523,6 +549,43 @@ Error: Unique constraint violation (state=,code=0)
 | Vancouver                       |      |
 +---------------------------------+------+
 0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Verify that the optimization can be used even when the join key from the
+0: jdbc:luciddb:> -- target table is non-unique
+0: jdbc:luciddb:> create table nonUniqueEmps(
+. . . . . . . . >     empno int not null, name varchar(20) not null, deptno int,
+. . . . . . . . >     gender char(1), city char(30), age smallint, salary numeric(10,2));
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
+0: jdbc:luciddb:> insert into nonUniqueEmps select * from emps;
+0: jdbc:luciddb:> insert into nonUniqueEmps values(
+. . . . . . . . >     110, 'EricJr', 20, 'M', 'San Francisco', 40, 36000);
+0: jdbc:luciddb:> insert into nonUniqueEmps values(130, 'JohnJr', 40, 'M', 'Vancouver', 10, null);
+0: jdbc:luciddb:> select lcs_rid(empno), * from nonUniqueEmps order by empno;
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               |  AGE   |  SALARY   |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| 0       | 110    | ERIC    | 20      | M       | San Francisco                   | 80     | 72000.00  |
+| 4       | 110    | EricJr  | 20      | M       | San Francisco                   | 40     | 36000.00  |
+| 1       | 130    | JOHN    | 40      | M       | Vancouver                       |        |           |
+| 5       | 130    | JohnJr  | 40      | M       | Vancouver                       | 10     |           |
+| 2       | 140    | barney  | 9       | M       | San Mateo                       | 32729  | 50000.00  |
+| 3       | 150    | betty   | 19      | F       | San Francisco                   | 32728  | 90000.00  |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+0: jdbc:luciddb:> merge into nonUniqueEmps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set city = upper(t.t_city);
+0: jdbc:luciddb:> select lcs_rid(empno), * from nonUniqueEmps order by empno;
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               |  AGE   |  SALARY   |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| 0       | 110    | ERIC    | 20      | M       | SAN FRANCISCO                   | 80     | 72000.00  |
+| 4       | 110    | EricJr  | 20      | M       | SAN FRANCISCO                   | 40     | 36000.00  |
+| 1       | 130    | JOHN    | 40      | M       | VANCOUVER                       |        |           |
+| 5       | 130    | JohnJr  | 40      | M       | VANCOUVER                       | 10     |           |
+| 2       | 140    | barney  | 9       | M       | SAN MATEO                       | 32729  | 50000.00  |
+| 3       | 150    | betty   | 19      | F       | SAN FRANCISCO                   | 32728  | 90000.00  |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> ---------------------------------------------------------------------------
 0: jdbc:luciddb:> -- Exercise cases where the optimization cannot be used.  In this case, the
@@ -1055,6 +1118,132 @@ Error: Unique constraint violation (state=,code=0)
 | 32      | 170  | 180  | 1800  | 18  | 18  | 18  | 36  |
 | 33      | 180  | 190  | 1900  | 19  | 19  | 19  | 38  |
 +---------+------+------+-------+-----+-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LER-10611 -- Verify that duplicate keys that correspond to deleted rows
+0: jdbc:luciddb:> -- are ignored when rebuilding the unique index; otherwise, the 4th merge
+0: jdbc:luciddb:> -- statement below incorrectly results in a constraint violation.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table u(a int primary key, b int);
+0: jdbc:luciddb:> insert into u values(0,0);
+0: jdbc:luciddb:> insert into u values(1,1);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 1       | 1  | 1  |
++---------+----+----+
+0: jdbc:luciddb:> -- for the next two merge statements, we do NOT want to enable the optimization;
+0: jdbc:luciddb:> -- the filter on b should be selective enough so the optimization is disabled
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where b = 1) as src
+. . . . . . . . >     on tgt.a = src.a
+. . . . . . . . >     when matched then update set b = 2;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 2       | 1  | 2  |
++---------+----+----+
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where b = 2) as src 
+. . . . . . . . >     on tgt.a = src.a
+. . . . . . . . >     when matched then update set b = 3;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 3  |
++---------+----+----+
+0: jdbc:luciddb:> -- this statement is just to show that the filter "b + 1 >= 4" will
+0: jdbc:luciddb:> -- cause the optimization to be used; so the rid values returned should be
+0: jdbc:luciddb:> -- identical to those returned previously -- 0 and 3
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where b + 1 >= 4) as src
+. . . . . . . . >     on tgt.a = src.a
+. . . . . . . . >     when matched then update set b = 4;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 4  |
++---------+----+----+
+0: jdbc:luciddb:> -- so for this statement, the optimization should be used and the rid values
+0: jdbc:luciddb:> -- returned should be the same as prior to the merge -- 0 and 3
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where b + 1 >= 5) as src
+. . . . . . . . >     on tgt.a = src.a
+. . . . . . . . >     when matched then update set a = 2;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 2  | 4  |
++---------+----+----+
+0: jdbc:luciddb:> -- check that the data is properly stored in the index
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> explain plan for select * from u where a >= 0 order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, RC, U]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$U$A, SYS$CLUSTERED_INDEX$U$B]])'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, RC, U]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$U], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
+0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 0  | 0  |
+| 2  | 4  |
++----+----+
+0: jdbc:luciddb:> -- verify things work as well when the key value 1 is inserted, deleted, and
+0: jdbc:luciddb:> -- then an existing entry is updated to the key value 1; the update should not
+0: jdbc:luciddb:> -- result in a constraint violation
+0: jdbc:luciddb:> insert into u values(1, 1);
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 4       | 1  | 1  |
+| 3       | 2  | 4  |
++---------+----+----+
+0: jdbc:luciddb:> delete from u where a = 1;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 2  | 4  |
++---------+----+----+
+0: jdbc:luciddb:> update u set a = a + 1;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 1  | 0  |
+| 3       | 3  | 4  |
++---------+----+----+
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 1  | 0  |
+| 3  | 4  |
++----+----+
+0: jdbc:luciddb:> -- make sure violations are returned when appropriate
+0: jdbc:luciddb:> update u set a = 2;
+Error: Unique constraint violation (state=,code=0)
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 1  | 0  |
+| 3       | 3  | 4  |
++---------+----+----+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop label l;
 0: jdbc:luciddb:> drop schema rc cascade;

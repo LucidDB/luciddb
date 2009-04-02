@@ -195,6 +195,12 @@ typedef boost::shared_ptr<DynamicParam> SharedDynamicParam;
 class DynamicParamManager;
 typedef boost::shared_ptr<DynamicParamManager> SharedDynamicParamManager;
 
+class SegBufferReader;
+typedef boost::shared_ptr<SegBufferReader> SharedSegBufferReader;
+
+class SegBufferWriter;
+typedef boost::shared_ptr<SegBufferWriter> SharedSegBufferWriter;
+
 class SizeBuffer;
 typedef boost::shared_ptr<SizeBuffer> SharedSizeBuffer;
 

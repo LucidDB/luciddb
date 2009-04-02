@@ -127,6 +127,11 @@ protected:
 
 public:
     /**
+     * @return true if the stream can be closed early
+     */
+    virtual bool canEarlyClose();
+
+    /**
      * @return reference to containing graph
      */
     inline ExecStreamGraph &getGraph() const;

@@ -104,6 +104,8 @@ protected:
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyBarrierStreamDef &);
     virtual void visit(ProxyBufferingTupleStreamDef &);
+    virtual void visit(ProxyBufferReaderStreamDef &);
+    virtual void visit(ProxyBufferWriterStreamDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyIndexScanDef &);

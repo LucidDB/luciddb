@@ -192,6 +192,19 @@ public class HepProgramBuilder
     }
 
     /**
+     * Adds an instruction to attempt to match instances of
+     * {@link CommonRelSubExprRule}, but only in cases where vertices have more
+     * than one parent.
+     */
+    public void addCommonRelSubExprInstruction()
+    {
+        assert (group == null);
+        HepInstruction.CommonRelSubExprRules instruction =
+            new HepInstruction.CommonRelSubExprRules();
+        instructions.add(instruction);
+    }
+
+    /**
      * Adds an instruction to change the order of pattern matching for
      * subsequent instructions. The new order will take effect for the rest of
      * the program (not counting subprograms) or until another match order

@@ -177,6 +177,7 @@ jmethodID ProxyLhxJoinStreamDef::meth_isSetopDistinct = 0;
 jmethodID ProxyMergeStreamDef::meth_isPrePullInputs = 0;
 jmethodID ProxyMergeStreamDef::meth_isSequential = 0;
 jmethodID ProxyMockTupleStreamDef::meth_getRowCount = 0;
+jmethodID ProxyMultiUseBufferingStreamDef::meth_getReaderRefCountParamId = 0;
 jmethodID ProxyNestedLoopJoinStreamDef::meth_getLeftJoinKey = 0;
 jmethodID ProxyReshapeParameter::meth_getCompareOffset = 0;
 jmethodID ProxyReshapeParameter::meth_getDynamicParamId = 0;
@@ -254,6 +255,12 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 ProxyBernoulliSamplingStreamDef::meth_getRepeatableSeed = pEnv->GetMethodID(jClass,"getRepeatableSeed","()I");
 ProxyBernoulliSamplingStreamDef::meth_isRepeatable = pEnv->GetMethodID(jClass,"isRepeatable","()Z");
 ProxyBernoulliSamplingStreamDef::meth_getSamplingRate = pEnv->GetMethodID(jClass,"getSamplingRate","()F");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBufferReaderStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyBufferReaderStreamDef>));
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBufferWriterStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyBufferWriterStreamDef>));
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBufferingTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyBufferingTupleStreamDef>));
@@ -640,6 +647,10 @@ ProxyMergeStreamDef::meth_isSequential = pEnv->GetMethodID(jClass,"isSequential"
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMockTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMockTupleStreamDef>));
 ProxyMockTupleStreamDef::meth_getRowCount = pEnv->GetMethodID(jClass,"getRowCount","()J");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMultiUseBufferingStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMultiUseBufferingStreamDef>));
+ProxyMultiUseBufferingStreamDef::meth_getReaderRefCountParamId = pEnv->GetMethodID(jClass,"getReaderRefCountParamId","()I");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemNestedLoopJoinStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyNestedLoopJoinStreamDef>));
@@ -1885,6 +1896,11 @@ return pEnv->CallBooleanMethod(jObject,meth_isSequential);
 int64_t ProxyMockTupleStreamDef::getRowCount()
 {
 return pEnv->CallLongMethod(jObject,meth_getRowCount);
+}
+
+int32_t ProxyMultiUseBufferingStreamDef::getReaderRefCountParamId()
+{
+return pEnv->CallIntMethod(jObject,meth_getReaderRefCountParamId);
 }
 
 SharedProxyCorrelation ProxyNestedLoopJoinStreamDef::getLeftJoinKey()

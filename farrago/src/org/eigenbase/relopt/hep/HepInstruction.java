@@ -104,6 +104,17 @@ abstract class HepInstruction
         }
     }
 
+    static class CommonRelSubExprRules
+        extends HepInstruction
+    {
+        Set<RelOptRule> ruleSet;
+
+        void execute(HepPlanner planner)
+        {
+            planner.executeInstruction(this);
+        }
+    }
+
     static class RuleInstance
         extends HepInstruction
     {

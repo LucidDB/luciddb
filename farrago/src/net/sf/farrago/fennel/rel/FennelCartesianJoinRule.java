@@ -55,7 +55,8 @@ public class FennelCartesianJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
-                ANY));
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(RelNode.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -76,8 +77,8 @@ public class FennelCartesianJoinRule
             return;
         }
 
-        RelNode leftRel = joinRel.getLeft();
-        RelNode rightRel = joinRel.getRight();
+        RelNode leftRel = call.rels[1];
+        RelNode rightRel = call.rels[2];
 
         /*
          * Joins that can use CartesianProduct will have only TRUE condition
