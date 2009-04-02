@@ -190,8 +190,9 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
         boost::out_edges(current,graphRep);
 
     bool emptyFound = false;
-    ExecStreamGraphImpl::Edge emptyEdge;
-    ExecStreamId emptyStreamId;
+    // dummy initializations to avoid compiler error
+    ExecStreamGraphImpl::Edge emptyEdge = edge;
+    ExecStreamId emptyStreamId = current;
 
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
         edge = *(outEdges.first);
