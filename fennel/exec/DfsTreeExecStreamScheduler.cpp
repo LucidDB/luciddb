@@ -188,6 +188,12 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
 {
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
         boost::out_edges(current,graphRep);
+
+    bool emptyFound = false;
+    // dummy initializations to avoid compiler error
+    ExecStreamGraphImpl::Edge emptyEdge = edge;
+    ExecStreamId emptyStreamId = current;
+
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
         edge = *(outEdges.first);
         current = boost::target(edge,graphRep);
@@ -202,16 +208,35 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
 
         ExecStreamBufAccessor &bufAccessor =
             graphImpl.getBufAccessorFromEdge(edge);
+
+        // Save the first edge with an empty state that we find, but don't
+        // return that as the next consumer.  We want to give priority to
+        // streams that have explicity requested data.  So, only return the
+        // empty edge consumer if there are no consumers that have explicitly
+        // requested data.
+        if (bufAccessor.getState() == EXECBUF_EMPTY) {
+            if (!emptyFound) {
+                emptyFound = true;
+                emptyEdge = edge;
+                emptyStreamId = current;
+            }
+            continue;
+        }
+
         if (bufAccessor.getState() != skipState) {
             break;
         }
         assert(!(skipState == EXECBUF_UNDERFLOW &&
                     bufAccessor.getState() == EXECBUF_EOS));
     }
-    // should be at least one consumer in non-underflow state if looking
-    // for a non-underflow consumer
-    assert(!(skipState == EXECBUF_UNDERFLOW &&
-                outEdges.first == outEdges.second));
+
+    if (outEdges.first == outEdges.second && emptyFound) {
+        edge = emptyEdge;
+        current = emptyStreamId;
+    } else {
+        assert(!(skipState == EXECBUF_UNDERFLOW &&
+                    outEdges.first == outEdges.second));
+    }
 
     return true;
 }

@@ -25,8 +25,8 @@
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
-#include "fennel/segment/SegInputStream.h"
-#include "fennel/segment/SegOutputStream.h"
+#include "fennel/exec/SegBufferReader.h"
+#include "fennel/exec/SegBufferWriter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -65,7 +65,7 @@ void SegBufferExecStream::open(bool restart)
     if (restart) {
         pOutAccessor->clear();
         if (multipass) {
-            if (pByteInputStream) {
+            if (pSegBufferReader) {
                 // reread from beginning
                 openBufferForRead(false);
             } else {
@@ -92,101 +92,51 @@ void SegBufferExecStream::closeImpl()
 
 void SegBufferExecStream::destroyBuffer()
 {
-    if (pByteOutputStream || (multipass && (firstPageId != NULL_PAGE_ID))) {
+    if (pSegBufferWriter || (multipass && (firstPageId != NULL_PAGE_ID))) {
         // this is to make sure that buffer storage gets deallocated in all
         // cases
         openBufferForRead(true);
     }
-    pByteInputStream.reset();
+    pSegBufferReader.reset();
     firstPageId = NULL_PAGE_ID;
 }
 
 void SegBufferExecStream::openBufferForRead(bool destroy)
 {
-    cbLastRead = 0;
     if (firstPageId == NULL_PAGE_ID) {
-        firstPageId = pByteOutputStream->getFirstPageId();
-        pByteOutputStream.reset();
-        pByteInputStream = SegInputStream::newSegInputStream(
-            bufferSegmentAccessor,firstPageId);
-        pByteInputStream->getSegPos(restartPos);
-    } else {
-        pByteInputStream->endPrefetch();
-        pByteInputStream->seekSegPos(restartPos);
+        firstPageId = pSegBufferWriter->getFirstPageId();
+        pSegBufferWriter.reset();
+        pSegBufferReader =
+            SegBufferReader::newSegBufferReader(
+                pOutAccessor,
+                bufferSegmentAccessor,
+                firstPageId);
     }
-
-    if (destroy) {
-        pByteInputStream->setDeallocate(true);
-    }
-    pByteInputStream->startPrefetch();
+    pSegBufferReader->open(destroy);
 }
 
 ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
 {
-    if (!pByteInputStream) {
-        if (!pByteOutputStream) {
-            pByteOutputStream = SegOutputStream::newSegOutputStream(
-                bufferSegmentAccessor);
-        }
-        ExecStreamBufState inState = pInAccessor->getState();
-        switch (inState) {
-        case EXECBUF_NONEMPTY:
-        case EXECBUF_OVERFLOW:
-            pByteOutputStream->consumeWritePointer(
-                pInAccessor->getConsumptionAvailable());
-            pByteOutputStream->hardPageBreak();
-            pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
-            if (pInAccessor->getState() == EXECBUF_EOS) {
-                return EXECRC_BUF_UNDERFLOW;
-            }
-            // else fall through intentionally
-        case EXECBUF_EMPTY:
-            {
-                uint cb;
-                PBuffer pBuffer = pByteOutputStream->getWritePointer(1,&cb);
-                pInAccessor->provideBufferForProduction(
-                    pBuffer,
-                    pBuffer + cb,
+    if (!pSegBufferReader) {
+        if (!pSegBufferWriter) {
+            pSegBufferWriter =
+                SegBufferWriter::newSegBufferWriter(
+                    pInAccessor,
+                    bufferSegmentAccessor,
                     false);
-            }
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_UNDERFLOW:
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_EOS:
-            {
-                ExecStreamGraphImpl &graphImpl =
-                    dynamic_cast<ExecStreamGraphImpl&>(getGraph());
-                graphImpl.closeProducers(getStreamId());
-                openBufferForRead(!multipass);
-                break;
-            }
-        default:
-            permAssert(false);
         }
+        ExecStreamResult rc = pSegBufferWriter->write();
+        if (rc != EXECRC_EOS) {
+            return rc;
+        }
+
+        ExecStreamGraphImpl &graphImpl =
+            dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+        graphImpl.closeProducers(getStreamId());
+        openBufferForRead(!multipass);
     }
 
-    switch (pOutAccessor->getState()) {
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        return EXECRC_BUF_OVERFLOW;
-    case EXECBUF_UNDERFLOW:
-    case EXECBUF_EMPTY:
-        break;
-    case EXECBUF_EOS:
-        return EXECRC_EOS;
-    default:
-        permAssert(false);
-    }
-    pByteInputStream->consumeReadPointer(cbLastRead);
-    PConstBuffer pBuffer = pByteInputStream->getReadPointer(1,&cbLastRead);
-    if (!pBuffer) {
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    }
-    pOutAccessor->provideBufferForConsumption(
-        pBuffer,
-        pBuffer + cbLastRead);
-    return EXECRC_BUF_OVERFLOW;
+    return pSegBufferReader->read();
 }
 
 ExecStreamBufProvision SegBufferExecStream::getOutputBufProvision() const

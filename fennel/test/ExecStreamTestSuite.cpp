@@ -37,6 +37,8 @@
 #include "fennel/exec/CopyExecStream.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
+#include "fennel/exec/SegBufferReaderExecStream.h"
+#include "fennel/exec/SegBufferWriterExecStream.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
@@ -1012,6 +1014,151 @@ void ExecStreamTestSuite::testSplitterPlusBarrier()
 
     ConstExecStreamGenerator expectedResultGenerator(nRows);
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
+}
+
+void ExecStreamTestSuite::testSegBufferReaderWriterExecStream(
+    bool restartable,
+    bool earlyClose)
+{
+    // This testcase exercises the SegBufferReaderExecStream and
+    // SegBufferWriterExecStream classes using either a MergeExecStream
+    // (inputs read serially) or a CartesianJoinExecStream (restartable
+    // input), depending on the "restartable" parameter.
+    //
+    // The stream graph consists of a MergeExecStream or a
+    // CartesianJoinExecStream with two inputs that are
+    // SegBufferReaderExecStreams.  A SegBufferWriterExecStream buffers a
+    // mock producer so it can be read by SegBufferReaderExecStreams.
+    //
+    // If the earlyClose parameter is set, then the
+    // SegBufferReaderExecStreams output their data to a SegBufferExecStream
+    // which will execute an early close once it has read all of its input.
+
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    uint nRows;
+    if (!restartable) {
+        nRows = 10000;
+    } else {
+        nRows = 200;
+    }
+    mockParams.nRows = nRows;
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    SegBufferWriterExecStreamParams writerParams;
+    writerParams.scratchAccessor.pSegment = pRandomSegment;
+    writerParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
+    writerParams.readerRefCountParamId = DynamicParamId(1);
+    writerParams.outputTupleDesc.push_back(attrDesc);
+
+    ExecStreamEmbryo writerStreamEmbryo;
+    writerStreamEmbryo.init(
+        new SegBufferWriterExecStream(),
+        writerParams);
+    writerStreamEmbryo.getStream()->setName("SegBufferWriterExecStream");
+
+    SegBufferReaderExecStreamParams readerParams;
+    readerParams.scratchAccessor.pSegment = pRandomSegment;
+    readerParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
+    readerParams.readerRefCountParamId = DynamicParamId(1);
+    readerParams.outputTupleDesc.push_back(attrDesc);
+
+    ExecStreamEmbryo readerStreamEmbryo1;
+    readerStreamEmbryo1.init(
+        new SegBufferReaderExecStream(),
+        readerParams);
+    readerStreamEmbryo1.getStream()->setName("SegBufferReaderExecStream1");
+
+    ExecStreamEmbryo readerStreamEmbryo2;
+    readerStreamEmbryo2.init(
+        new SegBufferReaderExecStream(),
+        readerParams);
+    readerStreamEmbryo2.getStream()->setName("SegBufferReaderExecStream2");
+
+    std::vector<std::vector<ExecStreamEmbryo> > interStreamEmbryosList;
+    std::vector<ExecStreamEmbryo> readerInput;
+    readerInput.push_back(readerStreamEmbryo1);
+    if (earlyClose) {
+        SegBufferExecStreamParams bufParams;
+        bufParams.scratchAccessor.pSegment = pRandomSegment;
+        bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
+        bufParams.multipass = false;
+
+        ExecStreamEmbryo bufStreamEmbryo;
+        bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+        bufStreamEmbryo.getStream()->setName("SegBufferExecStream1");
+        readerInput.push_back(bufStreamEmbryo);
+    }
+    interStreamEmbryosList.push_back(readerInput);
+
+    readerInput.clear();
+    readerInput.push_back(readerStreamEmbryo2);
+    if (earlyClose) {
+        SegBufferExecStreamParams bufParams;
+        bufParams.scratchAccessor.pSegment = pRandomSegment;
+        bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
+        if (restartable) {
+            bufParams.multipass = true;
+        }
+
+        ExecStreamEmbryo bufStreamEmbryo;
+        bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+        bufStreamEmbryo.getStream()->setName("SegBufferExecStream2");
+        readerInput.push_back(bufStreamEmbryo);
+    }
+    interStreamEmbryosList.push_back(readerInput);
+
+    MergeExecStreamParams mergeParams;
+    CartesianJoinExecStreamParams joinParams;
+    if (restartable) {
+        joinParams.leftOuter = false;
+    } else {
+        mergeParams.outputTupleDesc.push_back(attrDesc);
+        if (getDegreeOfParallelism() != 1) {
+            mergeParams.isParallel = true;
+        }
+    }
+
+    ExecStreamEmbryo execStreamEmbryo;
+    if (restartable) {
+        execStreamEmbryo.init(new CartesianJoinExecStream(), joinParams);
+        execStreamEmbryo.getStream()->setName("CartesianJoinExecStream");
+    } else {
+        execStreamEmbryo.init(new MergeExecStream(), mergeParams);
+        execStreamEmbryo.getStream()->setName("MergeExecStream");
+    }
+
+    SharedExecStream pOutputStream =
+        prepareDAG(
+            mockStreamEmbryo,
+            writerStreamEmbryo,
+            interStreamEmbryosList,
+            execStreamEmbryo);
+
+    int64_t zero = 0;
+    TupleDescriptor expectedDesc;
+    expectedDesc.push_back(attrDesc);
+    if (restartable) {
+        expectedDesc.push_back(attrDesc);
+    }
+    TupleData expectedTuple;
+    expectedTuple.compute(expectedDesc);
+    expectedTuple[0].pData = reinterpret_cast<PBuffer>(&zero);
+    if (restartable) {
+        expectedTuple[1].pData = reinterpret_cast<PBuffer>(&zero);
+    }
+
+    verifyConstantOutput(
+        *pOutputStream,
+        expectedTuple,
+        restartable ? nRows * nRows : 2 * nRows);
 }
 
 // End ExecStreamTestSuite.cpp

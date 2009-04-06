@@ -22,12 +22,9 @@
 */
 package org.eigenbase.rel.rules;
 
-import java.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -62,27 +59,6 @@ public class PushProjectPastFilterRule
                 ProjectRel.class,
                 new RelOptRuleOperand(FilterRel.class, ANY)));
         this.preserveExprCondition = PushProjector.ExprCondition.FALSE;
-    }
-
-    /**
-     * Creates a PushProjectPastFilterRule with an explicit root operand
-     * and set of operators which are to be preserved.
-     *
-     * @deprecated LucidEra, please remove
-     *
-     * @param operand root operand, must not be null
-     *
-     * @param id Part of description
-     */
-    public PushProjectPastFilterRule(
-        RelOptRuleOperand operand,
-        Set<SqlOperator> preserveExprs,
-        String id)
-    {
-        this(
-            operand,
-            new PushProjector.OperatorExprCondition(preserveExprs),
-            id);
     }
 
     /**

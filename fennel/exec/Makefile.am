@@ -24,7 +24,11 @@ MockResourceExecStream.cpp \
 NestedLoopJoinExecStream.cpp \
 ParallelExecStreamScheduler.cpp \
 ScratchBufferExecStream.cpp \
+SegBufferReader.cpp \
+SegBufferWriter.cpp \
 SegBufferExecStream.cpp \
+SegBufferReaderExecStream.cpp \
+SegBufferWriterExecStream.cpp \
 SimpleExecStreamGovernor.cpp \
 SingleInputExecStream.cpp \
 SingleOutputExecStream.cpp \

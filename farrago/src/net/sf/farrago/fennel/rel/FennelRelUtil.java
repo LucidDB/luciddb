@@ -938,8 +938,14 @@ public abstract class FennelRelUtil
      */
     public static FennelBufferRel bufferRight(RelNode left, RelNode right)
     {
-        FennelBufferRel bufRel =
-            new FennelBufferRel(right.getCluster(), right, false, true);
+        // If the right input is already buffered, then reuse the buffer.
+        FennelBufferRel bufRel;
+        if (right instanceof FennelMultiUseBufferRel) {
+            return (FennelBufferRel) right;
+        } else {
+            bufRel =
+                new FennelBufferRel(right.getCluster(), right, false, true);
+        }
 
         // if we don't have a rowcount for the LHS, then just go ahead and
         // buffer

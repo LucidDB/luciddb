@@ -638,6 +638,45 @@ explain plan for select count(*) from vc2 where a is null;
 !set outputformat table
 select count(*) from vc2 where a is null;
 
+-- LER-10217 -- Note these testcases may not cause a failure even w/o the fix
+-- for LER-10217, as that bug requires the data to be sorted in a particular
+-- order, which is non-deterministic.  However, they do exercise the codepaths
+-- introduced by the fix.
+create table t5(
+    a varchar(4000), b varchar(4000), c varchar(4000), d varchar(4000), 
+    e varchar(4000));
+create index it5a on t5(a);
+create index it5b on t5(b);
+create index it5c on t5(c);
+create index it5d on t5(d);
+create index it5e on t5(e);
+create table src(a varchar(4000));
+insert into src values
+    ('a'),('a'),('b'),('c'),('d'),('e'),('a'),('a');
+insert into src select * from src;
+insert into src select * from src;
+insert into t5 select a, a, a, a, a from src;
+select * from t5 where a = 'a';
+-- make sure the index was used
+!set outputformat csv
+explain plan for select * from t5 where a = 'a';
+!set outputformat table
+
+create table t3(a varchar(4000), b varchar(4000), c varchar(4000));
+create index it3a on t3(a);
+create index it3b on t3(b);
+create index it3c on t3(c);
+truncate table src;
+insert into src values
+    ('a'),('b'),('c'),('d'),('e'),('f'),('g'),('h'),('a'),('i'),('a'),('b'),
+    ('c'),('d'),('e'),('f');
+insert into src select * from src;
+insert into t3 select a, a, a from src;
+select * from t3 where a = 'a';
+-- make sure the index was used
+!set outputformat csv
+explain plan for select * from t3 where a = 'a';
+
 -- cleanup
 drop server test_data cascade;
 

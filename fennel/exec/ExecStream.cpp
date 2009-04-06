@@ -46,6 +46,11 @@ ExecStream::ExecStream()
     name = "";
 }
 
+bool ExecStream::canEarlyClose()
+{
+    return true;
+}
+
 void ExecStream::closeImpl()
 {
     isOpen = false;

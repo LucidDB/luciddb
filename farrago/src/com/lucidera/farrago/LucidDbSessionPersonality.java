@@ -270,6 +270,9 @@ public class LucidDbSessionPersonality
             calcVM);
 
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
+        if (fennelEnabled) {
+            planner.addRule(FennelBufferCommonRelSubExprRule.instance);
+        }
 
         planner.removeRule(SwapJoinRule.instance);
         return planner;
@@ -295,10 +298,6 @@ public class LucidDbSessionPersonality
         // could come later, but MUST come before FennelBernoulliSamplingRule
         // or else we lose system sampling.
         builder.addRuleInstance(LcsSamplingRowScanRule.instance);
-
-        // Eliminate AGG(DISTINCT x) now, because this transformation
-        // may introduce new joins which need to be optimized further on.
-        builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
 
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection.  Also need to fire these
@@ -376,10 +375,15 @@ public class LucidDbSessionPersonality
         // to joins.
         builder.addRuleInstance(new MergeProjectRule(true));
 
+        // Eliminate AGG(DISTINCT x).  Because this transformation
+        // may introduce new joins, it needs to be applied before
+        // the rules that determine join ordering.
+        builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
+
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
         // all of its children have been converted to MultiJoinRels.  At the
-        // same time, push any filters on top of the converted MultiJoinRel's
+        // same time, push any filters on top of the converted MultiJoinRels
         // into the MultiJoinRel and pull up projects that are on top of
         // them so the projects are above their parent joins.  Since we're
         // pulling up projects, we need to also merge any projects we generate
@@ -408,8 +412,8 @@ public class LucidDbSessionPersonality
         // final query.  (This can occur as a result of unfolding views.)
         // Note that this call will only reduce expressions in the projection
         // and where clause.  Another round of reduction needs to be done
-        // further below after MultiJoinRel's have been converted back to
-        // JoinRel's.
+        // further below after MultiJoinRels have been converted back to
+        // JoinRels.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
 
         // Push projection information in the remaining projections that sit
@@ -456,7 +460,7 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(LoptOptimizeJoinRule.instance);
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
-        // Now that we've converted MultiJoinRel's back to JoinRel's, reduce
+        // Now that we've converted MultiJoinRels back to JoinRels, reduce
         // expressions in join conditions.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
 
@@ -517,6 +521,15 @@ public class LucidDbSessionPersonality
         // removing the semijoin, which could result in an incorrect query
         // result.
         builder.addRuleInstance(RemoveSemiJoinRule.instance);
+
+        // Remove common relational subexpressions.  Do this after the rules
+        // that determine the optimal join ordering because as part of
+        // determining join ordering, we also remove unnecessary joins.
+        // So we want to avoid buffering subexpressions that otherwise
+        // would have been removed.  However, do this before the last round
+        // of projection pushing.  Otherwise, pushing those projections will
+        // result in some relational subexpressions no longer being common.
+        builder.addCommonRelSubExprInstruction();
 
         // Now that we've finished join ordering optimization, have converted
         // filters where possible, and have converted semijoins, push projects
@@ -595,7 +608,7 @@ public class LucidDbSessionPersonality
         // call metadata queries on logical RelNodes.
         builder.addRuleInstance(LhxAggRule.instance);
 
-        // Handle rid expressions being projected from EmptyRel's
+        // Handle rid expressions being projected from EmptyRels
         builder.addRuleInstance(LcsRemoveRidExprRule.instance);
 
         // Handle trivial renames now so that they don't get
@@ -739,7 +752,8 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(
             new PushProjectPastSetOpRule(
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+                new PushProjector.OperatorExprCondition(
+                    LucidDbOperatorTable.ldbInstance().getSpecialOperators())));
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
                 new PushProjector.OperatorExprCondition(
@@ -754,12 +768,14 @@ public class LucidDbSessionPersonality
                 new RelOptRuleOperand(
                     ProjectRel.class,
                     new RelOptRuleOperand(FilterRel.class, RelOptRule.ANY)),
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                new PushProjector.OperatorExprCondition(
+                    LucidDbOperatorTable.ldbInstance().getSpecialOperators()),
                 "with project"));
         builder.addRuleInstance(
             new PushProjectPastFilterRule(
                 new RelOptRuleOperand(FilterRel.class, RelOptRule.ANY),
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                new PushProjector.OperatorExprCondition(
+                    LucidDbOperatorTable.ldbInstance().getSpecialOperators()),
                 "without project"));
         builder.addRuleInstance(new MergeProjectRule(true));
         builder.addGroupEnd();

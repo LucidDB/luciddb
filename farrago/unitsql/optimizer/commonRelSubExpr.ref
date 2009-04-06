@@ -1,0 +1,758 @@
+> -- $Id$
+> -- Exercise materialization of common relational subexpressions.  Many of the
+> -- testcases in here are nonsense queries that are intended to exercise the
+> -- corner cases described at
+> -- http://pub.eigenbase.org/wiki/LucidDbCommonRelationalSubExpressionMaterialization
+> 
+> create schema crse;
+> set schema 'crse';
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> create table sales(
+>     sid int primary key, product_id int, salesperson int, customer int,
+>     quantity int);
+> create index i_sales_pid on sales(product_id);
+> create index i_sales_sp on sales(salesperson);
+> create index i_sales_cust on sales(customer);
+> 
+> create table product(
+>     id int unique not null, name char(20), color char(10), size char(1));
+> create table salesperson(id int unique not null, name char(20), age int);
+> create table customer(
+>     id int unique not null, company char(20), city char(20) not null);
+> create table state(city char(20) unique not null, state char(20));
+> 
+> create index i_product_color on product(color);
+> create index i_product_size on product(size);
+> create index i_customer_city on customer(city);
+> 
+> insert into product values(1, 'radio', 'black', 'S');
+> insert into product values(2, 'phone', 'white', 'M');
+> insert into salesperson values(1, 'XYZ', 30);
+> insert into salesperson values(2, 'UVW', 40);
+> insert into customer values(1, 'ABC', 'San Mateo');
+> insert into customer values(2, 'DEF', 'New York City');
+> insert into state values('San Mateo', 'CA');
+> insert into state values('New York City', 'New York');
+> insert into sales values(1, 1, 1, 1, 10);
+> insert into sales values(2, 1, 1, 2, 20);
+> insert into sales values(3, 1, 2, 1, 30);
+> insert into sales values(4, 1, 2, 2, 40);
+> insert into sales values(5, 2, 1, 1, 50);
+> insert into sales values(6, 2, 1, 2, 60);
+> insert into sales values(7, 2, 2, 1, 70);
+> insert into sales values(8, 2, 2, 2, 80);
+> 
+> -- more faking of stats; note also that the predicates chosen in the
+> -- actual queries aren't necessarily selective in reality but the stats
+> -- make the optimizer think they are
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CRSE', 'SALES', 100000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CRSE', 'PRODUCT', 20);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CRSE', 'SALESPERSON', 10);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CRSE', 'CUSTOMER', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CRSE', 'STATE', 5);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'CRSE', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> create view v as
+> select sid, p.name as pname, p.color, p.size, sp.name as spname, sp.age,
+>     c.company, c.city, st.state, quantity
+>     from sales s left outer join product p on s.product_id = p.id
+>         left outer join salesperson sp on s.salesperson = sp.id
+>         left outer join customer c on s.customer = c.id
+>         left outer join state st on c.city = st.city;
+> 
+> !set outputformat csv
+> 
+> -- Buffering is not used here because it's not cost-effective
+> 
+> explain plan for
+> select count(distinct product_id), sum(quantity) from sales;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, INTEGER EXPR$1) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelAggRel(groupCount=[0], EXPR$1=[SUM($1)])'
+'        LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'      FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'        LhxAggRel(groupCount=[1])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID]])'
+> 
+> -- But it is used here
+> 
+> explain plan for
+> select count(distinct product_id), sum(quantity) from sales
+>     where salesperson < 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, INTEGER EXPR$1) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelAggRel(groupCount=[0], EXPR$1=[SUM($1)])'
+'        FennelReshapeRel(projection=[[1, 4]], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY) NOT NULL])'
+'          FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[2])'
+'            LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelValuesRel(tuples=[[{ '(', null, ')', 2 }]])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'          LhxAggRel(groupCount=[1])'
+'            FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER PRODUCT_ID) NOT NULL])'
+'              FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[2])'
+'                LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '(', null, ')', 2 }]])'
+> 
+> -- Multiple count-distinct's with another aggregate
+> 
+> explain plan for
+> select count(distinct pname), count(distinct company), sum(quantity) from v
+>     where size >= 'M' and city >= 'N';
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[2, 1, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelAggRel(groupCount=[0], EXPR$2=[SUM($2)])'
+'          FennelReshapeRel(projection=[[1, 2, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PNAME, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER QUANTITY) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                  FennelToIteratorConverter'
+'                    LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                      FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                        LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                      FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                        LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          FennelAggRel(groupCount=[0], EXPR$1=[COUNT($0)])'
+'            LhxAggRel(groupCount=[1])'
+'              FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
+'                FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                      FennelToIteratorConverter'
+'                        LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                          FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                            LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                              LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                              FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                                LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'          LhxAggRel(groupCount=[1])'
+'            FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PNAME) NOT NULL])'
+'              FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                IteratorToFennelConverter'
+'                  IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                    FennelToIteratorConverter'
+'                      LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                        FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                          LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                            FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                              LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                        FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                          LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+> explain plan for
+> select city, count(distinct pname), count(distinct company), min(quantity),
+>     max(quantity)
+>     from v 
+>     where size >= 'M' and city >= 'N'
+>     group by city;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 5, 3, 1, 2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 4]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER EXPR$3, INTEGER EXPR$4, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'          LhxAggRel(groupCount=[1], EXPR$3=[MIN($3)], EXPR$4=[MAX($3)])'
+'            FennelReshapeRel(projection=[[3, 1, 2, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PNAME, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER QUANTITY) NOT NULL])'
+'              FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                IteratorToFennelConverter'
+'                  IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                    FennelToIteratorConverter'
+'                      LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                        FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                          LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                            FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                              LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                        FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                          LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'          LhxAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'            LhxAggRel(groupCount=[2])'
+'              FennelReshapeRel(projection=[[3, 2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
+'                FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                      FennelToIteratorConverter'
+'                        LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                          FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                            LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                              LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                              FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                                LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelReshapeRel(projection=[[3, 1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PNAME) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..7=[{inputs}], expr#8=[null], expr#9=[CAST($t8):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=['M'], expr#11=[>=($t6, $t10)], QUANTITY=[$t1], NAME=[$t5], COMPANY=[$t2], CITY=[$t3], CITY0=[$t9], $condition=[$t11])'
+'                  FennelToIteratorConverter'
+'                    LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[LEFT])'
+'                      FennelReshapeRel(projection=[[0, 2, 4, 5]], filterOp=[COMP_GE], filterOrdinals=[[5]], filterTuple=[['N                   ']], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'                        LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[LEFT])'
+'                          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                      FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                        LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+> 
+> -- Chained semijoin -- buffering should be done on the scans of both
+> -- STATE and CUSTOMER
+> explain plan for
+> select s.sid, s.quantity, c.city, st.state, c.company
+>     from sales s, state st, customer c
+>     where s.customer = c.id and (c.company like 'A%' or c.company like 'D%')
+>         and c.city = st.city and (st.state like 'New%');
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 5, 6, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" STATE, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_CUST], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[3])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0..2=[{inputs}], expr#3=['A%'], expr#4=[LIKE($t1, $t3)], expr#5=['D%'], expr#6=[LIKE($t1, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'                      FennelToIteratorConverter'
+'                        LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                            LcsIndexSearchRel(table=[[LOCALDB, CRSE, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                              FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                                FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY) NOT NULL])'
+'                                  FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'                                    IteratorToFennelConverter'
+'                                      IterCalcRel(expr#0..1=[{inputs}], expr#2=['New%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                                        FennelToIteratorConverter'
+'                                          LcsRowScanRel(table=[[LOCALDB, CRSE, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 4, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" STATE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
+'          FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[3])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0..2=[{inputs}], expr#3=['A%'], expr#4=[LIKE($t1, $t3)], expr#5=['D%'], expr#6=[LIKE($t1, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                      LcsIndexSearchRel(table=[[LOCALDB, CRSE, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                          FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY) NOT NULL])'
+'                            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'                              IteratorToFennelConverter'
+'                                IterCalcRel(expr#0..1=[{inputs}], expr#2=['New%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                                  FennelToIteratorConverter'
+'                                    LcsRowScanRel(table=[[LOCALDB, CRSE, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]])'
+'          FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0..1=[{inputs}], expr#2=['New%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, CRSE, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]])'
+> 
+> -- This is intended to test a scenario similar to the query tree shown below,
+> -- which is referenced in the design writeup.
+> --
+> --         Z
+> --        / \
+> --       Y  B1
+> --      / \
+> --     B2 B2
+> --     |   |
+> --     X   X
+> --     |   |
+> --     B1 B1
+> 
+> create view v1 as
+>     select s.sid, p.name from sales s, product p
+>         where s.product_id = p.id;
+> create view v2 as
+>     select * from v1 union all select c.id, c.company from customer c;
+> 
+> explain plan for
+> (select * from v2 where name like 'r%'
+>     union all select * from v2 where name like 'r%')
+> union all
+>     select * from v1 where name like 'r%';
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[3])'
+'      FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'                      IteratorToFennelConverter'
+'                        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                          FennelToIteratorConverter'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'          FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'    FennelRenameRel(fieldNames=[[SID, NAME]])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[2])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'            FennelToIteratorConverter'
+'              LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[3])'
+'      FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'                      IteratorToFennelConverter'
+'                        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                          FennelToIteratorConverter'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'          FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'    FennelRenameRel(fieldNames=[[SID, NAME]])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[2])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'            FennelToIteratorConverter'
+'              LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[3])'
+'      FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, CRSE, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'                      IteratorToFennelConverter'
+'                        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                          FennelToIteratorConverter'
+'                            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'          FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[4])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+> 
+> -- This is intended to test a scenario similar to the query tree shown below,
+> -- which is referenced in the design writeup.
+> --
+> --        -- X --
+> --       /       \
+> --       B        Y
+> --       |      /   \
+> --      IFC1  IFC2   Z
+> --              |
+> --              B
+> --              |
+> --             IFC1
+> 
+> create view v3 as
+>     select s.sid, p.name from sales s left outer join 
+>     (select id, name from product p where name like 'r%') as p
+>         on s.product_id = p.id;
+> explain plan for
+> select id, name from product where name like 'r%' union all
+>     (select * from v3 where name like 'ra%' union all 
+>         select id, company from customer);
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'    FennelRenameRel(fieldNames=[[ID, NAME]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..4=[{inputs}], expr#5=['ra%'], expr#6=[LIKE($t3, $t5)], SID=[$t0], NAME=[$t3], $condition=[$t6])'
+'          FennelToIteratorConverter'
+'            LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[LEFT])'
+'              LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'              FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                      FennelToIteratorConverter'
+'                        LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'    FennelRenameRel(fieldNames=[[ID, NAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+> 
+> -- Avoid buffering a common relational subexpression that will be removed
+> -- by join removal.  The first query can use buffering because the self-join
+> -- on the view is not removed.  But the second cannot be buffered because the
+> -- self-join is removed.
+> 
+> explain plan for
+> select * from v3 x, v3 y where x.sid = y.sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 0, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[LEFT])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'          FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+'      FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'              FennelToIteratorConverter'
+'                LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+> explain plan for
+> select x.* from v3 x, v3 y where x.sid = y.sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER NOT NULL SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[LEFT])'
+'      LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], expr#4=[CAST($t0):INTEGER], proj#0..1=[{exprs}], CAST($0):INTEGER=[$t4], $condition=[$t3])'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
+> 
+> -- If the buffering rule is applied too early, the following queries will use
+> -- buffering, resulting in excessive joins.  The correct plans will not buffer.
+> 
+> explain plan for
+> select sid from sales s
+>     where not (quantity in (select id from product))
+>         and exists(select * from product where id = s.product_id);
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER NOT NULL SID) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS TRUE($t4)], expr#7=[NOT($t6)], proj#0..1=[{exprs}], $condition=[$t7])'
+'          FennelToIteratorConverter'
+'            LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[LEFT])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], proj#0..2=[{exprs}], $condition=[$t3])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'              FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, BOOLEAN $f1, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                      FennelToIteratorConverter'
+'                        LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..2=[{inputs}], expr#3=[true], $f0=[$t2], $f0=[$t3])'
+'            FennelToIteratorConverter'
+'              LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'                FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                  LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                LhxAggRel(groupCount=[1])'
+'                  FennelRenameRel(fieldNames=[[$f0]])'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID]])'
+> explain plan for
+> select * from product p
+>     where (select min(quantity + product_id) from sales
+>             where product_id = p.id)
+>     < (select max(quantity + product_id) from sales
+>             where product_id = p.id);
+'column0'
+'IterCalcRel(expr#0..6=[{inputs}], expr#7=[<($t4, $t6)], proj#0..3=[{exprs}], $condition=[$t7])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 5]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER EXPR$0) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
+'          LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'          LhxAggRel(groupCount=[1], EXPR$0=[MIN($1)])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t0)], $f0=[$t2], $f0=[$t4])'
+'                FennelToIteratorConverter'
+'                  LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                    FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                      LhxAggRel(groupCount=[1])'
+'                        FennelRenameRel(fieldNames=[[$f0]])'
+'                          LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[MAX($1)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t0)], $f0=[$t2], $f0=[$t4])'
+'            FennelToIteratorConverter'
+'              LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
+'                LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'                FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                  LhxAggRel(groupCount=[1])'
+'                    FennelRenameRel(fieldNames=[[$f0]])'
+'                      LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+> 
+> -- Buffering is in a dataflow that is the input into a UDX that is on the RHS
+> -- of a hash join.  Buffering is done on both inputs into the hash join.
+> -- Therefore, if the scheduler incorrectly schedules the left input of the
+> -- hash join rather than the right, to consume the buffered data, a hang will
+> -- occur.
+> 
+> set path 'crse';
+> create function stringify(c cursor, delimiter varchar(128))
+> returns table(v varchar(65535))
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+> explain plan for
+> select * from
+>     table(stringify(cursor(select * from product where name like 'p%'), '|'))
+>         as x,
+>     (select cast(id as varchar(10)) || '|' || name || '|' || color || '|'
+>             || size as v
+>         from product where name like 'p%') as y
+>     where x.v = y.v;
+'column0'
+'IterCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#7=['|'], expr#8=[||($t6, $t7)], expr#9=[||($t8, $t1)], expr#10=[||($t9, $t7)], expr#11=[||($t10, $t2)], expr#12=[||($t11, $t7)], expr#13=[||($t12, $t3)], V=[$t5], V=[$t13])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[4]], rightKeys=[[0]], joinType=[INNER])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t0):VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=['|'], expr#6=[||($t4, $t5)], expr#7=[||($t6, $t1)], expr#8=[||($t7, $t5)], expr#9=[||($t8, $t2)], expr#10=[||($t9, $t5)], expr#11=[||($t10, $t3)], expr#12=[CAST($t11):VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST(||(||(||(||(||(||(CAST($0):VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL, '|'), $1), '|'), $2), '|'), $3)):VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t12])'
+'          FennelToIteratorConverter'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..3=[{inputs}], expr#4=['p%'], expr#5=[LIKE($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'      IteratorToFennelConverter'
+'        FarragoJavaUdxRel(invocation=[CAST(STRINGIFY(CAST($0):CURSOR, CAST('|'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")):RecordType(VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" V) NOT NULL])'
+'          FennelToIteratorConverter'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0..3=[{inputs}], expr#4=['p%'], expr#5=[LIKE($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'                  FennelToIteratorConverter'
+'                    LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+> 
+> -- Buffering occurs in the RHS of a cartesian join, without a FennelBufferRel
+> -- in between the FennelMultiUseBufferRel and the cartesian join.  This
+> -- exercises executing SegBufferReaderExecStream in open-restart mode.
+> 
+> explain plan for
+> select c1.company, c2.city from
+>     (select * from customer where id = 1) as c1, 
+>     (select * from customer where id = 1) as c2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCartesianProductRel(leftouterjoin=[false])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, CRSE, CUSTOMER]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$CUSTOMER$ID], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
+'    FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY) NOT NULL])'
+'      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'        LcsRowScanRel(table=[[LOCALDB, CRSE, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, CRSE, CUSTOMER]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$CUSTOMER$ID], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
+> 
+> !set outputformat table
+> -- Run the above queries
+> 
+> select count(distinct product_id), sum(quantity) from sales;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 2       | 360     |
++---------+---------+
+> select count(distinct product_id), sum(quantity) from sales
+>     where salesperson < 2;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 2       | 140     |
++---------+---------+
+> -- execute the above query a second time to ensure proper handling when
+> -- executing a previously closed stream graph
+> select count(distinct product_id), sum(quantity) from sales
+>     where salesperson < 2;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 2       | 140     |
++---------+---------+
+> select count(distinct pname), count(distinct company), sum(quantity) from v
+>     where size >= 'M' and city >= 'N';
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 2       | 2       | 360     |
++---------+---------+---------+
+> select city, count(distinct pname), count(distinct company), min(quantity),
+>     max(quantity)
+>     from v 
+>     where size >= 'M' and city >= 'N'
+>     group by city
+>     order by city;
++-----------------------+---------+---------+---------+---------+
+|         CITY          | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
++-----------------------+---------+---------+---------+---------+
+| New York City         | 2       | 1       | 20      | 80      |
+| San Mateo             | 2       | 1       | 10      | 70      |
++-----------------------+---------+---------+---------+---------+
+> (select * from v2 where name like 'r%'
+>         union all select * from v2 where name like 'r%')
+>     union all
+>         select * from v1 where name like 'r%'
+>     order by sid, name;
++------+-----------------------+
+| SID  |         NAME          |
++------+-----------------------+
+| 1    | radio                 |
+| 1    | radio                 |
+| 1    | radio                 |
+| 2    | radio                 |
+| 2    | radio                 |
+| 2    | radio                 |
+| 3    | radio                 |
+| 3    | radio                 |
+| 3    | radio                 |
+| 4    | radio                 |
+| 4    | radio                 |
+| 4    | radio                 |
++------+-----------------------+
+> select id, name from product where name like 'r%' union all
+>     (select * from v3 where name like 'ra%' union all 
+>         select id, company from customer)
+>     order by id, name;
++-----+-----------------------+
+| ID  |         NAME          |
++-----+-----------------------+
+| 1   | ABC                   |
+| 1   | radio                 |
+| 1   | radio                 |
+| 2   | DEF                   |
+| 2   | radio                 |
+| 3   | radio                 |
+| 4   | radio                 |
++-----+-----------------------+
+> select * from v3 x, v3 y where x.sid = y.sid order by sid;
++------+-----------------------+-------+-----------------------+
+| SID  |         NAME          | SID0  |         NAME0         |
++------+-----------------------+-------+-----------------------+
+| 1    | radio                 | 1     | radio                 |
+| 2    | radio                 | 2     | radio                 |
+| 3    | radio                 | 3     | radio                 |
+| 4    | radio                 | 4     | radio                 |
+| 5    |                       | 5     |                       |
+| 6    |                       | 6     |                       |
+| 7    |                       | 7     |                       |
+| 8    |                       | 8     |                       |
++------+-----------------------+-------+-----------------------+
+> select x.* from v3 x, v3 y where x.sid = y.sid order by sid;
++------+-----------------------+
+| SID  |         NAME          |
++------+-----------------------+
+| 1    | radio                 |
+| 2    | radio                 |
+| 3    | radio                 |
+| 4    | radio                 |
+| 5    |                       |
+| 6    |                       |
+| 7    |                       |
+| 8    |                       |
++------+-----------------------+
+> select sid from sales s
+>     where not (quantity in (select id from product))
+>         and exists(select * from product where id = s.product_id)
+>     order by sid;
++------+
+| SID  |
++------+
+| 1    |
+| 2    |
+| 3    |
+| 4    |
+| 5    |
+| 6    |
+| 7    |
+| 8    |
++------+
+> select * from product p
+>     where (select min(quantity + product_id) from sales
+>             where product_id = p.id)
+>     < (select max(quantity + product_id) from sales
+>             where product_id = p.id)
+>     order by id;
++-----+-----------------------+-------------+-------+
+| ID  |         NAME          |    COLOR    | SIZE  |
++-----+-----------------------+-------------+-------+
+| 1   | radio                 | black       | S     |
+| 2   | phone                 | white       | M     |
++-----+-----------------------+-------------+-------+
+> select * from
+>     table(stringify(cursor(select * from product where name like 'p%'), '|'))
+>         as x,
+>     (select cast(id as varchar(10)) || '|' || name || '|' || color || '|'
+>             || size as v
+>         from product where name like 'p%') as y
+>     where x.v = y.v;
++--------------------------------------+--------------------------------------+
+|                  V                   |                  V0                  |
++--------------------------------------+--------------------------------------+
+| 2|phone               |white     |M  | 2|phone               |white     |M  |
++--------------------------------------+--------------------------------------+
+> select c1.company, c2.city from
+>     (select * from customer where id = 1) as c1, 
+>     (select * from customer where id = 1) as c2;
++-----------------------+-----------------------+
+|        COMPANY        |         CITY          |
++-----------------------+-----------------------+
+| ABC                   | San Mateo             |
++-----------------------+-----------------------+
+> 
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> !quit

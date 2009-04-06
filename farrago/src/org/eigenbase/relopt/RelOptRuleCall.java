@@ -46,6 +46,7 @@ public abstract class RelOptRuleCall
     private final RelOptRule rule;
     public final RelNode [] rels;
     private final RelOptPlanner planner;
+    private final List<RelNode> parents;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -57,19 +58,32 @@ public abstract class RelOptRuleCall
      * @param rels Array of relational expressions which matched each operand
      * @param nodeChildren For each node which matched with <code>
      * matchAnyChildren</code>=true, a list of the node's children
+     * @param parents list of parent RelNodes corresponding to the first
+     * relational expression in the array argument, if known; otherwise, null
      */
     protected RelOptRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
         RelNode [] rels,
-        Map<RelNode, List<RelNode>> nodeChildren)
+        Map<RelNode, List<RelNode>> nodeChildren,
+        List<RelNode> parents)
     {
         this.planner = planner;
         this.operand0 = operand;
         this.nodeChildren = nodeChildren;
         this.rule = operand.getRule();
         this.rels = rels;
+        this.parents = parents;
         assert (rels.length == rule.operands.length);
+    }
+
+    protected RelOptRuleCall(
+        RelOptPlanner planner,
+        RelOptRuleOperand operand,
+        RelNode[] rels,
+        Map<RelNode, List<RelNode>> nodeChildren)
+    {
+        this(planner, operand, rels, nodeChildren, null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -135,6 +149,14 @@ public abstract class RelOptRuleCall
     public RelOptPlanner getPlanner()
     {
         return planner;
+    }
+
+    /**
+     * @return list of parents of the first relational expression
+     */
+    public List<RelNode> getParents()
+    {
+        return parents;
     }
 
     /**

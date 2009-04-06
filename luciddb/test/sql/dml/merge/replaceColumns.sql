@@ -77,6 +77,12 @@ merge into emps e
         update set gender = lower(t.t_gender), name = lower(t.t_name);
 select lcs_rid(empno), * from emps order by empno;
 
+-- Executes the updates using actual update statements
+update emps set gender = upper(gender) where gender = lower(gender);
+select lcs_rid(empno), * from emps order by empno;
+update emps set gender = lower(gender) where gender = 'M';
+select lcs_rid(empno), * from emps order by empno;
+
 -- Update columns that are indexed.  Verify that the indexes are still usable.
 -- (Double check via explain plan that the indexes are in fact being used.)
 
@@ -226,6 +232,23 @@ select city, age from emps where city >= 'A' union
     order by city, age;
 alter session set "label" = null;
 
+-- Verify that the optimization can be used even when the join key from the
+-- target table is non-unique
+create table nonUniqueEmps(
+    empno int not null, name varchar(20) not null, deptno int,
+    gender char(1), city char(30), age smallint, salary numeric(10,2));
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
+insert into nonUniqueEmps select * from emps;
+insert into nonUniqueEmps values(
+    110, 'EricJr', 20, 'M', 'San Francisco', 40, 36000);
+insert into nonUniqueEmps values(130, 'JohnJr', 40, 'M', 'Vancouver', 10, null);
+select lcs_rid(empno), * from nonUniqueEmps order by empno;
+merge into nonUniqueEmps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set city = upper(t.t_city);
+select lcs_rid(empno), * from nonUniqueEmps order by empno;
+
 ---------------------------------------------------------------------------
 -- Exercise cases where the optimization cannot be used.  In this case, the
 -- rid values after executing the MERGEs should be different.
@@ -351,6 +374,57 @@ merge into t
     on t.a = t2.a
     when matched then update set g = t.g * 2;
 select lcs_rid(a), * from t order by a;
+
+-- LER-10611 -- Verify that duplicate keys that correspond to deleted rows
+-- are ignored when rebuilding the unique index; otherwise, the 4th merge
+-- statement below incorrectly results in a constraint violation.
+
+create table u(a int primary key, b int);
+insert into u values(0,0);
+insert into u values(1,1);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+select lcs_rid(a), * from u order by a;
+-- for the next two merge statements, we do NOT want to enable the optimization;
+-- the filter on b should be selective enough so the optimization is disabled
+merge into u as tgt using (select * from u where b = 1) as src
+    on tgt.a = src.a
+    when matched then update set b = 2;
+select lcs_rid(a), * from u order by a;
+merge into u as tgt using (select * from u where b = 2) as src 
+    on tgt.a = src.a
+    when matched then update set b = 3;
+select lcs_rid(a), * from u order by a;
+-- this statement is just to show that the filter "b + 1 >= 4" will
+-- cause the optimization to be used; so the rid values returned should be
+-- identical to those returned previously -- 0 and 3
+merge into u as tgt using (select * from u where b + 1 >= 4) as src
+    on tgt.a = src.a
+    when matched then update set b = 4;
+select lcs_rid(a), * from u order by a;
+-- so for this statement, the optimization should be used and the rid values
+-- returned should be the same as prior to the merge -- 0 and 3
+merge into u as tgt using (select * from u where b + 1 >= 5) as src
+    on tgt.a = src.a
+    when matched then update set a = 2;
+select lcs_rid(a), * from u order by a;
+-- check that the data is properly stored in the index
+!set outputformat csv
+explain plan for select * from u where a >= 0 order by a;
+!set outputformat table
+select * from u where a >= 0 order by a;
+-- verify things work as well when the key value 1 is inserted, deleted, and
+-- then an existing entry is updated to the key value 1; the update should not
+-- result in a constraint violation
+insert into u values(1, 1);
+select lcs_rid(a), * from u order by a;
+delete from u where a = 1;
+select lcs_rid(a), * from u order by a;
+update u set a = a + 1;
+select lcs_rid(a), * from u order by a;
+select * from u where a >= 0 order by a;
+-- make sure violations are returned when appropriate
+update u set a = 2;
+select lcs_rid(a), * from u order by a;
 
 drop label l;
 drop schema rc cascade;

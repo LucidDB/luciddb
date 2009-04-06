@@ -23,6 +23,7 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.fennel.rel.*;
 
+import java.util.*;
 import java.util.logging.*;
 
 import junit.framework.*;
@@ -136,6 +137,15 @@ public class FarragoOptRulesTest
         String sql)
         throws Exception
     {
+        check(program, sql, null);
+    }
+
+    private void check(
+        HepProgram program,
+        String sql,
+        List<RelOptRule> rules)
+        throws Exception
+    {
         this.program = program;
 
         final DiffRepository diffRepos = getDiffRepos();
@@ -143,7 +153,7 @@ public class FarragoOptRulesTest
 
         String explainQuery = "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql2;
 
-        checkQuery(explainQuery);
+        addRulesAndCheckQuery(explainQuery, rules);
     }
 
     private void check(
@@ -722,6 +732,37 @@ public class FarragoOptRulesTest
             programBuilder.createProgram(),
             "insert into sales.depts(name) "
             + "select cast(gender as varchar(128)) from sales.emps");
+    }
+
+    public void testFennelBufferCommonRelSubExprRule()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+
+        // Explicitly add the instruction to apply common subexpression rules,
+        // so FennelBufferCommonRelSubExprRule will only be applied on
+        // subexpressions that appear more than once in the query.  Adding
+        // FennelBufferCommonRelSubExprRule as a rule instance in the program
+        // builder will incorrectly result in the rule being applied on all
+        // RelNodes.
+        programBuilder.addCommonRelSubExprInstruction();
+
+        List<RelOptRule> rules = new ArrayList<RelOptRule>();
+        rules.add(FennelBufferCommonRelSubExprRule.instance);
+
+        // Make sure the common subexpression is complex enough so buffering
+        // is beneficial.  Note that the 2nd sub-select is not the same as
+        // the other two, so it won't get buffered.
+        check(
+            programBuilder.createProgram(),
+            "select * from "
+            + "(select * from sales.emps e, sales.depts d "
+            + "   where e.deptno = d.deptno), "
+            + "(select * from sales.depts d, sales.emps e "
+            + "   where e.deptno = d.deptno), "
+            + "(select * from sales.emps e, sales.depts d "
+            + "   where e.deptno = d.deptno)",
+            rules);
     }
 }
 

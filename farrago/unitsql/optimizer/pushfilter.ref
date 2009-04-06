@@ -395,8 +395,10 @@
 '    FennelCartesianProductRel(leftouterjoin=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], preserveOrder=[false])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
+'            FennelToIteratorConverter'
+'              FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], preserveOrder=[false])'
 > 
 > ------------------------------
 > -- LucidDb-specific operations

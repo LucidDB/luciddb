@@ -48,6 +48,8 @@ protected:
     void testBTreeInsertExecStream(bool useDynamicBTree, uint nRows);
     void testNestedLoopJoinExecStream(uint nRowsLeft, uint nRowsRight);
     virtual uint getDegreeOfParallelism();
+    void testSegBufferReaderWriterExecStream(
+        bool restartable, bool earlyClose);
 
 public:
     /**
@@ -100,6 +102,18 @@ public:
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testSplitterPlusBarrier);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSegBufferReaderWriterExecStream1);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSegBufferReaderWriterExecStream2);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSegBufferReaderWriterExecStream3);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSegBufferReaderWriterExecStream4);
         }
     }
 
@@ -188,6 +202,26 @@ public:
     void testNestedLoopJoinExecStream2()
     {
         testNestedLoopJoinExecStream(5, 10000);
+    }
+
+    void testSegBufferReaderWriterExecStream1()
+    {
+        testSegBufferReaderWriterExecStream(false, false);
+    }
+
+    void testSegBufferReaderWriterExecStream2()
+    {
+        testSegBufferReaderWriterExecStream(true, false);
+    }
+
+    void testSegBufferReaderWriterExecStream3()
+    {
+        testSegBufferReaderWriterExecStream(false, true);
+    }
+
+    void testSegBufferReaderWriterExecStream4()
+    {
+        testSegBufferReaderWriterExecStream(true, true);
     }
 };
 

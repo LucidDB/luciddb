@@ -739,4 +739,55 @@ TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], update
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testFennelBufferCommonRelSubExprRule">
+        <Resource name="sql">
+            <![CDATA[select * from (select * from sales.emps e, sales.depts d    where e.deptno = d.deptno), (select * from sales.depts d, sales.emps e    where e.deptno = d.deptno), (select * from sales.emps e, sales.depts d    where e.deptno = d.deptno)]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11], DEPTNO1=[$12], NAME1=[$13], EMPNO0=[$14], NAME00=[$15], DEPTNO00=[$16], GENDER0=[$17], CITY0=[$18], EMPID0=[$19], AGE0=[$20], PUBLIC_KEY0=[$21], SLACKER0=[$22], MANAGER0=[$23], EMPNO1=[$24], NAME2=[$25], DEPTNO2=[$26], GENDER1=[$27], CITY1=[$28], EMPID1=[$29], AGE1=[$30], PUBLIC_KEY1=[$31], SLACKER1=[$32], MANAGER1=[$33], DEPTNO01=[$34], NAME01=[$35])
+  JoinRel(condition=[true], joinType=[inner])
+    JoinRel(condition=[true], joinType=[inner])
+      ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])
+        FilterRel(condition=[=($2, $10)])
+          JoinRel(condition=[true], joinType=[inner])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+            TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      ProjectRel(DEPTNO=[$0], NAME=[$1], EMPNO=[$2], NAME0=[$3], DEPTNO0=[$4], GENDER=[$5], CITY=[$6], EMPID=[$7], AGE=[$8], PUBLIC_KEY=[$9], SLACKER=[$10], MANAGER=[$11])
+        FilterRel(condition=[=($4, $0)])
+          JoinRel(condition=[true], joinType=[inner])
+            TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])
+      FilterRel(condition=[=($2, $10)])
+        JoinRel(condition=[true], joinType=[inner])
+          TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11], DEPTNO1=[$12], NAME1=[$13], EMPNO0=[$14], NAME00=[$15], DEPTNO00=[$16], GENDER0=[$17], CITY0=[$18], EMPID0=[$19], AGE0=[$20], PUBLIC_KEY0=[$21], SLACKER0=[$22], MANAGER0=[$23], EMPNO1=[$24], NAME2=[$25], DEPTNO2=[$26], GENDER1=[$27], CITY1=[$28], EMPID1=[$29], AGE1=[$30], PUBLIC_KEY1=[$31], SLACKER1=[$32], MANAGER1=[$33], DEPTNO01=[$34], NAME01=[$35])
+  JoinRel(condition=[true], joinType=[inner])
+    JoinRel(condition=[true], joinType=[inner])
+      FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])
+        ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])
+          FilterRel(condition=[=($2, $10)])
+            JoinRel(condition=[true], joinType=[inner])
+              TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+              TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      ProjectRel(DEPTNO=[$0], NAME=[$1], EMPNO=[$2], NAME0=[$3], DEPTNO0=[$4], GENDER=[$5], CITY=[$6], EMPID=[$7], AGE=[$8], PUBLIC_KEY=[$9], SLACKER=[$10], MANAGER=[$11])
+        FilterRel(condition=[=($4, $0)])
+          JoinRel(condition=[true], joinType=[inner])
+            TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])
+      ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])
+        FilterRel(condition=[=($2, $10)])
+          JoinRel(condition=[true], joinType=[inner])
+            TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+            TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

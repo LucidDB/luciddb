@@ -109,14 +109,6 @@ public class AggregateCall
     }
 
     /**
-     * @deprecated remove when all lucidera red code is converted
-     */
-    public int [] getArgs()
-    {
-        return args;
-    }
-
-    /**
      * Returns the ordinals of the arguments to this call.
      *
      * <p>The list is immutable.

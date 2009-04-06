@@ -20,6 +20,7 @@
  */
 package com.lucidera.lcs;
 
+import com.lucidera.farrago.*;
 import com.lucidera.query.*;
 
 import java.util.*;
@@ -84,7 +85,7 @@ public class LcsTableMergeRule
                 TableModificationRel.class,
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand(RelNode.class, ANY))));
+                    new RelOptRuleOperand(JoinRel.class, ANY))));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -128,7 +129,7 @@ public class LcsTableMergeRule
         List<FemLocalIndex> updateClusters =
             shouldReplaceColumns(
                 (LcsTable) tableModification.getTable(),
-                call.rels[2],
+                (JoinRel) call.rels[2],
                 updateList,
                 updateOnly);
 
@@ -217,13 +218,13 @@ public class LcsTableMergeRule
      */
     List<FemLocalIndex> shouldReplaceColumns(
         LcsTable target,
-        RelNode source,
+        JoinRel source,
         List<String> updateCols,
         boolean updateOnly)
     {
         if (!target.getPreparingStmt().getSession().getPersonality()
-                   .supportsFeature(
-                       EigenbaseResource.instance().PersonalitySupportsSnapshots))
+            .supportsFeature(
+                   EigenbaseResource.instance().PersonalitySupportsSnapshots))
         {
             return null;
         }
@@ -238,40 +239,8 @@ public class LcsTableMergeRule
             return null;
         }
 
-        // If the source is a ProjectRel or FilterRel, then the MERGE has
-        // been optimized by LcsConvertMergeToUpdateRule and already meets
-        // the criteria of having unique join keys.  If it's a join, then
-        // we need to validate that the keys are unique.  The source shouldn't
-        // be anything else, but in case it is, we reject those as well.
-        if (source instanceof JoinRel) {
-            List<Integer> leftKeys = new ArrayList<Integer>();
-            List<Integer> rightKeys = new ArrayList<Integer>();
-            JoinRel joinRel = (JoinRel) source;
-            RelOptUtil.splitJoinCondition(
-                joinRel.getInput(0),
-                joinRel.getInput(1),
-                joinRel.getCondition(),
-                leftKeys,
-                rightKeys);
-            if (leftKeys.size() == 0) {
-                return null;
-            }
-            if (!RelMdUtil.areColumnsDefinitelyUnique(
-                    joinRel.getInput(0),
-                    RelMdUtil.setBitKeys(leftKeys)))
-            {
-                return null;
-            }
-            if (!RelMdUtil.areColumnsDefinitelyUnique(
-                    joinRel.getInput(1),
-                    RelMdUtil.setBitKeys(rightKeys)))
-            {
-                return null;
-            }
-        } else if (
-            !(source instanceof ProjectRel)
-            && !(source instanceof FilterRel))
-        {
+        // Validate that the join keys are unique
+        if (!checkUniqueJoinKeys(source)) {
             return null;
         }
 
@@ -311,6 +280,73 @@ public class LcsTableMergeRule
     }
 
     /**
+     * Determines if the join keys corresponding to the source for the MERGE
+     * are unique.  Rid expressions are considered to be unique keys.
+     *
+     * @param joinRel the join
+     *
+     * @return true if the join keys are unique
+     */
+    private boolean checkUniqueJoinKeys(JoinRel joinRel)
+    {
+        List<RexNode> leftKeyExprs = new ArrayList<RexNode>();
+        List<RexNode> rightKeyExprs = new ArrayList<RexNode>();
+        RelOptUtil.splitJoinCondition(
+            Collections.<RelDataTypeField>emptyList(),
+            joinRel.getInput(0),
+            joinRel.getInput(1),
+            joinRel.getCondition(),
+            leftKeyExprs,
+            rightKeyExprs,
+            null,
+            null);
+        if (leftKeyExprs.size() == 0) {
+            return false;
+        }
+
+        // The source is always on the LHS of the join, so we only need to
+        // check those keys.
+        List<Integer> leftKeys = new ArrayList<Integer>();
+        for (int i = 0; i < leftKeyExprs.size(); i++) {
+            if (leftKeyExprs.get(i) instanceof RexInputRef) {
+                leftKeys.add(((RexInputRef) leftKeyExprs.get(i)).getIndex());;
+            } else if (detectLcsRid(leftKeyExprs.get(i))) {
+                // Once an equality filter on rid columns is found, we know
+                // we have a unique join key and need not look at any of the
+                // other keys.
+                return true;
+            }
+        }
+        if (leftKeys.size() == 0) {
+            return false;
+        }
+        if (!RelMdUtil.areColumnsDefinitelyUnique(
+                joinRel.getInput(0),
+                RelMdUtil.setBitKeys(leftKeys)))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Determines if an expression corresponds to a rid expression.
+     *
+     * @param node the expression
+     *
+     * @return true if the expression is a rid expression
+     */
+    private boolean detectLcsRid(RexNode node)
+    {
+        if (!(node instanceof RexCall)) {
+            return false;
+        }
+        RexCall call = (RexCall) node;
+        return (call.getOperator() == LucidDbOperatorTable.lcsRidFunc);
+    }
+
+    /**
      * Determines if each of the columns from a list of columns being updated
      * all belong to clusters containing only a single column.
      *
@@ -338,7 +374,9 @@ public class LcsTableMergeRule
         Map<Integer, FemLocalIndex> colOrdToClusterMap =
             new HashMap<Integer, FemLocalIndex>();
         for (FemLocalIndex cluster : clusteredIndexes) {
-            for (CwmIndexedFeature indexedFeature : cluster.getIndexedFeature()) {
+            for (CwmIndexedFeature indexedFeature :
+                cluster.getIndexedFeature())
+            {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();
                 colOrdToClusterMap.put(column.getOrdinal(), cluster);

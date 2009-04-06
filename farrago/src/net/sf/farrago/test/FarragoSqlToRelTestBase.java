@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.test;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -30,6 +32,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 
@@ -64,8 +67,15 @@ public abstract class FarragoSqlToRelTestBase
         RelNode topRel)
         throws Exception;
 
-    protected void checkQuery(
-        String explainQuery)
+    protected void checkQuery(String explainQuery)
+        throws Exception
+    {
+        addRulesAndCheckQuery(explainQuery, null);
+    }
+
+    protected void addRulesAndCheckQuery(
+        String explainQuery,
+        List<RelOptRule> rules)
         throws Exception
     {
         // hijack necessary internals
@@ -107,6 +117,13 @@ public abstract class FarragoSqlToRelTestBase
             stmt.enablePartialImplementation();
 
             initPlanner(stmt);
+
+            // add any additional rules needed in the planner
+            if (rules != null) {
+                for (RelOptRule rule : rules) {
+                    stmt.getPlanner().addRule(rule);
+                }
+            }
 
             // parse the EXPLAIN PLAN statement
             SqlParser sqlParser = new SqlParser(explainQuery);

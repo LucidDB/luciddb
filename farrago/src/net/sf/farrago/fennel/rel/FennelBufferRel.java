@@ -43,8 +43,8 @@ class FennelBufferRel
 {
     //~ Instance fields --------------------------------------------------------
 
-    boolean inMemory;
-    boolean multiPass;
+    protected boolean inMemory;
+    protected boolean multiPass;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -53,7 +53,7 @@ class FennelBufferRel
      *
      * @param cluster RelOptCluster for this rel
      * @param child child input
-     * @param inMemory true if the buffering needs to done only in memory
+     * @param inMemory true if the buffering needs to be done only in memory
      * @param multiPass true if the buffer output will be read multiple times
      */
     public FennelBufferRel(
@@ -68,6 +68,14 @@ class FennelBufferRel
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return true if the buffering needs to be done only in memory
+     */
+    boolean isInMemory()
+    {
+        return inMemory;
+    }
 
     // implement Cloneable
     public FennelBufferRel clone()

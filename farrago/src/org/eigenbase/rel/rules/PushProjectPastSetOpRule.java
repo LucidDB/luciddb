@@ -27,7 +27,6 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -63,14 +62,6 @@ public class PushProjectPastSetOpRule
                 ProjectRel.class,
                 new RelOptRuleOperand(SetOpRel.class, ANY)));
         this.preserveExprCondition = PushProjector.ExprCondition.FALSE;
-    }
-
-    /**
-     * @deprecated LucidEra please remove
-     */
-    public PushProjectPastSetOpRule(Set<SqlOperator> preserveExprs)
-    {
-        this(new PushProjector.OperatorExprCondition(preserveExprs));
     }
 
     /**

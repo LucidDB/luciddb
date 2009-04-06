@@ -21,57 +21,57 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_SegBufferExecStream_Included
-#define Fennel_SegBufferExecStream_Included
+#ifndef Fennel_SegBufferReaderExecStream_Included
+#define Fennel_SegBufferReaderExecStream_Included
 
+#include "fennel/tuple/TupleData.h"
 #include "fennel/exec/ConduitExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * SegBufferExecStreamParams defines parameters for instantiating a
- * SegBufferExecStream.
- *
- *<p>
- *
- * TODO:  support usage of a SpillOutputStream.
+ * SegBufferReaderExecStreamParams defines parameters for instantiating a
+ * SegBufferReaderExecStream.
  */
-struct SegBufferExecStreamParams : public ConduitExecStreamParams
+struct SegBufferReaderExecStreamParams : public ConduitExecStreamParams
 {
     /**
-     * If true, buffer contents are preserved rather than deleted as they are
-     * read.  This allows open(restart=true) to be used to perform multiple
-     * iterations over the buffer.
-     *
-     *<p>
-     *
-     * TODO: support "tee" on the first pass.
+     * Id of the dynamic parameter used to keep a reference count of the
+     * number of active readers of the buffered input
      */
-    bool multipass;
+    DynamicParamId readerRefCountParamId;
 };
 
 /**
- * SegBufferExecStream fully buffers its input (using segment storage as
- * specified in its parameters).  The first execute request causes all input
- * data to be stored, after which the original input stream is ignored and data
- * is returned from the stored buffer instead.
+ * SegBufferReaderExecStream reads the buffered input written by
+ * a SegBufferWriterExecStream.  It waits until the writer stream has
+ * completed buffering its input before it attempts to read it.  It then
+ * writes the data to its output stream.
  *
- * @author John V. Sichi
+ * <p>
+ * The first buffer pageId written by the writer stream will be passed to
+ * this stream's input stream, once the data has been buffered.
+ *
+ * <p>
+ * The stream shares a dynamic parameter with its corresponding
+ * SegBufferWriterExecStream.  The parameter is a reference counter that's
+ * incremented when this stream is opened, and decremented when it's closed.
+ * SegBufferWriterExecStream uses this reference counter to determine when
+ * it's safe to destroy the buffered data.
+ *
+ * @author Zelaine Fong
  * @version $Id$
  */
-class SegBufferExecStream : public ConduitExecStream
+class SegBufferReaderExecStream : public ConduitExecStream
 {
     SegmentAccessor bufferSegmentAccessor;
     SharedSegBufferReader pSegBufferReader;
-    SharedSegBufferWriter pSegBufferWriter;
-    PageId firstPageId;
-    bool multipass;
-
-    void destroyBuffer();
-    void openBufferForRead(bool destroy);
+    DynamicParamId readerRefCountParamId;
+    PageId firstBufferPageId;
+    TupleData inputTuple;
 
 public:
-    virtual void prepare(SegBufferExecStreamParams const &params);
+    virtual void prepare(SegBufferReaderExecStreamParams const &params);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
@@ -79,11 +79,10 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
     virtual ExecStreamBufProvision getOutputBufProvision() const;
-    virtual ExecStreamBufProvision getInputBufProvision() const;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End SegBufferExecStream.h
+// End SegBufferReaderExecStream.h

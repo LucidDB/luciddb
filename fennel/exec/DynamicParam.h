@@ -49,9 +49,12 @@ class DynamicParam
     boost::scoped_array<FixedBuffer> pBuffer;
     TupleAttributeDescriptor desc;
     TupleDatum datum;
+    bool isCounter;
 
 public:
-    explicit DynamicParam(TupleAttributeDescriptor const &desc);
+    explicit DynamicParam(
+        TupleAttributeDescriptor const &desc,
+        bool isCounter = false);
     inline TupleDatum const &getDatum() const;
     inline TupleAttributeDescriptor const &getDesc() const;
 };
@@ -72,12 +75,16 @@ class DynamicParamManager
 
     DynamicParam &getParamInternal(DynamicParamId dynamicParamId);
 
+    void createParam(
+        DynamicParamId dynamicParamId,
+        SharedDynamicParam param,
+        bool failIfExists);
 public:
     /**
      * Creates a new dynamic parameter.  Initially, a dynamic parameter
      * has value NULL.
      *
-     * @param dynamicParamId unique ID of parameter within this manager; ID's
+     * @param dynamicParamId unique ID of parameter within this manager; IDs
      * need not be contiguous, and must be assigned by some other authority
      *
      * @param attrDesc descriptor for data values to be stored
@@ -88,6 +95,21 @@ public:
     void createParam(
         DynamicParamId dynamicParamId,
         const TupleAttributeDescriptor &attrDesc,
+        bool failIfExists = true);
+
+    /**
+     * Creates a new dynamic parameter that will be used as a counter.
+     * Initializes the parameter value to 0.  The counter parameter can be
+     * used to do atomic increments and decrements.
+     *
+     * @param dynamicParamId unique ID of parameter within this manager; IDs
+     * need not be contiguous, and must be assigned by some other authority
+     *
+     * @param failIfExists if true (the default) an assertion failure
+     * will occur if dynamicParamId is already in use
+     */
+    void createCounterParam(
+        DynamicParamId dynamicParamId,
         bool failIfExists = true);
 
     /**
@@ -125,6 +147,20 @@ public:
      * @param dest destination tupledata for parameter
      */
     void readParam(DynamicParamId dynamicParamId, TupleDatum &dest);
+
+    /**
+     * Increments a dynamic parameter that corresponds to a counter.
+     *
+     * @param dynamicParamId ID with which the counter parameter was created
+     */
+    void incrementCounterParam(DynamicParamId dynamicParamId);
+
+    /**
+     * Decrements a dynamic parameter that corresponds to a counter.
+     *
+     * @param dynamicParamId ID with which the counter parameter was created
+     */
+    void decrementCounterParam(DynamicParamId dynamicParamId);
 
     /**
      * Deletes all dynamic parameters
