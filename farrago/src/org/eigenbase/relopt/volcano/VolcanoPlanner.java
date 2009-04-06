@@ -657,6 +657,9 @@ SUBSET_LOOP:
             if (equivRel != null) {
                 final RelSubset equivSubset = getSubset(equivRel);
                 if (equivSubset != subset) {
+                    assert subset.set != equivSubset.set
+                        : "Same set, different subsets means rel and equivRel"
+                        + " have different traits, and that's an error";
                     merge(subset.set, equivSubset.set);
                 }
             }
@@ -669,7 +672,7 @@ SUBSET_LOOP:
     /**
      * Checks internal consistency.
      */
-    private void validate()
+    protected void validate()
     {
         for (RelSet set : allSets) {
             if (set.equivalentSet != null) {
@@ -775,7 +778,7 @@ SUBSET_LOOP:
      *
      * @pre rel != null
      */
-    RelSubset getSubset(RelNode rel)
+    public RelSubset getSubset(RelNode rel)
     {
         assert rel != null : "pre: rel != null";
         if (rel instanceof RelSubset) {
@@ -785,13 +788,11 @@ SUBSET_LOOP:
         }
     }
 
-    RelSubset getSubset(
+    public RelSubset getSubset(
         RelNode rel,
         RelTraitSet traits)
     {
-        if ((rel instanceof RelSubset)
-            && (rel.getTraits().equals(traits)))
-        {
+        if ((rel instanceof RelSubset) && (rel.getTraits().equals(traits))) {
             return (RelSubset) rel;
         }
         RelSet set = getSet(rel);
@@ -905,7 +906,7 @@ SUBSET_LOOP:
      *
      * @see #normalizePlan(String)
      */
-    void dump(PrintWriter pw)
+    public void dump(PrintWriter pw)
     {
         pw.println("Root: " + root.getDescription());
         pw.println("Original rel:");
@@ -961,7 +962,8 @@ SUBSET_LOOP:
                     if (importance != null) {
                         pw.print(", importance=" + importance);
                     }
-                    pw.print(", rowcount=" + RelMetadataQuery.getRowCount(rel));
+                    pw.print(", rowcount=" +
+                        RelMetadataQuery.getRowCount(rel));
                     pw.println(", cumulative cost=" + getCost(rel));
                 }
             }

@@ -1205,7 +1205,10 @@ public class DdlValidator
         }
 
         for (T supplier : suppliers) {
-            dependency.getSupplier().add(supplier);
+            // REVIEW: Shouldn't this be ref counted instead???
+            if (!dependency.getSupplier().contains(supplier)) {
+                dependency.getSupplier().add(supplier);
+            }
         }
 
         return dependency;

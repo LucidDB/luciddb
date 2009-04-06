@@ -500,12 +500,14 @@ public class FarragoObjectCache
                 tracer.finest(
                     "unpinning cache entry " + entry
                     + " with pin count " + entry.pinCount);
+                entry.pinCount--;
 
-                if (1 >= entry.pinCount) {
+                if (0 == entry.pinCount) {
                     if (entry.getValue() instanceof FarragoAllocation) {
                         ((FarragoAllocation) entry.getValue())
                         .closeAllocation();
                     }
+                    discard(key);
                 } else {
                     entry.pinCount--;
                 }

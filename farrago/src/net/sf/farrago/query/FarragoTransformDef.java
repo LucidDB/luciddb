@@ -86,9 +86,14 @@ public class FarragoTransformDef
         this.streamName = s;
     }
 
-    String getClassName()
+    public String getClassName()
     {
         return className;
+    }
+
+    public String getStreamName()
+    {
+        return streamName;
     }
 
     // called when the implementor gives the def to an executable stmt

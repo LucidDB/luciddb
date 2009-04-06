@@ -890,7 +890,7 @@ public class FarragoPreparingStmt
         return rootRel;
     }
 
-    private void validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    protected void validatePlan(RelNode rel, RelTraitSet desiredTraits)
         throws InvalidPlanException
     {
         if (!rel.getTraits().matches(desiredTraits)) {

@@ -254,7 +254,7 @@ public class RelSubset
             assert set.variablesUsed.containsAll(variablesUsed);
         }
         propagateCostImprovements(
-            (VolcanoPlanner) rel.getCluster().getPlanner(),
+            (VolcanoPlanner)(rel.getCluster().getPlanner()),
             rel,
             new HashSet<RelSubset>());
     }
@@ -351,6 +351,14 @@ public class RelSubset
         variableSet.addAll(getVariablesSet());
     }
 
+    /**
+     * Returns the rel nodes in this rel subset.  All rels must have the same
+     * traits and are logically equivalent.
+     * @return all the rels in the subset
+     */
+    public List<RelNode> getRels() {
+        return rels;
+    }
     //~ Inner Classes ----------------------------------------------------------
 
     /**
