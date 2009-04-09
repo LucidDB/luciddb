@@ -264,26 +264,13 @@ public abstract class FarragoManagementUDR
     public static void exportCatalog(String xmiFile)
         throws Exception
     {
-        exportCatalog(xmiFile, false);
-    }
-
-    /**
-     * Exports the catalog repository contents as an XMI file.
-     *
-     * @param xmiFile name of file to create
-     * @param isCompressed if true, compress the XMI file
-     */
-    public static void exportCatalog(String xmiFile, boolean isCompressed)
-        throws Exception
-    {
         xmiFile = FarragoProperties.instance().expandProperties(xmiFile);
         File file = new File(xmiFile);
         FarragoModelLoader modelLoader = getModelLoader();
         FarragoReposUtil.exportExtent(
             modelLoader.getMdrRepos(),
             file,
-            "FarragoCatalog",
-            isCompressed);
+            "FarragoCatalog");
     }
 
     public static FarragoModelLoader getModelLoader()
@@ -489,8 +476,6 @@ public abstract class FarragoManagementUDR
     public static void systemInfo(PreparedStatement resultInserter)
         throws Exception
     {
-        int i = 0;
-
         String JVM_SRC = "java.lang.System";
         Runtime runtime = Runtime.getRuntime();
 
@@ -783,7 +768,20 @@ public abstract class FarragoManagementUDR
     {
         FarragoSystemRestore restore =
             new FarragoSystemRestore(archiveDirectory);
-        restore.restoreDatabase();
+        restore.restoreDatabase(true);
+    }
+
+    /**
+     * Restores a database from backup, excluding the catalog data.
+     *
+     * @param archiveDirectory the directory containing the backup
+     */
+    public static void restoreDatabaseWithoutCatalog(String archiveDirectory)
+        throws Exception
+    {
+        FarragoSystemRestore restore =
+            new FarragoSystemRestore(archiveDirectory);
+        restore.restoreDatabase(false);
     }
 
     /**

@@ -1,0 +1,18 @@
+-- setup
+-- end of setup
+
+-- thread badAccess1
+> set schema 'br';
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: org.eigenbase.sql.parser.SqlParseException: Catalog data is readonly.
+-- end of thread badAccess1
+
+-- thread badAccess2
+> select * from br.emp;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Data is not accessible.  A partial restore has been executed.
+-- end of thread badAccess2
+
+-- thread badAccess3
+> create table foo(a int);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: org.eigenbase.sql.parser.SqlParseException: Catalog data is readonly.
+-- end of thread badAccess3
+

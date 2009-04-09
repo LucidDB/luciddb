@@ -1100,7 +1100,11 @@ public class FarragoDbSession
         reposSessionEnded = false;
 
         FarragoReposTxnContext reposTxnContext =
-            new FarragoReposTxnContext(repos);
+            new FarragoReposTxnContext(
+                repos,
+                false,
+                getDatabase().isPartiallyRestored());
+
 
         boolean [] pRollback = { true };
         FarragoSessionStmtValidator stmtValidator = newStmtValidator();

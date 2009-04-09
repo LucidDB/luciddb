@@ -1,0 +1,19 @@
+-- Run as a .mtsql script to avoid auto-execution of SQL statements prior to
+-- the start of the actual test
+
+-- Validate that various statements cannot access the system when it's in
+-- a partially restored state.
+
+@nolockstep
+
+@thread badAccess1
+@err set schema 'br';
+@end
+
+@thread badAccess2
+@err select * from br.emp;
+@end
+
+@thread badAccess3
+@err create table foo(a int);
+@end

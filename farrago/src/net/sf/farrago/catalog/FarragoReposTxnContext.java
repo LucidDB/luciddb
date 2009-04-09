@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.catalog;
 
+import net.sf.farrago.resource.*;
+
 /**
  * FarragoReposTxnContext manages the state of at most one repository
  * transaction. A context may be inactive, meaning it has no current
@@ -64,6 +66,7 @@ public class FarragoReposTxnContext
     private State state;
     private int lockLevel;
     private final boolean manageReposSession;
+    private boolean readOnly;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -89,10 +92,26 @@ public class FarragoReposTxnContext
         FarragoRepos repos,
         boolean manageRepoSession)
     {
+        this(repos, manageRepoSession, false);
+    }
+
+    /**
+     * Creates a new inactive transaction context that's optionally readonly.
+     *
+     * @param repos the repos against which transactions are to be performed
+     * @param manageRepoSession if true, a repository session is wrapped around
+     * each transaction
+     */
+    public FarragoReposTxnContext(
+        FarragoRepos repos,
+        boolean manageRepoSession,
+        boolean readOnly)
+    {
         this.repos = repos;
         state = State.NO_TXN;
         lockLevel = 0;
         this.manageReposSession = manageRepoSession;
+        this.readOnly = readOnly;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -134,6 +153,10 @@ public class FarragoReposTxnContext
     public void beginWriteTxn()
     {
         assert (!isTxnInProgress());
+
+        if (readOnly) {
+            throw FarragoResource.instance().CatalogReadOnly.ex();
+        }
 
         if (manageReposSession) {
             repos.beginReposSession();
@@ -247,6 +270,14 @@ public class FarragoReposTxnContext
     public void endExclusiveAccess()
     {
         ((FarragoReposImpl) repos).endExclusiveAccess();
+    }
+
+    /**
+     * Switches the repository to read-only mode.
+     */
+    public void setReposReadOnly()
+    {
+        readOnly = true;
     }
 }
 

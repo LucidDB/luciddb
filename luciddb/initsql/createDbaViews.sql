@@ -881,6 +881,14 @@ language java
 parameter style java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.restoreDatabase';
+
+create or replace procedure restore_database_without_catalog(
+    in archive_directory varchar(65535))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.restoreDatabaseWithoutCatalog';
+
 create or replace procedure change_default_character_set_to_unicode()
 language java
 no sql
