@@ -508,8 +508,6 @@ public class FarragoObjectCache
                         .closeAllocation();
                     }
                     discard(key);
-                } else {
-                    entry.pinCount--;
                 }
             }
         }
