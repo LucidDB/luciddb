@@ -24,8 +24,6 @@ package net.sf.farrago.syslib;
 
 import java.io.*;
 
-import java.nio.channels.*;
-
 import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
@@ -77,9 +75,11 @@ public class FarragoSystemRestore
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Restores the database from a backup.
+     * Restores the database from a backup, optionally restoring the catalog.
+     *
+     * @param includeCatalog if true, also restore the catalog data
      */
-    public void restoreDatabase()
+    public void restoreDatabase(boolean includeCatalog)
         throws Exception
     {
         timingTracer = new EigenbaseTimingTracer(tracer, "restore: begin");
@@ -113,7 +113,6 @@ public class FarragoSystemRestore
                 archiveDirectory,
                 isCompressed,
                 false);
-
             timingTracer.traceTime("restore: checkBackupFiles");
 
             // Get information on the backups that have completed
@@ -133,68 +132,27 @@ public class FarragoSystemRestore
             {
                 throw FarragoResource.instance().NoFullBackup.ex();
             }
-
-            FennelDbHandle fennelDbHandle = db.getFennelDbHandle();
-            FarragoRepos systemRepos = db.getSystemRepos();
-
             timingTracer.traceTime("restore: getCurrentBackupData");
 
-            // Restore the data pages first so we can also verify if the backup
-            // file is the correct one.
-            FemCmdRestoreFromBackup cmd =
-                systemRepos.newFemCmdRestoreFromBackup();
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
-            String dataDumpName = "FennelDataDump.dat";
-            if (isCompressed.booleanValue()) {
-                dataDumpName += ".gz";
-            }
-            File dataFile = new File(archiveDirectory, dataDumpName);
-            cmd.setBackupPathname(dataFile.getAbsolutePath());
-            cmd.setFileSize(dbDatSize);
-            if (isCompressed.booleanValue()) {
-                cmd.setCompressionProgram("gzip");
+            restoreFennelData(execHandle, db);
+
+            if (includeCatalog) {
+                restoreCatalog(reposTxnContext, repos);
             } else {
-                cmd.setCompressionProgram("");
-            }
-
-            if (backupType != FarragoBackupType.FULL) {
-                // Add 1 to account for the checkpoint at the end of the
-                // prior restore
-                lowerBoundCsn++;
-            }
-            cmd.setLowerBoundCsn(lowerBoundCsn);
-            cmd.setUpperBoundCsn(upperBoundCsn);
-            fennelDbHandle.executeCmd(cmd, execHandle);
-
-            timingTracer.traceTime("restore: femCmdRestoreFromBackup");
-
-            File importFile =
-                FarragoBackupRestoreUtil.getCatalogBackupFile(
-                    archiveDirectory,
-                    isCompressed);
-
-            // Restore the catalog backup and request shutdown.
-            InputStream importStream = new FileInputStream(importFile);
-
-            reposTxnContext.beginWriteTxn();
-            try {
-                if (isCompressed) {
-                    importStream = new GZIPInputStream(importStream);
+                // Even though we're not restoring the catalog, we need to
+                // add records to the backup catalog indicating that a full
+                // backup was done at one point since incremental and
+                // differential restores require the existence of a prior
+                // full backup.
+                if (backupType == FarragoBackupType.FULL) {
+                    reposTxnContext.beginWriteTxn();
+                    try {
+                        FarragoCatalogUtil.addPendingRestore(repos);
+                        reposTxnContext.commit();
+                    } finally {
+                        reposTxnContext.rollback();
+                    }
                 }
-
-                repos.getEnkiMdrRepos().restoreExtent(
-                    FarragoReposUtil.FARRAGO_CATALOG_EXTENT,
-                    FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
-                    FarragoReposUtil.FARRAGO_PACKAGE_NAME,
-                    importStream);
-
-                reposTxnContext.commit();
-            } finally {
-                reposTxnContext.rollback();
-
-                importStream.close();
-
-                timingTracer.traceTime("restore: restoreExtent");
             }
 
             ((FarragoDbSession) session).setShutdownRequest(true);
@@ -207,6 +165,79 @@ public class FarragoSystemRestore
         }
 
         timingTracer.traceTime("restore: finished");
+    }
+
+    private void restoreFennelData(
+        FennelExecutionHandle execHandle,
+        FarragoDatabase db)
+        throws Exception
+    {
+        FennelDbHandle fennelDbHandle = db.getFennelDbHandle();
+        FarragoRepos systemRepos = db.getSystemRepos();
+
+        // Restore the data pages first so we can also verify if the backup
+        // file is the correct one.
+        FemCmdRestoreFromBackup cmd =
+            systemRepos.newFemCmdRestoreFromBackup();
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        String dataDumpName = "FennelDataDump.dat";
+        if (isCompressed.booleanValue()) {
+            dataDumpName += ".gz";
+        }
+        File dataFile = new File(archiveDirectory, dataDumpName);
+        cmd.setBackupPathname(dataFile.getAbsolutePath());
+        cmd.setFileSize(dbDatSize);
+        if (isCompressed.booleanValue()) {
+            cmd.setCompressionProgram("gzip");
+        } else {
+            cmd.setCompressionProgram("");
+        }
+
+        if (backupType != FarragoBackupType.FULL) {
+            // Add 1 to account for the checkpoint at the end of the
+            // prior restore
+            lowerBoundCsn++;
+        }
+        cmd.setLowerBoundCsn(lowerBoundCsn);
+        cmd.setUpperBoundCsn(upperBoundCsn);
+        fennelDbHandle.executeCmd(cmd, execHandle);
+
+        timingTracer.traceTime("restore: femCmdRestoreFromBackup");
+    }
+
+    private void restoreCatalog(
+        FarragoReposTxnContext reposTxnContext,
+        FarragoRepos repos)
+        throws Exception
+    {
+        File importFile =
+            FarragoBackupRestoreUtil.getCatalogBackupFile(
+                archiveDirectory,
+                isCompressed);
+
+        // Restore the catalog backup and request shutdown.
+        InputStream importStream = new FileInputStream(importFile);
+
+        reposTxnContext.beginWriteTxn();
+        try {
+            if (isCompressed) {
+                importStream = new GZIPInputStream(importStream);
+            }
+
+            repos.getEnkiMdrRepos().restoreExtent(
+                FarragoReposUtil.FARRAGO_CATALOG_EXTENT,
+                FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
+                FarragoReposUtil.FARRAGO_PACKAGE_NAME,
+                importStream);
+
+            reposTxnContext.commit();
+        } finally {
+            reposTxnContext.rollback();
+
+            importStream.close();
+
+            timingTracer.traceTime("restore: restoreExtent");
+        }
     }
 
     private void readPropertyFile()

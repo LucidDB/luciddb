@@ -121,8 +121,8 @@
 
     <antcall target="restoreFullc"/>
     <antcall target="restoreIncr1b"/>
-    <antcall target="restoreIncr2"/>
-    <antcall target="validateIncr2"/>
+    <antcall target="restoreIncr2a"/>
+    <antcall target="validateIncr2a"/>
 
     <antcall target="restoreFulld"/>
     <antcall target="restoreDiff"/>
@@ -141,6 +141,18 @@
          restore failure
     -->
     <antcall target="validateFullc"/>
+
+    <!-- Do a couple of restores without restoring the catalog and then do
+         a final restore with the catalog.
+    -->
+    <antcall target="restoreFullWithoutCataloga"/>
+    <antcall target="restoreIncr1WithoutCatalog"/>
+    <antcall target="restoreIncr2b"/>
+    <antcall target="validateIncr2b"/>
+
+    <!-- Make sure the data is inaccessible after a partial restore -->
+    <antcall target="restoreFullWithoutCatalogb"/>
+    <antcall target="partialRestoreAccess"/>
 
   </target>
 
@@ -211,9 +223,29 @@
     <!-- restoreCatalog is needed so the error test that follows this returns
          a consistent commit sequence number
     -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
     <blackhawk.fork
       basedir="${backupRestore.dir}"
       testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullWithoutCataloga">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullWithoutCataloga" />
+    <!-- do a restoreCatalog so we're starting from scratch -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFullWithoutCatalog.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullWithoutCatalogb">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullWithoutCatalogb" />
+    <!-- don't do a restoreCatalog so we'll retain the original catalog data -->
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFullWithoutCatalog.xml"
       classpathref="test.classpath"/>
   </target>
 
@@ -233,8 +265,25 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="restoreIncr2">
-    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr2" />
+  <target name="restoreIncr1WithoutCatalog">
+      <property name="bh.log.basedir"
+          value="${testlog.dir}/bh-restoreIncr1WithoutCatalog" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr1WithoutCatalog.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr2a">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr2a" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr2b">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr2b" />
     <blackhawk.fork
       basedir="${backupRestore.dir}"
       testscript="restoreIncr2.xml"
@@ -263,6 +312,16 @@
       basedir="${backupRestore.dir}"
       testscript="badRestore2.xml"
       classpathref="test.classpath"/>
+  </target>
+
+  <target name="partialRestoreAccess">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-partialRestoreAccess" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="partialRestoreAccess.xml"
+      classpathref="test.classpath"/>
+    <!-- put the catalog back into a usable state -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>
 
   <target name="validateFulla">
@@ -297,8 +356,16 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="validateIncr2">
-    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr2" />
+  <target name="validateIncr2a">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr2a" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateIncr2b">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr2b" />
     <blackhawk.fork
       basedir="${backupRestore.dir}"
       testscript="validateIncr2.xml"
@@ -340,17 +407,23 @@
     <delete dir="${backupRestore.dir}/bh-restoreFulld" />
     <delete dir="${backupRestore.dir}/bh-restoreFulle" />
     <delete dir="${backupRestore.dir}/bh-restoreFullf" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullWithoutCataloga" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullWithoutCatalogb" />
     <delete dir="${backupRestore.dir}/bh-restoreIncr1a" />
     <delete dir="${backupRestore.dir}/bh-restoreIncr1b" />
-    <delete dir="${backupRestore.dir}/bh-restoreIncr2" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr1WithoutCatalog" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr2a" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr2b" />
     <delete dir="${backupRestore.dir}/bh-badRestore1" />
     <delete dir="${backupRestore.dir}/bh-badRestore2" />
     <delete dir="${backupRestore.dir}/bh-restoreDiff" />
+    <delete dir="${backupRestore.dir}/bh-partialRestoreAccess" />
     <delete dir="${backupRestore.dir}/bh-validateFulla" />
     <delete dir="${backupRestore.dir}/bh-validateFullb" />
     <delete dir="${backupRestore.dir}/bh-validateFullc" />
     <delete dir="${backupRestore.dir}/bh-validateIncr1" />
-    <delete dir="${backupRestore.dir}/bh-validateIncr2" />
+    <delete dir="${backupRestore.dir}/bh-validateIncr2a" />
+    <delete dir="${backupRestore.dir}/bh-validateIncr2b" />
     <delete dir="${backupRestore.dir}/bh-validateDiff" />
     <delete>
       <fileset dir="${backupRestore.dir}" includes="*.log"/>
@@ -365,7 +438,9 @@
     <delete file="badRestore1.mtsql"/>
     <delete file="badRestore2.mtsql"/>
     <delete file="restoreFull.mtsql"/>
+    <delete file="restoreFullWithoutCatalog.mtsql"/>
     <delete file="restoreIncr1.mtsql"/>
+    <delete file="restoreIncr1WithoutCatalog.mtsql"/>
     <delete file="restoreIncr2.mtsql"/>
     <delete file="restoreDiff.mtsql"/>
     <delete file="backups.ref"/>
@@ -378,7 +453,9 @@
     <delete file="badRestore1.ref"/>
     <delete file="badRestore2.ref"/>
     <delete file="restoreFull.ref"/>
+    <delete file="restoreFullWithoutCatalog.ref"/>
     <delete file="restoreIncr1.ref"/>
+    <delete file="restoreIncr1WithoutCatalog.ref"/>
     <delete file="restoreIncr2.ref"/>
     <delete file="restoreDiff.ref"/>
     <delete dir="${csv.copy.dir}"/>

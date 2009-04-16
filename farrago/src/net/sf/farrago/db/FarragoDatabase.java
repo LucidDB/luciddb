@@ -95,6 +95,12 @@ public class FarragoDatabase
     private boolean authenticateLocalConnections = false;
 
     /**
+     * Set to true if the system has only been partially restored, in which
+     * case, no tables can be accessed and no objects can be created.
+     */
+    private boolean partialRestore = false;
+
+    /**
      * Cache of all sorts of stuff; see <a
      * href="http://wiki.eigenbase.org/FarragoCodeCache">the design docs</a>.
      */
@@ -632,7 +638,7 @@ public class FarragoDatabase
             new FarragoReposTxnContext(systemRepos, true);
         try {
             reposTxnContext.beginWriteTxn();
-            FarragoCatalogUtil.updatePendingBackupData(
+            partialRestore = FarragoCatalogUtil.updatePendingBackupData(
                 systemRepos,
                 backupSucceeded,
                 setEndTimestamp);
@@ -640,6 +646,19 @@ public class FarragoDatabase
         } finally {
             reposTxnContext.rollback();
         }
+    }
+
+    /**
+     * Determines if the database is in a state where a partial restore has
+     * been done, which indicates that the catalog data is not in sync with
+     * table data.  Therefore, any attempt to access a table or create/modify
+     * an object should result in an error.
+     *
+     * @return true if the database is in a partial restore state
+     */
+    public boolean isPartiallyRestored()
+    {
+        return partialRestore;
     }
 
     private void filterMapNullValues(Map<String, Object> configMap)

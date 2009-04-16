@@ -2093,14 +2093,17 @@ public abstract class FarragoCatalogUtil
 
     /**
      * Updates the system backup catalog data depending on whether the last
-     * pending backup (if any) succeeded or failed.
+     * pending backup (if any) succeeded or failed.  However, if the data
+     * indicates that a partial restore has been done, then nothing is updated.
      *
      * @param repos repository
      * @param backupSucceeded true if the last backup succeeded
      * @param setEndTimestamp if true, record the current timestamp as the
      * ending timestamp when updating pending data to completed
+     *
+     * @return true if a partial restore was done
      */
-    public static void updatePendingBackupData(
+    public static boolean updatePendingBackupData(
         FarragoRepos repos,
         boolean backupSucceeded,
         boolean setEndTimestamp)
@@ -2108,10 +2111,16 @@ public abstract class FarragoCatalogUtil
         Collection<FemSystemBackup> backups =
             repos.allOfType(FemSystemBackup.class);
 
-        // First see which pending records exist
+        // First see which pending records exist and whether a partial restore
+        // was done.
         boolean pendingFull = false;
         boolean pendingLast = false;
         for (FemSystemBackup backup : backups) {
+            if (backup.getStatus() == BackupStatusTypeEnum.COMPLETED &&
+                backup.getStartTimestamp() == null)
+            {
+                return true;
+            }
             if (backup.getStatus() == BackupStatusTypeEnum.PENDING) {
                 if (backup.getType() == BackupTypeEnum.LAST) {
                     pendingLast = true;
@@ -2124,7 +2133,7 @@ public abstract class FarragoCatalogUtil
 
         // If no pending records, there's no work to do
         if (!pendingFull && !pendingLast) {
-            return;
+            return false;
         }
         if (pendingFull) {
             assert (pendingLast);
@@ -2158,6 +2167,50 @@ public abstract class FarragoCatalogUtil
                 }
             }
         }
+
+        return false;
+    }
+
+    /**
+     * Adds or updates records in the system backup catalog, indicating that a
+     * partial restore has been completed.
+     *
+     * @param repos repository
+     */
+    public static void addPendingRestore(FarragoRepos repos)
+    {
+        Collection<FemSystemBackup> backups =
+            repos.allOfType(FemSystemBackup.class);
+
+        // See if there already are backup records.  If there are, null
+        // out the starting timestamp.  That's the indicator that only a
+        // partial restore has been completed.
+        int updateCount = 0;
+        for (FemSystemBackup backup : backups) {
+            assert (backup.getStatus() == BackupStatusTypeEnum.COMPLETED);
+            backup.setStartTimestamp(null);
+            backup.setEndTimestamp(null);
+            updateCount++;
+        }
+        assert (updateCount == 0 || updateCount == 2);
+        if (updateCount > 0) {
+            return;
+        }
+
+        // If not, add new records.
+        addNewPendingRestoreRecord(repos, BackupTypeEnum.LAST);
+        addNewPendingRestoreRecord(repos, BackupTypeEnum.FULL);
+    }
+
+    private static void addNewPendingRestoreRecord(
+        FarragoRepos repos,
+        BackupTypeEnum type)
+    {
+        FemSystemBackup backup = repos.newFemSystemBackup();
+        backup.setStartTimestamp(null);
+        backup.setEndTimestamp(null);
+        backup.setType(type);
+        backup.setStatus(BackupStatusTypeEnum.COMPLETED);
     }
 
     //~ Inner Classes ----------------------------------------------------------

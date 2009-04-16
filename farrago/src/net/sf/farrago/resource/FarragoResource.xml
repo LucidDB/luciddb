@@ -100,6 +100,14 @@
 <text>Stored catalog model timestamp ''{0}'' does not match compiled catalog timestamp ''{1}''</text>
 </exception>
 
+<exception id="400140" name="PartialRestore">
+    <text>Data is not accessible.  A partial restore has been executed.</text>
+</exception>
+
+<exception id="400150" name="CatalogReadOnly">
+    <text>Catalog data is readonly.</text>
+</exception>
+
 <message name="CatalogBootstrapObjDescription">
 <text>Created by system initialization</text>
 </message>

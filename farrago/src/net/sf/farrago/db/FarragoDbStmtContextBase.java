@@ -420,6 +420,13 @@ public abstract class FarragoDbStmtContextBase
     {
         FarragoSessionTxnMgr txnMgr = session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
+        // If we're attempting to access a table, and the system has only
+        // been partially restored, then raise an exception.
+        if (!accessMap.getTablesAccessed().isEmpty() &&
+            session.getDatabase().isPartiallyRestored())
+        {
+            throw FarragoResource.instance().PartialRestore.ex();
+        }
         txnMgr.accessTables(
             txnId,
             accessMap);

@@ -28,7 +28,6 @@ import java.net.*;
 import java.nio.charset.*;
 
 import java.util.*;
-import java.util.zip.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
@@ -230,15 +229,6 @@ public abstract class FarragoReposUtil
         String catalogDumpName = "FarragoCatalogDump.xmi";
         File catalogDump = new File(catalogDir, catalogDumpName);
 
-        // If FarragoCatalogDump.xmi doesn't exist, assume the dump is
-        // compressed using gzip.
-        boolean isCompressed = false;
-        if (!catalogDump.exists()) {
-            catalogDumpName += ".gz";
-            catalogDump = new File(catalogDir, catalogDumpName);
-            isCompressed = true;
-        }
-
         try {
             modelLoader.initStorage(false);
 
@@ -248,8 +238,7 @@ public abstract class FarragoReposUtil
                 metamodelDump,
                 FARRAGO_METAMODEL_EXTENT,
                 null,
-                null,
-                false);
+                null);
 
             // import catalog
             importExtent(
@@ -257,8 +246,7 @@ public abstract class FarragoReposUtil
                 catalogDump,
                 FARRAGO_CATALOG_EXTENT,
                 FARRAGO_METAMODEL_EXTENT,
-                FARRAGO_PACKAGE_NAME,
-                isCompressed);
+                FARRAGO_PACKAGE_NAME);
 
             metamodelDump.delete();
             catalogDump.delete();
@@ -273,22 +261,9 @@ public abstract class FarragoReposUtil
         String extentName)
         throws Exception
     {
-        exportExtent(mdrRepos, file, extentName, false);
-    }
-
-    public static void exportExtent(
-        MDRepository mdrRepos,
-        File file,
-        String extentName,
-        boolean isCompressed)
-        throws Exception
-    {
         RefPackage refPackage = mdrRepos.getExtent(extentName);
         XmiWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         OutputStream outStream = new FileOutputStream(file);
-        if (isCompressed) {
-            outStream = new GZIPOutputStream(outStream);
-        }
         try {
             xmiWriter.write(outStream, refPackage, "1.2");
         } finally {
@@ -311,8 +286,7 @@ public abstract class FarragoReposUtil
         File file,
         String extentName,
         String metaPackageExtentName,
-        String metaPackageName,
-        boolean isCompressed)
+        String metaPackageName)
         throws Exception
     {
         mdrRepos.beginTrans(true);
@@ -344,9 +318,6 @@ public abstract class FarragoReposUtil
                 XMIReaderFactory.getDefault().createXMIReader();
 
             InputStream in = new FileInputStream(file);
-            if (isCompressed) {
-                in = new GZIPInputStream(in);
-            }
             InvalidXmlCharFilterInputStream filter =
                 new InvalidXmlCharFilterInputStream(in);
 
