@@ -452,7 +452,8 @@ void LcsClusterAppendExecStream::loadExistingBlock()
     // the first rowid and the number of rows currently on the page.
     // As rows are "rolled back", lastRow is decremented accordingly
 
-    lcsBlockBuilder->openAppend(numVals.get(), lastValOff.get(), nrows);
+    bool bStartNewBlock =
+        lcsBlockBuilder->openAppend(numVals.get(), lastValOff.get(), nrows);
     lastRow = firstRow + nrows;
     startRow = lastRow;
 
@@ -485,7 +486,17 @@ void LcsClusterAppendExecStream::loadExistingBlock()
             aLeftOverBufs[i].reset(
                 new FixedBuffer[anLeftOvers * aiFixedSize[i]]);
             lcsBlockBuilder->rollBackLastBatch(i, aLeftOverBufs[i].get());
+            indexBlockDirty = true;
         }
+    }
+
+    // Decrement lastRow if there was a rollback of the last batch
+    lastRow -= anLeftOvers;
+
+    // If the last page is already full, then write it out and start a new one
+    if (bStartNewBlock) {
+        writeBlock();
+        startNewBlock();
     }
 
     // Start a new batch for each column.
@@ -493,11 +504,14 @@ void LcsClusterAppendExecStream::loadExistingBlock()
         //reset everytime through loop
         rowCnt = startRowCnt;
 
-        // Repopulate the hash table with the values already in the
-        // data segment at the bottom of the block (because we didn't
-        // roll back these values, we only roll back the pointers to
-        // these values)
-        hash[i].restore(numVals[i], lastValOff[i]);
+        if (!bStartNewBlock) {
+            // Repopulate the hash table with the values already in the
+            // data segment at the bottom of the block (because we didn't
+            // roll back these values, we only roll back the pointers to
+            // these values).  But only do this if we haven't started a new
+            // block.
+            hash[i].restore(numVals[i], lastValOff[i]);
+        }
 
         // if we had left overs from the last batch, start a new batch
         // NOTE: we are guaranteed to be able to add these values back
@@ -528,8 +542,6 @@ void LcsClusterAppendExecStream::loadExistingBlock()
             }
         }
     }
-
-    lastRow -= rowCnt;
 }
 
 void LcsClusterAppendExecStream::addValueOrdinal(uint column, uint16_t vOrd)
