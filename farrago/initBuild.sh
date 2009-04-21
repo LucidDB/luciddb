@@ -35,9 +35,10 @@ usage() {
     echo "           [--with-nightly-tests] (default without)"
     echo "           [--with-repos-type=REPOS_TYPE]"
     echo "             where REPOS_TYPE may be:"
-    echo "                 default            (Enki/Netbeans + HSQLDB)"
+    echo "                 default            (Enki/Hibernate + HSQLDB)"
     echo "                 mysql/hibernate    (Enki/Hibernate + MySQL)"
     echo "                 hsqldb/hibernate   (Enki/Hibernate + HSQLDB)"
+    echo "                 hsqldb/netbeans    (Enki/Netbeans + HSQLDB)"
     echo "                 psql/netbeans      (Enki/Netbeans + psql)"
 }
 
@@ -77,6 +78,8 @@ while [ -n "$1" ]; do
             repos_type="switchToMysqlHibernateReposStorage";;
         --with-repos-type=hsqldb/hibernate)
             repos_type="switchToHsqldbHibernateReposStorage";;
+        --with-repos-type=hsqldb/netbeans) 
+            repos_type="switchToHsqldbReposStorage";;
         --with-repos-type=psql/netbeans) 
             repos_type="switchToPsqlReposStorage";;
             
