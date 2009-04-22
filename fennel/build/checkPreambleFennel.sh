@@ -20,6 +20,7 @@ common/FemGeneratedEnums.h
 common/FennelResource.cpp
 common/FennelResource.h
 config.h
+dummy.cpp
 disruptivetech/calc/CalcGrammar.cpp
 disruptivetech/calc/CalcGrammar.h
 disruptivetech/calc/CalcGrammar.tab.cpp
