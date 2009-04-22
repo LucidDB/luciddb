@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
  * Structure used to store information about dynamic parameters used by
  * the ReshapeExecStream
  */
-struct ReshapeParameter
+struct FENNEL_EXEC_EXPORT ReshapeParameter
 {
     /**
      * Dynamic parameter id
@@ -70,7 +70,8 @@ struct ReshapeParameter
 /**
  * ReshapeExecStreamParams defines parameters for ReshapeExecStream.
  */
-struct ReshapeExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT ReshapeExecStreamParams
+    : public ConduitExecStreamParams
 {
     /**
      * Comparison operator. Set to COMP_NOOP if no comparisons need to be done.
@@ -126,7 +127,8 @@ struct ReshapeExecStreamParams : public ConduitExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class ReshapeExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT ReshapeExecStream
+    : public ConduitExecStream
 {
     /**
      * Comparison operator

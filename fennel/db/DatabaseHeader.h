@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * because an identical copy is stored as part of a careful-write protocol when
  * checkpointing.)
  */
-struct DatabaseHeader : public StoredNode
+struct FENNEL_DB_EXPORT DatabaseHeader
+    : public StoredNode
 {
     // NOTE jvs 27-Apr-2007:  We use distinct magic numbers for incompatible
     // hardware/OS/compiler architectures.  This prevents accidents when
@@ -53,7 +54,7 @@ struct DatabaseHeader : public StoredNode
 
     // Magic number history:
     // Original value:  0xb1b7b315d821d90aLL;
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #if __WORDSIZE == 64
     // Added by jvs for amd64 on 27-May-2007
     static const MagicNumber MAGIC_NUMBER = 0xa513a9e27bc336acLL;

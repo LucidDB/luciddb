@@ -40,7 +40,7 @@ FENNEL_BEGIN_NAMESPACE
  * href="structSegmentDesign.html#Overview">the design docs</a> for more
  * detail.
  */
-class Segment
+class FENNEL_SEGMENT_EXPORT Segment
     : public MappedPageListener,
         public boost::noncopyable,
         public ClosableObject,

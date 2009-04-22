@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamGraphEmbryo : public boost::noncopyable
+class FENNEL_EXEC_EXPORT ExecStreamGraphEmbryo
+    : public boost::noncopyable
 {
     typedef std::map<std::string,ExecStreamEmbryo> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;

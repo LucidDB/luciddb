@@ -40,7 +40,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LhxHashGenerator
+class FENNEL_HASHEXE_EXPORT LhxHashGenerator
 {
 private:
     /*

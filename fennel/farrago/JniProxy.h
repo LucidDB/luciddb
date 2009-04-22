@@ -43,7 +43,7 @@ FENNEL_BEGIN_NAMESPACE
  * visitor infrastructure (see CmdInterpreter and TupleStreamBuilder for
  * examples).
  */
-class JniProxy
+class FENNEL_FARRAGO_EXPORT JniProxy
 {
 protected:
     // helper for methods which return strings
@@ -214,7 +214,7 @@ public:
  * JniProxyVisitor is the base for all classes which need to visit one or more
  * instances of JniProxy polymorphically.
  */
-class JniProxyVisitor
+class FENNEL_FARRAGO_EXPORT JniProxyVisitor
 {
 public:
     virtual ~JniProxyVisitor();
@@ -227,7 +227,7 @@ public:
     virtual void unhandledVisit();
 };
 
-class JniProxyVisitTableBase
+class FENNEL_FARRAGO_EXPORT JniProxyVisitTableBase
 {
 public:
     /**

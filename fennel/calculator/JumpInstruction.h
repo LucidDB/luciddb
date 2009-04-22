@@ -30,7 +30,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class JumpInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT JumpInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -57,7 +58,8 @@ protected:
         const char* shortName) const;
 };
 
-class Jump : public JumpInstruction
+class FENNEL_CALCULATOR_EXPORT Jump
+    : public JumpInstruction
 {
 public:
     explicit
@@ -91,7 +93,8 @@ public:
     }
 };
 
-class JumpTrue : public JumpInstruction
+class FENNEL_CALCULATOR_EXPORT JumpTrue
+    : public JumpInstruction
 {
 public:
     explicit
@@ -131,7 +134,8 @@ public:
     }
 };
 
-class JumpFalse : public JumpInstruction
+class FENNEL_CALCULATOR_EXPORT JumpFalse
+    : public JumpInstruction
 {
 public:
     explicit
@@ -172,7 +176,8 @@ public:
 
 };
 
-class JumpNull : public JumpInstruction
+class FENNEL_CALCULATOR_EXPORT JumpNull
+    : public JumpInstruction
 {
 public:
     explicit
@@ -213,7 +218,8 @@ public:
 
 };
 
-class JumpNotNull : public JumpInstruction
+class FENNEL_CALCULATOR_EXPORT JumpNotNull
+    : public JumpInstruction
 {
 public:
     explicit
@@ -254,8 +260,9 @@ public:
 
 };
 
-class JumpInstructionRegister : InstructionRegister {
-
+class FENNEL_CALCULATOR_EXPORT JumpInstructionRegister
+    : InstructionRegister
+{
     // TODO: Refactor registerTypes to class InstructionRegister
     template < class INSTCLASS2 >
     static void

@@ -189,7 +189,7 @@ void LhxJoinExecStream::open(bool restart)
     shared_ptr<dynamic_bitset<> > joinFilterInit =
         shared_ptr<dynamic_bitset<> >();
 
-    vector<uint> filteredRows;
+    VectorOfUint filteredRows;
     filteredRows.push_back(0);
     filteredRows.push_back(0);
 

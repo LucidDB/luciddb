@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * AtomicCounter wraps STL support for atomic increment/decrement.
  */
-class AtomicCounter : public _STL::_Refcount_Base
+class FENNEL_COMMON_EXPORT AtomicCounter : public _STL::_Refcount_Base
 {
 public:
     explicit AtomicCounter() : _Refcount_Base(0)

@@ -43,7 +43,7 @@ class TupleDatum;
  * the attributes are being processed.  In theory, this hybrid should yield the
  * highest efficiency, but it needs to be benchmarked and tuned.
  */
-class AttributeAccessor
+class FENNEL_TUPLE_EXPORT AttributeAccessor
 {
 public:
     /**

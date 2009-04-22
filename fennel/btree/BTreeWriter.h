@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeWriter extends BTreeReader to provide read-write access to the contents
  * of a BTree.  Optionally, it can also be used as a transaction participant.
  */
-class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
+class FENNEL_BTREE_EXPORT BTreeWriter
+    : public BTreeReader, public LogicalTxnParticipant
 {
     /**
      * LogicalActionType for inserting an entry into a BTree.

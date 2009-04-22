@@ -36,7 +36,7 @@ class LogicalTxnParticipant;
 /**
  * LogicalTxnSavepoint defines all state for a savepoint within a LogicalTxn.
  */
-struct LogicalTxnSavepoint
+struct FENNEL_TXN_EXPORT LogicalTxnSavepoint
 {
     /**
      * Log size up to end of last action logged.
@@ -52,7 +52,7 @@ struct LogicalTxnSavepoint
 /**
  * Log record describing a transaction event.
  */
-struct LogicalTxnEventMemento
+struct FENNEL_TXN_EXPORT LogicalTxnEventMemento
 {
     enum Event {
         EVENT_ROLLBACK,
@@ -95,7 +95,7 @@ struct LogicalTxnEventMemento
 /**
  * Logged header for a single logical action.
  */
-struct LogicalTxnActionHeader
+struct FENNEL_TXN_EXPORT LogicalTxnActionHeader
 {
     /**
      * Stored pointer to the participant initiating the action.  While
@@ -122,7 +122,7 @@ struct LogicalTxnActionHeader
  * Global information recorded during LogicalTxnLog::checkpoint; this is all
  * the information needed to begin recovery.
  */
-struct LogicalTxnLogCheckpointMemento
+struct FENNEL_TXN_EXPORT LogicalTxnLogCheckpointMemento
 {
     /**
      * Log stream position of first LogicalTxnCheckpointHeader.

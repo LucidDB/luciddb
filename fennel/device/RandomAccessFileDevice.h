@@ -35,7 +35,8 @@ class RandomAccessRequest;
  * RandomAccessFileDevice is an implementation of RandomAccessDevice in terms
  * of a FileDevice.
  */
-class RandomAccessFileDevice : public RandomAccessDevice, public FileDevice
+class FENNEL_DEVICE_EXPORT RandomAccessFileDevice
+    : public RandomAccessDevice, public FileDevice
 {
 public:
     /**

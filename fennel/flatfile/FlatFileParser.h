@@ -34,7 +34,7 @@ typedef boost::shared_ptr<FlatFileParser> SharedFlatFileParser;
 /**
  * Result of scanning for a column in a flat file format buffer
  */
-class FlatFileColumnParseResult
+class FENNEL_FLATFILE_EXPORT FlatFileColumnParseResult
 {
 public:
     /** Delimiter type encountered during column parse */
@@ -74,7 +74,7 @@ public:
 /**
  * Result of scanning for a row in a flat file format buffer
  */
-class FlatFileRowParseResult
+class FENNEL_FLATFILE_EXPORT FlatFileRowParseResult
 {
 public:
     /** Status of row parsing */
@@ -118,17 +118,17 @@ public:
     /**
      * Offsets to column values within the buffer
      */
-    std::vector<uint> offsets;
+    VectorOfUint offsets;
 
     /**
      * Sizes of column values
      */
-    std::vector<uint> sizes;
+    VectorOfUint sizes;
 
     /**
      * Sizes of stripped column values
      */
-    std::vector<uint> strippedSizes;
+    VectorOfUint strippedSizes;
 
     /**
      * Reference to the current row.
@@ -232,14 +232,21 @@ public:
 /**
  * Describes characteristics of a column to be parsed
  */
-class FlatFileColumnDescriptor
+class FENNEL_FLATFILE_EXPORT FlatFileColumnDescriptor
 {
 public:
     uint maxLength;
 
-    FlatFileColumnDescriptor(uint maxLength)
+#ifdef __MSVC__
+    explicit FlatFileColumnDescriptor()
     {
-        this->maxLength = maxLength;
+        maxLength = 0;
+    }
+#endif
+
+    explicit FlatFileColumnDescriptor(uint maxLengthInit)
+    {
+        maxLength = maxLengthInit;
     }
 };
 
@@ -251,12 +258,13 @@ public:
  * There are two main types of scans. An unbounded scan and a bounded
  * scan. By default, the scan is bounded.
  */
-class FlatFileRowDescriptor : public std::vector<FlatFileColumnDescriptor>
+class FENNEL_FLATFILE_EXPORT FlatFileRowDescriptor
+    : public std::vector<FlatFileColumnDescriptor>
 {
     bool bounded;
     bool lenient;
 
-    std::vector<uint> columnMap;
+    VectorOfUint columnMap;
 
 public:
     /**
@@ -293,7 +301,7 @@ public:
      * to -1. If no source columns are present, all values will be -1. The
      * behavior is undefined if two source columns map to the same target.
      */
-    void setMap(std::vector<uint> map)
+    void setMap(VectorOfUint map)
     {
         columnMap = map;
     }
@@ -378,7 +386,7 @@ public:
  * @author John Pham
  * @version $Id$
  */
-class FlatFileParser
+class FENNEL_FLATFILE_EXPORT FlatFileParser
 {
     char fieldDelim;
     char rowDelim;

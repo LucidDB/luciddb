@@ -59,7 +59,7 @@ extern int CalcYYparse (void *);
  * with the Calculator responsible for the deallocation of any objects
  * that are allocated by the CalcAssembler.
  */
-class CalcAssembler
+class FENNEL_CALCULATOR_EXPORT CalcAssembler
 {
 public:
     explicit

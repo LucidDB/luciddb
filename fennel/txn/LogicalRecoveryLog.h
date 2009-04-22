@@ -39,7 +39,7 @@ class LogicalTxnParticipantFactory;
  * LogicalRecoveryLog is the recovery-time counterpart to the online
  * LogicalTxnLog.
  */
-class LogicalRecoveryLog
+class FENNEL_TXN_EXPORT LogicalRecoveryLog
     : public boost::noncopyable
 {
     typedef std::hash_map<TxnId,LogicalTxnEventMemento> TxnMap;

@@ -56,7 +56,7 @@ class LhxHashTableTest : virtual public SegStorageTestBase
         uint numRows,
         uint maxBlockCount,
         uint partitionLevel,
-        vector<uint> &repeatSeqValues,
+        VectorOfUint &repeatSeqValues,
         uint numKeyCols,
         uint numAggs,
         uint numDataCols,
@@ -167,7 +167,7 @@ void LhxHashTableTest::testInsert(
     uint numRows,
     uint maxBlockCount,
     uint partitionLevel,
-    vector<uint> &repeatSeqValues,
+    VectorOfUint &repeatSeqValues,
     uint numKeyCols,
     uint numAggs,
     uint numDataCols,
@@ -457,7 +457,7 @@ void LhxHashTableTest::testInsert1Ka()
     uint numRows = 100;
     uint maxBlockCount = 10;
     uint partitionLevel = 0;
-    vector<uint> values;
+    VectorOfUint values;
     uint numKeyCols = 1;
     uint numAggs = 0;
     uint numDataCols = 0;
@@ -494,7 +494,7 @@ void LhxHashTableTest::testInsert1Kb()
     uint numRows = 1000;
     uint maxBlockCount = 10;
     uint partitionLevel = 0;
-    vector<uint> values;
+    VectorOfUint values;
     uint numKeyCols = 2;
     uint numAggs = 0;
     uint numDataCols = 4;

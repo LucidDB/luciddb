@@ -35,7 +35,7 @@ class ExternalSortRunLoader;
  * is parallelized.  After each run is loaded by the main thread, it is
  * dispatched as a task to be sorted and stored by a thread from the pool.
  */
-class ExternalSortTask
+class FENNEL_SORTER_EXPORT ExternalSortTask
 {
     /**
      * The stream on behalf of which this task is working.

@@ -31,51 +31,13 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-#ifdef __CYGWIN__
-// NOTE:  This is a stupid hack to account for the fact that on Cygwin,
-// pthread_mutex_init may return EBUSY if the mutex initially contains certain
-// bit patterns.
-template <class BoostMutex>
-class FennelMutex
-{
-    int dummy;
-    BoostMutex boostMutex;
+typedef boost::recursive_mutex RecursiveMutex;
+typedef boost::mutex StrictMutex;
+typedef boost::recursive_mutex::scoped_lock RecursiveMutexGuard;
+typedef boost::mutex::scoped_lock StrictMutexGuard;
+typedef boost::condition_variable LocalCondition;
 
-    int zeroBoostMutex()
-    {
-        memset(&boostMutex,0,sizeof(boostMutex));
-        return 0;
-    }
-
-public:
-    FennelMutex()
-        : dummy(zeroBoostMutex())
-    {
-    }
-
-    operator BoostMutex &()
-    {
-        return boostMutex;
-    }
-};
-
-typedef FennelMutex<boost::recursive_try_mutex> RecursiveMutex;
-typedef FennelMutex<boost::try_mutex> StrictMutex;
-
-#else
-
-typedef boost::recursive_try_mutex RecursiveMutex;
-typedef boost::try_mutex StrictMutex;
-
-#endif
-
-typedef boost::recursive_try_mutex::scoped_lock RecursiveMutexGuard;
-typedef boost::try_mutex::scoped_lock StrictMutexGuard;
-typedef boost::recursive_try_mutex::scoped_try_lock RecursiveMutexTryGuard;
-typedef boost::try_mutex::scoped_try_lock StrictMutexTryGuard;
-typedef boost::condition LocalCondition;
-
-extern void convertTimeout(uint iMillis,boost::xtime &);
+extern void FENNEL_SYNCH_EXPORT convertTimeout(uint iMillis,boost::xtime &);
 
 FENNEL_END_NAMESPACE
 

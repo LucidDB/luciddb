@@ -35,7 +35,7 @@ class StatsTarget;
 /**
  * StatsTimer publishes stats snapshots from StatsSources to a StatsTarget.
  */
-class StatsTimer : private TimerThreadClient
+class FENNEL_SYNCH_EXPORT StatsTimer : private TimerThreadClient
 {
     StatsTarget *pTarget;
     std::vector<SharedStatsSource> sources;

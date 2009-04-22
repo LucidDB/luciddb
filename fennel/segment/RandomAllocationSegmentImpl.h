@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * ExtentAllocationNode is the allocation map for one extent
  * in a RandomAllocationSegment.
  */
-struct ExtentAllocationNode : public StoredNode
+struct FENNEL_SEGMENT_EXPORT ExtentAllocationNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0xb9ca99dced182239LL;
 

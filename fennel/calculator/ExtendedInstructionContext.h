@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 //! between exec() calls. Typically used to store results of pre-compilation
 //! or cache instantiations of library classes, and so forth.
 //! An alternate implementation could store context pointers in local variables.
-class ExtendedInstructionContext
+class FENNEL_CALCULATOR_EXPORT ExtendedInstructionContext
 {
 public:
     explicit

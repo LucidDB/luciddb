@@ -32,7 +32,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class ReturnInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT ReturnInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -84,7 +85,8 @@ public:
 //! valid extension thereof. When code is NULL, an exception is not
 //! raised- becomes a no-op. Note: instruction does not
 //! terminate execution.
-class RaiseInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT RaiseInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -138,7 +140,8 @@ private:
     RegisterRef<char*>* mCode;
 };
 
-class ReturnInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT ReturnInstructionRegister
+    : InstructionRegister {
 public:
     static void
     registerInstructions()

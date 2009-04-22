@@ -33,7 +33,7 @@ class StoredTypeDescriptor;
  * StoredTypeDescriptors are instantiated, as described in
  * <a href="structTupleDesign.html#StoredTypeDescriptor">the design docs</a>.
  */
-class StoredTypeDescriptorFactory
+class FENNEL_TUPLE_EXPORT StoredTypeDescriptorFactory
 {
 public:
     virtual ~StoredTypeDescriptorFactory();

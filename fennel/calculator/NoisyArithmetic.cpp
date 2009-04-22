@@ -48,16 +48,18 @@
                                  optimizations which don't play well with fp
                                  status registers */
 #endif
+#ifndef __MSVC__
 #include <fenv.h>
+#endif
 #include <string>
 
 #include "NoisyArithmetic.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-// TODO jvs 29-Feb-2008:  enable noisy once Mingw32 upgrades allow us
-// to upgrade the old STLport version we are using there
-#ifdef __MINGW32__
+// TODO jvs 1-Apr-2009:  try noisy on Win32 again now that we have
+// upgraded the old STLport version we were using there
+#ifdef __MSVC__
 #define NOISY_DISABLED    (1)
 #endif
 

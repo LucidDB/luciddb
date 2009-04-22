@@ -34,8 +34,11 @@
 
 // NOTE: we include these first to make sure we get the desired limit
 // definitions
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #define __STDC_LIMIT_MACROS
+#else
+#define NOMINMAX
+#pragma warning (disable : 4355)
 #endif
 
 #define _XOPEN_SOURCE 500
@@ -45,12 +48,16 @@
 // versions of standard I/O calls.
 #define _FILE_OFFSET_BITS 64
 
+#ifndef __MSVC__
 #include <inttypes.h>
+#endif
+
 #include <stddef.h>
 #include <limits.h>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdexcept>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -58,9 +65,10 @@
 #include <time.h>
 #include <new>
 #include <cassert>
+#include <vector>
 #include <boost/thread/tss.hpp>
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #if __WORDSIZE == 64
 #define FMT_INT64      "ld"
 #define FMT_UINT64     "lu"
@@ -69,14 +77,154 @@
 #define FMT_UINT64     "llu"
 #endif
 #else
-// Mingw uses MSVCRT.DLL for printf, which treats ll as a 32-bit integer
+// MSVCRT.DLL printf treats ll as a 32-bit integer
 // and uses the prefix I64 for 64-bit integers
 #define FMT_INT64      "I64d"
 #define FMT_UINT64     "I64u"
+#define strtoll _strtoi64
+#define strtoull _strtoui64
+#define strncasecmp strnicmp
+#define isnan _isnan
+// TODO jvs 3-Mar-2009:  inline function instead
+#define round(x) (((x) >= 0) ? floor((x) + 0.5) : ceil((x) - 0.5))
+#define roundf round
+
 #endif
 
-// FIXME:  correct port
 typedef unsigned uint;
+
+// DLL export symbols for each component
+
+#ifdef __MSVC__
+
+#if defined(FENNEL_COMMON_EXPORTS) || defined(FENNEL_SYNCH_EXPORTS)
+#define FENNEL_COMMON_EXPORT __declspec(dllexport)
+#define FENNEL_SYNCH_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_COMMON_EXPORT __declspec(dllimport)
+#define FENNEL_SYNCH_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_DEVICE_EXPORTS
+#define FENNEL_DEVICE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_DEVICE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_CACHE_EXPORTS
+#define FENNEL_CACHE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_CACHE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_SEGMENT_EXPORTS
+#define FENNEL_SEGMENT_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_SEGMENT_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_TXN_EXPORTS
+#define FENNEL_TXN_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_TXN_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_TUPLE_EXPORTS
+#define FENNEL_TUPLE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_TUPLE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_EXEC_EXPORTS
+#define FENNEL_EXEC_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_EXEC_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_BTREE_EXPORTS
+#define FENNEL_BTREE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_BTREE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_DB_EXPORTS
+#define FENNEL_DB_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_DB_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_FTRS_EXPORTS
+#define FENNEL_FTRS_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_FTRS_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_SORTER_EXPORTS
+#define FENNEL_SORTER_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_SORTER_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_FLATFILE_EXPORTS
+#define FENNEL_FLATFILE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_FLATFILE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_HASHEXE_EXPORTS
+#define FENNEL_HASHEXE_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_HASHEXE_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_CALCULATOR_EXPORTS
+#define FENNEL_CALCULATOR_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_CALCULATOR_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_FARRAGO_EXPORTS
+#define FENNEL_FARRAGO_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_FARRAGO_EXPORT __declspec(dllimport)
+#endif
+
+#ifdef FENNEL_TEST_EXPORTS
+#define FENNEL_TEST_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_TEST_EXPORT __declspec(dllimport)
+#endif
+
+#if defined(FENNEL_LCS_EXPORTS) || defined(FENNEL_LBM_EXPORTS)
+#define FENNEL_LCS_EXPORT __declspec(dllexport)
+#define FENNEL_LBM_EXPORT __declspec(dllexport)
+#else
+#define FENNEL_LCS_EXPORT __declspec(dllimport)
+#define FENNEL_LBM_EXPORT __declspec(dllimport)
+
+#endif
+
+#else
+#define FENNEL_COMMON_EXPORT
+#define FENNEL_SYNCH_EXPORT
+#define FENNEL_DEVICE_EXPORT
+#define FENNEL_CACHE_EXPORT
+#define FENNEL_SEGMENT_EXPORT
+#define FENNEL_TXN_EXPORT
+#define FENNEL_TUPLE_EXPORT
+#define FENNEL_EXEC_EXPORT
+#define FENNEL_BTREE_EXPORT
+#define FENNEL_DB_EXPORT
+#define FENNEL_FTRS_EXPORT
+#define FENNEL_SORTER_EXPORT
+#define FENNEL_FLATFILE_EXPORT
+#define FENNEL_HASHEXE_EXPORT
+#define FENNEL_CALCULATOR_EXPORT
+#define FENNEL_FARRAGO_EXPORT
+#define FENNEL_TEST_EXPORT
+#define FENNEL_LCS_EXPORT
+#define FENNEL_LBM_EXPORT
+#endif
 
 #include "fennel/common/Namespace.h"
 
@@ -98,7 +246,8 @@ namespace std
 {
 
 template<class T,class Dummy>
-struct hash< fennel::OpaqueInteger<T,Dummy> >
+struct hash
+< fennel::OpaqueInteger<T,Dummy> >
 {
     size_t operator() (const fennel::OpaqueInteger<T,Dummy> &key) const
     {
@@ -122,6 +271,10 @@ inline void *operator new[](size_t,fennel::PBuffer pBuffer)
 }
 
 FENNEL_BEGIN_NAMESPACE
+
+class FENNEL_COMMON_EXPORT VectorOfUint : public std::vector<uint>
+{
+};
 
 /**
  * Delete an object and set the pointer associated with
@@ -222,7 +375,7 @@ inline uint bytesForBits(uint cBits)
 // prints out a hex dump of the given block of memory
 // cb bytes are dumped with at most 16 bytes per line, with the offset
 // of each line printed on the left (with an optional additional offset)
-extern void hexDump(
+extern void FENNEL_COMMON_EXPORT hexDump(
     std::ostream &,void const *,uint cb,
     uint cbOffsetInitial = 0);
 
@@ -233,9 +386,9 @@ inline Numeric sqr(Numeric n)
 }
 
 // NOTE jvs 18-Mar-2005:  neither boost nor stlport exposes this
-extern int getCurrentThreadId();
+extern int FENNEL_COMMON_EXPORT getCurrentThreadId();
 
-extern std::logic_error constructAssertion(
+extern std::logic_error FENNEL_COMMON_EXPORT constructAssertion(
     char const *pFilename,int lineNum,char const *condExpr);
 
 // Use permAssert to create an assertion which should be compiled even in

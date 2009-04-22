@@ -39,7 +39,7 @@ class DataVisitor;
  * A TupleAttributeDescriptor is a component of a TupleDescriptor, as explained
  * in the <a href="structTupleDesign.html#TupleDescriptor">design docs</a>.
  */
-struct TupleAttributeDescriptor
+struct FENNEL_TUPLE_EXPORT TupleAttributeDescriptor
 {
     StoredTypeDescriptor const *pTypeDescriptor;
     bool isNullable;
@@ -59,7 +59,8 @@ struct TupleAttributeDescriptor
  * A TupleProjection specifies a projection of a tuple, as explained in
  * the <a href="structTupleDesign.html#TupleProjection">design docs</a>.
  */
-class TupleProjection : public std::vector<uint>
+class FENNEL_TUPLE_EXPORT TupleProjection
+    : public VectorOfUint
 {
 public:
     void writePersistent(
@@ -85,7 +86,8 @@ public:
  * non-equal column (negated if LT).  This allows a caller to
  * implement ORDER BY DESC without having to pass in ASC/DESC information.
  */
-class TupleDescriptor : public std::vector<TupleAttributeDescriptor>
+class FENNEL_TUPLE_EXPORT TupleDescriptor
+    : public std::vector<TupleAttributeDescriptor>
 {
 public:
     void projectFrom(
@@ -127,9 +129,11 @@ public:
     TupleStorageByteLength getMaxByteCount() const;
 };
 
-std::ostream &operator<<(std::ostream &str,TupleDescriptor const &);
+FENNEL_TUPLE_EXPORT std::ostream & operator<< (
+    std::ostream &str,TupleDescriptor const &);
 
-std::ostream &operator<<(std::ostream &str,TupleAttributeDescriptor const &);
+FENNEL_TUPLE_EXPORT std::ostream & operator<< (
+    std::ostream &str,TupleAttributeDescriptor const &);
 
 FENNEL_END_NAMESPACE
 

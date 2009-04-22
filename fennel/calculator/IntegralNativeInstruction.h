@@ -450,8 +450,9 @@ public:
     }
 };
 
-class IntegralNativeInstructionRegister : InstructionRegister {
-
+class FENNEL_CALCULATOR_EXPORT IntegralNativeInstructionRegister
+    : InstructionRegister
+{
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void

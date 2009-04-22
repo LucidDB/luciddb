@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author Zelaine Fong
  * @version $Id$
  */
-class SimpleExecStreamGovernor : public ExecStreamGovernor
+class FENNEL_EXEC_EXPORT SimpleExecStreamGovernor
+    : public ExecStreamGovernor
 {
     /**
      * Portion of resources that can be allocated to an exec stream graph

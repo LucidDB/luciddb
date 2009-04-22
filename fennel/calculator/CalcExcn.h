@@ -34,7 +34,8 @@ class TupleData;
 /**
  * Exception class for errors encountered during calculator execution.
  */
-class CalcExcn : public FennelExcn
+class FENNEL_CALCULATOR_EXPORT CalcExcn
+    : public FennelExcn
 {
 public:
     /**

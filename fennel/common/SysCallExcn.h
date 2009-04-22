@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Exception class for failed system calls.
  */
-class SysCallExcn : public FennelExcn
+class FENNEL_COMMON_EXPORT SysCallExcn : public FennelExcn
 {
 private:
     int errCode;

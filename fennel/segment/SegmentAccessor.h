@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * A SegmentAccessor combines a Segment with a CacheAccessor.
  */
-struct SegmentAccessor
+struct FENNEL_SEGMENT_EXPORT SegmentAccessor
 {
     SharedSegment pSegment;
     SharedCacheAccessor pCacheAccessor;

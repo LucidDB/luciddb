@@ -66,14 +66,15 @@ struct LcsRowScanBaseExecStreamParams : public ConfluenceExecStreamParams
 /**
  * Implements basic elements required to scan clusters in an exec stream
  */
-class LcsRowScanBaseExecStream : public ConfluenceExecStream
+class FENNEL_LCS_EXPORT LcsRowScanBaseExecStream
+    : public ConfluenceExecStream
 {
 protected:
     /**
      * Projection map that maps columns read from cluster to their position
      * in the output projection
      */
-    std::vector<uint> projMap;
+    VectorOfUint projMap;
 
     /**
      * Number of clusters to be scanned

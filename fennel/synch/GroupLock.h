@@ -41,7 +41,7 @@ FENNEL_BEGIN_NAMESPACE
  * Note that there are no provisions for preventing starvation, or whatever the
  * equally unpleasant equivalent is in this example.
  */
-class GroupLock : public SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT GroupLock : public SynchMonitoredObject
 {
     uint nHolders;
     uint iHeldGroup;

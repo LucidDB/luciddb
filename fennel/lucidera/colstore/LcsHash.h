@@ -40,7 +40,7 @@ FENNEL_BEGIN_NAMESPACE
  * hash value nodes array stored in LcsHashTable class. The highest bit of the
  * value is used to indicate whether this value is part of the current batch.
  */
-class LcsHashValOrd
+class FENNEL_LCS_EXPORT LcsHashValOrd
 {
 private:
 
@@ -127,7 +127,7 @@ struct LcsHashValueNode
  * nodes into one scratch buffer of size hashBlockSize.
  * The overflow nodes are of type LcsHashValueNode.
  */
-class LcsHashTable
+class FENNEL_LCS_EXPORT LcsHashTable
 {
 private:
 
@@ -319,7 +319,7 @@ struct LcsUndoType
  * The sorted indices can then be used to encode the offsets when preparing
  * a compressed batch to write out.
  */
-class LcsCompareColKeyUsingOffsetIndex
+class FENNEL_LCS_EXPORT LcsCompareColKeyUsingOffsetIndex
 {
 private:
 
@@ -397,7 +397,7 @@ public:
 /**
  * Theis class is passed to std::sort. It implements the "less than" operator.
  */
-class LcsCompare
+class FENNEL_LCS_EXPORT LcsCompare
 {
 private:
 
@@ -441,7 +441,7 @@ public:
  * tuple and sends to the LcsClusterNodeWriter data pointers with encoded length
  * information.
  */
-class LcsHash
+class FENNEL_LCS_EXPORT LcsHash
 {
 private:
 

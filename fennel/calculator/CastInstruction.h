@@ -187,7 +187,8 @@ public:
 
 #define TTT(a)
 
-class CastInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT CastInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename, typename > class INSTCLASS2 >

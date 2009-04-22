@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BTreeReader provides read-only access to the contents of a BTree.
  */
-class BTreeReader : public BTreeAccessBase
+class FENNEL_BTREE_EXPORT BTreeReader
+    : public BTreeAccessBase
 {
 protected:
     /**

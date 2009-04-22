@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BTreeDescriptor defines the information required for accessing a BTree.
  */
-struct BTreeDescriptor
+struct FENNEL_BTREE_EXPORT BTreeDescriptor
 {
     /**
      * Accessor for segment storing BTree.

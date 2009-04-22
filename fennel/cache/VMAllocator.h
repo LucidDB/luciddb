@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * VMAllocator is an implementation of the CacheAllocator interface in
  * terms of OS page allocation calls.
  */
-class VMAllocator : public CacheAllocator
+class FENNEL_CACHE_EXPORT VMAllocator
+    : public CacheAllocator
 {
     size_t cbAlloc;
     size_t nAllocs;

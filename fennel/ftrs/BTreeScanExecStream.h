@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeScanExecStreamParams defines parameters for instantiating a
  * BTreeScanExecStream.
  */
-struct BTreeScanExecStreamParams : public BTreeReadExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeScanExecStreamParams
+    : public BTreeReadExecStreamParams
 {
 };
 
@@ -45,7 +46,8 @@ struct BTreeScanExecStreamParams : public BTreeReadExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeScanExecStream : public BTreeReadExecStream
+class FENNEL_FTRS_EXPORT BTreeScanExecStream
+    : public BTreeReadExecStream
 {
 public:
     // implement ExecStream

@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * CopyExecStreamParams defines parameters for CopyExecStream.
  */
-struct CopyExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT CopyExecStreamParams
+    : public ConduitExecStreamParams
 {
 };
 
@@ -44,7 +45,8 @@ struct CopyExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class CopyExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT CopyExecStream
+    : public ConduitExecStream
 {
 public:
     // implement ExecStream

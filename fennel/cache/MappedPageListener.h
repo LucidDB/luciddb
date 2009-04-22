@@ -34,7 +34,7 @@ class CachePage;
  * implementations (not pure virtual) so derived classes only need to override
  * those of interest.
  */
-class MappedPageListener
+class FENNEL_CACHE_EXPORT MappedPageListener
 {
 public:
     virtual ~MappedPageListener();

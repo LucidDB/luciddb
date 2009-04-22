@@ -1,9 +1,9 @@
 #!/bin/bash
 # $Id$
 # Eigenbase master build script for creating release images
-# Copyright (C) 2005-2007 The Eigenbase Project
-# Copyright (C) 2005-2007 Disruptive Tech
-# Copyright (C) 2005-2007 LucidEra, Inc.
+# Copyright (C) 2005-2009 The Eigenbase Project
+# Copyright (C) 2005-2009 Disruptive Tech
+# Copyright (C) 2005-2009 LucidEra, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -155,6 +155,17 @@ cp $DIST_DIR/VERSION $FARRAGO_RELEASE
 tar cjvf $FARRAGO_RELEASE.$ARCHIVE_SUFFIX $FARRAGO_RELEASE
 rm -rf $DIST_DIR/$FARRAGO_RELEASE
 
+
+# Build Fennel-only source release
+rm -rf $DIST_DIR/$FENNEL_RELEASE
+rm -f $DIST_DIR/$FENNEL_RELEASE.$ARCHIVE_SUFFIX
+cd $DIST_DIR
+mkdir $FENNEL_RELEASE
+cp -R $OPEN_DIR/fennel $FENNEL_RELEASE
+cp $DIST_DIR/VERSION $FENNEL_RELEASE
+tar cjvf $FENNEL_RELEASE.$ARCHIVE_SUFFIX $FENNEL_RELEASE
+rm -rf $FENNEL_RELEASE
+
 fi
 
 # Build full binary release
@@ -196,22 +207,3 @@ cd $OPEN_DIR/luciddb
 ./initBuild.sh --without-farrago-build --with-optimization --without-debug
 mv dist/luciddb.$ARCHIVE_SUFFIX \
     $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
-
-if [ $cygwin = "false" ]; then
-
-# Build Fennel-only source release
-# This has to happen after binary build so that Makefiles are generated.
-# Note that if someone forgot to update Fennel's version in configure.in,
-# the tar xjvf below will fail.
-rm -rf $DIST_DIR/$FENNEL_RELEASE
-rm -f $DIST_DIR/$FENNEL_RELEASE.$ARCHIVE_SUFFIX
-cd $OPEN_DIR/fennel
-make dist
-cd $DIST_DIR
-tar xzvf $OPEN_DIR/fennel/$FENNEL_RELEASE.tar.gz
-cp $DIST_DIR/VERSION $FENNEL_RELEASE
-tar cjvf $FENNEL_RELEASE.$ARCHIVE_SUFFIX $FENNEL_RELEASE
-rm -rf $FENNEL_RELEASE
-rm -f $OPEN_DIR/fennel/$FENNEL_RELEASE.tar.gz
-
-fi

@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ByteInputStream defines an interface for reading from a stream of bytes.
  */
-class ByteInputStream : virtual public ByteStream
+class FENNEL_COMMON_EXPORT ByteInputStream : virtual public ByteStream
 {
     /**
      * First buffered byte of data.

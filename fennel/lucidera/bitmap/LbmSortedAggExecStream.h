@@ -53,7 +53,8 @@ struct LbmSortedAggExecStreamParams : public SortedAggExecStreamParams
  * @author John Pham
  * @version $Id$
  */
-class LbmSortedAggExecStream : public SortedAggExecStream
+class FENNEL_LBM_EXPORT LbmSortedAggExecStream
+    : public SortedAggExecStream
 {
 protected:
     virtual AggComputer *newAggComputer(

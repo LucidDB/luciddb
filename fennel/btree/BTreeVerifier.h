@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeStatistics is used to return information about the tree computed
  * as a side-effect of verification.
  */
-struct BTreeStatistics
+struct FENNEL_BTREE_EXPORT BTreeStatistics
 {
     /**
      * Number of levels in tree.
@@ -64,7 +64,8 @@ struct BTreeStatistics
 /**
  * BTreeVerifier checks BTree integrity.
  */
-class BTreeVerifier : public BTreeAccessBase
+class FENNEL_BTREE_EXPORT BTreeVerifier
+    : public BTreeAccessBase
 {
     /**
      * Key data used for verifying that all keys in a node are greater than or

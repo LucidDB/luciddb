@@ -43,7 +43,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStream
+class FENNEL_EXEC_EXPORT ExecStream
     : public boost::noncopyable,
         virtual public ClosableObject,
         virtual public TraceSource,

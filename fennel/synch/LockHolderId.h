@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class LockHolderId
+class FENNEL_SYNCH_EXPORT LockHolderId
 {
     enum HolderType {
         TYPE_NULL,

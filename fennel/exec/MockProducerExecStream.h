@@ -57,7 +57,7 @@ typedef boost::shared_ptr<Int64ColumnGenerator> SharedInt64ColumnGenerator;
  * MockProducerExecStreamGenerator defines an interface for generating
  * a data stream.
  */
-class MockProducerExecStreamGenerator
+class FENNEL_EXEC_EXPORT MockProducerExecStreamGenerator
 {
 public:
     virtual ~MockProducerExecStreamGenerator();
@@ -80,7 +80,8 @@ typedef boost::shared_ptr<MockProducerExecStreamGenerator>
 /**
  * MockProducerExecStreamParams defines parameters for MockProducerExecStream.
  */
-struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
+struct FENNEL_EXEC_EXPORT MockProducerExecStreamParams
+    : public SingleOutputExecStreamParams
 {
     /**
      * Number of rows to generate.
@@ -124,7 +125,8 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class MockProducerExecStream : public SingleOutputExecStream
+class FENNEL_EXEC_EXPORT MockProducerExecStream
+    : public SingleOutputExecStream
 {
     uint cbTuple;
     uint64_t nRowsMax;

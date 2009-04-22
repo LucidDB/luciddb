@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * LcsClusterAccessBase is a base for classes which access cluster pages.
  */
-class LcsClusterAccessBase : public boost::noncopyable
+class FENNEL_LCS_EXPORT LcsClusterAccessBase
+    : public boost::noncopyable
 {
 protected:
     /**

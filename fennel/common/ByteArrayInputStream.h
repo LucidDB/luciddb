@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * ByteArrayInputStream implements the ByteInputStream interface by reading data
  * from an existing fixed-size array of bytes.
  */
-class ByteArrayInputStream : public ByteInputStream
+class FENNEL_COMMON_EXPORT ByteArrayInputStream : public ByteInputStream
 {
     // implement the ByteInputStream interface
     virtual void readNextBuffer();

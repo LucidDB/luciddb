@@ -50,7 +50,7 @@ FENNEL_BEGIN_NAMESPACE
 //! should/must have return value == destStorage.
 //
 //  TODO: Does not implement an implementation defined max length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCat_Ascii(
     char* dest,
     int destStorageBytes,
@@ -80,7 +80,7 @@ SqlStrCat_Ascii(
 //! destLenBytes = destStorageBytes
 //
 //  TODO: Does not implement an implementation defined max length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCat_Ascii(
     char* dest,
     int destStorageBytes,
@@ -92,7 +92,7 @@ SqlStrCat_Ascii(
 //! StrCmp. Ascii. Fixed Width / SQL CHAR.
 //!
 //! Returns -1, 0, 1.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCmp_Ascii_Fix(
     char const * const str1,
     int str1LenBytes,
@@ -103,7 +103,7 @@ SqlStrCmp_Ascii_Fix(
 //! StrCmp. Ascii. Variable Width / VARCHAR.
 //!
 //! Returns -1, 0, 1
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCmp_Ascii_Var(
     char const * const str1,
     int str1LenBytes,
@@ -113,7 +113,7 @@ SqlStrCmp_Ascii_Var(
 //! StrLen in bits. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrLenBit_Ascii(
     char const * const str,
     int strLenBytes);
@@ -121,7 +121,7 @@ SqlStrLenBit_Ascii(
 //! StrLen in characters. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrLenChar_Ascii(
     char const * const str,
     int strLenBytes);
@@ -129,7 +129,7 @@ SqlStrLenChar_Ascii(
 //! StrLen in octets. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrLenOct_Ascii(
     char const * const str,
     int strLenBytes);
@@ -142,7 +142,7 @@ SqlStrLenOct_Ascii(
 //! Result is VARCHAR, as the result of substring is always VARCHAR,
 //! and concatenation results in VARCHAR if any of its operands are VARCHAR.
 //! startChar is 1-indexed, as per SQL standard.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrOverlay_Ascii(
     char* dest,
     int destStorageBytes,
@@ -158,7 +158,7 @@ SqlStrOverlay_Ascii(
 //!
 //! Returns 0 if not found. Returns 1 if find is zero length. See
 //! SQL99 Part 2 Section 6.17 General Rule 2.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrPos_Ascii(
     char const * const str,
     int strLenBytes,
@@ -175,7 +175,7 @@ SqlStrPos_Ascii(
 //! Results in a VARCHAR.
 //! See SQL99 Part 2 Section 6.18 General Rule 3.
 //! subStartChar is 1-indexed.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrSubStr_Ascii(
     char const ** dest,
     int destStorageBytes,
@@ -186,7 +186,7 @@ SqlStrSubStr_Ascii(
     int subLenBytesSpecified);
 
 //! toLower. Ascii. CHAR/VARCHAR. Returns length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrToLower_Ascii(
     char* dest,
     int destStorageBytes,
@@ -194,7 +194,7 @@ SqlStrToLower_Ascii(
     int srcLenBytes);
 
 //! toUpper. Ascii. CHAR/VARCHAR. Returns length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrToUpper_Ascii(
     char* dest,
     int destStorageBytes,
@@ -205,7 +205,7 @@ SqlStrToUpper_Ascii(
 //!
 //! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrTrim_Ascii(
     char* dest,
     int destStorageBytes,
@@ -223,7 +223,7 @@ SqlStrTrim_Ascii(
 //! substring as this is irrelevant. If a program depends on the size
 //! of result not changing, and this instruction enforcing that
 //! invariant -- probably a bad practice anyway -- trouble could result.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrTrim_Ascii(
     char const ** result,
     char const * const str,

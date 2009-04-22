@@ -157,7 +157,7 @@ public:
 class UnionNumberStream : public NumberStream
 {
     std::vector<SharedNumberStream> children;
-    std::vector<uint> currentValues;
+    VectorOfUint currentValues;
     uint prev, next;
 
     bool findNext()

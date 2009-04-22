@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ValuesExecStreamParams defines parameters for ValuesExecStream.
  */
-struct ValuesExecStreamParams : public SingleOutputExecStreamParams
+struct FENNEL_EXEC_EXPORT ValuesExecStreamParams
+    : public SingleOutputExecStreamParams
 {
     /**
      * Number of bytes in buffer
@@ -53,7 +54,8 @@ struct ValuesExecStreamParams : public SingleOutputExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class ValuesExecStream : public SingleOutputExecStream
+class FENNEL_EXEC_EXPORT ValuesExecStream
+    : public SingleOutputExecStream
 {
     /**
      * Number of bytes in input buffer

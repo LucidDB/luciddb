@@ -96,7 +96,8 @@ struct ExternalSortExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class ExternalSortExecStream : public ConduitExecStream
+class FENNEL_SORTER_EXPORT ExternalSortExecStream
+    : public ConduitExecStream
 {
 public:
     /**

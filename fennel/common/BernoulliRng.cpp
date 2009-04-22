@@ -31,7 +31,7 @@ BernoulliRng::BernoulliRng(float successProbability)
 }
 
 
-void BernoulliRng::reseed(uint32_t seed)
+void BernoulliRng::reseed(boost::uint32_t seed)
 {
     uniformRng.seed(seed);
 }

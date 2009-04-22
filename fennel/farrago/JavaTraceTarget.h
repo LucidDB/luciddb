@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * converting performance counter updates into trace events which
  * are published inside of Java.
  */
-class JavaTraceTarget : public TraceTarget, public StatsTarget
+class FENNEL_FARRAGO_EXPORT JavaTraceTarget
+    : public TraceTarget, public StatsTarget
 {
     /**
      * net.sf.farrago.util.NativeTrace object to which trace messages should be

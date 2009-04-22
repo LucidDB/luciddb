@@ -41,7 +41,7 @@ class TupleProjection;
  * <a href="structTupleDesign.html#TupleData">the design docs</a> for
  * more details.
  */
-struct TupleDatum
+struct FENNEL_TUPLE_EXPORT TupleDatum
 {
     TupleStorageByteLength cbData;
     PConstBuffer pData;
@@ -115,7 +115,8 @@ struct TupleDatum
  * TupleData is an in-memory collection of independent data values, as
  * explained in <a href="structTupleDesign.html#TupleData">the design docs</a>.
  */
-class TupleData : public std::vector<TupleDatum>
+class FENNEL_TUPLE_EXPORT TupleData
+    : public std::vector<TupleDatum>
 {
 public:
     inline explicit TupleData();

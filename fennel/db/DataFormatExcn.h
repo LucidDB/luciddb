@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Exception class for incompatible data format errors
  */
-class DataFormatExcn : public FennelExcn
+class FENNEL_DB_EXPORT DataFormatExcn
+    : public FennelExcn
 {
 public:
     /**

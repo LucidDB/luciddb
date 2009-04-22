@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeLeafReader extends BTreeReader by only doing reads of leaf pages in
  * a btree.
  */
-class BTreeLeafReader : public BTreeReader
+class FENNEL_BTREE_EXPORT BTreeLeafReader
+    : public BTreeReader
 {
     /**
      * The current leaf page to be searched/read

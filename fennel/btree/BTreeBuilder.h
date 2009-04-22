@@ -46,7 +46,8 @@ typedef boost::shared_ptr<BTreeBuildLevel> SharedBTreeBuildLevel;
  * BTreeBuilder is also used for creating empty trees and truncating or
  * dropping existing ones.
  */
-class BTreeBuilder : public BTreeAccessBase
+class FENNEL_BTREE_EXPORT BTreeBuilder
+    : public BTreeAccessBase
 {
     // TODO:  something better
     friend class BTreeBuildLevel;

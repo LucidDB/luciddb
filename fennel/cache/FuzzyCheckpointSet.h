@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * It implements the PagePredicate interface by returning true only for pages
  * which have remained dirty since the last checkpoint.
  */
-class FuzzyCheckpointSet : public PagePredicate
+class FENNEL_CACHE_EXPORT FuzzyCheckpointSet
+    : public PagePredicate
 {
     /**
      * Pages dirty during last checkpoint.

@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * CacheTestBase is a common base for any test which depends on the Cache
  * interface.
  */
-class CacheTestBase : virtual public TestBase
+class FENNEL_TEST_EXPORT CacheTestBase
+    : virtual public TestBase
 {
 protected:
     /**

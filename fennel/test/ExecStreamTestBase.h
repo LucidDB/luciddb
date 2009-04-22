@@ -38,7 +38,8 @@ class ExecStreamScheduler;
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamTestBase : virtual public SegStorageTestBase
+class FENNEL_TEST_EXPORT ExecStreamTestBase
+    : virtual public SegStorageTestBase
 {
 protected:
     static const uint DefaultCacheReservePercent = 5;

@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BarrierExecStreamParams defines parameters for BarrierExecStream.
  */
-struct BarrierExecStreamParams : public ConfluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT BarrierExecStreamParams
+    : public ConfluenceExecStreamParams
 {
     /**
      * Return mode for the stream
@@ -63,7 +64,8 @@ struct BarrierExecStreamParams : public ConfluenceExecStreamParams
  * @author Rushan Chen
  * @version $Id$
  */
-class BarrierExecStream : public ConfluenceExecStream
+class FENNEL_EXEC_EXPORT BarrierExecStream
+    : public ConfluenceExecStream
 {
     /**
      * Tupledata for input

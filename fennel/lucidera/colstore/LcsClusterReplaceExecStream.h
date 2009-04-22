@@ -50,7 +50,8 @@ struct LcsClusterReplaceExecStreamParams :
  * rootPageId.  So, this execution stream requires the underlying segment
  * corresponding to the cluster to be a snapshot segment.
  */
-class LcsClusterReplaceExecStream : public LcsClusterAppendExecStream
+class FENNEL_LCS_EXPORT LcsClusterReplaceExecStream
+    : public LcsClusterAppendExecStream
 {
     /**
      * Dynamic parameter id corresponding to the root pageId of the new cluster,

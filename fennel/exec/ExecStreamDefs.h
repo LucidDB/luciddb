@@ -108,7 +108,7 @@ inline std::ostream & operator<< (std::ostream &os, ExecStreamResult e)
  * example, for nTuplesMax, a filter might count number of input tuples, while
  * a join might count number of tuple comparisons.
  */
-struct ExecStreamQuantum
+struct FENNEL_EXEC_EXPORT ExecStreamQuantum
 {
     /**
      * Maximum number of tuples to process per quantum.
@@ -149,7 +149,7 @@ enum ExecStreamResourceSettingType {
  * ExecStreamResourceQuantity quantifies various resources which
  * can be allocated to an ExecStream.
  */
-struct ExecStreamResourceQuantity
+struct FENNEL_EXEC_EXPORT ExecStreamResourceQuantity
 {
     /**
      * Number of dedicated threads the stream may request while executing.
@@ -174,7 +174,7 @@ struct ExecStreamResourceQuantity
 /**
  * Common parameters for instantiating any ExecStream.
  */
-struct ExecStreamParams
+struct FENNEL_EXEC_EXPORT ExecStreamParams
 {
     /**
      * CacheAccessor to use for any data access.  This will be singular if the

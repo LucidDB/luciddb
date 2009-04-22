@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * TraceSource is a common base for all classes which write messages to
  * a TraceTarget.
  */
-class TraceSource
+class FENNEL_COMMON_EXPORT TraceSource
 {
     SharedTraceTarget pTraceTarget;
 

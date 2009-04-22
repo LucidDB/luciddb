@@ -42,7 +42,8 @@ typedef boost::shared_ptr<ModifiedAllocationNode> SharedModifiedAllocationNode;
 /**
  * Allocation status for a single data page in this extent.
  */
-struct VersionedPageEntry : PageEntry
+struct FENNEL_SEGMENT_EXPORT VersionedPageEntry
+    : PageEntry
 {
     /**
      * Commit sequence number corresponding to the id of the transaction
@@ -61,7 +62,7 @@ struct VersionedPageEntry : PageEntry
  * made to the page entry and extent entry corresponding to a page.  Also,
  * tracks whether the page can be updated in-place.
  */
-struct ModifiedPageEntry
+struct FENNEL_SEGMENT_EXPORT ModifiedPageEntry
 {
     enum ModType {
         ALLOCATED,
@@ -134,7 +135,8 @@ static const uint64_t DEALLOCATED_PAGE_OWNER_ID_MASK = 0x8000000000000000LL;
  * permanent segment.  The two methods should be called in a loop, one after
  * the other, until getOldPageIds() can no longer find any old pages.
  */
-class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
+class FENNEL_SEGMENT_EXPORT VersionedRandomAllocationSegment
+    : public RandomAllocationSegmentBase
 {
     typedef std::hash_map<PageId, SharedModifiedAllocationNode>
         ModifiedAllocationNodeMap;

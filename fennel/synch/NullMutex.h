@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * A NullMutex is a dummy class for use in cases where the need for
  * synchronization is parameterized.
  */
-class NullMutex
+class FENNEL_SYNCH_EXPORT NullMutex
 {
 public:
     NullMutex()
@@ -48,7 +48,7 @@ public:
  * Guard class for acquisition of an NullMutex.  Models the
  * boost::ScopedLock concept.
  */
-class NullMutexGuard : public boost::noncopyable
+class FENNEL_SYNCH_EXPORT NullMutexGuard : public boost::noncopyable
 {
 public:
     explicit NullMutexGuard(NullMutex &)

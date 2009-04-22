@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmSegmentReader : public LbmSegmentReaderBase
+class FENNEL_LBM_EXPORT LbmSegmentReader
+    : public LbmSegmentReaderBase
 {
     /**
      * True if initial read has been done

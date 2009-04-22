@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * change before execution terminates, or change before a Calculator
  * XO can read the message.
  */
-class CalcMessage
+class FENNEL_CALCULATOR_EXPORT CalcMessage
 {
 public:
     /**

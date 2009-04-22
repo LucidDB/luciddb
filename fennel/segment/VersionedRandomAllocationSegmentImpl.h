@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * VersionedExtentAllocationNode is the allocation map for one extent
  * in a VersionedRandomAllocationSegment.
  */
-struct VersionedExtentAllocationNode : public StoredNode
+struct FENNEL_SEGMENT_EXPORT VersionedExtentAllocationNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0xbfc76ee9882a1be6LL;
 
@@ -59,7 +60,7 @@ typedef SegNodeLock<VersionedExtentAllocationNode> VersionedExtentAllocLock;
  * ModifiedAllocationNode is a structure that keeps track of the temporary page
  * corresponding to a modified allocation node
  */
-struct ModifiedAllocationNode
+struct FENNEL_SEGMENT_EXPORT ModifiedAllocationNode
 {
     /**
      * True if this corresponds to a segment allocation node

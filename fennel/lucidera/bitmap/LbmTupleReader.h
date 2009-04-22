@@ -36,7 +36,7 @@ typedef TupleData *PTupleData;
  * @author John Pham
  * @version $Id$
  */
-class LbmTupleReader
+class FENNEL_LBM_EXPORT LbmTupleReader
 {
 public:
     virtual ~LbmTupleReader();
@@ -56,7 +56,8 @@ public:
  * LbmStreamTupleReader is a base class for reading bitmap tuples
  * from an input stream
  */
-class LbmStreamTupleReader : public LbmTupleReader
+class FENNEL_LBM_EXPORT LbmStreamTupleReader
+    : public LbmTupleReader
 {
     /**
      * Input stream accessor
@@ -89,7 +90,8 @@ public:
  * LbmSingleTupleReader is a class satisyfing the bitmap tuple reader
  * interface for a single input tuple
  */
-class LbmSingleTupleReader : public LbmTupleReader
+class FENNEL_LBM_EXPORT LbmSingleTupleReader
+    : public LbmTupleReader
 {
     /**
      * Whether the segment reader has a tuple to return

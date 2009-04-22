@@ -448,7 +448,7 @@ void LhxPlan::init(
     shared_ptr<dynamic_bitset<> > joinFilterInit =
         shared_ptr<dynamic_bitset<> >();
     vector<shared_array<uint> > subPartStatsInit;
-    vector<uint> filteredRows;
+    VectorOfUint filteredRows;
 
     for (uint i = 0; i < partitionsInit.size(); i ++) {
         subPartStatsInit.push_back(shared_array<uint>());
@@ -466,7 +466,7 @@ void LhxPlan::init(
     vector<SharedLhxPartition> &partitionsInit,
     vector<shared_array<uint> > &subPartStats,
     shared_ptr<dynamic_bitset<> > joinFilterInit,
-    vector<uint> &filteredRowsInit,
+    VectorOfUint &filteredRowsInit,
     bool enableSubPartStat,
     bool enableSwing)
 {
@@ -986,7 +986,7 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo,
         SharedLhxPlan newChildPlan = SharedLhxPlan(new LhxPlan());
         vector<SharedLhxPartition> partitionList;
         vector<shared_array<uint> > subPartStats;
-        vector<uint> filteredRows;
+        VectorOfUint filteredRows;
         for (j = 0; j < partInfo.numInputs; j ++) {
             partitionList.push_back(
                 partInfo.destPartitionList[i + LhxChildPartCount * j]);

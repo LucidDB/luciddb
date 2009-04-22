@@ -75,7 +75,8 @@ struct LbmSplicerExecStreamParams : public DiffluenceExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmSplicerExecStream : public DiffluenceExecStream
+class FENNEL_LBM_EXPORT LbmSplicerExecStream
+    : public DiffluenceExecStream
 {
     /**
      * Scratch accessor

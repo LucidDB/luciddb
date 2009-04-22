@@ -266,7 +266,12 @@ public class ProxyGen
             generateClassDefinition(bases[i]);
         }
         undefinedInterfaces.remove(clazz);
-        pw.println("class " + getCppClassName(clazz));
+
+        // TODO jvs 6-Apr-2009:  instead of hard-coding FENNEL_FARRAGO_EXPORT,
+        // make it a generator parameter so that extension projects
+        // can supply their own DLL export macros
+        
+        pw.println("class FENNEL_FARRAGO_EXPORT " + getCppClassName(clazz));
         pw.print(": virtual public JniProxy");
         for (int i = 0; i < bases.length; ++i) {
             if (bases[i] == RefObject.class) {
@@ -327,7 +332,8 @@ public class ProxyGen
         // Finally, generate the visitor interface with a visitor method
         // overload for each class.
         pw.println(
-            "class " + visitorClassName + " : virtual public "
+            "class FENNEL_FARRAGO_EXPORT "
+            + visitorClassName + " : virtual public "
             + visitorBaseName);
         pw.println("{");
         pw.println("public:");

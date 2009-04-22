@@ -37,7 +37,8 @@ class TupleData;
  * @author John V. Sichi
  * @version $Id$
  */
-class TupleOverflowExcn : public FennelExcn
+class FENNEL_TUPLE_EXPORT TupleOverflowExcn
+    : public FennelExcn
 {
 public:
     /**

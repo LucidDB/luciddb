@@ -39,7 +39,8 @@ FENNEL_BEGIN_NAMESPACE
  * and carries on, it may need to delete the local jthrowable reference
  * to avoid a leak.
  */
-class JavaExcn : public FennelExcn
+class FENNEL_FARRAGO_EXPORT JavaExcn
+    : public FennelExcn
 {
     jthrowable javaException;
 

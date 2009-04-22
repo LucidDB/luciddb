@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Reads RIDs from a single cluster
  */
-class LcsColumnReader : public boost::noncopyable
+class FENNEL_LCS_EXPORT LcsColumnReader
+    : public boost::noncopyable
 {
     /**
      * Parent cluster reader object

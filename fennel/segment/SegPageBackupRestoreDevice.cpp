@@ -141,7 +141,7 @@ void SegPageBackupRestoreDevice::init()
         backupFile = fopen(backupFilePathname.c_str(), mode);
         isCompressed = false;
     } else {
-#ifdef __MINGW32__
+#ifdef __MSVC__
         throw FennelExcn(
             FennelResource::instance().unsupportedOperation("popen"));
 #else
@@ -411,7 +411,12 @@ void SegPageBackupRestoreDevice::closeImpl()
     freeScratchPageQueue.clear();
     if (backupFile != NULL) {
         if (isCompressed) {
+#ifdef __MSVC__
+        throw FennelExcn(
+            FennelResource::instance().unsupportedOperation("pclose"));
+#else
             pclose(backupFile);
+#endif
         } else {
             fclose(backupFile);
         }
