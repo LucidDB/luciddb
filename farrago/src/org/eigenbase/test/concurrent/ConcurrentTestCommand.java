@@ -1,9 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,42 +20,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.test.concurrent;
+package org.eigenbase.test.concurrent;
 
 /**
- * FarragoTestConcurrentCommand represents a command, sequentially executed by
- * {@link FarragoTestConcurrentCommandExecutor}, during a concurrency test
- * ({@link FarragoTestConcurrentTestCase}.
+ * ConcurrentTestCommand represents a command, sequentially executed by
+ * {@link ConcurrentTestCommandExecutor}, during a concurrency test
  *
- * <p>FarragoTestConcurrentCommand instances are normally instantiated by the
- * {@link FarragoTestConcurrentCommandGenerator} class.
+ * <p>ConcurrentTestCommand instances are normally instantiated by the
+ * {@link ConcurrentTestCommandGenerator} class.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public interface FarragoTestConcurrentCommand
+public interface ConcurrentTestCommand
 {
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Executes this command. The FarragoTestConcurrentCommandExecutor provides
+     * Executes this command. The ConcurrentTestCommandExecutor provides
      * access to a JDBC connection and previously prepared statements.
      *
-     * @param exec the FarragoTestConcurrentCommandExecutor firing this command.
+     * @param exec the ConcurrentTestCommandExecutor firing this command.
      *
      * @throws Exception to indicate a test failure
      *
-     * @see FarragoTestConcurrentCommandExecutor#getStatement()
-     * @see FarragoTestConcurrentCommandExecutor#setStatement(java.sql.Statement)
+     * @see ConcurrentTestCommandExecutor#getStatement()
+     * @see ConcurrentTestCommandExecutor#setStatement(java.sql.Statement)
      */
-    void execute(FarragoTestConcurrentCommandExecutor exec)
+    void execute(ConcurrentTestCommandExecutor exec)
         throws Exception;
 
     /**
      * Marks a command to show that it is expected to fail, and indicates how.
      * Used for negative tests. Normally when a command fails the embracing test
-     * fails (see {@link
-     * net.sf.farrago.test.concurrent.FarragoTestConcurrentTestCase#executeTest}).
+     * fails.
      * But when a marked command fails, the error is caught and inspected: if it
      * matches the expected error, the test continues. However if it does not
      * match, if another kind of exception is thrown, or if no exception is
@@ -67,7 +66,7 @@ public interface FarragoTestConcurrentCommand
      * @param pattern null, or a regular expression that matches the expected
      * error message.
      */
-    FarragoTestConcurrentCommand markToFail(
+    ConcurrentTestCommand markToFail(
         String comment,
         String pattern);
 
@@ -82,7 +81,7 @@ public interface FarragoTestConcurrentCommand
     /**
      * Set this command to expect a patternless failure.
      */
-    FarragoTestConcurrentCommand markToFail();
+    ConcurrentTestCommand markToFail();
 
     //~ Inner Classes ----------------------------------------------------------
 
@@ -107,4 +106,4 @@ public interface FarragoTestConcurrentCommand
     }
 }
 
-// End FarragoTestConcurrentCommand.java
+// End ConcurrentTestCommand.java

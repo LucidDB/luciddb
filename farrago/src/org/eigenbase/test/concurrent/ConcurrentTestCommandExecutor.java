@@ -1,9 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,26 +20,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.test.concurrent;
+package org.eigenbase.test.concurrent;
 
-import java.io.*;
-
+import java.io.PrintStream;
 import java.sql.*;
-
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
-
-
 /**
- * FarragoTestConcurrentCommandExecutor is a thread that executes a sequence of
- * {@link FarragoTestConcurrentCommand commands} on a JDBC connection.
+ * ConcurrentTestCommandExecutor is a thread that executes a sequence of
+ * {@link ConcurrentTestCommand commands} on a JDBC connection.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestConcurrentCommandExecutor
-    extends Thread
+class ConcurrentTestCommandExecutor extends Thread
 {
     //~ Instance fields --------------------------------------------------------
 
@@ -51,6 +46,11 @@ public class FarragoTestConcurrentCommandExecutor
      * JDBC URL to connect with.
      */
     private String jdbcURL;
+
+    /**
+     * JDBC Connection properties.
+     */
+    private Properties jdbcProps;
 
     /**
      * Command sequence for this thread.
@@ -90,34 +90,37 @@ public class FarragoTestConcurrentCommandExecutor
     /**
      * Command throwing error *
      */
-    private FarragoTestConcurrentCommand errorCommand;
+    private ConcurrentTestCommand errorCommand;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a FarragoTestConcurrentCommandExecutor with the given thread
+     * Constructs a ConcurrentTestCommandExecutor with the given thread
      * ID, JDBC URL, commands and synchronization object.
      *
      * @param threadId the thread ID (see {@link
-     * FarragoTestConcurrentCommandGenerator})
+     * ConcurrentTestCommandGenerator})
      * @param threadName the thread's name
      * @param jdbcURL the JDBC URL to connect to
+     * @param jdbcProps JDBC Connnection properties (user, password, etc.)
      * @param commands the sequence of commands to execute -- null elements
      * indicate no-ops
      * @param synchronizer synchronization object (may not be null);
      * @param debugPrintStream if non-null a PrintStream to use for debugging
      * output (may help debugging thread synchronization issues)
      */
-    FarragoTestConcurrentCommandExecutor(
+    ConcurrentTestCommandExecutor(
         int threadId,
         String threadName,
         String jdbcURL,
+        Properties jdbcProps,
         Iterator commands,
         Sync synchronizer,
         PrintStream debugPrintStream)
     {
         this.threadId = new Integer(threadId);
         this.jdbcURL = jdbcURL;
+        this.jdbcProps = jdbcProps;
         this.commands = commands;
         this.synchronizer = synchronizer;
         this.debugPrintStream = debugPrintStream;
@@ -133,11 +136,7 @@ public class FarragoTestConcurrentCommandExecutor
     public void run()
     {
         try {
-            connection =
-                DriverManager.getConnection(
-                    jdbcURL,
-                    FarragoCatalogInit.SA_USER_NAME,
-                    null);
+            connection = DriverManager.getConnection(jdbcURL, jdbcProps);
             if (connection.getMetaData().supportsTransactions()) {
                 connection.setAutoCommit(false);
             }
@@ -150,11 +149,11 @@ public class FarragoTestConcurrentCommandExecutor
         int stepNumber = 0;
 
         while (commands.hasNext()) {
-            FarragoTestConcurrentCommand command =
-                (FarragoTestConcurrentCommand) commands.next();
+            ConcurrentTestCommand command =
+                (ConcurrentTestCommand) commands.next();
 
             if (!(command
-                    instanceof FarragoTestConcurrentCommandGenerator.AutoSynchronizationCommand))
+                    instanceof ConcurrentTestCommandGenerator.AutoSynchronizationCommand))
             {
                 stepNumber++;
             }
@@ -170,7 +169,7 @@ public class FarragoTestConcurrentCommandExecutor
             // synchronization commands are always executed, lest we deadlock
             boolean isSync =
                 command
-                instanceof FarragoTestConcurrentCommandGenerator.SynchronizationCommand;
+                instanceof ConcurrentTestCommandGenerator.SynchronizationCommand;
 
             if (isSync
                 || ((connection != null)
@@ -203,7 +202,7 @@ public class FarragoTestConcurrentCommandExecutor
     private void handleError(
         Throwable error,
         String when,
-        FarragoTestConcurrentCommand command)
+        ConcurrentTestCommand command)
     {
         this.error = error;
         this.when = when;
@@ -283,7 +282,7 @@ public class FarragoTestConcurrentCommandExecutor
         return when;
     }
 
-    public FarragoTestConcurrentCommand getFailureCommand()
+    public ConcurrentTestCommand getFailureCommand()
     {
         return errorCommand;
     }
@@ -297,8 +296,8 @@ public class FarragoTestConcurrentCommandExecutor
 
     /**
      * Synchronization object that allows multiple
-     * FarragoTestConcurrentCommandExecutors to execute commands in lock-step.
-     * Requires that all FarragoTestConcurrentCommandExecutors have the same
+     * ConcurrentTestCommandExecutors to execute commands in lock-step.
+     * Requires that all ConcurrentTestCommandExecutors have the same
      * number of commands.
      */
     public static class Sync
@@ -330,4 +329,4 @@ public class FarragoTestConcurrentCommandExecutor
     }
 }
 
-// End FarragoTestConcurrentCommandExecutor.java
+// End ConcurrentTestCommandExecutor.java

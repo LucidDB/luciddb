@@ -1,9 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,16 +20,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.test.concurrent;
+package org.eigenbase.test.concurrent;
 
-import java.io.*;
-
+import java.io.PrintStream;
 import java.util.*;
 
-
 /**
- * FarragoTestConcurrentTimedCommandGenerator extends {@link
- * FarragoTestConcurrentCommandGenerator} and repeats the configured command
+ * ConcurrentTestTimedCommandGenerator extends {@link
+ * ConcurrentTestCommandGenerator} and repeats the configured command
  * sequence until a certain amount of time has elapsed.
  *
  * <p>The command sequence is always completed in full, even if the time limit
@@ -39,8 +38,8 @@ import java.util.*;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestConcurrentTimedCommandGenerator
-    extends FarragoTestConcurrentCommandGenerator
+public class ConcurrentTestTimedCommandGenerator
+    extends ConcurrentTestCommandGenerator
 {
     //~ Instance fields --------------------------------------------------------
 
@@ -50,14 +49,14 @@ public class FarragoTestConcurrentTimedCommandGenerator
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a new FarragoTestConcurrentTimedCommandGenerator that will run
+     * Constructs a new ConcurrentTestTimedCommandGenerator that will run
      * for at least the given amount of time. See {@link
-     * FarragoTestConcurrentTimedCommandGenerator} for more information on the
+     * ConcurrentTestTimedCommandGenerator} for more information on the
      * semantics of run-time length.
      *
      * @param runTimeSeconds minimum run-time length, in seconds
      */
-    public FarragoTestConcurrentTimedCommandGenerator(int runTimeSeconds)
+    public ConcurrentTestTimedCommandGenerator(int runTimeSeconds)
     {
         super();
 
@@ -156,4 +155,4 @@ public class FarragoTestConcurrentTimedCommandGenerator
     }
 }
 
-// End FarragoTestConcurrentTimedCommandGenerator.java
+// End ConcurrentTestTimedCommandGenerator.java

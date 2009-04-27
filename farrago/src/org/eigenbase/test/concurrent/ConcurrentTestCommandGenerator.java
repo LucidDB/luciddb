@@ -1,9 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,51 +20,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.test.concurrent;
+package org.eigenbase.test.concurrent;
 
-import java.io.*;
-
+import java.io.PrintStream;
 import java.math.*;
-
 import java.sql.*;
-
 import java.util.*;
-import java.util.regex.*;
+import java.util.regex.Pattern;
 
-import junit.framework.*;
-
-import net.sf.farrago.trace.*;
-
-import org.eigenbase.runtime.*;
-import org.eigenbase.util.*;
+import org.eigenbase.runtime.AbstractIterResultSet;
+import org.eigenbase.util.Util;
 
 
 /**
- * FarragoTestConcurrentCommandGenerator creates instances of {@link
- * FarragoTestConcurrentCommand} that perform specific actions in a specific
+ * ConcurrentTestCommandGenerator creates instances of {@link
+ * ConcurrentTestCommand} that perform specific actions in a specific
  * order and within the context of a test thread ({@link
- * FarragoTestConcurrentCommandExecutor}).
+ * ConcurrentTestCommandExecutor}).
  *
  * <p>Typical actions include preparing a SQL statement for execution, executing
  * the statement and verifying its result set, and closing the statement.
  *
- * <p>A single FarragoTestConcurrentCommandGenerator creates commands for
+ * <p>A single ConcurrentTestCommandGenerator creates commands for
  * multiple threads. Each thread is represented by an integer "thread ID".
  * Thread IDs may take on any positive integer value and may be a sparse set
  * (e.g. 1, 2, 5).
  *
  * <p>When each command is created, it is associated with a thread and given an
  * execution order. Execution order values are positive integers, must be unique
- * within a thread, and may be a sparse set. See {@link
- * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
- * boolean, String)} for other considerations.
+ * within a thread, and may be a sparse set.
  *
  * <p>There are no restrictions on the order of command creation.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestConcurrentCommandGenerator
+public class ConcurrentTestCommandGenerator
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -73,12 +65,17 @@ public class FarragoTestConcurrentCommandGenerator
     private static final char RIGHT_BRACKET = '}';
 
     //~ Instance fields --------------------------------------------------------
+    protected boolean debug = false;
+    protected PrintStream debugStream = System.out;
+    protected String jdbcURL;
+    protected Properties jdbcProps;
+
 
     /**
      * Maps Integer thread IDs to a TreeMap. The TreeMap vaules map an Integer
-     * execution order to a {@link FarragoTestConcurrentCommand}.
+     * execution order to a {@link ConcurrentTestCommand}.
      */
-    private TreeMap<Integer, TreeMap<Integer, FarragoTestConcurrentCommand>>
+    private TreeMap<Integer, TreeMap<Integer, ConcurrentTestCommand>>
         threadMap;
 
     /**
@@ -86,17 +83,38 @@ public class FarragoTestConcurrentCommandGenerator
      */
     private TreeMap<Integer, String> threadNameMap;
 
+    /** Describes a thread that failed */
+    static public class FailedThread {
+        public final String name;
+        public final String location;
+        public final Throwable failure;
+
+        public FailedThread(String name, String location, Throwable failure) {
+            this.name = name;
+            this.location = location;
+            this.failure = failure;
+        }
+    }
+
+    /** Collects threads that failed. Cleared when execution starts, valid whe/n
+     * execution has ended. Only failed threads appear in the list, so after a
+     * successful test the list is empty.
+     */
+    private List<FailedThread> failedThreads;
+
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a new FarragoTestConcurrentCommandGenerator.
+     * Constructs a new ConcurrentTestCommandGenerator.
      */
-    public FarragoTestConcurrentCommandGenerator()
+    public ConcurrentTestCommandGenerator()
     {
         threadMap =
             new TreeMap<Integer,
-                TreeMap<Integer, FarragoTestConcurrentCommand>>();
+                TreeMap<Integer, ConcurrentTestCommand>>();
         threadNameMap = new TreeMap<Integer, String>();
+        failedThreads = new ArrayList<FailedThread>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -114,7 +132,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addSynchronizationCommand(
+    public ConcurrentTestCommand addSynchronizationCommand(
         int threadId,
         int order)
     {
@@ -126,7 +144,7 @@ public class FarragoTestConcurrentCommandGenerator
 
     /**
      * Causes the given thread to sleep for the indicated number of
-     * milliseconds. Thread executes {@link Thread#sleep(long)}.
+     * milliseconds.  Thread executes {@link java.lang.Thread#sleep(long)}.
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
@@ -135,7 +153,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addSleepCommand(
+    public ConcurrentTestCommand addSleepCommand(
         int threadId,
         int order,
         long millis)
@@ -156,14 +174,14 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addExplainCommand(
+    public ConcurrentTestCommand addExplainCommand(
         int threadId,
         int order,
         String sql)
     {
         assert (sql != null);
 
-        FarragoTestConcurrentCommand command = new ExplainCommand(sql);
+        ConcurrentTestCommand command = new ExplainCommand(sql);
 
         return addCommand(threadId, order, command);
     }
@@ -171,7 +189,7 @@ public class FarragoTestConcurrentCommandGenerator
     /**
      * Creates a {@link PreparedStatement} for the given SQL. This command does
      * not execute the SQL, it merely creates a PreparedStatement and stores it
-     * in the FarragoTestConcurrentCommandExecutor.
+     * in the ConcurrentTestCommandExecutor.
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
@@ -181,14 +199,14 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @see #addFetchAndCompareCommand(int, int, int, String)
      */
-    public FarragoTestConcurrentCommand addPrepareCommand(
+    public ConcurrentTestCommand addPrepareCommand(
         int threadId,
         int order,
         String sql)
     {
         assert (sql != null);
 
-        FarragoTestConcurrentCommand command = new PrepareCommand(sql);
+        ConcurrentTestCommand command = new PrepareCommand(sql);
 
         return addCommand(threadId, order, command);
     }
@@ -222,13 +240,13 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addFetchAndCompareCommand(
+    public ConcurrentTestCommand addFetchAndCompareCommand(
         int threadId,
         int order,
         int timeout,
         String expected)
     {
-        FarragoTestConcurrentCommand command =
+        ConcurrentTestCommand command =
             new FetchAndCompareCommand(timeout, expected);
 
         return addCommand(threadId, order, command);
@@ -243,7 +261,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addCloseCommand(
+    public ConcurrentTestCommand addCloseCommand(
         int threadId,
         int order)
     {
@@ -268,13 +286,13 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addInsertCommand(
+    public ConcurrentTestCommand addInsertCommand(
         int threadId,
         int order,
         int timeout,
         String sql)
     {
-        FarragoTestConcurrentCommand command = new InsertCommand(timeout, sql);
+        ConcurrentTestCommand command = new InsertCommand(timeout, sql);
 
         return addCommand(threadId, order, command);
     }
@@ -287,7 +305,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addCommitCommand(
+    public ConcurrentTestCommand addCommitCommand(
         int threadId,
         int order)
     {
@@ -305,7 +323,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addRollbackCommand(
+    public ConcurrentTestCommand addRollbackCommand(
         int threadId,
         int order)
     {
@@ -321,7 +339,7 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addDdlCommand(
+    public ConcurrentTestCommand addDdlCommand(
         int threadId,
         int order,
         String ddl)
@@ -337,18 +355,18 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @return the newly-added command
      */
-    public FarragoTestConcurrentCommand addCommand(
+    protected ConcurrentTestCommand addCommand(
         int threadId,
         int order,
-        FarragoTestConcurrentCommand command)
+        ConcurrentTestCommand command)
     {
         assert (threadId > 0);
         assert (order > 0);
 
-        TreeMap<Integer, FarragoTestConcurrentCommand> commandMap =
+        TreeMap<Integer, ConcurrentTestCommand> commandMap =
             threadMap.get(threadId);
         if (commandMap == null) {
-            commandMap = new TreeMap<Integer, FarragoTestConcurrentCommand>();
+            commandMap = new TreeMap<Integer, ConcurrentTestCommand>();
             threadMap.put(threadId, commandMap);
         }
 
@@ -366,9 +384,129 @@ public class FarragoTestConcurrentCommandGenerator
      */
     public void setThreadName(int threadId, String name)
     {
-        threadNameMap.put(new Integer(threadId),
-            name);
+        threadNameMap.put(new Integer(threadId), name);
     }
+
+    protected void setDebug(boolean enabled)
+    {
+        debug = enabled;
+    }
+
+    protected void setDebug(
+        boolean enabled,
+        PrintStream alternatePrintStream)
+    {
+        debug = enabled;
+        debugStream = alternatePrintStream;
+    }
+
+
+    /**
+     * Sets the jdbc data source for executing the command threads.
+     */
+    public void setDataSource(String jdbcURL, Properties jdbcProps)
+    {
+        this.jdbcURL = jdbcURL;
+        this.jdbcProps = jdbcProps;
+    }
+
+
+   /**
+     * Creates a {@link ConcurrentTestCommandExecutor} object for each define thread,
+     * and then runs them all.
+     *
+     * @throws Exception if no connection found or if a thread operation is
+     * interrupted
+     */
+    public void execute() throws Exception
+    {
+        ConcurrentTestCommandExecutor [] threads = innerExecute();
+        postExecute(threads);
+    }
+
+    protected ConcurrentTestCommandExecutor[] innerExecute() throws Exception
+    {
+        failedThreads.clear();
+        Set threadIds = getThreadIds();
+        ConcurrentTestCommandExecutor.Sync sync =
+            new ConcurrentTestCommandExecutor.Sync(threadIds.size());
+
+        // initialize command executors
+        ConcurrentTestCommandExecutor [] threads =
+            new ConcurrentTestCommandExecutor[threadIds.size()];
+
+        int threadIndex = 0;
+        for (Iterator i = threadIds.iterator(); i.hasNext();) {
+            Integer threadId = (Integer) i.next();
+            Iterator commands = getCommandIterator(threadId);
+
+            if (debug) {
+                debugStream.println(
+                    "Thread ID: " + threadId + " ("
+                    + getThreadName(threadId)
+                    + ")");
+                printCommands(debugStream, threadId);
+            }
+
+            threads[threadIndex++] =
+                new ConcurrentTestCommandExecutor(
+                    threadId.intValue(), getThreadName(threadId),
+                    this.jdbcURL, this.jdbcProps,
+                    commands,
+                    sync,
+                    this.debug ? this.debugStream : null);
+        }
+
+        // start all the threads
+        for (int i = 0, n = threads.length; i < n; i++) {
+            threads[i].start();
+        }
+
+        // wait for all threads to finish
+        for (int i = 0, n = threads.length; i < n; i++) {
+            threads[i].join();
+        }
+        return threads;
+    }
+
+    protected void postExecute(ConcurrentTestCommandExecutor[] threads)
+        throws Exception
+    {
+        // check for failures
+        if (requiresCustomErrorHandling()) {
+            for (int i = 0, n = threads.length; i < n; i++) {
+                ConcurrentTestCommandExecutor executor = threads[i];
+                if (executor.getFailureCause() != null) {
+                    customErrorHandler(executor);
+                }
+            }
+        } else {
+            for (int i = 0, n = threads.length; i < n; i++) {
+                Throwable cause = threads[i].getFailureCause();
+                if (cause != null) {
+                    failedThreads.add(
+                        new FailedThread(
+                            threads[i].getName(),
+                            threads[i].getFailureLocation(),
+                            cause));
+                }
+            }
+        }
+    }
+
+
+    /** @return true if any test thread failed. Valid after execute() has returned */
+    public boolean failed()
+    {
+        return !failedThreads.isEmpty();
+    }
+
+    /** @return the list of failed threads (unmodifiable) */
+    public List<FailedThread> getFailedThreads()
+    {
+        return Collections.unmodifiableList(failedThreads);
+    }
+
 
     /**
      * Insures that the number of commands is the same for each thread, fills
@@ -376,15 +514,15 @@ public class FarragoTestConcurrentCommandGenerator
      * command before each actual command. These steps are required for
      * synchronized execution in FarragoConcurrencyTestCase.
      */
-    void synchronizeCommandSets()
+    public void synchronizeCommandSets()
     {
         int maxCommands = 0;
         for (
-            Iterator<TreeMap<Integer, FarragoTestConcurrentCommand>> i =
+            Iterator<TreeMap<Integer, ConcurrentTestCommand>> i =
                 threadMap.values().iterator();
             i.hasNext();)
         {
-            TreeMap<Integer, FarragoTestConcurrentCommand> commands = i.next();
+            TreeMap<Integer, ConcurrentTestCommand> commands = i.next();
 
             // Fill in missing slots with null (no-op) commands.
             for (int j = 1; j < (commands.lastKey()).intValue(); j++) {
@@ -402,11 +540,11 @@ public class FarragoTestConcurrentCommandGenerator
 
         // Make sure all threads have the same number of commands.
         for (
-            Iterator<TreeMap<Integer, FarragoTestConcurrentCommand>> i =
+            Iterator<TreeMap<Integer, ConcurrentTestCommand>> i =
                 threadMap.values().iterator();
             i.hasNext();)
         {
-            TreeMap<Integer, FarragoTestConcurrentCommand> commands = i.next();
+            TreeMap<Integer, ConcurrentTestCommand> commands = i.next();
 
             if (commands.size() < maxCommands) {
                 for (int j = commands.size() + 1; j <= maxCommands; j++) {
@@ -419,29 +557,29 @@ public class FarragoTestConcurrentCommandGenerator
         // Interleave synchronization commands before each command.
         for (
             Iterator<Map.Entry<Integer,
-                TreeMap<Integer, FarragoTestConcurrentCommand>>> i =
+                TreeMap<Integer, ConcurrentTestCommand>>> i =
                 threadMap.entrySet().iterator();
             i.hasNext();)
         {
-            Map.Entry<Integer, TreeMap<Integer, FarragoTestConcurrentCommand>> threadCommandsEntry =
+            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>> threadCommandsEntry =
                 i.next();
 
-            TreeMap<Integer, FarragoTestConcurrentCommand> commands =
+            TreeMap<Integer, ConcurrentTestCommand> commands =
                 threadCommandsEntry.getValue();
 
-            TreeMap<Integer, FarragoTestConcurrentCommand> synchronizedCommands =
-                new TreeMap<Integer, FarragoTestConcurrentCommand>();
+            TreeMap<Integer, ConcurrentTestCommand> synchronizedCommands =
+                new TreeMap<Integer, ConcurrentTestCommand>();
 
             for (
-                Iterator<Map.Entry<Integer, FarragoTestConcurrentCommand>> j =
+                Iterator<Map.Entry<Integer, ConcurrentTestCommand>> j =
                     commands.entrySet().iterator();
                 j.hasNext();)
             {
-                Map.Entry<Integer, FarragoTestConcurrentCommand> commandEntry =
+                Map.Entry<Integer, ConcurrentTestCommand> commandEntry =
                     j.next();
 
                 int orderKey = (commandEntry.getKey()).intValue();
-                FarragoTestConcurrentCommand command = commandEntry.getValue();
+                ConcurrentTestCommand command = commandEntry.getValue();
 
                 synchronizedCommands.put(
                     new Integer((orderKey * 2) - 1),
@@ -457,45 +595,38 @@ public class FarragoTestConcurrentCommandGenerator
     /**
      * Validates that all threads have the same number of
      * SynchronizationCommands (otherwise a deadlock is guaranteed).
+     * @return true when valid, false when invalid.
      */
-    void validateSynchronization(TestCase test)
+    public boolean hasValidSynchronization()
     {
         int numSyncs = -1;
         for (
             Iterator<Map.Entry<Integer,
-                TreeMap<Integer, FarragoTestConcurrentCommand>>> i =
+                TreeMap<Integer, ConcurrentTestCommand>>> i =
                 threadMap.entrySet().iterator();
             i.hasNext();)
         {
-            Map.Entry<Integer, TreeMap<Integer, FarragoTestConcurrentCommand>> threadCommandsEntry =
+            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>> threadCommandsEntry =
                 i.next();
 
-            TreeMap<Integer, FarragoTestConcurrentCommand> commands =
-                (TreeMap<Integer, FarragoTestConcurrentCommand>)
+            TreeMap<Integer, ConcurrentTestCommand> commands =
+                (TreeMap<Integer, ConcurrentTestCommand>)
                 threadCommandsEntry.getValue();
 
             int numSyncsThisThread = 0;
-            for (
-                Iterator<FarragoTestConcurrentCommand> j =
-                    commands.values().iterator();
-                j.hasNext();)
-            {
+            for (Iterator<ConcurrentTestCommand> j = commands.values().iterator(); j.hasNext();) {
                 if (j.next() instanceof SynchronizationCommand) {
                     numSyncsThisThread++;
                 }
             }
-
             if (numSyncs < 0) {
                 numSyncs = numSyncsThisThread;
-            } else {
-                Assert.assertEquals(
-                    "mismatched synchronization command count (thread "
-                    + getThreadName(threadCommandsEntry.getKey())
-                    + ")",
-                    numSyncs,
-                    numSyncsThisThread);
+            }
+            if (numSyncs != numSyncsThisThread) {
+                return false;
             }
         }
+        return true;
     }
 
     /**
@@ -525,7 +656,7 @@ public class FarragoTestConcurrentCommandGenerator
      * Indicates whether commands generated by this generator require special
      * handling. Default implement returns false.
      */
-    public boolean requiresCustomErrorHandling()
+    boolean requiresCustomErrorHandling()
     {
         return false;
     }
@@ -535,13 +666,13 @@ public class FarragoTestConcurrentCommandGenerator
      * #requiresCustomErrorHandling()} returns true. Default implementation does
      * nothing.
      */
-    public void customErrorHandler(
-        FarragoTestConcurrentCommandExecutor executor)
+    void customErrorHandler(
+        ConcurrentTestCommandExecutor executor)
     {
     }
 
     /**
-     * Returns a {@link Collection} of {@link FarragoTestConcurrentCommand}
+     * Returns a {@link Collection} of {@link ConcurrentTestCommand}
      * objects for the given thread ID.
      */
     Collection getCommands(Integer threadId)
@@ -552,7 +683,7 @@ public class FarragoTestConcurrentCommandGenerator
     }
 
     /**
-     * Returns an {@link Iterator} of {@link FarragoTestConcurrentCommand}
+     * Returns an {@link Iterator} of {@link ConcurrentTestCommand}
      * objects for the given thread ID.
      */
     Iterator getCommandIterator(Integer threadId)
@@ -581,15 +712,15 @@ public class FarragoTestConcurrentCommandGenerator
      * abstract base to handle SQLExceptions
      */
     protected static abstract class AbstractCommand
-        implements FarragoTestConcurrentCommand
+        implements ConcurrentTestCommand
     {
         private boolean shouldFail = false;
         private String failComment = null; // describes an expected error
         private Pattern failPattern = null; // an expected error message
         private boolean failureExpected = false; // failure expected, no pattern
 
-        // implement FarragoTestConcurrentCommand
-        public FarragoTestConcurrentCommand markToFail(
+        // implement ConcurrentTestCommand
+        public ConcurrentTestCommand markToFail(
             String comment,
             String pattern)
         {
@@ -604,7 +735,7 @@ public class FarragoTestConcurrentCommandGenerator
             return failureExpected;
         }
 
-        public FarragoTestConcurrentCommand markToFail()
+        public ConcurrentTestCommand markToFail()
         {
             this.failureExpected = true;
             return this;
@@ -612,17 +743,17 @@ public class FarragoTestConcurrentCommandGenerator
 
         // subclasses define this to execute themselves
         protected abstract void doExecute(
-            FarragoTestConcurrentCommandExecutor exec)
+            ConcurrentTestCommandExecutor exec)
             throws Exception;
 
-        // implement FarragoTestConcurrentCommand
-        public void execute(FarragoTestConcurrentCommandExecutor exec)
+        // implement ConcurrentTestCommand
+        public void execute(ConcurrentTestCommandExecutor exec)
             throws Exception
         {
             try {
                 doExecute(exec);
                 if (shouldFail) {
-                    throw new FarragoTestConcurrentCommand.ShouldHaveFailedException(
+                    throw new ConcurrentTestCommand.ShouldHaveFailedException(
                         failComment);
                 }
             } catch (SQLException err) {
@@ -652,9 +783,7 @@ public class FarragoTestConcurrentCommandGenerator
                     throw err;
                 } else {
                     // else swallow it
-                    Util.swallow(
-                        err,
-                        FarragoTrace.getTestTracer());
+                    Util.swallow(err, null);
                 }
             }
         }
@@ -671,7 +800,7 @@ public class FarragoTestConcurrentCommandGenerator
         {
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws Exception
         {
             executor.getSynchronizer().waitForOthers();
@@ -706,7 +835,7 @@ public class FarragoTestConcurrentCommandGenerator
             this.millis = millis;
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws Exception
         {
             Thread.sleep(millis);
@@ -716,7 +845,7 @@ public class FarragoTestConcurrentCommandGenerator
     /**
      * ExplainCommand executes explain plan commands. Automatically closes the
      * {@link Statement} before returning from {@link
-     * #execute(FarragoTestConcurrentCommandExecutor)}.
+     * #execute(ConcurrentTestCommandExecutor)}.
      */
     private static class ExplainCommand
         extends AbstractCommand
@@ -728,7 +857,7 @@ public class FarragoTestConcurrentCommandGenerator
             this.sql = sql;
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();
@@ -756,7 +885,7 @@ public class FarragoTestConcurrentCommandGenerator
 
     /**
      * PrepareCommand creates a {@link PreparedStatement}. Stores the prepared
-     * statement in the FarragoTestConcurrentCommandExecutor.
+     * statement in the ConcurrentTestCommandExecutor.
      */
     private static class PrepareCommand
         extends AbstractCommand
@@ -768,7 +897,7 @@ public class FarragoTestConcurrentCommandGenerator
             this.sql = sql;
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             PreparedStatement stmt =
@@ -780,12 +909,12 @@ public class FarragoTestConcurrentCommandGenerator
 
     /**
      * CloseCommand closes a previously prepared statement. If no statement is
-     * stored in the FarragoTestConcurrentCommandExecutor, it does nothing.
+     * stored in the ConcurrentTestCommandExecutor, it does nothing.
      */
     private static class CloseCommand
         extends AbstractCommand
     {
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getStatement();
@@ -824,7 +953,7 @@ public class FarragoTestConcurrentCommandGenerator
 
     /**
      * FetchAndCompareCommand executes a previously prepared statement stored in
-     * the FarragoTestConcurrentCommandExecutor and then validates the returned
+     * the ConcurrentTestCommandExecutor and then validates the returned
      * rows against expected data.
      */
     private static class FetchAndCompareCommand
@@ -842,7 +971,7 @@ public class FarragoTestConcurrentCommandGenerator
             parseExpected(expected.trim());
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             PreparedStatement stmt =
@@ -874,10 +1003,7 @@ public class FarragoTestConcurrentCommandGenerator
                 if (!timeoutSet) {
                     throw e;
                 }
-
-                Util.swallow(
-                    e,
-                    FarragoTrace.getTestTracer());
+                Util.swallow(e, null);
             } finally {
                 rset.close();
             }
@@ -889,7 +1015,7 @@ public class FarragoTestConcurrentCommandGenerator
 
         /**
          * Parses expected values. See {@link
-         * FarragoTestConcurrentCommandGenerator#addFetchAndCompareCommand(int,
+         * ConcurrentTestCommandGenerator#addFetchAndCompareCommand(int,
          * int, int, String)} for details on format of <code>expected</code>.
          *
          * @throws IllegalStateException if there are formatting errors in
@@ -1315,7 +1441,7 @@ public class FarragoTestConcurrentCommandGenerator
             this.sql = sql;
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();
@@ -1333,7 +1459,7 @@ public class FarragoTestConcurrentCommandGenerator
     private static class CommitCommand
         extends AbstractCommand
     {
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             executor.getConnection().commit();
@@ -1347,7 +1473,7 @@ public class FarragoTestConcurrentCommandGenerator
     private static class RollbackCommand
         extends AbstractCommand
     {
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             executor.getConnection().rollback();
@@ -1357,7 +1483,7 @@ public class FarragoTestConcurrentCommandGenerator
     /**
      * DdlCommand executes DDL commands. Automatically closes the {@link
      * Statement} before returning from {@link
-     * #doExecute(FarragoTestConcurrentCommandExecutor)}.
+     * #doExecute(ConcurrentTestCommandExecutor)}.
      */
     private static class DdlCommand
         extends AbstractCommand
@@ -1369,7 +1495,7 @@ public class FarragoTestConcurrentCommandGenerator
             this.sql = sql;
         }
 
-        protected void doExecute(FarragoTestConcurrentCommandExecutor executor)
+        protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();
@@ -1383,4 +1509,4 @@ public class FarragoTestConcurrentCommandGenerator
     }
 }
 
-// End FarragoTestConcurrentCommandGenerator.java
+// End ConcurrentTestCommandGenerator.java

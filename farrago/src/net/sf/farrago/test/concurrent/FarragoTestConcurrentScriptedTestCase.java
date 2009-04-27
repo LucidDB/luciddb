@@ -23,9 +23,8 @@
 package net.sf.farrago.test.concurrent;
 
 import java.io.*;
-
 import java.util.*;
-
+import org.eigenbase.test.concurrent.*;
 
 /**
  * FarragoTestConcurrentScriptedTestCase is a base class for multi-threaded,
@@ -58,54 +57,22 @@ public abstract class FarragoTestConcurrentScriptedTestCase
     /**
      * Executes the given multi-threaded test script.
      */
-    protected void runScript(String mtsqlFile, String jdbcUrl)
-        throws Exception
+    protected void runScript(String mtsqlFile, String jdbcURL) throws Exception
     {
-        File mtsqlFileSansExt =
-            new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
-
-        FarragoTestConcurrentScriptedCommandGenerator cmdGen =
+        ConcurrentTestCommandScript cmdGen =
             newScriptedCommandGenerator(mtsqlFile);
-
         if (cmdGen.isDisabled()) {
             return;
         }
+        setDataSource(cmdGen, jdbcURL);
+        innerExecuteTest(cmdGen, cmdGen.useLockstep());
 
-        cmdGen.executeSetup(jdbcUrl);
-
-        executeTest(
-            cmdGen,
-            cmdGen.useLockstep(),
-            jdbcUrl);
-
-        Map<Integer, String[]> results = cmdGen.getResults();
-        OutputStream outStream = openTestLogOutputStream(mtsqlFileSansExt);
-
+        File mtsqlFileBase =
+            new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
+        OutputStream outStream = openTestLogOutputStream(mtsqlFileBase);
         BufferedWriter out =
             new BufferedWriter(new OutputStreamWriter(outStream));
-
-        for (Map.Entry<Integer, String[]> entry : results.entrySet()) {
-            Integer threadId = entry.getKey();
-            String [] threadResult = entry.getValue();
-
-            String threadName = "thread " + threadResult[0];
-            if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID
-                .equals(
-                    threadId))
-            {
-                threadName = "setup";
-            }
-
-            out.write("-- " + threadName);
-            out.newLine();
-            out.write(threadResult[1]);
-            out.write("-- end of " + threadName);
-            out.newLine();
-            out.newLine();
-        }
-
-        out.flush();
-
+        cmdGen.printResults(out);
         diffTestLog();
     }
 }
