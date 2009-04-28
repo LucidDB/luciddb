@@ -43,7 +43,8 @@ enum ForceMode { none = 0, fixed = 1, variable = 2 };
  * on the page and determining the offsets where different elements are to
  * be stored
  */
-class LcsClusterNodeWriter : public LcsClusterAccessBase, public TraceSource
+class FENNEL_LCS_EXPORT LcsClusterNodeWriter
+    : public LcsClusterAccessBase, public TraceSource
 {
 private:
     /**

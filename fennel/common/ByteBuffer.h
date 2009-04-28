@@ -45,7 +45,7 @@ typedef uint8_t UnsignedByte;
  * @author John Pham
  * @version $Id$
  */
-class ByteBuffer
+class FENNEL_COMMON_EXPORT ByteBuffer
 {
     boost::shared_array<PBuffer> ppBuffers;
     uint nBuffers;

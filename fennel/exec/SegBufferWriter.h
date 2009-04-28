@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class SegBufferWriter : public ClosableObject
+class FENNEL_EXEC_EXPORT SegBufferWriter
+    : public ClosableObject
 {
     SharedExecStreamBufAccessor pInAccessor;
     SegmentAccessor bufferSegmentAccessor;

@@ -333,7 +333,7 @@ typedef JniProxyIter<ProxyWindowPartitionDef> SharedProxyWindowPartitionDef;
 class ProxyWindowStreamDef;
 typedef JniProxyIter<ProxyWindowStreamDef> SharedProxyWindowStreamDef;
 
-class ProxyAggInvocation
+class FENNEL_FARRAGO_EXPORT ProxyAggInvocation
 : virtual public JniProxy
 {
 public:
@@ -345,7 +345,7 @@ int32_t getInputAttributeIndex();
 static jmethodID meth_getInputAttributeIndex;
 };
 
-class ProxyExecutionStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
@@ -361,13 +361,13 @@ SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
 };
 
-class ProxyTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyTupleStreamDef
 : virtual public JniProxy, virtual public ProxyExecutionStreamDef
 {
 public:
 };
 
-class ProxyAggStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyAggStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -377,7 +377,7 @@ int32_t getGroupingPrefixSize();
 static jmethodID meth_getGroupingPrefixSize;
 };
 
-class ProxyBarrierStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyBarrierStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -387,13 +387,13 @@ BarrierReturnMode getReturnMode();
 static jmethodID meth_getReturnMode;
 };
 
-class ProxyCmd
+class FENNEL_FARRAGO_EXPORT ProxyCmd
 : virtual public JniProxy
 {
 public:
 };
 
-class ProxyDatabaseCmd
+class FENNEL_FARRAGO_EXPORT ProxyDatabaseCmd
 : virtual public JniProxy, virtual public ProxyCmd
 {
 public:
@@ -401,7 +401,7 @@ SharedProxyDbHandle getDbHandle();
 static jmethodID meth_getDbHandle;
 };
 
-class ProxyBeginTxnCmd
+class FENNEL_FARRAGO_EXPORT ProxyBeginTxnCmd
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -409,7 +409,7 @@ SharedProxyTxnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 };
 
-class ProxyBernoulliSamplingStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyBernoulliSamplingStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -421,7 +421,7 @@ float getSamplingRate();
 static jmethodID meth_getSamplingRate;
 };
 
-class ProxyBufferingTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyBufferingTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -431,7 +431,7 @@ bool isMultipass();
 static jmethodID meth_isMultipass;
 };
 
-class ProxyMultiUseBufferingStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyMultiUseBufferingStreamDef
 : virtual public JniProxy, virtual public ProxyBufferingTupleStreamDef
 {
 public:
@@ -439,19 +439,19 @@ int32_t getReaderRefCountParamId();
 static jmethodID meth_getReaderRefCountParamId;
 };
 
-class ProxyBufferReaderStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyBufferReaderStreamDef
 : virtual public JniProxy, virtual public ProxyMultiUseBufferingStreamDef
 {
 public:
 };
 
-class ProxyBufferWriterStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyBufferWriterStreamDef
 : virtual public JniProxy, virtual public ProxyMultiUseBufferingStreamDef
 {
 public:
 };
 
-class ProxyCalcTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyCalcTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -461,7 +461,7 @@ std::string getProgram();
 static jmethodID meth_getProgram;
 };
 
-class ProxyCartesianProductStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyCartesianProductStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -469,13 +469,13 @@ bool isLeftOuter();
 static jmethodID meth_isLeftOuter;
 };
 
-class ProxyCmdAbandonBackup
+class FENNEL_FARRAGO_EXPORT ProxyCmdAbandonBackup
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
 };
 
-class ProxyCmdAlterSystemDeallocate
+class FENNEL_FARRAGO_EXPORT ProxyCmdAlterSystemDeallocate
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -483,7 +483,7 @@ int64_t getOldestLabelCsn();
 static jmethodID meth_getOldestLabelCsn;
 };
 
-class ProxyCmdBeginTxn
+class FENNEL_FARRAGO_EXPORT ProxyCmdBeginTxn
 : virtual public JniProxy, virtual public ProxyBeginTxnCmd
 {
 public:
@@ -491,7 +491,7 @@ bool isReadOnly();
 static jmethodID meth_isReadOnly;
 };
 
-class ProxyCmdBeginTxnWithCsn
+class FENNEL_FARRAGO_EXPORT ProxyCmdBeginTxnWithCsn
 : virtual public JniProxy, virtual public ProxyBeginTxnCmd
 {
 public:
@@ -499,7 +499,7 @@ SharedProxyCsnHandle getCsnHandle();
 static jmethodID meth_getCsnHandle;
 };
 
-class ProxyCmdCheckpoint
+class FENNEL_FARRAGO_EXPORT ProxyCmdCheckpoint
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -509,13 +509,13 @@ bool isFuzzy();
 static jmethodID meth_isFuzzy;
 };
 
-class ProxyCmdCloseDatabase
+class FENNEL_FARRAGO_EXPORT ProxyCmdCloseDatabase
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
 };
 
-class ProxyTxnCmd
+class FENNEL_FARRAGO_EXPORT ProxyTxnCmd
 : virtual public JniProxy, virtual public ProxyCmd
 {
 public:
@@ -523,7 +523,7 @@ SharedProxyTxnHandle getTxnHandle();
 static jmethodID meth_getTxnHandle;
 };
 
-class ProxyEndTxnCmd
+class FENNEL_FARRAGO_EXPORT ProxyEndTxnCmd
 : virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
@@ -531,13 +531,13 @@ SharedProxySvptHandle getSvptHandle();
 static jmethodID meth_getSvptHandle;
 };
 
-class ProxyCmdCommit
+class FENNEL_FARRAGO_EXPORT ProxyCmdCommit
 : virtual public JniProxy, virtual public ProxyEndTxnCmd
 {
 public:
 };
 
-class ProxyCmdCompleteBackup
+class FENNEL_FARRAGO_EXPORT ProxyCmdCompleteBackup
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -547,7 +547,7 @@ int64_t getUpperBoundCsn();
 static jmethodID meth_getUpperBoundCsn;
 };
 
-class ProxyCmdCreateExecutionStreamGraph
+class FENNEL_FARRAGO_EXPORT ProxyCmdCreateExecutionStreamGraph
 : virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
@@ -555,7 +555,7 @@ SharedProxyStreamGraphHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 };
 
-class ProxyIndexCmd
+class FENNEL_FARRAGO_EXPORT ProxyIndexCmd
 : virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
@@ -571,13 +571,13 @@ SharedProxyTupleDescriptor getTupleDesc();
 static jmethodID meth_getTupleDesc;
 };
 
-class ProxyCmdCreateIndex
+class FENNEL_FARRAGO_EXPORT ProxyCmdCreateIndex
 : virtual public JniProxy, virtual public ProxyIndexCmd
 {
 public:
 };
 
-class ProxyTupleStreamGraphCmd
+class FENNEL_FARRAGO_EXPORT ProxyTupleStreamGraphCmd
 : virtual public JniProxy, virtual public ProxyCmd
 {
 public:
@@ -585,7 +585,7 @@ SharedProxyStreamGraphHandle getStreamGraphHandle();
 static jmethodID meth_getStreamGraphHandle;
 };
 
-class ProxyCmdCreateStreamHandle
+class FENNEL_FARRAGO_EXPORT ProxyCmdCreateStreamHandle
 : virtual public JniProxy, virtual public ProxyTupleStreamGraphCmd
 {
 public:
@@ -597,7 +597,7 @@ std::string getStreamName();
 static jmethodID meth_getStreamName;
 };
 
-class ProxyIndexAccessCmd
+class FENNEL_FARRAGO_EXPORT ProxyIndexAccessCmd
 : virtual public JniProxy, virtual public ProxyIndexCmd
 {
 public:
@@ -605,13 +605,13 @@ int64_t getRootPageId();
 static jmethodID meth_getRootPageId;
 };
 
-class ProxyCmdDropIndex
+class FENNEL_FARRAGO_EXPORT ProxyCmdDropIndex
 : virtual public JniProxy, virtual public ProxyIndexAccessCmd
 {
 public:
 };
 
-class ProxyCsnHandleReturningCmd
+class FENNEL_FARRAGO_EXPORT ProxyCsnHandleReturningCmd
 : virtual public JniProxy
 {
 public:
@@ -619,19 +619,19 @@ SharedProxyCsnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 };
 
-class ProxyCmdGetLastCommittedTxnId
+class FENNEL_FARRAGO_EXPORT ProxyCmdGetLastCommittedTxnId
 : virtual public JniProxy, virtual public ProxyDatabaseCmd, virtual public ProxyCsnHandleReturningCmd
 {
 public:
 };
 
-class ProxyCmdGetTxnCsn
+class FENNEL_FARRAGO_EXPORT ProxyCmdGetTxnCsn
 : virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyTxnCmd
 {
 public:
 };
 
-class ProxyCmdInitiateBackup
+class FENNEL_FARRAGO_EXPORT ProxyCmdInitiateBackup
 : virtual public JniProxy, virtual public ProxyDatabaseCmd, virtual public ProxyCsnHandleReturningCmd
 {
 public:
@@ -652,7 +652,7 @@ int64_t getSpacePadding();
 static jmethodID meth_getSpacePadding;
 };
 
-class ProxyCmdOpenDatabase
+class FENNEL_FARRAGO_EXPORT ProxyCmdOpenDatabase
 : virtual public JniProxy, virtual public ProxyCmd
 {
 public:
@@ -669,7 +669,7 @@ void clearResultRecoveryRequired();
 static jmethodID meth_setResultRecoveryRequired;
 };
 
-class ProxyCmdPrepareExecutionStreamGraph
+class FENNEL_FARRAGO_EXPORT ProxyCmdPrepareExecutionStreamGraph
 : virtual public JniProxy, virtual public ProxyTupleStreamGraphCmd
 {
 public:
@@ -679,7 +679,7 @@ SharedProxyExecutionStreamDef getStreamDefs();
 static jmethodID meth_getStreamDefs;
 };
 
-class ProxyCmdRestoreFromBackup
+class FENNEL_FARRAGO_EXPORT ProxyCmdRestoreFromBackup
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -695,13 +695,13 @@ int64_t getUpperBoundCsn();
 static jmethodID meth_getUpperBoundCsn;
 };
 
-class ProxyCmdRollback
+class FENNEL_FARRAGO_EXPORT ProxyCmdRollback
 : virtual public JniProxy, virtual public ProxyEndTxnCmd
 {
 public:
 };
 
-class ProxyCmdSavepoint
+class FENNEL_FARRAGO_EXPORT ProxyCmdSavepoint
 : virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
@@ -709,7 +709,7 @@ SharedProxySvptHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 };
 
-class ProxyCmdSetParam
+class FENNEL_FARRAGO_EXPORT ProxyCmdSetParam
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
@@ -717,13 +717,13 @@ SharedProxyDatabaseParam getParam();
 static jmethodID meth_getParam;
 };
 
-class ProxyCmdTruncateIndex
+class FENNEL_FARRAGO_EXPORT ProxyCmdTruncateIndex
 : virtual public JniProxy, virtual public ProxyCmdDropIndex
 {
 public:
 };
 
-class ProxyCmdVerifyIndex
+class FENNEL_FARRAGO_EXPORT ProxyCmdVerifyIndex
 : virtual public JniProxy, virtual public ProxyIndexAccessCmd
 {
 public:
@@ -743,7 +743,7 @@ void clearResultUniqueKeyCount();
 static jmethodID meth_setResultUniqueKeyCount;
 };
 
-class ProxyCmdVersionIndexRoot
+class FENNEL_FARRAGO_EXPORT ProxyCmdVersionIndexRoot
 : virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
@@ -753,13 +753,13 @@ int64_t getOldRootPageId();
 static jmethodID meth_getOldRootPageId;
 };
 
-class ProxyCollectTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyCollectTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
 };
 
-class ProxyColumnName
+class FENNEL_FARRAGO_EXPORT ProxyColumnName
 : virtual public JniProxy
 {
 public:
@@ -769,7 +769,7 @@ std::string getName();
 static jmethodID meth_getName;
 };
 
-class ProxyCorrelation
+class FENNEL_FARRAGO_EXPORT ProxyCorrelation
 : virtual public JniProxy
 {
 public:
@@ -783,7 +783,7 @@ int32_t getOffset();
 static jmethodID meth_getOffset;
 };
 
-class ProxyCorrelationJoinStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyCorrelationJoinStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -791,7 +791,7 @@ SharedProxyCorrelation getCorrelations();
 static jmethodID meth_getCorrelations;
 };
 
-class ProxyHandle
+class FENNEL_FARRAGO_EXPORT ProxyHandle
 : virtual public JniProxy
 {
 public:
@@ -799,13 +799,13 @@ int64_t getLongHandle();
 static jmethodID meth_getLongHandle;
 };
 
-class ProxyCsnHandle
+class FENNEL_FARRAGO_EXPORT ProxyCsnHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxyDatabaseParam
+class FENNEL_FARRAGO_EXPORT ProxyDatabaseParam
 : virtual public JniProxy
 {
 public:
@@ -815,13 +815,13 @@ std::string getValue();
 static jmethodID meth_getValue;
 };
 
-class ProxyDbHandle
+class FENNEL_FARRAGO_EXPORT ProxyDbHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxyDynamicParamUse
+class FENNEL_FARRAGO_EXPORT ProxyDynamicParamUse
 : virtual public JniProxy
 {
 public:
@@ -833,7 +833,7 @@ bool isRead();
 static jmethodID meth_isRead;
 };
 
-class ProxyDynamicParameter
+class FENNEL_FARRAGO_EXPORT ProxyDynamicParameter
 : virtual public JniProxy
 {
 public:
@@ -843,7 +843,7 @@ int32_t getParameterId();
 static jmethodID meth_getParameterId;
 };
 
-class ProxyExecStreamDataFlow
+class FENNEL_FARRAGO_EXPORT ProxyExecStreamDataFlow
 : virtual public JniProxy
 {
 public:
@@ -855,7 +855,7 @@ SharedProxyExecutionStreamDef getProducer();
 static jmethodID meth_getProducer;
 };
 
-class ProxyFlatFileTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyFlatFileTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -893,7 +893,7 @@ bool isTrim();
 static jmethodID meth_isTrim;
 };
 
-class ProxyGenericStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyGenericStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -903,7 +903,7 @@ std::string getType();
 static jmethodID meth_getType;
 };
 
-class ProxyKeyAccessorDef
+class FENNEL_FARRAGO_EXPORT ProxyKeyAccessorDef
 : virtual public JniProxy
 {
 public:
@@ -911,7 +911,7 @@ SharedProxyTupleProjection getKeyProj();
 static jmethodID meth_getKeyProj;
 };
 
-class ProxyIndexAccessorDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexAccessorDef
 : virtual public JniProxy, virtual public ProxyKeyAccessorDef
 {
 public:
@@ -929,13 +929,13 @@ SharedProxyTupleDescriptor getTupleDesc();
 static jmethodID meth_getTupleDesc;
 };
 
-class ProxyIndexStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef, virtual public ProxyIndexAccessorDef
 {
 public:
 };
 
-class ProxyIndexLoaderDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexLoaderDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
 public:
@@ -945,7 +945,7 @@ bool isMonotonic();
 static jmethodID meth_isMonotonic;
 };
 
-class ProxyIndexScanDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexScanDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
 public:
@@ -953,7 +953,7 @@ SharedProxyTupleProjection getOutputProj();
 static jmethodID meth_getOutputProj;
 };
 
-class ProxyIndexSearchDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexSearchDef
 : virtual public JniProxy, virtual public ProxyIndexScanDef
 {
 public:
@@ -973,7 +973,7 @@ bool isUniqueKey();
 static jmethodID meth_isUniqueKey;
 };
 
-class ProxyIndexWriterDef
+class FENNEL_FARRAGO_EXPORT ProxyIndexWriterDef
 : virtual public JniProxy, virtual public ProxyIndexAccessorDef
 {
 public:
@@ -987,7 +987,7 @@ bool isUpdateInPlace();
 static jmethodID meth_isUpdateInPlace;
 };
 
-class ProxyJavaSinkStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyJavaSinkStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -995,7 +995,7 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
-class ProxyJavaTransformStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyJavaTransformStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1007,7 +1007,7 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
-class ProxyLbmBitOpStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmBitOpStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1017,7 +1017,7 @@ int32_t getStartRidParamId();
 static jmethodID meth_getStartRidParamId;
 };
 
-class ProxyLbmChopperStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmChopperStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1025,7 +1025,7 @@ int32_t getRidLimitParamId();
 static jmethodID meth_getRidLimitParamId;
 };
 
-class ProxyLcsRowScanStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLcsRowScanStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1053,7 +1053,7 @@ int64_t getSamplingRowCount();
 static jmethodID meth_getSamplingRowCount;
 };
 
-class ProxyLbmGeneratorStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmGeneratorStreamDef
 : virtual public JniProxy, virtual public ProxyIndexAccessorDef, virtual public ProxyLcsRowScanStreamDef
 {
 public:
@@ -1063,25 +1063,25 @@ int32_t getInsertRowCountParamId();
 static jmethodID meth_getInsertRowCountParamId;
 };
 
-class ProxyLbmIntersectStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmIntersectStreamDef
 : virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
 {
 public:
 };
 
-class ProxyLbmMinusStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmMinusStreamDef
 : virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
 {
 public:
 };
 
-class ProxyLbmNormalizerStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmNormalizerStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
 };
 
-class ProxyLbmSearchStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmSearchStreamDef
 : virtual public JniProxy, virtual public ProxyIndexSearchDef
 {
 public:
@@ -1091,19 +1091,19 @@ int32_t getStartRidParamId();
 static jmethodID meth_getStartRidParamId;
 };
 
-class ProxySortedAggStreamDef
+class FENNEL_FARRAGO_EXPORT ProxySortedAggStreamDef
 : virtual public JniProxy, virtual public ProxyAggStreamDef
 {
 public:
 };
 
-class ProxyLbmSortedAggStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmSortedAggStreamDef
 : virtual public JniProxy, virtual public ProxySortedAggStreamDef
 {
 public:
 };
 
-class ProxyLbmSplicerStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmSplicerStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1117,7 +1117,7 @@ int32_t getWriteRowCountParamId();
 static jmethodID meth_getWriteRowCountParamId;
 };
 
-class ProxyLbmUnionStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLbmUnionStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1129,7 +1129,7 @@ int32_t getSegmentLimitParamId();
 static jmethodID meth_getSegmentLimitParamId;
 };
 
-class ProxyLcsClusterAppendStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLcsClusterAppendStreamDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
 public:
@@ -1137,13 +1137,13 @@ SharedProxyTupleProjection getClusterColProj();
 static jmethodID meth_getClusterColProj;
 };
 
-class ProxyLcsClusterReplaceStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLcsClusterReplaceStreamDef
 : virtual public JniProxy, virtual public ProxyLcsClusterAppendStreamDef
 {
 public:
 };
 
-class ProxyLcsClusterScanDef
+class FENNEL_FARRAGO_EXPORT ProxyLcsClusterScanDef
 : virtual public JniProxy, virtual public ProxyIndexAccessorDef
 {
 public:
@@ -1153,7 +1153,7 @@ SharedProxyLcsRowScanStreamDef getRowScan();
 static jmethodID meth_getRowScan;
 };
 
-class ProxyLhxAggStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLhxAggStreamDef
 : virtual public JniProxy, virtual public ProxyAggStreamDef
 {
 public:
@@ -1163,7 +1163,7 @@ int64_t getNumRows();
 static jmethodID meth_getNumRows;
 };
 
-class ProxyLhxJoinStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyLhxJoinStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1191,7 +1191,7 @@ bool isSetopDistinct();
 static jmethodID meth_isSetopDistinct;
 };
 
-class ProxyMergeStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyMergeStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1201,7 +1201,7 @@ bool isSequential();
 static jmethodID meth_isSequential;
 };
 
-class ProxyMockTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyMockTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1209,7 +1209,7 @@ int64_t getRowCount();
 static jmethodID meth_getRowCount;
 };
 
-class ProxyNestedLoopJoinStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyNestedLoopJoinStreamDef
 : virtual public JniProxy, virtual public ProxyCartesianProductStreamDef
 {
 public:
@@ -1217,7 +1217,7 @@ SharedProxyCorrelation getLeftJoinKey();
 static jmethodID meth_getLeftJoinKey;
 };
 
-class ProxyReshapeParameter
+class FENNEL_FARRAGO_EXPORT ProxyReshapeParameter
 : virtual public JniProxy
 {
 public:
@@ -1231,7 +1231,7 @@ SharedProxyReshapeStreamDef getReshape();
 static jmethodID meth_getReshape;
 };
 
-class ProxyReshapeStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyReshapeStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1247,7 +1247,7 @@ std::string getTupleCompareBytesBase64();
 static jmethodID meth_getTupleCompareBytesBase64;
 };
 
-class ProxySortingStreamDef
+class FENNEL_FARRAGO_EXPORT ProxySortingStreamDef
 : virtual public JniProxy, virtual public ProxyKeyAccessorDef, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1261,7 +1261,7 @@ int64_t getEstimatedNumRows();
 static jmethodID meth_getEstimatedNumRows;
 };
 
-class ProxySplicerIndexAccessorDef
+class FENNEL_FARRAGO_EXPORT ProxySplicerIndexAccessorDef
 : virtual public JniProxy, virtual public ProxyIndexAccessorDef
 {
 public:
@@ -1269,31 +1269,31 @@ SharedProxyLbmSplicerStreamDef getSplicer();
 static jmethodID meth_getSplicer;
 };
 
-class ProxySplitterStreamDef
+class FENNEL_FARRAGO_EXPORT ProxySplitterStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
 };
 
-class ProxyStreamGraphHandle
+class FENNEL_FARRAGO_EXPORT ProxyStreamGraphHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxyStreamHandle
+class FENNEL_FARRAGO_EXPORT ProxyStreamHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxySvptHandle
+class FENNEL_FARRAGO_EXPORT ProxySvptHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxyTableWriterDef
+class FENNEL_FARRAGO_EXPORT ProxyTableWriterDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1301,19 +1301,19 @@ SharedProxyIndexWriterDef getIndexWriter();
 static jmethodID meth_getIndexWriter;
 };
 
-class ProxyTableDeleterDef
+class FENNEL_FARRAGO_EXPORT ProxyTableDeleterDef
 : virtual public JniProxy, virtual public ProxyTableWriterDef
 {
 public:
 };
 
-class ProxyTableInserterDef
+class FENNEL_FARRAGO_EXPORT ProxyTableInserterDef
 : virtual public JniProxy, virtual public ProxyTableWriterDef
 {
 public:
 };
 
-class ProxyTableUpdaterDef
+class FENNEL_FARRAGO_EXPORT ProxyTableUpdaterDef
 : virtual public JniProxy, virtual public ProxyTableWriterDef
 {
 public:
@@ -1321,7 +1321,7 @@ SharedProxyTupleProjection getUpdateProj();
 static jmethodID meth_getUpdateProj;
 };
 
-class ProxyTupleAccessor
+class FENNEL_FARRAGO_EXPORT ProxyTupleAccessor
 : virtual public JniProxy
 {
 public:
@@ -1333,7 +1333,7 @@ int32_t getMinByteLength();
 static jmethodID meth_getMinByteLength;
 };
 
-class ProxyTupleAttrAccessor
+class FENNEL_FARRAGO_EXPORT ProxyTupleAttrAccessor
 : virtual public JniProxy
 {
 public:
@@ -1347,7 +1347,7 @@ int32_t getNullBitIndex();
 static jmethodID meth_getNullBitIndex;
 };
 
-class ProxyTupleAttrDescriptor
+class FENNEL_FARRAGO_EXPORT ProxyTupleAttrDescriptor
 : virtual public JniProxy
 {
 public:
@@ -1359,7 +1359,7 @@ int32_t getTypeOrdinal();
 static jmethodID meth_getTypeOrdinal;
 };
 
-class ProxyTupleAttrProjection
+class FENNEL_FARRAGO_EXPORT ProxyTupleAttrProjection
 : virtual public JniProxy
 {
 public:
@@ -1367,7 +1367,7 @@ int32_t getAttributeIndex();
 static jmethodID meth_getAttributeIndex;
 };
 
-class ProxyTupleDescriptor
+class FENNEL_FARRAGO_EXPORT ProxyTupleDescriptor
 : virtual public JniProxy
 {
 public:
@@ -1375,7 +1375,7 @@ SharedProxyTupleAttrDescriptor getAttrDescriptor();
 static jmethodID meth_getAttrDescriptor;
 };
 
-class ProxyTupleProjection
+class FENNEL_FARRAGO_EXPORT ProxyTupleProjection
 : virtual public JniProxy
 {
 public:
@@ -1383,19 +1383,19 @@ SharedProxyTupleAttrProjection getAttrProjection();
 static jmethodID meth_getAttrProjection;
 };
 
-class ProxyTxnHandle
+class FENNEL_FARRAGO_EXPORT ProxyTxnHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
 };
 
-class ProxyUncollectTupleStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyUncollectTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
 };
 
-class ProxyValuesStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyValuesStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1403,7 +1403,7 @@ std::string getTupleBytesBase64();
 static jmethodID meth_getTupleBytesBase64;
 };
 
-class ProxyWindowDef
+class FENNEL_FARRAGO_EXPORT ProxyWindowDef
 : virtual public JniProxy
 {
 public:
@@ -1421,7 +1421,7 @@ SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
 };
 
-class ProxyWindowPartitionDef
+class FENNEL_FARRAGO_EXPORT ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
@@ -1439,7 +1439,7 @@ SharedProxyWindowDef getWindow();
 static jmethodID meth_getWindow;
 };
 
-class ProxyWindowStreamDef
+class FENNEL_FARRAGO_EXPORT ProxyWindowStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1453,7 +1453,7 @@ SharedProxyWindowDef getWindow();
 static jmethodID meth_getWindow;
 };
 
-class FemVisitor : virtual public JniProxyVisitor
+class FENNEL_FARRAGO_EXPORT FemVisitor : virtual public JniProxyVisitor
 {
 public:
 static JniProxyVisitTable<FemVisitor> visitTbl;

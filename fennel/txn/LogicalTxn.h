@@ -38,7 +38,7 @@ class LogicalTxnParticipant;
  * LogicalTxn represents a transaction implemented via a logical
  * logging strategy.
  */
-class LogicalTxn
+class FENNEL_TXN_EXPORT LogicalTxn
     : public boost::noncopyable,
         public boost::enable_shared_from_this<LogicalTxn>
 {

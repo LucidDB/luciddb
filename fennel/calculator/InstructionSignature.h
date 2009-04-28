@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
 
 using namespace std;
 
-class InstructionSignature {
+class FENNEL_CALCULATOR_EXPORT InstructionSignature
+{
 public:
     explicit
     InstructionSignature(string const & name);

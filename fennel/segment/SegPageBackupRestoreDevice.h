@@ -41,7 +41,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Random access request binding for I/O requests issued during backup/restore
  */
-class BackupRestorePage : public RandomAccessRequestBinding
+class FENNEL_SEGMENT_EXPORT BackupRestorePage
+    : public RandomAccessRequestBinding
 {
     /**
      * Pointer to the scratch buffer associated with this request
@@ -122,7 +123,7 @@ public:
 /**
  * Device used to backup and restore pages from a data segment.
  */
-class SegPageBackupRestoreDevice
+class FENNEL_SEGMENT_EXPORT SegPageBackupRestoreDevice
     : public boost::noncopyable,
         public ClosableObject,
         public boost::enable_shared_from_this<SegPageBackupRestoreDevice>

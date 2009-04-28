@@ -60,7 +60,8 @@ SharedExternalSortRunAccessor;
 /**
  * ExternalSortMerger manages the process of merging stored runs.
  */
-class ExternalSortMerger : public ExternalSortSubStream
+class FENNEL_SORTER_EXPORT ExternalSortMerger
+    : public ExternalSortSubStream
 {
     /**
      * Global information.

@@ -75,7 +75,7 @@ enum StandardTypeDescriptorOrdinal
  * StandardTypeDescriptor provides convenience functions to
  * StandardTypeDescriptorOrdinal enum
  */
-class StandardTypeDescriptor
+class FENNEL_TUPLE_EXPORT StandardTypeDescriptor
 {
 public:
     static inline char const * const
@@ -309,7 +309,8 @@ private:
  * StoredTypeDescriptorFactory interface capable of constructing all of the
  * types enumerated in StandardTypeDescriptorOrdinal.
  */
-class StandardTypeDescriptorFactory : public StoredTypeDescriptorFactory
+class FENNEL_TUPLE_EXPORT StandardTypeDescriptorFactory
+    : public StoredTypeDescriptorFactory
 {
 public:
     explicit StandardTypeDescriptorFactory();

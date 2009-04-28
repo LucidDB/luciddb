@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * href="structSegmentDesign.html#WALSegment">the design docs</a> for more
  * detail.
  */
-class WALSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT WALSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 

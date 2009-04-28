@@ -43,7 +43,8 @@ FENNEL_BEGIN_NAMESPACE
  * the allocation point from wrapping around to the oldest allocated page, or
  * an assertion violation results.
  */
-class CircularSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT CircularSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 

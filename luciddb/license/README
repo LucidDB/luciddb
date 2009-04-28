@@ -74,6 +74,7 @@ Changes since 0.8.0 include
 - add Star Schema Benchmark (SSB)
 - overhaul build to use cmake instead of autotools
 - overhaul Windows build to use MSVC instead of mingw
+- change catalog persistence to use Hibernate
 - fix for end-of-full-page loader bug
 - allow restore_database to bypass restore of catalog data
 - optimize common relational subexpressions

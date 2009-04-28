@@ -29,11 +29,11 @@
 #include "fennel/common/Backtrace.h"
 #include "fennel/tuple/StoredTypeDescriptor.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <process.h>
 #endif
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #include <signal.h>
 #endif
 
@@ -95,7 +95,7 @@ std::ofstream JniUtil::handleCountTraceStream;
 JavaThreadTracker JniUtil::threadTracker;
 
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
 static void debugger_signalHandler(int signum)
 {
     // do nothing
@@ -120,7 +120,7 @@ void JniUtil::initDebug(char const *envVarName)
         snprintf(pidstr, 32, "%d", getpid());
         std::cout << "Waiting for debugger; pid=" << pidstr << std::endl;
         std::cout.flush();
-#ifdef __MINGW32__
+#ifdef __MSVC__
         // A "cont" in gdb will wake this sleep up immediately, which
         // is disturbing but useful.
         _sleep(600000);
@@ -372,26 +372,26 @@ std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
 {
     JniEnvAutoRef pEnv;
 
-    jobjectArray interfaces =
+    jobjectArray ifaces =
         reinterpret_cast<jobjectArray>(
             pEnv->CallObjectMethod(jClass, methGetInterfaces));
-    assert(interfaces);
+    assert(ifaces);
 
-    for (jsize i = 0, len = pEnv->GetArrayLength(interfaces); i < len; i++) {
-        jclass interface =
+    for (jsize i = 0, len = pEnv->GetArrayLength(ifaces); i < len; i++) {
+        jclass iface =
             reinterpret_cast<jclass>(
-                pEnv->GetObjectArrayElement(interfaces, i));
-        assert(interface);
+                pEnv->GetObjectArrayElement(ifaces, i));
+        assert(iface);
 
         jint modifiers =
-            pEnv->CallIntMethod(interface, methGetModifiers);
+            pEnv->CallIntMethod(iface, methGetModifiers);
 
         jboolean isPublic =
             pEnv->CallStaticBooleanMethod(
                 classModifier, methIsPublic, modifiers);
 
         if (isPublic) {
-            return getClassName(interface);
+            return getClassName(iface);
         }
     }
 

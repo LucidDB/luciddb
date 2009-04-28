@@ -45,7 +45,8 @@ class AttributeAccessor;
  * formats.  See <a href="structTupleDesign.html#TupleAccessor">the design
  * docs</a> for more details.
  */
-class TupleAccessor : public boost::noncopyable
+class FENNEL_TUPLE_EXPORT TupleAccessor
+    : public boost::noncopyable
 {
     /**
      * Precomputed accessors for attributes, in logical tuple order.
@@ -55,14 +56,14 @@ class TupleAccessor : public boost::noncopyable
     /**
      * Array of 0-based indices of variable-width attributes.
      */
-    std::vector<uint> pVarWidthAttrIndices;
+    VectorOfUint pVarWidthAttrIndices;
 
     /**
      * Permutation in which attributes should be marshalled; empty when
      * !bAlignedVar, in which case attributes should be marshalled in logical
      * order.
      */
-    std::vector<uint> marshalOrder;
+    VectorOfUint marshalOrder;
 
     /**
      * @see getMaxByteCount()
@@ -122,7 +123,7 @@ class TupleAccessor : public boost::noncopyable
     TupleFormat format;
 
     // private helpers
-    void initFixedAccessors(TupleDescriptor const &,std::vector<uint> &);
+    void initFixedAccessors(TupleDescriptor const &,VectorOfUint &);
     void clear();
 
 public:

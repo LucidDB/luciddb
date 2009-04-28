@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * SynchMonitoredObject is the base for any object needing to use the monitor
  * synchronization pattern.
  */
-class SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT SynchMonitoredObject
 {
 protected:
     StrictMutex mutex;

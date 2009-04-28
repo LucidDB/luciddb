@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * SortedAggExecStreamParams defines parameters for SortedAggExecStream.
  */
-struct SortedAggExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT SortedAggExecStreamParams
+    : public ConduitExecStreamParams
 {
     AggInvocationList aggInvocations;
     int groupByKeyCount;
@@ -51,7 +52,8 @@ struct SortedAggExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SortedAggExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT SortedAggExecStream
+    : public ConduitExecStream
 {
     enum State {
         STATE_ACCUMULATING,

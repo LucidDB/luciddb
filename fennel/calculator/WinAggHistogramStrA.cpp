@@ -30,7 +30,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 char*
 StringDesc::pointer() const
 {
-    assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
+    assert(StandardTypeDescriptor::isArray(mType));
     assert(pData);
     return reinterpret_cast<char*>(const_cast<PBuffer>(pData));
 }

@@ -70,7 +70,8 @@ typedef boost::shared_ptr<FlatFileBuffer> SharedFlatFileBuffer;
  * @version $Id$
  */
 
-class FlatFileBuffer : public ClosableObject, public TraceSource
+class FENNEL_FLATFILE_EXPORT FlatFileBuffer
+    : public ClosableObject, public TraceSource
 {
     std::string path;
     FILE *pFile;

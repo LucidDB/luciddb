@@ -43,7 +43,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class AioLinuxScheduler : public DeviceAccessScheduler, public Thread
+class FENNEL_DEVICE_EXPORT AioLinuxScheduler
+    : public DeviceAccessScheduler, public Thread
 {
     /**
      * Context for calling libaio.

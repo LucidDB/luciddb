@@ -179,7 +179,8 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
  * @author jpham
  * @version $Id$
  */
-class FlatFileExecStream : public SingleOutputExecStream
+class FENNEL_FLATFILE_EXPORT FlatFileExecStream
+    : public SingleOutputExecStream
 {
 public:
     /**

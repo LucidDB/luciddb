@@ -25,7 +25,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class CalcInit
+class FENNEL_CALCULATOR_EXPORT CalcInit
 {
 public:
     //! CalcInit: Call once at start of world to set up instruction factories

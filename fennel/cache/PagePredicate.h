@@ -34,7 +34,7 @@ class MappedPageListener;
 /**
  * Callback class for Cache::checkpointPages.
  */
-class PagePredicate
+class FENNEL_CACHE_EXPORT PagePredicate
 {
 public:
     virtual ~PagePredicate();
@@ -53,7 +53,8 @@ public:
  * DeviceIdPagePredicate is an implementation of PagePredicate which returns
  * true for pages mapped to a given DeviceId.
  */
-class DeviceIdPagePredicate : public PagePredicate
+class FENNEL_CACHE_EXPORT DeviceIdPagePredicate
+    : public PagePredicate
 {
     DeviceId deviceId;
 
@@ -67,7 +68,8 @@ public:
  * MappedPageListenerPredicate is an implementation of PagePredicate which
  * returns true for pages with a given MappedPageListener
  */
-class MappedPageListenerPredicate : public PagePredicate
+class FENNEL_CACHE_EXPORT MappedPageListenerPredicate
+    : public PagePredicate
 {
     MappedPageListener &listener;
 

@@ -57,10 +57,12 @@ public:
           mPointerType(pointerType)
     {}
     ~BoolPointerInstruction() {
+#ifndef __MSVC__
         // If (0) to reduce performance impact of template type checking
         if (0) {
             PointerInstruction_NotAPointerType<PTR_TYPE>();
         }
+#endif
     }
 
 protected:
@@ -628,8 +630,9 @@ public:
     }
 };
 
-class BoolPointerInstructionRegister : InstructionRegister {
-
+class FENNEL_CALCULATOR_EXPORT BoolPointerInstructionRegister
+    : InstructionRegister
+{
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void

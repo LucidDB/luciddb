@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  a high-performance template for builtin datatypes
  */
-class BTreeCompactNodeAccessor : public BTreeNodeAccessor
+class FENNEL_BTREE_EXPORT BTreeCompactNodeAccessor
+    : public BTreeNodeAccessor
 {
     /**
      * Number of bytes per entry.

@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * CRC/PseudoUuid/PageId combination.  This can be used to reliably
  * detect end-of-stream during recovery.
  */
-class CrcSegOutputStream : public SegOutputStream
+class FENNEL_SEGMENT_EXPORT CrcSegOutputStream
+    : public SegOutputStream
 {
     PseudoUuid onlineUuid;
 

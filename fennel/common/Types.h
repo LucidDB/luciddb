@@ -28,6 +28,24 @@
 
 #include <set>
 
+// TODO jvs 25-Feb-2009:  update these for win64.  I had to use
+// the unsized ints to avoid compilation errors from mersenne_twister
+// in BernoulliRng.cpp.
+#ifdef __MSVC__
+typedef __int8 int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+
+#define snprintf _snprintf
+#define strcasecmp strcmpi
+
+#endif
+
 FENNEL_BEGIN_NAMESPACE
 
 // use these symbols when you want to indicate that a variable points to
@@ -60,7 +78,7 @@ class SegNodeLock;
 /**
  * See class IntrusiveList for details.
  */
-struct IntrusiveListNode
+struct FENNEL_COMMON_EXPORT IntrusiveListNode
 {
     IntrusiveListNode *pNext;
 
@@ -78,7 +96,7 @@ struct IntrusiveListNode
 // compiler knows that an unsigned number can't possibly be negative.
 // Instead, use MAXU, defined here.
 
-class MaxU {
+class FENNEL_COMMON_EXPORT MaxU {
 public:
     MaxU()
     {
@@ -103,14 +121,6 @@ public:
     {
         return 0xFFFFFFFFFFFFFFFFLL;
     }
-
-    // TODO:  something better
-#ifdef __CYGWIN__
-    operator uint() const
-    {
-        return 0xFFFFFFFFFFFFFFFFLL;
-    }
-#endif
 };
 
 static const MaxU MAXU;

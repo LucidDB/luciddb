@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * SplitterExecStreamParams defines parameters for SplitterExecStream.
  */
-struct SplitterExecStreamParams : public DiffluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT SplitterExecStreamParams
+    : public DiffluenceExecStreamParams
 {
 };
 
@@ -45,7 +46,8 @@ struct SplitterExecStreamParams : public DiffluenceExecStreamParams
  * @author Rushan Chen
  * @version $Id$
  */
-class SplitterExecStream : public DiffluenceExecStream
+class FENNEL_EXEC_EXPORT SplitterExecStream
+    : public DiffluenceExecStream
 {
     /**
      * 0-based ordinal of next output from which to retrieve state

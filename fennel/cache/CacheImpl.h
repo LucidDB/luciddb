@@ -428,7 +428,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      *
      * @param discard if true, the page is being discarded from the cache
      */
-    void unmapPage(PageT &page,StrictMutexTryGuard &guard,bool discard);
+    void unmapPage(PageT &page,StrictMutexGuard &guard,bool discard);
 
     /**
      * Unmaps a page being discarded and adds it to unmappedBucket.
@@ -444,7 +444,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      */
     void unmapAndFreeDiscardedPage(
         PageT &page,
-        StrictMutexTryGuard &guard);
+        StrictMutexGuard &guard);
 
     /**
      * Maps a page if it is not already mapped (and notifies victimPolicy of the

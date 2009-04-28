@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * SegmentTestBase is a common base for any test of an implementation of the
  * Segment interface.
  */
-class SegmentTestBase
+class FENNEL_TEST_EXPORT SegmentTestBase
     : virtual public SegStorageTestBase,
         virtual public PagingTestBase
 {

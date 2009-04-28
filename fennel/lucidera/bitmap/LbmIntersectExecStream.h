@@ -41,7 +41,8 @@ struct LbmIntersectExecStreamParams : public LbmBitOpExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmIntersectExecStream : public LbmBitOpExecStream
+class FENNEL_LBM_EXPORT LbmIntersectExecStream
+    : public LbmBitOpExecStream
 {
     /**
      * Number of inputs with overlapping rid values.  Must be equal to

@@ -45,7 +45,7 @@ ParamVal DeviceAccessSchedulerParams::valAioLinuxScheduler = "aioLinux";
 
 DeviceAccessSchedulerParams::DeviceAccessSchedulerParams()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     schedulerType = IO_COMPLETION_PORT_SCHEDULER;
 #elif defined(USE_LIBAIO_H)
     schedulerType = AIO_LINUX_SCHEDULER;

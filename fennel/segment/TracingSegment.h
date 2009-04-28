@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TracingSegment implements tracing for the Segment interface.
  */
-class TracingSegment : public DelegatingSegment, public TraceSource
+class FENNEL_SEGMENT_EXPORT TracingSegment
+    : public DelegatingSegment, public TraceSource
 {
 public:
     /**

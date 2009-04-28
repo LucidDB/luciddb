@@ -34,7 +34,7 @@ struct SegmentAllocationNode;
 /**
  * Allocation status for a single data page
  */
-struct PageEntry
+struct FENNEL_SEGMENT_EXPORT PageEntry
 {
     /**
      * Identity of object to which this page is allocated, or
@@ -65,7 +65,7 @@ struct PageEntry
  *
  * <p>The allocation nodes may be stored in a separate segment.
  */
-class RandomAllocationSegmentBase
+class FENNEL_SEGMENT_EXPORT RandomAllocationSegmentBase
     : public DelegatingSegment
 {
     /**

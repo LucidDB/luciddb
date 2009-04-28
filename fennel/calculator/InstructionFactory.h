@@ -37,7 +37,7 @@ class ExtendedInstructionTable;
 
 //! Dynamically create Instruction objects given an InstructionDescription
 //! description of the desired Instruction.
-class InstructionFactory
+class FENNEL_CALCULATOR_EXPORT InstructionFactory
 {
 public:
     explicit

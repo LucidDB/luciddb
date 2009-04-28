@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ConfluenceExecStreamParams defines parameters for ConfluenceExecStream.
  */
-struct ConfluenceExecStreamParams : virtual public SingleOutputExecStreamParams
+struct FENNEL_EXEC_EXPORT ConfluenceExecStreamParams
+    : virtual public SingleOutputExecStreamParams
 {
 };
 
@@ -42,7 +43,8 @@ struct ConfluenceExecStreamParams : virtual public SingleOutputExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class ConfluenceExecStream : virtual public SingleOutputExecStream
+class FENNEL_EXEC_EXPORT ConfluenceExecStream
+    : virtual public SingleOutputExecStream
 {
 protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;

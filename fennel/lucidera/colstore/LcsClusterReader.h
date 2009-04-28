@@ -81,7 +81,7 @@ struct LcsRidRun
  * while scan.nextRange != false
  * scan.close()
  */
-class LcsClusterReader :
+class FENNEL_LCS_EXPORT LcsClusterReader :
     public LcsClusterAccessBase, public SegPageEntryIterSource<LcsRid>
 {
     friend class LcsColumnReader;

@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 // language ("en" or "fr" in our example.  Language-only locales have
 // no parent.  Language and country codes are always two letters.
 // Also, the language should be lowercase and the country uppercase.
-class Locale
+class FENNEL_COMMON_EXPORT Locale
 {
 public:
     explicit Locale(const std::string &language);

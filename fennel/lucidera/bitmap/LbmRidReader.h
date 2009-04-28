@@ -140,7 +140,8 @@ public:
  * EXECRC_BUF_UNDERFLOW. An assertion error will be thrown if the segment
  * reader is initialized with a tuple reader that returns this state.
  */
-class LbmIterableRidReader : protected LbmRidReaderBase
+class FENNEL_LBM_EXPORT LbmIterableRidReader
+    : protected LbmRidReaderBase
 {
 protected:
     /**
@@ -199,7 +200,8 @@ public:
 /**
  * LbmTupleRidReader is a class for reading rids from bitmap tuples
  */
-class LbmTupleRidReader : public LbmIterableRidReader
+class FENNEL_LBM_EXPORT LbmTupleRidReader
+    : public LbmIterableRidReader
 {
     /**
      * Typed pointer to internal tuple reader
@@ -224,7 +226,7 @@ public:
 /**
  * LbmBTreeRidReader is a class for reading RIDs from a deletion index
  */
-class LbmDeletionIndexReader
+class FENNEL_LBM_EXPORT LbmDeletionIndexReader
 {
     /**
      * Deletion index btree reader

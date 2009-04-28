@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * ThreadedTestBase is a common base for tests which execute multiple threads
  * with various operations over a configurable duration.
  */
-class ThreadedTestBase : virtual public TestBase
+class FENNEL_TEST_EXPORT ThreadedTestBase
+    : virtual public TestBase
 {
     friend class ThreadedTestBaseTask;
 private:
@@ -91,7 +92,7 @@ protected:
     void runThreadedTestCase();
 };
 
-class ThreadedTestBaseTask
+class FENNEL_TEST_EXPORT ThreadedTestBaseTask
 {
     ThreadedTestBase &test;
     int iOp;

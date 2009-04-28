@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * to pages allocated from a Segment.  The Segment must support the
  * get/setPageSuccessor interface for chaining the pages together.
  */
-class SegOutputStream : public SegStream, public ByteOutputStream
+class FENNEL_SEGMENT_EXPORT SegOutputStream
+    : public SegStream, public ByteOutputStream
 {
 protected:
     /**

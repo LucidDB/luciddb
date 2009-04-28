@@ -269,9 +269,12 @@ void LhxJoinExecStreamTest::testSequentialImpl(
 
     assert (keyCount <= numColsRight && keyCount <= numColsLeft);
 
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > leftColumnGenerators;
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > rightColumnGenerators;
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > outColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        leftColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        rightColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        outColumnGenerators;
 
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -344,9 +347,12 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
 
     assert (keyCount <= numColsRight && keyCount <= numColsLeft);
 
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > leftColumnGenerators;
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > rightColumnGenerators;
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > outColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        leftColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        rightColumnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        outColumnGenerators;
 
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(

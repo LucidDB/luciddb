@@ -69,7 +69,7 @@ FENNEL_BEGIN_NAMESPACE
  * For a PageId or BlockId, the byte offset portion is always 0 (except for
  * NULL_PAGE_ID and NULL_BLOCK_ID).
  */
-class CompoundId
+class FENNEL_COMMON_EXPORT CompoundId
 {
      // masks for extracting portions of a PageId, BlockId, or SegByteId
     static const uint64_t DEVICE_ID_MASK =   0xFFF0000000000000ULL;

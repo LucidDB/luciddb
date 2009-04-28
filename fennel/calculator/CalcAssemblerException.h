@@ -35,7 +35,8 @@ using namespace std;
 /**
  * Exception indicating an invalid type
  */
-class InvalidTypeException : public FennelExcn
+class FENNEL_CALCULATOR_EXPORT InvalidTypeException
+    : public FennelExcn
 {
 public:
     //! Constructs a InvalidTypeException with the given description,
@@ -104,7 +105,8 @@ protected:
  * The text of the program code itself may also be included in the
  * exception.
  */
-class CalcAssemblerException : public FennelExcn
+class FENNEL_CALCULATOR_EXPORT CalcAssemblerException
+    : public FennelExcn
 {
 public:
     //! Constructs CalcAssemblerException with location information

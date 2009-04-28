@@ -29,8 +29,13 @@
 #include <boost/io/ios_state.hpp>
 #include <boost/format.hpp>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 # include <windows.h>
+# include "fennel/common/AtomicCounter.h"
+# include "fennel/common/IntrusiveDList.h"
+# include "fennel/common/CompoundId.h"
+# include "fennel/common/AbortExcn.h"
+# include "fennel/common/VoidPtrHash.h"
 #else
 # include <pthread.h>
 #endif
@@ -38,7 +43,7 @@
 // NOTE jvs 26-June-2005:  I added this to squelch link errors with
 // the Boost filesystem library.  Yet another case where I have no
 // idea what's really going on.
-#ifdef __MINGW32__
+#ifdef __MSVC__
 void *operator new [](unsigned sz) throw (std::bad_alloc)
 {
     void *p = malloc(sz ? sz : 1);
@@ -66,7 +71,7 @@ std::logic_error constructAssertion(
 
 int getCurrentThreadId()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     return static_cast<int>(GetCurrentThreadId());
 #else
     return static_cast<int>(pthread_self());
@@ -104,6 +109,20 @@ void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
         o << std::endl;
     }
 }
+
+// TODO jvs 27-Feb-2009:  move this somewhere else
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedCommonStructs
+{
+    AtomicCounter atomicCounter;
+    IntrusiveDListNode dlistNode;
+    CompoundId compoundId;
+    AbortExcn abortExcn;
+    VoidPtrHash voidPtrHash;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * Dynamic parameter used to pass a join key value from the left input to
  * the right input
  */
-struct NestedLoopJoinKey
+struct FENNEL_EXEC_EXPORT NestedLoopJoinKey
 {
     DynamicParamId dynamicParamId;
     uint leftAttributeOrdinal;
@@ -49,7 +49,8 @@ struct NestedLoopJoinKey
  * NestedLoopJoinExecStream defines parameters for instantiating a
  * NestedLoopJoinExecStream.
  */
-struct NestedLoopJoinExecStreamParams : public CartesianJoinExecStreamParams
+struct FENNEL_EXEC_EXPORT NestedLoopJoinExecStreamParams
+    : public CartesianJoinExecStreamParams
 {
     std::vector<NestedLoopJoinKey> leftJoinKeys;
 };
@@ -71,7 +72,8 @@ struct NestedLoopJoinExecStreamParams : public CartesianJoinExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class NestedLoopJoinExecStream : public CartesianJoinExecStream
+class FENNEL_EXEC_EXPORT NestedLoopJoinExecStream
+    : public CartesianJoinExecStream
 {
     /**
      * True if pre-processing on third input completed

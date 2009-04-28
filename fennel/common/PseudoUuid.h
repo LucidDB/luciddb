@@ -26,7 +26,7 @@
 
 #include "fennel/common/FennelExcn.h"
 
-#ifdef HAVE_LIBUUID
+#if defined(HAVE_LIBUUID) || defined(HAVE_LIBUUID_NEW)
 
 #ifdef HAVE_UUID_UUID_H
 #include <uuid/uuid.h>
@@ -55,7 +55,7 @@ FENNEL_BEGIN_NAMESPACE
  * default constructor leaves the value uninitialized; call generate to get a
  * new UUID.
  */
-class PseudoUuid
+class FENNEL_COMMON_EXPORT PseudoUuid
 {
 public:
 #ifdef FENNEL_UUID_REAL_NEW
@@ -131,7 +131,7 @@ public:
  * supplied by the Fennel build, but subclasses may override
  * (e.g. to call to a Java-based generator).
  */
-class PseudoUuidGenerator
+class FENNEL_COMMON_EXPORT PseudoUuidGenerator
 {
 public:
     virtual ~PseudoUuidGenerator();

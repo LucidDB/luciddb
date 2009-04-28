@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  * JavaErrorTarget implements ErrorTarget by calling back into the
  * Farrago error handling facility.
  */
-class JavaErrorTarget : public ErrorTarget
+class FENNEL_FARRAGO_EXPORT JavaErrorTarget
+    : public ErrorTarget
 {
     /**
      * net.sf.farrago.fennel.FennelJavaErrorTarget object to which

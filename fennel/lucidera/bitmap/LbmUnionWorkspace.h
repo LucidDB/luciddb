@@ -36,7 +36,7 @@ typedef ByteWindow<LbmByteNumberPrimitive> LbmUnionMergeArea;
  * @author John Pham
  * @version $Id$
  */
-class LbmUnionWorkspace
+class FENNEL_LBM_EXPORT LbmUnionWorkspace
 {
     /**
      * Buffer used to merge segments, indexed by ByteNumber

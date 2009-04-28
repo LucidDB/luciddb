@@ -35,7 +35,8 @@ class RandomAccessRequest;
  * something like /dev/null, except that it does not allow any transfers at
  * all.
  */
-class RandomAccessNullDevice : public RandomAccessDevice
+class FENNEL_DEVICE_EXPORT RandomAccessNullDevice
+    : public RandomAccessDevice
 {
 public:
     /**

@@ -39,7 +39,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi, Marc Berkowitz
  * @version $Id$
  */
-class ExecStreamUnitTestBase : public ExecStreamTestBase
+class FENNEL_TEST_EXPORT ExecStreamUnitTestBase
+    : public ExecStreamTestBase
 {
 protected:
     SharedExecStreamGraph pGraph;

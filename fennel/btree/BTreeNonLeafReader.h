@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeNonLeafReader extends BTreeReader by only doing reads of non-leaf
  * pages in a btree.
  */
-class BTreeNonLeafReader : public BTreeReader
+class FENNEL_BTREE_EXPORT BTreeNonLeafReader
+    : public BTreeReader
 {
     /**
      * Deals with the fact that when we lock the root, we don't know whether it

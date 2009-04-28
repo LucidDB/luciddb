@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * design docs</a> for more detail.
  *
  */
-class ScratchSegment : public Segment, public CacheAccessor
+class FENNEL_SEGMENT_EXPORT ScratchSegment
+    : public Segment, public CacheAccessor
 {
     friend class SegmentFactory;
 

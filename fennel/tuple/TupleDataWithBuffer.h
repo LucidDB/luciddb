@@ -40,7 +40,8 @@ FENNEL_BEGIN_NAMESPACE
  * Calculator::getInputRegisterDescriptor()
  *
  */
-class TupleDataWithBuffer : public TupleData
+class FENNEL_TUPLE_EXPORT TupleDataWithBuffer
+    : public TupleData
 {
 public:
     explicit TupleDataWithBuffer();

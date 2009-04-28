@@ -32,7 +32,7 @@ class StatsTarget;
  * StatsSource defines an interface implemented by classes which produce
  * performance/activity statistics.
  */
-class StatsSource
+class FENNEL_COMMON_EXPORT StatsSource
 {
 public:
     virtual ~StatsSource();

@@ -33,9 +33,9 @@ FENNEL_BEGIN_NAMESPACE
 class TupleDescriptor;
 class TupleData;
 
-class TuplePrinter
+class FENNEL_TUPLE_EXPORT TuplePrinter
     : public boost::noncopyable,
-    private DataVisitor
+        private DataVisitor
 {
     std::ostream *pStream;
     uint iValue;

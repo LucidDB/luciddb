@@ -68,7 +68,8 @@ FENNEL_BEGIN_NAMESPACE
  * available through the graph by finding the "last" stream registered
  * under the original stream's name.
  */
-class ExecStreamBuilder : public boost::noncopyable
+class FENNEL_FARRAGO_EXPORT ExecStreamBuilder
+    : public boost::noncopyable
 {
     /**
      * Embryo for graph being built up.

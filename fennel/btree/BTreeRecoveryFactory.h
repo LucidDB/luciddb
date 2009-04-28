@@ -38,7 +38,8 @@ class StoredTypeDescriptorFactory;
  * BTreeRecoveryFactory implements the LogicalTxnParticipantFactory interface
  * by constructing BTreeWriters to be used for recovery.
  */
-class BTreeRecoveryFactory : public LogicalTxnParticipantFactory
+class FENNEL_BTREE_EXPORT BTreeRecoveryFactory
+    : public LogicalTxnParticipantFactory
 {
     SegmentAccessor segmentAccessor;
     SegmentAccessor scratchAccessor;

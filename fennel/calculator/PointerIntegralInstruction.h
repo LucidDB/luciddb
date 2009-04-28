@@ -42,10 +42,12 @@ public:
     {}
 
     ~PointerIntegralInstruction() {
+#ifndef __MSVC__
         // If (0) to reduce performance impact of template type checking
         if (0) {
             PointerInstruction_NotAPointerType<PTR_TYPE>();
         }
+#endif
     }
 
 protected:
@@ -131,7 +133,8 @@ public:
 //! Note: There cannot be a PointerIntegralPutStorage() as cbStorage,
 //! the maximum size, is always read-only.
 
-class PointerIntegralInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT PointerIntegralInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >

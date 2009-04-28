@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * StatsTarget defines an interface implemented by classes which consume
  * performance/activity statistics.
  */
-class StatsTarget
+class FENNEL_COMMON_EXPORT StatsTarget
 {
 public:
     virtual ~StatsTarget();

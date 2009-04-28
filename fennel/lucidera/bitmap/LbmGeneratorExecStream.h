@@ -89,7 +89,8 @@ struct LbmGeneratorExecStreamParams :
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
+class FENNEL_LBM_EXPORT LbmGeneratorExecStream
+    : public BTreeExecStream, LcsRowScanBaseExecStream
 {
     /**
      * Number of misc scratch pages needed; excludes pages for generating

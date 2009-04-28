@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamScheduler
+class FENNEL_EXEC_EXPORT ExecStreamScheduler
     : public boost::noncopyable,
         public virtual TraceSource
 {

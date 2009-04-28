@@ -48,7 +48,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class SegStreamAllocation : public ClosableObject
+class FENNEL_SEGMENT_EXPORT SegStreamAllocation
+    : public ClosableObject
 {
     /**
      * In state READING, a record of number of pages allocated

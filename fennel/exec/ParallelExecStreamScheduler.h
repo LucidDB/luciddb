@@ -43,7 +43,7 @@ class ThreadTracker;
  * ParallelExecTask represents a task submitted
  * to ParallelExecStreamScheduler's thread pool.
  */
-class ParallelExecTask
+class FENNEL_EXEC_EXPORT ParallelExecTask
 {
     ParallelExecStreamScheduler &scheduler;
     ExecStream *pStream;
@@ -65,7 +65,7 @@ public:
  * ParallelExecResult represents the result of a task submitted
  * to ParallelExecStreamScheduler's thread pool.
  */
-class ParallelExecResult
+class FENNEL_EXEC_EXPORT ParallelExecResult
 {
     ExecStreamId streamId;
     ExecStreamResult rc;
@@ -95,7 +95,7 @@ public:
  * @author John Sichi
  * @version $Id$
  */
-class ParallelExecStreamScheduler
+class FENNEL_EXEC_EXPORT ParallelExecStreamScheduler
     : public ExecStreamScheduler, public SynchMonitoredObject
 {
     enum StreamState

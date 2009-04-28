@@ -20,7 +20,14 @@ common/FemGeneratedEnums.h
 common/FennelResource.cpp
 common/FennelResource.h
 config.h
+dummy.cpp
+disruptivetech/calc/CalcGrammar.cpp
+disruptivetech/calc/CalcGrammar.h
+disruptivetech/calc/CalcGrammar.tab.cpp
+disruptivetech/calc/CalcLexer.cpp
+CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp
 calculator/CalcGrammar.h
+calculator/CalcGrammar.tab.cpp
 calculator/CalcGrammar.cpp
 calculator/CalcLexer.cpp
 farrago/FemGeneratedClasses.h

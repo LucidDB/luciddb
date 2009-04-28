@@ -27,7 +27,7 @@ namespace fennel {
 class FennelResource;
 typedef map<Locale, FennelResource*> FennelResourceBundleCache;
 
-class FennelResource : ResourceBundle
+class FENNEL_COMMON_EXPORT FennelResource : ResourceBundle
 {
     protected:
     explicit FennelResource(Locale locale);

@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * A link in an intrusive doubly-linked list.
  */
-class IntrusiveDListNode
+class FENNEL_COMMON_EXPORT IntrusiveDListNode
 {
     IntrusiveDListNode *pPrev;
     IntrusiveDListNode *pNext;

@@ -34,7 +34,7 @@ class DeviceAccessSchedulerParams;
  * initiate access requests on devices and handle their completions
  * asynchronously.  For more information, see DeviceDesign.
  */
-class DeviceAccessScheduler
+class FENNEL_DEVICE_EXPORT DeviceAccessScheduler
 {
 public:
     /**

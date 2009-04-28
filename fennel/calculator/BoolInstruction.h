@@ -30,7 +30,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class BoolInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT BoolInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -75,7 +76,8 @@ protected:
     }
 };
 
-class BoolOr : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolOr
+    : public BoolInstruction
 {
 public:
     explicit
@@ -141,7 +143,8 @@ public:
     }
 };
 
-class BoolAnd : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolAnd
+    : public BoolInstruction
 {
 public:
     explicit
@@ -202,7 +205,8 @@ public:
     }
 };
 
-class BoolNot : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolNot
+    : public BoolInstruction
 {
 public:
     explicit
@@ -249,7 +253,8 @@ public:
     }
 };
 
-class BoolMove : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolMove
+    : public BoolInstruction
 {
 public:
     explicit
@@ -293,7 +298,8 @@ public:
     }
 };
 
-class BoolRef : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolRef
+    : public BoolInstruction
 {
 public:
     explicit
@@ -333,7 +339,8 @@ public:
     }
 };
 
-class BoolIs : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIs
+    : public BoolInstruction
 {
 public:
     explicit
@@ -389,7 +396,8 @@ public:
     }
 };
 
-class BoolIsNot : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNot
+    : public BoolInstruction
 {
 public:
     explicit
@@ -447,7 +455,8 @@ public:
 
 
 // BoolEqual is not the same as SQL99 boolean IS
-class BoolEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -499,7 +508,8 @@ public:
     }
 };
 
-class BoolNotEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolNotEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -551,7 +561,8 @@ public:
     }
 };
 
-class BoolGreater : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolGreater
+    : public BoolInstruction
 {
 public:
     explicit
@@ -603,7 +614,8 @@ public:
     }
 };
 
-class BoolGreaterEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolGreaterEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -658,7 +670,8 @@ public:
     }
 };
 
-class BoolLess : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolLess
+    : public BoolInstruction
 {
 public:
     explicit
@@ -710,7 +723,8 @@ public:
     }
 };
 
-class BoolLessEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolLessEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -765,7 +779,8 @@ public:
     }
 };
 
-class BoolIsNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -809,7 +824,8 @@ public:
     }
 };
 
-class BoolIsNotNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNotNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -854,7 +870,8 @@ public:
     }
 };
 
-class BoolToNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolToNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -890,7 +907,8 @@ public:
     }
 };
 
-class BoolInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT BoolInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < class INSTCLASS2 >

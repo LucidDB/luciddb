@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * of scan (full table scan versus specific rid reads) and whether residual
  * filtering should be performed.
  */
-struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
+struct FENNEL_LCS_EXPORT LcsRowScanExecStreamParams
+    : public LcsRowScanBaseExecStreamParams
 {
     static int32_t defaultSystemSamplingClumps;
 
@@ -106,7 +107,8 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
  * the appropriate clustered indexes defined on the table. The stream
  * returns a projected subset of columns from the table
  */
-class LcsRowScanExecStream : public LcsRowScanBaseExecStream
+class FENNEL_LCS_EXPORT LcsRowScanExecStream
+    : public LcsRowScanBaseExecStream
 {
     /**
      * Tuple data for all columns read from all clusters, including

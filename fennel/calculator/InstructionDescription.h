@@ -37,7 +37,7 @@ class Instruction;
 
 //! A StandardTypeDescriptorOrdinal that allows a level of
 //! wildcarding
-class RegDesc
+class FENNEL_CALCULATOR_EXPORT RegDesc
 {
 public:
     enum Groups {
@@ -75,7 +75,7 @@ private:
 
 //! Description of an instruction. (Contrasted with
 //! an ExtendedInstruction.)
-class InstructionDescription
+class FENNEL_CALCULATOR_EXPORT InstructionDescription
 {
 private:
     // TODO: Move to instruction.h?

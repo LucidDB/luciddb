@@ -53,7 +53,8 @@ FENNEL_BEGIN_NAMESPACE
 using namespace std;
 
 
-class Calculator : virtual public TraceSource
+class FENNEL_CALCULATOR_EXPORT Calculator
+    : virtual public TraceSource
 {
 public:
     //! Constructor for XOs that will use assemble().

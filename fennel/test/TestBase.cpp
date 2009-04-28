@@ -27,10 +27,6 @@
 #include "fennel/common/Backtrace.h"
 #include "boost/test/test_tools.hpp"
 
-#ifdef __CYGWIN__
-#include <locale>
-#endif
-
 using namespace fennel;
 using boost::unit_test::test_unit;
 
@@ -264,30 +260,11 @@ TraceLevel TestBase::getSourceTraceLevel(std::string)
 
 void TestBase::snooze(uint nSeconds)
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     ::_sleep(nSeconds*1000);
 #else
     ::sleep(nSeconds);
 #endif
 }
-
-#ifdef __MINGW32__
-// REVIEW jvs 31-Aug-2005:  I had to add this to shut up the linker
-// when moving to boost 1.33.  According to the boost docs, the
-// linker's complaint indicates the potential for a leak due to
-// the interaction between threads and DLL's.  Since it's only
-// for tests, figuring out what's going wrong is low priority.
-extern "C" void tss_cleanup_implemented(void)
-{
-}
-#endif
-
-// NOTE:  This pulls in all of the code for the Boost unit test framework.
-// This way, it's only compiled and linked once into shared library
-// libfenneltest, rather than linked statically into each unit test.  For a
-// while, I was instead building the Boost unit test framework as a separate
-// library via the normal Boost build.  This reduced Fennel build time, but
-// didn't work on Cygwin.
-#include <boost/test/included/unit_test_framework.hpp>
 
 // End TestBase.cpp

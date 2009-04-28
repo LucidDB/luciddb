@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * UncollectExecStreamParams defines parameters for instantiating a
  * UncollectExecStream.
  */
-struct UncollectExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT UncollectExecStreamParams
+    : public ConduitExecStreamParams
 {
     //empty
 };
@@ -46,7 +47,8 @@ struct UncollectExecStreamParams : public ConduitExecStreamParams
  * @author Wael Chatila
  * @version $Id$
  */
-class UncollectExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT UncollectExecStream
+    : public ConduitExecStream
 {
 private:
     TupleData inputTupleData;

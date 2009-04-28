@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * SegmentMap defines an interface for mapping a SegmentId to a loaded Segment
  * instance.
  */
-class SegmentMap
+class FENNEL_SEGMENT_EXPORT SegmentMap
 {
 public:
     virtual ~SegmentMap()

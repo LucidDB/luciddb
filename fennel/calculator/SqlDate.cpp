@@ -38,7 +38,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::local_time;
 using namespace boost::gregorian;
@@ -99,8 +98,8 @@ int64_t IsoStringToDate(const char * const src, int len)
     std::string s(src,len);
     trimSpaces(s);
 
-    regex dateExp("\\d+-\\d+-\\d+");
-    if (regex_match(s, dateExp)) {
+    boost::regex dateExp("\\d+-\\d+-\\d+");
+    if (boost::regex_match(s, dateExp)) {
         try {
             date_duration td = boost::gregorian::from_string(s) - epoc.date();
             return td.days() * milliseconds_per_day;
@@ -123,9 +122,9 @@ int64_t IsoStringToTime(const char * const src, int len)
     // TODO: Boost library doesn't catch invalid hour, min, sec
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
-    cmatch what;
-    regex timeExp("(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
-    if (regex_match(s.c_str(), what, timeExp)) {
+    boost::cmatch what;
+    boost::regex timeExp("(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
+    if (boost::regex_match(s.c_str(), what, timeExp)) {
         try {
             int hour = atoi(what[1].first);
             int min = atoi(what[2].first);
@@ -156,10 +155,10 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     // TODO: Boost library doesn't catch invalid hour, min, sec
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
-    cmatch what;
-    regex timestampExp("\\d+-\\d+-\\d+ +"
+    boost::cmatch what;
+    boost::regex timestampExp("\\d+-\\d+-\\d+ +"
                        "(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
-    if (regex_match(s.c_str(), what, timestampExp)) {
+    if (boost::regex_match(s.c_str(), what, timestampExp)) {
         try {
             int hour = atoi(what[1].first);
             int min = atoi(what[2].first);

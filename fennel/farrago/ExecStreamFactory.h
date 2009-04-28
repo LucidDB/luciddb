@@ -55,7 +55,7 @@ class SortedAggExecStreamParams;
  *
  * NOTE: this class is not thread-safe
  */
-class ExecStreamFactory
+class FENNEL_FARRAGO_EXPORT ExecStreamFactory
     : public boost::noncopyable, virtual public FemVisitor
 {
 protected:
@@ -230,7 +230,8 @@ public:
     DynamicParamId readDynamicParamId(const int val);
 };
 
-class ExecStreamSubFactory : public boost::noncopyable
+class FENNEL_FARRAGO_EXPORT ExecStreamSubFactory
+    : public boost::noncopyable
 {
 public:
     virtual ~ExecStreamSubFactory();

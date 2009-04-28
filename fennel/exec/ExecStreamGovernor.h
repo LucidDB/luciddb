@@ -47,7 +47,7 @@ enum ExecStreamResourceKnobType {
  * ExecStreamResourceKnobs is a structure that stores the settings of the
  * different knobs that are used to determine exec stream resource allocation
  */
-struct ExecStreamResourceKnobs
+struct FENNEL_EXEC_EXPORT ExecStreamResourceKnobs
 {
     /**
      * Max expected number of concurrent, active statements
@@ -71,7 +71,8 @@ enum ExecStreamResourceType {
 /**
  * Structure used to track the resource requirements for a single stream
  */
-struct ExecStreamResourceRequirements {
+struct FENNEL_EXEC_EXPORT ExecStreamResourceRequirements
+{
     uint minReqt;
     uint optReqt;
     ExecStreamResourceSettingType optType;
@@ -85,7 +86,7 @@ struct ExecStreamResourceRequirements {
  * @author Zelaine Fong
  * @version $Id$
  */
-class ExecStreamGovernor
+class FENNEL_EXEC_EXPORT ExecStreamGovernor
     : public boost::noncopyable, public virtual TraceSource,
     public StatsSource
 {

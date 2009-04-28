@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * CacheStats defines performance/activity statistics collected by the cache;
  * these can be obtained as a snapshot from Cache::collectStats().
  */
-class CacheStats
+class FENNEL_CACHE_EXPORT CacheStats
 {
 public:
     /**

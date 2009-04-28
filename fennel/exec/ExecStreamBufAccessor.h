@@ -42,7 +42,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamBufAccessor : public boost::noncopyable
+class FENNEL_EXEC_EXPORT ExecStreamBufAccessor
+    : public boost::noncopyable
 {
     PBuffer pBufStart;
 

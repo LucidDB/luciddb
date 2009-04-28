@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * information on each page read.  An invalid page is interpreted as end of
  * stream.
  */
-class CrcSegInputStream : public SegInputStream
+class FENNEL_SEGMENT_EXPORT CrcSegInputStream
+    : public SegInputStream
 {
     PseudoUuid onlineUuid;
 

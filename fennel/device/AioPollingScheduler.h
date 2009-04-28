@@ -40,7 +40,8 @@ FENNEL_BEGIN_NAMESPACE
  * AioPollingScheduler implements DeviceAccessScheduler via Unix aio calls and
  * threads which poll for completion.
  */
-class AioPollingScheduler : public DeviceAccessScheduler, public Thread
+class FENNEL_DEVICE_EXPORT AioPollingScheduler
+    : public DeviceAccessScheduler, public Thread
 {
     StrictMutex mutex;
     LocalCondition newRequestPending;

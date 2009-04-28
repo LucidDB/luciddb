@@ -41,7 +41,8 @@ static const PageOwnerId UNALLOCATED_PAGE_OWNER_ID = PageOwnerId(0);
  * SegmentAllocationNode is the allocation map for a run of extents in a
  * RandomAllocationSegmentBase.
  */
-struct SegmentAllocationNode : public StoredNode
+struct FENNEL_SEGMENT_EXPORT SegmentAllocationNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0xa3db80b98208bfd4LL;
 

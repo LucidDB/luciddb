@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John Sichi
  * @version $Id$
  */
-class TransactionalCacheAccessor : public DelegatingCacheAccessor
+class FENNEL_CACHE_EXPORT TransactionalCacheAccessor
+    : public DelegatingCacheAccessor
 {
     TxnId implicitTxnId;
 

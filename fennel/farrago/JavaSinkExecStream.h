@@ -47,7 +47,8 @@ struct JavaSinkExecStreamParams : public SingleInputExecStreamParams
  * @author jhyde
  * @version $Id$
  */
-class JavaSinkExecStream : public SingleInputExecStream
+class FENNEL_FARRAGO_EXPORT JavaSinkExecStream
+    : public SingleInputExecStream
 {
     ExecStreamResult lastResult;
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;

@@ -24,7 +24,7 @@
 #ifndef Fennel_IoCompletionPortScheduler_Included
 #define Fennel_IoCompletionPortScheduler_Included
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 
 #include <vector>
 #include "fennel/device/DeviceAccessScheduler.h"
@@ -40,7 +40,8 @@ class IoCompletionPortThread;
  * IoCompletionPortScheduler implements DeviceAccessScheduler via
  * the Win32 IoCompletionPort facility.
  */
-class IoCompletionPortScheduler : public DeviceAccessScheduler
+class FENNEL_DEVICE_EXPORT IoCompletionPortScheduler
+    : public DeviceAccessScheduler
 {
     friend class IoCompletionPortThread;
 

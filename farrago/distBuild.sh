@@ -42,8 +42,8 @@ case "`uname`" in
 esac
 
 if [ $cygwin = "true" ]; then
-    SO_3P_PATTERN="lib*.dll*"
-    SO_PATTERN="cyg*.dll*"
+    SO_3P_PATTERN="*.dll"
+    SO_PATTERN="*.dll"
 else
     SO_3P_PATTERN="lib*.so*"
     SO_PATTERN=$SO_3P_PATTERN
@@ -180,17 +180,13 @@ cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 # fi
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
 
-if [ $cygwin = "true" ]; then
-    cp /usr/bin/mingwm10.dll $LIB_DIR/fennel
-fi
-
 # copy fennel libs
 if $dist_fennel; then
     cd $FENNEL_DIR
-    cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d libfennel/$SO_PATTERN $LIB_DIR/fennel
+    cp -d farrago/$SO_PATTERN $LIB_DIR/fennel
+    cp -d lucidera/libfennel_lu/$SO_PATTERN $LIB_DIR/fennel
+    cp -d lucidera/farrago/$SO_PATTERN $LIB_DIR/fennel
 
     # if possible, strip rpath info
     if [ $cygwin = "false" ]; then

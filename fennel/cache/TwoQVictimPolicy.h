@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  * TwoQVictimPolicy.  It can be used to implement LRU and FIFO queues,
  * based on how the caller inserts and moves elements in the queue.
  */
-class TwoQPageQueue
+class FENNEL_CACHE_EXPORT TwoQPageQueue
 {
     /**
      * Head of the queue
@@ -200,7 +200,8 @@ public:
  * lists are subsets of the full 2Q page queues, as they consist of only the
  * dirty pages.
  */
-class TwoQDirtyPage : public IntrusiveDListNode
+class FENNEL_CACHE_EXPORT TwoQDirtyPage
+    : public IntrusiveDListNode
 {
 public:
     /**
@@ -282,7 +283,8 @@ public:
  * TwoQVictim is the attributes class which must be a base for any CachePage
  * type which will be cached using a TwoQVictimPolicy.
  */
-class TwoQVictim : public IntrusiveDListNode
+class FENNEL_CACHE_EXPORT TwoQVictim
+    : public IntrusiveDListNode
 {
 public:
     /**

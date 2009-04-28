@@ -58,7 +58,8 @@ struct LbmChopperExecStreamParams : public ConfluenceExecStreamParams
  * @author John Pham
  * @version $Id$
  */
-class LbmChopperExecStream : public ConfluenceExecStream
+class FENNEL_LBM_EXPORT LbmChopperExecStream
+    : public ConfluenceExecStream
 {
     enum LbmChopperState {
         LBM_STATE_NONE = 0,

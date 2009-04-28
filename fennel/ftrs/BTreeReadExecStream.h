@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeReadExecStreamParams defines parameters for instantiating a
  * BTreeReadExecStream.
  */
-struct BTreeReadExecStreamParams : public BTreeExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeReadExecStreamParams
+    : public BTreeExecStreamParams
 {
     /**
      * Projection of attributes to be retrieved from BTree (relative to
@@ -51,7 +52,8 @@ struct BTreeReadExecStreamParams : public BTreeExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeReadExecStream : public BTreeExecStream
+class FENNEL_FTRS_EXPORT BTreeReadExecStream
+    : public BTreeExecStream
 {
 protected:
     SharedBTreeReader pReader;

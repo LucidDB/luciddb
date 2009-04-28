@@ -43,7 +43,8 @@ class AioSignalHandlerThread;
  * AioSignalScheduler implements DeviceAccessScheduler via Unix aio calls and
  * threads which run a signal handler.
  */
-class AioSignalScheduler : public DeviceAccessScheduler
+class FENNEL_DEVICE_EXPORT AioSignalScheduler
+    : public DeviceAccessScheduler
 {
     friend class AioSignalHandlerThread;
 

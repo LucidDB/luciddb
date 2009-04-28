@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 // InstructionArgs
 // A class that can represent all possible arguments to
 // an Instruction constructor.
-class InstructionArgs
+class FENNEL_CALCULATOR_EXPORT InstructionArgs
 {
 public:
     explicit

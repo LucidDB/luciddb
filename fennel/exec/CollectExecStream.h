@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * CollectExecStream.
  * @author Wael Chatila
  */
-struct CollectExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT CollectExecStreamParams
+    : public ConduitExecStreamParams
 {
     //empty
 };
@@ -48,7 +49,8 @@ struct CollectExecStreamParams : public ConduitExecStreamParams
  * @author Wael Chatila
  * @version $Id$
  */
-class CollectExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT CollectExecStream
+    : public ConduitExecStream
 {
 private:
     TupleData outputTupleData;

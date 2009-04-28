@@ -41,7 +41,8 @@ class BTreeNodeAccessor;
  * BTreeAccessBase is a base for classes which access BTree contents.  It
  * declares some of the necessary tuple accessors, helper methods, etc.
  */
-class BTreeAccessBase : public boost::noncopyable
+class FENNEL_BTREE_EXPORT BTreeAccessBase
+    : public boost::noncopyable
 {
 protected:
     /**

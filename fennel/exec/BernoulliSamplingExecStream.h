@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * BernoulliSamplingExecStreamParams defines parameters for
  * BernoulliSamplingExecStream.
  */
-struct BernoulliSamplingExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT BernoulliSamplingExecStreamParams
+    : public ConduitExecStreamParams
 {
     /** Sampling rate in the range [0, 1]. */
     float samplingRate;
@@ -53,7 +54,8 @@ struct BernoulliSamplingExecStreamParams : public ConduitExecStreamParams
  *
  * @author Stephan Zuercher
  */
-class BernoulliSamplingExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT BernoulliSamplingExecStream
+    : public ConduitExecStream
 {
     /** Sampling rate in the range [0, 1]. */
     float samplingRate;

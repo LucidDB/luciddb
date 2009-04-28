@@ -776,7 +776,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testComments);
 
     // FIXME jvs 21-Mar-2006:  these still don't work on Win32
-#ifndef __MINGW32__
+#ifndef __MSVC__
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testInvalidPrograms);
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testStandardTypes);
 #endif

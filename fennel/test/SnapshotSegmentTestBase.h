@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * SnapshotSegmentTestBase is a common base for any test that uses a
  * SnapshotRandomAllocationSegment for storage.
  */
-class SnapshotSegmentTestBase : virtual public SegmentTestBase
+class FENNEL_TEST_EXPORT SnapshotSegmentTestBase
+    : virtual public SegmentTestBase
 {
 protected:
     uint nDiskPagesTotal;

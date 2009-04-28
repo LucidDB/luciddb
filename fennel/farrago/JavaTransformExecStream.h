@@ -62,7 +62,8 @@ struct JavaTransformExecStreamParams :
  * JavaTransformExecStream represents a sequence of Java transforms
  * encapsulated within a Fennel ExecStream.
  */
-class JavaTransformExecStream : virtual public ExecStream
+class FENNEL_FARRAGO_EXPORT JavaTransformExecStream
+    : virtual public ExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     std::string javaClassName;

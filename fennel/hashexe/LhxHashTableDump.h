@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LhxHashTableDump : public TraceSource
+class FENNEL_HASHEXE_EXPORT LhxHashTableDump
+    : public TraceSource
 {
     /**
      * The level at which tracing of cluster dump will be done.

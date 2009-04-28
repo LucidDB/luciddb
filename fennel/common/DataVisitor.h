@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  doc
  */
-class DataVisitor
+class FENNEL_COMMON_EXPORT DataVisitor
 {
 public:
     virtual ~DataVisitor();
