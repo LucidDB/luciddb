@@ -23,22 +23,19 @@ JDK 1.5 is available.  You can use it to test parsing, validation,
 optimization, and the metadata aspects of DDL, as well as queries
 against foreign data accessible via Java (a sample <a
 href="http://hsqldb.sf.net">HSQLDB</a> source is provided for testing
-JDBC, and the <a href="howto/medmdr.html">MDR HOWTO</a> explains
-MDR/JMI usage).
+JDBC, and the <a
+href="http://pub.eigenbase.org/wiki/FarragoMedMqlPlugin">Freebase
+MQL</a> plugin demonstrates access to a webservice).
 
 <p>
 
 So, if you're working on a task that doesn't require Fennel, you can
-do the development anywhere.  If you need Fennel, then you have a few
+do the development anywhere.  If you need Fennel, then you have two
 options:
 
 <ul>
 
-<li>use your own Linux or Windows box if you have one (Linux is strongly
-recommended; the Windows C++ build/debug environment is slow and touchy)
-
-<li>use one of the Sourceforge compile farm machines (Fennel has
-been successfully tested on some of them)
+<li>use your own Linux or Windows box if you have one
 
 <li>work on porting Fennel to your platform!
 
@@ -47,8 +44,8 @@ been successfully tested on some of them)
 <h3>Important Windows Note</h3>
 
 If you are using Windows, please read and follow the <a
-href="cygwinSetup.html">Cygwin setup instructions</a> before going any
-further.  
+href="http://pub.eigenbase.org/wiki/WindowsBuildSetup">Windows setup
+instructions</a> before going any further.
 
 <h2>Get the Source Code</h2>
 
@@ -164,17 +161,10 @@ href="http://sourceforge.net/mail/?group_id=80183">farrago-developers
 mailing list</a>.  You should probably include the last 100 lines of
 build output including the error.
 
-<h3>Fennel and Autotools</h3>
+<h3>Fennel Build</h3>
 
-If you are building with Fennel, the initBuild script will check to
-see if you have a autotools versions (autoconf, automake, and libtool)
-which are known to work; if you don't, the script will fail before
-starting the C++ build.  If this occurs, you can either follow the
-directions in the script error message to build and install the
-autotools from thirdparty, or update your machine using the mechanism
-provided by your OS distribution (Linux or Cygwin).
-
-<p>
+The Fennel build is documented <a
+href="http://pub.eigenbase.org/wiki/FennelBuildSystem">here</a>.
 
 If you need help with problems in the C++ portion of the build, use
 the <a href="http://sourceforge.net/mail/?group_id=53161">fennel-developers
@@ -277,10 +267,6 @@ After connecting, try <code>select * from sales.emps;</code>
 (but if you disabled Fennel, don't be disappointed when the result set
 comes back empty).
 
-<p>
-
-If you prefer using a GUI, try the <code>dbmanEngine</code> script instead.
-
 <h2>Tracing</h2>
 
 See <a href="http://wiki.eigenbase.org/FarragoTracing">the wiki docs</a>
@@ -319,13 +305,13 @@ a successful build, the full classpath is always dumped to the file
 
 So far, all of the execution modes discussed have been <em>embedded
 engine mode</em>, where the Farrago engine is loaded directly into a
-single process such as sqlline.  This is the most
-useful for debugging, but scripts are also available to test
-client/server mode.  Run the <code>farragoServer</code> script to
-start the server in a shell (after startup, it waits listening for
-connections; enter the <code>!quit</code> command in that shell to
-shut it down).  From another shell, run <code>sqllineClient</code> or
-<code>dbmanClient</code> to connect and execute commands.
+single process such as sqlline.  This is the most useful for
+debugging, but scripts are also available to test client/server mode.
+Run the <code>farragoServer</code> script to start the server in a
+shell (after startup, it waits listening for connections; enter the
+<code>!quit</code> command in that shell to shut it down).  From
+another shell, run <code>sqllineClient</code> to connect and execute
+commands.
 
 <h2>Coding</h2>
 
