@@ -19,7 +19,7 @@ for how to build the two sub-project frameworks (Farrago and Fennel)
 together.
 
 For LucidDB build instructions, see
-http://docs.eigenbase.org/LucidDbBuildFromSource
+http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
 
 If instead of building you would like to obtain pre-packaged binaries,
 download the correct full binary release for your platform.
