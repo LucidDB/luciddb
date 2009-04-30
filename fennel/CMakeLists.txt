@@ -44,7 +44,7 @@ else()
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} -fPIC -DPIC")
+   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Wno-parentheses -Wno-missing-braces -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} -fPIC -DPIC")
    set(JDK_PLATFORM linux)
 else()
     set(CMAKE_CXX_FLAGS "${GENERIC_DEFINES} ${ENDIAN_DEFINES}=1 ${OPT_DEFINES} ${DEBUG_DEFINES} -D__MSVC__ -DBOOST_ALL_NO_LIB /EHsc")
