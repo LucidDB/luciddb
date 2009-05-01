@@ -123,6 +123,16 @@ class RelSet
         return null;
     }
 
+    // removes all references to a specific relnode in both the subsets
+    // and their parent relationships
+    void obliterateRelNode(RelNode rel)
+    {
+        for (RelSubset subset : subsets) {
+            subset.parents.remove(rel);
+            subset.rels.remove(rel);
+        }
+    }
+
     /**
      * Adds a relational expression to a set, with its results available under a
      * particular calling convention. An expression may be in the set several

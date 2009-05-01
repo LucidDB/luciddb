@@ -792,12 +792,23 @@ SUBSET_LOOP:
         RelNode rel,
         RelTraitSet traits)
     {
+        return getSubset(rel, traits, false);
+    }
+
+    public RelSubset getSubset(
+        RelNode rel,
+        RelTraitSet traits,
+        boolean createIfMissing)
+    {
         if ((rel instanceof RelSubset) && (rel.getTraits().equals(traits))) {
             return (RelSubset) rel;
         }
         RelSet set = getSet(rel);
         if (set == null) {
             return null;
+        }
+        if (createIfMissing) {
+            return set.getOrCreateSubset(rel.getCluster(), traits);
         }
         return set.getSubset(traits);
     }
@@ -1225,7 +1236,8 @@ SUBSET_LOOP:
         if (traits.size() != traitDefs.size()) {
             throw Util.newInternal(
                 "Relational expression " + rel
-                + " does not have the correct number of traits");
+                + " does not have the correct number of traits "
+                + traits.size() + " != " + traitDefs.size());
         }
 
         // Ensure that its sub-expressions are registered.
@@ -1283,6 +1295,11 @@ SUBSET_LOOP:
                     digest = rel.recomputeDigest();
                     RelNode equivRel = mapDigestToRel.get(digest);
                     if ((equivRel != rel) && (equivRel != null)) {
+                        // make sure this bad rel didn't get into the
+                        // set in any way (fixupInputs will do this but it
+                        // doesn't know if it should so it does it anyway)
+                        set.obliterateRelNode(rel);
+
                         // There is already an equivalent expression. Use that
                         // one, and forget about this one.
                         return getSubset(equivRel);

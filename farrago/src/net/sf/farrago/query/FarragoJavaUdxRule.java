@@ -68,9 +68,24 @@ public class FarragoJavaUdxRule
 
         for (int i = 0; i < inputs.length; i++) {
             RelNode input = inputs[i];
+            final RelTraitSet traits = RelOptUtil.clone(input.getTraits());
+
+            // copy over other traits
+            for (int j = 0; j < callRel.getTraits().size(); j++) {
+                RelTrait trait = callRel.getTraits().getTrait(j);
+                if (trait.getTraitDef() !=
+                    CallingConventionTraitDef.instance)
+                {
+                    if (traits.getTrait(trait.getTraitDef()) != null) {
+                        traits.setTrait(trait.getTraitDef(), trait);
+                    } else {
+                        traits.addTrait(trait);
+                    }
+                }
+            }
             inputs[i] =
                 mergeTraitsAndConvert(
-                    input.getTraits(),
+                    traits,
                     CallingConvention.ITERATOR,
                     input);
         }

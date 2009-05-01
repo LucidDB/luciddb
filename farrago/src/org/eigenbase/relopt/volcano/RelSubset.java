@@ -134,6 +134,11 @@ public class RelSubset
         return set.variablesUsed;
     }
 
+    public RelNode getBest()
+    {
+        return best;
+    }
+
     /**
      * A <code>RelSubSet</code> is its own clone.
      */

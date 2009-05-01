@@ -119,7 +119,7 @@ public final class WindowedAggregateRel
     {
         return new WindowedAggregateRel(
             getCluster(),
-            traits,
+            traits.clone(),
             getChild(),
             program,
             rowType);

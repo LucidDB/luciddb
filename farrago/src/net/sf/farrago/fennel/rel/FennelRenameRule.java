@@ -106,13 +106,12 @@ public class FennelRenameRule
 
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                project.getTraits(),
+                project.getChild().getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 project.getChild());
         if (fennelInput == null) {
             return null;
         }
-
         return new FennelRenameRel(
             project.getCluster(),
             fennelInput,
