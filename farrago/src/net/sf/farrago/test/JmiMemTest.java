@@ -296,6 +296,7 @@ public class JmiMemTest
     {
         // First, export the entire repository from MDR storage.
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        xmiWriter.getConfiguration().setEncoding("UTF-8");
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 
         repos.beginReposSession();
