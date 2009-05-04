@@ -509,7 +509,23 @@ public class RexProgram
             assert !fail;
             return false;
         }
-        final Checker checker = new Checker(fail);
+        final Checker checker =
+            new Checker(
+                fail,
+                inputRowType,
+                new AbstractList<RelDataType>()
+                {
+                    public RelDataType get(int index)
+                    {
+                        return exprs[index].getType();
+                    }
+
+                    @Override
+                    public int size()
+                    {
+                        return exprs.length;
+                    }
+                });
         if (condition != null) {
             if (!SqlTypeUtil.inBooleanFamily(condition.getType())) {
                 assert !fail : "condition must be boolean";
@@ -646,7 +662,8 @@ loop:
      * Returns whether the fields on the leading edge of the project list are
      * the input fields.
      *
-     * @param fail
+     * @param fail Whether to throw an assert failure if does not project
+     * identity
      */
     public boolean projectsIdentity(final boolean fail)
     {
@@ -834,22 +851,32 @@ loop:
     /**
      * Visitor which walks over a program and checks validity.
      */
-    class Checker
-        extends RexVisitorImpl<Boolean>
+    static class Checker extends RexChecker
     {
-        private final boolean fail;
-        int failCount = 0;
+        private final List<RelDataType> internalExprTypeList;
 
-        public Checker(boolean fail)
+        /**
+         * Creates a Checker.
+         *
+         * @param fail Whether to fail
+         * @param inputRowType Types of the input fields
+         * @param internalExprTypeList Types of the internal expressions
+         */
+        public Checker(
+            boolean fail,
+            RelDataType inputRowType,
+            List<RelDataType> internalExprTypeList)
         {
-            super(true);
-            this.fail = fail;
+            super(inputRowType, fail);
+            this.internalExprTypeList = internalExprTypeList;
         }
 
+        // override RexChecker; RexLocalRef is illegal in most rex expressions,
+        // but legal in a program
         public Boolean visitLocalRef(RexLocalRef localRef)
         {
             final int index = localRef.getIndex();
-            if ((index < 0) || (index >= exprs.length)) {
+            if ((index < 0) || (index >= internalExprTypeList.size())) {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -858,35 +885,7 @@ loop:
                     "type1",
                     localRef.getType(),
                     "type2",
-                    exprs[index].getType(),
-                    fail))
-            {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            return true;
-        }
-
-        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
-        {
-            super.visitFieldAccess(fieldAccess);
-            final RelDataType refType =
-                fieldAccess.getReferenceExpr().getType();
-            assert refType.isStruct();
-            final RelDataTypeField field = fieldAccess.getField();
-            final int index = field.getIndex();
-            if ((index < 0) || (index > refType.getFieldCount())) {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq(
-                    "type1",
-                    typeField.getType(),
-                    "type2",
-                    fieldAccess.getType(),
+                    internalExprTypeList.get(index),
                     fail))
             {
                 assert !fail;
