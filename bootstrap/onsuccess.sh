@@ -24,7 +24,7 @@ echo $INSTALLER >$LINKINFO
 # create MD5 signature file
 rm -f $MD5INFO
 DIR=$PWD
-(cd `dirname $INSTALLER`; openssl md5 `basename $INSTALLER` >$DIR/$MD5INFO)
+(cd `dirname $INSTALLER`; md5sum `basename $INSTALLER` >$DIR/$MD5INFO)
 
 # debugging info
 #echo ----- $BUILDNAME ----- >>~/work/onsuccess.out.txt
