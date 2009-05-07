@@ -232,6 +232,7 @@ public abstract class JmiObjUtil
     public static String exportToXmiString(Collection<?> collection)
     {
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        xmiWriter.getConfiguration().setEncoding("UTF-8");
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         try {
             xmiWriter.write(outStream, collection, "1.2");
