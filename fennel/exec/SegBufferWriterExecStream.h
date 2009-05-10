@@ -74,6 +74,7 @@ class FENNEL_EXEC_EXPORT SegBufferWriterExecStream
     uint outputBufSize;
     std::vector<bool> outputWritten;
     uint nOutputsWritten;
+    bool paramCreated;
 
     /**
      * Reads and returns the current value of the reader reference count

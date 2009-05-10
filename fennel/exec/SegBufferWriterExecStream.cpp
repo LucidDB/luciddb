@@ -37,6 +37,7 @@ void SegBufferWriterExecStream::prepare(
     DiffluenceExecStream::prepare(params);
     bufferSegmentAccessor = params.scratchAccessor;
     readerRefCountParamId = params.readerRefCountParamId;
+    paramCreated = false;
 
     for (uint i = 0; i < outAccessors.size(); i++) {
         assert(outAccessors[i]->getTupleDesc().size() == 1);
@@ -73,6 +74,7 @@ void SegBufferWriterExecStream::open(bool restart)
             TupleAttributeDescriptor(
                 stdTypeFactory.newDataType(STANDARD_TYPE_UINT_64));
         pDynamicParamManager->createCounterParam(readerRefCountParamId);
+        paramCreated = true;
         outputTupleBuffer.reset(new FixedBuffer[outputBufSize]);
         firstBufferPageId = NULL_PAGE_ID;
     }
@@ -82,6 +84,7 @@ void SegBufferWriterExecStream::open(bool restart)
 void SegBufferWriterExecStream::closeImpl()
 {
     assert(readReaderRefCount() == 0);
+    paramCreated = false;
     pSegBufferWriter.reset();
     outputTupleBuffer.reset();
     DiffluenceExecStream::closeImpl();
@@ -94,6 +97,12 @@ bool SegBufferWriterExecStream::canEarlyClose()
 
 int64_t SegBufferWriterExecStream::readReaderRefCount()
 {
+    if (!paramCreated) {
+        // If the stream was never opened, then the parameter will not have
+        // been created.
+        return 0;
+    }
+
     int64_t refCount;
     TupleDatum refCountDatum;
     refCountDatum.pData = (PConstBuffer) &refCount;
