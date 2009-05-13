@@ -102,6 +102,14 @@ public abstract class Bug
     public static final boolean Frg327Fixed = false;
 
     /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-377">issue
+     * FRG-377: Regular character set identifiers defined in SQL:2008 spec like
+     * :ALPHA:, * :UPPER:, :LOWER:, ... etc. are not yet implemented in
+     * SIMILAR TO expressions.</a> is fixed.
+     */
+    public static final boolean Frg377Fixed = false;
+
+    /**
      * Whether dtbug1684 "CURRENT_DATE not implemented in fennel calc" is fixed.
      */
     public static final boolean Dt1684Fixed = false;
@@ -237,6 +245,13 @@ public abstract class Bug
      * FRG-296: SUBSTRING(string FROM regexp FOR regexp)</a> is fixed.
      */
     public static final boolean Frg296Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-375">issue
+     * FRG-375: The expression VALUES ('cd' SIMILAR TO '[a-e^c]d') returns TRUE.
+     * It should return FALSE.</a> is fixed.
+     */
+    public static final boolean Frg375Fixed = false;
 }
 
 // End Bug.java

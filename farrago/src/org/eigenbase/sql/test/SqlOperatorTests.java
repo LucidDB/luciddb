@@ -2785,6 +2785,203 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean(
             "'xbcy'    similar to 'x(ab|c)+y'",
             Boolean.FALSE);
+
+        getTester().checkBoolean("'ab' similar to 'a%' ", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to 'a%' ", Boolean.TRUE);
+        getTester().checkBoolean("'abcd' similar to 'a_' ", Boolean.FALSE);
+        getTester().checkBoolean("'abcd' similar to 'a%' ", Boolean.TRUE);
+        getTester().checkBoolean("'1a' similar to '_a' ", Boolean.TRUE);
+        getTester().checkBoolean("'123aXYZ' similar to '%a%'", Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'123aXYZ' similar to '_%_a%_' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean("'xy' similar to '(xy)' ", Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'abd' similar to '[ab][bcde]d' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'bdd' similar to '[ab][bcde]d' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean("'abd' similar to '[ab]d' ", Boolean.FALSE);
+        getTester().checkBoolean("'cd' similar to '[a-e]d' ", Boolean.TRUE);
+        getTester().checkBoolean("'amy' similar to 'amy|fred' ", Boolean.TRUE);
+        getTester().checkBoolean("'fred' similar to 'amy|fred' ", Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'mike' similar to 'amy|fred' ",
+            Boolean.FALSE);
+
+        getTester().checkBoolean("'acd' similar to 'ab*c+d' ", Boolean.TRUE);
+        getTester().checkBoolean("'accccd' similar to 'ab*c+d' ", Boolean.TRUE);
+        getTester().checkBoolean("'abd' similar to 'ab*c+d' ", Boolean.FALSE);
+        getTester().checkBoolean("'aabc' similar to 'ab*c+d' ", Boolean.FALSE);
+        getTester().checkBoolean("'abb' similar to 'a(b{3})' ", Boolean.FALSE);
+        getTester().checkBoolean("'abbb' similar to 'a(b{3})' ", Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'abbbbb' similar to 'a(b{3})' ",
+            Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'abbbbb' similar to 'ab{3,6}' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'abbbbbbbb' similar to 'ab{3,6}' ",
+            Boolean.FALSE);
+        getTester().checkBoolean("'' similar to 'ab?' ", Boolean.FALSE);
+        getTester().checkBoolean("'a' similar to 'ab?' ", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to 'a(b?)' ", Boolean.TRUE);
+        getTester().checkBoolean("'ab' similar to 'ab?' ", Boolean.TRUE);
+        getTester().checkBoolean("'ab' similar to 'a(b?)' ", Boolean.TRUE);
+        getTester().checkBoolean("'abb' similar to 'ab?' ", Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'ab' similar to 'a\\_' ESCAPE '\\' ",
+            Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'ab' similar to 'a\\%' ESCAPE '\\' ",
+            Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'a_' similar to 'a\\_' ESCAPE '\\' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'a%' similar to 'a\\%' ESCAPE '\\' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean(
+            "'a(b{3})' similar to 'a(b{3})' ",
+            Boolean.FALSE);
+
+        getTester().checkBoolean(
+            "'a(b{3})' similar to 'a\\(b\\{3\\}\\)' ESCAPE '\\' ",
+            Boolean.TRUE);
+
+        getTester().checkBoolean("'yd' similar to '[a-ey]d'", Boolean.TRUE);
+        getTester().checkBoolean("'yd' similar to '[^a-ey]d'", Boolean.FALSE);
+        getTester().checkBoolean("'yd' similar to '[^a-ex-z]d'", Boolean.FALSE);
+        getTester().checkBoolean("'yd' similar to '[a-ex-z]d'", Boolean.TRUE);
+        getTester().checkBoolean("'yd' similar to '[x-za-e]d'", Boolean.TRUE);
+        getTester().checkBoolean("'yd' similar to '[^a-ey]?d'", Boolean.FALSE);
+        getTester().checkBoolean("'yyyd' similar to '[a-ey]*d'", Boolean.TRUE);
+
+         // range must be specified in []
+        getTester().checkBoolean("'yd' similar to 'x-zd'", Boolean.FALSE);
+        getTester().checkBoolean("'y' similar to 'x-z'", Boolean.FALSE);
+
+        getTester().checkBoolean("'cd' similar to '([a-e])d'", Boolean.TRUE);
+        getTester().checkBoolean("'xy' similar to 'x*?y'", Boolean.TRUE);
+        getTester().checkBoolean("'y' similar to 'x*?y'", Boolean.TRUE);
+        getTester().checkBoolean("'y' similar to '(x?)*y'", Boolean.TRUE);
+        getTester().checkBoolean("'y' similar to 'x*+y'", Boolean.TRUE);
+        getTester().checkBoolean("'y' similar to 'x+?y'", Boolean.FALSE);
+        getTester().checkBoolean("'y' similar to 'x?+y'", Boolean.TRUE);
+
+        // some negative tests
+        getTester().checkFails(
+            "'yd' similar to '[x-ze-a]d'",
+            "Illegal character range near index 6" + NL +
+            "\\[x-ze-a\\]d" + NL + "      \\^",
+            true);   // illegal range
+
+        getTester().checkFails(
+            "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{,5}'",
+            "Illegal repetition near index 20" + NL +
+            "\\[\\:LOWER\\:\\]\\{2\\}\\[\\:DIGIT\\:\\]\\{,5\\}" + NL +
+            "                    \\^",
+            true);
+
+        getTester().checkFails(
+            "'cd' similar to '[(a-e)]d' ",
+            "Invalid regular expression: \\[\\(a-e\\)\\]d at 1",
+            true);
+
+        getTester().checkFails(
+            "'yd' similar to '[(a-e)]d' ",
+            "Invalid regular expression: \\[\\(a-e\\)\\]d at 1",
+            true);
+
+        // all the following tests wrong results due to missing functionality
+        // or defect (FRG-375 & 378).
+        if (Bug.Frg375Fixed) {
+            getTester().checkBoolean(
+                "'cd' similar to '[a-e^c]d' ", Boolean.FALSE); // FRG-375
+        }
+
+        // following tests use regular character set identifiers.
+        // Not implemented yet. FRG-377.
+        if (Bug.Frg377Fixed) {
+            getTester().checkBoolean(
+                "'y' similar to '[:ALPHA:]*'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd32' similar to '[:LOWER:]{2}[:DIGIT:]*'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd32' similar to '[:ALNUM:]*'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd32' similar to '[:ALNUM:]*[:DIGIT:]?'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd32' similar to '[:ALNUM:]?[:DIGIT:]*'",
+                Boolean.FALSE);
+
+            getTester().checkBoolean(
+                "'yd3223' similar to '([:LOWER:]{2})[:DIGIT:]{2,5}'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{2,}'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd3223' similar to '[:LOWER:]{2}||[:DIGIT:]{4}'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{3}'",
+                Boolean.FALSE);
+
+            getTester().checkBoolean(
+                "'yd  3223' similar to '[:UPPER:]{2}  [:DIGIT:]{3}'",
+                Boolean.FALSE);
+
+            getTester().checkBoolean(
+                "'YD  3223' similar to '[:UPPER:]{2}  [:DIGIT:]{3}'",
+                Boolean.FALSE);
+
+            getTester().checkBoolean(
+                "'YD  3223' similar to " +
+                "'[:UPPER:]{2}||[:WHITESPACE:]*[:DIGIT:]{4}'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'YD\t3223' similar to '[:UPPER:]{2}[:SPACE:]*[:DIGIT:]{4}'",
+                Boolean.FALSE);
+
+            getTester().checkBoolean(
+                "'YD\t3223' similar to " +
+                "'[:UPPER:]{2}[:WHITESPACE:]*[:DIGIT:]{4}'",
+                Boolean.TRUE);
+
+            getTester().checkBoolean(
+                "'YD\t\t3223' similar to " +
+                "'([:UPPER:]{2}[:WHITESPACE:]+)||[:DIGIT:]{4}'",
+                Boolean.TRUE);
+        }
     }
 
     public void testEscapeOperator()
