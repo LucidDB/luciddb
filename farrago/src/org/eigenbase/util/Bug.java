@@ -252,6 +252,13 @@ public abstract class Bug
      * It should return FALSE.</a> is fixed.
      */
     public static final boolean Frg375Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-378">issue
+     * FRG-378: Regular expressions in SIMILAR TO predicates
+     * potentially dont match SQL:2008 spec in a few cases.</a> is fixed.
+     */
+    public static final boolean Frg378Fixed = false;
 }
 
 // End Bug.java
