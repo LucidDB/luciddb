@@ -207,7 +207,7 @@ public class MedJdbcForeignDataWrapper
         }
     }
 
-    private Driver loadDriverClass(String driverClassName)
+    protected Driver loadDriverClass(String driverClassName)
     {
         try {
             Class<?> clazz = Class.forName(driverClassName);
