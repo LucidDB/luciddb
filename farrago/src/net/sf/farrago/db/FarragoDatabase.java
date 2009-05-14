@@ -440,6 +440,15 @@ public class FarragoDatabase
             // This will close (in reverse order) all the FarragoAllocations
             // opened by the constructor.
             synchronized (this) {
+                // kick off asynchronous cancel requests on each session;
+                // inside of closeAllocation, we'll wait for each
+                // of those to be honored
+                for (ClosableAllocation a : allocations) {
+                    if (a instanceof FarragoDbSession) {
+                        FarragoDbSession session = (FarragoDbSession) a;
+                        session.cancel();
+                    }
+                }
                 closeAllocation();
             }
             assertNoFennelHandles();
@@ -815,9 +824,9 @@ public class FarragoDatabase
             tracer.info("killSession " + id + ": already closed");
             return;
         }
-        if (cancelOnly) {
-            target.cancel();
-        } else {
+
+        target.cancel();
+        if (!cancelOnly) {
             target.kill();
         }
     }
