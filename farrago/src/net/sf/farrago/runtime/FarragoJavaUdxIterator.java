@@ -188,11 +188,21 @@ public abstract class FarragoJavaUdxIterator
         // metadata repository -- the session is lightweight, so no problem
         // if repository txn is never started
         try {
-            runtimeContext.getSession().getRepos().beginReposSession();
+            // sometimes sessions don't exist (don't ask why, if you don't know
+            // you will always have a session)
+            if (runtimeContext.getSession() != null) {
+                runtimeContext.getSession().getRepos().beginReposSession();
+            } else {
+                runtimeContext.getRepos().beginReposSession();
+            }
             try {
                 executeUdx();
             } finally {
-                runtimeContext.getSession().getRepos().endReposSession();
+                if (runtimeContext.getSession() != null) {
+                    runtimeContext.getSession().getRepos().endReposSession();
+                } else {
+                    runtimeContext.getRepos().endReposSession();
+                }
             }
         } finally {
             latch.countDown();

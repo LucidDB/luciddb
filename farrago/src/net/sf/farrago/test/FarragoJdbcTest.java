@@ -178,7 +178,7 @@ public class FarragoJdbcTest
     private static final int TIMESTAMP = 16;
     private static final int DECIMAL = 17;
     private static final int DECIMAL73 = 18;
-    private static boolean schemaExists = false;
+    protected static boolean schemaExists = false;
     private static final String [] columnNames =
         new String[TestSqlType.all.length];
     protected static String columnTypeStr = "";
@@ -1094,10 +1094,15 @@ public class FarragoJdbcTest
             stmt.executeQuery("select * from datatypes_schema.dataTypes_table");
         int rows = checkResults(resultSet, javaType);
         assertEquals(res, rows);
-        stmt.close();
         if (!connection.getAutoCommit()) {
             connection.rollback();
+        } else {
+            // if auto-commit testing, we have to delete all the rows
+            // from the table for the next test
+            tracer.info("deleting datatypes_table rows");
+            stmt.executeUpdate("delete from datatypes_schema.dataTypes_table");
         }
+        stmt.close();
 
         // wipe out the array for the next test
         Arrays.fill(values, null);
@@ -2514,6 +2519,11 @@ public class FarragoJdbcTest
 
         if (!connection.getAutoCommit()) {
             connection.rollback();
+        } else {
+            // if auto-commit testing, we have to delete all the rows
+            // from the table for the next test
+            preparedStmt.executeUpdate(
+                "delete from datatypes_schema.dataTypes_table");
         }
     }
 

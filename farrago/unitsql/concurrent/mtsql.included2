@@ -1,0 +1,2 @@
+create or replace schema foo;
+set schema 'foo';

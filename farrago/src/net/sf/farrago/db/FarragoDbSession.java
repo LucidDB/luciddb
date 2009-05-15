@@ -878,7 +878,12 @@ public class FarragoDbSession
         return txnCodeCache;
     }
 
-    FennelTxnContext getFennelTxnContext()
+    /**
+     * Accessor for the fennel Txn Context in this session.  If no transaction
+     * is active, this should return null
+     * @return the FennelTxnContext active in this DB session
+     */
+    public FennelTxnContext getFennelTxnContext()
     {
         return fennelTxnContext;
     }

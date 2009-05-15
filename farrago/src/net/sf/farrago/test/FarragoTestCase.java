@@ -965,6 +965,7 @@ public abstract class FarragoTestCase
                         list.add(name);
                     }
                 }
+                schemas.close();
             }
 
             tracer.finer("Schema name list has " + list.size() + " entries");
@@ -974,7 +975,11 @@ public abstract class FarragoTestCase
                     + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                     + " cascade";
                 tracer.finer(dropStmt);
-                getStmt().execute(dropStmt);
+                try {
+                    getStmt().execute(dropStmt);
+                } catch (Exception e) {
+                    tracer.log(Level.INFO, "could not drop schema " + name, e);
+                }
             }
         }
 

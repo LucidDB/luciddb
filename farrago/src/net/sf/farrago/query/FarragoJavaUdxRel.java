@@ -26,6 +26,7 @@ import java.util.List;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.FarragoSessionPersonality;
 
 import openjava.mop.*;
 
@@ -330,6 +331,26 @@ public class FarragoJavaUdxRel
             memberList);
         farragoImplementor.setServerMofId(null);
 
+
+        // Kludge to accomodate a push-mode scheduler.
+        // TODO mberkowitz 5/09 Same implementation should work with all
+        // schedulers.
+        FarragoSessionPersonality personality =
+            farragoImplementor.getPreparingStmt().getSession().getPersonality();
+        boolean restartable = personality.isJavaUdxRestartable();
+
+        if (!restartable) {
+            // Call QueueIterator's done method to indicate end-of-stream:
+            //     done(null);
+            executeMethodBody.add(
+                new ExpressionStatement(
+                    new MethodCall(
+                        (Expression) null,
+                        "done",
+                        new ExpressionList(
+                            Literal.constantNull()))));
+        }
+
         MemberDeclaration executeMethodDecl =
             new MethodDeclaration(
                 new ModifierList(ModifierList.PROTECTED),
@@ -345,7 +366,7 @@ public class FarragoJavaUdxRel
                 implementor,
                 this);
 
-        Expression iteratorExp =
+        Expression tupleIterExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
@@ -354,11 +375,13 @@ public class FarragoJavaUdxRel
                     typeLookupCall),
                 memberList);
 
-        Expression tupleIterExp =
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
-                new ExpressionList(
-                    iteratorExp));
+        if (restartable) {
+            tupleIterExp =
+                new AllocationExpression(
+                    OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
+                    new ExpressionList(
+                        tupleIterExp));
+        }
         return tupleIterExp;
     }
 

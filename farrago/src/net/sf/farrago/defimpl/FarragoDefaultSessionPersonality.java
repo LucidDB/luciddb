@@ -42,7 +42,7 @@ import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
@@ -191,6 +191,11 @@ public class FarragoDefaultSessionPersonality
     public boolean isAlterTableAddColumnIncremental()
     {
         return false;
+    }
+
+    public boolean isJavaUdxRestartable()
+    {
+        return true;
     }
 
     // implement FarragoSessionPersonality

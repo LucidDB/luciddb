@@ -205,6 +205,16 @@ public abstract class MedAbstractFennelProjectionRule
             traits.setTrait(
                 CallingConventionTraitDef.instance,
                 FennelRel.FENNEL_EXEC_CONVENTION);
+            if (!traits.equals(projectedScan.getTraits())) {
+                RelNode mergedProjectedScan = convert(projectedScan, traits);
+                RelOptPlanner planner =
+                    projectedScan.getCluster().getPlanner();
+                // register projectedScan == mergedProjectedScan
+                // so mergedProjectedScan will have a RelSet later on
+                projectedScan =
+                    planner.ensureRegistered(mergedProjectedScan,
+                        projectedScan);
+            }
             scanRel =
                 new FennelRenameRel(
                     origProject.getCluster(),
