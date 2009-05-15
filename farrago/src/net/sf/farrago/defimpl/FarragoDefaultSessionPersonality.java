@@ -193,6 +193,11 @@ public class FarragoDefaultSessionPersonality
         return false;
     }
 
+    public boolean isJavaUdxRestartable()
+    {
+        return true;
+    }
+
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
