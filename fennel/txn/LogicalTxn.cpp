@@ -61,7 +61,7 @@ LogicalTxn::LogicalTxn(
 
 LogicalTxn::~LogicalTxn()
 {
-    assert(state == STATE_ROLLED_BACK || state == STATE_COMMITTED);
+    assert(isEnded());
     assert(participants.empty());
 }
 
@@ -240,6 +240,11 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
 SharedLogicalTxnLog LogicalTxn::getLog()
 {
     return pLog;
+}
+
+bool LogicalTxn::isEnded() const
+{
+    return state == STATE_ROLLED_BACK || state == STATE_COMMITTED;
 }
 
 TxnId LogicalTxn::getTxnId() const
