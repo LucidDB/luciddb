@@ -119,20 +119,9 @@ void LbmSplicerExecStream::open(bool restart)
             bitmapBuffer.get(), mergeBuffer.get(), maxEntrySize,
             bitmapTupleDesc);
 
-        if (createNewIndex) {
-            writeBTreeDesc.rootPageId = NULL_PAGE_ID;
-            BTreeBuilder builder(
-                writeBTreeDesc,
-                writeBTreeDesc.segmentAccessor.pSegment);
-            builder.createEmptyRoot();
-            writeBTreeDesc.rootPageId = builder.getRootPageId();
-            emptyTable = true;
-            emptyTableUnknown = false;
-        } else {
-            emptyTable = false;
-            emptyTableUnknown = true;
-        }
-
+        newIndexCreated = false;
+        emptyTable = false;
+        emptyTableUnknown = true;
         bTreeWriter = SharedBTreeWriter(
             new BTreeWriter(writeBTreeDesc, scratchAccessor, emptyTable));
         bTreeWriterMoved = true;
@@ -207,7 +196,7 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (isDone) {
         // Version the index roots if the index was dynamically created
-        if (createNewIndex) {
+        if (newIndexCreated) {
             pSnapshotSegment->versionPage(
                 origRootPageId,
                 writeBTreeDesc.rootPageId);
@@ -596,6 +585,23 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
         FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));
 
+        // If we're creating a new index, we need to defer creating it until
+        // we know that there are new input tuples.  Otherwise, there's no
+        // point in creating it.
+        if (createNewIndex && !newIndexCreated) {
+            newIndexCreated = true;
+            writeBTreeDesc.rootPageId = NULL_PAGE_ID;
+            BTreeBuilder builder(
+                writeBTreeDesc,
+                writeBTreeDesc.segmentAccessor.pSegment);
+            builder.createEmptyRoot();
+            writeBTreeDesc.rootPageId = builder.getRootPageId();
+            emptyTable = true;
+            emptyTableUnknown = false;
+            bTreeWriter = SharedBTreeWriter(
+                new BTreeWriter(writeBTreeDesc, scratchAccessor, emptyTable));
+        }
+
         if (!uniqueRequired(inputTuple)) {
             return EXECRC_YIELD;
         }
@@ -638,6 +644,7 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
 
     // all other rids are rejected as duplicate keys, unless they're deleted
     // rids
+    bool reject = false;
     while (inputRidReader.hasNext()) {
         if (!violationTuple.size()) {
             // if there is a possibility of violations, the splicer should
@@ -654,6 +661,7 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         if (!violationAccessor->produceTuple(violationTuple)) {
             return EXECRC_BUF_OVERFLOW;
         }
+        reject = true;
         postViolation(inputTuple, violationTuple);
         inputRidReader.advance();
     }
@@ -671,8 +679,12 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         return EXECRC_YIELD;
     }
 
-    // otherwise every rid of the current tuple was either rejected or
-    // already deleted, so continue to the next tuple
+    // Otherwise every rid of the current tuple was either rejected or
+    // already deleted, so continue to the next tuple.  In the case where all
+    // of the rids were deleted rids, we need to revalidate the next key.
+    if (!reject) {
+        firstValidation = true;
+    }
     pInAccessor->consumeTuple();
     return getValidatedTuple();
 }

@@ -139,42 +139,7 @@ void LcsClusterAppendExecStream::init()
     arraysAlloced = false;
     compressCalled = false;
     numRowCompressed = 0;
-
-    // The dynamic allocated memory in lcsBlockBuilder is allocated for every
-    // LcsClusterAppendExecStream.open() and deallocated for every
-    // LcsClusterAppendExecStream.closeImpl(). The dynamic memory is not reused
-    // across calls(e.g. when issueing the same statement twice).
-    lcsBlockBuilder = SharedLcsClusterNodeWriter(
-        new LcsClusterNodeWriter(
-            treeDescriptor,
-            scratchAccessor,
-            clusterColsTupleDesc,
-            getSharedTraceTarget(),
-            getTraceSourceName()));
-
-    allocArrays();
-
-    // get blocks from cache to use as temporary space and initialize arrays
-    for (uint i = 0; i < numColumns; i++) {
-        bufferLock.allocatePage();
-        rowBlock[i] = bufferLock.getPage().getWritableData();
-        bufferLock.unlock();
-
-        bufferLock.allocatePage();
-        hashBlock[i] = bufferLock.getPage().getWritableData();
-        bufferLock.unlock();
-
-        bufferLock.allocatePage();
-        builderBlock[i] = bufferLock.getPage().getWritableData();
-        bufferLock.unlock();
-
-        hash[i].init(
-            hashBlock[i], lcsBlockBuilder, colTupleDesc[i], i, blockSize);
-    }
-
-    nRowsMax = blockSize / sizeof(uint16_t);
 }
-
 
 ExecStreamResult LcsClusterAppendExecStream::compress(
     ExecStreamQuantum const &quantum)
@@ -214,7 +179,9 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
             // resource usage window smaller and avoid interference with
             // downstream processing such as writing to unclustered indexes.
             writeBlock();
-            lcsBlockBuilder->close();
+            if (lcsBlockBuilder) {
+                lcsBlockBuilder->close();
+            }
             close();
 
             // outputTuple was already initialized to point to numRowCompressed/
@@ -329,6 +296,40 @@ void LcsClusterAppendExecStream::initLoad()
 
     if (!compressCalled) {
         compressCalled = true;
+
+        // The dynamic allocated memory in lcsBlockBuilder is allocated for
+        // every LcsClusterAppendExecStream.open() and deallocated for every
+        // LcsClusterAppendExecStream.closeImpl(). The dynamic memory is not
+        // reused across calls(e.g. when issueing the same statement twice).
+        lcsBlockBuilder = SharedLcsClusterNodeWriter(
+            new LcsClusterNodeWriter(
+                treeDescriptor,
+                scratchAccessor,
+                clusterColsTupleDesc,
+                getSharedTraceTarget(),
+                getTraceSourceName()));
+
+        allocArrays();
+
+        // get blocks from cache to use as temporary space and initialize arrays
+        for (uint i = 0; i < numColumns; i++) {
+            bufferLock.allocatePage();
+            rowBlock[i] = bufferLock.getPage().getWritableData();
+            bufferLock.unlock();
+
+            bufferLock.allocatePage();
+            hashBlock[i] = bufferLock.getPage().getWritableData();
+            bufferLock.unlock();
+
+            bufferLock.allocatePage();
+            builderBlock[i] = bufferLock.getPage().getWritableData();
+            bufferLock.unlock();
+
+            hash[i].init(
+                hashBlock[i], lcsBlockBuilder, colTupleDesc[i], i, blockSize);
+        }
+
+        nRowsMax = blockSize / sizeof(uint16_t);
 
         // if the index exists, get last block written
 

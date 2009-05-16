@@ -112,39 +112,34 @@ public class LcsTableProjectionRule
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
         // in the projection, then it needs to be used in the scan.
-        List<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
+        // Put clusters corresponding to residual columns first in the
+        // list.
+        List<FemLocalIndex> indexList =
+            origScan.getIndexGuide().createResidualClusterList(
+                origScan.residualColumns);
 
-        // Test which clustered indexes are needed to cover the
-        // projectedColumns and filterColumns.
-        Integer [] readColumns =
-            projectedColumnList.toArray(
-                new Integer[projectedColumnList.size()
-                    + origScan.residualColumns.length]);
-
-        System.arraycopy(
-            origScan.residualColumns,
-            0,
-            readColumns,
-            projectedColumnList.size(),
-            origScan.residualColumns.length);
-
+        // Test which of the remaining clustered indexes are needed to cover
+        // the projectedColumns.
         Integer [] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
 
         for (FemLocalIndex index : origScan.clusteredIndexes) {
+            if (indexList.contains(index)) {
+                continue;
+            }
             if (!origScan.getIndexGuide().testIndexCoverage(
                     index,
-                    readColumns))
+                    projectedColumns))
             {
                 continue;
             }
             indexList.add(index);
         }
 
-        // if no clusters need to be read, read from the cluster with the
+        // If no clusters need to be read, read from the cluster with the
         // fewest pages; if more than one has the fewest pages, then
-        // pick based on alphabetical order of the cluster name
+        // pick based on alphabetical order of the cluster name.
         if (indexList.size() == 0) {
             indexList.add(
                 LcsIndexOptimizer.getIndexWithMinDiskPages(origScan));

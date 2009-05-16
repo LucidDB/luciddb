@@ -122,6 +122,11 @@ class FENNEL_LCS_EXPORT LcsClusterReplaceExecStream
     TupleDataWithBuffer origClusterTupleData;
 
     /**
+     * True if at least one existing row is being replaced with a new value
+     */
+    bool newData;
+
+    /**
      * Initializes member fields corresponding to the data to be loaded,
      * taking into account the extra rid column that identifies each input
      * tuple.
