@@ -425,6 +425,38 @@ select * from u where a >= 0 order by a;
 -- make sure violations are returned when appropriate
 update u set a = 2;
 select lcs_rid(a), * from u order by a;
+-- verify the case where the deleted keys appear as singletons
+truncate table u;
+insert into u values(0,0);
+insert into u values(1,1);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+merge into u as tgt using (select * from u where a = 1) as src
+    on tgt.a = src.a when matched then update set b = 2;
+merge into u as tgt using (select * from u where a = 1) as src 
+    on tgt.a = src.a when matched then update set b = 3;
+insert into u values(3,3),(4,4),(5,5),(6,6),(7,7),(8,8);
+update u set a = a + 1 where a > 2;
+select lcs_rid(a), * from u order by a;
+select * from u where a >= 0 order by a;
+-- do a no-op update; verify this by checking that no new pages are allocated
+-- after the update
+call applib.create_var('RC', null, 'test context');
+call applib.create_var(
+    'RC', 'pageCount', ' used to store current page allocation count');
+call applib.set_var(
+    'RC',
+    'pageCount',
+    (select counter_value from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated'));
+update u set a = a;
+select lcs_rid(a), * from u order by a;
+select * from u where a >= 0 order by a;
+-- sleep before retrieving the stats again
+select sys_boot.mgmt.sleep(1000) from u where a = 0;
+select (counter_value = applib.get_var('RC', 'pageCount'))
+    from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated';
 
 drop label l;
 drop schema rc cascade;
+call applib.delete_var('RC', 'pageCount');

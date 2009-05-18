@@ -96,7 +96,8 @@ public abstract class LcsRowScanRelBase
      * @param cluster RelOptCluster for this rel
      * @param children children inputs into the row scan
      * @param lcsTable table being scanned
-     * @param clusteredIndexes clusters to use for table access
+     * @param clusteredIndexes list of clusters to use for table access, in
+     * the order in which the clusters are to be scanned
      * @param connection connection
      * @param projectedColumns array of 0-based table-relative column ordinals,
      * or null to project all columns
@@ -246,13 +247,7 @@ public abstract class LcsRowScanRelBase
             }
         }
 
-        // REVIEW jvs 27-Dec-2005:  Since LcsRowScanRel is given
-        // a list (implying ordering) as input, it seems to me that
-        // the caller should be responsible for putting the
-        // list into a deterministic order rather than doing
-        // it here.
-
-        TreeSet<String> indexNames = new TreeSet<String>();
+        List<String> indexNames = new ArrayList<String>();
         for (FemLocalIndex index : clusteredIndexes) {
             indexNames.add(index.getName());
         }
@@ -260,9 +255,9 @@ public abstract class LcsRowScanRelBase
         // REVIEW jvs 27-Dec-2005: See http://issues.eigenbase.org/browse/FRG-8;
         // the "clustered indexes" attribute is an example of a derived
         // attribute which doesn't need to be part of the digest (it's implied
-        // by the column projection since we don't allow clusters to overlap),
-        // but is useful in verbose mode. Can't resolve this comment until FRG-8
-        // is completed.
+        // by a combination of the column projection and residual columns,
+        // since we don't allow clusters to overlap), but is useful in verbose
+        // mode. Can't resolve this comment until FRG-8 is completed.
 
         int nExtraTerms = hasResidualFilters() ? 1 : 0;
         if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {

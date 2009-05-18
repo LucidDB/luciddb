@@ -71,6 +71,7 @@ class FENNEL_EXEC_EXPORT SegBufferReaderExecStream
     DynamicParamId readerRefCountParamId;
     PageId firstBufferPageId;
     TupleData inputTuple;
+    bool paramIncremented;
 
 public:
     virtual void prepare(SegBufferReaderExecStreamParams const &params);

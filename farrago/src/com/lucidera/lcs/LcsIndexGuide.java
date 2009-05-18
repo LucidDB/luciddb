@@ -27,7 +27,6 @@ import java.math.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
@@ -87,6 +86,8 @@ public class LcsIndexGuide
 
     private Map<FemLocalIndex, Integer> clusterToRootPageIdParamIdMap;
 
+    private Map<Integer, FemLocalIndex> ordinalToClusterMap;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -122,6 +123,22 @@ public class LcsIndexGuide
         clusterToRootPageIdParamIdMap = new HashMap<FemLocalIndex, Integer>();
 
         createClusterMap(clusteredIndexes);
+
+        // Create a mapping from flattened ordinal to its corresponding cluster
+        ordinalToClusterMap = new HashMap<Integer, FemLocalIndex>();
+        for (FemLocalIndex cluster : clusteredIndexes) {
+            for (CwmIndexedFeature indexedFeature :
+                cluster.getIndexedFeature())
+            {
+                FemAbstractColumn column =
+                    (FemAbstractColumn) indexedFeature.getFeature();
+                int start = flattenOrdinal(column.getOrdinal());
+                int end = start + getNumFlattenedSubCols(column.getOrdinal());
+                for (int i = start; i < end; i++) {
+                    ordinalToClusterMap.put(i, cluster);
+                }
+            }
+        }
     }
 
     /**
@@ -1760,6 +1777,35 @@ public class LcsIndexGuide
             }
         }
         return nMatches;
+    }
+
+    /**
+     * Retrieves a list of clusters corresponding to clusters containing
+     * residual filtered columns.  The list of clusters is returned in the same
+     * order as the residual filtered columns.  Note that the number of
+     * clusters may be smaller than the number of residual columns, if a
+     * cluster has more than one column.
+     *
+     * @param residualColumns array of flattened ordinals corresponding to the
+     * columns that have residual filters
+     *
+     * @return the list of residual column clusters
+     */
+    public List<FemLocalIndex> createResidualClusterList(
+        Integer[] residualColumns)
+    {
+        List<FemLocalIndex> residualClusterList =
+            new ArrayList<FemLocalIndex>();
+
+        // Add the clusters corresponding to residual columns
+        for (int i = 0; i < residualColumns.length; i++) {
+            FemLocalIndex cluster = ordinalToClusterMap.get(residualColumns[i]);
+            if (!residualClusterList.contains(cluster)) {
+                residualClusterList.add(cluster);
+            }
+        }
+
+        return residualClusterList;
     }
 }
 

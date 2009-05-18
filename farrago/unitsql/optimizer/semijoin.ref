@@ -92,9 +92,9 @@
 '          LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], index=[IT_D], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '              LhxAggRel(groupCount=[1])'
-'                LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2]], residual columns=[[1]])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1]], residual columns=[[1]])'
 '                  FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -----------------
@@ -110,7 +110,7 @@
 '    LhxJoinRel(leftKeys=[[4]], rightKeys=[[3]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..4=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
-'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- filter not of the form cola = colb
@@ -123,7 +123,7 @@
 '    LhxJoinRel(leftKeys=[[3]], rightKeys=[[4]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t0)], proj#0..4=[{exprs}])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- no filter on dimension table, so not worthwhile to do a semijoin
@@ -221,9 +221,9 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '                  LhxAggRel(groupCount=[2])'
 '                    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t3], S1=[$t0], $condition=[$t2])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- same as above except join columns are reversed
@@ -242,9 +242,9 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '                  LhxAggRel(groupCount=[2])'
 '                    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t3], S1=[$t0], $condition=[$t2])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- join on 3 columns but index only on 2 columns
@@ -264,9 +264,9 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '                  LhxAggRel(groupCount=[2])'
 '                    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t3], S1=[$t0], $condition=[$t2])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- same query but filters juggled around
@@ -286,9 +286,9 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '                  LhxAggRel(groupCount=[2])'
 '                    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t3], S1=[$t0], $condition=[$t2])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > ---------------------------------------
@@ -467,7 +467,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 4, 5, 6, 2]], outputRowType=[RecordType(INTEGER SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER QUANTITY) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[0]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]], residual columns=[[0]])'
 '          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -494,7 +494,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 4, 5, 6, 2]], outputRowType=[RecordType(INTEGER SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER QUANTITY) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[0]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]], residual columns=[[0]])'
 '          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -630,7 +630,7 @@
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 1, 3, 5]], outputRowType=[RecordType(INTEGER SID, INTEGER PRODUCT_ID, INTEGER QUANTITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[0]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[0]])'
 '              LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
 '                LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[1])'
 '                  LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -678,7 +678,7 @@
 '                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                            FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '        FennelReshapeRel(projection=[[0, 1, 2, 4, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" STATE, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
@@ -686,9 +686,9 @@
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                      FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-'            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 > 
 > -- index can be used for both semijoins and table filtering
@@ -1273,7 +1273,7 @@
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                      FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > explain plan for
 >     select * from vt, smalltable s
@@ -1291,7 +1291,7 @@
 '                  FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], expr#2=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t2], $condition=[$t1])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                      FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- but not in these cases
@@ -1303,7 +1303,7 @@
 '    LhxJoinRel(leftKeys=[[3]], rightKeys=[[0]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[FLAG(BOTH)], expr#4=[' '], expr#5=[TRIM($t3, $t4, $t2)], proj#0..2=[{exprs}], TRIM(FLAG(BOTH), ' ', $2)=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
-'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > explain plan for
 >     select * from vt, smalltable s
@@ -1459,7 +1459,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[0]])'
+'    LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]], residual columns=[[0]])'
 '      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
 '        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[1])'
 '          LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -1496,7 +1496,7 @@
 '                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                    LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                        LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                        LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                          FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 > -- shuffle the order of the tables in the from clause
 > explain plan for
@@ -1519,7 +1519,7 @@
 '                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                    LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                        LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                        LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                          FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 > 
 > -- product can be removed because its join key with t can be obtained from
@@ -1777,9 +1777,9 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '                  LhxAggRel(groupCount=[2])'
 '                    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t3], S1=[$t0], $condition=[$t2])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 > 
 > -- semijoin keys not unique
@@ -1877,14 +1877,14 @@
 '                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                            FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
 '            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                  LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                    FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 > 
 > -- neither customer or state can be removed because state is referenced in the
@@ -1911,7 +1911,7 @@
 '                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                            FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '        FennelReshapeRel(projection=[[0, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" STATE, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
@@ -1919,9 +1919,9 @@
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                      FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-'            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 > 
 > -- although customer doesn't need to be joined with either state or sales
@@ -1951,14 +1951,14 @@
 '                        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                          LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                            FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                              LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                              LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                                FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '            FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CITY, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
 '                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                  LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                    FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                      LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$STATE, SYS$CLUSTERED_INDEX$STATE$CITY]], residual columns=[[1]])'
 '                        FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$T$C]])'
 > 
@@ -2115,7 +2115,7 @@
 '            LhxAggRel(groupCount=[1])'
 '              LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY]], residual columns=[[1]])'
 '                FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
-'    LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_ACCTBAL, SYS$CLUSTERED_INDEX$SUPPLIER$S_ADDRESS, SYS$CLUSTERED_INDEX$SUPPLIER$S_COMMENT, SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY, SYS$CLUSTERED_INDEX$SUPPLIER$S_PHONE, SYS$CLUSTERED_INDEX$SUPPLIER$S_SUPPKEY]], residual columns=[[1]])'
+'    LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_ACCTBAL, SYS$CLUSTERED_INDEX$SUPPLIER$S_ADDRESS, SYS$CLUSTERED_INDEX$SUPPLIER$S_COMMENT, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY, SYS$CLUSTERED_INDEX$SUPPLIER$S_PHONE, SYS$CLUSTERED_INDEX$SUPPLIER$S_SUPPKEY]], residual columns=[[1]])'
 '      FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
 > 
 > -- LER-8251 -- In the resulting query plan, you should NOT see a cast of a
@@ -2187,7 +2187,7 @@
 '          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, LINEITEM]], index=[L_PARTKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                LcsRowScanRel(table=[[LOCALDB, SJ, PART]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PART$P_PARTKEY, SYS$CLUSTERED_INDEX$PART$P_TYPE]], residual columns=[[4]])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, PART]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PART$P_TYPE, SYS$CLUSTERED_INDEX$PART$P_PARTKEY]], residual columns=[[4]])'
 '                  FennelValuesRel(tuples=[[{ '[', 'ECONOMY ANODIZED STEEL', ']', 'ECONOMY ANODIZED STEEL' }]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, ORDERS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$ORDERS$O_ORDERDATE, SYS$CLUSTERED_INDEX$ORDERS$O_ORDERKEY]], residual columns=[[4]])'
@@ -2234,7 +2234,7 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER CAST($0):INTEGER) NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, SJ, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A, SYS$CLUSTERED_INDEX$T2$B]], residual columns=[[1]])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$B, SYS$CLUSTERED_INDEX$T2$A]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '[', null, ']', null }]])'
 > 
 > -- LER-9882 -- the join to PRODUCT should be removed even though it left outer

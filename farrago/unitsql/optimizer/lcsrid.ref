@@ -369,7 +369,7 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, EXPR$10]])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[1]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C1_C2, I_C0, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[1]])'
 '      FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
 > explain plan for select c0 from tencols where lcs_rid(c1) > 2 order by c0;
 'column0'
@@ -382,14 +382,14 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER C0, INTEGER C9, BIGINT EXPR$2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]], residual columns=[[9]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID, LCS_RID]], clustered indexes=[[I_C6_C7_C8_C9, I_C0]], residual columns=[[9]])'
 '      FennelValuesRel(tuples=[[{ '(', 9, '+', null }]])'
 > explain plan for select c0, c6, lcs_rid(c7) from tencols
 >     where c6 = 26 and lcs_rid(c8) = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[2]], outputRowType=[RecordType(INTEGER C0, INTEGER C6, BIGINT EXPR$2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]], residual columns=[[6]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C6_C7_C8_C9, I_C0]], residual columns=[[6]])'
 '      FennelValuesRel(tuples=[[{ '[', 26, ']', 26 }]])'
 > explain plan for select * from tencols where lcs_rid(c0) = 0;
 'column0'

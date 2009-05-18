@@ -104,6 +104,14 @@ class FENNEL_LBM_EXPORT LbmSplicerExecStream
     bool createNewIndex;
 
     /**
+     * True if a new index was created.  This will only be true if
+     * createNewIndex is true and there is at least one input tuple,
+     * indicating that the existing index needs to be recreated and the new
+     * one versioned off of the original.
+     */
+    bool newIndexCreated;
+
+    /**
      * Parameter id of the dynamic parameter used to write the row count
      * affected by this stream that will be read downstream
      */

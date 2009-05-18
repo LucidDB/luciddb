@@ -104,13 +104,7 @@ void LcsClusterReplaceExecStream::getResourceRequirements(
 
 void LcsClusterReplaceExecStream::open(bool restart)
 {
-    // Create a new rid to pageId btree map for this cluster
-    treeDescriptor.rootPageId = NULL_PAGE_ID;
-    BTreeBuilder builder(
-        treeDescriptor,
-        treeDescriptor.segmentAccessor.pSegment);
-    builder.createEmptyRoot();
-    treeDescriptor.rootPageId = builder.getRootPageId();
+    newData = false;
 
     // Need to call this after the setup above because the cluster append
     // stream depends on the new cluster being in place
@@ -165,7 +159,12 @@ ExecStreamResult LcsClusterReplaceExecStream::getTupleForLoad()
         // Therefore, if there's a gap at the end of the cluster, read the
         // original rows until we read the rid corresponding to the last tuple
         // tuple in the original cluster, at which point, we can finally
-        // say that we're done
+        // say that we're done.  However, if there wasn't at least one new
+        // row, then there's no need to replace the column.  We can simply
+        // keep the original.
+        if (!newData) {
+            return EXECRC_EOS;
+        }
         if (opaqueToInt(currLoadRid) < origNumRows) {
             readOrigClusterRow();
             needTuple = false;
@@ -182,6 +181,18 @@ ExecStreamResult LcsClusterReplaceExecStream::getTupleForLoad()
 
     if (!pInAccessor->demandData()) {
         return EXECRC_BUF_UNDERFLOW;
+    }
+
+    // Create a new rid to pageId btree map for this cluster, once we know
+    // at least one row is being updated
+    if (!newData) {
+        treeDescriptor.rootPageId = NULL_PAGE_ID;
+        BTreeBuilder builder(
+            treeDescriptor,
+            treeDescriptor.segmentAccessor.pSegment);
+        builder.createEmptyRoot();
+        treeDescriptor.rootPageId = builder.getRootPageId();
+        newData = true;
     }
 
     initLoad();

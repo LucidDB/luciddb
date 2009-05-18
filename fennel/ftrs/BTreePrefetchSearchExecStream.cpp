@@ -77,11 +77,12 @@ void BTreePrefetchSearchExecStream::getResourceRequirements(
 
     // The actual size of the keys should never exceed a page size, but we're
     // trying to store at least 2 keys on each page.  If the max size is such
-    // that we can only store a single key on a page, then set aside an entire
-    // page to store each key.
+    // that we can only store a single key on a page, then set aside 2 entire
+    // pages, one per key.
     if (keyValuesSize > scratchPageSize) {
         bigMaxKey = true;
         keyValuesSize = scratchPageSize;
+        minQuantity.nCachePages += 1;
     } else {
         bigMaxKey = false;
     }

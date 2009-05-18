@@ -70,10 +70,15 @@ public class LcsTable
     {
         RelNode [] emptyInput = new RelNode[0];
 
-        clusteredIndexes =
+        // Sort the clusters by cluster name
+        TreeSet<FemLocalIndex> sortedClusters =
+            new TreeSet<FemLocalIndex>(new ClusterComparator());
+        sortedClusters.addAll(
             FarragoCatalogUtil.getClusteredIndexes(
                 getPreparingStmt().getRepos(),
-                getCwmColumnSet());
+                getCwmColumnSet()));
+        clusteredIndexes = new ArrayList<FemLocalIndex>(sortedClusters);
+
         double inputSelectivity = 1.0;
 
         return new LcsRowScanRel(
@@ -108,6 +113,18 @@ public class LcsTable
                     getCwmColumnSet());
         }
         return clusteredIndexes;
+    }
+
+    /**
+     * Comparator that sorts clusters by cluster name.
+     */
+    private static class ClusterComparator
+        implements Comparator<FemLocalIndex>
+    {
+        public int compare(FemLocalIndex i1, FemLocalIndex i2)
+        {
+            return i1.getName().compareTo(i2.getName());
+        }
     }
 }
 
