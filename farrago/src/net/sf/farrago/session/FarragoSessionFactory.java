@@ -107,6 +107,19 @@ public interface FarragoSessionFactory
     public FarragoSessionTxnMgr newTxnMgr();
 
     /**
+     * Sets the class loader for plugins.
+     *
+     * @param pluginClassLoader classloader to use
+     */
+    public void setPluginClassLoader(
+        FarragoPluginClassLoader pluginClassLoader);
+
+    /**
+     * @return plugin class loader to use
+     */
+    public FarragoPluginClassLoader getPluginClassLoader();
+
+    /**
      * Loads a model extension plugin instance.
      *
      * @param pluginClassLoader FarragoPluginClassLoader to use to load the

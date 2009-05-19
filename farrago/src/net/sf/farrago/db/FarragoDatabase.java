@@ -152,12 +152,13 @@ public class FarragoDatabase
 
             // Tell MDR about our plugin ClassLoader so that it can find
             // extension model JMI interfaces in plugin jars.
-            pluginClassLoader = new FarragoPluginClassLoader();
+            pluginClassLoader = sessionFactory.getPluginClassLoader();
+            final ClassLoader pcl = pluginClassLoader;
             MDRepositoryFactory.setClassLoaderProvider(
                 new ClassLoaderProvider() {
                     public ClassLoader getClassLoader()
                     {
-                        return pluginClassLoader;
+                        return pcl;
                     }
 
                     public Class defineClass(
@@ -1297,13 +1298,21 @@ public class FarragoDatabase
         String libraryName =
             FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
         try {
-            FarragoPluginClassLoader classLoader =
-                new FarragoPluginClassLoader();
+            FarragoDatabase db = instance;
+            FarragoPluginClassLoader classLoader;
+            if (db == null) {
+                classLoader = new FarragoPluginClassLoader();
+            } else {
+                classLoader = db.getPluginClassLoader();
+            }
             Class c =
                 classLoader.loadClassFromLibraryManifest(
                     libraryName,
                     "SessionFactoryClassName");
-            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
+            FarragoSessionFactory sessionFactory =
+                (FarragoSessionFactory) classLoader.newPluginInstance(c);
+            sessionFactory.setPluginClassLoader(classLoader);
+            return sessionFactory;
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(
                 libraryName,
