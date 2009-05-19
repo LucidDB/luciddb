@@ -33,6 +33,7 @@ import openjava.mop.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;

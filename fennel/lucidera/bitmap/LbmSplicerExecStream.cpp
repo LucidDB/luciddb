@@ -439,9 +439,9 @@ bool LbmSplicerExecStream::ridOverlaps(
     if (firstByte) {
        rowCount = LbmSegment::LbmOneByteSize;
     } else {
-       rowCount = LbmEntry::getRowCount(bitmapTupleData);
-       if (rowCount == 1) {
-           rowCount = LbmSegment::LbmOneByteSize;
+        rowCount = LbmEntry::getRowCount(bitmapTupleData);
+        if (rowCount == 1) {
+            rowCount = LbmSegment::LbmOneByteSize;
         }
     }
     if (rid >= startRid && rid < startRid + rowCount) {

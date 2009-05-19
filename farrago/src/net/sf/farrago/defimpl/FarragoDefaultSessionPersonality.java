@@ -21,10 +21,7 @@
 */
 package net.sf.farrago.defimpl;
 
-import net.sf.farrago.fennel.calc.*;
-
 import com.lucidera.farrago.fennel.*;
-import org.eigenbase.lurql.*;
 
 import java.io.*;
 
@@ -43,6 +40,7 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
@@ -52,6 +50,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.lurql.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -672,11 +671,11 @@ public class FarragoDefaultSessionPersonality
      */
     public class ParamValidator
     {
-        private final int BOOLEAN_TYPE = 1;
-        private final int INT_TYPE = 2;
-        private final int STRING_TYPE = 3;
-        private final int DIRECTORY_TYPE = 4;
-        private final int LONG_TYPE = 5;
+        private static final int BOOLEAN_TYPE = 1;
+        private static final int INT_TYPE = 2;
+        private static final int STRING_TYPE = 3;
+        private static final int DIRECTORY_TYPE = 4;
+        private static final int LONG_TYPE = 5;
 
         private Map<String, ParamDesc> params;
 

@@ -52,7 +52,6 @@ void histogramAlloc(
     RegisterRef<char*>* result,
     RegisterReference* targetDataType)
 {
-
     StandardTypeDescriptorOrdinal dType = targetDataType->type();
 
     PBuffer histogramObject = NULL;

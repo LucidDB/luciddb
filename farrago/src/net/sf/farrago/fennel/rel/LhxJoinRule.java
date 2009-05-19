@@ -28,8 +28,8 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.*;
 import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.rex.*;
 
 
 /**

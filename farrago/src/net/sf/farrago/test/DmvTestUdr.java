@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.test;
 
-import org.eigenbase.lurql.*;
-
 import java.io.*;
 
 import java.util.*;
@@ -38,6 +36,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.dmv.*;
 import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
+import org.eigenbase.lurql.*;
 import org.eigenbase.util.*;
 
 

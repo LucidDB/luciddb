@@ -22,14 +22,13 @@
 */
 package net.sf.farrago.trace;
 
-import net.sf.farrago.fennel.calc.*;
-
 import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.test.*;

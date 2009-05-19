@@ -21,13 +21,12 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.fennel.rel.*;
-
 import java.util.*;
 import java.util.logging.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;

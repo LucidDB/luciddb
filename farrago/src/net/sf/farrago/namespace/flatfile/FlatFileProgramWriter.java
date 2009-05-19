@@ -23,7 +23,6 @@ package net.sf.farrago.namespace.flatfile;
 
 import net.sf.farrago.query.*;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
@@ -211,7 +210,7 @@ public class FlatFileProgramWriter
                 sourceTypes[i] = getTextType(targetType);
             }
             sourceTypes[i] =
-                FlatFileBCPFile.forceSingleByte(
+                FlatFileBcpFile.forceSingleByte(
                     typeFactory,
                     sourceTypes[i]);
             sourceNames[i] = targetTypes[i].getName();

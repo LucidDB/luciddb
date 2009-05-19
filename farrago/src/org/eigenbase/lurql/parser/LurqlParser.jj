@@ -217,7 +217,7 @@ LurqlRoot SimpleRoot() :
     [
         <AS> aliasName = Identifier()
     ]
-    [ 
+    [
         whereClause = WhereClause()
     ]
     [
@@ -313,7 +313,7 @@ LurqlFollow Follow() :
     [
         <AS> aliasName = Identifier()
     ]
-    [ 
+    [
         whereClause = WhereClause()
     ]
     [

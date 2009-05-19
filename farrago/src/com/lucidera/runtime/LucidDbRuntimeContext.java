@@ -610,11 +610,11 @@ public class LucidDbRuntimeContext
         private boolean needsHeader;
         private boolean hasException;
 
-        private final char LINE_DELIM = '\n';
-        private final char FIELD_DELIM = ',';
-        private final char QUOTE_CHAR = '"';
-        private final String ONE_QUOTE = "\"";
-        private final String TWO_QUOTES = "\"\"";
+        private static final char LINE_DELIM = '\n';
+        private static final char FIELD_DELIM = ',';
+        private static final char QUOTE_CHAR = '"';
+        private static final String ONE_QUOTE = "\"";
+        private static final String TWO_QUOTES = "\"\"";
 
         public DefaultErrorLogger(String filename)
         {

@@ -21,12 +21,11 @@
 */
 package org.eigenbase.sql.test;
 
-import org.eigenbase.sql.advise.*;
-
 import java.util.*;
 import java.util.logging.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.advise.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;

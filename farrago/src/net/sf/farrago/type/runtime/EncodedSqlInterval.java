@@ -166,7 +166,7 @@ public abstract class EncodedSqlInterval
     public abstract static class EncodedSqlIntervalYM
         extends EncodedSqlInterval
     {
-        public static long MONTHS_PER_YEAR = 12;
+        public static final long MONTHS_PER_YEAR = 12;
 
         // implement AssignableValue
         public void assignFrom(Object obj)
@@ -226,10 +226,10 @@ public abstract class EncodedSqlInterval
     public abstract static class EncodedSqlIntervalDT
         extends EncodedSqlInterval
     {
-        public static long MS_PER_SECOND = 1000;
-        public static long MS_PER_MINUTE = 60 * MS_PER_SECOND;
-        public static long MS_PER_HOUR = 60 * MS_PER_MINUTE;
-        public static long MS_PER_DAY = 24 * MS_PER_HOUR;
+        public static final long MS_PER_SECOND = 1000;
+        public static final long MS_PER_MINUTE = 60 * MS_PER_SECOND;
+        public static final long MS_PER_HOUR = 60 * MS_PER_MINUTE;
+        public static final long MS_PER_DAY = 24 * MS_PER_HOUR;
 
         // implement AssignableValue
         public void assignFrom(Object obj)

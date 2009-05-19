@@ -22,9 +22,9 @@
 */
 package net.sf.farrago.fennel.rel;
 
-import net.sf.farrago.query.*;
-
 import java.util.*;
+
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;

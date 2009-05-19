@@ -463,9 +463,15 @@ public class Enum14
         }
 
         // forwarding function for super.equals
-        public boolean equals(Object o)
+        public final boolean equals(Object o)
         {
             return super.equals(o);
+        }
+
+        // keep checkstyle happy
+        public final int hashCode()
+        {
+            return super.hashCode();
         }
 
         // implement Comparable

@@ -420,17 +420,19 @@ void BTreeBuilder::truncateExternal(TupleProjection const &leafPageIdProj)
     TupleData projData(projDesc);
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
-    if (reader.searchFirst()) do {
-        projAccessor.unmarshal(projData);
-        for (uint i = 0; i < projData.size(); ++i) {
-            if (!projData[i].pData) {
-                continue;
+    if (reader.searchFirst()) {
+        do {
+            projAccessor.unmarshal(projData);
+            for (uint i = 0; i < projData.size(); ++i) {
+                if (!projData[i].pData) {
+                    continue;
+                }
+                PageId pageId = *reinterpret_cast<PageId const *>(
+                    projData[i].pData);
+                pageLock.deallocateUnlockedPage(pageId);
             }
-            PageId pageId = *reinterpret_cast<PageId const *>(
-                projData[i].pData);
-            pageLock.deallocateUnlockedPage(pageId);
-        }
-    } while (reader.searchNext());
+        } while (reader.searchNext());
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

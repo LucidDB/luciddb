@@ -21,12 +21,11 @@
 */
 package net.sf.farrago.test.regression;
 
-import net.sf.farrago.fennel.calc.*;
-
 import java.util.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.test.*;
 

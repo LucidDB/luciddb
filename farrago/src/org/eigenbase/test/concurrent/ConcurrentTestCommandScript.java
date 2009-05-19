@@ -1806,26 +1806,26 @@ public class ConcurrentTestCommandScript
          * "+----+--------+"</code>.
          */
         private void printSeparator()
-       {
-           indent();
-           for (int i = 0; i < widths.length; i++) {
-               if (i > 0) {
-                   out.write("-+-");
-               } else {
-                   out.write("+-");
-               }
+        {
+            indent();
+            for (int i = 0; i < widths.length; i++) {
+                if (i > 0) {
+                    out.write("-+-");
+                } else {
+                    out.write("+-");
+                }
 
-               int numDashes = widths[i];
-               while (numDashes > 0) {
-                   out.write(
-                       dashes,
-                       0,
-                       Math.min(numDashes, BUF_SIZE));
-                   numDashes -= Math.min(numDashes, BUF_SIZE);
-               }
-           }
-           out.println("-+");
-       }
+                int numDashes = widths[i];
+                while (numDashes > 0) {
+                    out.write(
+                        dashes,
+                        0,
+                        Math.min(numDashes, BUF_SIZE));
+                    numDashes -= Math.min(numDashes, BUF_SIZE);
+                }
+            }
+            out.println("-+");
+        }
 
         /**
          * Prints an output table row. Something like <code>"| COL1 | COL2

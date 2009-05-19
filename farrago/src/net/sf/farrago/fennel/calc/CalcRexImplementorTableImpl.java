@@ -21,11 +21,11 @@
 */
 package net.sf.farrago.fennel.calc;
 
-import net.sf.farrago.fennel.calc.CalcProgramBuilder.*;
-
 import java.math.*;
 
 import java.util.*;
+
+import net.sf.farrago.fennel.calc.CalcProgramBuilder.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;

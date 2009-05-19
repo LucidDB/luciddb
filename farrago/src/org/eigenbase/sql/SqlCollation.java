@@ -31,7 +31,6 @@ import java.util.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
-import org.eigenbase.util.*;
 
 
 /**

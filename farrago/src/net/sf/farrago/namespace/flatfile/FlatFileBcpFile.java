@@ -43,7 +43,7 @@ import org.eigenbase.util.*;
  * @author Sunny Choi
  * @version $Id$
  */
-class FlatFileBCPFile
+class FlatFileBcpFile
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -81,7 +81,7 @@ class FlatFileBCPFile
 
     //~ Constructors -----------------------------------------------------------
 
-    FlatFileBCPFile(String filePath, FarragoTypeFactory typeFactory)
+    FlatFileBcpFile(String filePath, FarragoTypeFactory typeFactory)
     {
         this.fileName = filePath;
         this.typeFactory = typeFactory;
@@ -604,4 +604,4 @@ class FlatFileBCPFile
     }
 }
 
-// End FlatFileBCPFile.java
+// End FlatFileBcpFile.java
