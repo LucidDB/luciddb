@@ -41,7 +41,7 @@ class Segment;
  *
  * NOTE:  this is not an STL-style iterator.
  */
-class SegPageIter
+class FENNEL_SEGMENT_EXPORT SegPageIter
 {
     /**
      * Maximum number of outstanding pre-fetch requests

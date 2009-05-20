@@ -35,7 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * segment so the pointer becomes singular once that delegating segment is
  * deallocated.
  */
-class DynamicDelegatingSegment : public Segment
+class FENNEL_SEGMENT_EXPORT DynamicDelegatingSegment
+    : public Segment
 {
     WeakSegment delegateSegment;
 

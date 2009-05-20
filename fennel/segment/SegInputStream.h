@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * only if the underlying segment supports CONSECUTIVE_ALLOCATION or
  * LINEAR_ALLOCATION.
  */
-class SegInputStream : public SegStream, public ByteInputStream
+class FENNEL_SEGMENT_EXPORT SegInputStream
+    : public SegStream, public ByteInputStream
 {
 protected:
     SegPageIter pageIter;

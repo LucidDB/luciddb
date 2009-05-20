@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  Take a join filter?
  */
-struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT CartesianJoinExecStreamParams
+    : public ConfluenceExecStreamParams
 {
     bool leftOuter;
 };
@@ -53,7 +54,8 @@ struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class CartesianJoinExecStream : public ConfluenceExecStream
+class FENNEL_EXEC_EXPORT CartesianJoinExecStream
+    : public ConfluenceExecStream
 {
 protected:
     bool leftOuter;

@@ -73,10 +73,12 @@ public:
         assert(StandardTypeDescriptor::isArray(pointerType));
     }
     ~PointerPointerInstruction() {
+#ifndef __MSVC__
         // If (0) to reduce performance impact of template type checking
         if (0) {
             PointerInstruction_NotAPointerType<PTR_TYPE>();
         }
+#endif
     }
 
 protected:
@@ -128,7 +130,7 @@ public:
                 newLength = 0;
             }
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->pointer(
-                reinterpret_cast<PTR_TYPE>(
+                static_cast<PTR_TYPE>(
                     PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->pointer()) +
                 PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
@@ -220,7 +222,7 @@ public:
                 newLength = maxLength;
             }
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->pointer(
-                reinterpret_cast<PTR_TYPE>(
+                static_cast<PTR_TYPE>(
                     PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->pointer()) -
                 PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
@@ -467,8 +469,9 @@ public:
 };
 
 
-class PointerPointerInstructionRegister : InstructionRegister {
-
+class FENNEL_CALCULATOR_EXPORT PointerPointerInstructionRegister
+    : InstructionRegister
+{
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void

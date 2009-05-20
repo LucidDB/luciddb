@@ -176,7 +176,8 @@ public interface FarragoSessionPersonality
      * See {@link FarragoSessionModelExtension#defineDdlHandlers}.
      *
      * @param ddlValidator validator which will invoke handlers
-     * @param handlerList receives handler objects in order in which they should
+     * @param handlerList receives handler objects in order in which they
+     * should be invoked
      */
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,

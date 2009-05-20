@@ -284,7 +284,7 @@ public class LcsAppendStreamDef
                     unclusteredIndex,
                     delIndex,
                     implementor,
-                    replaceColumns,
+                    false,
                     insertDynParamId,
                     replaceColumns);
             bitmapAppendDefs.add(bitmapAppend);

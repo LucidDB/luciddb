@@ -36,7 +36,7 @@ class BTreeOwnerRootMap;
 /**
  * BTreeParams defines parameters used when accessing btrees
  */
-struct BTreeParams
+struct FENNEL_FTRS_EXPORT BTreeParams
 {
     /**
      * Segment containing BTree.
@@ -84,13 +84,13 @@ struct BTreeParams
  * BTreeExecStreamParams defines parameters common to implementations of
  * BTreeExecStream.
  */
-struct BTreeExecStreamParams :
-    BTreeParams, virtual public SingleOutputExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeExecStreamParams
+    : BTreeParams, virtual public SingleOutputExecStreamParams
 {
     explicit BTreeExecStreamParams();
 };
 
-class BTreeOwnerRootMap
+class FENNEL_FTRS_EXPORT BTreeOwnerRootMap
 {
 public:
     virtual ~BTreeOwnerRootMap();
@@ -106,7 +106,8 @@ class BTreeAccessBase;
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeExecStream : virtual public SingleOutputExecStream
+class FENNEL_FTRS_EXPORT BTreeExecStream
+    : virtual public SingleOutputExecStream
 {
 protected:
     BTreeDescriptor treeDescriptor;

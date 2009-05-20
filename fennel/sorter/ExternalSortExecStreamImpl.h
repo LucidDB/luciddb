@@ -49,7 +49,8 @@ SharedExternalSortRunLoader;
  * @author John V. Sichi
  * @version $Id$
  */
-class ExternalSortExecStreamImpl : public ExternalSortExecStream
+class FENNEL_SORTER_EXPORT ExternalSortExecStreamImpl
+    : public ExternalSortExecStream
 {
     friend class ExternalSortTask;
 

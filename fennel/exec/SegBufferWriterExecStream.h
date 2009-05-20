@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * SegBufferWriterExecStreamParams defines parameters for instantiating a
  * SegBufferWriterExecStream.
  */
-struct SegBufferWriterExecStreamParams : public DiffluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT SegBufferWriterExecStreamParams
+    : public DiffluenceExecStreamParams
 {
     /**
      * Id of the dynamic parameter used to keep a reference count of the
@@ -61,7 +62,8 @@ struct SegBufferWriterExecStreamParams : public DiffluenceExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class SegBufferWriterExecStream : public DiffluenceExecStream
+class FENNEL_EXEC_EXPORT SegBufferWriterExecStream
+    : public DiffluenceExecStream
 {
     SegmentAccessor bufferSegmentAccessor;
     SharedSegBufferWriter pSegBufferWriter;
@@ -72,6 +74,7 @@ class SegBufferWriterExecStream : public DiffluenceExecStream
     uint outputBufSize;
     std::vector<bool> outputWritten;
     uint nOutputsWritten;
+    bool paramCreated;
 
     /**
      * Reads and returns the current value of the reader reference count

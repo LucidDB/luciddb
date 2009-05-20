@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ByteOutputStream defines an interface for writing to a stream of bytes.
  */
-class ByteOutputStream : virtual public ByteStream
+class FENNEL_COMMON_EXPORT ByteOutputStream : virtual public ByteStream
 {
     /**
      * Next position to write in output buffer.

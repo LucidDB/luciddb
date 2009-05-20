@@ -27,11 +27,15 @@
 #include "fennel/common/SysCallExcn.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifndef __MSVC__
 #include <sys/file.h>
+#endif
+
 #include <fcntl.h>
 #include <sstream>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
@@ -43,7 +47,7 @@ FileDevice::FileDevice(
     filename = filenameInit;
     mode = openMode;
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 
     DWORD fdwCreate = mode.create ? CREATE_ALWAYS : OPEN_EXISTING;
 
@@ -164,7 +168,7 @@ FileDevice::~FileDevice()
 void FileDevice::close()
 {
     assert(isOpen());
-#ifdef __MINGW32__
+#ifdef __MSVC__
     CloseHandle(HANDLE(handle));
 #else
     ::close(handle);
@@ -180,7 +184,7 @@ void FileDevice::flush()
     if (mode.readOnly) {
         return;
     }
-#ifdef __MINGW32__
+#ifdef __MSVC__
     if (!FlushFileBuffers(HANDLE(handle))) {
         throw SysCallExcn("Flush failed");
     }
@@ -193,7 +197,7 @@ void FileDevice::flush()
 
 void FileDevice::setSizeInBytes(FileSize cbFileNew)
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     LARGE_INTEGER cbLarge;
     cbLarge.QuadPart = cbFileNew;
     if (!SetFilePointerEx(HANDLE(handle),cbLarge,NULL,FILE_BEGIN)) {
@@ -214,7 +218,7 @@ void FileDevice::transfer(RandomAccessRequest const &request)
 {
     FileSize cbActual;
     assert(request.bindingList.size() == 1);
-#ifdef __MINGW32__
+#ifdef __MSVC__
     LARGE_INTEGER largeInt;
     RandomAccessRequestBinding &binding = request.bindingList.front();
     largeInt.QuadPart = request.cbOffset;
@@ -253,21 +257,6 @@ void FileDevice::transfer(RandomAccessRequest const &request)
         }
     }
     cbActual = dwActual;
-#elif defined(__CYGWIN__)
-    StrictMutexGuard guard(mutex);
-    ::lseek(handle, request.cbOffset, SEEK_SET);
-    if (request.type == RandomAccessRequest::READ) {
-        cbActual = ::read(
-            handle,
-            request.bindingList.front().getBuffer(),
-            request.cbTransfer);
-    } else {
-        cbActual = ::write(
-            handle,
-            request.bindingList.front().getBuffer(),
-            request.cbTransfer);
-    }
-    guard.unlock();
 #else
     if (request.type == RandomAccessRequest::READ) {
         cbActual = ::pread(

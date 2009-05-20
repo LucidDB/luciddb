@@ -215,7 +215,7 @@ void LcsClusterNodeWriter::openNew(LcsRid startRID)
     assert(szLeft >= 0);
 }
 
-void LcsClusterNodeWriter::openAppend(
+bool LcsClusterNodeWriter::openAppend(
     uint *nValOffsets, uint16_t *lastValOffsets, RecordNum &nrows)
 {
     int i;
@@ -246,6 +246,8 @@ void LcsClusterNodeWriter::openAppend(
         oValBank[i] = 0;
         batchCount[i] = pHdr->nBatch / nClusterCols;
     }
+
+    return (szLeft == 0);
 }
 
 void LcsClusterNodeWriter::describeLastBatch(

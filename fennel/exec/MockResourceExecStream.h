@@ -34,7 +34,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct MockResourceExecStreamParams : public SingleOutputExecStreamParams
+struct FENNEL_EXEC_EXPORT MockResourceExecStreamParams
+    : public SingleOutputExecStreamParams
 {
     ExecStreamResourceQuantity minReqt;
     ExecStreamResourceQuantity optReqt;
@@ -52,7 +53,8 @@ struct MockResourceExecStreamParams : public SingleOutputExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class MockResourceExecStream : public SingleOutputExecStream
+class FENNEL_EXEC_EXPORT MockResourceExecStream
+    : public SingleOutputExecStream
 {
     ExecStreamResourceQuantity minReqt;
     ExecStreamResourceQuantity optReqt;

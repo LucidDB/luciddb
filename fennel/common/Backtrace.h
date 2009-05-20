@@ -27,7 +27,7 @@
 #include <ostream>
 #include <stdlib.h>
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #include <signal.h>
 #include <execinfo.h>
 #include <link.h>
@@ -41,14 +41,14 @@ FENNEL_BEGIN_NAMESPACE
  * The constructor wraps up the backtrace of the current thread at the point of construction.
  * A Backtrace object can be printed to an ostream.
  */
-class Backtrace
+class FENNEL_COMMON_EXPORT Backtrace
 {
     size_t depth;                       // actual depth
     const bool ownbuf;                  // the object allocated the addrbuf
     const size_t bufsize;
     void** addrbuf;                     // [bufsize]
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
     struct LibraryInfo
     {
         ElfW(Addr) baseAddress;
@@ -105,11 +105,12 @@ inline std::ostream& operator << (std::ostream& os, const Backtrace& bt)
  * The backtrace handler has global scope.
  * Fatal errors include abort(), assert(), fennel permAssert(), and runaway C++ exceptions.
  */
-class AutoBacktrace {
+class FENNEL_COMMON_EXPORT AutoBacktrace
+{
     static std::ostream* pstream;
     static SharedTraceTarget ptrace;
     static void signal_handler(int signum);
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #define BACKTRACE_SIG_MAX 32
     static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif

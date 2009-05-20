@@ -178,7 +178,8 @@ public:
  * the list to be modified during the course of iteration.
  */
 template <class T,class DerivedListNode = IntrusiveListNode>
-class IntrusiveListMutator : public RawIntrusiveListMutator
+class IntrusiveListMutator
+    : public RawIntrusiveListMutator
 {
     typedef RawIntrusiveListMutator super;
 

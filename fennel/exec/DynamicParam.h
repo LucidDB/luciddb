@@ -42,7 +42,7 @@ FENNEL_BEGIN_NAMESPACE
  * @version $Id$
  */
 
-class DynamicParam
+class FENNEL_EXEC_EXPORT DynamicParam
 {
     friend class DynamicParamManager;
 
@@ -64,7 +64,7 @@ public:
  * dynamic parameters.  It is multi-thread safe (but see warning
  * on getParam).
  */
-class DynamicParamManager
+class FENNEL_EXEC_EXPORT DynamicParamManager
 {
     typedef std::map<DynamicParamId, SharedDynamicParam> ParamMap;
     typedef ParamMap::const_iterator ParamMapConstIter;

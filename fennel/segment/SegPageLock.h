@@ -47,7 +47,8 @@ FENNEL_BEGIN_NAMESPACE
  * ID; the destructor for the SegPageLock will then unlock the page
  * automatically, unless the dontUnlock method is invoked first.
  */
-class SegPageLock : public boost::noncopyable
+class FENNEL_SEGMENT_EXPORT SegPageLock
+    : public boost::noncopyable
 {
     // NOTE: the shared pointers in segmentAccessor imply some locking
     // overhead during assignment.  If this is an issue, preallocate
@@ -384,7 +385,7 @@ public:
  * might invalidate extant stored databases; it may be possible to make the
  * change in a backwards-compatible fashion.
  */
-struct StoredNode
+struct FENNEL_SEGMENT_EXPORT StoredNode
 {
     /**
      * Magic number identifying the derived StoredNode class.

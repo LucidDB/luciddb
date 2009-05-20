@@ -55,7 +55,7 @@ enum ExternalSortRC
  * Fetch interface implemented by sorter subcomponents which return
  * intermediate results.
  */
-class ExternalSortSubStream
+class FENNEL_SORTER_EXPORT ExternalSortSubStream
 {
 public:
     virtual ~ExternalSortSubStream()

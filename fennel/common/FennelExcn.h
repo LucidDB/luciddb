@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Base class for all Fennel exceptions.
  */
-class FennelExcn : public std::exception
+class FENNEL_COMMON_EXPORT FennelExcn : public std::exception
 {
 protected:
     std::string msg;

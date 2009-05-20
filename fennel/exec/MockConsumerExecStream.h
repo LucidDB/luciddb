@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * MockConsumerExecStreamParams defines parameters for MockConsumerExecStream.
  */
-struct MockConsumerExecStreamParams : public SingleInputExecStreamParams
+struct FENNEL_EXEC_EXPORT MockConsumerExecStreamParams
+    : public SingleInputExecStreamParams
 {
     /** save data as a vector of strings */
     bool saveData;
@@ -56,7 +57,8 @@ struct MockConsumerExecStreamParams : public SingleInputExecStreamParams
  * @author Julian Hyde
  * @version $Id$
  */
-class MockConsumerExecStream : public SingleInputExecStream
+class FENNEL_EXEC_EXPORT MockConsumerExecStream
+    : public SingleInputExecStream
 {
 protected:
     bool saveData;

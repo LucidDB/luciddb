@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BTreeInserterParams defines parameters for instantiating a BTreeInserter.
  */
-struct BTreeInsertExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeInsertExecStreamParams
     : public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     Distinctness distinctness;
@@ -53,7 +53,8 @@ struct BTreeInsertExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeInsertExecStream : public BTreeExecStream, public ConduitExecStream
+class FENNEL_FTRS_EXPORT BTreeInsertExecStream
+    : public BTreeExecStream, public ConduitExecStream
 {
     Distinctness distinctness;
     bool monotonic;

@@ -914,7 +914,7 @@ public class FarragoDbSession
         onEndOfTransaction(FarragoSessionTxnEnd.ROLLBACK);
     }
 
-    private void onEndOfTransaction(
+    protected void onEndOfTransaction(
         FarragoSessionTxnEnd eot)
     {
         if (txnIdRef.txnId != null) {

@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/cache/CacheImpl.h"
+#include "fennel/cache/LRUVictimPolicy.h"
 #include "fennel/cache/TwoQVictimPolicy.h"
 #include "fennel/common/StatsTarget.h"
 
@@ -145,6 +146,14 @@ void Cache::writeStats(StatsTarget &target)
     target.writeCounter(
         "CachePagesAllocationLimit", stats.nMemPagesMax);
 }
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedCacheStructs
+{
+    LRUVictim lruVictim;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

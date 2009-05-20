@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Exception class for invalid parameter settings
  */
-class InvalidParamExcn : public FennelExcn
+class FENNEL_COMMON_EXPORT InvalidParamExcn : public FennelExcn
 {
 public:
     /**

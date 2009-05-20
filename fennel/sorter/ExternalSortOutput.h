@@ -36,7 +36,7 @@ class ExternalSortInfo;
  * ExternalSortMerger marshals XO output buffers by fetching from a
  * top-level ExternalSortSubStream.
  */
-class ExternalSortOutput
+class FENNEL_SORTER_EXPORT ExternalSortOutput
 {
     /**
      * Global information.

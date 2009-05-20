@@ -86,7 +86,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[QUANTITY, SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY0]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
 > explain plan for
 > select s1.*, s2.quantity from sales s1, sales s2 where s1.sid = s2.sid and
@@ -94,7 +94,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, QUANTITY0]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
 > explain plan for
 > select s1.*, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
@@ -102,7 +102,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, SID0, PRODUCT_ID0, SALESPERSON0, CUSTOMER0, QUANTITY0]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 60, '+', null }]])'
 > explain plan for
 > select s1.*, s2.* from sales s1, sales s2, product p
@@ -190,7 +190,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[QUANTITY, SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY0]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -292,7 +292,7 @@
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[3]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
 '                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -328,7 +328,7 @@
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[1, 2, 3, 4, 5]], outputRowType=[RecordType(INTEGER QUANTITY, INTEGER PRODUCT_ID, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[2, 4, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[2, 4, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
 '            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -365,7 +365,7 @@
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[1, 2, 3, 4, 5]], outputRowType=[RecordType(INTEGER QUANTITY, INTEGER PRODUCT_ID, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[3]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[2, 4, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[2, 4, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
 '            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -661,7 +661,7 @@
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
 > explain plan for select * from sales s1 right outer join sales s2
 >     on s1.sid = s2.sid and s1.quantity > 50;
@@ -670,7 +670,7 @@
 '  FennelReshapeRel(projection=[[5, 6, 7, 8, 9, 0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER NOT NULL SID0, INTEGER PRODUCT_ID0, INTEGER SALESPERSON0, INTEGER CUSTOMER0, INTEGER QUANTITY0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
-'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '        FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
 > explain plan for select * from 
 >     (select * from sales where quantity > 50) s1
@@ -680,9 +680,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
-'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
 '      FennelValuesRel(tuples=[[{ '(', 60, '+', null }]])'
 > 
 > -- one of the self-join inputs is removed by a semijoin

@@ -50,7 +50,8 @@ struct LcsClusterReplaceExecStreamParams :
  * rootPageId.  So, this execution stream requires the underlying segment
  * corresponding to the cluster to be a snapshot segment.
  */
-class LcsClusterReplaceExecStream : public LcsClusterAppendExecStream
+class FENNEL_LCS_EXPORT LcsClusterReplaceExecStream
+    : public LcsClusterAppendExecStream
 {
     /**
      * Dynamic parameter id corresponding to the root pageId of the new cluster,
@@ -119,6 +120,11 @@ class LcsClusterReplaceExecStream : public LcsClusterAppendExecStream
      * TupleData used to load column values from the original cluster
      */
     TupleDataWithBuffer origClusterTupleData;
+
+    /**
+     * True if at least one existing row is being replaced with a new value
+     */
+    bool newData;
 
     /**
      * Initializes member fields corresponding to the data to be loaded,

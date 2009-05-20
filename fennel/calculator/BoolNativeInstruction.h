@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John Kalucki
  */
 template<typename TMPLT>
-class BoolNativeInstruction : public NativeInstruction<TMPLT>
+class BoolNativeInstruction
+    : public NativeInstruction<TMPLT>
 {
 public:
     explicit
@@ -60,7 +61,8 @@ protected:
 };
 
 template <typename TMPLT>
-class BoolNativeEqual : public BoolNativeInstruction<TMPLT>
+class BoolNativeEqual
+    : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
@@ -614,7 +616,8 @@ public:
     }
 };
 
-class BoolNativeInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT BoolNativeInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >

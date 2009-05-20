@@ -609,4 +609,23 @@ insert into self_insert_udx values('abc');
 insert into self_insert_udx 
 select * from table(stringify(cursor(select * from self_insert_udx), '|'));
 
+-- LER-10746 -- Insert into a table whose last cluster page is full
+create foreign table chars(a varchar(100))
+server flatfile_server
+options (filename 'unitsql/optimizer/data/chars.csv');
+create table t(a varchar(256) primary key);
+insert into t select * from chars;
+insert into t values('oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp');
+insert into t values('pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
+insert into t values('qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr');
+insert into t values('rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
+insert into t values('sttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt');
+insert into t values('tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu');
+insert into t values('uvvvvvvvvvvvvvvvvvvv');
+insert into t values('vwwwwwwwwwwwwwwwwwww');
+insert into t values('wxxxxxxxxxxxxxxxxxxx');
+insert into t values('aaaaaaaaaaaaaaaaaaaa');
+insert into t values('bbbbbbbbbbbbbbbbbbbb');
+select * from t order by a;
+
 -- End lcs.sql

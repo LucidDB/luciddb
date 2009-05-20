@@ -36,7 +36,8 @@ using namespace fennel;
  * Derived classes can add tests and/or use a different scheduler
  * implementation.
  */
-class ExecStreamTestSuite : public ExecStreamUnitTestBase
+class FENNEL_TEST_EXPORT ExecStreamTestSuite
+    : public ExecStreamUnitTestBase
 {
 protected:
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);

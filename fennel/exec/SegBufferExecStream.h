@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  support usage of a SpillOutputStream.
  */
-struct SegBufferExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT SegBufferExecStreamParams
+    : public ConduitExecStreamParams
 {
     /**
      * If true, buffer contents are preserved rather than deleted as they are
@@ -59,7 +60,8 @@ struct SegBufferExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SegBufferExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT SegBufferExecStream
+    : public ConduitExecStream
 {
     SegmentAccessor bufferSegmentAccessor;
     SharedSegBufferReader pSegBufferReader;

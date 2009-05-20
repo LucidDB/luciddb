@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  * SegStorageTestBase is a common base for any test which depends on the
  * Segment interface.
  */
-class SegStorageTestBase : virtual public CacheTestBase
+class FENNEL_TEST_EXPORT SegStorageTestBase
+    : virtual public CacheTestBase
 {
 protected:
     SharedSegmentFactory pSegmentFactory;

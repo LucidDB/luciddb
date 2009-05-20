@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * FileSystem provides some static utility methods for manipulating the OS
  * file system.
  */
-class FileSystem
+class FENNEL_COMMON_EXPORT FileSystem
 {
 public:
     static void remove(char const *filename);

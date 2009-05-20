@@ -32,7 +32,7 @@ class ConfigMap;
  * DeviceAccessSchedulerParams defines parameters used to create a
  * DeviceAccessScheduler.
  */
-class DeviceAccessSchedulerParams
+class FENNEL_DEVICE_EXPORT DeviceAccessSchedulerParams
 {
 public:
     static ParamName paramSchedulerType;

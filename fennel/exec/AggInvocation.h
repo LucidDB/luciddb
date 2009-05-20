@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-struct AggInvocation
+struct FENNEL_EXEC_EXPORT AggInvocation
 {
     /**
      * Aggregate function to be computed.

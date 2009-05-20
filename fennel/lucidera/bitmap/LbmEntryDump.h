@@ -39,7 +39,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LbmEntryDump : public TraceSource
+class FENNEL_LBM_EXPORT LbmEntryDump
+    : public TraceSource
 {
     static const uint lineLen = 80;
 

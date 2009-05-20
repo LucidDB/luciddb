@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LbmEntry : public LbmSegment
+class FENNEL_LBM_EXPORT LbmEntry
+    : public LbmSegment
 {
     /**
      * Scratch buffer to store bitmap segments and descriptors.

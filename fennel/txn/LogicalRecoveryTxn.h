@@ -40,7 +40,7 @@ struct LogicalTxnSavepoint;
  * LogicalRecoveryTxn implements recovery for transactions previously logged
  * via LogicalTxn.
  */
-class LogicalRecoveryTxn
+class FENNEL_TXN_EXPORT LogicalRecoveryTxn
     : public boost::noncopyable
 {
     typedef std::hash_map<

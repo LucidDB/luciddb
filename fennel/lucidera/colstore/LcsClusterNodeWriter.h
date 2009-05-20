@@ -43,7 +43,8 @@ enum ForceMode { none = 0, fixed = 1, variable = 2 };
  * on the page and determining the offsets where different elements are to
  * be stored
  */
-class LcsClusterNodeWriter : public LcsClusterAccessBase, public TraceSource
+class FENNEL_LCS_EXPORT LcsClusterNodeWriter
+    : public LcsClusterAccessBase, public TraceSource
 {
 private:
     /**
@@ -302,7 +303,9 @@ public:
     void openNew(LcsRid startRID);
 
     /**
-     * Prepares an existing cluster page for appending new data
+     * Prepares an existing cluster page for appending new data, and determines
+     * whether the page is already full and cannot accomodate any more data.
+     *
      *
      * @param nValOffsets pointer to output array reflecting the number of
      * values currently in each column on this page
@@ -311,8 +314,10 @@ public:
      * the last value currently on the page for each cluster column
      *
      * @param nrows returns number of rows currently on page
+     *
+     * @return true if the page is already full
      */
-    void openAppend(
+    bool openAppend(
         uint *nValOffsets, uint16_t *lastValOffsets, RecordNum &nrows);
 
     /**

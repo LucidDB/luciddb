@@ -1,11 +1,15 @@
-Eigenbase Source Release 0.5.0
+Eigenbase Source Release 0.9.0
 
 ----------------------------------------------------------------------
 HOME PAGE
 
-For information about the project, please see
+For information about The Eigenbase Project, see
 
 http://www.eigenbase.org
+
+For information about LucidDB, see
+
+http://www.luciddb.org
 
 ----------------------------------------------------------------------
 BUILD
@@ -14,15 +18,21 @@ See farrago/doc/developerJumpStart.html, which includes instructions
 for how to build the two sub-project frameworks (Farrago and Fennel)
 together.
 
+For LucidDB build instructions, see
+http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
+
+If instead of building you would like to obtain pre-packaged binaries,
+download the correct full binary release for your platform.
+
+http://www.eigenbase.org/download.html
+
 ------------------------------------------------------------
 RELEASE NOTES
 
-This initial source release is intended for use by developers who want
-to build, test, and possibly modify the platform without having to
-access the Eigenbase source control system.  Because the project is
-still under incubation, it is not suitable for any production use.
-Instead, we encourage developers to explore the architecture and
-internals of the platform with an eye towards
+This source release is intended for use by developers who want to
+build, test, and possibly modify the code without having to access
+the Eigenbase source control system.  We encourage developers to
+explore the architecture and internals of Eigenbase with an eye towards
 
 - contributing enhancements 
 
@@ -35,19 +45,16 @@ SPI's, and class libraries) are still in a fluid state and subject to
 frequent review and change.  As interfaces solidify, they will be
 officially frozen in future releases.
 
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
+
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2005 The Eigenbase Project and others
+Copyright (C) 1999-2009 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General
 Public License; see file COPYING for details.  License terms for
 third-party libraries contained in this distribution are provided as
 text files in the lib directory.
-
-------------------------------------------------------------
-ACKNOWLEDGEMENTS
-
-The project is hosted on Sourceforge
-
-http://sourceforge.net/projects/eigenbase

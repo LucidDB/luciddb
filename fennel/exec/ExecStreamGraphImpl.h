@@ -47,7 +47,8 @@ FENNEL_BEGIN_NAMESPACE
  * ExecStreamGraphImpl is an implementation for the ExecStreamGraph
  * interface based on the boost graph template.
  */
-class ExecStreamGraphImpl : virtual public ExecStreamGraph
+class FENNEL_EXEC_EXPORT ExecStreamGraphImpl
+    : virtual public ExecStreamGraph
 {
 public:
     typedef boost::adjacency_list<

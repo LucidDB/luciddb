@@ -35,8 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * CheckpointThread is dedicated to listening for checkpoint requests and
  * carrying them out.
  */
-class CheckpointThread :
-    public Thread, public SynchMonitoredObject, public ClosableObject,
+class FENNEL_DB_EXPORT CheckpointThread
+    : public Thread, public SynchMonitoredObject, public ClosableObject,
     public CheckpointProvider
 {
     Database &database;

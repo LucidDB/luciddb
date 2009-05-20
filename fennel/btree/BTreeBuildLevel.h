@@ -31,13 +31,13 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-// TODO:  doc inernals
+// TODO:  doc internals
 
 /**
  * BTreeBuildLevel is subordinate to BTreeBuilder.  It manages the build state
  * for one level of a BTree being built.
  */
-class BTreeBuildLevel
+class FENNEL_BTREE_EXPORT BTreeBuildLevel
 {
     friend class BTreeBuilder;
 
@@ -121,7 +121,8 @@ public:
     void indexLastChild();
 };
 
-class FixedBuildLevel : public BTreeBuildLevel
+class FENNEL_BTREE_EXPORT FixedBuildLevel
+    : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
 
@@ -134,7 +135,8 @@ class FixedBuildLevel : public BTreeBuildLevel
     virtual bool isNodeFull(BTreeNode const &node,uint cbTuple);
 };
 
-class VariableBuildLevel : public BTreeBuildLevel
+class FENNEL_BTREE_EXPORT VariableBuildLevel
+    : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
 
@@ -153,7 +155,8 @@ public:
     virtual ~VariableBuildLevel();
 };
 
-class DynamicBuildLevel : public BTreeBuildLevel
+class FENNEL_BTREE_EXPORT DynamicBuildLevel
+    : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
 

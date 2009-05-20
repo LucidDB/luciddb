@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Class used to dump the contents of a cluster page using fennel trace
  */
-class LcsClusterDump : public LcsClusterAccessBase, public TraceSource
+class FENNEL_LCS_EXPORT LcsClusterDump
+    : public LcsClusterAccessBase, public TraceSource
 {
     /**
      * The level at which tracing of cluster dump will be done.

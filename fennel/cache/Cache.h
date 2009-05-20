@@ -53,7 +53,7 @@ class CacheStats;
  * synchronization points, so callers should be aware of the potential
  * for deadlock.
  */
-class Cache
+class FENNEL_CACHE_EXPORT Cache
     : public ClosableObject,
         public CacheAccessor, public StatsSource,
         public boost::enable_shared_from_this<Cache>

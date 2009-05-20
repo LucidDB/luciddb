@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John Sichi
  * @version $Id$
  */
-class JavaThreadTracker : public ThreadTracker
+class FENNEL_FARRAGO_EXPORT JavaThreadTracker
+    : public ThreadTracker
 {
     virtual void onThreadStart();
     virtual void onThreadEnd();

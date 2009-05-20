@@ -27,20 +27,23 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FileSystem.h"
 
-// TODO:  trim this
+#ifdef __MSVC__
+#include <io.h>
+#define S_IRUSR S_IREAD
+#define S_IWUSR S_IWRITE
+typedef int mode_t;
+#else
 #include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include "fennel/common/FennelResource.h"
 #else
 #include <sys/statvfs.h>
 #endif
 #include <fcntl.h>
-//#include <dirent.h>
-//#include <fnmatch.h>
 #include "fennel/common/SysCallExcn.h"
-//#include <errno.h>
 #include <sstream>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -73,7 +76,7 @@ bool FileSystem::setFileAttributes(char const *filename,bool readOnly)
 
 void FileSystem::getDiskFreeSpace(char const *path, FileSize &availableSpace)
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     throw FennelExcn(FennelResource::instance().unsupportedOperation("statvfs"));
 #else
     struct statvfs buf;

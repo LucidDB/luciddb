@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TimerThreadClient receives callbacks from a TimerThread.
  */
-class TimerThreadClient : public ThreadTracker
+class FENNEL_SYNCH_EXPORT TimerThreadClient : public ThreadTracker
 {
 public:
     virtual ~TimerThreadClient();
@@ -55,7 +55,8 @@ public:
  * TimerThread implements a timer callback via a dedicated thread.  Once
  * started, the thread runs until stop() is called.
  */
-class TimerThread : public Thread, private SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT TimerThread
+    : public Thread, private SynchMonitoredObject
 {
     TimerThreadClient &client;
     bool bStop;

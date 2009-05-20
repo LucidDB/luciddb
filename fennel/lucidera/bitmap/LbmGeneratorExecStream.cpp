@@ -246,7 +246,9 @@ ExecStreamResult LbmGeneratorExecStream::execute(
     case EXECRC_EOS:
         // no more rows to process
         if (!createIndex) {
-            assert(rowCount == numRowsToLoad);
+            // It's possible for the row count to be larger if we're building
+            // an index on a replaced column.
+            assert(rowCount >= numRowsToLoad);
         }
         doneReading = true;
         return EXECRC_BUF_UNDERFLOW;

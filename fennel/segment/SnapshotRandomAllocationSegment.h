@@ -45,7 +45,8 @@ FENNEL_BEGIN_NAMESPACE
  * VersionedRandomAllocationSegment.  That segment is responsible for the
  * actual underlying data storage.
  */
-class SnapshotRandomAllocationSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT SnapshotRandomAllocationSegment
+    : public DelegatingSegment
 {
     /**
      * Keeps track of the number of modifications made to the page entry and

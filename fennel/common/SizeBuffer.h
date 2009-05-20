@@ -25,6 +25,7 @@
 #define Fennel_SharedBuffer_Included
 
 #include <boost/scoped_array.hpp>
+#include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -35,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
  * @since Aug 01, 2005
  * @version $Id$
  **/
-class SizeBuffer : public boost::noncopyable
+class FENNEL_COMMON_EXPORT SizeBuffer : public boost::noncopyable
 {
 public:
     explicit SizeBuffer(uint capacity, uint length = 0);

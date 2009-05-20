@@ -1547,7 +1547,7 @@
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 2]], filterOp=[COMP_GT], filterOrdinals=[[2]], filterTuple=[[0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" Y0, INTEGER X0) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
-'            LcsRowScanRel(table=[[LOCALDB, OJ, Y]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$Y$Y0, SYS$CLUSTERED_INDEX$Y$Y1]], residual columns=[[1]])'
+'            LcsRowScanRel(table=[[LOCALDB, OJ, Y]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$Y$Y1, SYS$CLUSTERED_INDEX$Y$Y0]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
 '            LcsRowScanRel(table=[[LOCALDB, OJ, X]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$X$X0]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, Z]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$Z$Z0, SYS$CLUSTERED_INDEX$Z$Z1]])'

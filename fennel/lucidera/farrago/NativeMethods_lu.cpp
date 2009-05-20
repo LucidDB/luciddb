@@ -40,7 +40,7 @@
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/cache/QuotaCacheAccessor.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
@@ -312,7 +312,7 @@ class ExecStreamSubFactory_lu
     }
 };
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
     HANDLE hModule,
     DWORD  ul_reason_for_call,

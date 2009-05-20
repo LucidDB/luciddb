@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ConduitExecStreamParams defines parameters for ConduitExecStream.
  */
-struct ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT ConduitExecStreamParams
     : virtual public SingleInputExecStreamParams,
         virtual public SingleOutputExecStreamParams
 {
@@ -45,7 +45,7 @@ struct ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class ConduitExecStream
+class FENNEL_EXEC_EXPORT ConduitExecStream
     : virtual public SingleInputExecStream,
         virtual public SingleOutputExecStream
 {

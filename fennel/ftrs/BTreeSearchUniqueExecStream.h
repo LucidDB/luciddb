@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeSearchUniqueExecStream : public BTreeSearchExecStream
+class FENNEL_FTRS_EXPORT BTreeSearchUniqueExecStream
+    : public BTreeSearchExecStream
 {
 public:
     // implement ExecStream

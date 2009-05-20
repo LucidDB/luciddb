@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * DUP_DISCARD, the key should normally be the whole tuple to avoid
  * non-determinism with regards to which tuples are discarded.
  */
-struct BTreeSortExecStreamParams : public BTreeInsertExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeSortExecStreamParams
+    : public BTreeInsertExecStreamParams
 {
 };
 
@@ -49,7 +50,8 @@ struct BTreeSortExecStreamParams : public BTreeInsertExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeSortExecStream : public BTreeInsertExecStream
+class FENNEL_FTRS_EXPORT BTreeSortExecStream
+    : public BTreeInsertExecStream
 {
     bool sorted;
 

@@ -46,7 +46,7 @@ typedef uint32_t TRegisterRefProp;
 
 
 //! How a register set is bound to data.
-class RegisterSetBinding
+class FENNEL_CALCULATOR_EXPORT RegisterSetBinding
 {
     const bool ownTheBase;              // we own (and will delete) the base
     uint ncols;
@@ -110,7 +110,7 @@ public:
 //! the best choice for this performance critical object. So, for
 //! the moment, object properties will be internal-state-based vs.
 //! object-type-based.
-class RegisterReference
+class FENNEL_CALCULATOR_EXPORT RegisterReference
 {
 public:
     //! Index all register sets
@@ -449,7 +449,7 @@ public:
     //! is not a pointer.
     TMPLT
     pointer() const {
-        assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
+        assert(StandardTypeDescriptor::isArray(mType));
         if (mProp & (EPropCachePointer | EPropPtrReset)) {
             assert(mPData);  // useful or harmful?
             return reinterpret_cast<TMPLT>(mPData);
@@ -470,7 +470,7 @@ public:
     {
         assert(!(mProp & EPropReadOnly));
         assert(newP);  // use toNull()
-        assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
+        assert(StandardTypeDescriptor::isArray(mType));
         if (mProp & (EPropCachePointer | EPropPtrReset)) {
             if ((mProp & EPropPtrReset) && !mCachePtrModified) {
                 mCachePtrModified = true;
@@ -605,7 +605,7 @@ public:
         if (this->isNull()) { // does assert checking for us
             return "NULL";
         }
-        if (StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType)) {
+        if (StandardTypeDescriptor::isArray(mType)) {
 #if 0
             // Does not compile due to ptr/non-ptr compile issue
             // TODO: Make this work with VARBINARY and I18N

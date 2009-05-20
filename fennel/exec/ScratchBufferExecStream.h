@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ScratchBufferExecStreamParams defines parameters for ScratchBufferExecStream.
  */
-struct ScratchBufferExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT ScratchBufferExecStreamParams
+    : public ConduitExecStreamParams
 {
 };
 
@@ -46,7 +47,8 @@ struct ScratchBufferExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class ScratchBufferExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT ScratchBufferExecStream
+    : public ConduitExecStream
 {
     SegmentAccessor scratchAccessor;
     SegPageLock bufferLock;

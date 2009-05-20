@@ -41,7 +41,8 @@ FENNEL_BEGIN_NAMESPACE
  * but full truncation is.
  *
  */
-class LinearViewSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT LinearViewSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 

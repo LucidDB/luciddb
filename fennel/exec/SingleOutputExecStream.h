@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * SingleOutputExecStreamParams defines parameters for SingleOutputExecStream.
  */
-struct SingleOutputExecStreamParams : virtual public ExecStreamParams
+struct FENNEL_EXEC_EXPORT SingleOutputExecStreamParams
+    : virtual public ExecStreamParams
 {
     TupleDescriptor outputTupleDesc;
 
@@ -48,7 +49,8 @@ struct SingleOutputExecStreamParams : virtual public ExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SingleOutputExecStream : virtual public ExecStream
+class FENNEL_EXEC_EXPORT SingleOutputExecStream
+    : virtual public ExecStream
 {
 protected:
     SharedExecStreamBufAccessor pOutAccessor;

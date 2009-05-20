@@ -254,7 +254,7 @@
 '    IteratorToFennelConverter'
 '      IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t4)], expr#9=['UNKOWN'], expr#10=[CAST($t9):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#11=[ROW($t10)], expr#12=[$IS_DIFFERENT_FROM($t8, $t11)], expr#13=[CAST($t7):BIGINT NOT NULL], rid=[$t13], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t10], AGE=[$t5], SALARY=[$t6], $condition=[$t12])'
 '        FennelToIteratorConverter'
-'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[4]])'
+'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[4]])'
 '            FennelValuesRel(tuples=[[{ '[', null, ']', null }]])'
 > 
 > explain plan for
@@ -267,7 +267,7 @@
 '    IteratorToFennelConverter'
 '      IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t6)], expr#9=[1.1], expr#10=[Reinterpret($t6)], expr#11=[Reinterpret($t9)], expr#12=[*($t10, $t11)], expr#13=[Reinterpret($t12)], expr#14=[Reinterpret($t13)], expr#15=[0], expr#16=[>($t14, $t15)], expr#17=[5], expr#18=[+($t14, $t17)], expr#19=[-($t14, $t17)], expr#20=[CASE($t16, $t18, $t19)], expr#21=[10], expr#22=[/INT($t20, $t21)], expr#23=[true], expr#24=[Reinterpret($t22, $t23)], expr#25=[ROW($t24)], expr#26=[$IS_DIFFERENT_FROM($t8, $t25)], expr#27=[CAST($t7):BIGINT NOT NULL], rid=[$t27], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t24], $condition=[$t26])'
 '        FennelToIteratorConverter'
-'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[5, 6]])'
+'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$SALARY, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME]], residual columns=[[5, 6]])'
 '            FennelValuesRel(tuples=[[{ '(', 40, '+', null }]])'
 '            FennelValuesRel(tuples=[[{ '(', null, ')', 50000.00 }]])'
 > 
@@ -357,7 +357,7 @@
 '    IteratorToFennelConverter'
 '      IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t1)], expr#9=[UPPER($t1)], expr#10=[ROW($t9)], expr#11=[$IS_DIFFERENT_FROM($t8, $t10)], expr#12=[CAST($t7):BIGINT NOT NULL], rid=[$t12], EMPNO=[$t0], NAME=[$t9], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], $condition=[$t11])'
 '        FennelToIteratorConverter'
-'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[3, 4]])'
+'          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[3, 4]])'
 '            FennelValuesRel(tuples=[[{ '[', 'F', ']', 'F' }]])'
 '            FennelValuesRel(tuples=[[{ '[', 'UNKNOWN                       ', ']', 'UNKNOWN                       ' }]])'
 > 

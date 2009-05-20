@@ -83,9 +83,8 @@ struct StringDesc : public TupleDatum
 
 };
 
-class WinAggHistogramStrA
+class FENNEL_CALCULATOR_EXPORT WinAggHistogramStrA
 {
-
 public:
     WinAggHistogramStrA()
         : currentWindow(),

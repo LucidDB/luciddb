@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/synch/Thread.h"
+#include "fennel/synch/NullMutex.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -43,6 +44,14 @@ void convertTimeout(uint iMilliseconds,boost::xtime &atv)
         atv.nsec += nsec;
     }
 }
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedSynchStructs
+{
+    NullMutex nullMutex;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

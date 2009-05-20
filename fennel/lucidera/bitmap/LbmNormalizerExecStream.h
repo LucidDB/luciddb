@@ -56,7 +56,8 @@ struct LbmNormalizerExecStreamParams : public ConduitExecStreamParams
  * @author John Pham
  * @version $Id$
  */
-class LbmNormalizerExecStream : public ConduitExecStream
+class FENNEL_LBM_EXPORT LbmNormalizerExecStream
+    : public ConduitExecStream
 {
     /**
      * Input descriptor, accessor, and data

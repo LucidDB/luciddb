@@ -1095,12 +1095,7 @@ public class Util
             }
         }
 
-        if (!System.mapLibraryName(libName).startsWith("lib")) {
-            // assume mingw
-            System.loadLibrary("cyg" + libName);
-        } else {
-            System.loadLibrary(libName);
-        }
+        System.loadLibrary(libName);
     }
 
     public static void restartIterator(Iterator iterator)

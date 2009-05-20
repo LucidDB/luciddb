@@ -24,7 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/PseudoUuid.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #include <rpcdce.h>
 #endif
@@ -85,7 +85,7 @@ void PseudoUuid::generate()
 #else
 
     memset(&data,0,sizeof(data));
-#ifdef __MINGW32__
+#ifdef __MSVC__
     assert(sizeof(data) == sizeof(UUID));
     UuidCreate((UUID *) data);
 #else

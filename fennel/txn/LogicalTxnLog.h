@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
  * LogicalTxnLog defines the log structure used by LogicalTxn to record
  * transaction data.
  */
-class LogicalTxnLog
+class FENNEL_TXN_EXPORT LogicalTxnLog
     : public boost::noncopyable,
         public boost::enable_shared_from_this<LogicalTxnLog>,
         public SynchMonitoredObject

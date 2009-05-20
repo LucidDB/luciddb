@@ -1,4 +1,4 @@
-Fennel Source Release 0.8.1
+Fennel Source Release 0.9.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -8,9 +8,14 @@ http://fennel.sourceforge.net
 ----------------------------------------------------------------------
 BUILD
 
-See file INSTALL for details.  If instead of building you would like
-to obtain pre-packaged binaries, download the full Eigenbase binary 
-release for your platform.
+For build instructions, see
+
+http://pub.eigenbase.org/wiki/FennelBuildSystem
+
+You can use initBuild.sh with no options for a first attempt.
+
+If instead of building you would like to obtain pre-packaged binaries,
+download the full Eigenbase binary release for your platform:
 
 http://www.eigenbase.org/download.html
 

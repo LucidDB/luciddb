@@ -82,7 +82,7 @@ class LbmEntryTest : virtual public SegStorageTestBase
      */
     void testMergeEntry(
         std::vector<LcsRid> const &ridValues,
-        std::vector<uint> const &nRidsPerBitmap, uint scratchBufferSize);
+        VectorOfUint const &nRidsPerBitmap, uint scratchBufferSize);
 
     void newLbmEntry(
         std::vector<SharedLbmEntryInfo> &entryList, LcsRid startRid,
@@ -94,18 +94,18 @@ class LbmEntryTest : virtual public SegStorageTestBase
         LbmEntry &entry, std::vector<LcsRid> const &ridValues, uint &ridPos,
         bool testContains);
 
-    void recurseCombos(uint curr, uint nEntries, std::vector<uint> &eTypes);
+    void recurseCombos(uint curr, uint nEntries, VectorOfUint &eTypes);
 
     void generateBitmaps(
         EntryType etype, std::vector<LcsRid> &ridValues,
-        std::vector<uint> &nRidsPerBitmap);
+        VectorOfUint &nRidsPerBitmap);
 
     void generateSingleBitmaps(
-        std::vector<LcsRid> &ridValues, std::vector<uint> &nRidsPerBitmap,
+        std::vector<LcsRid> &ridValues, VectorOfUint &nRidsPerBitmap,
         LcsRid startRid, uint nRids);
 
     void generateCompressedBitmaps(
-        std::vector<LcsRid> &ridValues, std::vector<uint> &nRidsPerBitmap,
+        std::vector<LcsRid> &ridValues, VectorOfUint &nRidsPerBitmap,
         LcsRid startRid, uint nRids);
 
     /**
@@ -258,7 +258,7 @@ void LbmEntryTest::testRandom(
     uint nUniqueKeys, uint nRows, uint scratchBufferSize)
 {
     std::vector<LcsRid> ridValues;
-    std::vector<uint> nRidsPerBitmap;
+    VectorOfUint nRidsPerBitmap;
     uint totalRids = nRows / nUniqueKeys;
 
     assert(scratchBufferSize >= 8);
@@ -304,7 +304,7 @@ void LbmEntryTest::testRandom(
 
 void LbmEntryTest::testMergeEntry(
     std::vector<LcsRid> const &ridValues,
-    std::vector<uint> const &nRidsPerBitmap, uint scratchBufferSize)
+    VectorOfUint const &nRidsPerBitmap, uint scratchBufferSize)
 {
     std::vector<SharedLbmEntryInfo> entryList;
 
@@ -834,7 +834,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) pow(2,16)*8);
+    rid = LcsRid(rid + (int64_t) pow(2.0,16.0)*8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;
@@ -850,7 +850,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) pow(2,24)*8);
+    rid = LcsRid(rid + (int64_t) pow(2.0,24.0)*8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;
@@ -866,7 +866,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) (pow(2,24)+1)*8);
+    rid = LcsRid(rid + (int64_t) (pow(2.0,24.0)+1)*8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;
@@ -913,7 +913,7 @@ void LbmEntryTest::testZeroBytes()
 void LbmEntryTest::testCombos()
 {
     uint nEntries = 5;
-    std::vector<uint> eTypes;
+    VectorOfUint eTypes;
 
     for (uint i = 0; i < nEntries; i++) {
         eTypes.push_back(0);
@@ -922,10 +922,10 @@ void LbmEntryTest::testCombos()
 }
 
 void LbmEntryTest::recurseCombos(
-    uint curr, uint nEntries, std::vector<uint> &eTypes)
+    uint curr, uint nEntries, VectorOfUint &eTypes)
 {
     std::vector<LcsRid> ridValues;
-    std::vector<uint> nRidsPerBitmap;
+    VectorOfUint nRidsPerBitmap;
 
     uint nETypes = (curr == 0) ? 3 : 9;
     for (uint i = 0; i < nETypes; i++) {
@@ -956,7 +956,7 @@ void LbmEntryTest::recurseCombos(
 
 void LbmEntryTest::generateBitmaps(
     EntryType etype, std::vector<LcsRid> &ridValues,
-    std::vector<uint> &nRidsPerBitmap)
+    VectorOfUint &nRidsPerBitmap)
 {
     LcsRid prev;
 
@@ -1004,7 +1004,7 @@ void LbmEntryTest::generateBitmaps(
 }
 
 void LbmEntryTest::generateSingleBitmaps(
-    std::vector<LcsRid> &ridValues, std::vector<uint> &nRidsPerBitmap,
+    std::vector<LcsRid> &ridValues, VectorOfUint &nRidsPerBitmap,
     LcsRid startRid, uint nRids)
 {
     for (uint i = 0;  i < nRids; i++) {
@@ -1015,7 +1015,7 @@ void LbmEntryTest::generateSingleBitmaps(
 }
 
 void LbmEntryTest::generateCompressedBitmaps(
-    std::vector<LcsRid> &ridValues, std::vector<uint> &nRidsPerBitmap,
+    std::vector<LcsRid> &ridValues, VectorOfUint &nRidsPerBitmap,
     LcsRid startRid, uint nRids)
 {
     for (uint i = 0; i < nRids; i++) {

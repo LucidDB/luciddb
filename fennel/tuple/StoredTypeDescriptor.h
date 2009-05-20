@@ -33,10 +33,9 @@ class DataVisitor;
  * characterize values stored in tuples, as described in
  * <a href="structTupleDesign.html#StoredTypeDescriptor">the design docs</a>.
  */
-class StoredTypeDescriptor
+class FENNEL_TUPLE_EXPORT StoredTypeDescriptor
 {
 public:
-    // REVIEW:  should this be a uuid instead?
     /**
      * Each type must have a unique positive integer ordinal associated with
      * it.  This is used to reconstruct a StoredTypeDescriptor object from a

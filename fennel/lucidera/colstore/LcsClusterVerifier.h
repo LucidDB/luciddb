@@ -46,7 +46,8 @@ struct ClusterPageData
  * LcsClusterVerifier is a class for verifying cluster pages.  It reads
  * cluster pages and gathers data regarding the page.
  */
-class LcsClusterVerifier : public LcsClusterReader
+class FENNEL_LCS_EXPORT LcsClusterVerifier
+    : public LcsClusterReader
 {
     /**
      * Information gathered for the current cluster page

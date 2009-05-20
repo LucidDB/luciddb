@@ -53,7 +53,8 @@ struct LbmSearchExecStreamParams : public BTreePrefetchSearchExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmSearchExecStream : public BTreePrefetchSearchExecStream
+class FENNEL_LBM_EXPORT LbmSearchExecStream
+    : public BTreePrefetchSearchExecStream
 {
     /**
      * True if the rid key is included in the btree search key.  This will

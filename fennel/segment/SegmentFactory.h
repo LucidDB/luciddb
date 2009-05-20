@@ -46,7 +46,7 @@ class PseudoUuid;
  * interface.  See <a href="structSegmentDesign.html#SegmentFactory">the design
  * docs</a> for more detail.
  */
-class SegmentFactory
+class FENNEL_SEGMENT_EXPORT SegmentFactory
     : public boost::noncopyable,
         public boost::enable_shared_from_this<SegmentFactory>
 {
@@ -362,7 +362,8 @@ public:
         SharedSegment pSegment);
 };
 
-class TempSegDestructor : public ClosableObjectDestructor
+class FENNEL_SEGMENT_EXPORT TempSegDestructor
+    : public ClosableObjectDestructor
 {
     SharedSegmentFactory pSegmentFactory;
 

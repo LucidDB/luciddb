@@ -35,6 +35,7 @@ void SegBufferReaderExecStream::prepare(
     ConduitExecStream::prepare(params);
     bufferSegmentAccessor = params.scratchAccessor;
     readerRefCountParamId = params.readerRefCountParamId;
+    paramIncremented = false;
 
     assert(pInAccessor->getTupleDesc().size() == 1);
     inputTuple.compute(pInAccessor->getTupleDesc());
@@ -59,6 +60,7 @@ void SegBufferReaderExecStream::open(bool restart)
     if (!restart) {
         firstBufferPageId = NULL_PAGE_ID;
         pDynamicParamManager->incrementCounterParam(readerRefCountParamId);
+        paramIncremented = true;
         ConduitExecStream::open(restart);
     } else {
         pOutAccessor->clear();
@@ -75,7 +77,12 @@ void SegBufferReaderExecStream::open(bool restart)
 
 void SegBufferReaderExecStream::closeImpl()
 {
-    pDynamicParamManager->decrementCounterParam(readerRefCountParamId);
+    // If this stream was never opened, then it's possible that the parameter
+    // does not exist.  So, only decrement if we know we've done an increment.
+    if (paramIncremented) {
+        pDynamicParamManager->decrementCounterParam(readerRefCountParamId);
+        paramIncremented = false;
+    }
     pSegBufferReader.reset();
     ConduitExecStream::closeImpl();
 }

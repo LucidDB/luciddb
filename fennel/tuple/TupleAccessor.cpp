@@ -90,12 +90,12 @@ void TupleAccessor::compute(
 
     // these vectors keep track of the logical 0-based indices of the
     // attributes belonging to the various attribute storage classes
-    std::vector<uint> aligned8;
-    std::vector<uint> aligned4;
-    std::vector<uint> aligned2;
-    std::vector<uint> unalignedFixed;
-    std::vector<uint> unalignedVar;
-    std::vector<uint> alignedVar2;
+    VectorOfUint aligned8;
+    VectorOfUint aligned4;
+    VectorOfUint aligned2;
+    VectorOfUint unalignedFixed;
+    VectorOfUint unalignedVar;
+    VectorOfUint alignedVar2;
 
     // special-case reference to the accessor for the first variable-width
     // attribute
@@ -401,7 +401,7 @@ void TupleAccessor::compute(
 }
 
 void TupleAccessor::initFixedAccessors(
-    TupleDescriptor const &tuple,std::vector<uint> &v)
+    TupleDescriptor const &tuple,VectorOfUint &v)
 {
     for (uint i = 0; i < v.size(); i++) {
         uint iAttr = v[i];

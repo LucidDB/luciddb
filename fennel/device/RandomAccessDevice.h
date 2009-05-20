@@ -36,7 +36,7 @@ class RandomAccessRequestBinding;
  * stored bytes can be accessed at random in constant time.
  * For more information, see DeviceDesign.
  */
-class RandomAccessDevice : boost::noncopyable
+class FENNEL_DEVICE_EXPORT RandomAccessDevice : boost::noncopyable
 {
 public:
     virtual ~RandomAccessDevice();

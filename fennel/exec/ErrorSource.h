@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
  * preregistered with the external system. (For example, a Fennel long might
  * map to a decimal or datetime type.)
  */
-class ErrorSource
+class FENNEL_EXEC_EXPORT ErrorSource
 {
     SharedErrorTarget pErrorTarget;
     std::string name;

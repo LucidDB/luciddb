@@ -271,9 +271,6 @@ void BTreeTxnTest::testTxns()
         shared_from_this());
     BOOST_CHECK(pDatabase->isRecoveryRequired());
 
-    statsTimer.addSource(pDatabase);
-    statsTimer.start();
-
     StandardTypeDescriptorFactory typeFactory;
     SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
@@ -287,6 +284,11 @@ void BTreeTxnTest::testTxns()
     segmentAccessor.reset();
     scratchAccessor.reset();
     pDatabase->recover(btreeRecoveryFactory);
+
+    // Don't restart the stats timer until after recovery has completed.
+    statsTimer.addSource(pDatabase);
+    statsTimer.start();
+
     treeDescriptor.segmentAccessor.pSegment = pDatabase->getDataSegment();
     RecordNum nEntriesRecovered = verifyTree();
 

@@ -34,7 +34,8 @@ class TupleData;
 /**
  * Exception class for duplicate keys encountered during insert or update.
  */
-class BTreeDuplicateKeyExcn : public FennelExcn
+class FENNEL_BTREE_EXPORT BTreeDuplicateKeyExcn
+    : public FennelExcn
 {
 public:
     /**

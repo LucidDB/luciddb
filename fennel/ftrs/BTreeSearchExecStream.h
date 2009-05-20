@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  * Structure used to store information about dynamic parameters used in the
  * btree search
  */
-struct BTreeSearchKeyParameter
+struct FENNEL_FTRS_EXPORT BTreeSearchKeyParameter
 {
     /**
      * Dynamic parameter id
@@ -60,7 +60,7 @@ struct BTreeSearchKeyParameter
  * BTreeSearchExecStreamParams defines parameters for instantiating a
  * BTreeSearchExecStream.
  */
-struct BTreeSearchExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeSearchExecStreamParams
     : public BTreeReadExecStreamParams, public ConduitExecStreamParams
 {
     /**
@@ -102,7 +102,7 @@ struct BTreeSearchExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeSearchExecStream
+class FENNEL_FTRS_EXPORT BTreeSearchExecStream
     : public BTreeReadExecStream, public ConduitExecStream
 {
     /**

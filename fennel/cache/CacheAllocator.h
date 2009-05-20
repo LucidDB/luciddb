@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * CacheAllocator defines an interface for allocating memory pages to be used
  * by the cache.
  */
-class CacheAllocator
+class FENNEL_CACHE_EXPORT CacheAllocator
 {
 public:
     virtual ~CacheAllocator();

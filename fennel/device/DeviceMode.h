@@ -26,7 +26,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct DeviceMode
+struct FENNEL_DEVICE_EXPORT DeviceMode
 {
     bool create : 1;
     bool readOnly : 1;

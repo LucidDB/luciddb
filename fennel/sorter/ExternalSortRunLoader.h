@@ -49,7 +49,8 @@ class ExternalSortInfo;
  * computation (first find the right page, and then find the tuple on that
  * page).
  */
-class ExternalSortRunLoader : public ExternalSortSubStream
+class FENNEL_SORTER_EXPORT ExternalSortRunLoader
+    : public ExternalSortSubStream
 {
     /**
      * Global information.

@@ -660,3 +660,24 @@ select xid, xactDate, currency, amount as origAmount,
     on currency = fromCurrency and xactDate >= fromDate and
     currency = trim('EUR   ')
     order by currency, toCurrency, xactDate, toDate;
+
+-- LER-10967 -- Nested loop join on large keys
+-- Temporarily bump up expectedConcurrentStatements to reduce the amount of
+-- memory available to queries.  This assumes the default Farrago cache setting 
+-- of 1000 pages.  Verify this by ensuring that the first alter returns an
+-- error.
+alter system set "expectedConcurrentStatements" = 201;
+alter system set "expectedConcurrentStatements" = 200;
+!set outputformat csv
+explain plan for 
+select x1.currency, x2.currency from xacts x1 left outer join xacts x2
+    on cast(x1.currency as varchar(32768)) > 
+        cast(x2.currency as varchar(32768))
+    group by x1.currency, x2.currency;
+!set outputformat table
+select x1.currency, x2.currency from xacts x1 left outer join xacts x2
+    on cast(x1.currency as varchar(32768)) > 
+        cast(x2.currency as varchar(32768))
+    group by x1.currency, x2.currency
+    order by 1, 2;
+alter system set "expectedConcurrentStatements" = 4;

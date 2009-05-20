@@ -211,13 +211,15 @@ public class FarragoDdlGenerator
     }
 
     public void create(
-        CwmSchema schema,
+        FemLocalSchema schema,
         GeneratedDdlStmt stmt)
     {
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "SCHEMA", stmt);
 
         name(sb, null, schema.getName());
+        addDescription(sb, schema);
+
         stmt.addStmt(sb.toString());
     }
 
@@ -742,7 +744,7 @@ public class FarragoDdlGenerator
             sb,
             index.isClustered() ? "CLUSTERED INDEX" : "INDEX",
             stmt);
-        name(sb, index.getNamespace(), index.getName());
+        name(sb, null, index.getName());
         sb.append(" ON ");
         final CwmClass spanned = index.getSpannedClass();
         name(sb, spanned.getNamespace(), spanned.getName());
@@ -764,6 +766,28 @@ public class FarragoDdlGenerator
         GeneratedDdlStmt stmt)
     {
         drop(index, "INDEX", stmt);
+    }
+
+    public void create(
+        FemLabel label,
+        GeneratedDdlStmt stmt)
+    {
+        StringBuilder sb = new StringBuilder();
+        createHeader(sb, "LABEL", stmt);
+        name(sb, null, label.getName());
+        if (label.getParentLabel() != null) {
+            sb.append(" FROM LABEL ");
+            name(sb, null, label.getParentLabel().getName());
+        }
+        addDescription(sb, label);
+        stmt.addStmt(sb.toString());
+    }
+
+    public void drop(
+        FemLabel label,
+        GeneratedDdlStmt stmt)
+    {
+        drop(label, "LABEL", stmt);
     }
 
     protected void addColumns(

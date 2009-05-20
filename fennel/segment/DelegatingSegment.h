@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * DelegatingSegment is a common base class for all Segments which delegate
  * part of their behavior to another underlying Segment.
  */
-class DelegatingSegment : public Segment
+class FENNEL_SEGMENT_EXPORT DelegatingSegment
+    : public Segment
 {
     SharedSegment pDelegateSegment;
 

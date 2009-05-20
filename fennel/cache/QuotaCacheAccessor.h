@@ -43,7 +43,8 @@ typedef boost::shared_ptr<QuotaCacheAccessor> SharedQuotaCacheAccessor;
  *
  * QuotaCacheAccessor inherits TransactionalCacheAccessor functionality.
  */
-class QuotaCacheAccessor : public TransactionalCacheAccessor
+class FENNEL_CACHE_EXPORT QuotaCacheAccessor
+    : public TransactionalCacheAccessor
 {
     SharedQuotaCacheAccessor pSuperQuotaAccessor;
     uint maxLockedPages;

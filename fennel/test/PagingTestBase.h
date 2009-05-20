@@ -38,7 +38,7 @@ class CachePage;
  * PagingTestBase is a common base for multi-threaded tests which exercise
  * cache paging.
  */
-class PagingTestBase
+class FENNEL_TEST_EXPORT PagingTestBase
     : virtual public CacheTestBase,
         virtual public ThreadedTestBase
 {
