@@ -31,8 +31,11 @@ ${LINK_NO_WHOLE_ARCHIVE}
 ${DEVICE_DEPS})
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-  set(DEVICE_AIO_DEPS fennel_device ${DEVICE_DEPS} aio)
-
+  if (HAVE_LIBAIO)
+    set(DEVICE_AIO_DEPS fennel_device ${DEVICE_DEPS} aio)
+  else()
+    set(DEVICE_AIO_DEPS fennel_device ${DEVICE_DEPS})
+  endif ()
   add_library(fennel_device_aio SHARED ${fennel_SOURCE_DIR}/dummy.cpp)
   target_link_libraries(
   fennel_device_aio 
