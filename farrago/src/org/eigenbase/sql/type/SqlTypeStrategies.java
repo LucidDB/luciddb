@@ -381,11 +381,17 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.Composition.OR,
-            otcNumeric,
-            otcInterval);
+        public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcNumeric,
+                otcInterval);
+
+        public static final SqlSingleOperandTypeChecker otcDatetimeOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcDatetime,
+                otcInterval);
 
     public static final SqlSingleOperandTypeChecker otcNumericOrString =
         new CompositeOperandTypeChecker(

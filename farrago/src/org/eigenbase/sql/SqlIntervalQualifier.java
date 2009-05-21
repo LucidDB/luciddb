@@ -323,9 +323,11 @@ public class SqlIntervalQualifier
     {
         return new SqlIntervalQualifier(
             startUnit,
-            startPrecision,
+            useDefaultStartPrecision ? USE_DEFAULT_PRECISION
+                : startPrecision,
             endUnit,
-            fractionalSecondPrecision,
+            useDefaultFractionalSecondPrecision ? USE_DEFAULT_PRECISION
+                : fractionalSecondPrecision,
             pos);
     }
 
