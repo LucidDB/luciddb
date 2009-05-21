@@ -11,7 +11,7 @@
 <h1>What's Working Already?</h1>
 
 Here's a laundry list of SQL features which are already working in
-Farrago as of release 0.7.  If a sub-feature isn't
+Farrago as of release 0.9.  If a sub-feature isn't
 mentioned (e.g. CHECK clause in CREATE TABLE), it isn't available yet.
 Everything is supposed to work according to the SQL standard, so if
 something doesn't, that's either a bug or an incomplete feature.
@@ -228,6 +228,10 @@ GRANT role/privilege
 <a href="http://wiki.eigenbase.org/SampleDatasetSubstitution">Sample
 datasets</a>: This is a Farrago-specific extension.
 
+<li>
+<a href="http://pub.eigenbase.org/wiki/LucidDbWarehouseLabels">CREATE
+LABEL</a>: This is a Farrago-specific extension.
+
 </ul>
 
 <h2>Queries</h2>
@@ -383,8 +387,10 @@ routine accessibility, and SQL/MED.
 
 <li>Type inference is missing for some dynamic parameter contexts.
 
-<li>You can specify a CHARACTER SET name on CHAR/VARCHAR columns from
-only the single-byte character sets known to Java.
+<li><a
+href="http://pub.eigenbase.org/wiki/FarragoCharacterSets">CHARACTER
+SET support</a> is limited to LATIN1 (ISO-8859-1) and UTF16 (UNICODE);
+collations other than case-sensitive are not supported at all yet.
 
 <li>Bulk load for multi-level trees is implemented internally, but not
 yet hooked into CREATE INDEX.

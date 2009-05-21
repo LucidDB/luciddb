@@ -43,7 +43,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcQueryRel
+public class MedJdbcQueryRel
     extends JdbcQuery
 {
     //~ Instance fields --------------------------------------------------------
@@ -54,7 +54,7 @@ class MedJdbcQueryRel
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcQueryRel(
+    public MedJdbcQueryRel(
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,

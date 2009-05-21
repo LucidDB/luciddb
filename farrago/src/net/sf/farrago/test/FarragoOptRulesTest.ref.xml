@@ -790,4 +790,37 @@ ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushAggThroughUnion">
+        <Resource name="sql">
+            <![CDATA[select name,sum(empno),count(*) from (select * from sales.emps e1 union all select * from sales.emps e2) group by name]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+  ProjectRel(NAME=[$1], EMPNO=[$0])
+    UnionRel(all=[true])
+      ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[CAST($2):BIGINT NOT NULL])
+  AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)])
+    UnionRel(all=[true])
+      AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+        ProjectRel(NAME=[$1], EMPNO=[$0])
+          ProjectRel(EMPNO=[$0], NAME=[$1])
+            ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+              TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      AggregateRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])
+        ProjectRel(NAME=[$1], EMPNO=[$0])
+          ProjectRel(EMPNO=[$0], NAME=[$1])
+            ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+              TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

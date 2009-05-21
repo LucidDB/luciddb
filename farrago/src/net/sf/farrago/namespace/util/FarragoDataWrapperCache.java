@@ -313,19 +313,9 @@ public class FarragoDataWrapperCache
     public Properties getStorageOptionsAsProperties(
         FemElementWithStorageOptions element)
     {
-        Properties props = new Properties();
-
-        // TODO:  validate no duplicates
-        String optName, optValue;
-        for (FemStorageOption option : element.getStorageOptions()) {
-            optName = option.getName();
-            assert (!props.containsKey(optName));
-            optValue = getRepos().expandProperties(option.getValue());
-            props.setProperty(
-                optName,
-                optValue);
-        }
-        return props;
+        return FarragoCatalogUtil.getStorageOptionsAsProperties(
+            getRepos(),
+            element);
     }
 
     // implement FarragoAllocation

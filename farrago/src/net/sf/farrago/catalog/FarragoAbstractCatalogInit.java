@@ -110,7 +110,7 @@ public abstract class FarragoAbstractCatalogInit
         }
     }
 
-    protected void publishObjects(boolean rollback)
+    public void publishObjects(boolean rollback)
     {
         repos.getMdrRepos().removeListener(this);
         if (rollback) {

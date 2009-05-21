@@ -734,6 +734,20 @@ public class FarragoOptRulesTest
             + "select cast(gender as varchar(128)) from sales.emps");
     }
 
+    public void testPushAggThroughUnion()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushProjectPastSetOpRule.instance);
+        programBuilder.addRuleInstance(PushAggregateThroughUnionRule.instance);
+        check(
+            programBuilder.createProgram(),
+            "select name,sum(empno),count(*) from "
+            + "(select * from sales.emps e1 union all "
+            + "select * from sales.emps e2) "
+            + "group by name");
+    }
+
     public void testFennelBufferCommonRelSubExprRule()
         throws Exception
     {

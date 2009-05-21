@@ -613,6 +613,17 @@ public class RexBuilder
     }
 
     /**
+     * Creates a BIGINT literal.
+     */
+    public RexLiteral makeBigintLiteral(BigDecimal bd)
+    {
+        RelDataType bigintType =
+            typeFactory.createSqlType(
+                SqlTypeName.BIGINT);
+        return makeLiteral(bd, bigintType, SqlTypeName.DECIMAL);
+    }
+
+    /**
      * Creates a numeric literal.
      */
     public RexLiteral makeExactLiteral(BigDecimal bd, RelDataType type)

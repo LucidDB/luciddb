@@ -45,7 +45,7 @@ import org.eigenbase.sql.type.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcNameDirectory
+public class MedJdbcNameDirectory
     extends MedAbstractNameDirectory
 {
     //~ Instance fields --------------------------------------------------------
@@ -60,12 +60,12 @@ class MedJdbcNameDirectory
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcNameDirectory(MedJdbcDataServer server)
+    public MedJdbcNameDirectory(MedJdbcDataServer server)
     {
         this(server, null);
     }
 
-    MedJdbcNameDirectory(MedJdbcDataServer server, String schemaName)
+    public MedJdbcNameDirectory(MedJdbcDataServer server, String schemaName)
     {
         this.server = server;
         this.schemaName = schemaName;
@@ -86,6 +86,14 @@ class MedJdbcNameDirectory
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return the server exposing this directory
+     */
+    public MedJdbcDataServer getServer()
+    {
+        return server;
+    }
 
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(

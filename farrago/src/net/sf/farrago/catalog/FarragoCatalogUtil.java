@@ -2213,6 +2213,35 @@ public abstract class FarragoCatalogUtil
         backup.setStatus(BackupStatusTypeEnum.COMPLETED);
     }
 
+    /**
+     * Extracts the storage options for an element into a Properties. No
+     * duplicate property names are allowed. Inline property references (such as
+     * <code>${varname}</code> get expanded on read.
+     *
+     * @param repos repository reference
+     *
+     * @param element FemElement we want the options from
+     *
+     * @return Properties object populated with the storage options
+     */
+    public static Properties getStorageOptionsAsProperties(
+        FarragoRepos repos,
+        FemElementWithStorageOptions element)
+    {
+        Properties props = new Properties();
+
+        String optName, optValue;
+        for (FemStorageOption option : element.getStorageOptions()) {
+            optName = option.getName();
+            assert (!props.containsKey(optName));
+            optValue = repos.expandProperties(option.getValue());
+            props.setProperty(
+                optName,
+                optValue);
+        }
+        return props;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

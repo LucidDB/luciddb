@@ -462,7 +462,7 @@ void printTestHeader(const char *msg)
     printf("=========================================================\n");
     printf("=====\n");
     printf("=====     ");
-    printf(msg);
+    printf("%s", msg);
     printf("\n");
     printf("=====\n");
     printf("=========================================================\n");

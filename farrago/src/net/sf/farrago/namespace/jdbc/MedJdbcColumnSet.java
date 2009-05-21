@@ -36,12 +36,14 @@ import org.eigenbase.sql.*;
 
 
 /**
- * MedJdbcColumnSet implements FarragoMedColumnSet for foreign JDBC tables.
+ * MedJdbcColumnSet implements the {@link
+ * net.sf.farrago.namespace.FarragoMedColumnSet} interface for foreign JDBC
+ * tables.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcColumnSet
+public class MedJdbcColumnSet
     extends MedAbstractColumnSet
 {
     //~ Instance fields --------------------------------------------------------
@@ -55,7 +57,7 @@ class MedJdbcColumnSet
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcColumnSet(
+    public MedJdbcColumnSet(
         MedJdbcNameDirectory directory,
         String [] foreignName,
         String [] localName,
@@ -81,6 +83,22 @@ class MedJdbcColumnSet
     {
         // TODO:  use getStatistics?
         return super.getRowCount();
+    }
+
+    /**
+     * @return the directory from which this columnset originates
+     */
+    public MedJdbcNameDirectory getDirectory()
+    {
+        return directory;
+    }
+
+    /**
+     * @return the dialect of SQL used to access the remote DBMS
+     */
+    public SqlDialect getDialect()
+    {
+        return dialect;
     }
 
     // implement RelOptTable
@@ -125,6 +143,28 @@ class MedJdbcColumnSet
         RelOptConnection connection)
         throws SQLException
     {
+        String [] schemaQualifiedName = getForeignName();
+
+        // Schema name should always be present in foreign name.
+        if (schemaQualifiedName.length < 2) {
+            return null;
+        }
+
+        // OK, we're ready to construct the local name of the real
+        // underlying table.
+        String [] actualName = new String[3];
+        actualName[0] = null;
+        actualName[1] = schemaQualifiedName[schemaQualifiedName.length - 2];
+        actualName[2] = schemaQualifiedName[schemaQualifiedName.length - 1];
+        return optimizeLoopbackLink(cluster, connection, actualName);
+    }
+
+    protected RelNode optimizeLoopbackLink(
+        RelOptCluster cluster,
+        RelOptConnection connection,
+        String [] actualName)
+        throws SQLException
+    {
         if (directory == null) {
             return null;
         }
@@ -139,11 +179,6 @@ class MedJdbcColumnSet
             return null;
         }
 
-        // Instead, schema name should always be present in foreign name.
-        String [] schemaQualifiedName = getForeignName();
-        if (schemaQualifiedName.length < 2) {
-            return null;
-        }
         Connection loopbackConnection = directory.server.getConnection();
         if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
             Connection conn = loopbackConnection;
@@ -165,12 +200,9 @@ class MedJdbcColumnSet
             }
         }
 
-        // OK, we're ready to construct the local name of the real
-        // underlying table.
-        String [] actualName = new String[3];
-        actualName[0] = catalogName;
-        actualName[1] = schemaQualifiedName[schemaQualifiedName.length - 2];
-        actualName[2] = schemaQualifiedName[schemaQualifiedName.length - 1];
+        if (actualName[0] == null) {
+            actualName[0] = catalogName;
+        }
 
         // REVIEW jvs 14-Aug-2006:  Security security security.
         RelOptTable realTable =

@@ -89,6 +89,9 @@ public abstract class JmiModeledMemFactory
         throws ClassNotFoundException
     {
         for (JmiClassVertex vertex : modelGraph.vertexSet()) {
+            if (vertex.getRefClass() == null) {
+                continue;
+            }
             Class ifaceClass =
                 JmiObjUtil.getJavaInterfaceForRefClass(vertex.getRefClass());
             Class ifaceObj =
@@ -163,6 +166,10 @@ public abstract class JmiModeledMemFactory
     {
         for (DefaultEdge edgeObj : modelGraph.getAssocGraph().edgeSet()) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
+
+            if (edge.getRefAssoc() == null) {
+                continue;
+            }
 
             Class<? extends RefBaseObject> ifaceAssoc =
                 JmiObjUtil.getJavaInterfaceForRefAssoc(
