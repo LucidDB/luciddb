@@ -30,9 +30,13 @@ import org.eigenbase.util.*;
 
 
 /**
- * Runtime type for interval values. TODO: Need to include precision TODO: Need
- * to support casting from string, exact numerics TODO: both of above would be
- * easier if we just get the SqlIntervalQualifier
+ * Runtime type for interval values.
+ *
+ * <p>TODO:<ul>
+ * <li>Need to include precision.
+ * <li>Need to support casting from string, exact numerics
+ * <li>Both of above would be easier if we just get the SqlIntervalQualifier
+ * </ul>
  *
  * @author angel
  * @version $Id$
@@ -151,7 +155,7 @@ public abstract class EncodedSqlInterval
 
     protected void floor(TimeUnit timeUnit)
     {
-       throw Util.unexpected(timeUnit);
+        throw Util.unexpected(timeUnit);
     }
 
     /**
@@ -168,7 +172,7 @@ public abstract class EncodedSqlInterval
 
     protected void ceil(TimeUnit timeUnit)
     {
-       throw Util.unexpected(timeUnit);
+        throw Util.unexpected(timeUnit);
     }
 
     private static void appendHours(StringBuffer buf, long hours)

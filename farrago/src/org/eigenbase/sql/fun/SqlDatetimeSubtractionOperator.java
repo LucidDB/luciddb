@@ -79,7 +79,7 @@ public class SqlDatetimeSubtractionOperator
         SqlCall call,
         SqlValidatorScope scope)
     {
-          return SqlStdOperatorTable.minusOperator.getMonotonicity(call, scope);
+        return SqlStdOperatorTable.minusOperator.getMonotonicity(call, scope);
     }
 }
 
