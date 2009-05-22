@@ -923,17 +923,6 @@ public class ConcurrentTestCommandScript
                                     nextThreadId++,
                                     threadNamesTok.nextToken());
                             }
-
-                            // Since DDL commands are prepared and executed, defer
-                            // any DDL validation until execute time
-
-                            order = 1;
-                            String defer = "alter session set \"validateDdlOnPrepare\" = false";
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addDdlCommand(i, order, defer);
-                            }
-                            order++;
-
                         } else if (REPEAT.equals(command)) {
                             String arg = line.substring(REPEAT_LEN).trim();
                             repeatCount = Integer.parseInt(vars.expand(arg));
