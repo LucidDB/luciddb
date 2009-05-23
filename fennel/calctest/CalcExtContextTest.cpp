@@ -181,7 +181,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
         InstructionFactory::getExtendedInstructionTable();
     ExtendedInstructionDef* inst;
 
-    vector<StandardTypeDescriptorOrdinal>params;
+    vector<StandardTypeDescriptorOrdinal> params;
     params.push_back(STANDARD_TYPE_BOOL);
 
     eit->add(

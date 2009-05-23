@@ -38,8 +38,10 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * A Backtrace represents a backtrace of the run-time stack.
- * The constructor wraps up the backtrace of the current thread at the point of construction.
- * A Backtrace object can be printed to an ostream.
+ *
+ * The constructor wraps up the backtrace of the current thread at the
+ * point of construction.  A Backtrace object can be printed to an
+ * ostream.
  */
 class Backtrace
 {
@@ -67,9 +69,12 @@ public:
     Backtrace(size_t maxdepth = 32);
 
     /**
-     * Captures the backtrace at the point of construction. The caller provides an
-     * address buffer, probably on the stack.
-     * The buffer should contain an extra item to refer to the Backtrace constructor itself.
+     * Captures the backtrace at the point of construction. The caller provides
+     * an address buffer, probably on the stack.
+     *
+     * The buffer should contain an extra item to refer to the
+     * Backtrace constructor itself.
+     *
      * @param bufsize buffer size, in words (sizeof(void*) = 1 word)
      * @param buffer an array of BUFSIZE (void *) entries.
      */
@@ -77,10 +82,16 @@ public:
 
     ~Backtrace();
 
-    /** prints the backtrace in human readable form. Skips the Backtrace constructor */
+    /**
+     * Prints the backtrace in human readable form. Skips the
+     * Backtrace constructor.
+     */
     std::ostream& print(std::ostream&) const;
 
-    /** prints the backtrace to a unix file descriptor: for use when out of memory */
+    /**
+     * Prints the backtrace to a unix file descriptor: for use when
+     * out of memory.
+     */
     void print(int fd) const;
 
     /**
@@ -100,10 +111,12 @@ inline std::ostream& operator << (std::ostream& os, const Backtrace& bt)
 }
 
 /**
- * AutoBacktrace provides a handler that intercepts fatal errors, prints a backtrace,
- * and passes on the fatal error to other handlers.
- * The backtrace handler has global scope.
- * Fatal errors include abort(), assert(), fennel permAssert(), and runaway C++ exceptions.
+ * AutoBacktrace provides a handler that intercepts fatal errors,
+ * prints a backtrace, and passes on the fatal error to other
+ * handlers.
+ *
+ * The backtrace handler has global scope.  Fatal errors include
+ * abort(), assert(), fennel permAssert(), and runaway C++ exceptions.
  */
 class AutoBacktrace {
     static std::ostream* pstream;

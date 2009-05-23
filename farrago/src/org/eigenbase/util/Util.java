@@ -1657,7 +1657,11 @@ public class Util
         Writer appOutput)
         throws IOException, InterruptedException
     {
-        return runAppProcess(newAppProcess(cmdarray), logger, appInput, appOutput);
+        return runAppProcess(
+            newAppProcess(cmdarray),
+            logger,
+            appInput,
+            appOutput);
     }
 
     /**
@@ -1931,12 +1935,15 @@ public class Util
      *
      * <p>Typical usage, to iterate over a {@link Properties}:
      *
-     * <pre>
-     * Properties properties;
-     * for (Map.Entry<String, String> entry = Util.toMap(properties).entrySet()) {
-     *   println("key=" + entry.getKey() + ", value=" + entry.getValue());
+     * <blockquote>
+     * <code>
+     * Properties properties;<br/>
+     * for (Map.Entry&lt;String, String&gt; entry =
+     * Util.toMap(properties).entrySet()) {<br/>
+     *   println("key=" + entry.getKey() + ", value=" + entry.getValue());<br/>
      * }
-     * </pre>
+     * </code>
+     * </blockquote>
      */
     public static Map<String, String> toMap(
         final Properties properties)

@@ -284,8 +284,8 @@ public abstract class EncodedSqlInterval
         }
 
         /**
-         * Rounds this interval value down to a unit of time. All smaller units of
-         * time are zeroed also.
+         * Rounds this interval value down to a unit of time. All smaller units
+         * of time are zeroed also.
          *
          * <p>For example, <code>floor(MINUTE)</code> applied to <code>INTERVAL
          * '7 11:23:45' DAY TO SECOND</code> returns <code>INTERVAL '7 11:23:00'
@@ -295,7 +295,7 @@ public abstract class EncodedSqlInterval
          */
         public void floor(SqlIntervalQualifier.TimeUnit timeUnit)
         {
-            if (value<0) {
+            if (value < 0) {
                 value = -value;
                 ceil(timeUnit);
                 value = -value;
@@ -331,7 +331,7 @@ public abstract class EncodedSqlInterval
          */
         public void ceil(SqlIntervalQualifier.TimeUnit timeUnit)
         {
-            if (value<0) {
+            if (value < 0) {
                 value = -value;
                 floor(timeUnit);
                 value = -value;
@@ -345,10 +345,14 @@ public abstract class EncodedSqlInterval
                 value = (value + (MS_PER_HOUR - 1)) / MS_PER_HOUR * MS_PER_HOUR;
                 break;
             case Minute:
-               value = (value + (MS_PER_MINUTE - 1)) / MS_PER_MINUTE * MS_PER_MINUTE;
+               value =
+                   (value + (MS_PER_MINUTE - 1)) / MS_PER_MINUTE
+                   * MS_PER_MINUTE;
                break;
             case Second:
-                value = (value + (MS_PER_SECOND - 1)) / MS_PER_SECOND * MS_PER_SECOND;
+                value =
+                    (value + (MS_PER_SECOND - 1)) / MS_PER_SECOND
+                    * MS_PER_SECOND;
                 break;
             default:
                 throw Util.unexpected(timeUnit);

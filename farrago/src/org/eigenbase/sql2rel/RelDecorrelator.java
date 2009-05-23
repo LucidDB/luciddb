@@ -373,7 +373,8 @@ public class RelDecorrelator
             // If child produces correlated variables, move them to the front,
             // right after any existing groupby fields.
 
-            SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos =
+            SortedMap<CorrelatorRel.Correlation, Integer>
+                childMapCorVarToOutputPos =
                 mapNewRelToMapCorVarToOutputPos.get(newChildRel);
 
             // Now add the corVars from the child, starting from
@@ -568,7 +569,8 @@ public class RelDecorrelator
 
         // Project any correlated variables the child wants to pass along.
         if (produceCorVar) {
-            SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos =
+            SortedMap<CorrelatorRel.Correlation, Integer>
+                childMapCorVarToOutputPos =
                 mapNewRelToMapCorVarToOutputPos.get(newChildRel);
 
             // propagate cor vars from the new child
@@ -896,7 +898,8 @@ public class RelDecorrelator
             return;
         }
 
-        SortedMap<CorrelatorRel.Correlation, Integer> rightChildMapCorVarToOutputPos =
+        SortedMap<CorrelatorRel.Correlation, Integer>
+            rightChildMapCorVarToOutputPos =
             mapNewRelToMapCorVarToOutputPos.get(newRightRel);
 
         if (rightChildMapCorVarToOutputPos == null) {
@@ -1085,7 +1088,8 @@ public class RelDecorrelator
         // Right input positions are shifted by newLeftFieldCount.
         int oldRightPos;
         if (mapNewRelToMapCorVarToOutputPos.containsKey(newRightRel)) {
-            SortedMap<CorrelatorRel.Correlation, Integer> rightChildMapCorVarToOutputPos =
+            SortedMap<CorrelatorRel.Correlation, Integer>
+                rightChildMapCorVarToOutputPos =
                 mapNewRelToMapCorVarToOutputPos.get(newRightRel);
             for (
                 CorrelatorRel.Correlation corVar
@@ -1470,7 +1474,8 @@ public class RelDecorrelator
                     && mapNewRelToMapCorVarToOutputPos.containsKey(
                         newInputRel))
                 {
-                    SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos =
+                    SortedMap<CorrelatorRel.Correlation, Integer>
+                        childMapCorVarToOutputPos =
                         mapNewRelToMapCorVarToOutputPos.get(newInputRel);
 
                     if (childMapCorVarToOutputPos != null) {
@@ -1579,12 +1584,12 @@ public class RelDecorrelator
 
             // Construct a CASE expression to handle the null indicator.
             //
-            // This also covers the case where a left correlated subquery projects
-            // fields from outer relation. Since LOJ cannot produce nulls on the
-            // LHS, the projection now need to make a nullable LHS reference
-            // using a nullability indicator. If this this indicator is null, it
-            // means the subquery does not produce any value. As a result, any
-            // RHS ref by this usbquery needs to produce null value.
+            // This also covers the case where a left correlated subquery
+            // projects fields from outer relation. Since LOJ cannot produce
+            // nulls on the LHS, the projection now need to make a nullable LHS
+            // reference using a nullability indicator. If this this indicator
+            // is null, it means the subquery does not produce any value. As a
+            // result, any RHS ref by this usbquery needs to produce null value.
 
             // WHEN indicator IS NULL
             caseOperands[0] =

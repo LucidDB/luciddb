@@ -36,30 +36,35 @@ import org.eigenbase.util.*;
  * <p>INTERVAL qualifier is defined as follows:
  *
  * <blockquote><code>
- * <pre>
  *
- * &lt;interval qualifier&gt; ::=
- *               &lt;start field&gt; TO &lt;end field&gt;
- *               | &lt;single datetime field&gt;
- * &lt;start field&gt; ::=
- *               &lt;non-second primary datetime field&gt;
- *               [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
- * &lt;end field&gt; ::=
- *               &lt;non-second primary datetime field&gt;
- *               | SECOND [ &lt;left paren&gt; &lt;interval fractional seconds precision&gt; &lt;right paren&gt; ]
- * &lt;single datetime field&gt; ::=
- *               &lt;non-second primary datetime field&gt;
- *               [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
- *               | SECOND [ &lt;left paren&gt; &lt;interval leading field precision&gt;
- *               [ &lt;comma&gt; &lt;interval fractional seconds precision&gt; ] &lt;right paren&gt; ]
- * &lt;primary datetime field&gt; ::=
- *              &lt;non-second primary datetime field&gt;
- *              | SECOND
- * &lt;non-second primary datetime field&gt; ::= YEAR | MONTH | DAY | HOUR | MINUTE
- * &lt;interval fractional seconds precision&gt; ::= &lt;unsigned integer&gt;
+ * &lt;interval qualifier&gt; ::=<br/>
+ * &nbsp;&nbsp; &lt;start field&gt; TO &lt;end field&gt;<br/>
+ * &nbsp;&nbsp;| &lt;single datetime field&gt;<br/>
+ * &lt;start field&gt; ::=<br/>
+ * &nbsp;&nbsp; &lt;non-second primary datetime field&gt;<br/>
+ * &nbsp;&nbsp; [ &lt;left paren&gt; &lt;interval leading field precision&gt;
+ * &lt;right paren&gt; ]<br/>
+ * &lt;end field&gt; ::=<br/>
+ * &nbsp;&nbsp; &lt;non-second primary datetime field&gt;<br/>
+ * &nbsp;&nbsp;| SECOND [ &lt;left paren&gt;
+ * &lt;interval fractional seconds precision&gt; &lt;right paren&gt; ]<br/>
+ * &lt;single datetime field&gt; ::=<br/>
+ * &nbsp;&nbsp;&lt;non-second primary datetime field&gt;<br/>
+ * &nbsp;&nbsp;[ &lt;left paren&gt; &lt;interval leading field precision&gt;
+ * &lt;right paren&gt; ]<br/>
+ * &nbsp;&nbsp;| SECOND [ &lt;left paren&gt;
+ * &lt;interval leading field precision&gt;<br/>
+ * &nbsp;&nbsp;[ &lt;comma&gt; &lt;interval fractional seconds precision&gt; ]
+ * &lt;right paren&gt; ]<br/>
+ * &lt;primary datetime field&gt; ::=<br/>
+ * &nbsp;&nbsp;&lt;non-second primary datetime field&gt;<br/>
+ * &nbsp;&nbsp;| SECOND<br/>
+ * &lt;non-second primary datetime field&gt; ::= YEAR | MONTH | DAY | HOUR
+ * | MINUTE<br/>
+ * &lt;interval fractional seconds precision&gt; ::=
+ * &lt;unsigned integer&gt;<br/>
  * &lt;interval leading field precision&gt; ::= &lt;unsigned integer&gt;
  *
- * </pre>
  * </code></blockquote>
  *
  * <p>Examples include:

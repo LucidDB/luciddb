@@ -212,7 +212,8 @@ protected:
     virtual void bindStreamBufAccessors(SharedExecStream pStream);
     virtual void mergeFrom(ExecStreamGraphImpl& src);
     virtual void mergeFrom(
-        ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes);
+        ExecStreamGraphImpl& src,
+        std::vector<ExecStreamId> const& nodes);
 
     /** frees all nodes and edges: like removeStream() on all streams, but
      * faster */
@@ -267,7 +268,8 @@ public:
         ExecStreamId consumerId);
     virtual void mergeFrom(ExecStreamGraph& src);
     virtual void mergeFrom(
-        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes);
+        ExecStreamGraph& src,
+        std::vector<ExecStreamId> const& nodes);
     virtual SharedExecStream findStream(
         std::string name);
     virtual SharedExecStream findLastStream(

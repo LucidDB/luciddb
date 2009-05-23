@@ -215,8 +215,9 @@ public class ConcurrentTestCommandScript
         }
     }
 
-    // Special "thread ids" for setup & cleanup sections; actually setup & cleanup
-    // SQL is executed by the main thread, and neither are in the the thread map.
+    // Special "thread ids" for setup & cleanup sections; actually setup &
+    // cleanup SQL is executed by the main thread, and neither are in the the
+    // thread map.
     private static final Integer SETUP_THREAD_ID = -1;
     private static final Integer CLEANUP_THREAD_ID = -2;
 
@@ -259,8 +260,14 @@ public class ConcurrentTestCommandScript
 
     //~ Methods ----------------------------------------------------------------
 
-    /** Gets ready to execute: loads script FILENAME applying external variable BINDINGS */
-    private void prepare(String filename, List<String> bindings) throws IOException
+    /**
+     * Gets ready to execute: loads script FILENAME applying external variable
+     * BINDINGS.
+     */
+    private void prepare(
+        String filename,
+        List<String> bindings)
+        throws IOException
     {
         vars = new VariableTable();
         CommandParser parser = new CommandParser();
@@ -398,7 +405,10 @@ public class ConcurrentTestCommandScript
         }
     }
 
-    private void storeResults(Integer threadId, ResultSet rset, boolean withTimeout)
+    private void storeResults(
+        Integer threadId,
+        ResultSet rset,
+        boolean withTimeout)
         throws SQLException
     {
         ResultsReader r = threadResultsReaders.get(threadId);
@@ -715,7 +725,6 @@ public class ConcurrentTestCommandScript
                             val = matcher.group(0);
                         }
                     }
-                    // matcher.appendReplacement(out, matcher.quoteReplacement(val));
                     out.append(in.substring(lastEnd, start));
                     out.append(val);
                     lastEnd = end;
@@ -853,12 +862,16 @@ public class ConcurrentTestCommandScript
                         } else if (CLEANUP_STATE.equals(state)) {
                             trace("@cleanup", sql);
                             cleanupCommands.add(sql);
-                        } else if (THREAD_STATE.equals(state) || REPEAT_STATE.equals(state)) {
+                        } else if (THREAD_STATE.equals(state)
+                            || REPEAT_STATE.equals(state))
+                        {
                             boolean isSelect = isSelect(sql);
                             trace(sql);
                             for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd = isSelect?
-                                    new SelectCommand(sql) : new SqlCommand(sql);
+                                CommandWithTimeout cmd =
+                                    isSelect
+                                    ? new SelectCommand(sql)
+                                    : new SqlCommand(sql);
                                 addCommand(i, order, cmd);
                             }
                             order++;
@@ -907,7 +920,8 @@ public class ConcurrentTestCommandScript
                             trace("@cleanup");
 
                         } else if (INCLUDE.equals(command)) {
-                            String includedFile = line.substring(INCLUDE_LEN).trim();
+                            String includedFile =
+                                line.substring(INCLUDE_LEN).trim();
                             trace("@include", includedFile);
                             load(includedFile);
                             trace("end @include", includedFile);
@@ -924,8 +938,8 @@ public class ConcurrentTestCommandScript
                                     threadNamesTok.nextToken());
                             }
 
-                            // Since DDL commands are prepared and executed, defer
-                            // any DDL validation until execute time
+                            // Since DDL commands are prepared and executed,
+                            // defer any DDL validation until execute time
 
                             order = 1;
                             String defer = "alter session set \"validateDdlOnPrepare\" = false";
@@ -982,12 +996,15 @@ public class ConcurrentTestCommandScript
                             long millis = Long.parseLong(millisStr);
                             assert (millis >= 0L) : "Timeout must be >= 0";
 
-                            String sql = readSql(skipFirstWord(args).trim(), in);
+                            String sql =
+                                readSql(skipFirstWord(args).trim(), in);
                             trace("@timeout", sql);
                             boolean isSelect = isSelect(sql);
                             for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd = isSelect?
-                                    new SelectCommand(sql, millis) : new SqlCommand(sql, millis);
+                                CommandWithTimeout cmd =
+                                    isSelect
+                                    ? new SelectCommand(sql, millis)
+                                    : new SqlCommand(sql, millis);
                                 addCommand(i, order, cmd);
                             }
                             order++;
@@ -998,19 +1015,24 @@ public class ConcurrentTestCommandScript
                             int limit = Integer.parseInt(limitStr);
                             assert (limit >= 0) : "Rowlimit must be >= 0";
 
-                            String sql = readSql(skipFirstWord(args).trim(), in);
+                            String sql =
+                                readSql(skipFirstWord(args).trim(), in);
                             trace("@rowlimit ", sql);
                             boolean isSelect = isSelect(sql);
                             if (!isSelect) {
                                 throw new IllegalStateException("Only select can be used with rowlimit");
                             }
                             for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(i, order, new SelectCommand(sql, 0, limit));
+                                addCommand(
+                                    i,
+                                    order,
+                                    new SelectCommand(sql, 0, limit));
                             }
                             order++;
 
                         } else if (PRINT.equals(command)) {
-                            String spec = vars.expand(line.substring(PRINT_LEN).trim());
+                            String spec =
+                                vars.expand(line.substring(PRINT_LEN).trim());
                             trace("@print", spec);
                             for (int i = threadId; i < nextThreadId; i++) {
                                 addCommand(i, order, new PrintCommand(spec));
@@ -1052,15 +1074,18 @@ public class ConcurrentTestCommandScript
                             trace("@err ", sql);
                             boolean isSelect = isSelect(sql);
                             for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd = isSelect?
-                                    new SelectCommand(sql, true) : new SqlCommand(sql, true);
+                                CommandWithTimeout cmd =
+                                    isSelect
+                                    ? new SelectCommand(sql, true)
+                                    : new SqlCommand(sql, true);
                                 addCommand(i, order, cmd);
                             }
                             order++;
 
                         } else if (FETCH.equals(command)) {
                             trace("@fetch");
-                            String millisStr = vars.expand(line.substring(FETCH_LEN).trim());
+                            String millisStr =
+                                vars.expand(line.substring(FETCH_LEN).trim());
                             long millis = 0L;
                             if (millisStr.length() > 0) {
                                 millis = Long.parseLong(millisStr);
@@ -1083,7 +1108,8 @@ public class ConcurrentTestCommandScript
                             order++;
 
                         } else if (SLEEP.equals(command)) {
-                            String arg = vars.expand(line.substring(SLEEP_LEN).trim());
+                            String arg =
+                                vars.expand(line.substring(SLEEP_LEN).trim());
                             trace("@sleep", arg);
                             long millis = Long.parseLong(arg);
                             assert (millis >= 0L) : "Sleep timeout must be >= 0";
@@ -1171,8 +1197,9 @@ public class ConcurrentTestCommandScript
         }
 
         /**
-         * Returns the first word of the given line, assuming the line is trimmed.
-         * Returns the characters up the first non-whitespace character in the line.
+         * Returns the first word of the given line, assuming the line is
+         * trimmed. Returns the characters up the first non-whitespace
+         * character in the line.
          */
         private String firstWord(String trimmedLine)
         {
@@ -1190,8 +1217,9 @@ public class ConcurrentTestCommandScript
         }
 
         /**
-         * Returns an input line, possible extended by the continuation character (\).
-         * Scans the script until it finds an un-escaped newline.
+         * Returns an input line, possible extended by the continuation
+         * character (\).  Scans the script until it finds an un-escaped
+         * newline.
          */
         private String readLine(String line, BufferedReader in)
             throws IOException
@@ -1224,9 +1252,9 @@ public class ConcurrentTestCommandScript
         }
 
         /**
-         * Returns a block of SQL, starting with the given String. Returns <code>
-         * startOfSql</code> concatenated with each line from <code>in</code> until
-         * a line ending with a semicolon is found.
+         * Returns a block of SQL, starting with the given String. Returns
+         * <code> startOfSql</code> concatenated with each line from
+         * <code>in</code> until a line ending with a semicolon is found.
          */
         private String readSql(String startOfSql, BufferedReader in)
             throws IOException
@@ -1256,11 +1284,11 @@ public class ConcurrentTestCommandScript
 
     // Inner Classes: the Commands
 
-    // When executed, a @print command defines how any following @fetch or @select
-    // commands will handle their resuult rows. MTSQL can print all rows, no rows, or
-    // every nth row. A printed row can be prefixed by a sequence nuber and/or the
-    // time it was received (a different notion than its rowtime, which often tells
-    // when it was inserted).
+    // When executed, a @print command defines how any following @fetch
+    // or @select commands will handle their resuult rows. MTSQL can print all
+    // rows, no rows, or every nth row. A printed row can be prefixed by a
+    // sequence nuber and/or the time it was received (a different notion than
+    // its rowtime, which often tells when it was inserted).
     private class PrintCommand extends AbstractCommand
     {
         // print every nth row: 1 means all rows, 0 means no rows.
@@ -1303,7 +1331,9 @@ public class ConcurrentTestCommandScript
         {
             Integer threadId = executor.getThreadId();
             BufferedWriter out = threadBufferedWriters.get(threadId);
-            threadResultsReaders.put(threadId, new ResultsReader(out, nth, count, time));
+            threadResultsReaders.put(
+                threadId,
+                new ResultsReader(out, nth, count, time));
         }
     }
 
@@ -1373,7 +1403,8 @@ public class ConcurrentTestCommandScript
             try {
                 // direct stdout & stderr to the the threadWriter
                 int status =
-                    Util.runAppProcess(pb, null, null, getThreadWriter(threadId));
+                    Util.runAppProcess(
+                        pb, null, null, getThreadWriter(threadId));
                 if (status != 0) {
                     storeMessage(
                         threadId,
@@ -1478,7 +1509,8 @@ public class ConcurrentTestCommandScript
         protected void doExecute(ConcurrentTestCommandExecutor executor)
             throws SQLException
         {
-            //TODO: trim and chop in constructor; stash sql in base class; execute() calls storeSql.
+            // TODO: trim and chop in constructor; stash sql in base class;
+            // execute() calls storeSql.
             String properSql = sql.trim();
 
             storeSql(
@@ -1599,13 +1631,13 @@ public class ConcurrentTestCommandScript
 
     /**
      * PrepareCommand creates a {@link PreparedStatement}, which is saved as the
-     * current statement of its test thread. For a preparted query (a SELECT or a
-     * CALL with results), a subsequent FetchAndPrintCommand executes the statement
-     * and fetches its reults, until end-of-data or a timeout. A PrintCommand
-     * attaches a listener, called for each rows, that selects rows to save and
-     * print, and sets the format. By default, if no PrintCommand appears before a
-     * FetchAndPrintCommand, all rows are printed. A CloseCommand closes and discards
-     * the prepared statement.
+     * current statement of its test thread. For a preparted query (a SELECT or
+     * a CALL with results), a subsequent FetchAndPrintCommand executes the
+     * statement and fetches its reults, until end-of-data or a timeout. A
+     * PrintCommand attaches a listener, called for each rows, that selects rows
+     * to save and print, and sets the format. By default, if no PrintCommand
+     * appears before a FetchAndPrintCommand, all rows are printed. A
+     * CloseCommand closes and discards the prepared statement.
      */
     private class PrepareCommand
         extends AbstractCommand
@@ -1668,9 +1700,15 @@ public class ConcurrentTestCommandScript
     private class ResultsReader
     {
         private final PrintWriter out;
-        private final int nth;          // print every Nth row. 1 means all rows, 0 means none.
-        private final boolean counted;  // prefix printed row with its sequence number
-        private final boolean timestamped; // prefix printed row with time it was fetched
+
+        /** print every Nth row. 1 means all rows, 0 means none. */
+        private final int nth;
+
+        /** prefix printed row with its sequence number */
+        private final boolean counted;
+
+        /** prefix printed row with time it was fetched */
+        private final boolean timestamped;
 
         private long baseTime = 0;
         private int ncols = 0;
@@ -1682,7 +1720,11 @@ public class ConcurrentTestCommandScript
             this(out, 1, false, false);
         }
 
-        ResultsReader(BufferedWriter out, int nth, boolean counted, boolean timestamped)
+        ResultsReader(
+            BufferedWriter out,
+            int nth,
+            boolean counted,
+            boolean timestamped)
         {
             this.out = new PrintWriter(out);
             this.nth = nth;
@@ -1701,8 +1743,8 @@ public class ConcurrentTestCommandScript
                 labels[i] = meta.getColumnLabel(i + 1);
                 int displaySize = meta.getColumnDisplaySize(i + 1);
 
-                // NOTE jvs 13-June-2006: I put this in to cap EXPLAIN PLAN, which
-                // now returns a very large worst-case display size.
+                // NOTE jvs 13-June-2006: I put this in to cap EXPLAIN PLAN,
+                // which now returns a very large worst-case display size.
                 if (displaySize > 4096) {
                     displaySize = 0;
                 }
@@ -1732,7 +1774,9 @@ public class ConcurrentTestCommandScript
                     }
                     if (nth == 1 || rowCount % nth == 0) {
                         long time = System.currentTimeMillis();
-                        if (printedRowCount > 0 && (printedRowCount % 100 == 0)) {
+                        if (printedRowCount > 0
+                            && (printedRowCount % 100 == 0))
+                        {
                             printHeaders();
                         }
                         for (int i = 0; i < ncols; i++) {
@@ -1898,7 +1942,8 @@ public class ConcurrentTestCommandScript
                 BufferedWriter cout =
                     new BufferedWriter(new OutputStreamWriter(System.out));
                 for (String file : files) {
-                    ConcurrentTestCommandScript script = new ConcurrentTestCommandScript();
+                    ConcurrentTestCommandScript script =
+                        new ConcurrentTestCommandScript();
                     script.setQuiet(quiet);
                     script.setVerbose(verbose);
                     script.setDebug(debug);
@@ -1977,7 +2022,8 @@ public class ConcurrentTestCommandScript
      * Client tool that connects via jdbc and runs one or more mtsql on that
      * connection.
      *
-     * Usage: mtsql [-vgq] -u SERVER -d DRIVER [-n USER][-p PASSWORD] [VAR=VAL]...  SCRIPT [SCRIPT]...
+     * <p>Usage: mtsql [-vgq] -u SERVER -d DRIVER [-n USER][-p PASSWORD]
+     * [VAR=VAL]...  SCRIPT [SCRIPT]...
      */
     static public void main(String[] args)
     {

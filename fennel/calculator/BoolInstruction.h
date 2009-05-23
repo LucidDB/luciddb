@@ -66,7 +66,7 @@ protected:
 
     static vector<StandardTypeDescriptorOrdinal>
     regDesc(uint args) {
-        vector<StandardTypeDescriptorOrdinal>v;
+        vector<StandardTypeDescriptorOrdinal> v;
         uint i;
         for (i = 0; i < args; i++) {
             v.push_back(STANDARD_TYPE_BOOL);
@@ -123,7 +123,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -184,7 +184,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -233,7 +233,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -277,7 +277,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -317,7 +317,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -371,7 +371,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -427,7 +427,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -481,7 +481,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -533,7 +533,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -585,7 +585,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -640,7 +640,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -692,7 +692,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -747,7 +747,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -793,7 +793,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -838,7 +838,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -877,7 +877,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 

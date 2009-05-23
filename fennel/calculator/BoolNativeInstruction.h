@@ -112,7 +112,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -183,7 +183,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -254,7 +254,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -325,7 +325,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -396,7 +396,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -467,7 +467,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -533,7 +533,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }
@@ -597,7 +597,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         v[0] = STANDARD_TYPE_BOOL;
         return InstructionSignature(shortName(), v);
     }

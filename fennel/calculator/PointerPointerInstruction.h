@@ -110,27 +110,38 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->isNull())
+        if (PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp2->isNull())
         {
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->toNull();
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->length(0);
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->toNull();
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->length(0);
         } else {
             // Educated guess: Length decreases. If incorrect, compiler is
             // responsible for resetting the length correctly with
             // Instruction PointerPutSize
-            uint oldLength = PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->length();
-            uint delta = PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value();
+            uint oldLength =
+                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp1->length();
+            uint delta =
+                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp2->value();
             uint newLength;
             if (oldLength > delta) {
                 newLength = oldLength - delta;
             } else {
                 newLength = 0;
             }
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->pointer(
-                reinterpret_cast<PTR_TYPE>(
-                    PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->pointer()) +
-                PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value(),
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->pointer(
+                    reinterpret_cast<PTR_TYPE>(
+                        PointerPointerInstruction<
+                            PTR_TYPE, PointerOperandT>::mOp1->pointer()) +
+                    PointerPointerInstruction<
+                        PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
         }
     }
@@ -204,25 +215,36 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->isNull()) {
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->toNull();
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->length(0);
+        if (PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp2->isNull()) {
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->toNull();
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->length(0);
         } else {
             // Educated guess: Length increases. If incorrect, compiler is
             // responsible for resetting the length correctly with
             // Instruction PointerPutLength
             uint newLength =
-               PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->length() +
-               PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value();
-            uint maxLength = PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->storage();
+                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp1->length() +
+                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp2->value();
+            uint maxLength =
+                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp1->storage();
             if (newLength > maxLength) {
                 newLength = maxLength;
             }
-            PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->pointer(
-                reinterpret_cast<PTR_TYPE>(
-                    PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->pointer()) -
-                PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value(),
+            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mResult->pointer(
+                    reinterpret_cast<PTR_TYPE>(
+                        PointerPointerInstruction<
+                            PTR_TYPE, PointerOperandT>::mOp1->pointer()) -
+                    PointerPointerInstruction<
+                        PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
         }
     }

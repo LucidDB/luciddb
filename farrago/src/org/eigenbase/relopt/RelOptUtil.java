@@ -1111,13 +1111,15 @@ public abstract class RelOptUtil
                 op1.accept(inputFinder1);
 
                 if ((projRefs0.nextSetBit(firstRightField) < 0)
-                    && (projRefs1.nextSetBit(firstLeftField) >= firstRightField))
+                    && (projRefs1.nextSetBit(firstLeftField)
+                        >= firstRightField))
                 {
                     leftKey = op0;
                     rightKey = op1;
                 } else if (
                     (projRefs1.nextSetBit(firstRightField) < 0)
-                    && (projRefs0.nextSetBit(firstLeftField) >= firstRightField))
+                    && (projRefs0.nextSetBit(firstLeftField)
+                        >= firstRightField))
                 {
                     leftKey = op1;
                     rightKey = op0;
@@ -1204,7 +1206,9 @@ public abstract class RelOptUtil
 
                     // effectively performing an equality comparison
                     operator = SqlStdOperatorTable.equalsOperator;
-                } else if (projRefs.nextSetBit(firstLeftField) >= firstRightField) {
+                } else if (projRefs.nextSetBit(firstLeftField)
+                    >= firstRightField)
+                {
                     leftKey = rexBuilder.makeLiteral(true);
 
                     // replace right Key input ref

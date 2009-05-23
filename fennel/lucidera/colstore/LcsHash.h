@@ -123,8 +123,8 @@ struct LcsHashValueNode
 
 
 /**
- * LcsHashTable implements a hash table that fits the hash entries and the overflow
- * nodes into one scratch buffer of size hashBlockSize.
+ * LcsHashTable implements a hash table that fits the hash entries and
+ * the overflow nodes into one scratch buffer of size hashBlockSize.
  * The overflow nodes are of type LcsHashValueNode.
  */
 class LcsHashTable
@@ -324,7 +324,8 @@ class LcsCompareColKeyUsingOffsetIndex
 private:
 
     /**
-     * Reference to the Hash Table where cluster column values are inserted into.
+     * Reference to the Hash Table where cluster column values are inserted
+     * into.
      */
     LcsHashTable            *hashTable;
 
@@ -805,7 +806,9 @@ inline LcsHashValueNode* LcsHashTable::getNewValueNode()
     return &(valueNodes[nextValueNode]);
 }
 
-inline void LcsHashTable::insertNewValueNode(uint key,  LcsHashValueNode *newNode)
+inline void LcsHashTable::insertNewValueNode(
+    uint key,
+    LcsHashValueNode *newNode)
 {
     newNode->next = (uint16_t)entry[key];
 
@@ -838,7 +841,8 @@ inline LcsHashValueNode* LcsHashTable::getFirstValueNode(uint key)
     }
 }
 
-inline LcsHashValueNode* LcsHashTable::getNextValueNode(LcsHashValueNode *pValueNode)
+inline LcsHashValueNode* LcsHashTable::getNextValueNode(
+    LcsHashValueNode *pValueNode)
 {
     uint16_t offset = pValueNode->next;
 

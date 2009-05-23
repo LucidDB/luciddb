@@ -174,11 +174,11 @@ void LcsHash::insert(
         }
 
         /*
-         * Inserts a new node only when the above call does not return undoInsert.
-         * If a new node is inserted but the undoInsert above is true, the
-         * subsequent undoInsert() call will not roll back the new node
-         * correctly if undo.what is not set to NEWENTRY(the default value is
-         * NOTHING).
+         * Inserts a new node only when the above call does not return
+         * undoInsert.  If a new node is inserted but the undoInsert above is
+         * true, the subsequent undoInsert() call will not roll back the new
+         * node correctly if undo.what is not set to NEWENTRY(the default value
+         * is NOTHING).
          */
         newNode = hash.getNewValueNode();
         newNode->valueOffset = newValueOffset;
@@ -208,7 +208,8 @@ void LcsHash::insert(
          */
         bool bFirstTimeInBatch = !valOrd->isValueInBatch();
 
-        *undoInsert = !clusterBlockWriter->addValue(columnId, bFirstTimeInBatch);
+        *undoInsert =
+            !clusterBlockWriter->addValue(columnId, bFirstTimeInBatch);
 
         if (*undoInsert) {
             /*
@@ -373,8 +374,8 @@ void LcsHash::prepareCompressedBatch(
               LcsCompare(compareInst));
 
     /*
-     * Now OffsetIndexVector is sorted. Sets sortedOrd,  which is basically index
-     * into the OffsetIndexVector,  in valueNodes array.
+     * Now OffsetIndexVector is sorted. Sets sortedOrd, which is basically index
+     * into the OffsetIndexVector, in valueNodes array.
      */
     for (i = 0; i < *numVals; i++) {
         hash.valueNodes[offsetIndexVector[i]].sortedOrd = i;
@@ -549,7 +550,8 @@ void LcsHashTable::init(PBuffer hashBlockInit, uint hashBlockSizeInit)
     /*
      * valueNodes follow the entry array.
      */
-    valueNodes = (LcsHashValueNode *)(hashBlock + sizeof(uint16_t) * hashTableSize);
+    valueNodes = static_cast<LcsHashValueNode *>(
+        hashBlock + sizeof(uint16_t) * hashTableSize);
 
     /*
      * Starts from the very first valueNodes.

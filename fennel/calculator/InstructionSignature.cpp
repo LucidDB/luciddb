@@ -134,7 +134,7 @@ vector<StandardTypeDescriptorOrdinal>
 InstructionSignature::typeVector(
     bool(*typeFunction)(StandardTypeDescriptorOrdinal))
 {
-    vector<StandardTypeDescriptorOrdinal>v;
+    vector<StandardTypeDescriptorOrdinal> v;
     int iter;
     StandardTypeDescriptorOrdinal iter2;
     assert(STANDARD_TYPE_MIN < STANDARD_TYPE_END_NO_UNICODE);

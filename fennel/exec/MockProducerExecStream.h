@@ -101,8 +101,9 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
     bool saveTuples;
 
     /**
-     * When not null, print each generated tuple to this stream, for tracing or for
-     * later comparison.  Allowed only when a generator is provided.
+     * When not null, print each generated tuple to this stream, for
+     * tracing or for later comparison.  Allowed only when a generator
+     * is provided.
      */
     std::ostream* echoTuples;
 

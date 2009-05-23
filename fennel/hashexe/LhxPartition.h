@@ -181,8 +181,8 @@ struct LhxPartitionInfo
     /**
      * Src partition reader.
      *
-     * It could either be a local reader (probeReader), or a reader passed in from
-     * the exec stream in open() method. The latter is used to partition a
+     * It could either be a local reader (probeReader), or a reader passed in
+     * from the exec stream in open() method. The latter is used to partition a
      * build input. When the hash table overflows, all the data from the hash
      * table, plus the remaining data from the build partition, as well as the
      * inflight tuple which caused the hash table overflow, need to be

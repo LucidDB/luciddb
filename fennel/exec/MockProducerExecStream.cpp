@@ -102,7 +102,8 @@ ExecStreamResult MockProducerExecStream::execute(
             }
 
             for (int col = 0; col < outputData.size(); ++col) {
-                values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
+                values.get()[col] =
+                    pGenerator->generateValue(nRowsProduced, col);
             }
 
             bool rc = pOutAccessor->produceTuple(outputData);
@@ -116,7 +117,8 @@ ExecStreamResult MockProducerExecStream::execute(
             }
             if (saveTuples) {
                 std::ostringstream oss;
-                tuplePrinter.print(oss, pOutAccessor->getTupleDesc(), outputData);
+                tuplePrinter.print(
+                    oss, pOutAccessor->getTupleDesc(), outputData);
                 savedTuples.push_back(oss.str());
             }
             if (nTuples >= quantum.nTuplesMax) {

@@ -56,7 +56,8 @@ void CollectExecStream::open(bool restart)
     outputTupleData.compute(pOutAccessor->getTupleDesc());
     inputTupleData.compute(pInAccessor->getTupleDesc());
 
-    uint cbOutMaxsize = pOutAccessor->getConsumptionTupleAccessor().getMaxByteCount();
+    uint cbOutMaxsize =
+        pOutAccessor->getConsumptionTupleAccessor().getMaxByteCount();
     pOutputBuffer.reset(new FixedBuffer[cbOutMaxsize]);
     bytesWritten = 0;
     alreadyWrittenToOutput = false;
@@ -100,10 +101,12 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
 #endif
 
         // write one input tuple to the staging output buffer
-        memcpy(pOutputBuffer.get() + bytesWritten,
-               pInAccessor->getConsumptionStart(),
-               pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
-        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount();
+        memcpy(
+            pOutputBuffer.get() + bytesWritten,
+            pInAccessor->getConsumptionStart(),
+            pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+        bytesWritten +=
+            pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount();
         pInAccessor->consumeTuple();
     }
     return EXECRC_QUANTUM_EXPIRED;

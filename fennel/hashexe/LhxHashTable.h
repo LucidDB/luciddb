@@ -226,7 +226,9 @@ public:
      * inputTuple.
      * @param [in] maxBufferSize maximum buffer size
      */
-    inline void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
+    inline void checkStorageSize(
+        TupleData const &inputTuple,
+        uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.
@@ -413,7 +415,9 @@ public:
      * inputTuple.
      * @param [in] maxBufferSize maximum buffer size
      */
-    inline void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
+    inline void checkStorageSize(
+        TupleData const &inputTuple,
+        uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.

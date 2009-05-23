@@ -133,8 +133,8 @@ class VolcanoRuleMatch
                 // make the plan cheaper, so we'd hate to miss this opportunity.
                 //
                 //
-                // REVIEW: jhyde, 2007/12/21: This rule seems to make sense, but is
-                // disabled until it has been proven.
+                // REVIEW: jhyde, 2007/12/21: This rule seems to make sense, but
+                // is disabled until it has been proven.
                 if ((subset != null)
                     && subset.bestCost.isLt(targetSubset.bestCost)
                     && false)

@@ -112,7 +112,8 @@ public interface FarragoSessionPersonality
     public boolean isAlterTableAddColumnIncremental();
 
     /**
-     * Tests whether a JavaUDX is implemented as a restartable data source or not.
+     * Returns whether a JavaUDX is implemented as a restartable data source.
+     *
      * @return true if a JavaUDXRel implementation is restartable.
      */
     public boolean isJavaUdxRestartable();

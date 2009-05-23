@@ -109,7 +109,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v;
+        vector<StandardTypeDescriptorOrdinal> v;
         v.push_back(type);
         v.push_back(POINTERSIZET_STANDARD_TYPE);
         return InstructionSignature(shortName(), v);

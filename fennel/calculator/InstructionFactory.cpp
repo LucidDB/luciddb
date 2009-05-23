@@ -45,7 +45,7 @@ InstructionFactory::createInstruction(
     TProgramCounter pc,
     RegisterReference* operand)
 {
-    vector<RegisterReference*>v;
+    vector<RegisterReference*> v;
     if (operand) {
         v.push_back(operand);
     }

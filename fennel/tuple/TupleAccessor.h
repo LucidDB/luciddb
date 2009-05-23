@@ -209,7 +209,8 @@ public:
      *  False means the buffer is free space; unmarshal binds a TupleData to the
      *  buffer. This is useful only for TUPLE_FORMAT_ALL_FIXED.
      *
-     * REVIEW: An alternative is to require the caller to zero out the buffer; but that seems riskier.
+     * REVIEW: An alternative is to require the caller to zero out the buffer;
+     * but that seems riskier.
      */
     void setCurrentTupleBuf(PConstBuffer pTupleBuf, bool valid = true);
 

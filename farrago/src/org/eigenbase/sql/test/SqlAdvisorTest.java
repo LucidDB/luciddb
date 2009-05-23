@@ -520,20 +520,24 @@ public class SqlAdvisorTest
         throws Exception
     {
         String sql;
+
+        // from
         sql =
             "select a.empno, b.deptno from ^dummy a join sales.dummy b "
             + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // from
+        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables());
 
+        // from
         sql = "select a.empno, b.deptno from ^ a join sales.dummy b";
-        assertComplete(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // from
+        assertComplete(sql, getFromKeywords(), SCHEMAS, getSalesTables());
 
         // REVIEW: because caret is before 'sales', should it ignore schema
         // name and present all schemas and all tables in the default schema?
+        // join
         sql =
             "select a.empno, b.deptno from dummy a join ^sales.dummy b "
             + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // join
+        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables());
 
         sql = "select a.empno, b.deptno from dummy a join sales.^";
         assertComplete(sql, getSalesTables()); // join

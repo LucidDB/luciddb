@@ -167,7 +167,7 @@ public:
         StandardTypeDescriptorOrdinal type1,
         StandardTypeDescriptorOrdinal type2)
     {
-        vector<StandardTypeDescriptorOrdinal>v;
+        vector<StandardTypeDescriptorOrdinal> v;
         v.push_back(type1);
         v.push_back(type2);
         return InstructionSignature(shortName(), v);
