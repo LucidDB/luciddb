@@ -37,12 +37,12 @@ void usage();
  * Utility program that preallocates and appends a specified number of pages
  * to the end of a data file.
  *
- * <p>Usage:
- * <br>
- * allocFile --append-pages=&lt;number of pages&gt; --pagesize=&lt;pageSize&gt; &lt;filename&gt;
+ * <p>Usage:<br>
  *
- * <p>
- * The file must be writable and exclusively lockable.
+ * allocFile --append-pages=&lt;number of pages&gt;
+ * --pagesize=&lt;pageSize&gt; &lt;filename&gt;
+ *
+ * <p>The file must be writable and exclusively lockable.
  */
 int
 main(int argc, char *argv[])

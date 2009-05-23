@@ -73,7 +73,7 @@ protected:
         StandardTypeDescriptorOrdinal type,
         uint operandArgs2)
     {
-        vector<StandardTypeDescriptorOrdinal>v(
+        vector<StandardTypeDescriptorOrdinal> v(
             sizetArgs1,
             POINTERSIZET_STANDARD_TYPE);
         uint i;

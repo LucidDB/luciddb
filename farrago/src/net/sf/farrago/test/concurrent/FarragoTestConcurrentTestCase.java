@@ -136,7 +136,9 @@ public abstract class FarragoTestConcurrentTestCase
         epilog(cmdGen);
     }
 
-    protected void setDataSource(ConcurrentTestCommandGenerator cmdGen, String jdbcURL)
+    protected void setDataSource(
+        ConcurrentTestCommandGenerator cmdGen,
+        String jdbcURL)
     {
         Properties jdbcProps = new Properties();
         jdbcProps.setProperty("user", FarragoCatalogInit.SA_USER_NAME);

@@ -321,7 +321,8 @@ public class FennelToIteratorConverter
                                 "getShort",
                                 new ExpressionList(
                                     Literal.makeLiteral(
-                                        attrAccessor.getEndIndirectOffset()))))));
+                                        attrAccessor
+                                            .getEndIndirectOffset()))))));
                 Expression expStartOffset;
                 if (varPrevEndOffset == null) {
                     expStartOffset =

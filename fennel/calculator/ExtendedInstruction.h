@@ -763,7 +763,8 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
+    typedef
+        FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
         DefT;
 
 private:

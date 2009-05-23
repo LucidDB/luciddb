@@ -65,8 +65,10 @@ public:
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamInner);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,testCartesianJoinExecStreamInner);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);

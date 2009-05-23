@@ -120,8 +120,8 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 {
     JniEnvAutoRef pEnv;
 
-    // Get an output ByteBuffer. Since this is a local ref, it will be automatically
-    // deleted when the next method call returns.
+    // Get an output ByteBuffer. Since this is a local ref, it will be
+    // automatically deleted when the next method call returns.
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
     jobject javaByteBuf = pEnv->CallObjectMethod(
         javaFennelPipeTupleIter, methFennelPipeTupleIter_getByteBuffer, size);
@@ -138,7 +138,10 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
     FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
 }
 
-void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
+void JavaSinkExecStream::stuffByteBuffer(
+    jobject byteBuffer,
+    PConstBuffer src,
+    uint size)
 {
     // TODO: lookup methods in constructor.
     // TODO: ByteBuffer with a longer life, permanently pinned.

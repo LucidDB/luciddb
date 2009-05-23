@@ -32,7 +32,9 @@ TraceSource::TraceSource()
     minimumLevel = TRACE_OFF;
 }
 
-TraceSource::TraceSource(SharedTraceTarget pTraceTargetInit,std::string nameInit)
+TraceSource::TraceSource(
+    SharedTraceTarget pTraceTargetInit,
+    std::string nameInit)
 {
     initTraceSource(pTraceTargetInit,nameInit);
 }

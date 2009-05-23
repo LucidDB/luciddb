@@ -224,7 +224,8 @@ public:
      * @param nodes identifies source nodes.
      */
     virtual void mergeFrom(
-        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
+        ExecStreamGraph& src,
+        std::vector<ExecStreamId> const& nodes) = 0;
 
     /**
      * Finds a stream by name.

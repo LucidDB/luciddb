@@ -2061,7 +2061,9 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     uint descriptorBytesPerSegment = 1;
     uint maxNumSegments =
         (bitmapColSize / (LbmMaxSegSize + descriptorBytesPerSegment))
-        + ((bitmapColSize % (LbmMaxSegSize + descriptorBytesPerSegment)) == 0 ? 0 : 1);
+        + ((bitmapColSize % (LbmMaxSegSize + descriptorBytesPerSegment)) == 0
+           ? 0
+           : 1);
     return (bitmapColSize - maxNumSegments * descriptorBytesPerSegment);
 }
 

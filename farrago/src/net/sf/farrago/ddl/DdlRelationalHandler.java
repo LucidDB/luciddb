@@ -284,8 +284,8 @@ public class DdlRelationalHandler
         // Perform validation specific to the local data server
         FarragoMedDataServer medDataServer =
             validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
-        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer
-            .getClass().getName();
+        assert medDataServer instanceof FarragoMedLocalDataServer
+            : medDataServer.getClass().getName();
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {

@@ -22,15 +22,21 @@
 package net.sf.farrago.type.runtime;
 
 import java.text.*;
+import java.util.Calendar;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
 import org.eigenbase.util.*;
 
 
 /**
- * Runtime type for interval values. TODO: Need to include precision TODO: Need
- * to support casting from string, exact numerics TODO: both of above would be
- * easier if we just get the SqlIntervalQualifier
+ * Runtime type for interval values.
+ *
+ * <p>TODO:<ul>
+ * <li>Need to include precision.
+ * <li>Need to support casting from string, exact numerics
+ * <li>Both of above would be easier if we just get the SqlIntervalQualifier
+ * </ul>
  *
  * @author angel
  * @version $Id$
@@ -134,6 +140,40 @@ public abstract class EncodedSqlInterval
     protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
 
     protected abstract SqlIntervalQualifier.TimeUnit getEndUnit();
+
+    /**
+     * Rounds this interval value down to a unit of time expressed using its
+     * ordinal. Called by generated code.
+     *
+     * @param timeUnitOrdinal Ordinal of {@link
+     * org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     */
+    public void floor(int timeUnitOrdinal)
+    {
+        floor(SqlIntervalQualifier.TimeUnit.getValue(timeUnitOrdinal));
+    }
+
+    protected void floor(TimeUnit timeUnit)
+    {
+        throw Util.unexpected(timeUnit);
+    }
+
+    /**
+     * Rounds this interval value up to a unit of time expressed using its
+     * ordinal. Called by generated code.
+     *
+     * @param timeUnitOrdinal Ordinal of {@link
+     * org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     */
+    public void ceil(int timeUnitOrdinal)
+    {
+        ceil(SqlIntervalQualifier.TimeUnit.getValue(timeUnitOrdinal));
+    }
+
+    protected void ceil(TimeUnit timeUnit)
+    {
+        throw Util.unexpected(timeUnit);
+    }
 
     private static void appendHours(StringBuffer buf, long hours)
     {
@@ -240,6 +280,82 @@ public abstract class EncodedSqlInterval
                 value = interval.value;
             } else {
                 super.assignFrom(obj);
+            }
+        }
+
+        /**
+         * Rounds this interval value down to a unit of time. All smaller units
+         * of time are zeroed also.
+         *
+         * <p>For example, <code>floor(MINUTE)</code> applied to <code>INTERVAL
+         * '7 11:23:45' DAY TO SECOND</code> returns <code>INTERVAL '7 11:23:00'
+         * DAY TO SECOND</code>.
+         *
+         * @param timeUnit Time unit
+         */
+        public void floor(SqlIntervalQualifier.TimeUnit timeUnit)
+        {
+            if (value < 0) {
+                value = -value;
+                ceil(timeUnit);
+                value = -value;
+                return;
+            }
+            switch (timeUnit) {
+            case Day:
+                value = value / MS_PER_DAY * MS_PER_DAY;
+                break;
+            case Hour:
+                value = value / MS_PER_HOUR * MS_PER_HOUR;
+                break;
+            case Minute:
+               value = value / MS_PER_MINUTE * MS_PER_MINUTE;
+               break;
+            case Second:
+                value = value / MS_PER_SECOND * MS_PER_SECOND;
+                break;
+            default:
+                throw Util.unexpected(timeUnit);
+            }
+        }
+
+        /**
+         * Rounds this interval value up to a unit of time. All smaller units of
+         * time are zeroed also.
+         *
+         * <p>For example, <code>floor(MINUTE)</code> applied to <code>INTERVAL
+         * '7 11:23:45' DAY TO SECOND</code> returns <code>INTERVAL '7 11:24:00'
+         * DAY TO SECOND</code>.
+         *
+         * @param timeUnit Time unit
+         */
+        public void ceil(SqlIntervalQualifier.TimeUnit timeUnit)
+        {
+            if (value < 0) {
+                value = -value;
+                floor(timeUnit);
+                value = -value;
+                return;
+            }
+            switch (timeUnit) {
+            case Day:
+                value = (value + (MS_PER_DAY - 1)) / MS_PER_DAY * MS_PER_DAY;
+                break;
+            case Hour:
+                value = (value + (MS_PER_HOUR - 1)) / MS_PER_HOUR * MS_PER_HOUR;
+                break;
+            case Minute:
+               value =
+                   (value + (MS_PER_MINUTE - 1)) / MS_PER_MINUTE
+                   * MS_PER_MINUTE;
+               break;
+            case Second:
+                value =
+                    (value + (MS_PER_SECOND - 1)) / MS_PER_SECOND
+                    * MS_PER_SECOND;
+                break;
+            default:
+                throw Util.unexpected(timeUnit);
             }
         }
 

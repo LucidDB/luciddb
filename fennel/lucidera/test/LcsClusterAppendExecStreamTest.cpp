@@ -588,9 +588,11 @@ void LcsClusterAppendExecStreamTest::testSingleColStairNewRoot()
     // 2. scan 848 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
     SharedMockProducerExecStreamGenerator pResultGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
 
     testLoadSingleCol(
         848, 0, true, pGenerator, "testSingleColStairNewRoot");
@@ -613,11 +615,14 @@ void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
     // 3. load 10 more rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1, 7));
     SharedMockProducerExecStreamGenerator pRidGenerator =
-        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+        SharedMockProducerExecStreamGenerator(
+            new RampExecStreamGenerator());
     SharedMockProducerExecStreamGenerator pResultGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
 
     testLoadSingleCol(
         10, 0, true,  pGenerator,  "testSingleColStairOldRoot");
@@ -724,9 +729,11 @@ void LcsClusterAppendExecStreamTest::testMultiColStairNewRoot()
     // 2. scan 848 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
     SharedMockProducerExecStreamGenerator pResultGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
 
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColStairNewRoot");
     resetExecStreamTest();
@@ -748,11 +755,13 @@ void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
     // 3. load more 10 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1, 7));
     SharedMockProducerExecStreamGenerator pRidGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     SharedMockProducerExecStreamGenerator pResultGenerator =
-        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+        SharedMockProducerExecStreamGenerator(
+            new StairCaseExecStreamGenerator(1,  7));
 
     testLoadMultiCol(10, 3, true, pGenerator, "testMultiColStairOldRoot");
     resetExecStreamTest();

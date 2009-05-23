@@ -474,7 +474,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                                  * NULLs
                                  */
                                 for (uint i = 0; i < probeFieldLength; i ++) {
-                                    outputTuple[i + probeFieldOffset].pData = NULL;
+                                    outputTuple[i + probeFieldOffset].pData =
+                                        NULL;
                                 }
                                 joinState = ProduceBuild;
                                 nextState.push_back(GetNextPlan);
@@ -535,7 +536,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * to be included in the output tuple is 0.
                              */
                             for (uint i = 0; i < probeFieldLength; i ++) {
-                                outputTuple[i + probeFieldOffset].copyFrom(probeTuple[i]);
+                                outputTuple[i + probeFieldOffset].copyFrom(
+                                    probeTuple[i]);
                             }
 
                             /**
@@ -554,10 +556,12 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * Produce one output tuple per matched tuple from
                              * the left side.
                              *
-                             * Set the output tuple to include only the probe input.
+                             * Set the output tuple to include only
+                             * the probe input.
                              */
                             for (uint i = 0; i < probeFieldLength; i ++) {
-                                outputTuple[i + probeFieldOffset].copyFrom(probeTuple[i]);
+                                outputTuple[i + probeFieldOffset].copyFrom(
+                                    probeTuple[i]);
                             }
                             joinState = ProducePending;
                             nextState.push_back(Probe);
@@ -586,7 +590,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * input, and set NULL values on the right.
                              */
                             for (uint i = 0; i < probeFieldLength; i ++) {
-                                outputTuple[i + probeFieldOffset].copyFrom(probeTuple[i]);
+                                outputTuple[i + probeFieldOffset].copyFrom(
+                                    probeTuple[i]);
                             }
 
                             for (uint i = 0; i < buildFieldLength; i ++) {
@@ -620,7 +625,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                  */
                 if (hashTableReader.getNext(buildTuple)) {
                     for (uint i = 0; i < buildFieldLength; i ++) {
-                        outputTuple[i + buildFieldOffset].copyFrom(buildTuple[i]);
+                        outputTuple[i + buildFieldOffset].copyFrom(
+                            buildTuple[i]);
                     }
 
                     joinState = ProducePending;

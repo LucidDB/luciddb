@@ -366,7 +366,7 @@ inline T *alignRoundPtrUp(T *t)
 // calculate number of bytes needed to hold given number of bits
 inline uint bytesForBits(uint cBits)
 {
-    return (cBits>>3) + ((cBits & 7) ? 1 : 0);
+    return (cBits >> 3) + ((cBits & 7) ? 1 : 0);
 }
 
 

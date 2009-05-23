@@ -125,7 +125,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 

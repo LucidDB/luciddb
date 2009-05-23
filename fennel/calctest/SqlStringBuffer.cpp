@@ -228,7 +228,7 @@ SqlStringBufferUCS2::randomize(
 {
     patternfill(start, lower, upper);
 
-    vector <uint16_t>r;
+    vector <uint16_t> r;
     uint16_t tmp;
     int i = 0;
     while (i < mSize) {

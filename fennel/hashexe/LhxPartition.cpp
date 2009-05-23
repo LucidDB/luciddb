@@ -236,8 +236,8 @@ bool LhxPartitionReader::demandData()
          * has reached EOD.
          */
         if (!pSrcBuf) {
-           bufState = EXECBUF_EOS;
-           return false;
+            bufState = EXECBUF_EOS;
+            return false;
         } else {
             tupleStorageLength = tupleAccessor.getBufferByteCount(pSrcBuf);
             assert(bytesReadable >= tupleStorageLength);

@@ -140,7 +140,8 @@ public class SqlParseException
             if (expectedTokenSequence.length == maxLength) {
                 set.add(
                     tokenImages[
-                        expectedTokenSequence[expectedTokenSequence.length - 1]]);
+                        expectedTokenSequence[
+                            expectedTokenSequence.length - 1]]);
             }
         }
         return set;

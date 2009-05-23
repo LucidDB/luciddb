@@ -181,7 +181,7 @@ public abstract class SqlOperatorTests
             Long.toString(Byte.MIN_VALUE - 1),
             Long.toString(Short.MIN_VALUE - 1),
             Long.toString((long) Integer.MIN_VALUE - 1),
-            (new BigDecimal(Long.MIN_VALUE)).subtract(BigDecimal.ONE).toString(),
+            new BigDecimal(Long.MIN_VALUE).subtract(BigDecimal.ONE).toString(),
             "-1000.00",
             "1e-46",
             "1e-324",
@@ -3107,7 +3107,8 @@ public abstract class SqlOperatorTests
     {
         // Note: the initcap function is an Oracle defined function and is not
         // defined in the SQL:2003 standard
-        getTester().setFor(SqlStdOperatorTable.initcapFunc, VM_FENNEL); // todo: implement in fennel
+        // todo: implement in fennel
+        getTester().setFor(SqlStdOperatorTable.initcapFunc, VM_FENNEL);
         getTester().checkString("initcap('aA')", "Aa", "CHAR(2) NOT NULL");
         getTester().checkString("initcap('Aa')", "Aa", "CHAR(2) NOT NULL");
         getTester().checkString("initcap('1a')", "1a", "CHAR(2) NOT NULL");
@@ -3144,7 +3145,8 @@ public abstract class SqlOperatorTests
 
     public void testExpFunc()
     {
-        getTester().setFor(SqlStdOperatorTable.expFunc, VM_FENNEL); // todo: implement in fennel
+        // todo: implement in fennel
+        getTester().setFor(SqlStdOperatorTable.expFunc, VM_FENNEL);
         getTester().checkScalarApprox(
             "exp(2)",
             "DOUBLE NOT NULL",

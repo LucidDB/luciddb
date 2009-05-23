@@ -53,10 +53,18 @@ class FENNEL_FARRAGO_EXPORT JavaSinkExecStream
     ExecStreamResult lastResult;
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     int javaFennelPipeTupleIterId;
-    jobject javaFennelPipeTupleIter;         // our java peer, a FennelPipeTupleIter
-    jmethodID methFennelPipeTupleIter_write; // its method 'write(ByteBuffer, int byteCount)'
-    jmethodID methFennelPipeTupleIter_getByteBuffer; // its method 'getByteBuffer(int size)'
-    jmethodID methByteBuffer_array;     // java method ByteBuffer.array()
+
+    /// our java peer, a FennelPipeTupleIter
+    jobject javaFennelPipeTupleIter;
+
+    /// its method 'write(ByteBuffer, int byteCount)'
+    jmethodID methFennelPipeTupleIter_write;
+
+    /// its method 'getByteBuffer(int size)'
+    jmethodID methFennelPipeTupleIter_getByteBuffer;
+
+    /// java method ByteBuffer.array()
+    jmethodID methByteBuffer_array;
 
     /// sends data to the java peer
     void sendData(PConstBuffer src, uint size);
