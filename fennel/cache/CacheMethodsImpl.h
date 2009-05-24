@@ -170,8 +170,9 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
             pages.clear();
             if (pages.capacity() > nPagesMax) {
                 // Reset capacity of pages to a smaller value by swapping pages
-                // with a temporary vector that has no capacity.
-                std::vector<PageT *>(0).swap(pages);
+                // with a temporary vector that has tiny capacity.  (Avoid
+                // zero capacity since that causes a memset warning.)
+                std::vector<PageT *>(1).swap(pages);
             }
             pages.reserve(nPagesMax);
             pages.assign(nPagesMax, NULL);
