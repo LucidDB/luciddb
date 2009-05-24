@@ -117,7 +117,11 @@ public:
         case STANDARD_TYPE_UNICODE_VARCHAR:
             return "vU";
         default:
-            throw std::invalid_argument("fennel/tuple/StandardTypeDescriptor::toString");
+            {
+                std::string msg(
+                    "fennel/tuple/StandardTypeDescriptor::toString");
+                throw std::invalid_argument(msg);
+            }
         }
     }
 
