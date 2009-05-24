@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.9.0
+LucidDB Binary Release 0.9.1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -61,6 +61,18 @@ please visit http://www.eigenbase.org/download.html.
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.9.0 include
+
+- miscellaneous compiler compatibility fixes
+- fix buffer pool requirement calculation for nested loop joins
+- optimize no-op replace column updates to avoid touching pages
+- fix hang in kill/shutdown (FRG-294)
+- additional bitmap index fixes
+- optimize column store scans so filtered columns are scanned first
+- fix crash in cleanup of dynamic parameter for unopened stream
+- use UTF-8 for XMI catalog export
+- fix catalog write performance on OpenSUSE (FRG-376)
 
 Changes since 0.8.0 include
 
