@@ -51,15 +51,15 @@ SAVE_PWD="$PWD"
 cd ../thirdparty
 make fennel
 
-
 # Detect Cygwin
 cygwin=false
 case "`uname`" in
   CYGWIN*) cygwin=true ;;
 esac
 
-
+thirdparty_dir=`pwd`
 if $cygwin ; then
+    thirdparty_dir=$(cygpath -a -m ${thirdparty_dir})
     export JAVA_HOME=`cygpath -u $JAVA_HOME`
 fi
 
@@ -69,11 +69,11 @@ if [ "$ICU_FLAG" == "" ] ; then
 fi
 
 if [ "$ICU_FLAG" == "--with-icu" ] ; then
-    ICU_CONF="--with-icu=`pwd`/../thirdparty/icu"
+    ICU_CONF="--with-icu=${thirdparty_dir}/../thirdparty/icu"
 fi
 
-CMAKE_FLAGS="-Dboost_location=`pwd`/boost \
-    -Dstlport_location=`pwd`/stlport \
+CMAKE_FLAGS="-Dboost_location=${thirdparty_dir}/boost \
+    -Dstlport_location=${thirdparty_dir}/stlport \
     -DOPT_FLAG=$OPT_FLAG -DDEBUG_FLAG=$DEBUG_FLAG -DAIO_FLAG=$AIO_FLAG"
 
 if [ "$FARRAGO_FLAG" == "--with-farrago" ] ; then
