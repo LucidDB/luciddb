@@ -572,7 +572,8 @@ public class FarragoPreparingStmt
                 // is not part of the cache key
                 cmdPrepareStream.setDegreeOfParallelism(
                     getSession().getSessionVariables().getInteger(
-                        FarragoDefaultSessionPersonality.DEGREE_OF_PARALLELISM));
+                        FarragoDefaultSessionPersonality
+                            .DEGREE_OF_PARALLELISM));
 
                 Collection<FemExecutionStreamDef> streamDefs =
                     cmdPrepareStream.getStreamDefs();
@@ -1175,6 +1176,10 @@ public class FarragoPreparingStmt
             stmtValidator.resolveSchemaObjectName(
                 names,
                 CwmNamedColumnSet.class);
+
+        if (resolved == null) {
+            return null;
+        }
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);

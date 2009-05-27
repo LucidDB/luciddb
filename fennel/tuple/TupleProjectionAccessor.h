@@ -37,7 +37,7 @@ class TupleProjection;
  * selected attributes of a tuple, as explained in
  * the <a href="structTupleDesign.html#TupleProjection">design docs</a>.
  */
-class TupleProjectionAccessor
+class FENNEL_TUPLE_EXPORT TupleProjectionAccessor
 {
     TupleAccessor const *pTupleAccessor;
     std::vector<AttributeAccessor const *> ppAttributeAccessors;

@@ -44,7 +44,7 @@ class TupleDatum;
  * @author John V. Sichi
  * @version $Id$
  */
-class AggComputer
+class FENNEL_EXEC_EXPORT AggComputer
 {
 protected:
     int iInputAttr;

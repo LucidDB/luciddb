@@ -53,7 +53,8 @@ struct CalcExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class CalcExecStream : public ConduitExecStream
+class FENNEL_CALCULATOR_EXPORT CalcExecStream
+    : public ConduitExecStream
 {
     /**
      * TupleDescriptor for input tuples.

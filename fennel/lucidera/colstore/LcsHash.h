@@ -40,7 +40,7 @@ FENNEL_BEGIN_NAMESPACE
  * hash value nodes array stored in LcsHashTable class. The highest bit of the
  * value is used to indicate whether this value is part of the current batch.
  */
-class LcsHashValOrd
+class FENNEL_LCS_EXPORT LcsHashValOrd
 {
 private:
 
@@ -123,11 +123,11 @@ struct LcsHashValueNode
 
 
 /**
- * LcsHashTable implements a hash table that fits the hash entries and the overflow
- * nodes into one scratch buffer of size hashBlockSize.
+ * LcsHashTable implements a hash table that fits the hash entries and
+ * the overflow nodes into one scratch buffer of size hashBlockSize.
  * The overflow nodes are of type LcsHashValueNode.
  */
-class LcsHashTable
+class FENNEL_LCS_EXPORT LcsHashTable
 {
 private:
 
@@ -319,12 +319,13 @@ struct LcsUndoType
  * The sorted indices can then be used to encode the offsets when preparing
  * a compressed batch to write out.
  */
-class LcsCompareColKeyUsingOffsetIndex
+class FENNEL_LCS_EXPORT LcsCompareColKeyUsingOffsetIndex
 {
 private:
 
     /**
-     * Reference to the Hash Table where cluster column values are inserted into.
+     * Reference to the Hash Table where cluster column values are inserted
+     * into.
      */
     LcsHashTable            *hashTable;
 
@@ -397,7 +398,7 @@ public:
 /**
  * Theis class is passed to std::sort. It implements the "less than" operator.
  */
-class LcsCompare
+class FENNEL_LCS_EXPORT LcsCompare
 {
 private:
 
@@ -441,7 +442,7 @@ public:
  * tuple and sends to the LcsClusterNodeWriter data pointers with encoded length
  * information.
  */
-class LcsHash
+class FENNEL_LCS_EXPORT LcsHash
 {
 private:
 
@@ -805,7 +806,9 @@ inline LcsHashValueNode* LcsHashTable::getNewValueNode()
     return &(valueNodes[nextValueNode]);
 }
 
-inline void LcsHashTable::insertNewValueNode(uint key,  LcsHashValueNode *newNode)
+inline void LcsHashTable::insertNewValueNode(
+    uint key,
+    LcsHashValueNode *newNode)
 {
     newNode->next = (uint16_t)entry[key];
 
@@ -838,7 +841,8 @@ inline LcsHashValueNode* LcsHashTable::getFirstValueNode(uint key)
     }
 }
 
-inline LcsHashValueNode* LcsHashTable::getNextValueNode(LcsHashValueNode *pValueNode)
+inline LcsHashValueNode* LcsHashTable::getNextValueNode(
+    LcsHashValueNode *pValueNode)
 {
     uint16_t offset = pValueNode->next;
 

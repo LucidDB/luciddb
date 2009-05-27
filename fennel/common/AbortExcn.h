@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class AbortExcn : public FennelExcn
+class FENNEL_COMMON_EXPORT AbortExcn : public FennelExcn
 {
 public:
     /**

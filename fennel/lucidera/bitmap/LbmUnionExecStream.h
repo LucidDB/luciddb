@@ -78,7 +78,8 @@ struct LbmUnionExecStreamParams : public ConfluenceExecStreamParams
  * @author John Pham
  * @version $Id$
  */
-class LbmUnionExecStream : public ConfluenceExecStream
+class FENNEL_LBM_EXPORT LbmUnionExecStream
+    : public ConfluenceExecStream
 {
     // see LbmUnionExecStreamParams
     LcsRid maxRid;

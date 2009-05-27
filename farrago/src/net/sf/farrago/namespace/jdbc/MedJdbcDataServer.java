@@ -422,6 +422,14 @@ public class MedJdbcDataServer
         }
     }
 
+    /**
+     * @return name of the catalog accessed by this server
+     */
+    public String getCatalogName()
+    {
+        return catalogName;
+    }
+
     private void initMetaData()
     {
         try {

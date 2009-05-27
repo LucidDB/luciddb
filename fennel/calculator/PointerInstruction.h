@@ -57,7 +57,8 @@ typedef uint32_t PointerSizeT;
 typedef uint32_t PointerOperandT;
 #define POINTEROPERANDT_STANDARD_TYPE STANDARD_TYPE_UINT_32
 
-class PointerInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT PointerInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -72,7 +73,7 @@ protected:
         StandardTypeDescriptorOrdinal type,
         uint operandArgs2)
     {
-        vector<StandardTypeDescriptorOrdinal>v(
+        vector<StandardTypeDescriptorOrdinal> v(
             sizetArgs1,
             POINTERSIZET_STANDARD_TYPE);
         uint i;

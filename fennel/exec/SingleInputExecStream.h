@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * SingleInputExecStreamParams defines parameters for SingleInputExecStream.
  */
-struct SingleInputExecStreamParams : virtual public ExecStreamParams
+struct FENNEL_EXEC_EXPORT SingleInputExecStreamParams
+    : virtual public ExecStreamParams
 {
 };
 
@@ -43,7 +44,8 @@ struct SingleInputExecStreamParams : virtual public ExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SingleInputExecStream : virtual public ExecStream
+class FENNEL_EXEC_EXPORT SingleInputExecStream
+    : virtual public ExecStream
 {
 protected:
     SharedExecStreamBufAccessor pInAccessor;

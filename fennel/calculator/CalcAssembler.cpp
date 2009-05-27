@@ -30,7 +30,6 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace std;
-using namespace boost;
 
 CalcAssembler::~CalcAssembler()
 {
@@ -130,7 +129,7 @@ void CalcAssembler::setTupleDatum(
     case STANDARD_TYPE_REAL:
 
         *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<float>(value);
+            boost::numeric_cast<float>(value);
 
         // Check for underflow where the value becomes 0
         // NOTE: Underflows that causes precision loss but does not become 0
@@ -145,7 +144,7 @@ void CalcAssembler::setTupleDatum(
         break;
     case STANDARD_TYPE_DOUBLE:
         *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<double>(value);
+            boost::numeric_cast<double>(value);
         break;
     default:
         // Invalid real type - horrible, horrible
@@ -163,41 +162,41 @@ void CalcAssembler::setTupleDatum(
     switch (type) {
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int8_t>(value);
+            boost::numeric_cast<int8_t>(value);
         break;
     case STANDARD_TYPE_UINT_8:
         *(reinterpret_cast<uint8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<uint8_t>(value);
+            boost::numeric_cast<uint8_t>(value);
         break;
     case STANDARD_TYPE_INT_16:
         *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-                numeric_cast<int16_t>(value);
+                boost::numeric_cast<int16_t>(value);
         break;
     case STANDARD_TYPE_UINT_16:
         *(reinterpret_cast<uint16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<uint16_t>(value);
+            boost::numeric_cast<uint16_t>(value);
         break;
     case STANDARD_TYPE_INT_32:
         *(reinterpret_cast<int32_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int32_t>(value);
+            boost::numeric_cast<int32_t>(value);
         break;
     case STANDARD_TYPE_UINT_32:
         *(reinterpret_cast<uint32_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<uint32_t>(value);
+            boost::numeric_cast<uint32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
         // Explicitly check for overflow of int64_t because the boost
-        // numeric_cast does not throw an exception in this case
+        // boost::numeric_cast does not throw an exception in this case
         if (value > std::numeric_limits<int64_t>::max()) {
             throw InvalidValueException<uint64_t>(
                 "bad numeric cast: overflow", type, value);
         }
         *(reinterpret_cast<int64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int64_t>(value);
+            boost::numeric_cast<int64_t>(value);
         break;
     case STANDARD_TYPE_UINT_64:
         *(reinterpret_cast<uint64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<uint64_t>(value);
+            boost::numeric_cast<uint64_t>(value);
             break;
     case STANDARD_TYPE_BOOL:
         // Booleans are specifed as 0 or 1
@@ -229,19 +228,19 @@ void CalcAssembler::setTupleDatum(
     switch (type) {
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int8_t>(value);
+            boost::numeric_cast<int8_t>(value);
         break;
     case STANDARD_TYPE_INT_16:
         *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int16_t>(value);
+            boost::numeric_cast<int16_t>(value);
         break;
     case STANDARD_TYPE_INT_32:
         *(reinterpret_cast<int32_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int32_t>(value);
+            boost::numeric_cast<int32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
         *(reinterpret_cast<int64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
-            numeric_cast<int64_t>(value);
+            boost::numeric_cast<int64_t>(value);
         break;
     default:
         throw InvalidValueException<int64_t>(

@@ -1065,9 +1065,8 @@ public class JavaRelImplementor
         }
 
         /**
-         * Walks over an expression, and throws {@link
-         * org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate
-         * } if expression cannot be translated.
+         * Walks over an expression, and throws <code>CannotTranslate</code>
+         * if expression cannot be translated.
          *
          * @param rex Expression
          *

@@ -56,7 +56,7 @@ class LhxHashTableTest : virtual public SegStorageTestBase
         uint numRows,
         uint maxBlockCount,
         uint partitionLevel,
-        vector<uint> &repeatSeqValues,
+        VectorOfUint &repeatSeqValues,
         uint numKeyCols,
         uint numAggs,
         uint numDataCols,
@@ -98,7 +98,9 @@ void LhxHashTableTest::testCaseTearDown()
     hashInfo.aggsProj.clear();
     hashInfo.dataProj.clear();
 
-    hashInfo.memSegmentAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    hashInfo.memSegmentAccessor.pSegment->deallocatePageRange(
+        NULL_PAGE_ID,
+        NULL_PAGE_ID);
     hashInfo.externalSegmentAccessor.reset();
     hashInfo.memSegmentAccessor.reset();
     SegStorageTestBase::testCaseTearDown();
@@ -167,7 +169,7 @@ void LhxHashTableTest::testInsert(
     uint numRows,
     uint maxBlockCount,
     uint partitionLevel,
-    vector<uint> &repeatSeqValues,
+    VectorOfUint &repeatSeqValues,
     uint numKeyCols,
     uint numAggs,
     uint numDataCols,
@@ -246,7 +248,8 @@ void LhxHashTableTest::testInsert(
     uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
-    hashTable.calculateNumSlots(cndKeys, usablePageSize, hashInfo.numCachePages);
+    hashTable.calculateNumSlots(
+        cndKeys, usablePageSize, hashInfo.numCachePages);
 
     bool status = hashTable.allocateResources();
 
@@ -361,14 +364,14 @@ void LhxHashTableTest::testInsert(
     }
 
     if (recursivePartitioning > 0) {
-        // using the same data set(the one from the hash table( for both inputs
-        // partition all leaf nodes till the tree reaches "recrusivePartitioning",
-        // partition level starts from level 0 which is a single partition.
-        // For each level, read all the data from the leaf partitions and make sure the
-        // rwo count remain the same as the rows initially written into the
-        // single partition.
+        // Using the same data set(the one from the hash table( for both inputs
+        // partition all leaf nodes till the tree reaches
+        // "recursivePartitioning", partition level starts from level 0 which is
+        // a single partition.  For each level, read all the data from the leaf
+        // partitions and make sure the rwo count remain the same as the rows
+        // initially written into the single partition.
 
-        // first set up the plan at level 0 which conprises of a single
+        // First set up the plan at level 0 which conprises of a single
         // partition, one from each side.
         std::vector<SharedLhxPartition> partitions;
         uint tuplesWritten[2];
@@ -457,7 +460,7 @@ void LhxHashTableTest::testInsert1Ka()
     uint numRows = 100;
     uint maxBlockCount = 10;
     uint partitionLevel = 0;
-    vector<uint> values;
+    VectorOfUint values;
     uint numKeyCols = 1;
     uint numAggs = 0;
     uint numDataCols = 0;
@@ -494,7 +497,7 @@ void LhxHashTableTest::testInsert1Kb()
     uint numRows = 1000;
     uint maxBlockCount = 10;
     uint partitionLevel = 0;
-    vector<uint> values;
+    VectorOfUint values;
     uint numKeyCols = 2;
     uint numAggs = 0;
     uint numDataCols = 4;

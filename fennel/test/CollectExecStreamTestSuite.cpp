@@ -37,15 +37,20 @@ CollectExecStreamTestSuite::CollectExecStreamTestSuite(bool addAllTests)
     if (addAllTests) {
         FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectInts);
         FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectUncollect);
-        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectCollectUncollectUncollect);
+        FENNEL_UNIT_TEST_CASE(
+            CollectExecStreamTestSuite,testCollectCollectUncollectUncollect);
     }
 
     StandardTypeDescriptorFactory stdTypeFactory;
 
-    descAttrInt64 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    descAttrInt64 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     descInt64.push_back(descAttrInt64);
 
-    descAttrVarbinary32 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,32);
+    descAttrVarbinary32 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY), true, 32);
     descVarbinary32.push_back(descAttrVarbinary32);
 }
 
@@ -111,7 +116,10 @@ void CollectExecStreamTestSuite::testCollectUncollect()
     StandardTypeDescriptorFactory stdTypeFactory;
     uint rows = 127;
 
-    TupleAttributeDescriptor tupleDescAttr(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true,
+        2 * rows * sizeof(uint64_t));
     TupleDescriptor tupleDesc;
     tupleDesc.push_back(tupleDescAttr);
 
@@ -154,11 +162,17 @@ void CollectExecStreamTestSuite::testCollectCollectUncollectUncollect() {
     StandardTypeDescriptorFactory stdTypeFactory;
     uint rows = 3;
 
-    TupleAttributeDescriptor tupleDescAttr1(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr1(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true,
+        2 * rows * sizeof(uint64_t));
     TupleDescriptor vbDesc1;
     vbDesc1.push_back(tupleDescAttr1);
 
-    TupleAttributeDescriptor tupleDescAttr2(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr2(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true,
+        2 * rows * rows * sizeof(uint64_t));
     TupleDescriptor vbDesc2;
     vbDesc2.push_back(tupleDescAttr2);
 

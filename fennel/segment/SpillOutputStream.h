@@ -37,7 +37,8 @@ class LogicalTxn;
  * contents are spilled to a new SegOutputStream to which all further writes
  * are directed.
  */
-class SpillOutputStream : public ByteOutputStream
+class FENNEL_SEGMENT_EXPORT SpillOutputStream
+    : public ByteOutputStream
 {
     /**
      * Factory to use for creating spill segment if necessary.

@@ -37,11 +37,11 @@ FENNEL_BEGIN_NAMESPACE
 // InstructionArgs
 // A class that can represent all possible arguments to
 // an Instruction constructor.
-class InstructionArgs
+class FENNEL_CALCULATOR_EXPORT InstructionArgs
 {
 public:
     explicit
-    InstructionArgs(const vector<RegisterReference*>o)
+    InstructionArgs(const vector<RegisterReference*> o)
         : operands(o),
           pcSet(false)
     {
@@ -49,7 +49,7 @@ public:
 
     explicit
     InstructionArgs(
-        const vector<RegisterReference*>o,
+        const vector<RegisterReference*> o,
         TProgramCounter p)
         : operands(o),
           pc(p),

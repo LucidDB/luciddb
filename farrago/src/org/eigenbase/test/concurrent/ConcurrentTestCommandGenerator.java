@@ -495,7 +495,10 @@ public class ConcurrentTestCommandGenerator
     }
 
 
-    /** @return true if any test thread failed. Valid after execute() has returned */
+    /**
+     * Returns whether any test thread failed. Valid after {@link #execute} has
+     * returned.
+     */
     public boolean failed()
     {
         return !failedThreads.isEmpty();
@@ -561,7 +564,8 @@ public class ConcurrentTestCommandGenerator
                 threadMap.entrySet().iterator();
             i.hasNext();)
         {
-            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>> threadCommandsEntry =
+            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>>
+                threadCommandsEntry =
                 i.next();
 
             TreeMap<Integer, ConcurrentTestCommand> commands =
@@ -606,15 +610,17 @@ public class ConcurrentTestCommandGenerator
                 threadMap.entrySet().iterator();
             i.hasNext();)
         {
-            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>> threadCommandsEntry =
-                i.next();
+            Map.Entry<Integer, TreeMap<Integer, ConcurrentTestCommand>>
+                threadCommandsEntry = i.next();
 
             TreeMap<Integer, ConcurrentTestCommand> commands =
                 (TreeMap<Integer, ConcurrentTestCommand>)
                 threadCommandsEntry.getValue();
 
             int numSyncsThisThread = 0;
-            for (Iterator<ConcurrentTestCommand> j = commands.values().iterator(); j.hasNext();) {
+            for (Iterator<ConcurrentTestCommand> j =
+                commands.values().iterator(); j.hasNext();)
+            {
                 if (j.next() instanceof SynchronizationCommand) {
                     numSyncsThisThread++;
                 }

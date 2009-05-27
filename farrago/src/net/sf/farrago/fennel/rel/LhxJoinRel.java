@@ -223,7 +223,8 @@ public class LhxJoinRel
                         "left", "right", "leftKeys", "rightKeys", "filterNulls",
                         "joinType"
                     },
-                    new Object[] { leftKeys, rightKeys, filterNulls, joinType });
+                    new Object[] {
+                        leftKeys, rightKeys, filterNulls, joinType });
             }
         } else {
             pw.explain(

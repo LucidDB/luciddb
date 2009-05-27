@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Exception class for scratch memory allocation errors
  */
-class ScratchMemExcn : public FennelExcn
+class FENNEL_SEGMENT_EXPORT ScratchMemExcn
+    : public FennelExcn
 {
 public:
     /**

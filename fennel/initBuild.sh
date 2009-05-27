@@ -47,48 +47,9 @@ set -v
 
 SAVE_PWD="$PWD"
 
-# Check automake/libtool/autoconf versions
-AUTOMAKE_VERSION=$(automake --version | awk '{print $4; exit}')
-case $AUTOMAKE_VERSION in
-1.7.6*) ;;
-1.7.8*) ;;
-1.7.9*) ;;
-1.8*) ;;
-1.9*) ;;
-1.10*) ;;
-*)
-    echo "Invalid automake version '$AUTOMAKE_VERSION'."
-    echo "To fix, please run 'make automake' under thirdparty,"
-    echo "then as root, 'make install' under thirdparty/automake."
-    exit -1
-    ;;
-esac
-
-LIBTOOL_VERSION=$(libtool --version | awk '{print $4; exit}')
-case $LIBTOOL_VERSION in
-1.5*) ;;
-*)
-    echo "Invalid libtool version '$LIBTOOL_VERSION'."
-    echo "To fix, please run 'make libtool' under thirdparty,"
-    echo "then as root, 'make install' under thirdparty/libtool."
-    exit -1
-    ;;
-esac
-
-AUTOCONF_VERSION=$(autoconf --version | awk '{print $4; exit}')
-VALID_AUTOCONF=`echo "$AUTOCONF_VERSION >= 2.57" | bc`
-if [ $VALID_AUTOCONF -ne 1 ]; then
-    echo "Invalid autoconf version '$AUTOCONF_VERSION'."
-    echo "Autoconf version must be 2.57 or later."
-    echo "To fix, please run 'make autoconf' under thirdparty,"
-    echo "then as root, 'make install' under thirdparty/autoconf."
-    exit -1
-fi
-
 # Unpack thirdparty components
 cd ../thirdparty
 make fennel
-
 
 # Detect Cygwin
 cygwin=false
@@ -96,16 +57,9 @@ case "`uname`" in
   CYGWIN*) cygwin=true ;;
 esac
 
-
+thirdparty_dir=`pwd`
 if $cygwin ; then
-    export CC="gcc -mno-cygwin"
-    export CXX="gcc -mno-cygwin"
-    MINGW32_TARGET="--target=mingw32"
-    if [ "$ICU_FLAG" == "--with-icu" ] ; then
-        # an explicit call for ICU
-        echo "Error: ICU library not supported on Cygwin / Mingw"
-        exit -1;
-    fi
+    thirdparty_dir=$(cygpath -a -m ${thirdparty_dir})
     export JAVA_HOME=`cygpath -u $JAVA_HOME`
 fi
 
@@ -115,20 +69,31 @@ if [ "$ICU_FLAG" == "" ] ; then
 fi
 
 if [ "$ICU_FLAG" == "--with-icu" ] ; then
-    ICU_CONF="--with-icu=`pwd`/../thirdparty/icu"
+    ICU_CONF="--with-icu=${thirdparty_dir}/../thirdparty/icu"
+fi
+
+CMAKE_FLAGS="-Dboost_location=${thirdparty_dir}/boost \
+    -Dstlport_location=${thirdparty_dir}/stlport \
+    -DOPT_FLAG=$OPT_FLAG -DDEBUG_FLAG=$DEBUG_FLAG -DAIO_FLAG=$AIO_FLAG"
+
+if [ "$FARRAGO_FLAG" == "--with-farrago" ] ; then
+    CMAKE_FLAGS="$CMAKE_FLAGS -Dwith_farrago=TRUE"
 fi
 
 # Configure Fennel
 cd "$SAVE_PWD"
-rm -rf autom4te.cache
-autoreconf --force --install
-./configure --with-boost=`pwd`/../thirdparty/boost \
-    --with-stlport=`pwd`/../thirdparty/stlport \
-    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG $DEBUG_FLAG $AIO_FLAG
-
+rm -rf CMakeFiles cmake_install.cmake CMakeCache.txt
 if $cygwin ; then
-    unset CC
-    unset CXX
+    cmake $CMAKE_FLAGS -G "NMake Makefiles" .
+    # NOTE jvs 6-Apr-2009:  the cmake kludge for Windows touches
+    # 0-sized .cpp.obj files in order to satisfy bogus dependencies,
+    # so we need to delete them now before attempting the real build
+    rm `find . -name '*.cpp.obj'`
+    rm -f FlexLexer.h
+    cp -f /usr/include/FlexLexer.h ./FlexLexer.h
+    touch ./unistd.h
+else
+    cmake $CMAKE_FLAGS .
 fi
 
 # Build thirdparty libraries required by Fennel
@@ -143,8 +108,13 @@ if $build_thirdparty ; then
 fi
 
 # Build Fennel itself
-make clean
-make
+if $cygwin ; then
+    nmake clean
+    nmake
+else
+    make clean
+    make
+fi
 
 if ! $skip_tests ; then
     # Set up Fennel runtime environment
@@ -152,5 +122,3 @@ if ! $skip_tests ; then
 
     make check
 fi
-
-

@@ -34,7 +34,7 @@ FENNEL_BEGIN_NAMESPACE
  * FileStatsTarget implements the StatsTarget interface by writing to a simple
  * text file.
  */
-class FileStatsTarget : public StatsTarget
+class FENNEL_COMMON_EXPORT FileStatsTarget : public StatsTarget
 {
     std::string filename;
     std::ofstream snapshotStream;

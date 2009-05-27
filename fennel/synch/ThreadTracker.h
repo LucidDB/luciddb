@@ -35,7 +35,7 @@ class FennelExcn;
  * @author John Sichi
  * @version $Id$
  */
-class ThreadTracker
+class FENNEL_SYNCH_EXPORT ThreadTracker
 {
 public:
     virtual ~ThreadTracker();

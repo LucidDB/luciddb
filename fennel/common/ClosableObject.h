@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * makes it easier to instantiate a shared_ptr which takes care of automatic
  * close on destruction (see ClosableObjectDestructor).
  */
-class ClosableObject
+class FENNEL_COMMON_EXPORT ClosableObject
 {
 protected:
     /**
@@ -70,7 +70,7 @@ public:
  * A destructor functor for use as the "D" parameter to a
  * boost::shared_ptr constructor.
  */
-class ClosableObjectDestructor
+class FENNEL_COMMON_EXPORT ClosableObjectDestructor
 {
 public:
     void operator()(ClosableObject *pClosableObject)

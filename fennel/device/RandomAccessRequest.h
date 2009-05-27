@@ -36,7 +36,7 @@ struct aiocb;
 struct iocb;
 #endif
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
@@ -48,14 +48,15 @@ class RandomAccessDevice;
  * RandomAccessRequestBinding binds a RandomAccessRequest to a particular
  * memory location being read from or written to.
  */
-class RandomAccessRequestBinding : public IntrusiveListNode
+class FENNEL_DEVICE_EXPORT RandomAccessRequestBinding
+    : public IntrusiveListNode
 #ifdef USE_AIO_H
 , public aiocb
 #endif
 #ifdef USE_LIBAIO_H
 , public iocb
 #endif
-#ifdef __MINGW32__
+#ifdef __MSVC__
 , public OVERLAPPED
 #endif
 {
@@ -90,7 +91,7 @@ public:
  * RandomAccessRequestBinding memory locations need not be contiguous
  * (scatter/gather).
  */
-class RandomAccessRequest
+class FENNEL_DEVICE_EXPORT RandomAccessRequest
 {
 public:
     enum Type {

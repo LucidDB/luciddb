@@ -152,12 +152,13 @@ public class FarragoDatabase
 
             // Tell MDR about our plugin ClassLoader so that it can find
             // extension model JMI interfaces in plugin jars.
-            pluginClassLoader = new FarragoPluginClassLoader();
+            pluginClassLoader = sessionFactory.getPluginClassLoader();
+            final ClassLoader pcl = pluginClassLoader;
             MDRepositoryFactory.setClassLoaderProvider(
                 new ClassLoaderProvider() {
                     public ClassLoader getClassLoader()
                     {
-                        return pluginClassLoader;
+                        return pcl;
                     }
 
                     public Class defineClass(
@@ -440,6 +441,15 @@ public class FarragoDatabase
             // This will close (in reverse order) all the FarragoAllocations
             // opened by the constructor.
             synchronized (this) {
+                // kick off asynchronous cancel requests on each session;
+                // inside of closeAllocation, we'll wait for each
+                // of those to be honored
+                for (ClosableAllocation a : allocations) {
+                    if (a instanceof FarragoDbSession) {
+                        FarragoDbSession session = (FarragoDbSession) a;
+                        session.cancel();
+                    }
+                }
                 closeAllocation();
             }
             assertNoFennelHandles();
@@ -815,9 +825,9 @@ public class FarragoDatabase
             tracer.info("killSession " + id + ": already closed");
             return;
         }
-        if (cancelOnly) {
-            target.cancel();
-        } else {
+
+        target.cancel();
+        if (!cancelOnly) {
             target.kill();
         }
     }
@@ -1288,13 +1298,21 @@ public class FarragoDatabase
         String libraryName =
             FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
         try {
-            FarragoPluginClassLoader classLoader =
-                new FarragoPluginClassLoader();
+            FarragoDatabase db = instance;
+            FarragoPluginClassLoader classLoader;
+            if (db == null) {
+                classLoader = new FarragoPluginClassLoader();
+            } else {
+                classLoader = db.getPluginClassLoader();
+            }
             Class c =
                 classLoader.loadClassFromLibraryManifest(
                     libraryName,
                     "SessionFactoryClassName");
-            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
+            FarragoSessionFactory sessionFactory =
+                (FarragoSessionFactory) classLoader.newPluginInstance(c);
+            sessionFactory.setPluginClassLoader(classLoader);
+            return sessionFactory;
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(
                 libraryName,

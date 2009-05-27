@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 
 #include "fennel/device/RandomAccessDevice.h"
 #include "fennel/device/IoCompletionPortScheduler.h"

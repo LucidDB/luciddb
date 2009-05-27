@@ -38,7 +38,8 @@ class SXMutex;
  * FtrsTableWriterExecStreamParams defines parameters for instantiating a
  * FtrsTableWriterExecStream.
  */
-struct FtrsTableWriterExecStreamParams : public FtrsTableWriterParams
+struct FENNEL_FTRS_EXPORT FtrsTableWriterExecStreamParams
+    : public FtrsTableWriterParams
 {
     SharedFtrsTableWriterFactory pTableWriterFactory;
     LogicalActionType actionType;
@@ -50,7 +51,7 @@ struct FtrsTableWriterExecStreamParams : public FtrsTableWriterParams
  * to write to all of the indexes making up a table (either INSERT or
  * DEELETE depending on prepared parameters).
  */
-class FtrsTableWriterExecStream
+class FENNEL_FTRS_EXPORT FtrsTableWriterExecStream
     : public ConduitExecStream
 {
     /**

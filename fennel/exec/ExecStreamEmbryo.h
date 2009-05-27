@@ -45,7 +45,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamEmbryo
+class FENNEL_EXEC_EXPORT ExecStreamEmbryo
 {
     /**
      * Unprepared stream.

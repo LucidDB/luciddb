@@ -189,6 +189,21 @@ select action_id, error_count, warning_count, "SQL"
     and action_id like 'merge_match_multiple_src_per_tgt%'
   order by 1,2,3,4;
 
+-- the following updates will result in replacement of the existing column;
+-- selecting the max rid column will confirm that replacement was done; the
+-- value needs to match the value before the updates
+-- as opposed
+alter session set "errorMax" = 0;
+select max(lcs_rid(partkey)) from part_uc;
+update part_uc set partkey = partkey + 1;
+select max(lcs_rid(partkey)) from part_uc;
+select * from sys_root.user_session_parameters
+  where param_name = 'lastUpsertRowsInserted';
+update part_uc set partkey = partkey + 20000 where name <> 'SUPERDELUX!';
+select max(lcs_rid(partkey)) from part_uc;
+select * from sys_root.user_session_parameters
+  where param_name = 'lastUpsertRowsInserted';
+
 -- cleanup
 drop table part_uc cascade;
 drop view part_src_dups;

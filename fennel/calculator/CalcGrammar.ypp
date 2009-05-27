@@ -246,4 +246,20 @@ void CalcYYerror(const char *s)
 
 FENNEL_END_CPPFILE("$Id$");
 
+// dummies
+
+#ifdef __MSVC__
+
+int CalcLexer::CalcYYlex()
+{
+    return 0;
+}
+
+int CalcYYFlexLexer::CalcYYlex()
+{
+    return 0;
+}
+
+#endif
+
 // End CalcGrammar.ypp

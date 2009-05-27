@@ -34,7 +34,8 @@ class ExternalSortInfo;
 /**
  * ExternalSortRunAccessor manages I/O for storing runs and reading them back.
  */
-class ExternalSortRunAccessor : public ExternalSortSubStream
+class FENNEL_SORTER_EXPORT ExternalSortRunAccessor
+    : public ExternalSortSubStream
 {
     /**
      * Global information.

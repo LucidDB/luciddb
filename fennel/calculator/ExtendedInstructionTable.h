@@ -32,7 +32,7 @@ using std::string;
 
 //! A singleton mapping of ExtendedInstruction signatures to
 //! ExtendedInstruction functors.
-class ExtendedInstructionTable
+class FENNEL_CALCULATOR_EXPORT ExtendedInstructionTable
 {
 public:
     //! Registers an extended instruction and the functor which implements it.

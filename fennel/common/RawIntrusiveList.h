@@ -34,7 +34,7 @@ class RawIntrusiveListMutator;
  * RawIntrusiveList is the type-unsafe implementation for the type-safe
  * IntrusiveList template.  See InstrusiveList for details.
  */
-class RawIntrusiveList
+class FENNEL_COMMON_EXPORT RawIntrusiveList
 {
     friend class RawIntrusiveListIter;
     friend class RawIntrusiveListMutator;
@@ -108,7 +108,7 @@ public:
  * RawIntrusiveListIter is the type-unsafe implementation for the type-safe
  * IntrusiveListIter template.  See InstrusiveListIter for details.
  */
-class RawIntrusiveListIter {
+class FENNEL_COMMON_EXPORT RawIntrusiveListIter {
 protected:
     IntrusiveListNode *pCurr;
 
@@ -148,7 +148,7 @@ public:
  * RawIntrusiveListMutator is the type-unsafe implementation for the type-safe
  * IntrusiveListMutator template.  See InstrusiveListMutator for details.
  */
-class RawIntrusiveListMutator
+class FENNEL_COMMON_EXPORT RawIntrusiveListMutator
 {
     friend class RawIntrusiveList;
 

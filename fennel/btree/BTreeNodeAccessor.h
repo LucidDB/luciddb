@@ -51,7 +51,7 @@ FENNEL_BEGIN_NAMESPACE
  * search can be computed inline).
  *
  */
-class BTreeNodeAccessor
+class FENNEL_BTREE_EXPORT BTreeNodeAccessor
 {
 public:
     /**

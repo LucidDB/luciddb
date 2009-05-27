@@ -42,7 +42,8 @@ class CacheImpl;
 /**
  * Embedded link class for PageBucket lists.
  */
-class PageBucketListNode : public IntrusiveListNode
+class FENNEL_CACHE_EXPORT PageBucketListNode
+    : public IntrusiveListNode
 {
 };
 
@@ -52,7 +53,7 @@ class PageBucketListNode : public IntrusiveListNode
  * be read or written with the getReadableData() and getWritableData() member
  * functions.
  */
-class CachePage
+class FENNEL_CACHE_EXPORT CachePage
     : public PageBucketListNode, private RandomAccessRequestBinding
 {
 public:
@@ -175,14 +176,6 @@ private:
      * caller MUST enclose calls to this method in a while loop.
      */
     void waitForPendingIO(StrictMutexGuard &guard)
-    {
-        ioCompletionCondition.wait(guard);
-    }
-
-    /**
-     * Waits for pending I/O to complete while holding a try-mutex.
-     */
-    void waitForPendingIO(StrictMutexTryGuard &guard)
     {
         ioCompletionCondition.wait(guard);
     }

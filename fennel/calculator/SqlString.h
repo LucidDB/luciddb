@@ -106,7 +106,7 @@ FENNEL_BEGIN_NAMESPACE
 //! should/must have return value == destStorage.
 //
 //  TODO: Does not implement an implementation defined max length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCat(
     char* dest,
     int destStorageBytes,
@@ -134,7 +134,7 @@ SqlStrCat(
 //! destLenBytes = destStorageBytes
 //
 //  TODO: Does not implement an implementation defined max length.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCat(
     char* dest,
     int destStorageBytes,
@@ -149,7 +149,7 @@ SqlStrCat(
 //! Follows byte-wise comparison semantics of memcmp().
 //!
 //! Returns -1, 0, 1.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCmp_Bin(
     char const * const str1,
     int str1LenBytes,
@@ -330,7 +330,7 @@ SqlStrCpy_Fix(
 //!
 //! May be used for Fixed width strings if strLenBytes == destStorageBytes
 //! Otherwise use SqlStrCpy_Fix() to get appropriate padding.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrCpy_Var(
     char* dest,
     int destStorageBytes,
@@ -341,7 +341,7 @@ SqlStrCpy_Var(
 //! StrLen in bits. CHAR/VARCHAR. Ascii & UCS2.
 //!
 //! Parameter str is ignored for ascii strings.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrLenBit(int strLenBytes);
 
 
@@ -369,7 +369,7 @@ SqlStrLenChar(
 //! StrLen in octets. CHAR/VARCHAR. Ascii & UCS2.
 //!
 //! Parameter str is ignored for ascii strings.
-int
+int FENNEL_CALCULATOR_EXPORT
 SqlStrLenOct(int strLenBytes);
 
 //! Overlay. CHAR/VARCHAR. Returns new length in bytes. Ascii. No UCS2 yet.
@@ -1311,7 +1311,11 @@ SqlStrCastToApprox(
                 ptr++;
             }
             int max = end - ptr;
+#ifdef __MSVC__
+            char *tmp = (char *) _alloca(max + 1);
+#else
             char tmp[max + 1];
+#endif
             memcpy(tmp, ptr, max);
             tmp[max] = 0;
             rv = strtod(tmp, &endptr);

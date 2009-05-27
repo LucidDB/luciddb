@@ -41,7 +41,7 @@ using namespace std;
 
 // Instruction
 // Not a pure abstract base class, but nearly so.
-class Instruction
+class FENNEL_CALCULATOR_EXPORT Instruction
 {
 public:
     explicit
@@ -130,7 +130,8 @@ protected:
 //! Each leaf in the object tree subclasses InstructionRegister
 //! and calls ::types for each Instruction.
 
-class InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT InstructionRegister
+{
 protected:
     template < typename TYPE1,
                template <typename> class INSTCLASS >

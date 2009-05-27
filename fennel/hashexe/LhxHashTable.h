@@ -52,7 +52,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LhxHashNodeAccessor
+class FENNEL_HASHEXE_EXPORT LhxHashNodeAccessor
 {
     // REVIEW jvs 25-Aug-2006: These should be doxygen comments.
 
@@ -155,7 +155,8 @@ public:
 // REVIEW jvs 25-Aug-2006: Seems like a lot of duplication between
 // LhxHashKeyAccessor and LhxHashDataAccessor; maybe it's unavoidable.
 
-class LhxHashDataAccessor : public LhxHashNodeAccessor
+class FENNEL_HASHEXE_EXPORT LhxHashDataAccessor
+    : public LhxHashNodeAccessor
 {
     /*
      * Shape of the data tuple stored.
@@ -226,7 +227,9 @@ public:
      * inputTuple.
      * @param [in] maxBufferSize maximum buffer size
      */
-    inline void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
+    inline void checkStorageSize(
+        TupleData const &inputTuple,
+        uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.
@@ -250,7 +253,8 @@ public:
     string toString();
 };
 
-class LhxHashKeyAccessor : public LhxHashNodeAccessor
+class FENNEL_HASHEXE_EXPORT LhxHashKeyAccessor
+    : public LhxHashNodeAccessor
 {
     /*
      * Offsets to the fields in the node
@@ -413,7 +417,9 @@ public:
      * inputTuple.
      * @param [in] maxBufferSize maximum buffer size
      */
-    inline void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
+    inline void checkStorageSize(
+        TupleData const &inputTuple,
+        uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.
@@ -447,7 +453,8 @@ public:
     string toString();
 };
 
-class LhxHashBlockAccessor : public LhxHashNodeAccessor
+class FENNEL_HASHEXE_EXPORT LhxHashBlockAccessor
+    : public LhxHashNodeAccessor
 {
     /**
      * Size of the buffer that a client can use.
@@ -541,7 +548,7 @@ public:
     PBuffer *getSlot(uint slotNum);
 };
 
-class LhxHashTable
+class FENNEL_HASHEXE_EXPORT LhxHashTable
 {
     /*
      * Inputs to LhxHashTable
@@ -897,7 +904,7 @@ public:
     string toString();
 };
 
-class LhxHashTableReader
+class FENNEL_HASHEXE_EXPORT LhxHashTableReader
 {
     /**
      * Underlying hash table to read from.

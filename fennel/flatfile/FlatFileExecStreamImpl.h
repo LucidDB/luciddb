@@ -51,7 +51,8 @@ const int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
  * @author John Pham
  * @version $Id$
  */
-class FlatFileExecStreamImpl : public FlatFileExecStream
+class FENNEL_FLATFILE_EXPORT FlatFileExecStreamImpl
+    : public FlatFileExecStream
 {
     // max length of text for a row when signalling an error
     static const uint MAX_ROW_ERROR_TEXT_WIDTH;
@@ -78,7 +79,7 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     FlatFileMode mode;
     int numRowsScan;
     bool done;
-    std::vector<uint> fieldSizes;
+    VectorOfUint fieldSizes;
     std::string describeResult;
 
     SegPageLock bufferLock;

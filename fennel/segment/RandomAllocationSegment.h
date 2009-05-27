@@ -35,7 +35,8 @@ struct ExtentAllocationNode;
  * ExtentAllocationNode where each page entry within the segment is unversioned.
  * The ExtentAllocationNodes are stored in the segment itself.
  */
-class RandomAllocationSegment : public RandomAllocationSegmentBase
+class FENNEL_SEGMENT_EXPORT RandomAllocationSegment
+    : public RandomAllocationSegmentBase
 {
     // implement RandomAllocationSegmentBase
     virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId);

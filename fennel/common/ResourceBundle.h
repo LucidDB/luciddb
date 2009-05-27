@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 
 using namespace std;
 
-class ResourceBundle
+class FENNEL_COMMON_EXPORT ResourceBundle
 {
 protected:
     explicit ResourceBundle(

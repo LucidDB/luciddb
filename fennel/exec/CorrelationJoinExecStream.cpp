@@ -127,7 +127,8 @@ ExecStreamResult CorrelationJoinExecStream::execute(
 
             // make runnable
             if (++leftRowCount == 1) {
-                for (std::vector<Correlation>::iterator it = correlations.begin();
+                for (std::vector<Correlation>::iterator it =
+                     correlations.begin();
                      it != correlations.end(); ++it)
                 {
                     // Make the right-hand descendant that uses the

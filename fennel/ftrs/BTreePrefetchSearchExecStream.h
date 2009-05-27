@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
  * Structure used to store the search key information that was used to locate
  * a pre-fetched btree leaf page.
  */
-struct BTreePrefetchSearchKey
+struct FENNEL_FTRS_EXPORT BTreePrefetchSearchKey
 {
     /**
      * Lower bound directive of the search key
@@ -69,7 +69,8 @@ struct BTreePrefetchSearchKey
  * BTreePrefetchSearchExecStreamParams defines parameters for instantiating a
  * BTreePrefetchSearchExecStream
  */
-struct BTreePrefetchSearchExecStreamParams : public BTreeSearchExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreePrefetchSearchExecStreamParams
+    : public BTreeSearchExecStreamParams
 {
 };
 
@@ -92,9 +93,9 @@ struct BTreePrefetchSearchExecStreamParams : public BTreeSearchExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class BTreePrefetchSearchExecStream :
-    public BTreeSearchExecStream,
-    public SegPageEntryIterSource<BTreePrefetchSearchKey>
+class FENNEL_FTRS_EXPORT BTreePrefetchSearchExecStream
+    : public BTreeSearchExecStream,
+        public SegPageEntryIterSource<BTreePrefetchSearchKey>
 {
 protected:
     /**

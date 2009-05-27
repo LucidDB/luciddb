@@ -38,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Helper for JniEnvRef.
  */
-class JniExceptionChecker
+class FENNEL_FARRAGO_EXPORT JniExceptionChecker
 {
     JNIEnv *pEnv;
 
@@ -70,7 +70,7 @@ public:
  * call wrapper technique</a> (except without the shared_ptrs, because
  * they're too slow!).
  */
-class JniEnvRef
+class FENNEL_FARRAGO_EXPORT JniEnvRef
 {
     JNIEnv *pEnv;
 
@@ -110,7 +110,8 @@ public:
  * by allocating a JniEnvAutoRef on a thread's initial stack frame
  * so that it will be available to all methods called.
  */
-class JniEnvAutoRef : public JniEnvRef
+class FENNEL_FARRAGO_EXPORT JniEnvAutoRef
+    : public JniEnvRef
 {
     bool needDetach;
 
@@ -141,7 +142,7 @@ public:
  * in places where temporary Java objects are needed inside of utility
  * methods which may be called many times before control returns to Java.
  */
-class JniLocalRefReaper
+class FENNEL_FARRAGO_EXPORT JniLocalRefReaper
 {
     JNIEnv *pEnv;
     jobject obj;
@@ -167,7 +168,7 @@ class ConfigMap;
 /**
  * JniUtilParams defines parameters used to configure JniUtil.
  */
-class JniUtilParams
+class FENNEL_FARRAGO_EXPORT JniUtilParams
 {
 public:
     static ParamName paramJniHandleTraceFile;
@@ -192,7 +193,7 @@ public:
 /**
  * Static utility methods for dealing with JNI.
  */
-class JniUtil
+class FENNEL_FARRAGO_EXPORT JniUtil
 {
     friend class JniEnvAutoRef;
 
@@ -577,7 +578,8 @@ public:
     static ThreadTracker &getThreadTracker();
 };
 
-class JniPseudoUuidGenerator : public PseudoUuidGenerator
+class FENNEL_FARRAGO_EXPORT JniPseudoUuidGenerator
+    : public PseudoUuidGenerator
 {
 public:
     virtual void generateUuid(PseudoUuid &pseudoUuid);
@@ -589,13 +591,25 @@ public:
 // Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.
 #define FENNEL_JNI_ONLOAD_COMMON() \
 { \
-  _STL::num_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 12; \
+  _STL::num_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      12; \
   _STL::num_get<char, const char*>::id._M_index          = 13; \
-  _STL::num_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 14; \
+  _STL::num_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      14; \
   _STL::num_put<char, char*>::id._M_index                = 15; \
-  _STL::time_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 16; \
+  _STL::time_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      16; \
   _STL::time_get<char, const char*>::id._M_index         = 17; \
-  _STL::time_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 18; \
+  _STL::time_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      18; \
   _STL::time_put<char, char*>::id._M_index               = 19; \
 }
 

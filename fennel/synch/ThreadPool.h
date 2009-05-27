@@ -37,7 +37,7 @@ class ThreadTracker;
 /**
  * ThreadPoolBase defines the non-templated portion of ThreadPool.
  */
-class ThreadPoolBase : protected SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT ThreadPoolBase : protected SynchMonitoredObject
 {
     friend class PooledThread;
     void runPooledThread();

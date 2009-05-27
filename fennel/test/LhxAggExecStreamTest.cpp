@@ -274,7 +274,7 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
 
     // Result should be a sequence of values in the first column
     // and 2 for the second column
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > > columnGenerators;
 
     SharedInt64ColumnGenerator col =
         SharedInt64ColumnGenerator(new SeqColumnGenerator());
@@ -295,11 +295,12 @@ void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     TupleAttributeDescriptor attrDescNullable(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true,
-        sizeof(int64_t));
+        sizeof(::int64_t));
 
     // Result should be a sequence of values in the first column
     // and 2 for the second column
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsIn;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        columnGeneratorsIn;
 
     SharedInt64ColumnGenerator col =
         SharedInt64ColumnGenerator(new DupColumnGenerator(1));
@@ -368,7 +369,8 @@ void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
         mockStreamEmbryo, transforms);
 
     // Result should be a sequence of values in both columns
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsOut;
+    vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
+        columnGeneratorsOut;
 
     col =
         SharedInt64ColumnGenerator(new DupColumnGenerator(1));

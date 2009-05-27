@@ -80,7 +80,8 @@ SharedBTreeWriter BTreeExecStream::newWriter(bool monotonic)
     return pWriter;
 }
 
-SharedBTreeWriter BTreeExecStream::newWriter(BTreeExecStreamParams const &params)
+SharedBTreeWriter BTreeExecStream::newWriter(
+    BTreeExecStreamParams const &params)
 {
     BTreeDescriptor treeDescriptor;
     copyParamsToDescriptor(treeDescriptor,params,params.pCacheAccessor);

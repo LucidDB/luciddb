@@ -32,7 +32,7 @@ import org.eigenbase.enki.mdr.*;
 
 
 /**
- * LucidDbCleanup takes care of cleaning up the catalog at the start of each
+ * LucidDbTestCleanup takes care of cleaning up the catalog at the start of each
  * LucidDB test suite.
  *
  * @author John V. Sichi

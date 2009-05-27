@@ -41,7 +41,8 @@ class WALSegment;
  * segment.  See <a href="structSegmentDesign.html#VersionedSegment">the design
  * docs</a> for more detail.
  */
-class VersionedSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT VersionedSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 

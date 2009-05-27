@@ -103,7 +103,7 @@ statement provides standard upsert capability</td>
 </tr>
 
 <tr>
-<td rowspan=4><i>Connectivity</i></td> <td>SQL/MED
+<td rowspan=5><i>Connectivity</i></td> <td>SQL/MED
 architecture</td> <td>Allows LucidDB to connect to heterogeneous
 external data sources via <em>foreign data wrappers</em> and access
 their content as <em>foreign tables</em></td>
@@ -128,6 +128,13 @@ hot-plugged into a running LucidDB instance</td>
 </tr>
 
 <tr>
+<td><a target="_top"
+href="http://pub.eigenbase.org/wiki/LucidDbPdiBulkLoad">Pentaho Data
+Integration plugin</a></td> Allows data to be pushed into LucidDB from
+the Kettle ETL tool<td></td>
+</tr>
+
+<tr>
 <td rowspan=3><i>Extensibility</i></td> <td>SQL/JRT
 architecture</td> <td>Allows new functions and transformations to be 
 developed in Java and hot-plugged into a running LucidDB instance;
@@ -149,7 +156,7 @@ to be added to the system</td>
 </tr>
 
 <tr>
-<td rowspan=3><i>Standards</i></td> <td>SQL:2003
+<td rowspan=4><i>Standards</i></td> <td>SQL:2003
 </td> <td>Smooths migration of applications to and from other DBMS 
 products</td>
 </tr>
@@ -158,6 +165,11 @@ products</td>
 <td>JDBC
 </td> <td>Allows connectivity from popular front-ends such as
 the <a target="_top" href="http://mondrian.sf.net">Mondrian</a> OLAP engine</td>
+</tr>
+
+<tr>
+<td>UNICODE
+</td> <td>Supports storage and access to international character data</td>
 </tr>
 
 <td>J2EE</td><td>Java architecture enables deployment of LucidDB into
@@ -169,5 +181,18 @@ with the many enterprise API's available
 </tr>
 
 </table>
+
+<!-- Piwik -->
+<script type="text/javascript">
+var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/luciddb/" : "http://apps.sourceforge.net/piwik/luciddb/");
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
+piwik_action_name = '';
+piwik_idsite = 1;
+piwik_url = pkBaseURL + "piwik.php";
+piwik_log(piwik_action_name, piwik_idsite, piwik_url);
+</script>
+<object><noscript><p><img src="http://apps.sourceforge.net/piwik/luciddb/piwik.php?idsite=1" alt="piwik"/></p></noscript></object>
+<!-- End Piwik Tag -->
 
 </body>

@@ -30,7 +30,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class ResourceDefinition
+class FENNEL_COMMON_EXPORT ResourceDefinition
 {
     const std::string _key;
 

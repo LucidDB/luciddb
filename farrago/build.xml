@@ -510,11 +510,18 @@ ${farrago.test.jvmargs}
        it already exists -->
   <target name="configureReposStorage" unless="ReposStorage.configured">
     <!-- Does nothing if the file already exists.  See switchTo* targets. -->
-    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
-      tofile="${farrago.ReposStorage.propfile}"/>
+    <copy file="${farrago.catalog.dir}/templates/HsqldbHibernateRepos.properties"
+      tofile="${farrago.ReposStorage.propfile}">
+      <filterchain>
+        <tokenfilter>
+          <replacestring from="{SCHEMA}" to="${farrago.catalog.schema}"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
   </target>
 
-  <!-- creates ReposStorage.properties from the default Postgres template -->
+  <!-- creates ReposStorage.properties from the default Postgres+Netbeans
+       template -->
   <target name="switchToPsqlReposStorage">
     <copy file="${farrago.catalog.dir}/templates/PostgresRepos.properties"
       tofile="${farrago.ReposStorage.propfile}" overwrite="true">
@@ -528,7 +535,7 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-  <!-- create ReposStorage.properties from the default Mysql+Hibernate
+  <!-- creates ReposStorage.properties from the default Mysql+Hibernate
        template -->
   <target name="switchToMysqlHibernateReposStorage">
     <copy file="${farrago.catalog.dir}/templates/MysqlHibernateRepos.properties"
@@ -541,7 +548,7 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-  <!-- create ReposStorage.properties from the default HSQLDB+Hibernate
+  <!-- creates ReposStorage.properties from the default HSQLDB+Hibernate
        template -->
   <target name="switchToHsqldbHibernateReposStorage">
     <copy file="${farrago.catalog.dir}/templates/HsqldbHibernateRepos.properties"
@@ -554,8 +561,15 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-  <!-- creates ReposStorage.properties from the default Postgres template -->
+  <!-- creates ReposStorage.properties from the default
+       template (which happens to be Hibernate+HSQLDB) -->
   <target name="switchToDefaultReposStorage">
+    <antcall target="switchToHsqldbHibernateReposStorage"/>
+  </target>
+
+  <!-- creates ReposStorage.properties from the default HSQLDB+Netbeans
+       template -->
+  <target name="switchToHsqldbReposStorage">
     <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
       tofile="${farrago.ReposStorage.propfile}" overwrite="true"/>
   </target>
@@ -575,7 +589,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">

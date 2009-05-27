@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * of CacheAccessor which delegate part of their behavior to another
  * underlying CacheAccessor.
  */
-class DelegatingCacheAccessor : public CacheAccessor
+class FENNEL_CACHE_EXPORT DelegatingCacheAccessor : public CacheAccessor
 {
     SharedCacheAccessor pDelegate;
 

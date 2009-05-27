@@ -43,7 +43,7 @@
 #include <iostream>
 #include <string>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -56,7 +56,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 #define JAVAOBJECTHANDLE_TYPE_STR ("JavaObjectHandle")
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
     HANDLE hModule,
     DWORD  ul_reason_for_call,
@@ -83,7 +83,7 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
     // shutdown problems when extension JNI libraries (such as
     // libfarrago_dt and libfarrago_lu) are loaded.  It pins our .so
     // artificially, which probably isn't a good thing either.
-#ifndef __MINGW32__
+#ifndef __MSVC__
     dlopen("libfarrago.so", RTLD_NOW | RTLD_GLOBAL);
 #endif
 
@@ -197,11 +197,13 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams(
         SharedExecStreamGraph pgraph = streamGraphHandle.pExecStreamGraph;
         assert(pgraph);
 
-        SharedExecStream base = pgraph->findStream(JniUtil::toStdString(pEnv, baseName));
+        SharedExecStream base =
+            pgraph->findStream(JniUtil::toStdString(pEnv, baseName));
         assert(base);
         uint ct = pgraph->getInputCount(base->getStreamId());
         for (uint i = 0; i < ct; i++) {
-            SharedExecStream input = pgraph->getStreamInput(base->getStreamId(), i);
+            SharedExecStream input =
+                pgraph->getStreamInput(base->getStreamId(), i);
             assert(input);
             jstring inputName = pEnv->NewStringUTF(input->getName().c_str());
             pEnv->CallObjectMethod(inputStreamNameList, methListAdd, inputName);

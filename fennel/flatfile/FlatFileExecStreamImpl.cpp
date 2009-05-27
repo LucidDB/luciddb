@@ -141,7 +141,7 @@ void FlatFileExecStreamImpl::open(bool restart)
             uint nFields = lastResult.getReadCount();
             int found = 0;
 
-            std::vector<uint> columnMap;
+            VectorOfUint columnMap;
             columnMap.resize(nFields);
             for (uint i = 0; i < nFields; i++) {
                 char *n = lastResult.getColumn(i);

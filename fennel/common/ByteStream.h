@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ByteStream is a common base class for ByteInputStream and ByteOutputStream.
  */
-class ByteStream : virtual public ClosableObject
+class FENNEL_COMMON_EXPORT ByteStream
+    : virtual public ClosableObject
 {
 protected:
     /**
@@ -54,7 +55,7 @@ public:
  * ByteInputStream::newMarker() serves as a factory method for creating new
  * marker instances.
  */
-class ByteStreamMarker
+class FENNEL_COMMON_EXPORT ByteStreamMarker
 {
     friend class ByteStream;
 
@@ -85,7 +86,7 @@ public:
  * SequentialByteStreamMarker is a default implementation of
  * ByteStreamMarker based on sequential byte position.
  */
-class SequentialByteStreamMarker : public ByteStreamMarker
+class FENNEL_COMMON_EXPORT SequentialByteStreamMarker : public ByteStreamMarker
 {
     friend class ByteInputStream;
 

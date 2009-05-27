@@ -112,7 +112,8 @@ public interface FarragoSessionPersonality
     public boolean isAlterTableAddColumnIncremental();
 
     /**
-     * Tests whether a JavaUDX is implemented as a restartable data source or not.
+     * Returns whether a JavaUDX is implemented as a restartable data source.
+     *
      * @return true if a JavaUDXRel implementation is restartable.
      */
     public boolean isJavaUdxRestartable();
@@ -176,7 +177,8 @@ public interface FarragoSessionPersonality
      * See {@link FarragoSessionModelExtension#defineDdlHandlers}.
      *
      * @param ddlValidator validator which will invoke handlers
-     * @param handlerList receives handler objects in order in which they should
+     * @param handlerList receives handler objects in order in which they
+     * should be invoked
      */
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,

@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * This class encapsulates a single byte segment, as opposed to
  * a tuple which contains a set of them
  */
-class LbmByteSegment
+class FENNEL_LBM_EXPORT LbmByteSegment
 {
 public:
     static const uint bitsInByte[];

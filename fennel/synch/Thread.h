@@ -38,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
  * Thread is a wrapper around boost::thread which allows for the thread object
  * to be created before it is actually started.
  */
-class Thread : public boost::noncopyable
+class FENNEL_SYNCH_EXPORT Thread : public boost::noncopyable
 {
 protected:
     boost::thread *pBoostThread;

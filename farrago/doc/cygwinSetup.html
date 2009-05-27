@@ -1,85 +1,17 @@
 <html>
 
 <head>
-<title>Farrago Cygwin Setup</title>
+<title>Eigenbase Windows Setup</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" />
 
 </head>
 
 <body>
 
-<h1>Farrago Cygwin Setup</h1>
+<h1>Eigenbase Windows Setup</h1>
 
-Here's a description of one way to set up your Cygwin environment for
-use in working on Farrago.  There are other ways to do it; this one is
-known to work and allows you to pretty much pretend you're not even
-running Windows.
-
-<ol>
-
-<li>
-Start by installing (or upgrading to) 
-<a href="http://www.cygwin.com">
-the latest Cygwin distribution</a>.  If you're planning to build the
-Fennel library, the Fennel INSTALL.mingw doc has more details on
-particular Cygwin packages and versions required.
-
-<li>
-Choose a directory which will contain third-party software and the
-Farrago build environment.  For example, I chose my home directory,
-/home/jvs, which is on my d: drive (referred to in Windows as
-d:\cygwin\home\jvs).  This will be referred to as the "home"
-directory.
-
-<li>
-Create a "mirror" directory outside of the cygwin root on the same
-drive.  For me, this was d:\home\jvs (referred to in Cygwin as
-/cygdrive/d/home/jvs).
-
-<li>
-Move anything in the home directory to the mirror directory (nothing
-if you're starting from scratch), leaving the original directory empty.
-
-<li>
-Delete the home directory (rmdir /home/jvs).
-
-<li>
-Create a symbolic link so that the home directory aliases the
-mirror directory (ln -s /cygdrive/d/home/jvs /home/jvs).
-
-<li>
-Now, if we ignore the drive letter and slash direction, the path to
-the home directory looks the same regardless of whether we are running
-a Cygwin program or a native Windows program (including Java
-applications such as ant).  This means environment variables can be
-defined just once and used by both environments.
-
-<li>
-Install the native Windows Perforce client programs, NOT the Cygwin
-Perforce client.  If you need to use both, be sure to set your path in
-such a way that when you are working on Farrago, you use the Windows
-client programs.  The Cygwin Perforce client seems to get confused by
-the symlinks.
-
-<li>
-Cygwin sets the PWD environment variable with a Unix path, so the
-Windows Perforce client can't read it, giving it trouble finding your
-.p4config file.  You can work around this by setting environment variable
-P4CONFIG to have the Windows path to your .p4config file,
-e.g. export P4CONFIG=$(cygpath -w "/home/jvs/.p4config")
-
-<li>
-When you create a Perforce client definition, make sure the client
-root is under the home directory, without a drive letter
-(e.g. /home/jvs).  Set the LineEnd attribute to <code>share</code> to
-avoid problems with CRLF, and also set your <code>CYGWIN</code>
-environment variable to contain the <code>binmode</code> attribute.
-
-<li>
-Sync the code and you should be ready to follow the rest of the build
-instructions.
-
-</ol>
+This page has been relocated to 
+<a href="http://pub.eigenbase.org/wiki/WindowsBuildSetup">the Farrago wiki</a>.
 
 </body>
 

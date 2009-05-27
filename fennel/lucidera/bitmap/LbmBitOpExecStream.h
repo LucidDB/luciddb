@@ -59,7 +59,8 @@ struct LbmBitOpExecStreamParams : public ConfluenceExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmBitOpExecStream : public ConfluenceExecStream
+class FENNEL_LBM_EXPORT LbmBitOpExecStream
+    : public ConfluenceExecStream
 {
 protected:
     /**

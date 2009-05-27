@@ -188,8 +188,10 @@ public class RhBase64
         14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, // Letters 'O' through
                                                         // 'Z'
         -9, -9, -9, -9, -9, -9, // Decimal 91 - 96
-        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, // Letters 'a' through 'm'
-        39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, // Letters 'n' through 'z'
+        26, 27, 28, 29, 30, 31, 32, // Letters 'a' through 'f'
+        33, 34, 35, 36, 37, 38,     // Letters 'g' through 'm'
+        39, 40, 41, 42, 43, 44, 45, // Letters 'n' through 't'
+        46, 47, 48, 49, 50, 51,     // Letters 'u' through 'z'
         -9, -9, -9, -9 // Decimal 123 - 126
 
         /*,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 127 - 139
@@ -562,9 +564,12 @@ public class RhBase64
 
             int len43 = len * 4 / 3;
             byte [] outBuff =
-                new byte[(len43) // Main 4:3
+                new byte[
+                    (len43) // Main 4:3
                     + (((len % 3) > 0) ? 4 : 0) // Account for padding
-                    + (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New lines
+                    + (breakLines
+                       ? (len43 / MAX_LINE_LENGTH)
+                       : 0)]; // New lines
             int d = 0;
             int e = 0;
             int len2 = len - 2;

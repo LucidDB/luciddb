@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * ByteArrayOutputStream implements the ByteOutputStream interface by writing
  * data to an existing fixed-size array of bytes.
  */
-class ByteArrayOutputStream : public ByteOutputStream
+class FENNEL_COMMON_EXPORT ByteArrayOutputStream : public ByteOutputStream
 {
     PBuffer pBuffer;
     uint cbBuffer;

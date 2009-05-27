@@ -75,7 +75,7 @@ public abstract class FarragoReposUtil
         String subPackageName)
         throws Exception
     {
-        XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        XMIWriter xmiWriter = createXmiWriter();
         ExportRefProvider refProvider =
             new ExportRefProvider(
                 subPackageName);
@@ -93,6 +93,18 @@ public abstract class FarragoReposUtil
         } finally {
             outStream.close();
         }
+    }
+
+    /**
+     * Creates an XMIWriter that uses a UTF-8 encoding.
+     *
+     * @return the XMIWriter
+     */
+    public static XMIWriter createXmiWriter()
+    {
+        XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        xmiWriter.getConfiguration().setEncoding("UTF-8");
+        return xmiWriter;
     }
 
     public static void importSubModel(
@@ -262,7 +274,7 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         RefPackage refPackage = mdrRepos.getExtent(extentName);
-        XmiWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        XMIWriter xmiWriter = createXmiWriter();
         OutputStream outStream = new FileOutputStream(file);
         try {
             xmiWriter.write(outStream, refPackage, "1.2");

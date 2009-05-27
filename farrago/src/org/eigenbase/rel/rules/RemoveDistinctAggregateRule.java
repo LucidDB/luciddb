@@ -225,31 +225,46 @@ public final class RemoveDistinctAggregateRule
             leftFields = left.getRowType().getFields();
         }
 
-        // AggregateRel( child, {COUNT(DISTINCT 1), SUM(DISTINCT 1), SUM(2)})
+        // AggregateRel(
+        //     child,
+        //     {COUNT(DISTINCT 1), SUM(DISTINCT 1), SUM(2)})
         //
         // becomes
         //
-        // AggregateRel( JoinRel( child, AggregateRel( child, < all columns > {})
-        // INNER, <f2 = f5>))
+        // AggregateRel(
+        //     JoinRel(
+        //         child,
+        //         AggregateRel(child, < all columns > {}),
+        //         INNER,
+        //         <f2 = f5>))
         //
-        // E.g. SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender), MAX(age)
-        // FROM Emps GROUP BY deptno
+        // E.g.
+        //   SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender), MAX(age)
+        //   FROM Emps
+        //   GROUP BY deptno
         //
         // becomes
         //
-        // SELECT e.deptno, adsal.sum_sal, adgender.count_gender, e.max_age FROM
-        // (select deptno, MAX(age) as max_age FROM Emps GROUP BY deptno) AS e
-        // JOIN ( SELECT deptno, COUNT(gender) AS count_gender FROM ( SELECT
-        // DISTINCT deptno, gender FROM Emps) AS dgender GROUP BY deptno) AS
-        // adgender ON e.deptno = adgender.deptno JOIN ( SELECT deptno, SUM(sal)
-        // AS sum_sal FROM ( SELECT DISTINCT deptno, sal FROM Emps) AS dsal
-        // GROUP BY deptno) AS adsal ON e.deptno = adsal.deptno GROUP BY
-        // e.deptno
+        //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender, e.max_age
+        //   FROM (
+        //     SELECT deptno, MAX(age) as max_age
+        //     FROM Emps GROUP BY deptno) AS e
+        //   JOIN (
+        //     SELECT deptno, COUNT(gender) AS count_gender FROM (
+        //       SELECT DISTINCT deptno, gender FROM Emps) AS dgender
+        //     GROUP BY deptno) AS adgender
+        //     ON e.deptno = adgender.deptno
+        //   JOIN (
+        //     SELECT deptno, SUM(sal) AS sum_sal FROM (
+        //       SELECT DISTINCT deptno, sal FROM Emps) AS dsal
+        //     GROUP BY deptno) AS adsal
+        //   ON e.deptno = adsal.deptno
+        //   GROUP BY e.deptno
         //
-        // Note that if a query contains no non-distinct aggregates, then the very
-        // first join/group by is omitted.  In the example above, if MAX(age) is
-        // removed, then the subselect of "e" is not needed, and instead the two
-        // other group by's are joined to one another.
+        // Note that if a query contains no non-distinct aggregates, then the
+        // very first join/group by is omitted.  In the example above, if
+        // MAX(age) is removed, then the subselect of "e" is not needed, and
+        // instead the two other group by's are joined to one another.
 
         // Project the columns of the GROUP BY plus the arguments
         // to the agg function.

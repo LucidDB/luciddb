@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
  * write out individual byte segments.  A bitmap segment is a bitmap entry
  * with no leading index key values.
  */
-class LbmSegmentWriter : public boost::noncopyable
+class FENNEL_LBM_EXPORT LbmSegmentWriter
+    : public boost::noncopyable
 {
     /**
      * Bitmap entry object used to construct bitmap segments

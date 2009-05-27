@@ -45,7 +45,7 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <process.h>
 #endif
 
@@ -328,7 +328,7 @@ void Database::deleteLogs()
     // instead of current_path()
     directory_iterator end_itr;
     for (directory_iterator itr(current_path()); itr != end_itr; ++itr) {
-        std::string filename = itr->leaf();
+        std::string filename = itr->path().filename();
         // TODO jvs 25-June-2005:  encapsulate filename parsing in
         // LogicalRecoveryLog
         if (filename.length() < 4) {
@@ -1028,7 +1028,7 @@ TxnId Database::initiateBackup(
     pBackupRestoreDevice =
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
              backupFilePathname,
-#ifdef __MINGW32__
+#ifdef __MSVC__
              "wb",
 #else
              "w",
@@ -1172,7 +1172,7 @@ void Database::restoreFromBackup(
     pBackupRestoreDevice =
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
              backupFilePathname,
-#ifdef __MINGW32__
+#ifdef __MSVC__
              "rb",
 #else
              "r",

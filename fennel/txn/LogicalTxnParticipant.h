@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * LogicalTxnParticipant defines an interface which must be implemented by any
  * object which is to participate in a LogicalTxn.
  */
-class LogicalTxnParticipant
+class FENNEL_TXN_EXPORT LogicalTxnParticipant
 {
     friend class LogicalTxn;
 

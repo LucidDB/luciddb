@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * LinearDeviceSegmentParams defines initialization parameters for
  * LinearDeviceSegment.
  */
-struct LinearDeviceSegmentParams
+struct FENNEL_SEGMENT_EXPORT LinearDeviceSegmentParams
 {
     /**
      * BlockId of the first page in the segment; the
@@ -82,7 +82,8 @@ struct LinearDeviceSegmentParams
  * This does not affect the size of the underlying device (REVIEW: maybe
  * it should?)
  */
-class LinearDeviceSegment : public Segment
+class FENNEL_SEGMENT_EXPORT LinearDeviceSegment
+    : public Segment
 {
     friend class SegmentFactory;
 

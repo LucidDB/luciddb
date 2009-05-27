@@ -169,11 +169,11 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
         switch (optType) {
         case EXEC_RESOURCE_ACCURATE:
             reqt.optReqt = optQuantity.nCachePages;
-            sqrtDiffOptMin[i] = sqrt(reqt.optReqt - reqt.minReqt);
+            sqrtDiffOptMin[i] = sqrt(double(reqt.optReqt - reqt.minReqt));
             break;
         case EXEC_RESOURCE_ESTIMATE:
             reqt.optReqt = optQuantity.nCachePages;
-            sqrtDiffOptMin[i] = sqrt(reqt.optReqt - reqt.minReqt);
+            sqrtDiffOptMin[i] = sqrt(double(reqt.optReqt - reqt.minReqt));
             allAccurate = false;
             break;
         case EXEC_RESOURCE_UNBOUNDED:
@@ -183,7 +183,7 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
             // to availability, but still set it to a finite value to
             // allow some allocation to go towards those streams that
             // have estimated optimums
-            sqrtDiffOptMin[i] = sqrt(allocationAmount);
+            sqrtDiffOptMin[i] = sqrt(double(allocationAmount));
             allAccurate = false;
             // in the unbounded case, we don't have an optimum setting, so
             // set it to assume the full allocation amount plus the min

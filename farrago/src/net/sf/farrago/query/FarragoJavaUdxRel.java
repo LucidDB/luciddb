@@ -26,7 +26,7 @@ import java.util.List;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
-import net.sf.farrago.session.FarragoSessionPersonality;
+import net.sf.farrago.session.*;
 
 import openjava.mop.*;
 

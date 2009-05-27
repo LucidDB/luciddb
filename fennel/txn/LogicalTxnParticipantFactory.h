@@ -32,7 +32,7 @@ class LogicalTxnParticipant;
  * LogicalTxnParticipantFactory defines an interface for reconstructing
  * instances of LogicalTxnParticipant during recovery.
  */
-class LogicalTxnParticipantFactory
+class FENNEL_TXN_EXPORT LogicalTxnParticipantFactory
 {
 public:
     virtual ~LogicalTxnParticipantFactory();

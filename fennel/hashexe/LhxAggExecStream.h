@@ -87,7 +87,8 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
  * @author Rushan Chen
  * @version $Id$
  */
-class LhxAggExecStream : public ConduitExecStream
+class FENNEL_HASHEXE_EXPORT LhxAggExecStream
+    : public ConduitExecStream
 {
     // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
     // all uppercase with underscores

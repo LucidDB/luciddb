@@ -74,7 +74,7 @@ struct LhxPartition
     explicit LhxPartition(ExecStream *pExecStreamInit);
 };
 
-class LhxPartitionWriter
+class FENNEL_HASHEXE_EXPORT LhxPartitionWriter
 {
     /**
      * Partition to write to.
@@ -116,7 +116,7 @@ public:
     void close();
 };
 
-class LhxPartitionReader
+class FENNEL_HASHEXE_EXPORT LhxPartitionReader
 {
     /**
      * Partition to read from.
@@ -181,8 +181,8 @@ struct LhxPartitionInfo
     /**
      * Src partition reader.
      *
-     * It could either be a local reader (probeReader), or a reader passed in from
-     * the exec stream in open() method. The latter is used to partition a
+     * It could either be a local reader (probeReader), or a reader passed in
+     * from the exec stream in open() method. The latter is used to partition a
      * build input. When the hash table overflows, all the data from the hash
      * table, plus the remaining data from the build partition, as well as the
      * inflight tuple which caused the hash table overflow, need to be
@@ -282,7 +282,8 @@ struct LhxPartitionInfo
     void close();
 };
 
-class LhxPlan : public enable_shared_from_this<LhxPlan>
+class FENNEL_HASHEXE_EXPORT LhxPlan
+    : public enable_shared_from_this<LhxPlan>
 {
     uint partitionLevel;
     vector<SharedLhxPartition> partitions;
@@ -369,7 +370,7 @@ public:
         vector<SharedLhxPartition> &partitionsInit,
         vector<shared_array<uint> > &subPartStats,
         shared_ptr<dynamic_bitset<> > filterInit,
-        vector<uint> &filteredRowsInit,
+        VectorOfUint &filteredRowsInit,
         bool enableSubPartStat,
         bool enableSwing);
 

@@ -22,6 +22,9 @@
 // Test Calculator object directly by instantiating instruction objects,
 // creating programs, running them, and checking the register set values.
 */
+
+#ifndef __MSVC__
+
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleData.h"
@@ -5150,5 +5153,14 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 {
     return NULL;
 }
+
+#else
+
+int main(int argc, char* argv[])
+{
+    return 0;
+}
+
+#endif
 
 // End testCalc.cpp

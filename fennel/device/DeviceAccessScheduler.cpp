@@ -30,7 +30,7 @@
 #include "fennel/common/FennelExcn.h"
 #include "fennel/common/FennelResource.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include "fennel/device/IoCompletionPortScheduler.h"
 #include "fennel/common/SysCallExcn.h"
 #include <windows.h>
@@ -74,7 +74,7 @@ DeviceAccessScheduler::newScheduler(
     case DeviceAccessSchedulerParams::THREAD_POOL_SCHEDULER:
         return new ThreadPoolScheduler(params);
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
     case DeviceAccessSchedulerParams::IO_COMPLETION_PORT_SCHEDULER:
         return new IoCompletionPortScheduler(params);
 #endif
@@ -118,7 +118,7 @@ DeviceAccessScheduler::~DeviceAccessScheduler()
 
 RandomAccessRequestBinding::RandomAccessRequestBinding()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     // TODO:  only create this when ThreadPoolScheduler is being used?
     hEvent = CreateEvent(NULL,1,0,NULL);
     if (!hEvent) {
@@ -129,7 +129,7 @@ RandomAccessRequestBinding::RandomAccessRequestBinding()
 
 RandomAccessRequestBinding::~RandomAccessRequestBinding()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     CloseHandle(hEvent);
 #endif
 }

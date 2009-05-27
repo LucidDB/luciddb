@@ -170,8 +170,9 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
             pages.clear();
             if (pages.capacity() > nPagesMax) {
                 // Reset capacity of pages to a smaller value by swapping pages
-                // with a temporary vector that has no capacity.
-                std::vector<PageT *>(0).swap(pages);
+                // with a temporary vector that has tiny capacity.  (Avoid
+                // zero capacity since that causes a memset warning.)
+                std::vector<PageT *>(1).swap(pages);
             }
             pages.reserve(nPagesMax);
             pages.assign(nPagesMax, NULL);
@@ -527,7 +528,7 @@ void CacheImpl<PageT,VictimPolicyT>
         victimPolicy.notifyPageDiscard(blockId);
         return;
     }
-    StrictMutexTryGuard pageGuard(page->mutex,true);
+    StrictMutexGuard pageGuard(page->mutex);
     // lookupPage already waited for pending reads, but also need to wait for
     // pending writes
     // REVIEW:  isn't this redundant with code in unmapAndFreeDiscardedPage?
@@ -712,7 +713,7 @@ uint CacheImpl<PageT,VictimPolicyT>
     for (;;) {
         for (uint i = 0; i < pages.size(); i++) {
             PageT &page = *(pages[i]);
-            StrictMutexTryGuard pageGuard(page.mutex,true);
+            StrictMutexGuard pageGuard(page.mutex);
             // restrict view to just mapped pages of interest
             if (!page.hasBlockId()) {
                 continue;
@@ -1037,8 +1038,8 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     for (; victimRange.first != victimRange.second; ++(victimRange.first)) {
         PageT &page = *(victimRange.first);
         // if page mutex is unavailable, just skip it
-        StrictMutexTryGuard pageGuard(page.mutex);
-        if (!pageGuard.locked()) {
+        StrictMutexGuard pageGuard(page.mutex, boost::try_to_lock);
+        if (!pageGuard.owns_lock()) {
             continue;
         }
         if (canVictimizePage(page)) {
@@ -1180,8 +1181,8 @@ void CacheImpl<PageT,VictimPolicyT>
     for (; victimRange.first != victimRange.second; ++(victimRange.first)) {
         PageT &page = *(victimRange.first);
         // if page mutex is unavailable, just skip it
-        StrictMutexTryGuard pageGuard(page.mutex);
-        if (!pageGuard.locked()) {
+        StrictMutexGuard pageGuard(page.mutex, boost::try_to_lock);
+        if (!pageGuard.owns_lock()) {
             continue;
         }
         if (!page.isDirty()) {
@@ -1218,10 +1219,10 @@ void CacheImpl<PageT,VictimPolicyT>
 
 template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>
-::unmapPage(PageT &page,StrictMutexTryGuard &pageGuard, bool discard)
+::unmapPage(PageT &page,StrictMutexGuard &pageGuard, bool discard)
 {
     assert(!page.nReferences);
-    assert(pageGuard.locked());
+    assert(pageGuard.owns_lock());
 
     victimPolicy.notifyPageUnmap(page, discard);
     if (page.pMappedPageListener) {
@@ -1249,7 +1250,7 @@ void CacheImpl<PageT,VictimPolicyT>
 
 template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>
-::unmapAndFreeDiscardedPage(PageT &page,StrictMutexTryGuard &pageGuard)
+::unmapAndFreeDiscardedPage(PageT &page,StrictMutexGuard &pageGuard)
 {
     while (page.isTransferInProgress()) {
         page.waitForPendingIO(pageGuard);

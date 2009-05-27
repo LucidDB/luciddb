@@ -34,7 +34,7 @@ FENNEL_BEGIN_NAMESPACE
  * ConfigMap defines a simple container for configuration parameter/value
  * pairs.
  */
-class ConfigMap : public TraceSource
+class FENNEL_COMMON_EXPORT ConfigMap : public TraceSource
 {
     typedef std::map<std::string,std::string> StringMap;
     typedef StringMap::iterator StringMapIter;

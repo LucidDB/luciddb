@@ -168,7 +168,9 @@ chooseTarget
             fileset=fileset.unitlurql
             nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.concurrentsql=''"
         fi
-
+        if [ "$EIGEN_JUNIT_CLASS" ]; then
+            junit_class=$EIGEN_JUNIT_CLASS
+        fi
         command="$ANT -Djunit.class=$junit_class $nullfilesets -D$fileset=$test $target"
     else
         # Interpret the argument as the name of a test case

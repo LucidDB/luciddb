@@ -136,7 +136,8 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     bool enableSwing;
 };
 
-class LhxJoinExecStream : public ConfluenceExecStream
+class FENNEL_HASHEXE_EXPORT LhxJoinExecStream
+    : public ConfluenceExecStream
 {
     // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
     // all uppercase with underscores

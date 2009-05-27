@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * DoubleBufferExecStreamParams defines parameters for DoubleBufferExecStream.
  */
-struct DoubleBufferExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT DoubleBufferExecStreamParams
+    : public ConduitExecStreamParams
 {
 };
 
@@ -49,7 +50,8 @@ struct DoubleBufferExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class DoubleBufferExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT DoubleBufferExecStream
+    : public ConduitExecStream
 {
     SegmentAccessor scratchAccessor;
     SegPageLock bufferLock1;

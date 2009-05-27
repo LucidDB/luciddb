@@ -766,12 +766,13 @@ ${farrago.test.jvmargs}
   <!-- Macro for running JUnit and sqlline tests -->
   <macrodef name="farrago.runTests">
     <attribute name="targetonerror" default=""/>
+    <attribute name="fork" default="no"/>
     <element name="testfileset" optional="no"/>
     <element name="junitargs" optional="yes"/>
     <sequential>
       <fail unless="testlog.dir"/>
       <mkdir dir="${testlog.dir}"/>
-      <junit printsummary="yes" fork="no" failureproperty="junit.failure"
+      <junit printsummary="yes" fork="@{fork}" failureproperty="junit.failure"
         tempdir="${testlog.dir}" reloading="false">
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <junitargs/>

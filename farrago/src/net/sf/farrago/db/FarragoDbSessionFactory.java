@@ -43,7 +43,14 @@ import net.sf.farrago.util.*;
 public class FarragoDbSessionFactory
     implements FarragoSessionFactory
 {
+    private FarragoPluginClassLoader pluginClassLoader;
+
     //~ Methods ----------------------------------------------------------------
+
+    public FarragoDbSessionFactory()
+    {
+        this.pluginClassLoader = new FarragoPluginClassLoader();
+    }
 
     // implement FarragoSessionFactory
     public FarragoSession newSession(
@@ -86,8 +93,21 @@ public class FarragoDbSessionFactory
     }
 
     // implement FarragoSessionFactory
+    public void setPluginClassLoader(
+        FarragoPluginClassLoader pluginClassLoader)
+    {
+        this.pluginClassLoader = pluginClassLoader;
+    }
+
+    // implement FarragoSessionFactory
+    public FarragoPluginClassLoader getPluginClassLoader()
+    {
+        return pluginClassLoader;
+    }
+
+    // implement FarragoSessionFactory
     public FarragoSessionModelExtension newModelExtension(
-        FarragoPluginClassLoader pluginClassLoader,
+        FarragoPluginClassLoader pcl,
         FemJar femJar)
     {
         String url = FarragoCatalogUtil.getJarUrl(femJar);
@@ -95,9 +115,9 @@ public class FarragoDbSessionFactory
             String attr =
                 FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE;
             Class factoryClass =
-                pluginClassLoader.loadClassFromJarUrlManifest(url, attr);
+                pcl.loadClassFromJarUrlManifest(url, attr);
             FarragoSessionModelExtensionFactory factory =
-                (FarragoSessionModelExtensionFactory) pluginClassLoader
+                (FarragoSessionModelExtensionFactory) pcl
                 .newPluginInstance(factoryClass);
 
             // TODO:  trace info about extension

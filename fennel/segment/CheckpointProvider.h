@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
  * logging segment can use it to attempt to free up log space when it's running
  * out.
  */
-class CheckpointProvider
+class FENNEL_SEGMENT_EXPORT CheckpointProvider
 {
 public:
     virtual ~CheckpointProvider()

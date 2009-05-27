@@ -41,7 +41,7 @@ class ExtendedInstruction;
  *
  * Created by ExtendedInstructionTable.
  */
-class ExtendedInstructionDef
+class FENNEL_CALCULATOR_EXPORT ExtendedInstructionDef
 {
 protected:
     string _name;
@@ -153,7 +153,8 @@ public:
  * Derived classes are typically (though not necessarily) templates
  * such as ExtendedInstruction1.
  */
-class ExtendedInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT ExtendedInstruction
+    : public Instruction
 {
 protected:
     virtual ExtendedInstructionDef const &getDef() const = 0;
@@ -198,7 +199,8 @@ public:
  * functor.
  * TODO: ExtendedInstruction0 is untested and may be broken.
  */
-class ExtendedInstruction0 : public ExtendedInstruction
+class FENNEL_CALCULATOR_EXPORT ExtendedInstruction0
+    : public ExtendedInstruction
 {
 public:
     /**
@@ -259,7 +261,8 @@ public:
  * functor.
  * TODO: ExtendedInstruction0Context is untested and may be broken.
  */
-class ExtendedInstruction0Context : public ExtendedInstruction
+class FENNEL_CALCULATOR_EXPORT ExtendedInstruction0Context
+    : public ExtendedInstruction
 {
 public:
     /**
@@ -760,7 +763,8 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
+    typedef
+        FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
         DefT;
 
 private:

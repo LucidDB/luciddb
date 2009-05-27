@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * of 2-byte offsets to the actual data, which is stored non-contiguously
  * (intermixed with free space) throughout the rest of the data area.
  */
-class BTreeHeapNodeAccessor : public BTreeNodeAccessor
+class FENNEL_BTREE_EXPORT BTreeHeapNodeAccessor
+    : public BTreeNodeAccessor
 {
     // REVIEW:  this limits us to 64K page size max; could be templatized
     typedef uint16_t EntryOffset;

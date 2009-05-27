@@ -1081,7 +1081,7 @@
 '  FennelToIteratorConverter'
 '    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[3, 4]], joinKeyParamIds=[[2, 1]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
 '          FennelValuesRel(tuples=[[{ '[', 'CNY', ']', 'CNY' }]])'
 '      FennelTempIdxSearchRel(indexKeys=[[5, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[1, 1, 2]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[3])'
 '        FennelValuesRel(tuples=[[{ '(', null, null, ']', null, null }]])'
@@ -1322,7 +1322,7 @@
 '          FennelToIteratorConverter'
 '            FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY) NOT NULL])'
 '              FennelBufferRel(inMemory=[false], multiPass=[true])'
-'                LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[0, 1]])'
+'                LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[0, 1]])'
 '                  FennelValuesRel(tuples=[[{ '[', 'JPY', ']', 'JPY' }]])'
 '                  FennelValuesRel(tuples=[[{ '[', 'USD', ']', 'USD' }]])'
 > 
@@ -1367,7 +1367,7 @@
 '      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[3], indexCols=[[5, 3]])'
 '        FennelSortRel(key=[[5, 3]], discardDuplicates=[false])'
 '          FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 0, 4]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", DATE CAST($4):DATE) NOT NULL])'
-'            LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[1]])'
+'            LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'JPY', ']', 'JPY' }]])'
 > explain plan for
 > select xid, xactDate, currency, amount as origAmount,
@@ -1410,7 +1410,7 @@
 '      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[4], indexCols=[[5, 3]])'
 '        FennelSortRel(key=[[5, 3]], discardDuplicates=[false])'
 '          FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 0, 4]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", DATE CAST($4):DATE) NOT NULL])'
-'            LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[1]])'
+'            LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'GBP', ']', 'GBP' }]])'
 > explain plan for
 > select xid, xactDate, currency, amount as origAmount,
@@ -1444,7 +1444,7 @@
 '  FennelToIteratorConverter'
 '    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[3, 4]], joinKeyParamIds=[[2, 1]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
 '          FennelValuesRel(tuples=[[{ '[', 'USD', ']', 'USD' }]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6]], filterOp=[COMP_GE], filterOrdinals=[[6]], dynamicParameters=[[2]], paramCompareOffsets=[[6]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", DATE CAST($4):DATE) NOT NULL])'
 '        FennelTempIdxSearchRel(indexKeys=[[5, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[1, 1, 2]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[3])'
@@ -1465,7 +1465,7 @@
 '  FennelToIteratorConverter'
 '    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[3, 4]], joinKeyParamIds=[[2, 1]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
 '          FennelValuesRel(tuples=[[{ '[', 'EUR', ']', 'EUR' }]])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6]], filterOp=[COMP_GE], filterOrdinals=[[6]], dynamicParameters=[[2]], paramCompareOffsets=[[6]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", DATE CAST($4):DATE) NOT NULL])'
 '        FennelTempIdxSearchRel(indexKeys=[[5, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[1, 1, 2]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[3])'
@@ -1492,7 +1492,7 @@
 '          FennelReshapeRel(projection=[[6, 7, 0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[6]], filterTuple=[['GBP']], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" TOCURRENCY, DOUBLE RATE, INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE) NOT NULL])'
 '            FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[3, 4]], joinKeyParamIds=[[6, 5]])'
 '              FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'                LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'                LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
 '                  FennelValuesRel(tuples=[[{ '[', 'EUR', ']', 'EUR' }]])'
 '              FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6]], filterOp=[COMP_GE], filterOrdinals=[[6]], dynamicParameters=[[6]], paramCompareOffsets=[[6]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", DATE CAST($4):DATE) NOT NULL])'
 '                FennelTempIdxSearchRel(indexKeys=[[5, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[5, 5, 6]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[7])'
@@ -1522,7 +1522,7 @@
 '    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[6, 7]], joinKeyParamIds=[[3, 2]])'
 '      FennelReshapeRel(projection=[[4, 5, 6, 0, 1, 2, 3, 2]], filterOp=[COMP_EQ], filterOrdinals=[[5]], filterTuple=[['JPY']], outputRowType=[RecordType(DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" TOCURRENCY, DECIMAL(10, 2) CONVERTEDAMOUNT, INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($5):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[3]], joinKeyParamIds=[[5]])'
-'          LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'          LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
 '            FennelValuesRel(tuples=[[{ '[', 'EUR', ']', 'EUR' }]])'
 '          FennelTempIdxSearchRel(indexKeys=[[0]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], searchKeyParamIds=[[5]], keyOffsets=[[1]], rootPageIdParamId=[6])'
 '            FennelValuesRel(tuples=[[{ '(', null, ')', null }]])'
@@ -2027,5 +2027,54 @@
 | 1    | 2006-12-31  | USD       | 100.00      |             |             |                  |
 | 5    | 2007-04-01  | USD       | 500.00      |             |             |                  |
 +------+-------------+-----------+-------------+-------------+-------------+------------------+
+> 
+> -- LER-10967 -- Nested loop join on large keys
+> -- Temporarily bump up expectedConcurrentStatements to reduce the amount of
+> -- memory available to queries.  This assumes the default Farrago cache setting 
+> -- of 1000 pages.  Verify this by ensuring that the first alter returns an
+> -- error.
+> alter system set "expectedConcurrentStatements" = 201;
+Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit/5'. (state=,code=0)
+> alter system set "expectedConcurrentStatements" = 200;
+> !set outputformat csv
+> explain plan for 
+> select x1.currency, x2.currency from xacts x1 left outer join xacts x2
+>     on cast(x1.currency as varchar(32768)) > 
+>         cast(x2.currency as varchar(32768))
+>     group by x1.currency, x2.currency;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[CURRENCY, CURRENCY]])'
+'    LhxAggRel(groupCount=[2])'
+'      FennelRenameRel(fieldNames=[[CURRENCY, $f1]])'
+'        FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY0) NOT NULL])'
+'          FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[1]], joinKeyParamIds=[[2]])'
+'            FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, VARCHAR(32768) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(32768) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY]])'
+'            FennelTempIdxSearchRel(indexKeys=[[1]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], searchKeyParamIds=[[2]], keyOffsets=[[1]], rootPageIdParamId=[3])'
+'              FennelValuesRel(tuples=[[{ '(', null, ')', null }]])'
+'            FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[3], indexCols=[[1]])'
+'              FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'                FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, VARCHAR(32768) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(32768) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'                  LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$CURRENCY]])'
+> !set outputformat table
+> select x1.currency, x2.currency from xacts x1 left outer join xacts x2
+>     on cast(x1.currency as varchar(32768)) > 
+>         cast(x2.currency as varchar(32768))
+>     group by x1.currency, x2.currency
+>     order by 1, 2;
++-----------+-----------+
+| CURRENCY  | CURRENCY  |
++-----------+-----------+
+|           |           |
+| EUR       |           |
+| GBP       | EUR       |
+| JPY       | EUR       |
+| JPY       | GBP       |
+| USD       | EUR       |
+| USD       | GBP       |
+| USD       | JPY       |
++-----------+-----------+
+> alter system set "expectedConcurrentStatements" = 4;
 > 
 > !quit

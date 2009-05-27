@@ -56,7 +56,7 @@ class ExecStreamScheduler;
  * ExecStreamId. This identifier is later used to work with the stream. If the
  * stream is moved to another graph, it obtains a new ExecStreamId.
  */
-class ExecStreamGraph
+class FENNEL_EXEC_EXPORT ExecStreamGraph
     : public boost::noncopyable,
         public ClosableObject
 {
@@ -224,7 +224,8 @@ public:
      * @param nodes identifies source nodes.
      */
     virtual void mergeFrom(
-        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
+        ExecStreamGraph& src,
+        std::vector<ExecStreamId> const& nodes) = 0;
 
     /**
      * Finds a stream by name.

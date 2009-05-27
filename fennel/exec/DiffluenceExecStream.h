@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * DiffluenceExecStreamParams defines parameters for DiffluenceExecStream.
  */
-struct DiffluenceExecStreamParams : virtual public SingleInputExecStreamParams
+struct FENNEL_EXEC_EXPORT DiffluenceExecStreamParams
+    : virtual public SingleInputExecStreamParams
 {
     /**
      * Output tuple descriptor.  Currently, all outputs must have the same
@@ -51,7 +52,8 @@ struct DiffluenceExecStreamParams : virtual public SingleInputExecStreamParams
  * @author Rushan Chen
  * @version $Id$
  */
-class DiffluenceExecStream : virtual public SingleInputExecStream
+class FENNEL_EXEC_EXPORT DiffluenceExecStream
+    : virtual public SingleInputExecStream
 {
 protected:
 

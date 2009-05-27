@@ -466,12 +466,12 @@ public abstract class SqlDateTimeWithoutTZ
         switch (timeUnit) {
         // Fall through
         case Year:
-            if (cal.get(Calendar.MONTH) >= 0) {
+            if (cal.get(Calendar.MONTH) > 0) {
                 cal.set(Calendar.MONTH, 0);
                 incNeeded = true;
             }
         case Month:
-            if (cal.get(Calendar.DAY_OF_MONTH) > 0) {
+            if (cal.get(Calendar.DAY_OF_MONTH) > 1) {
                 cal.set(Calendar.DAY_OF_MONTH, 1);
                 incNeeded = true;
             }

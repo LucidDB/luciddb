@@ -321,13 +321,25 @@ public class LcsIndexAccessRule
                 origRowScan.residualColumns[i];
         }
 
+        // Create the list of clusters so the clusters containing the
+        // residual columns appear first.  Note that the residual columns
+        // have already been sorted in selectivity order.
+        List<FemLocalIndex> clusterList =
+            origRowScan.getIndexGuide().createResidualClusterList(newResCols);
+        // Add the remaining clusters that haven't been added yet
+        for (FemLocalIndex cluster : origRowScan.clusteredIndexes) {
+            if (!clusterList.contains(cluster)) {
+                clusterList.add(cluster);
+            }
+        }
+
         // Build a RowScan rel based on index search with no extra filters.
         LcsRowScanRel rowScan =
             new LcsRowScanRel(
                 origRowScan.getCluster(),
                 rowScanInputRels,
                 origRowScan.lcsTable,
-                origRowScan.clusteredIndexes,
+                clusterList,
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 indexRelCount == 0,

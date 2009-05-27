@@ -38,7 +38,9 @@ string ExtendedInstructionDef::computeSignature()
             sig += ",";
         }
 
-        sig += StandardTypeDescriptor::toString(_parameterTypes[i]);
+        char const *pParamString =
+            StandardTypeDescriptor::toString(_parameterTypes[i]);
+        sig += pParamString;
     }
     sig += ")";
     return sig;

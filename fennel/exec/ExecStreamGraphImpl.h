@@ -47,7 +47,8 @@ FENNEL_BEGIN_NAMESPACE
  * ExecStreamGraphImpl is an implementation for the ExecStreamGraph
  * interface based on the boost graph template.
  */
-class ExecStreamGraphImpl : virtual public ExecStreamGraph
+class FENNEL_EXEC_EXPORT ExecStreamGraphImpl
+    : virtual public ExecStreamGraph
 {
 public:
     typedef boost::adjacency_list<
@@ -212,7 +213,8 @@ protected:
     virtual void bindStreamBufAccessors(SharedExecStream pStream);
     virtual void mergeFrom(ExecStreamGraphImpl& src);
     virtual void mergeFrom(
-        ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes);
+        ExecStreamGraphImpl& src,
+        std::vector<ExecStreamId> const& nodes);
 
     /** frees all nodes and edges: like removeStream() on all streams, but
      * faster */
@@ -267,7 +269,8 @@ public:
         ExecStreamId consumerId);
     virtual void mergeFrom(ExecStreamGraph& src);
     virtual void mergeFrom(
-        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes);
+        ExecStreamGraph& src,
+        std::vector<ExecStreamId> const& nodes);
     virtual SharedExecStream findStream(
         std::string name);
     virtual SharedExecStream findLastStream(

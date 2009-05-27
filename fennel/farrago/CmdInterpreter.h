@@ -44,7 +44,8 @@ class BTreeDescriptor;
  * implements FemVisitor in order to process commands; a visit on a command
  * results in its execution.
  */
-class CmdInterpreter : public boost::noncopyable, virtual public FemVisitor
+class FENNEL_FARRAGO_EXPORT CmdInterpreter
+    : public boost::noncopyable, virtual public FemVisitor
 {
 public:
     /**

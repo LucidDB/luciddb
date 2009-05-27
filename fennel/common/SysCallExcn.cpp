@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <sstream>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
@@ -51,7 +51,7 @@ void SysCallExcn::init()
     oss << msg;
     oss << ": ";
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
     oss << "GetLastError() = ";
     oss << errCode;
 #else

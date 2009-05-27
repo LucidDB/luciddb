@@ -294,7 +294,7 @@ inline T opaqueToInt(T t)
 // For debug build, define a dummy class to differentiate various
 // OpaqueInteger classes of the same size.
 #define DEFINE_OPAQUE_INTEGER(TypeName,TypeSize) \
-class Dummy##TypeName { \
+class FENNEL_COMMON_EXPORT Dummy##TypeName { \
 }; \
 typedef OpaqueInteger<TypeSize,Dummy##TypeName> TypeName; \
 typedef TypeSize TypeName##Primitive;

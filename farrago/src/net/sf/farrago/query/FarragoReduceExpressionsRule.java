@@ -106,11 +106,64 @@ public abstract class FarragoReduceExpressionsRule
                             filter.getChild(),
                             expList.get(0)));
                 } else {
+                    if (newConditionExp instanceof RexCall) {
+                        RexCall rexCall = (RexCall) newConditionExp;
+                        boolean reverse =
+                            (rexCall.getOperator() ==
+                                SqlStdOperatorTable.notOperator);
+                        if (reverse) {
+                            rexCall = (RexCall) rexCall.getOperands()[0];
+                        }
+                        reduceNotNullableFilter(
+                            call,
+                            filter,
+                            rexCall,
+                            reverse);
+                    }
                     return;
                 }
 
                 // New plan is absolutely better than old plan.
                 call.getPlanner().setImportance(filter, 0.0);
+            }
+
+            private void reduceNotNullableFilter(
+                RelOptRuleCall call,
+                FilterRel filter,
+                RexCall rexCall,
+                boolean reverse)
+            {
+                // If the expression is a IS [NOT] NULL on a non-nullable
+                // column, then we can either remove the filter or replace
+                // it with an EmptyRel.
+                SqlOperator op = rexCall.getOperator();
+                boolean alwaysTrue;
+                if (op == SqlStdOperatorTable.isNullOperator ||
+                    op == SqlStdOperatorTable.isUnknownOperator)
+                {
+                    alwaysTrue = false;
+                } else if (op == SqlStdOperatorTable.isNotNullOperator) {
+                    alwaysTrue = true;
+                } else {
+                    return;
+                }
+                if (reverse) {
+                    alwaysTrue = !alwaysTrue;
+                }
+                RexNode operand = rexCall.getOperands()[0];
+                if (operand instanceof RexInputRef) {
+                    RexInputRef inputRef = (RexInputRef) operand;
+                    if (!inputRef.getType().isNullable()) {
+                        if (alwaysTrue) {
+                            call.transformTo(filter.getChild());
+                        } else {
+                            call.transformTo(
+                                new EmptyRel(
+                                        filter.getCluster(),
+                                        filter.getRowType()));
+                        }
+                    }
+                }
             }
         };
 

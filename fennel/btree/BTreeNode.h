@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Header stored on each page of a BTree.
  */
-struct BTreeNode : public StoredNode
+struct FENNEL_BTREE_EXPORT BTreeNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0x9d4ec481f86aa93eLL;
 

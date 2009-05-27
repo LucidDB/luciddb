@@ -10,7 +10,7 @@
 <!ENTITY open_default.build.home     "/home/cruise/open">
 <!ENTITY open_integration.build.home "/home/cruise/open/bootstrap/build">
 
-<!ENTITY buildresultsbase "http://cruisehost.eigenbase.org:8081/cruisecontrol/buildresults">
+<!ENTITY buildresultsbase "http://cruise.eigenbase.org/cruisecontrol/buildresults">
 <!ENTITY mailhost         "mail.coastside.net">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Eigenbase Build Monkey">
@@ -43,7 +43,6 @@
 
 
 <cruisecontrol>
-	&saffronProject;
 	&fennelProject;
 	&farragoProject;
 </cruisecontrol>

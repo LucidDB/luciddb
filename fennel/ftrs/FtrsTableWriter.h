@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 
 class SXMutex;
 
-struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
+struct FENNEL_FTRS_EXPORT FtrsTableIndexWriterParams
+    : public BTreeInsertExecStreamParams
 {
     TupleProjection inputProj;
 
@@ -42,7 +43,8 @@ struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
 /**
  * FtrsTableWriterParams defines parameters for instantiating a FtrsTableWriter.
  */
-struct FtrsTableWriterParams : public ConduitExecStreamParams
+struct FENNEL_FTRS_EXPORT FtrsTableWriterParams
+    : public ConduitExecStreamParams
 {
     /**
      * Parameters for individual indexes making up table.
@@ -61,7 +63,7 @@ struct FtrsTableWriterParams : public ConduitExecStreamParams
     TupleProjection updateProj;
 };
 
-struct FtrsTableIndexWriter
+struct FENNEL_FTRS_EXPORT FtrsTableIndexWriter
 {
     SharedBTreeWriter pWriter;
     Distinctness distinctness;
@@ -76,7 +78,8 @@ struct FtrsTableIndexWriter
  * FtrsTableWriter performs inserts, updates, and deletes on the indexes making
  * up a table.
  */
-class FtrsTableWriter : public LogicalTxnParticipant
+class FENNEL_FTRS_EXPORT FtrsTableWriter
+    : public LogicalTxnParticipant
 {
     friend class FtrsTableWriterFactory;
 

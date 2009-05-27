@@ -1244,8 +1244,98 @@ Error: Unique constraint violation (state=,code=0)
 | 0       | 1  | 0  |
 | 3       | 3  | 4  |
 +---------+----+----+
+0: jdbc:luciddb:> -- verify the case where the deleted keys appear as singletons
+0: jdbc:luciddb:> truncate table u;
+0: jdbc:luciddb:> insert into u values(0,0);
+0: jdbc:luciddb:> insert into u values(1,1);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where a = 1) as src
+. . . . . . . . >     on tgt.a = src.a when matched then update set b = 2;
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where a = 1) as src 
+. . . . . . . . >     on tgt.a = src.a when matched then update set b = 3;
+0: jdbc:luciddb:> insert into u values(3,3),(4,4),(5,5),(6,6),(7,7),(8,8);
+0: jdbc:luciddb:> update u set a = a + 1 where a > 2;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 3  |
+| 4       | 4  | 3  |
+| 5       | 5  | 4  |
+| 6       | 6  | 5  |
+| 7       | 7  | 6  |
+| 8       | 8  | 7  |
+| 9       | 9  | 8  |
++---------+----+----+
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 0  | 0  |
+| 1  | 3  |
+| 4  | 3  |
+| 5  | 4  |
+| 6  | 5  |
+| 7  | 6  |
+| 8  | 7  |
+| 9  | 8  |
++----+----+
+0: jdbc:luciddb:> -- do a no-op update; verify this by checking that no new pages are allocated
+0: jdbc:luciddb:> -- after the update
+0: jdbc:luciddb:> call applib.create_var('RC', null, 'test context');
+0: jdbc:luciddb:> call applib.create_var(
+. . . . . . . . >     'RC', 'pageCount', ' used to store current page allocation count');
+0: jdbc:luciddb:> call applib.set_var(
+. . . . . . . . >     'RC',
+. . . . . . . . >     'pageCount',
+. . . . . . . . >     (select counter_value from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated'));
+0: jdbc:luciddb:> update u set a = a;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 3  |
+| 4       | 4  | 3  |
+| 5       | 5  | 4  |
+| 6       | 6  | 5  |
+| 7       | 7  | 6  |
+| 8       | 8  | 7  |
+| 9       | 9  | 8  |
++---------+----+----+
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 0  | 0  |
+| 1  | 3  |
+| 4  | 3  |
+| 5  | 4  |
+| 6  | 5  |
+| 7  | 6  |
+| 8  | 7  |
+| 9  | 8  |
++----+----+
+0: jdbc:luciddb:> -- sleep before retrieving the stats again
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from u where a = 0;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select (counter_value = applib.get_var('RC', 'pageCount'))
+. . . . . . . . >     from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop label l;
 0: jdbc:luciddb:> drop schema rc cascade;
+0: jdbc:luciddb:> call applib.delete_var('RC', 'pageCount');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -38,7 +38,7 @@ class MappedPageListener;
  * interface is derived from CacheAccessor, so any Cache implementation can
  * alway be used directly as a vanilla CacheAccessor.
  */
-class CacheAccessor : public boost::noncopyable
+class FENNEL_CACHE_EXPORT CacheAccessor : public boost::noncopyable
 {
 public:
     virtual ~CacheAccessor();

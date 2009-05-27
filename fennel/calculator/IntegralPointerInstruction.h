@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 
 
 template<typename PTR_TYPE>
-class IntegralPointerInstruction : public PointerInstruction
+class IntegralPointerInstruction
+    : public PointerInstruction
 {
 public:
     explicit
@@ -45,10 +46,12 @@ public:
     {}
 
     ~IntegralPointerInstruction() {
+#ifndef __MSVC__
         // If (0) to reduce performance impact of template type checking
         if (0) {
             PointerInstruction_NotAPointerType<PTR_TYPE>();
         }
+#endif
     }
 
 protected:
@@ -198,8 +201,9 @@ public:
 };
 
 
-class IntegralPointerInstructionRegister : InstructionRegister {
-
+class FENNEL_CALCULATOR_EXPORT IntegralPointerInstructionRegister
+    : InstructionRegister
+{
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void

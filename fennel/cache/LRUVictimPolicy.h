@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
  * LRUVictim is the attributes class which must be a base for any CachePage type
  * which will be cached using an LRUVictimPolicy.
  */
-class LRUVictim : public IntrusiveDListNode
+class FENNEL_CACHE_EXPORT LRUVictim
+    : public IntrusiveDListNode
 {
     // no data; base IntrusiveDListNode is used to order LRUVictims in an
     // intrusive doubly-linked list.

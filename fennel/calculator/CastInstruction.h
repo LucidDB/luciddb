@@ -167,7 +167,7 @@ public:
         StandardTypeDescriptorOrdinal type1,
         StandardTypeDescriptorOrdinal type2)
     {
-        vector<StandardTypeDescriptorOrdinal>v;
+        vector<StandardTypeDescriptorOrdinal> v;
         v.push_back(type1);
         v.push_back(type2);
         return InstructionSignature(shortName(), v);
@@ -187,7 +187,8 @@ public:
 
 #define TTT(a)
 
-class CastInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT CastInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename, typename > class INSTCLASS2 >

@@ -22,6 +22,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/hashexe/LhxHashTable.h"
+#include "fennel/hashexe/LhxHashTableDump.h"
 #include "fennel/tuple/TuplePrinter.h"
 #include <sstream>
 
@@ -1230,6 +1231,14 @@ bool LhxHashTableReader::getNext(TupleData &outputTuple)
         }
     }
 }
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedHashexeStructs
+{
+    LhxHashTableDump dump;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

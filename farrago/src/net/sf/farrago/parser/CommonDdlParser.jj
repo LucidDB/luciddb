@@ -195,6 +195,8 @@ DdlStmt DdlStmtEof() :
                 modelElement = ExtensionModelDefinition()
                 |
                 modelElement = LabelDefinition()
+                |
+                modelElement = CatalogDefinition()
             )
             {
                 ddlStmt = newDdlCreateStmt(modelElement, replaceOptions);
@@ -212,6 +214,8 @@ DdlStmt DdlStmtEof() :
             (
                 (
                     modelElement = SchemaDrop()
+                    |
+                    modelElement = CatalogDrop()
                     |
                     modelElement = TableDrop()
                     |
@@ -843,6 +847,24 @@ FemLabel LabelDefinition() :
     }
 }
 
+FemLocalCatalog CatalogDefinition() :
+{
+    FemLocalCatalog catalog;
+    SqlIdentifier catalogName;
+}
+{
+    <CATALOG> catalogName = SimpleIdentifier()
+    {
+        catalog = getRepos().newFemLocalCatalog();
+        catalog.setName(catalogName.getSimple());
+        FarragoCatalogUtil.initializeCatalog(getRepos(), catalog);
+    }
+    OptionalDescription(catalog)
+    {
+        return catalog;
+    }
+}
+
 CwmTable TableIdentifier() :
 {
     SqlIdentifier qualifiedTableName;
@@ -1306,6 +1328,19 @@ CwmModelElement SchemaDrop() :
     CascadeOption()
     {
         return schema;
+    }
+}
+
+CwmModelElement CatalogDrop() :
+{
+    SqlIdentifier catalogName;
+    CwmCatalog catalog;
+}
+{
+    catalog = CatalogReference()
+    CascadeOption()
+    {
+        return catalog;
     }
 }
 

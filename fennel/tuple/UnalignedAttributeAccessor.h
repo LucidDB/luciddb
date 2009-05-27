@@ -78,7 +78,7 @@ class TupleAttributeDescriptor;
  * TODO jvs 22-Oct-2006:  unify this up at the TupleAccessor level
  * as a new TUPLE_FORMAT_UNALIGNED.
  */
-class UnalignedAttributeAccessor
+class FENNEL_TUPLE_EXPORT UnalignedAttributeAccessor
 {
     static const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
     static const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;

@@ -35,7 +35,7 @@ class RandomAccessRequest;
 /**
  * FileDevice is a base class for devices built atop the OS file system.
  */
-class FileDevice
+class FENNEL_DEVICE_EXPORT FileDevice
 {
 protected:
     // REVIEW:  should this be synchronized here or at a higher level?

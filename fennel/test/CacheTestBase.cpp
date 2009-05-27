@@ -33,7 +33,7 @@
 #include <boost/test/test_tools.hpp>
 #include <strstream>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <process.h>
 #endif
 

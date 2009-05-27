@@ -55,7 +55,8 @@ struct LbmMinusExecStreamParams : public LbmBitOpExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmMinusExecStream : public LbmBitOpExecStream
+class FENNEL_LBM_EXPORT LbmMinusExecStream
+    : public LbmBitOpExecStream
 {
     /**
      * True if all subtrahends have reached EOS at some point

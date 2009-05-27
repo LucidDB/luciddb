@@ -46,7 +46,7 @@ class LinearDeviceSegmentParams;
  * Database defines the top-level database object, which is the unit of
  * self-contained storage and recovery.
  */
-class Database
+class FENNEL_DB_EXPORT Database
     : public boost::noncopyable,
         public ClosableObject,
         public TraceSource,

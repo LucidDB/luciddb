@@ -30,17 +30,9 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-// NOTE jvs 24-Nov-2004:  It would be nice to replace SXMutex with
-// boost::read_write_mutex.  However, it is a lot of work to
-// get this right, because the boost design is intended for short-duration
-// locks, whereas Fennel uses long-duration locks for cache pages.
-// Also, the boost implementation does not yet take advantage
-// of OS support for these primitives, so this custom implementation is
-// at least as efficient.
-
-// NOTE jvs 2-Jun-2007:  And it turns out that there were big problems
-// with boost::read_write_mutex, so it has been removed from the Boost
-// thread library, at least for now.
+// NOTE jvs 25-Oct-2008:  We can't replace this class with
+// boost::shared_mutex, because lock ownership need to be transaction-scoped
+// rather than thread-scoped.
 
 /**
  * An SXMutex implements a standard readers/writers exclusion scheme: any
@@ -58,7 +50,7 @@ FENNEL_BEGIN_NAMESPACE
  * thread takes an exclusive lock).  And "mutex" is more specific than "lock",
  * which is used in boost in the sense of a guard.
  */
-class SXMutex : public SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT SXMutex : public SynchMonitoredObject
 {
 public:
     /**

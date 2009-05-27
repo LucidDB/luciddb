@@ -27,6 +27,7 @@
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/segment/SegmentAccessor.h"
+#include "fennel/segment/SegmentMap.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -162,6 +163,14 @@ bool Segment::isWriteVersioned()
 void Segment::initForUse()
 {
 }
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedSegmentStructs
+{
+    SegmentMap &segmentMap;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

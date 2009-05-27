@@ -28,8 +28,8 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 
-#ifdef __MINGW32__
-#include <../w32api/winsock2.h>
+#ifdef __MSVC__
+#include <winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
@@ -40,7 +40,8 @@ FENNEL_BEGIN_NAMESPACE
  * AttributeAccessorImpl is a common base for all implementations of the
  * AttributeAccessor interface.
  */
-class AttributeAccessorImpl : public AttributeAccessor
+class FENNEL_TUPLE_EXPORT AttributeAccessorImpl
+    : public AttributeAccessor
 {
 public:
     explicit AttributeAccessorImpl();
@@ -78,7 +79,7 @@ public:
 /**
  * FixedWidthAccessor accesses NOT NULL fixed width attributes.
  */
-class FixedWidthAccessor
+class FENNEL_TUPLE_EXPORT FixedWidthAccessor
     : public AttributeAccessorImpl
 {
 public:
@@ -93,7 +94,7 @@ public:
  * FixedWidthNetworkAccessor16 accesses NOT NULL fixed width 16-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor16
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor16
     : public FixedWidthAccessor
 {
 public:
@@ -120,7 +121,7 @@ public:
  * FixedWidthNetworkAccessor32 accesses NOT NULL fixed width 32-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor32
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor32
     : public FixedWidthAccessor
 {
 public:
@@ -147,7 +148,7 @@ public:
  * FixedWidthNetworkAccessor64 accesses NOT NULL fixed width 64-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor64
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor64
     : public FixedWidthAccessor
 {
 public:
@@ -224,7 +225,7 @@ public:
 /**
  * BitAccessor accesses NOT NULL bit attributes.
  */
-class BitAccessor
+class FENNEL_TUPLE_EXPORT BitAccessor
     : public AttributeAccessorImpl
 {
 public:

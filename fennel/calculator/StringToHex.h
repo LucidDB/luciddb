@@ -29,13 +29,13 @@ FENNEL_BEGIN_NAMESPACE
 
 using std::string;
 
-string
+string FENNEL_CALCULATOR_EXPORT
 stringToHex(char const * const buf);
 
-string
+string FENNEL_CALCULATOR_EXPORT
 stringToHex(string const & s);
 
-string
+string FENNEL_CALCULATOR_EXPORT
 stringToHex(char const * const buf, uint buflen);
 
 

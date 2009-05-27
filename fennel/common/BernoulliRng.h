@@ -24,6 +24,7 @@
 #define Fennel_BernoulliRng_Included
 
 #include <boost/random.hpp>
+#include <boost/cstdint.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -37,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author Stephan Zuercher
  * @version $Id$
  */
-class BernoulliRng
+class FENNEL_COMMON_EXPORT BernoulliRng
 {
 private:
     /**
@@ -67,7 +68,7 @@ public:
      * that you call this method with a better seed.  The usual warnings about
      * not calling this method frequently with an input of 'time(0)' apply.
      */
-    void reseed(uint32_t seed);
+    void reseed(boost::uint32_t seed);
 
     /**
      * Returns the next value.

@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * ThreadPoolScheduler implements DeviceAccessScheduler by combining
  * a thread pool with synchronous I/O calls.
  */
-class ThreadPoolScheduler : public DeviceAccessScheduler
+class FENNEL_DEVICE_EXPORT ThreadPoolScheduler
+    : public DeviceAccessScheduler
 {
     ThreadPool<RandomAccessRequest> pool;
 

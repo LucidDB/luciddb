@@ -630,8 +630,9 @@ public class RexToCalcTranslator
         // to the aggregate function. So it has RexInputRef's and RexCall's.
         // This information is needed for add and drop programs.
         //
-        // Windowed Agg Rel has information about the aggregate functions alone. It
-        // has RexCall's that calls the interface methods for SUM, COUNT.
+        // Windowed Agg Rel has information about the aggregate functions alone.
+        // It has RexCall objects that call the interface methods for SUM,
+        // COUNT.
         //
         // Outer Calc Rel has information about the output expressions. It has
         // RexInputRef's and RexCall's. This information is needed for output

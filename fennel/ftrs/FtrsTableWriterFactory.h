@@ -40,7 +40,8 @@ class FtrsTableIndexWriterParams;
  * by constructing FtrsTableWriters to be used for recovery.  It also implements
  * online pooling, currently for a single txn at a time.
  */
-class FtrsTableWriterFactory : public LogicalTxnParticipantFactory
+class FENNEL_FTRS_EXPORT FtrsTableWriterFactory
+    : public LogicalTxnParticipantFactory
 {
     SharedSegmentMap pSegmentMap;
     SharedCacheAccessor pCacheAccessor;

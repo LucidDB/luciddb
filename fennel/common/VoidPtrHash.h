@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * VoidPtrHash can be used to create a hash_map or hash_set with pointers as
  * keys.
  */
-struct VoidPtrHash
+struct FENNEL_COMMON_EXPORT VoidPtrHash
 {
     size_t operator() (void *key) const
     {

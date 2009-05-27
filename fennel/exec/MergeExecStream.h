@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  * MergeExecStreamParams defines parameters for instantiating
  * a MergeExecStream.
  */
-struct MergeExecStreamParams : public ConfluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT MergeExecStreamParams
+    : public ConfluenceExecStreamParams
 {
     /**
      * Whether the stream should execute in parallel mode.
@@ -61,7 +62,8 @@ struct MergeExecStreamParams : public ConfluenceExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class MergeExecStream : public ConfluenceExecStream
+class FENNEL_EXEC_EXPORT MergeExecStream
+    : public ConfluenceExecStream
 {
     /**
      * 0-based ordinal of next input from which to read.

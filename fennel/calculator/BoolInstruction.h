@@ -30,7 +30,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class BoolInstruction : public Instruction
+class FENNEL_CALCULATOR_EXPORT BoolInstruction
+    : public Instruction
 {
 public:
     explicit
@@ -66,7 +67,7 @@ protected:
 
     static vector<StandardTypeDescriptorOrdinal>
     regDesc(uint args) {
-        vector<StandardTypeDescriptorOrdinal>v;
+        vector<StandardTypeDescriptorOrdinal> v;
         uint i;
         for (i = 0; i < args; i++) {
             v.push_back(STANDARD_TYPE_BOOL);
@@ -75,7 +76,8 @@ protected:
     }
 };
 
-class BoolOr : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolOr
+    : public BoolInstruction
 {
 public:
     explicit
@@ -123,7 +125,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -141,7 +143,8 @@ public:
     }
 };
 
-class BoolAnd : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolAnd
+    : public BoolInstruction
 {
 public:
     explicit
@@ -184,7 +187,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -202,7 +205,8 @@ public:
     }
 };
 
-class BoolNot : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolNot
+    : public BoolInstruction
 {
 public:
     explicit
@@ -233,7 +237,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -249,7 +253,8 @@ public:
     }
 };
 
-class BoolMove : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolMove
+    : public BoolInstruction
 {
 public:
     explicit
@@ -277,7 +282,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -293,7 +298,8 @@ public:
     }
 };
 
-class BoolRef : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolRef
+    : public BoolInstruction
 {
 public:
     explicit
@@ -317,7 +323,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -333,7 +339,8 @@ public:
     }
 };
 
-class BoolIs : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIs
+    : public BoolInstruction
 {
 public:
     explicit
@@ -371,7 +378,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -389,7 +396,8 @@ public:
     }
 };
 
-class BoolIsNot : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNot
+    : public BoolInstruction
 {
 public:
     explicit
@@ -427,7 +435,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -447,7 +455,8 @@ public:
 
 
 // BoolEqual is not the same as SQL99 boolean IS
-class BoolEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -481,7 +490,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -499,7 +508,8 @@ public:
     }
 };
 
-class BoolNotEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolNotEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -533,7 +543,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -551,7 +561,8 @@ public:
     }
 };
 
-class BoolGreater : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolGreater
+    : public BoolInstruction
 {
 public:
     explicit
@@ -585,7 +596,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -603,7 +614,8 @@ public:
     }
 };
 
-class BoolGreaterEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolGreaterEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -640,7 +652,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -658,7 +670,8 @@ public:
     }
 };
 
-class BoolLess : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolLess
+    : public BoolInstruction
 {
 public:
     explicit
@@ -692,7 +705,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -710,7 +723,8 @@ public:
     }
 };
 
-class BoolLessEqual : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolLessEqual
+    : public BoolInstruction
 {
 public:
     explicit
@@ -747,7 +761,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -765,7 +779,8 @@ public:
     }
 };
 
-class BoolIsNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -793,7 +808,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -809,7 +824,8 @@ public:
     }
 };
 
-class BoolIsNotNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolIsNotNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -838,7 +854,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -854,7 +870,8 @@ public:
     }
 };
 
-class BoolToNull : public BoolInstruction
+class FENNEL_CALCULATOR_EXPORT BoolToNull
+    : public BoolInstruction
 {
 public:
     explicit
@@ -877,7 +894,7 @@ public:
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        vector<StandardTypeDescriptorOrdinal> v(numArgs(), type);
         return InstructionSignature(shortName(), v);
     }
 
@@ -890,7 +907,8 @@ public:
     }
 };
 
-class BoolInstructionRegister : InstructionRegister {
+class FENNEL_CALCULATOR_EXPORT BoolInstructionRegister
+    : InstructionRegister {
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < class INSTCLASS2 >

@@ -123,6 +123,16 @@
           file="${open.dir}/luciddb/test/sql/concurrency/concurrentMerges.mtsql"/>
       </test>
 
+      <test name="labels">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/labels.mtsql"/>
+      </test>
+
+      <test name="labelsReportsEtl">
+        <junit-sql
+            file="${open.dir}/luciddb/test/sql/concurrency/labelsReportsEtl.mtsql"/>
+      </test>
+
 
       <cleanup-hook>
         <test-suite name="cleanup">

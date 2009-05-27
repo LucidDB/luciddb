@@ -46,7 +46,7 @@ void LcsRowScanExecStream::prepareResidualFilters(
     /*
      * compute the outputTupleData position of filter columns
      */
-    std::vector<uint> valueCols;
+    VectorOfUint valueCols;
     uint j, k = 0;
     for (uint i = 0;  i < nFilters; i++) {
         for (j = 0; j < params.outputProj.size(); j++) {

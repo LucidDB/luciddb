@@ -58,13 +58,19 @@ enum SqlDateTimeType {
 
 boost::posix_time::ptime const epoc(boost::gregorian::date(1970,1,1));
 
-int TimeToIsoString(char *dest, boost::posix_time::ptime t);
-int DateToIsoString(char *dest, boost::posix_time::ptime t);
-int TimestampToIsoString(char *dest, boost::posix_time::ptime t);
+int FENNEL_CALCULATOR_EXPORT TimeToIsoString(
+    char *dest, boost::posix_time::ptime t);
+int FENNEL_CALCULATOR_EXPORT DateToIsoString(
+    char *dest, boost::posix_time::ptime t);
+int FENNEL_CALCULATOR_EXPORT TimestampToIsoString(
+    char *dest, boost::posix_time::ptime t);
 
-int64_t IsoStringToTime(char const * const src, int len);
-int64_t IsoStringToDate(char const * const src, int len);
-int64_t IsoStringToTimestamp(char const * const src, int len);
+int64_t FENNEL_CALCULATOR_EXPORT IsoStringToTime(
+    char const * const src, int len);
+int64_t FENNEL_CALCULATOR_EXPORT IsoStringToDate(
+    char const * const src, int len);
+int64_t FENNEL_CALCULATOR_EXPORT IsoStringToTimestamp(
+    char const * const src, int len);
 
 template <
     int CodeUnitBytes,
@@ -190,20 +196,22 @@ SqlStrToDate(char *src, int len)
 ///
 /// (This function used to be called CurrentTime, but as FNL-77 points out,
 /// that is misleading, because CurrentTime's result is in the local timezone.)
-int64_t UniversalTime();
+int64_t FENNEL_CALCULATOR_EXPORT UniversalTime();
 
 /// Returns timestamp in UTC. That is, milliseconds since 1970-1-1 00:00:00 UTC.
 ///
 /// (This function used to be called CurrentTimestamp, but as FNL-77 points out,
 /// that is misleading, because CurrentTimestamp's result is in the local
 /// timezone.)
-int64_t UniversalTimestamp();
+int64_t FENNEL_CALCULATOR_EXPORT UniversalTimestamp();
 
 /// Returns the time of day in the given time zone.
-int64_t LocalTime(boost::local_time::time_zone_ptr tzPtr);
+int64_t FENNEL_CALCULATOR_EXPORT LocalTime(
+    boost::local_time::time_zone_ptr tzPtr);
 
 /// Returns the timestamp in the given time zone.
-int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr);
+int64_t FENNEL_CALCULATOR_EXPORT LocalTimestamp(
+    boost::local_time::time_zone_ptr tzPtr);
 
 FENNEL_END_NAMESPACE
 

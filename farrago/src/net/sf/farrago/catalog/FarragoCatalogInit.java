@@ -85,7 +85,7 @@ public class FarragoCatalogInit
 
     //~ Constructors -----------------------------------------------------------
 
-    protected FarragoCatalogInit(FarragoRepos repos)
+    public FarragoCatalogInit(FarragoRepos repos)
     {
         super(repos);
     }

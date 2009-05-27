@@ -33,7 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  * SegBufferReaderExecStreamParams defines parameters for instantiating a
  * SegBufferReaderExecStream.
  */
-struct SegBufferReaderExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT SegBufferReaderExecStreamParams
+    : public ConduitExecStreamParams
 {
     /**
      * Id of the dynamic parameter used to keep a reference count of the
@@ -62,13 +63,15 @@ struct SegBufferReaderExecStreamParams : public ConduitExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class SegBufferReaderExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT SegBufferReaderExecStream
+    : public ConduitExecStream
 {
     SegmentAccessor bufferSegmentAccessor;
     SharedSegBufferReader pSegBufferReader;
     DynamicParamId readerRefCountParamId;
     PageId firstBufferPageId;
     TupleData inputTuple;
+    bool paramIncremented;
 
 public:
     virtual void prepare(SegBufferReaderExecStreamParams const &params);

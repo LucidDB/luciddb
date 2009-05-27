@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * CountAggComputer is an abstract base for computing COUNT().
  */
-class CountAggComputer : public AggComputer
+class FENNEL_EXEC_EXPORT CountAggComputer
+    : public AggComputer
 {
 protected:
     inline uint64_t &interpretDatum(TupleDatum &);
@@ -54,7 +55,8 @@ public:
  * CountStarAggComputer computes COUNT(*), which counts tuples without
  * regard for null values.
  */
-class CountStarAggComputer : public CountAggComputer
+class FENNEL_EXEC_EXPORT CountStarAggComputer
+    : public CountAggComputer
 {
 public:
     // implement AggComputer
@@ -84,7 +86,8 @@ public:
  * CountNullableAggComputer computes COUNT(X), which does not count tuples
  * for which X IS NULL.
  */
-class CountNullableAggComputer : public CountAggComputer
+class FENNEL_EXEC_EXPORT CountNullableAggComputer
+    : public CountAggComputer
 {
 public:
     // implement AggComputer
@@ -114,7 +117,8 @@ public:
  * ExtremeAggComputer computes MIN/MAX, ignoring null values but returning
  * null if the input is empty.
  */
-class ExtremeAggComputer : public AggComputer
+class FENNEL_EXEC_EXPORT ExtremeAggComputer
+    : public AggComputer
 {
     /**
      * Type descriptor used as comparison functor.

@@ -5,14 +5,25 @@ else
     export FENNEL_HOME=$1
 fi
 
+cygwin=false
+case "`uname`" in
+  CYGWIN*) cygwin=true ;;
+esac
 
-export @lib_path_var@=$FENNEL_HOME/libfennel/.libs:$@lib_path_var@
-export @lib_path_var@=$FENNEL_HOME/lucidera/libfennel_lu/.libs:$@lib_path_var@
-export @lib_path_var@=$FENNEL_HOME/test/.libs:$@lib_path_var@
-export @lib_path_var@=$FENNEL_HOME/farrago/.libs:$@lib_path_var@
-export @lib_path_var@=$FENNEL_HOME/lucidera/farrago/.libs:$@lib_path_var@
-export @lib_path_var@=@boost_location@/lib:$@lib_path_var@
-export @lib_path_var@=@stlport_location@/lib:$@lib_path_var@
+boost_dir="@boost_location@"
+stlport_dir="@stlport_location@"
+if $cygwin ; then
+    boost_dir=`cygpath -u $boost_dir`
+    stlport_dir=`cygpath -u $stlport_dir`
+fi
+
+export @lib_path_var@=$FENNEL_HOME/libfennel:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/lucidera/libfennel_lu:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/test:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/farrago:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/lucidera/farrago:$@lib_path_var@
+export @lib_path_var@=$boost_dir/lib:$@lib_path_var@
+export @lib_path_var@=$stlport_dir/lib:$@lib_path_var@
 
 if [ -d "@icu_location@/lib" ]
 then

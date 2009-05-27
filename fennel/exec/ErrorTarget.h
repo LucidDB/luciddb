@@ -43,7 +43,7 @@ enum ErrorLevel
  * Typically, many or all ErrorSouce instances post errors to the same
  * ErrorTarget.
  */
-class ErrorTarget
+class FENNEL_EXEC_EXPORT ErrorTarget
 {
 public:
 

@@ -1936,7 +1936,7 @@
 > where a = 10 and b = 20 and c > 30;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$D]], residual columns=[[2]])'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$D]], residual columns=[[2]])'
 '    LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_BA], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
 '      FennelValuesRel(tuples=[[{ '[', 20, 10, ']', 20, 10 }]])'
 '    FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])'
@@ -2095,7 +2095,7 @@
 '          IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..2=[{exprs}])'
 '            FennelToIteratorConverter'
 '              LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$D]])'
-'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S1]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
 > 
 > select *
@@ -2199,9 +2199,9 @@
 '                        IteratorToFennelConverter'
 '                          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], S1=[$t1])'
 '                            FennelToIteratorConverter'
-'                              LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                              LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S1]], residual columns=[[1]])'
 '                                FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
-'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S1]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
 > 
 > select *

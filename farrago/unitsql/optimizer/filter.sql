@@ -163,3 +163,31 @@ select name from emps
 where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
 order by name;
 
+-- Exercise cases where IS [NOT] NULL filters can be removed.
+!set outputformat csv
+explain plan for select * from emps where empno is null;
+explain plan for select * from emps where empno is not null;
+explain plan for select * from emps where not(empno is null);
+explain plan for select * from emps where not(empno is not null);
+explain plan for select * from emps where manager is unknown;
+explain plan for select * from emps where not(manager is unknown);
+explain plan for select min(empno) from emps
+    having not(count(distinct city) is null);
+
+-- Make sure the filter is NOT removed when it's applied on a nullable column
+explain plan for select * from emps where city is null;
+explain plan for select * from emps where city is not null;
+explain plan for select * from emps where not(city is null);
+explain plan for select * from emps where not(city is not null);
+explain plan for select * from emps where slacker is unknown;
+explain plan for select * from emps where not(slacker is unknown);
+explain plan for
+    select * from
+        (select e.empno, d.name from emps e left outer join depts d
+            on e.deptno = d.deptno)
+    where name is null;
+!set outputformat table
+select * from
+    (select e.empno, d.name from emps e left outer join depts d
+        on e.deptno = d.deptno)
+where name is null;

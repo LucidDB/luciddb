@@ -2310,8 +2310,10 @@ public class CalcRexImplementorTableImpl
                 (SqlTrimFunction.Flag) literal.getValue();
 
             regList.add(resultOfCall);
-            regList.add(translator.implementNode(call.operands[2])); //str to trim from
-            regList.add(translator.implementNode(call.operands[1])); //trim char
+            // str to trim from
+            regList.add(translator.implementNode(call.operands[2]));
+            // trim char
+            regList.add(translator.implementNode(call.operands[1]));
             regList.add(translator.builder.newInt4Literal(flag.getLeft()));
             regList.add(translator.builder.newInt4Literal(flag.getRight()));
 

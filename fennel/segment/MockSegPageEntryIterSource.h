@@ -36,7 +36,8 @@ class Segment;
  * each page twice.  The context associated with each page returned is a
  * sequencing counter, starting at 0.
  */
-class MockSegPageEntryIterSource : public SegPageEntryIterSource<int>
+class FENNEL_SEGMENT_EXPORT MockSegPageEntryIterSource
+    : public SegPageEntryIterSource<int>
 {
     int counter;
     PageId nextPageId;

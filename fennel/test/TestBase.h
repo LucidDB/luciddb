@@ -30,7 +30,10 @@
 #include "fennel/common/FileStatsTarget.h"
 #include "fennel/synch/StatsTimer.h"
 
+#define BOOST_TEST_DYN_LINK
+
 #include <boost/shared_ptr.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -44,7 +47,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TestBase is the common base for all Fennel tests.
  */
-class TestBase
+class FENNEL_TEST_EXPORT TestBase
     : public TraceTarget,
         public boost::enable_shared_from_this<TestBase>
 
@@ -116,7 +119,7 @@ protected:
      * Collects a group of named test-case definitions.
      * Preserves the order; allows lookup by name.
      */
-    class TestCaseGroup
+    class FENNEL_TEST_EXPORT TestCaseGroup
     {
         struct Item
         {
@@ -236,23 +239,33 @@ public:
 // derived class name.
 
 #define FENNEL_UNIT_TEST_SUITE(UserTestClass) \
-TestSuite* init_unit_test_suite(int argc,char **argv) \
+bool init_unit_test() \
 { \
-    TestBase::readParams(argc,argv); \
+    TestBase::readParams( \
+        boost::unit_test::framework::master_test_suite().argc, \
+        boost::unit_test::framework::master_test_suite().argv); \
     std::string paramKey(TestBase::paramTestSuiteName); \
     std::string paramVal(#UserTestClass); \
     TestBase::configMap.setStringParam(paramKey,paramVal); \
     UserTestClass *pTestObj = new UserTestClass(); \
     TestBase::configMap.disableTracing(); \
-    return pTestObj->releaseTestSuite(); \
+    boost::unit_test::framework::master_test_suite().add( \
+        pTestObj->releaseTestSuite()); \
+    return true; \
+} \
+\
+int main(int argc, char **argv) \
+{ \
+    return ::boost::unit_test::unit_test_main(&init_unit_test, argc, argv); \
 }
 
 
+
 // In the test class constructor, invoke either FENNEL_UNIT_TEST_CASE or
-// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call FENNEL_UNIT_TEST_CASE
-// to define a test case that is run by default. Call FENNEL_EXTRA_UNIT_TEST_CASE to
-// define an extra test case that is run only when selected from the command line,
-// either by "-t TESTNAME" or by "-all".
+// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call
+// FENNEL_UNIT_TEST_CASE to define a test case that is run by default. Call
+// FENNEL_EXTRA_UNIT_TEST_CASE to define an extra test case that is run only
+// when selected from the command line, either by "-t TESTNAME" or by "-all".
 
 #define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
   FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests,UserTestClass,testMethodName)
@@ -261,8 +274,8 @@ TestSuite* init_unit_test_suite(int argc,char **argv) \
   FENNEL_DEFINE_UNIT_TEST_CASE(extraTests,UserTestClass,testMethodName)
 
 // This macro is based on BOOST_PARAM_CLASS_TEST_CASE():
-// make_test_case() below actually returns a test_unit_generator, not a test_case.
-// The generator emits one test.
+// make_test_case() below actually returns a test_unit_generator, not a
+// test_case. The generator emits one test.
 #define FENNEL_DEFINE_UNIT_TEST_CASE(group,UserTestClass,testMethodName) \
 do { \
     typedef TestWrapperTemplate<UserTestClass> TestWrapper; \

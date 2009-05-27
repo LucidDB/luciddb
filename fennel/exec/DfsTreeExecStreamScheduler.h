@@ -39,7 +39,8 @@ class ExecStreamGraphImpl;
  * @author John V. Sichi
  * @version $Id$
  */
-class DfsTreeExecStreamScheduler : public ExecStreamScheduler
+class FENNEL_EXEC_EXPORT DfsTreeExecStreamScheduler
+    : public ExecStreamScheduler
 {
     volatile bool aborted;
 
