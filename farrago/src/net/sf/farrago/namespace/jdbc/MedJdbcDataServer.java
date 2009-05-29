@@ -999,15 +999,16 @@ public class MedJdbcDataServer
                 "proj");
 
         // all pushdown rules
-        List<MedJdbcPushDownRule> pushdownRuleList =
-            new ArrayList<MedJdbcPushDownRule>();
+        List<RelOptRule> pushdownRuleList =
+            new ArrayList<RelOptRule>();
         pushdownRuleList.add(r1);
         pushdownRuleList.add(r2);
         pushdownRuleList.add(r3);
         pushdownRuleList.add(r4);
+        pushdownRuleList.add(MedJdbcAggPushDownRule.instance);
 
         // add the non-disabled pushdown rules
-        for (MedJdbcPushDownRule rule : pushdownRuleList) {
+        for (RelOptRule rule : pushdownRuleList) {
             boolean ruledOut = false;
             for (RelOptRuleOperand op : rule.getOperands()) {
                 if (disabledPushdownPattern.matcher(

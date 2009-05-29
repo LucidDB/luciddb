@@ -321,18 +321,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char the f%' order by 1,2
 . . . . . . . . > );
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                            column0                                                                                             |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                      |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                       |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(32) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, TIMESTAMP(0) c_timestamp) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                                                                                |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                                    |
-|           MedJdbcQueryRel(foreignSql=[SELECT `c_timestamp`, `c_varchar`                                                                                                                        |
-| FROM `DATATYPES`                                                                                                                                                                               |
-| WHERE NOT (`c_varchar` LIKE '%char the f%')])                                                                                                                                                  |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------+
+|                                column0                                 |
++------------------------------------------------------------------------+
+| FennelToIteratorConverter                                              |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])               |
+|     IteratorToFennelConverter                                          |
+|       ResultSetToFarragoIteratorConverter                              |
+|         MedJdbcQueryRel(foreignSql=[SELECT `c_varchar`, `c_timestamp`  |
+| FROM `DATATYPES`                                                       |
+| WHERE NOT (`c_varchar` LIKE '%char the f%')])                          |
++------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- LIKE
@@ -474,18 +473,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select "c_varchar","c_date" from test.datatype where "c_varchar" IN ('varchar the second', 'varchar') order by 1,2
 . . . . . . . . > );
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                      column0                                                                                      |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                         |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                          |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(32) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, DATE c_date) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                                                                   |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                       |
-|           MedJdbcQueryRel(foreignSql=[SELECT `c_date`, `c_varchar`                                                                                                                |
-| FROM `DATATYPES`                                                                                                                                                                  |
-| WHERE `c_varchar` = 'varchar the second' OR `c_varchar` = 'varchar'])                                                                                                             |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------+
+|                                column0                                 |
++------------------------------------------------------------------------+
+| FennelToIteratorConverter                                              |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])               |
+|     IteratorToFennelConverter                                          |
+|       ResultSetToFarragoIteratorConverter                              |
+|         MedJdbcQueryRel(foreignSql=[SELECT `c_varchar`, `c_date`       |
+| FROM `DATATYPES`                                                       |
+| WHERE `c_varchar` = 'varchar the second' OR `c_varchar` = 'varchar'])  |
++------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NOT NULL
@@ -526,18 +524,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select "c_varchar","c_date" from test.datatype where "c_varchar" IS NULL order by 1,2
 . . . . . . . . > );
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                      column0                                                                                      |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                         |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                          |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(32) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, DATE c_date) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                                                                   |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                       |
-|           MedJdbcQueryRel(foreignSql=[SELECT `c_date`, `c_varchar`                                                                                                                |
-| FROM `DATATYPES`                                                                                                                                                                  |
-| WHERE `c_varchar` IS NULL])                                                                                                                                                       |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------+
+|                              column0                              |
++-------------------------------------------------------------------+
+| FennelToIteratorConverter                                         |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])          |
+|     IteratorToFennelConverter                                     |
+|       ResultSetToFarragoIteratorConverter                         |
+|         MedJdbcQueryRel(foreignSql=[SELECT `c_varchar`, `c_date`  |
+| FROM `DATATYPES`                                                  |
+| WHERE `c_varchar` IS NULL])                                       |
++-------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- AND

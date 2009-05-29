@@ -37,7 +37,7 @@ import org.eigenbase.sql.parser.*;
 
 /**
  * MedJdbcPushDownRule is a rule to push filters and projections down to Jdbc
- * source
+ * sources.
  *
  * @author Sunny Choi
  * @version $Id$
@@ -83,6 +83,37 @@ class MedJdbcPushDownRule
         int relLength = call.rels.length;
         final MedJdbcQueryRel queryRel =
             (MedJdbcQueryRel) call.rels[relLength - 1];
+
+        // make sure we're starting from a plain
+        // "select a, b, c from tbl"
+        SqlSelect origSelect = queryRel.getSql();
+        SqlNodeList origSelectList = origSelect.getSelectList();
+        for (SqlNode selectItem : origSelectList.getList()) {
+            if (!(selectItem instanceof SqlIdentifier)) {
+                return;
+            }
+        }
+        if (!(origSelect.getFrom() instanceof SqlIdentifier)) {
+            return;
+        }
+        if (origSelect.getGroup() != null) {
+            return;
+        }
+        if (origSelect.getHaving() != null) {
+            return;
+        }
+        if (origSelect.getWhere() != null) {
+            return;
+        }
+        if (origSelect.getWindowList().size() != 0) {
+            return;
+        }
+        if (origSelect.getOrderList() != null) {
+            return;
+        }
+        if (origSelect.isDistinct()) {
+            return;
+        }
 
         ProjectRel topProj = null;
         FilterRel filter = null;
@@ -181,27 +212,28 @@ class MedJdbcPushDownRule
         List<SqlIdentifier> projList = null;
         String [] fieldNames = null;
         RelDataType [] fieldTypes = null;
+        List<RelDataTypeField> fields = null;
 
         // push down projection
         if (projOnFilter) {
             projList = new ArrayList<SqlIdentifier>();
-            List<RelDataTypeField> fields = topProj.getRowType().getFieldList();
-            int fieldLen = fields.size();
-            fieldNames = new String[fieldLen];
-            fieldTypes = new RelDataType[fieldLen];
-            for (int i = 0; i < fieldLen; i++) {
-                RelDataTypeField field = fields.get(i);
-                projList.add(
-                    new SqlIdentifier(
-                        getSourceFieldName(queryRel, field.getName()),
-                        SqlParserPos.ZERO));
-                fieldNames[i] = field.getName();
-                fieldTypes[i] = field.getType();
-            }
+            fields = topProj.getRowType().getFieldList();
         } else if (!filterOnly) {
             projList = new ArrayList<SqlIdentifier>();
-            List<RelDataTypeField> fields =
-                bottomProj.getRowType().getFieldList();
+
+            if (newTopProject != null) {
+                if (isPermutation(newTopProject)) {
+                    fields = newTopProject.getRowType().getFieldList();
+                    newTopProject = null;
+                }
+            }
+
+            if (fields == null) {
+                fields = bottomProj.getRowType().getFieldList();
+            }
+        }
+
+        if (projList != null) {
             int fieldLen = fields.size();
             fieldNames = new String[fieldLen];
             fieldTypes = new RelDataType[fieldLen];
@@ -216,7 +248,7 @@ class MedJdbcPushDownRule
             }
         }
 
-        SqlNodeList projection = queryRel.getSql().getSelectList();
+        SqlNodeList projection = origSelectList;
         if (projList != null) {
             projection =
                 new SqlNodeList(
@@ -225,15 +257,11 @@ class MedJdbcPushDownRule
                     SqlParserPos.ZERO);
         }
 
-        if (filterNode == null) {
-            filterNode = queryRel.getSql().getWhere();
-        }
-
         SqlSelect selectWithFilter =
             SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 projection,
-                queryRel.getSql().getFrom(),
+                origSelect.getFrom(),
                 filterNode,
                 null,
                 null,
@@ -241,64 +269,8 @@ class MedJdbcPushDownRule
                 null,
                 SqlParserPos.ZERO);
 
-        MedJdbcDataServer server = queryRel.columnSet.directory.server;
-        try {
-            SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
-            String sql = selectWithFilter.toSqlString(dialect);
-            sql = queryRel.columnSet.directory.normalizeQueryString(sql);
-
-            // test if sql can be executed against source
-            ResultSet rs = null;
-            PreparedStatement ps = null;
-            Statement testStatement = null;
-            try {
-                // Workaround for Oracle JDBC thin driver, where
-                // PreparedStatement.getMetaData does not actually get metadata
-                // before execution
-                if (dialect.isOracle()) {
-                    String quotedSql = dialect.quoteStringLiteral(sql);
-                    String sqlTest =
-                        " DECLARE"
-                        + "   test_cursor integer;"
-                        + " BEGIN"
-                        + "   test_cursor := dbms_sql.open_cursor;"
-                        + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
-                        + "   dbms_sql.native);"
-                        + "   dbms_sql.close_cursor(test_cursor);"
-                        + " EXCEPTION"
-                        + " WHEN OTHERS THEN"
-                        + "   dbms_sql.close_cursor(test_cursor);"
-                        + "   RAISE;"
-                        + " END;";
-                    testStatement = server.getConnection().createStatement();
-                    rs = testStatement.executeQuery(sqlTest);
-                } else {
-                    ps = server.getConnection().prepareStatement(sql);
-                    if (ps != null) {
-                        if (ps.getMetaData() == null) {
-                            return;
-                        }
-                    }
-                }
-            } catch (SQLException ex) {
-                return;
-            } catch (RuntimeException ex) {
-                return;
-            } finally {
-                try {
-                    if (rs != null) {
-                        rs.close();
-                    }
-                    if (testStatement != null) {
-                        testStatement.close();
-                    }
-                    if (ps != null) {
-                        ps.close();
-                    }
-                } catch (SQLException sqe) {
-                }
-            }
-        } catch (SQLException ex) {
+        MedJdbcNameDirectory dir = queryRel.columnSet.directory;
+        if (!dir.isRemoteSqlValid(selectWithFilter)) {
             return;
         }
 
@@ -330,6 +302,16 @@ class MedJdbcPushDownRule
         }
 
         call.transformTo(rel);
+    }
+
+    private boolean isPermutation(ProjectRel projectRel)
+    {
+        for (RexNode node : projectRel.getProjectExps()) {
+            if (!(node instanceof RexInputRef)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getSourceFieldName(MedJdbcQueryRel queryRel, String name)

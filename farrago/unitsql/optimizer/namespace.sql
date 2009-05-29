@@ -115,7 +115,20 @@ order by
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;
-    
+
+-- GROUP BY which can be pushed down to foreign DBMS
+select deptno, sum(sal), count(*)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
+-- GROUP BY with standalone count(distinct ) can be pushed down
+-- as two-level agg
+select deptno, count(distinct sal)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
 -- now explain plans for above queries
 !set outputformat csv
 
@@ -220,6 +233,18 @@ explain plan for
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;
+
+explain plan for 
+select deptno, sum(sal), count(*)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
+explain plan for 
+select deptno, count(distinct sal)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
 
 -- join on pseudocolumn (FRG-69)
 

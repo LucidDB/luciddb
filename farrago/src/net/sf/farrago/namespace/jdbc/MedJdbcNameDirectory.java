@@ -933,6 +933,79 @@ public class MedJdbcNameDirectory
             }
         }
     }
+
+    /**
+     * Tests whether a remote SQL query is valid by attempting
+     * to prepare it.  This is intended for use by pushdown rules
+     * constructing remote SQL from fragments of relational algebra.
+     *
+     * @param sqlNode SQL query to be tested
+     *
+     * @return true if statement is valid
+     */
+    protected boolean isRemoteSqlValid(SqlNode sqlNode)
+    {
+        try {
+            SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
+            String sql = sqlNode.toSqlString(dialect);
+            sql = normalizeQueryString(sql);
+
+            // test if sql can be executed against source
+            ResultSet rs = null;
+            PreparedStatement ps = null;
+            Statement testStatement = null;
+            try {
+                // Workaround for Oracle JDBC thin driver, where
+                // PreparedStatement.getMetaData does not actually get metadata
+                // before execution
+                if (dialect.isOracle()) {
+                    String quotedSql = dialect.quoteStringLiteral(sql);
+                    String sqlTest =
+                        " DECLARE"
+                        + "   test_cursor integer;"
+                        + " BEGIN"
+                        + "   test_cursor := dbms_sql.open_cursor;"
+                        + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
+                        + "   dbms_sql.native);"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + " EXCEPTION"
+                        + " WHEN OTHERS THEN"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + "   RAISE;"
+                        + " END;";
+                    testStatement = server.getConnection().createStatement();
+                    rs = testStatement.executeQuery(sqlTest);
+                } else {
+                    ps = server.getConnection().prepareStatement(sql);
+                    if (ps != null) {
+                        if (ps.getMetaData() == null) {
+                            return false;
+                        }
+                    }
+                }
+            } catch (SQLException ex) {
+                return false;
+            } catch (RuntimeException ex) {
+                return false;
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (testStatement != null) {
+                        testStatement.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                } catch (SQLException sqe) {
+                }
+            }
+        } catch (SQLException ex) {
+            return false;
+        }
+        return true;
+    }
 }
 
 // End MedJdbcNameDirectory.java
