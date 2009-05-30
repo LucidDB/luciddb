@@ -102,7 +102,7 @@ class MedJdbcPushDownRule
         if (origSelect.getHaving() != null) {
             return;
         }
-        if (origSelect.getWhere() != null) {
+        if ((origSelect.getWhere() != null) && !projectOnly) {
             return;
         }
         if (origSelect.getWindowList().size() != 0) {
@@ -262,7 +262,7 @@ class MedJdbcPushDownRule
                 null,
                 projection,
                 origSelect.getFrom(),
-                filterNode,
+                projectOnly ? origSelect.getWhere() : filterNode,
                 null,
                 null,
                 null,

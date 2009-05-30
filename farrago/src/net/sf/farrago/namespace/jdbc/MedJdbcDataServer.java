@@ -1018,6 +1018,9 @@ public class MedJdbcDataServer
                     break;
                 }
             }
+            if (disabledPushdownPattern.matcher(rule.toString()).matches()) {
+                ruledOut = true;
+            }
             if (!ruledOut) {
                 planner.addRule(rule);
             }
