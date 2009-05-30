@@ -21,9 +21,6 @@
 */
 package net.sf.farrago.test;
 
-import org.eigenbase.lurql.*;
-import org.eigenbase.lurql.parser.*;
-
 import java.io.*;
 
 import java.util.*;
@@ -38,6 +35,8 @@ import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.lurql.*;
+import org.eigenbase.lurql.parser.*;
 
 
 /**

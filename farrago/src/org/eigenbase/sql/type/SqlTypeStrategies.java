@@ -381,11 +381,17 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.Composition.OR,
-            otcNumeric,
-            otcInterval);
+        public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcNumeric,
+                otcInterval);
+
+        public static final SqlSingleOperandTypeChecker otcDatetimeOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcDatetime,
+                otcInterval);
 
     public static final SqlSingleOperandTypeChecker otcNumericOrString =
         new CompositeOperandTypeChecker(
@@ -995,7 +1001,8 @@ public abstract class SqlTypeStrategies
                         throw opBinding.newError(
                             EigenbaseResource.instance().TypeNotComparable.ex(
                                 opBinding.getOperandType(0).getFullTypeString(),
-                                opBinding.getOperandType(1).getFullTypeString()));
+                                opBinding.getOperandType(1)
+                                    .getFullTypeString()));
                     }
 
                     pickedCollation =

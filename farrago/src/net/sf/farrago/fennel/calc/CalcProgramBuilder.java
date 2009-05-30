@@ -1206,7 +1206,6 @@ public class CalcProgramBuilder
 
         for (int i = 0; i < operands.length; i++) {
             compilationAssert(null != operands[i], "Operand can not be null");
-            ;
         }
     }
 

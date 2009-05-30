@@ -67,7 +67,8 @@ ExecStreamResult MockConsumerExecStream::execute(
         inAccessor.unmarshalTuple(inputTuple);
         rowCount++;
         if (echoData) {
-            tuplePrinter.print(*echoData, inAccessor.getTupleDesc(), inputTuple);
+            tuplePrinter.print(
+                *echoData, inAccessor.getTupleDesc(), inputTuple);
         }
         if (saveData) {
             std::ostringstream oss;

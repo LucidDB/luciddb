@@ -572,7 +572,8 @@ public class FarragoPreparingStmt
                 // is not part of the cache key
                 cmdPrepareStream.setDegreeOfParallelism(
                     getSession().getSessionVariables().getInteger(
-                        FarragoDefaultSessionPersonality.DEGREE_OF_PARALLELISM));
+                        FarragoDefaultSessionPersonality
+                            .DEGREE_OF_PARALLELISM));
 
                 Collection<FemExecutionStreamDef> streamDefs =
                     cmdPrepareStream.getStreamDefs();
@@ -890,7 +891,7 @@ public class FarragoPreparingStmt
         return rootRel;
     }
 
-    private void validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    protected void validatePlan(RelNode rel, RelTraitSet desiredTraits)
         throws InvalidPlanException
     {
         if (!rel.getTraits().matches(desiredTraits)) {

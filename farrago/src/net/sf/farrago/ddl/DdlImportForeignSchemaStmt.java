@@ -326,7 +326,9 @@ public class DdlImportForeignSchemaStmt
             FemElementWithStorageOptions element,
             Properties props)
         {
-            for (Map.Entry<String, String> entry : Util.toMap(props).entrySet()) {
+            for (Map.Entry<String, String> entry :
+                 Util.toMap(props).entrySet())
+            {
                 FemStorageOption opt =
                     ddlValidator.getRepos().newFemStorageOption();
                 opt.setName(entry.getKey());

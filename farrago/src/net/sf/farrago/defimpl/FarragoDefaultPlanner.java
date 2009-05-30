@@ -22,10 +22,8 @@
 */
 package net.sf.farrago.defimpl;
 
-import net.sf.farrago.fennel.rel.*;
-import org.eigenbase.relopt.volcano.*;
-
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
@@ -33,6 +31,7 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.volcano.*;
 
 // TODO jvs 3-May-2006:  Rename this to FarragoDefaultVolcanoPlanner
 

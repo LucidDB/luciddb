@@ -292,7 +292,7 @@ public class FennelDbHandleImpl
      *
      * @return native handle
      */
-    public static FennelJavaHandle allocateNewObjectHandle(
+    public FennelJavaHandle allocateNewObjectHandle(
         FarragoAllocationOwner owner,
         Object obj)
     {

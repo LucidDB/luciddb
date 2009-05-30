@@ -85,7 +85,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     const uint N = sizeof(typesArray) / sizeof(typesArray[0]);
     string types;
     for (int i = 0; i < N; i++) {
-        if (i>0) {
+        if (i > 0) {
             types += ", ";
         }
         types += typesArray[i];
@@ -94,7 +94,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     pg << "L " << types << ";" << endl;
     pg << "C ";
     for (int i = 0; i < N; i++) {
-        if (i>0) {
+        if (i > 0) {
             pg << ", ";
         }
         pg << "s4";
@@ -102,7 +102,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     pg << ";" << endl;
     pg << "V ";
     for (int i = 0; i < N; i++) {
-        if (i>0) {
+        if (i > 0) {
             pg << ", ";
         }
         pg << i;

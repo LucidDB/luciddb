@@ -1243,22 +1243,22 @@ void CalcAssemblerTest::testIntegralNativeInstructions(
     string shfrstr = string("SHFR ") + typestr;
     addBinaryInstructions(instostr, "SHFR", outreg, inregs);
     expectedCalcOut.add(
-        shfrstr, (T) (min>>min), pc++, __LINE__);    // I0 >> I0 (min >> min)
+        shfrstr, (T) (min >> min), pc++, __LINE__);  // I0 >> I0 (min >> min)
     expectedCalcOut.add(
-        shfrstr, (T) (min>>max), pc++, __LINE__);    // I0 >> I1 (min >> max)
+        shfrstr, (T) (min >> max), pc++, __LINE__);  // I0 >> I1 (min >> max)
     expectedCalcOut.add(
         shfrstr, pNULL,   pc++, __LINE__);           // I0 >> I2 (min >> NULL)
     expectedCalcOut.add(
-        shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
+        shfrstr, (T) (min >> mid),  pc++, __LINE__); // I0 >> I3 (min >> 10)
 
     expectedCalcOut.add(
-        shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
+        shfrstr, (T) (max >> min), pc++, __LINE__);  // I1 >> I0 (max >> min)
     // NOTE jvs 28-Oct-2006:  see corresponding note above on (max << max)
     expectedCalcOut.addRegister(shfrstr, pc++);    // I1 >> I1 (max >> max)
     expectedCalcOut.add(
         shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
     expectedCalcOut.add(
-        shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
+        shfrstr, (T) (max >> mid), pc++, __LINE__);  // I1 >> I3 (max >> 10)
 
     expectedCalcOut.add(
         shfrstr, pNULL, pc++, __LINE__);      // I2 >> I0 (NULL >> min)
@@ -1270,13 +1270,13 @@ void CalcAssemblerTest::testIntegralNativeInstructions(
         shfrstr, pNULL, pc++, __LINE__);      // I2 >> I3 (NULL >> 10)
 
     expectedCalcOut.add(
-        shfrstr, (T) (mid>>min), pc++, __LINE__);    // I3 >> I0 (10 >> min)
+        shfrstr, (T) (mid >> min), pc++, __LINE__);  // I3 >> I0 (10 >> min)
     expectedCalcOut.add(
-        shfrstr, (T) (mid>>max), pc++, __LINE__);    // I3 >> I1 (10 >> max)
+        shfrstr, (T) (mid >> max), pc++, __LINE__);  // I3 >> I1 (10 >> max)
     expectedCalcOut.add(
         shfrstr, pNULL, pc++, __LINE__);             // I3 >> I2 (10 >> NULL)
     expectedCalcOut.add(
-        shfrstr, (T) (mid>>mid), pc++, __LINE__);    // I3 >> I3 (10 >> 10)
+        shfrstr, (T) (mid >> mid), pc++, __LINE__);  // I3 >> I3 (10 >> 10)
 
     assert(outreg == static_cast<uint>(pc));
 

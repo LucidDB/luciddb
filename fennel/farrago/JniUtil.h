@@ -591,13 +591,25 @@ public:
 // Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.
 #define FENNEL_JNI_ONLOAD_COMMON() \
 { \
-  _STL::num_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 12; \
+  _STL::num_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      12; \
   _STL::num_get<char, const char*>::id._M_index          = 13; \
-  _STL::num_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 14; \
+  _STL::num_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      14; \
   _STL::num_put<char, char*>::id._M_index                = 15; \
-  _STL::time_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 16; \
+  _STL::time_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      16; \
   _STL::time_get<char, const char*>::id._M_index         = 17; \
-  _STL::time_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 18; \
+  _STL::time_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      18; \
   _STL::time_put<char, char*>::id._M_index               = 19; \
 }
 

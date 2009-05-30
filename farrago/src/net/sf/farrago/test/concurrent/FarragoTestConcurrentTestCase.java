@@ -22,26 +22,28 @@
 package net.sf.farrago.test.concurrent;
 
 import java.io.*;
-
 import java.util.*;
 
 import net.sf.farrago.test.*;
-
+import net.sf.farrago.catalog.FarragoCatalogInit;
+import org.eigenbase.test.concurrent.*;
 
 /**
  * FarragoTestConcurrentTestCase provides a basic harness for executing
- * multi-threaded test cases.
+ * multi-threaded test cases. It extends {@link FarragoTestCase} to exploit
+ * the multi-thread test utility from the package {@link org.eigenbase.test.concurrent}.
  *
- * <p>Obtain a {@link FarragoTestConcurrentCommandGenerator} via the method
+ * To build a test case programmatically,
+ * obtain a {@link ConcurrentTestCommandGenerator} via the method
  * {@link #newCommandGenerator()} and use it to configure one or more threads to
- * execute one or more commands. Once configured, pass the
- * FarragoTestCommandGenerator to the {@link
- * #executeTest(FarragoTestConcurrentCommandGenerator, boolean, String)} method
- * to run the test.
+ * execute one or more commands. Once configured, run the test by calling
+ *{@link #executeTest(ConcurrentTestCommandGenerator, boolean, String)}.
+ * An alternative is to write a test script in the mtsql format;
+ * see {@link FarragoTestConcurrentScriptedTestCase}.
  *
  * <p><b>Note:</b> To properly configure a test based on this class, you must
  * provide a <code>suite()</code> method that wraps the tests in your class with
- * the necessary initialization from {@link FarragoTestCase}. The normal
+v * the necessary initialization from {@link FarragoTestCase}. The normal
  * implementation is:
  *
  * <pre>
@@ -67,11 +69,6 @@ import net.sf.farrago.test.*;
 public abstract class FarragoTestConcurrentTestCase
     extends FarragoTestCase
 {
-    //~ Instance fields --------------------------------------------------------
-
-    private boolean debug = false;
-    private PrintStream printStream = System.out;
-
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoTestConcurrentTestCase(String testName)
@@ -83,154 +80,98 @@ public abstract class FarragoTestConcurrentTestCase
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Instantiates a new FarragoTestConcurrentCommandGenerator.
+     * Instantiates a new ConcurrentTestCommandGenerator.
      */
-    protected FarragoTestConcurrentCommandGenerator newCommandGenerator()
+    protected ConcurrentTestCommandGenerator newCommandGenerator()
     {
-        return new FarragoTestConcurrentCommandGenerator();
+        return new ConcurrentTestCommandGenerator();
     }
 
     /**
-     * Instantiates a new FarragoTestConcurrentScriptedCommandGenerator with the
+     * Instantiates a new ConcurrentTestCommandScript with the
      * given file.
      */
-    protected FarragoTestConcurrentScriptedCommandGenerator
+    protected ConcurrentTestCommandScript
     newScriptedCommandGenerator(
         String filename)
         throws IOException
     {
-        return new FarragoTestConcurrentScriptedCommandGenerator(filename);
+        return new ConcurrentTestCommandScript(filename);
     }
 
     /**
-     * Creates {@link FarragoTestConcurrentCommandExecutor} objects for the
-     * threads defined in the given {@link
-     * FarragoTestConcurrentCommandGenerator} and then starts the command
-     * executors. <b>Note: If <code>synchronizeClockTicks</code> is <code>
+     * Executes a test case, possibly after interpolating synchronization.
+     *
+     * <b>Note: If <code>synchronizeClockTicks</code> is <code>
      * true</code>, the command lists configured for each thread are normalized
      * so that each thread has the same set of execution orders (or clock
      * ticks). When a thread is missing a clock tick that other threads contain,
      * a no-op command is added for the clock tick. Prior to execution, a
      * synchronization object is created. All
-     * FarragoTestConcurrentCommandExecutors for the test wait at a
+     * ConcurrentTestCommandExecutors for the test wait at a
      * synchronization point until all threads have reached the point before
      * continuing on to execute the clock tick's command. If <code>
      * synchronizeClockTicks</code> is <code>false</code>, no synchronization
      * occurs and all threads execute their commands, in order, as fast as they
      * can.
      *
-     * <p>Each FarragoTestConcurrentCommandExecutor's first error is reported on
-     * System.err. If any FarragoTestConcurrentCommandExecutor has an error, the
+     * <p>Each ConcurrentTestCommandExecutor's first error is reported on
+     * System.err. If any ConcurrentTestCommandExecutor has an error, the
      * test fails.
      *
-     * @param commandGenerator the configuration for this test
      * @param synchronizeClockTicks flag for thread synchronization (see above)
-     *
-     * @throws Exception if {@link FarragoTestCase#newJdbcEngineDriver} fails or
-     * if a thread operation is interrupted
+     * @param cmdGen embodies the test case
+     * @param jdbcURL identifies server
+     * @throws Exception if no connection found or if a thread operation is
+     * interrupted
      */
     protected void executeTest(
-        FarragoTestConcurrentCommandGenerator commandGenerator,
+        ConcurrentTestCommandGenerator cmdGen,
         boolean synchronizeClockTicks,
-        String jdbcUrl)
+        String jdbcURL)
+        throws Exception
+    {
+        setDataSource(cmdGen, jdbcURL);
+        innerExecuteTest(cmdGen, synchronizeClockTicks);
+        epilog(cmdGen);
+    }
+
+    protected void setDataSource(
+        ConcurrentTestCommandGenerator cmdGen,
+        String jdbcURL)
+    {
+        Properties jdbcProps = new Properties();
+        jdbcProps.setProperty("user", FarragoCatalogInit.SA_USER_NAME);
+        cmdGen.setDataSource(jdbcURL, jdbcProps);
+    }
+
+    protected void innerExecuteTest(
+        ConcurrentTestCommandGenerator cmdGen,
+        boolean synchronizeClockTicks)
         throws Exception
     {
         if (synchronizeClockTicks) {
-            commandGenerator.synchronizeCommandSets();
+            cmdGen.synchronizeCommandSets();
         }
+        assertTrue("test case has invalid synchronization",
+                   cmdGen.hasValidSynchronization());
+        cmdGen.execute();
+    }
 
-        commandGenerator.validateSynchronization(this);
-
-        Set threadIds = commandGenerator.getThreadIds();
-
-        FarragoTestConcurrentCommandExecutor.Sync sync =
-            new FarragoTestConcurrentCommandExecutor.Sync(threadIds.size());
-
-        // initialize command executors
-        FarragoTestConcurrentCommandExecutor [] threads =
-            new FarragoTestConcurrentCommandExecutor[threadIds.size()];
-
-        int threadIndex = 0;
-        for (Iterator i = threadIds.iterator(); i.hasNext();) {
-            Integer threadId = (Integer) i.next();
-            Iterator commands = commandGenerator.getCommandIterator(threadId);
-
-            if (debug) {
-                printStream.println(
-                    "Thread ID: " + threadId + " ("
-                    + commandGenerator.getThreadName(threadId)
-                    + ")");
-                commandGenerator.printCommands(printStream, threadId);
-            }
-
-            threads[threadIndex++] =
-                new FarragoTestConcurrentCommandExecutor(
-                    threadId.intValue(),
-                    commandGenerator.getThreadName(threadId),
-                    jdbcUrl,
-                    commands,
-                    sync,
-                    debug ? printStream : null);
-        }
-
-        // start all the threads
-        for (int i = 0, n = threads.length; i < n; i++) {
-            threads[i].start();
-        }
-
-        // wait for all threads to finish
-        for (int i = 0, n = threads.length; i < n; i++) {
-            threads[i].join();
-        }
-
-        // check for failure(s)
-        if (commandGenerator.requiresCustomErrorHandling()) {
-            for (int i = 0, n = threads.length; i < n; i++) {
-                FarragoTestConcurrentCommandExecutor executor = threads[i];
-
-                if (executor.getFailureCause() != null) {
-                    commandGenerator.customErrorHandler(executor);
-                }
-            }
-        } else {
-            boolean failure = false;
-            boolean needHeader = true;
-            for (int i = 0, n = threads.length; i < n; i++) {
-                Throwable failureCause = threads[i].getFailureCause();
-
-                if (failureCause != null) {
-                    if (needHeader) {
-                        System.err.println("Testcase: " + getName());
-                        needHeader = false;
-                    }
-
-                    System.err.println(
-                        threads[i].getName() + " failed "
-                        + threads[i].getFailureLocation());
-                    failureCause.printStackTrace(System.err);
+    private void epilog(ConcurrentTestCommandGenerator cmdGen)
+    {
+        if (cmdGen.failed()) {
+            System.err.println("Testcase: " + getName());
+            for (ConcurrentTestCommandGenerator.FailedThread f :
+                     cmdGen.getFailedThreads())
+                {
+                    System.err.println(f.name + " failed " + f.location);
+                    f.failure.printStackTrace(System.err);
                     System.err.println();
-                    failure = true;
                 }
-            }
-
-            if (failure) {
-                System.err.println("-----\n");
-                fail();
-            }
+            System.err.println("-----\n");
+            fail();
         }
-    }
-
-    protected void setDebug(boolean enabled)
-    {
-        debug = enabled;
-    }
-
-    protected void setDebug(
-        boolean enabled,
-        PrintStream alternatePrintStream)
-    {
-        debug = enabled;
-        printStream = alternatePrintStream;
     }
 }
 

@@ -314,11 +314,61 @@ public interface RelDataTypeFactory
      */
     public interface FieldInfo
     {
+        /**
+         * Returns the number of fields.
+         *
+         * @return number of fields
+         */
         public int getFieldCount();
 
+        /**
+         * Returns the name of a given field.
+         *
+         * @param index Ordinal of field
+         * @return Name of given field
+         */
         public String getFieldName(int index);
 
+        /**
+         * Returns the type of a given field.
+         *
+         * @param index Ordinal of field
+         * @return Type of given field
+         */
         public RelDataType getFieldType(int index);
+    }
+
+    /**
+     * Simple implementation of {@link FieldInfo}, based on a list of fields.
+     */
+    public static class ListFieldInfo implements FieldInfo
+    {
+        private final List<? extends RelDataTypeField> fieldList;
+
+        /**
+         * Creates a ListFieldInfo.
+         *
+         * @param fieldList List of fields
+         */
+        public ListFieldInfo(List<? extends RelDataTypeField> fieldList)
+        {
+            this.fieldList = fieldList;
+        }
+
+        public int getFieldCount()
+        {
+            return fieldList.size();
+        }
+
+        public String getFieldName(int index)
+        {
+            return fieldList.get(index).getName();
+        }
+
+        public RelDataType getFieldType(int index)
+        {
+            return fieldList.get(index).getType();
+        }
     }
 }
 

@@ -35,10 +35,6 @@ public class RuntimeTypeUtil
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    /**
-     * Translate the like pattern to java's regex pattern.
-     */
-
     private static final String javaRegexSpecials = "[]()|^-+*?{}$\\";
     private static final String SqlSimilarSpecials = "[]()|^-+*_%?{}";
     private static final String [] regCharClasses =
@@ -59,8 +55,15 @@ public class RuntimeTypeUtil
         "[:alnum:]", "\\p{Alnum}"
     };
 
+    protected RuntimeTypeUtil() {
+        throw new UnsupportedOperationException();
+    }
+
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Translates the like pattern to java's regex pattern.
+     */
     public static String SqlToRegexLike(
         String sqlPattern,
         CharSequence escapeStr)

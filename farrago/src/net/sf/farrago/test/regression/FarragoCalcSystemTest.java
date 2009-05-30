@@ -21,12 +21,11 @@
 */
 package net.sf.farrago.test.regression;
 
-import net.sf.farrago.fennel.calc.*;
-
 import java.util.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.test.*;
 
@@ -160,7 +159,9 @@ public class FarragoCalcSystemTest
         // test for it elsewhere.
         // ------------
         // iterating over all operators
-        for (SqlOperator op : SqlStdOperatorTable.instance().getOperatorList()) {
+        for (SqlOperator op :
+             SqlStdOperatorTable.instance().getOperatorList())
+        {
             if (exclude.contains(op)) {
                 continue;
             }

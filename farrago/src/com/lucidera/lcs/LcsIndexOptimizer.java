@@ -889,7 +889,6 @@ public class LcsIndexOptimizer
                 dimRel,
                 factKeyList,
                 dimKeyList);
-        ;
 
         // cost the residual filter access
         Double tableScanCost =

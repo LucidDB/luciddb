@@ -197,11 +197,13 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams(
         SharedExecStreamGraph pgraph = streamGraphHandle.pExecStreamGraph;
         assert(pgraph);
 
-        SharedExecStream base = pgraph->findStream(JniUtil::toStdString(pEnv, baseName));
+        SharedExecStream base =
+            pgraph->findStream(JniUtil::toStdString(pEnv, baseName));
         assert(base);
         uint ct = pgraph->getInputCount(base->getStreamId());
         for (uint i = 0; i < ct; i++) {
-            SharedExecStream input = pgraph->getStreamInput(base->getStreamId(), i);
+            SharedExecStream input =
+                pgraph->getStreamInput(base->getStreamId(), i);
             assert(input);
             jstring inputName = pEnv->NewStringUTF(input->getName().c_str());
             pEnv->CallObjectMethod(inputStreamNameList, methListAdd, inputName);

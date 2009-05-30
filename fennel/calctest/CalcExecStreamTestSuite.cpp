@@ -148,9 +148,18 @@ void CalcExecStreamTestSuite::testTupleOverflow()
         40000);
     outputDesc.push_back(charDesc);
 
+    /*
     BOOST_CHECK_THROW(
         testConstant(program, inputDesc, outputDesc, 0),
         TupleOverflowExcn);
+    */
+    try {
+        testConstant(program, inputDesc, outputDesc, 0);
+        BOOST_ASSERT(false);
+    } catch (TupleOverflowExcn &excn) {
+    } catch (std::exception &stdExcn) {
+        BOOST_ASSERT(false);
+    }
 }
 
 void CalcExecStreamTestSuite::testConstant(

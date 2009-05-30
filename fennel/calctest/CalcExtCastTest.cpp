@@ -113,7 +113,8 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToExact);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToDecimal);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToDecimal);
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToExactFails);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastStringToExactFails);
         FENNEL_UNIT_TEST_CASE(
             CalcExtCastTest, testCalcExtCastStringToDecimalFails);
         FENNEL_UNIT_TEST_CASE(

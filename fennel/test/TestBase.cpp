@@ -45,7 +45,9 @@ ParamName TestBase::paramDegreeOfParallelism = "degreeOfParallelism";
 TestBase::TestBase()
     : statsTarget(
         configMap.getStringParam(paramStatsFileName,"/tmp/fennel.stats")),
-      statsTimer(statsTarget,500)
+      statsTimer(statsTarget,500),
+      defaultTests(),
+      extraTests()
 {
     pTestObj.reset(this);
     testName = configMap.getStringParam(paramTestSuiteName);

@@ -73,6 +73,13 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(CwmCatalog catalog)
     {
+        // since servers are in the same namespace with CWM catalogs,
+        // need a special name uniquness check here
+        validator.validateUniqueNames(
+            repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
+            repos.allOfType(CwmCatalog.class),
+            false);
+
         validator.validateUniqueNames(
             catalog,
             catalog.getOwnedElement(),
@@ -277,8 +284,8 @@ public class DdlRelationalHandler
         // Perform validation specific to the local data server
         FarragoMedDataServer medDataServer =
             validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
-        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer
-            .getClass().getName();
+        assert medDataServer instanceof FarragoMedLocalDataServer
+            : medDataServer.getClass().getName();
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {

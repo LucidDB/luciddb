@@ -661,8 +661,10 @@ public class FarragoMultisetSplitterRule
                     aggregateGroupRel2,
                     RelOptUtil.isDistinctFrom(
                         rexBuilder,
-                        rexBuilder.makeRangeReference(u1.getRowType()), //todo get the right input ref from agg
-                        rexBuilder.makeRangeReference(u2.getRowType()), //todo get the right input ref from agg
+                        // todo: get the right input ref from agg
+                        rexBuilder.makeRangeReference(u1.getRowType()),
+                        // todo: get the right input ref from agg
+                        rexBuilder.makeRangeReference(u2.getRowType()),
                         true),
                     JoinRelType.LEFT,
                     variablesStopped);

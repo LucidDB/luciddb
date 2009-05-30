@@ -95,6 +95,22 @@ public interface FennelDbHandle
     public long executeCmd(FemCmd cmd, FennelExecutionHandle execHandle);
 
     /**
+     * Creates a native handle for a Java object for reference by XML commands.
+     * After this, the Java object cannot be garbage collected until its owner
+     * explicitly calls closeAllocation.
+     *
+     * @param owner the object which will be made responsible for the handle's
+     * allocation as a result of this call
+     * @param obj object for which to create a handle, or null to create a
+     * placeholder handle
+     *
+     * @return native handle
+     */
+    public FennelJavaHandle allocateNewObjectHandle(
+        FarragoAllocationOwner owner,
+        Object obj);
+
+    /**
      * Changes the object referenced by a handle.
      *
      * @param handle the handle to change

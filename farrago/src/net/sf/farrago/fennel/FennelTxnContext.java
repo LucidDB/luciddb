@@ -144,6 +144,15 @@ public class FennelTxnContext
     }
 
     /**
+     * You really don't want to use this.  Needed for a specific Farrago
+     * extension.
+     */
+    public long getRawTxnHandle()
+    {
+        return hTxn;
+    }
+
+    /**
      * @return whether a txn is in progress on this connection
      */
     public boolean isTxnInProgress()

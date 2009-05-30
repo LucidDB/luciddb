@@ -109,7 +109,7 @@ public class FarragoRuntimeContext
 
     private final FarragoSessionIndexMap indexMap;
     private final FarragoSessionVariables sessionVariables;
-    private final FarragoDataWrapperCache dataWrapperCache;
+    protected final FarragoDataWrapperCache dataWrapperCache;
     private final FarragoStreamFactoryProvider streamFactoryProvider;
     private final boolean isDml;
     private long currentTime;
@@ -557,7 +557,7 @@ public class FarragoRuntimeContext
         }
         streamIdToHandleMap.put(
             streamId,
-            FennelDbHandleImpl.allocateNewObjectHandle(owner, stream));
+            getFennelDbHandle().allocateNewObjectHandle(owner, stream));
     }
 
     /**
@@ -572,7 +572,12 @@ public class FarragoRuntimeContext
 
     public FarragoTransform findFarragoTransform(String key)
     {
-        return transformMap.get(key);
+        if (transformMap.containsKey(key)) {
+            return transformMap.get(key);
+        }
+        // protect fennel from crashing
+        throw new RuntimeException("cannot find farrago transform for stream "
+            + key);
     }
 
     /**
@@ -844,6 +849,14 @@ public class FarragoRuntimeContext
     public FennelDbHandle getFennelDbHandle()
     {
         return fennelTxnContext.getFennelDbHandle();
+    }
+
+    /**
+     * @return handle to current Fennel Transaction
+     */
+    public FennelTxnContext getFennelTxnContext()
+    {
+        return fennelTxnContext;
     }
 
     // implement FarragoSessionRuntimeContext

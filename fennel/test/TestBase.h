@@ -262,10 +262,10 @@ int main(int argc, char **argv) \
 
 
 // In the test class constructor, invoke either FENNEL_UNIT_TEST_CASE or
-// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call FENNEL_UNIT_TEST_CASE
-// to define a test case that is run by default. Call FENNEL_EXTRA_UNIT_TEST_CASE to
-// define an extra test case that is run only when selected from the command line,
-// either by "-t TESTNAME" or by "-all".
+// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call
+// FENNEL_UNIT_TEST_CASE to define a test case that is run by default. Call
+// FENNEL_EXTRA_UNIT_TEST_CASE to define an extra test case that is run only
+// when selected from the command line, either by "-t TESTNAME" or by "-all".
 
 #define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
   FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests,UserTestClass,testMethodName)
@@ -274,8 +274,8 @@ int main(int argc, char **argv) \
   FENNEL_DEFINE_UNIT_TEST_CASE(extraTests,UserTestClass,testMethodName)
 
 // This macro is based on BOOST_PARAM_CLASS_TEST_CASE():
-// make_test_case() below actually returns a test_unit_generator, not a test_case.
-// The generator emits one test.
+// make_test_case() below actually returns a test_unit_generator, not a
+// test_case. The generator emits one test.
 #define FENNEL_DEFINE_UNIT_TEST_CASE(group,UserTestClass,testMethodName) \
 do { \
     typedef TestWrapperTemplate<UserTestClass> TestWrapper; \

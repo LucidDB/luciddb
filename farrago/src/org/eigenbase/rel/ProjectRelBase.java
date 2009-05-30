@@ -133,14 +133,13 @@ public abstract class ProjectRelBase
             assert !fail;
             return false;
         }
-        Checker checker =
-            new Checker(
-                fail,
-                getChild());
+        RexChecker checker =
+            new RexChecker(
+                getChild().getRowType(), fail);
         for (RexNode exp : exps) {
             exp.accept(checker);
         }
-        if (checker.failCount > 0) {
+        if (checker.getFailureCount() > 0) {
             assert !fail;
             return false;
         }
@@ -235,26 +234,26 @@ public abstract class ProjectRelBase
         extends RexVisitorImpl<Boolean>
     {
         private final boolean fail;
-        private final RelNode child;
+        private final RelDataType inputRowType;
         int failCount = 0;
 
         /**
          * Creates a Checker.
          *
+         * @param inputRowType Input row type to expressions
          * @param fail Whether to throw if checker finds an error
-         * @param child Relational expression which is input to program
          */
-        Checker(boolean fail, RelNode child)
+        private Checker(RelDataType inputRowType, boolean fail)
         {
             super(true);
             this.fail = fail;
-            this.child = child;
+            this.inputRowType = inputRowType;
         }
 
         public Boolean visitInputRef(RexInputRef inputRef)
         {
             final int index = inputRef.getIndex();
-            final RelDataTypeField [] fields = child.getRowType().getFields();
+            final RelDataTypeField [] fields = inputRowType.getFields();
             if ((index < 0) || (index >= fields.length)) {
                 assert !fail;
                 ++failCount;

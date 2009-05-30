@@ -269,7 +269,8 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
 }
 
 void ExecStreamGraphImpl::mergeFrom(
-    ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes)
+    ExecStreamGraph& src,
+    std::vector<ExecStreamId> const& nodes)
 {
     if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
         mergeFrom(*p, nodes);
@@ -322,7 +323,8 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
 
 // merges a subgraph, viz the induced subgraph of a set of NODES of SRC
 void ExecStreamGraphImpl::mergeFrom(
-    ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes)
+    ExecStreamGraphImpl& src,
+    std::vector<ExecStreamId> const& nodes)
 {
     // both graphs must be prepared, and must both be open or both be closed.
     permAssert(isPrepared && src.isPrepared);

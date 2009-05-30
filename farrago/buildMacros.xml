@@ -516,7 +516,13 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
-
+  <taskdef name="junit"
+   classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+    <classpath>
+      <pathelement location="${junit.dir}/junit.jar"/>
+      <path refid="ant.classpath"/>
+    </classpath>
+  </taskdef>
 
   <!-- Macros -->
 
@@ -804,13 +810,18 @@ ${farrago.test.jvmargs}
     <attribute name="file" default="unspecified"/>
     <sequential>
       <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-        tempdir="${testlog.dir}" forkmode="perBatch">
-        <classpath refid="farrago.sqlline.classpath"/>
+        tempdir="${testlog.dir}" forkmode="perBatch" includeantruntime="no">
+        <!-- <classpath refid="farrago.sqlline.classpath"/> -->
+        <classpath>
+            <pathelement path="${farrago.sqlline.classpath}" />
+            <pathelement path="${ant.classpath}" />
+        </classpath>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
+        <jvmarg line="-XX:MaxPermSize=160m" />
+        <jvmarg line="-Djava.util.logging.config.file=/home/hunter/sqlstream2/aspen/trace/AspenTrace.properties" />
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
-        <sysproperty key="net.sf.farrago.fileset.unitsql"
-          file="@{file}"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>
         <formatter type="plain"/>
         <formatter type="xml"/> <!-- for integration builds -->
         <test todir="${testlog.dir}"

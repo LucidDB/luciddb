@@ -26,14 +26,14 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.fennel.rel.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.PushProjector;
 import org.eigenbase.relopt.*;
-
+import org.eigenbase.rel.rules.PushProjector;
 
 /**
  * FtrsTableProjectionRule implements the rule for pushing a Projection into a
@@ -62,6 +62,20 @@ class FtrsTableProjectionRule
     }
 
     //~ Methods ----------------------------------------------------------------
+    protected boolean equalTraitSets(RelTraitSet rts1, RelTraitSet rts2)
+    {
+        if (rts1.size() != rts2.size()) {
+            return false;
+        }
+        for (int i = 0; i < rts1.size(); i++) {
+            RelTrait rt1 = rts1.getTrait(i);
+            RelTrait rt2 = rts2.getTrait(rt1.getTraitDef());
+            if (rt1 != rt2) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -149,6 +163,23 @@ class FtrsTableProjectionRule
                     projectedColumns,
                     origScan.isOrderPreserving);
 
+            // copy over other traits
+            for (int i = 0; i < origScan.getTraits().size(); i++) {
+                RelTrait trait = origScan.getTraits().getTrait(i);
+                if (trait.getTraitDef() !=
+                    CallingConventionTraitDef.instance)
+                {
+                    if (projectedScan.getTraits().
+                        getTrait(trait.getTraitDef()) != null)
+                    {
+                        projectedScan.getTraits().setTrait(trait.getTraitDef(),
+                            trait);
+                    } else {
+                        projectedScan.getTraits().addTrait(trait);
+                    }
+                }
+            }
+
             // create new RelNodes to replace the existing ones, either
             // removing or replacing the ProjectRel and recreating the row scan
             // to read only projected columns
@@ -159,6 +190,32 @@ class FtrsTableProjectionRule
                     needRename,
                     newProject);
 
+            // change traits, just in case there are differences between
+            // the non CC traits of origProject and origScan
+            if (modRelNode != projectedScan) {
+                // copy over non CC traits if necessary
+                for (int i = 0; i < projectedScan.getTraits().size(); i++) {
+                    RelTrait trait = projectedScan.getTraits().getTrait(i);
+                    if (trait.getTraitDef() !=
+                        CallingConventionTraitDef.instance &&
+                        null == modRelNode.getTraits().
+                        getTrait(trait.getTraitDef())) {
+                        modRelNode.getTraits().addTrait(trait);
+                    }
+                }
+                // we only want to change traits if the CCs match and
+                // the other traits do not, otherwise we cause an
+                // AbstractConverter to be created which causes problems
+                // because the subsets will be merged by the transformTo
+                // call at the end of this method.
+                if (!equalTraitSets(origProject.getTraits(),
+                    modRelNode.getTraits()) &&
+                    !projectedScan.getTraits().equals(modRelNode.getTraits())) {
+                    modRelNode =
+                        call.getPlanner().changeTraits(modRelNode,
+                            projectedScan.getTraits());
+                }
+            }
             call.transformTo(modRelNode);
         }
     }

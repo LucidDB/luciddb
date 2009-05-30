@@ -25,8 +25,8 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.*;
 import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.rex.*;
 
 
 /**

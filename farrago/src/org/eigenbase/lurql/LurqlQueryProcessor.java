@@ -21,8 +21,6 @@
 */
 package org.eigenbase.lurql;
 
-import org.eigenbase.lurql.parser.*;
-
 import java.io.*;
 
 import java.sql.*;
@@ -32,6 +30,7 @@ import java.util.*;
 import javax.jmi.reflect.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.lurql.parser.*;
 
 import org.netbeans.api.mdr.*;
 

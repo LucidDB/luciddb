@@ -129,24 +129,24 @@ void LbmUnionExecStream::open(bool restart)
 ExecStreamResult LbmUnionExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-     if (isDone) {
+    if (isDone) {
         pOutAccessor->markEOS();
         return EXECRC_EOS;
-     }
+    }
 
-     if (isConsumerSridSet()) {
-         // avoid RIDs not required by the downstream consumer
-         requestedSrid = (LcsRid) *reinterpret_cast<RecordNum const *>(
-             pDynamicParamManager->getParam(startRidParamId).getDatum().pData);
-         workspace.advanceToSrid(requestedSrid);
-     }
-     if (isSegmentLimitSet()) {
-         segmentsRemaining = *reinterpret_cast<uint const *>(
-             pDynamicParamManager->getParam(segmentLimitParamId)
-             .getDatum().pData);
-     }
+    if (isConsumerSridSet()) {
+        // avoid RIDs not required by the downstream consumer
+        requestedSrid = (LcsRid) *reinterpret_cast<RecordNum const *>(
+            pDynamicParamManager->getParam(startRidParamId).getDatum().pData);
+        workspace.advanceToSrid(requestedSrid);
+    }
+    if (isSegmentLimitSet()) {
+        segmentsRemaining = *reinterpret_cast<uint const *>(
+            pDynamicParamManager->getParam(segmentLimitParamId)
+            .getDatum().pData);
+    }
 
-     for (uint i = 0; i < quantum.nTuplesMax; i++) {
+    for (uint i = 0; i < quantum.nTuplesMax; i++) {
         while (! producePending) {
             // yield control if segment limit is reached
             if (isSegmentLimitSet() && segmentsRemaining == 0) {

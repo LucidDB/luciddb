@@ -112,12 +112,13 @@ public abstract class FarragoReposUtil
         URL inputUrl)
         throws Exception
     {
+        FarragoTrace.getReposTracer().info("importing sub model " + inputUrl);
         if (((EnkiMDRepository) mdrRepos).isExtentBuiltIn(
                 FARRAGO_METAMODEL_EXTENT))
         {
+            FarragoTrace.getReposTracer().info("extent is builtin");
             return;
         }
-
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         ImportRefResolver refResolver =
             new ImportRefResolver(
@@ -136,6 +137,7 @@ public abstract class FarragoReposUtil
                 filter,
                 inputUrl.toString(),
                 mdrRepos.getExtent(FARRAGO_METAMODEL_EXTENT));
+            FarragoTrace.getReposTracer().info("read in url...");
 
             if (filter.getNumInvalidCharsFiltered() > 0) {
                 FarragoTrace.getReposTracer().warning(
@@ -146,6 +148,7 @@ public abstract class FarragoReposUtil
 
             rollback = false;
             mdrRepos.endTrans();
+            FarragoTrace.getReposTracer().info("commited trans");
         } finally {
             if (rollback) {
                 mdrRepos.endTrans(true);
@@ -242,6 +245,9 @@ public abstract class FarragoReposUtil
         File catalogDump = new File(catalogDir, catalogDumpName);
 
         try {
+            FarragoTrace.getReposTracer().info("mdrepo classloader " +
+                org.eigenbase.enki.mdr.MDRepositoryFactory.
+                getDefaultClassLoader());
             modelLoader.initStorage(false);
 
             // import metamodel

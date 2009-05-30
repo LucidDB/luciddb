@@ -107,7 +107,8 @@ public class CollectNamespace
 
             // "MULTISET(<query>)" is already a record.
             assert (type instanceof MultisetSqlType)
-                && ((MultisetSqlType) type).getComponentType().isStruct() : type;
+                && ((MultisetSqlType) type).getComponentType().isStruct()
+                : type;
             return type;
         default:
             throw child.getKind().unexpected();

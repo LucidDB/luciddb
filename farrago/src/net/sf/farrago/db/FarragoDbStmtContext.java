@@ -388,7 +388,9 @@ public class FarragoDbStmtContext
 
         // First, see if there are any child contexts that need to be
         // canceled
-        for (FarragoSessionStmtContext childStmtContext : childrenStmtContexts) {
+        for (FarragoSessionStmtContext childStmtContext :
+             childrenStmtContexts)
+        {
             childStmtContext.cancel();
         }
 

@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.fennel.calc.*;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,6 +33,7 @@ import junit.framework.*;
 
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.query.*;

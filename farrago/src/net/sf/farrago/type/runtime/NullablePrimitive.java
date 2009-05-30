@@ -229,7 +229,7 @@ public abstract class NullablePrimitive
          * Implements cast from string to non-nullable boolean Invoked by
          * generated code
          */
-        public static final boolean convertString(String s)
+        public static boolean convertString(String s)
         {
             s = s.trim();
             if (s.equalsIgnoreCase(TRUE_LITERAL)) {
@@ -253,7 +253,7 @@ public abstract class NullablePrimitive
          * @param n1 null indicator for arg1
          * @param v1 truth value of arg1 when !n1
          */
-        public final void assignFromAnd3VL(
+        public void assignFromAnd3VL(
             boolean n0,
             boolean v0,
             boolean n1,
@@ -296,7 +296,7 @@ public abstract class NullablePrimitive
          * @param n1 null indicator for arg1
          * @param v1 truth value of arg1 when !n1
          */
-        public final void assignFromOr3VL(
+        public void assignFromOr3VL(
             boolean n0,
             boolean v0,
             boolean n1,

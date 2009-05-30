@@ -21,7 +21,6 @@
 */
 package net.sf.farrago.plugin;
 
-import java.io.*;
 import java.net.*;
 
 import java.util.*;
@@ -32,7 +31,6 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.util.*;
 
 /**
  * FarragoPluginClassLoader allows plugin jars to be added to the ClassLoader
@@ -102,18 +100,6 @@ public class FarragoPluginClassLoader
      */
     public void addPluginUrl(URL url)
     {
-        // Canonicalize local filenames to reduce the chance of
-        // loading two copies of the same jar
-        if (url.getProtocol().equals("file")) {
-            try {
-                String libraryName = url.getFile();
-                File libraryFile = new File(libraryName);
-                libraryName = libraryFile.getCanonicalPath();
-                url = new URL("file", null, libraryName);
-            } catch (Throwable ex) {
-                throw Util.newInternal(ex);
-            }
-        }
         if (urlSet.contains(url)) {
             return;
         }

@@ -28,6 +28,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.type.SqlTypeName;
 
 
 /**
@@ -117,6 +118,52 @@ public abstract class JoinRelBase
     public RelNode getRight()
     {
         return right;
+    }
+
+    // TODO: enable
+    public boolean _isValid(boolean fail)
+    {
+        if (!super.isValid(fail)) {
+            return false;
+        }
+        if (getRowType().getFieldCount()
+            != getSystemFieldList().size()
+            + left.getRowType().getFieldCount()
+            + right.getRowType().getFieldCount())
+        {
+            assert !fail : "field count mismatch";
+            return false;
+        }
+        if (condition != null) {
+            if (condition.getType().getSqlTypeName() != SqlTypeName.BOOLEAN) {
+                assert !fail
+                    : "condition must be boolean: " + condition.getType();
+                return false;
+            }
+            // The input to the condition is a row type consisting of system
+            // fields, left fields, and right fields. Very similar to the
+            // output row type, except that fields have not yet been made due
+            // due to outer joins.
+            final List<RelDataTypeField> fieldList =
+                new ArrayList<RelDataTypeField>();
+            fieldList.addAll(getSystemFieldList());
+            fieldList.addAll(getLeft().getRowType().getFieldList());
+            fieldList.addAll(getRight().getRowType().getFieldList());
+            RexChecker checker =
+                new RexChecker(
+                    getCluster().getTypeFactory().createStructType(
+                        new RelDataTypeFactory.ListFieldInfo(
+                            fieldList)),
+                    fail);
+            condition.accept(checker);
+            if (checker.getFailureCount() > 0) {
+                assert !fail
+                    : checker.getFailureCount() + " failures in condition "
+                    + condition;
+                return false;
+            }
+        }
+        return true;
     }
 
     // implement RelNode
@@ -264,7 +311,9 @@ public abstract class JoinRelBase
     /**
      * Returns the type the row which results when two relations are joined.
      *
-     * <p>The resulting row type consists of the fields of the left type plus
+     * <p>The resulting row type consists of
+     * the system fields (if any), followed by
+     * the fields of the left type, followed by
      * the fields of the right type. The field name list, if present, overrides
      * the original names of the fields.
      *
@@ -277,8 +326,9 @@ public abstract class JoinRelBase
      * output row type; typically empty but must not be null
      * @return type of row which results when two relations are joined
      *
-     * @pre fieldNameList == null || fieldNameList.size() ==
-     * leftType.getFields().length + rightType.getFields().length
+     * @pre fieldNameList == null
+     * || fieldNameList.size() == systemFieldList.size()
+     * + leftType.getFieldCount() + rightType.getFieldCount()
      */
     public static RelDataType createJoinType(
         RelDataTypeFactory typeFactory,
@@ -290,8 +340,8 @@ public abstract class JoinRelBase
         assert (fieldNameList == null)
             || (fieldNameList.size()
                 == (systemFieldList.size()
-                    + leftType.getFields().length
-                    + rightType.getFields().length));
+                    + leftType.getFieldCount()
+                    + rightType.getFieldCount()));
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
 

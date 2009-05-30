@@ -118,14 +118,18 @@ public class FarragoOJRexImplementorTable
             new FarragoOJRexBuiltinImplementor(
                 FarragoOJRexBuiltinImplementor.Function.CONCAT));
 
-        /*
-        registerOperator( SqlStdOperatorTable.convertFunc, new FarragoOJRexBuiltinImplementor(
-         FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
+        if (false) {
+            registerOperator(
+                SqlStdOperatorTable.convertFunc,
+                new FarragoOJRexBuiltinImplementor(
+                    null /*FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION*/));
 
-         registerOperator( SqlStdOperatorTable.translateFunc, new
-         FarragoOJRexBuiltinImplementor(
-         FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
-         */
+            registerOperator(
+                SqlStdOperatorTable.translateFunc,
+                new FarragoOJRexBuiltinImplementor(
+                    null
+                    /*FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION*/));
+        }
 
         registerOperator(
             SqlStdOperatorTable.positionFunc,

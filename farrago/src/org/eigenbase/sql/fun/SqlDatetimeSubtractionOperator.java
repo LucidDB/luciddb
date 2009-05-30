@@ -23,6 +23,8 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlMonotonicity;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 
 /**
@@ -71,6 +73,13 @@ public class SqlDatetimeSubtractionOperator
         operands[1].unparse(writer, leftPrec, rightPrec);
         writer.endList(frame);
         operands[2].unparse(writer, leftPrec, rightPrec);
+    }
+
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
+    {
+        return SqlStdOperatorTable.minusOperator.getMonotonicity(call, scope);
     }
 }
 

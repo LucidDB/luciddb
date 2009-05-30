@@ -21,12 +21,12 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.fennel.calc.*;
-import net.sf.farrago.fennel.rel.*;
-
 import java.util.*;
 
 import junit.framework.*;
+
+import net.sf.farrago.fennel.calc.*;
+import net.sf.farrago.fennel.rel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;

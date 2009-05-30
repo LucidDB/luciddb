@@ -47,6 +47,11 @@ public class StringRepresentationComparator<T>
     {
         return obj.getClass().getName().equals(getClass().getName());
     }
+
+    public int hashCode()
+    {
+        return getClass().getName().hashCode();
+    }
 }
 
 // End StringRepresentationComparator.java

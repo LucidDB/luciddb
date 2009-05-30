@@ -183,8 +183,8 @@ class FlatFileDataServer
             String ctrlFilePath =
                 params.getDirectory() + filename
                 + params.getControlFileExtenstion();
-            FlatFileBCPFile bcpFile =
-                new FlatFileBCPFile(ctrlFilePath, typeFactory);
+            FlatFileBcpFile bcpFile =
+                new FlatFileBcpFile(ctrlFilePath, typeFactory);
             rowType =
                 deriveRowType(
                     typeFactory,
@@ -248,7 +248,7 @@ class FlatFileDataServer
         FlatFileParams.SchemaType schemaType,
         String [] localName,
         String filename,
-        FlatFileBCPFile bcpFile)
+        FlatFileBcpFile bcpFile)
         throws SQLException
     {
         List<RelDataType> fieldTypes = new ArrayList<RelDataType>();
@@ -273,7 +273,7 @@ class FlatFileDataServer
         switch (schemaType) {
         case DESCRIBE:
             fieldTypes.add(
-                FlatFileBCPFile.forceSingleByte(
+                FlatFileBcpFile.forceSingleByte(
                     typeFactory,
                     typeFactory.createSqlType(
                         SqlTypeName.VARCHAR,
@@ -291,7 +291,7 @@ class FlatFileDataServer
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);
                 nullableType =
-                    FlatFileBCPFile.forceSingleByte(
+                    FlatFileBcpFile.forceSingleByte(
                         typeFactory,
                         nullableType);
                 fieldTypes.add(nullableType);
@@ -299,7 +299,7 @@ class FlatFileDataServer
             }
             break;
         case QUERY:
-            synchronized (FlatFileBCPFile.class) {
+            synchronized (FlatFileBcpFile.class) {
                 if (!bcpFile.exists()) {
                     if (sampleAndCreateBcp(foreignName, bcpFile) == -1) {
                         return null;
@@ -377,7 +377,7 @@ class FlatFileDataServer
      */
     public long sampleAndCreateBcp(
         String [] localName,
-        FlatFileBCPFile bcpFile)
+        FlatFileBcpFile bcpFile)
         throws SQLException
     {
         // Attempt to issue a loopback query into Farrago to

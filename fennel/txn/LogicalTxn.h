@@ -193,6 +193,11 @@ public:
      * @return ID of this txn
      */
     TxnId getTxnId() const;
+
+    /**
+     * @return true if transaction has been committed or rolled back
+     */
+    bool isEnded() const;
 };
 
 FENNEL_END_NAMESPACE

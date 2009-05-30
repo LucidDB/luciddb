@@ -191,9 +191,10 @@ public:
     {
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScans);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanOnEmptyCluster);
-        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanPastEndOfCluster);
-        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest,
-            testCompressedFiltering);
+        FENNEL_UNIT_TEST_CASE(
+            LcsRowScanExecStreamTest, testScanPastEndOfCluster);
+        FENNEL_UNIT_TEST_CASE(
+            LcsRowScanExecStreamTest, testCompressedFiltering);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testBernoulliSampling);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testSystemSampling);
     }

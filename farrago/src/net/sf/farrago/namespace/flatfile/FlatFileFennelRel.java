@@ -175,7 +175,7 @@ public class FlatFileFennelRel
                 MAX_ROW_ERROR_TEXT_WIDTH);
         errorText = typeFactory.createTypeWithNullability(errorText, true);
         errorText =
-            FlatFileBCPFile.forceSingleByte(
+            FlatFileBcpFile.forceSingleByte(
                 typeFactory,
                 errorText);
         RelDataType errorType =

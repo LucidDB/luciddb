@@ -163,7 +163,7 @@ class FlatFileNameDirectory
     {
         File dir = new File(server.params.getDirectory());
         String [] fileNames = dir.list(new FlatFileFilter());
-        synchronized (FlatFileBCPFile.class) {
+        synchronized (FlatFileBcpFile.class) {
             for (int i = 0; i < fileNames.length; i++) {
                 String tableName =
                     fileNames[i].substring(
@@ -173,8 +173,8 @@ class FlatFileNameDirectory
                     server.params.getDirectory()
                     + tableName + server.params.getControlFileExtenstion();
                 File testFile = new File(bcpFileName);
-                FlatFileBCPFile bcpFile =
-                    new FlatFileBCPFile(
+                FlatFileBcpFile bcpFile =
+                    new FlatFileBcpFile(
                         bcpFileName,
                         sink.getTypeFactory());
                 if (!testFile.exists()) {
@@ -188,7 +188,7 @@ class FlatFileNameDirectory
                 }
             }
             String bcpExt = server.params.getControlFileExtenstion();
-            String [] files = dir.list(new BCPFileFilter());
+            String [] files = dir.list(new BcpFileFilter());
 
             for (int i = 0; i < files.length; i++) {
                 String tableName =
@@ -197,8 +197,8 @@ class FlatFileNameDirectory
                         files[i].indexOf("."));
                 String bcpFilePath =
                     server.params.getDirectory() + tableName + bcpExt;
-                FlatFileBCPFile bcpFile =
-                    new FlatFileBCPFile(
+                FlatFileBcpFile bcpFile =
+                    new FlatFileBcpFile(
                         bcpFilePath,
                         sink.getTypeFactory());
                 if (bcpFile.parse()) {
@@ -239,7 +239,7 @@ class FlatFileNameDirectory
         }
     }
 
-    class BCPFileFilter
+    class BcpFileFilter
         implements FilenameFilter
     {
         public boolean accept(File dir, String name)

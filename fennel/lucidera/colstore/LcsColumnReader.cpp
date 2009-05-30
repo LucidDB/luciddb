@@ -202,23 +202,23 @@ bool LcsColumnReader::applyFilters(
             }
         }
 
-       if (filter->upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
-          return true;
-       }
+        if (filter->upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
+            return true;
+        }
 
-       int c = filters.inputKeyDesc.compareTuples(
-           filter->boundData, filters.upperBoundProj,
-           outputTupleData, filters.readerKeyProj);
+        int c = filters.inputKeyDesc.compareTuples(
+            filter->boundData, filters.upperBoundProj,
+            outputTupleData, filters.readerKeyProj);
 
-       if (filter->upperBoundDirective == SEARCH_CLOSED_UPPER) {
-           if (c >= 0) {
-               return true;
-           }
-       } else {
-           if (c > 0) {
-               return true;
-           }
-       }
+        if (filter->upperBoundDirective == SEARCH_CLOSED_UPPER) {
+            if (c >= 0) {
+                return true;
+            }
+        } else {
+            if (c > 0) {
+                return true;
+            }
+        }
     }
 
     return false;
