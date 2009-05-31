@@ -147,18 +147,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" >= TIMESTAMP '2006-10-31 00:00:00'])                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" >= TIMESTAMP '2006-10-31 00:00:00'])                  |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- >
@@ -180,18 +179,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" > TIMESTAMP '2006-10-31 00:00:00'])                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" > TIMESTAMP '2006-10-31 00:00:00'])                   |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <=
@@ -213,18 +211,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" <= TIMESTAMP '2006-10-31 00:00:00'])                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" <= TIMESTAMP '2006-10-31 00:00:00'])                  |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <
@@ -245,18 +242,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" < TIMESTAMP '2006-10-31 00:00:00'])                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" < TIMESTAMP '2006-10-31 00:00:00'])                   |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- =
@@ -278,18 +274,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" = TIMESTAMP '2006-10-31 00:00:00'])                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" = TIMESTAMP '2006-10-31 00:00:00'])                   |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <>
@@ -311,18 +306,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" <> TIMESTAMP '2006-10-31 00:00:00'])                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "DATECOL" <> TIMESTAMP '2006-10-31 00:00:00'])                  |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT LIKE
@@ -335,18 +329,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select datecol, timestampcol from test.datatype where varcharcol NOT LIKE '%char' order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE NOT ("VARCHARCOL" LIKE '%char')])                                                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE NOT ("VARCHARCOL" LIKE '%char')])                               |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- LIKE
@@ -363,18 +356,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select datecol, timestampcol from test.datatype where varcharcol LIKE '%char' order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "VARCHARCOL" LIKE '%char'])                                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "VARCHARCOL" LIKE '%char'])                                     |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT BETWEEN
@@ -399,18 +391,17 @@
 . . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE NOT ("DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00')])                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------+
+|                                                   column0                                                    |
++--------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                    |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                     |
+|     IteratorToFennelConverter                                                                                |
+|       ResultSetToFarragoIteratorConverter                                                                    |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                     |
+| WHERE NOT ("DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00')])  |
++--------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- BETWEEN
@@ -437,18 +428,17 @@
 . . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . >   order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00'])                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------+
+|                                                column0                                                 |
++--------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                              |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                               |
+|     IteratorToFennelConverter                                                                          |
+|       ResultSetToFarragoIteratorConverter                                                              |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"                                   |
+| FROM "SCHOI"."DATATYPES"                                                                               |
+| WHERE "DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00'])  |
++--------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT IN
@@ -461,18 +451,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE NOT ("VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar')])                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE NOT ("VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar')])   |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IN
@@ -489,18 +478,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar'])                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar'])         |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NOT NULL
@@ -517,18 +505,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IS NOT NULL order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "VARCHARCOL" IS NOT NULL])                                                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "VARCHARCOL" IS NOT NULL])                                      |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NULL
@@ -542,18 +529,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IS NULL order by 1,2
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------+
-|                                                             column0                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                         |
-|     FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(TIMESTAMP(0) DATECOL, TIMESTAMP(0) TIMESTAMPCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                  |
-|         ResultSetToFarragoIteratorConverter                                                                                      |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL"                                                           |
-| FROM "SCHOI"."DATATYPES"                                                                                                         |
-| WHERE "VARCHARCOL" IS NULL])                                                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                                column0                                |
++-----------------------------------------------------------------------+
+| FennelToIteratorConverter                                             |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])              |
+|     IteratorToFennelConverter                                         |
+|       ResultSetToFarragoIteratorConverter                             |
+|         MedJdbcQueryRel(foreignSql=[SELECT "DATECOL", "TIMESTAMPCOL"  |
+| FROM "SCHOI"."DATATYPES"                                              |
+| WHERE "VARCHARCOL" IS NULL])                                          |
++-----------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- AND
