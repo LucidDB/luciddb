@@ -161,6 +161,18 @@ from sys_root.dba_columns
 where schema_name='DBAVTEST'
 order by 2,4;
 
+-- dba_unclustered_indexes
+create table dbavtest.table2(col1 int, col2 int, col3 int, col4 int, col5 int,
+    col6 int,
+    primary key(col6, col2),
+    unique(col5, col1, col3));
+create index i_table2_1 on dbavtest.table2(col2);
+create index i_table2_2 on dbavtest.table2(col4, col1, col6);
+
+select catalog_name, index_name, table_name, index_column_names, is_unique
+    from sys_root.dba_unclustered_indexes
+    where schema_name = 'DBAVTEST'
+    order by 2;
 
 -- test creator field
 create user lala authorization 'Unknown' Default schema DBAVTEST;

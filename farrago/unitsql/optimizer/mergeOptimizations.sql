@@ -13,21 +13,15 @@ create table emps(
     gender char(1), city char(30), age int, salary numeric(10,2));
 create index ideptno on emps(deptno);
 create index icity on emps(city);
-create table tempemps(
-    t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
-    t_city char(35), t_age int);
 create table salarytable(empno int, salary int);
+create table nullableEmps(
+    empno int unique, name varchar(20) unique not null, deptno int,
+    gender char(1), city char(30), age int, salary numeric(10,2));
 
 insert into emps(empno, name, deptno, gender, city, age, salary)
     select case when name = 'John' then 130 else empno end,
         name, deptno, gender, city, age, age * 900 from sales.emps;
 select * from emps order by empno;
-insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
-insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
-insert into tempemps
-    select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
-        from emps;
-select * from tempemps order by t_empno;
 insert into salarytable values(100, 100000);
 insert into salarytable values(110, 110000);
 insert into salarytable values(120, 120000);
@@ -35,6 +29,8 @@ insert into salarytable values(130, 130000);
 insert into salarytable values(140, 140000);
 insert into salarytable values(150, 150000);
 select * from salarytable order by empno;
+insert into nullableEmps select * from emps;
+select * from nullableEmps order by empno;
 
 --------------------------------------
 -- Test merges that are really updates
@@ -107,6 +103,12 @@ merge into emps e1
     when matched then update set salary = e2.salary;
 select * from emps order by empno;
 
+-- try in the case where the join key is nullable
+merge into nullableEmps e1 using nullableEmps e2 
+    on e1.empno  = e2.empno
+    when matched then update set deptno = e2.deptno + 100;
+select * from nullableEmps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -169,13 +171,17 @@ merge into emps e1 using (select * from emps where city = 'UNKNOWN') e2
     on e2.empno = e1.empno and e1.gender = 'F'
     when matched then update set name = upper(e1.name);
 
--- source has a join
 explain plan for
 merge into emps e1
     using (select e.empno, s.salary from emps e, salarytable s
             where e.empno = s.empno) e2
     on e1.empno = e2.empno
     when matched then update set salary = e2.salary;
+
+explain plan for
+merge into nullableEmps e1 using nullableEmps e2 
+    on e1.empno = e2.empno
+    when matched then update set deptno = e2.deptno + 100;
 
 ----------------------------------------------
 -- Self-joins cannot be removed in these cases

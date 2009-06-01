@@ -20,7 +20,6 @@
  */
 package com.lucidera.lcs;
 
-import com.lucidera.farrago.*;
 import com.lucidera.query.*;
 
 import java.util.*;
@@ -305,45 +304,25 @@ public class LcsTableMergeRule
         }
 
         // The source is always on the LHS of the join, so we only need to
-        // check those keys.
-        List<Integer> leftKeys = new ArrayList<Integer>();
-        for (int i = 0; i < leftKeyExprs.size(); i++) {
-            if (leftKeyExprs.get(i) instanceof RexInputRef) {
-                leftKeys.add(((RexInputRef) leftKeyExprs.get(i)).getIndex());;
-            } else if (detectLcsRid(leftKeyExprs.get(i))) {
-                // Once an equality filter on rid columns is found, we know
-                // we have a unique join key and need not look at any of the
-                // other keys.
-                return true;
-            }
-        }
-        if (leftKeys.size() == 0) {
-            return false;
-        }
-        if (!RelMdUtil.areColumnsDefinitelyUnique(
-                joinRel.getInput(0),
-                RelMdUtil.setBitKeys(leftKeys)))
+        // check those keys.  Do so by creating a projection of the join
+        // keys and checking the projection for uniqueness.
+        RelNode project = CalcRel.createProject(
+            joinRel.getInput(0),
+            leftKeyExprs,
+            null);
+        BitSet leftKeys = new BitSet();
+        RelOptUtil.setRexInputBitmap(leftKeys, 0, leftKeyExprs.size());
+        // If the keys are unique, that ensures that at most one source row
+        // joins with each target row.  Since nulls will be filtered out by the
+        // join condition, it's ok if there are nulls in the source join keys.
+        if (!RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
+                project,
+                leftKeys))
         {
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * Determines if an expression corresponds to a rid expression.
-     *
-     * @param node the expression
-     *
-     * @return true if the expression is a rid expression
-     */
-    private boolean detectLcsRid(RexNode node)
-    {
-        if (!(node instanceof RexCall)) {
-            return false;
-        }
-        RexCall call = (RexCall) node;
-        return (call.getOperator() == LucidDbOperatorTable.lcsRidFunc);
     }
 
     /**

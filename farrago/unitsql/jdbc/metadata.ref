@@ -106,6 +106,8 @@
 | SYS_BOOT   | MGMT           | DBA_FOREIGN_TABLES_INTERNAL1      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_FOREIGN_TABLES_INTERNAL2      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_FOREIGN_WRAPPERS_INTERNAL     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_INDEXES_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_INDEX_COLUMNS_INTERNAL        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_LABELS_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_ROUTINES_INTERNAL1            | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_ROUTINES_INTERNAL2            | VIEW        |          |           |             |            |                            |                 |

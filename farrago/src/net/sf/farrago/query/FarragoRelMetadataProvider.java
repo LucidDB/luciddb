@@ -82,8 +82,13 @@ public class FarragoRelMetadataProvider
         mapParameterTypes("getDistinctRowCount", args);
 
         mapParameterTypes(
-            "areColumnsUnique",
-            Collections.singletonList((Class) BitSet.class));
+            "getUniqueKeys",
+            Collections.singletonList((Class) Boolean.TYPE));
+
+        args = new ArrayList<Class>();
+        args.add((Class) BitSet.class);
+        args.add((Class) Boolean.TYPE);
+        mapParameterTypes("areColumnsUnique", args);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -222,14 +227,17 @@ public class FarragoRelMetadataProvider
         return getRowCountStat(rel, repos);
     }
 
-    public Set<BitSet> getUniqueKeys(RelNode rel)
+    public Set<BitSet> getUniqueKeys(RelNode rel, boolean ignoreNulls)
     {
-        return columnMd.getUniqueKeys(rel, repos);
+        return columnMd.getUniqueKeys(rel, repos, ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(RelNode rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
-        return columnMd.areColumnsUnique(rel, columns, repos);
+        return columnMd.areColumnsUnique(rel, columns, repos, ignoreNulls);
     }
 
     public Double getPopulationSize(RelNode rel, BitSet groupKey)

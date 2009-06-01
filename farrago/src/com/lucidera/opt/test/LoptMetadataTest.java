@@ -1445,6 +1445,55 @@ public class LoptMetadataTest
         }
     }
 
+    public void testUniqueKeysProjectedLcsTableWhenNullsFiltered()
+        throws Exception
+    {
+        stmt.executeUpdate(
+            "create table tabWithNullableUniqueKeys("
+            + "c0 int,"
+            + "c1 int,"
+            + "c2 int,"
+            + "c3 int,"
+            + "c4 int,"
+            + "constraint primaryKey primary key(c4),"
+            + "constraint nullableUniquekey1 unique(c2, c3),"
+            + "constraint nullableUniquekey2 unique(c0, c1))");
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(LcsTableProjectionRule.instance);
+        transformQuery(
+            programBuilder.createProgram(),
+            "select c4, c2, c1, c0 from tabWithNullableUniqueKeys where "
+            + "c0 is not null and c1 is not null and c2 is not null and "
+            + "c3 is not null");
+
+        // unique keys relative to projection are (0) and (3, 2);
+        // nullableUniquekey1 is not included because c3 is not projected
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        expected.add(uniqKey);
+
+        uniqKey = new BitSet();
+        uniqKey.set(3);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+
+        Set<BitSet> result =
+            RelMetadataQuery.getUniqueKeys(rootRel, true);
+        assertTrue(result.equals(expected));
+
+        for (BitSet key : expected) {
+            Boolean boolResult =
+                RelMetadataQuery.areColumnsUnique(
+                    rootRel,
+                    key,
+                    true);
+            assertTrue(boolResult.equals(true));
+        }
+    }
+
     public void testUniqueRidColumn()
         throws Exception
     {

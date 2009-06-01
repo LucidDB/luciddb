@@ -182,8 +182,11 @@ outerForLoop:
                     }
                 }
 
-                // see if the join keys are unique
-                if (RelMdUtil.areColumnsDefinitelyUnique(
+                // See if the join keys are unique.  Because the keys are
+                // part of an equality join condition, nulls are filtered out
+                // by the join.  So, it's ok if there are nulls in the join
+                // keys.
+                if (RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
                         multiJoin.getJoinFactor(factIdx),
                         joinKeys))
                 {
@@ -314,7 +317,7 @@ outerForLoop:
                 }
             }
             if ((selfJoinFilters.size() > 0)
-                && isJoinFilterUnique(
+                && isSelfJoinFilterUnique(
                     multiJoin,
                     factor1,
                     factor2,
@@ -378,7 +381,7 @@ outerForLoop:
      *
      * @return true if the criteria are met
      */
-    private boolean isJoinFilterUnique(
+    private boolean isSelfJoinFilterUnique(
         LoptMultiJoin multiJoin,
         int leftFactor,
         int rightFactor,
@@ -413,7 +416,7 @@ outerForLoop:
                     rightRel.getRowType().getFields(),
                     adjustments));
 
-        return areJoinKeysUnique(leftRel, rightRel, joinFilters);
+        return areSelfJoinKeysUnique(leftRel, rightRel, joinFilters);
     }
 
     /**
@@ -2083,11 +2086,11 @@ outerForLoop:
         }
 
         // Determine if the join keys are identical and unique
-        return areJoinKeysUnique(left, right, joinRel.getCondition());
+        return areSelfJoinKeysUnique(left, right, joinRel.getCondition());
     }
 
     /**
-     * Determines if the equality portion of a join condition is between
+     * Determines if the equality portion of a self-join condition is between
      * identical keys that are unique.
      *
      * @param leftRel left side of the join
@@ -2096,7 +2099,7 @@ outerForLoop:
      *
      * @return true if the equality join keys are the same and unique
      */
-    private static boolean areJoinKeysUnique(
+    private static boolean areSelfJoinKeysUnique(
         RelNode leftRel,
         RelNode rightRel,
         RexNode joinFilters)
@@ -2135,8 +2138,10 @@ outerForLoop:
         }
 
         // Now that we've verified that the keys are the same, see if they
-        // are unique.
-        return RelMdUtil.areColumnsDefinitelyUnique(
+        // are unique.  When removing self-joins, if needed, we'll later add an
+        // IS NOT NULL filter on the join keys that are nullable.  Therefore,
+        // it's ok if there are nulls in the unique key.
+        return RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
             leftRel,
             RelMdUtil.setBitKeys(leftKeys));
     }

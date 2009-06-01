@@ -13,10 +13,10 @@
 >     gender char(1), city char(30), age int, salary numeric(10,2));
 > create index ideptno on emps(deptno);
 > create index icity on emps(city);
-> create table tempemps(
->     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
->     t_city char(35), t_age int);
 > create table salarytable(empno int, salary int);
+> create table nullableEmps(
+>     empno int unique, name varchar(20) unique not null, deptno int,
+>     gender char(1), city char(30), age int, salary numeric(10,2));
 > 
 > insert into emps(empno, name, deptno, gender, city, age, salary)
 >     select case when name = 'John' then 130 else empno end,
@@ -30,22 +30,6 @@
 | 120    | Wilma  | 20      | F       |                                 | 50   | 45000.00  |
 | 130    | John   | 40      | M       | Vancouver                       |      |           |
 +--------+--------+---------+---------+---------------------------------+------+-----------+
-> insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
-> insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
-> insert into tempemps
->     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
->         from emps;
-> select * from tempemps order by t_empno;
-+----------+---------+-----------+-----------+--------------------------------------+--------+
-| T_EMPNO  | T_NAME  | T_DEPTNO  | T_GENDER  |                T_CITY                | T_AGE  |
-+----------+---------+-----------+-----------+--------------------------------------+--------+
-| 100      | Fred    | 11        |           | San Mateo                            | 25     |
-| 110      | Eric    | 21        | M         | San Francisco                        | 80     |
-| 120      | Wilma   | 21        | F         | San Mateo                            | 50     |
-| 130      | John    | 41        | M         | Vancouver                            |        |
-| 140      | Barney  | 10        | M         | San Mateo                            | 41     |
-| 150      | Betty   | 20        | F         | San Francisco                        | 40     |
-+----------+---------+-----------+-----------+--------------------------------------+--------+
 > insert into salarytable values(100, 100000);
 > insert into salarytable values(110, 110000);
 > insert into salarytable values(120, 120000);
@@ -63,6 +47,16 @@
 | 140    | 140000  |
 | 150    | 150000  |
 +--------+---------+
+> insert into nullableEmps select * from emps;
+> select * from nullableEmps order by empno;
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred   | 10      |         |                                 | 25   | 22500.00  |
+| 110    | Eric   | 20      | M       | San Francisco                   | 80   | 72000.00  |
+| 120    | Wilma  | 20      | F       |                                 | 50   | 45000.00  |
+| 130    | John   | 40      | M       | Vancouver                       |      |           |
++--------+--------+---------+---------+---------------------------------+------+-----------+
 > 
 > --------------------------------------
 > -- Test merges that are really updates
@@ -223,6 +217,20 @@
 | 130    | John   | 140     | M       | Vancouver                       |      | 130000.00  |
 +--------+--------+---------+---------+---------------------------------+------+------------+
 > 
+> -- try in the case where the join key is nullable
+> merge into nullableEmps e1 using nullableEmps e2 
+>     on e1.empno  = e2.empno
+>     when matched then update set deptno = e2.deptno + 100;
+> select * from nullableEmps order by empno;
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred   | 110     |         |                                 | 25   | 22500.00  |
+| 110    | Eric   | 120     | M       | San Francisco                   | 80   | 72000.00  |
+| 120    | Wilma  | 120     | F       |                                 | 50   | 45000.00  |
+| 130    | John   | 140     | M       | Vancouver                       |      |           |
++--------+--------+---------+---------+---------------------------------+------+-----------+
+> 
 > -----------------
 > -- Explain output
 > -----------------
@@ -361,7 +369,6 @@
 '            FennelValuesRel(tuples=[[{ '[', 'F', ']', 'F' }]])'
 '            FennelValuesRel(tuples=[[{ '[', 'UNKNOWN                       ', ']', 'UNKNOWN                       ' }]])'
 > 
-> -- source has a join
 > explain plan for
 > merge into emps e1
 >     using (select e.empno, s.salary from emps e, salarytable s
@@ -378,6 +385,18 @@
 '            LcsRowScanRel(table=[[LOCALDB, MO, SALARYTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALARYTABLE$EMPNO, SYS$CLUSTERED_INDEX$SALARYTABLE$SALARY]])'
 '            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
+> 
+> explain plan for
+> merge into nullableEmps e1 using nullableEmps e2 
+>     on e1.empno = e2.empno
+>     when matched then update set deptno = e2.deptno + 100;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, MO, NULLABLEEMPS]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..7=[{inputs}], expr#8=[IS NOT NULL($t0)], expr#9=[ROW($t2)], expr#10=[100], expr#11=[+($t2, $t10)], expr#12=[ROW($t11)], expr#13=[$IS_DIFFERENT_FROM($t9, $t12)], expr#14=[AND($t8, $t13)], expr#15=[CAST($t7):BIGINT NOT NULL], rid=[$t15], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t11], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], $condition=[$t14])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, MO, NULLABLEEMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$NULLABLEEMPS$AGE, SYS$CLUSTERED_INDEX$NULLABLEEMPS$CITY, SYS$CLUSTERED_INDEX$NULLABLEEMPS$DEPTNO, SYS$CLUSTERED_INDEX$NULLABLEEMPS$EMPNO, SYS$CLUSTERED_INDEX$NULLABLEEMPS$GENDER, SYS$CLUSTERED_INDEX$NULLABLEEMPS$NAME, SYS$CLUSTERED_INDEX$NULLABLEEMPS$SALARY]])'
 > 
 > ----------------------------------------------
 > -- Self-joins cannot be removed in these cases

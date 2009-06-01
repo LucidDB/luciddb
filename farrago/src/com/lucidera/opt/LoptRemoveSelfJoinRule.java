@@ -287,8 +287,8 @@ public class LoptRemoveSelfJoinRule
                 rightKeys);
 
         // Then, see if any of the join keys are nullable types.  If there
-        // are any, then those are excess keys that are not really unique.
-        // So, add them back in as IS NOT NULL filters.
+        // are any, then IS NOT NULL filters need to be applied on them, since
+        // we no longer have the join condition to filter them out.
         RelDataTypeField [] fields = joinRel.getLeft().getRowType().getFields();
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
         List<RexNode> extraFilterList = new ArrayList<RexNode>();

@@ -1139,11 +1139,17 @@ select
      (select depts.deptno from emps where deptno = depts.deptno) 
 from depts;
 
--- 10.3 Unique columns need to be not null to be considered unique keys.
+-- 10.3 Unique columns need be not null to be considered unique keys when
+-- join conditions filter out the nulls.
 create table test1(a int primary key, b int);
 create table test2(a int primary key, b int);
 create table test3(a int primary key, b int unique);
 create table test4(a int primary key, b int not null unique);
+
+insert into test1 values(1,1),(2,null),(3,3);
+insert into test2 values(1,1),(2,null),(4,4);
+insert into test3 values(1,1),(2,null),(3,null),(5,5);
+insert into test4 values(1,1),(2,2);
 
 explain plan for 
 select (select test1.b from test1 where test1.a = test2.a) from test2;
@@ -1174,6 +1180,45 @@ select
      from test1, test4 
      where test4.b = test2.b and test1.a = test2.a) 
 from test2;
+
+explain plan for
+select test2.a,
+    (select count(*) + count(test2.a) from test1 where test1.b = test2.b)
+    from test2;
+
+explain plan for
+select test3.a,
+    (select count(*) + count(test3.a) from test1 where test1.b = test3.b)
+    from test3;
+
+!set outputformat table
+select (select test1.b from test1 where test1.a = test2.a) from test2
+    order by 1;
+select (select test1.b from test1 where test1.b = test2.a) from test2
+    order by 1;
+select (select test2.b from test1 where test1.a = test2.a) from test2 
+    order by 1;
+select (select test3.b from test3 where test3.b = test2.a) from test2
+    order by 1;
+select (select test4.b from test4 where test4.b = test2.a) from test2
+    order by 1;
+select 
+    (select (test1.b + test3.b) 
+     from test1, test3 
+     where test3.a = test2.b and test1.a = test2.a) 
+from test2 order by 1;
+select 
+    (select (test1.b + test4.b) 
+     from test1, test4 
+     where test4.b = test2.b and test1.a = test2.a) 
+from test2 order by 1;
+select test2.a,
+    (select count(*) + count(test2.a) from test1 where test1.b = test2.b)
+    from test2 order by 1;
+select test3.a,
+    (select count(*) + count(test3.a) from test1 where test1.b = test3.b)
+    from test3 order by 1;
+!set outputformat csv
 
 drop table test1;
 drop table test2;

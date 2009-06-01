@@ -241,7 +241,33 @@ public abstract class RelMetadataQuery
             .getRelMetadata(
                 rel,
                 "getUniqueKeys",
-                null);
+                new Object[] { false });
+    }
+
+    /**
+     * Determines the set of unique minimal keys for this expression,
+     * optionally ignoring nulls in the columns in the expression.  A key is
+     * represented as a BitSet, where each bit position represents a 0-based
+     * output column ordinal. (Note that RelNode.isDistinct should return true
+     * if and only if at least one key is known.)
+     *
+     * <p>Nulls can be ignored if the relational expression has filtered out
+     * null values.
+     *
+     * @param rel the relational expression
+     * @param ignoreNulls if true, ignore null values when determining
+     * whether the keys are unique
+     *
+     * @return set of keys, or null if this information cannot be determined
+     * (whereas empty set indicates definitely no keys at all)
+     */
+    public static Set<BitSet> getUniqueKeys(RelNode rel, boolean ignoreNulls)
+    {
+        return (Set<BitSet>) rel.getCluster().getMetadataProvider()
+            .getRelMetadata(
+                rel,
+                "getUniqueKeys",
+                new Object[] { ignoreNulls });
     }
 
     /**
@@ -260,7 +286,33 @@ public abstract class RelMetadataQuery
         return (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
             rel,
             "areColumnsUnique",
-            new Object[] { columns });
+            new Object[] { columns, false });
+    }
+
+    /**
+     * Determines if a specified set of columns from a specified relational
+     * expression are unique, optionally ignoring null values in the columns.
+     * Nulls can be ignored if the relational expression has filtered out
+     * null values.
+     *
+     * @param rel the relational expression
+     * @param columns column mask representing the subset of columns for which
+     * uniqueness will be determined
+     * @param ignoreNulls if true, ignore null values when determining column
+     * uniqueness
+     *
+     * @return true or false depending on whether the columns are unique, or
+     * null if not enough information is available to make that determination
+     */
+    public static Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        boolean ignoreNulls)
+    {
+        return (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+            rel,
+            "areColumnsUnique",
+            new Object[] { columns, ignoreNulls });
     }
 
     /**

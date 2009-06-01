@@ -525,6 +525,92 @@ public class FarragoMetadataTest
         checkColumnUniqueness(expected, true);
     }
 
+    public void testUniqueKeysWhenNullsFiltered()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet primKey = new BitSet();
+        primKey.set(0);
+        expected.add(primKey);
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(1);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+
+        uniqKey = new BitSet();
+        uniqKey.set(2);
+        uniqKey.set(3);
+        expected.add(uniqKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from tab where c2 is not null and c3 is not null "
+            + "order by c1");
+
+        Set<BitSet> result =
+            RelMetadataQuery.getUniqueKeys(rootRel, true);
+        assertTrue(result.equals(expected));
+
+        for (BitSet key : expected) {
+            Boolean res =
+                RelMetadataQuery.areColumnsUnique(rootRel, key, true);
+            assertTrue(res.booleanValue());
+        }
+    }
+
+    public void testAreColumnsUniqueWithLiteral()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet primKey = new BitSet();
+        primKey.set(0);
+        primKey.set(5);
+        expected.add(primKey);
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(1);
+        uniqKey.set(2);
+        uniqKey.set(5);
+        expected.add(uniqKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select *, true from tab where c0 = 1 order by c1");
+
+        // Make sure the key sets are still unique even when they include a
+        // literal column (offset 5).
+        checkColumnUniqueness(expected, true);
+    }
+
+    public void testAreColumnsUniqueWithCast()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(1);
+        expected.add(uniqKey);
+
+        // Make sure the cast to remove non nullability does not affect
+        // uniqueness of the column.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select c1, cast(c2 as int) from tab where " +
+            " c1 is not null and c2 is not null "
+            + "order by c1");
+
+        Boolean res =
+            RelMetadataQuery.areColumnsUnique(rootRel, uniqKey, true);
+        assertTrue(res.booleanValue());
+    }
+
     private void checkUniqueKeysJoin(
         String sql,
         Set<BitSet> expected,
