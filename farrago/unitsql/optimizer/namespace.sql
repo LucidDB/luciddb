@@ -126,6 +126,10 @@ select dname
 from hsqldb_demo.sales.dept
 where deptno=20;
 
+-- full-table agg which can be pushed down to foreign DBMS
+select sum(sal)
+from hsqldb_demo.sales.emp;
+
 -- GROUP BY which can be pushed down to foreign DBMS
 select deptno, sum(sal), count(*)
 from hsqldb_demo.sales.emp
@@ -250,6 +254,10 @@ explain plan for
 select dname 
 from hsqldb_demo_limited_pushdown.sales.dept
 where deptno=20;
+
+explain plan for 
+select sum(sal)
+from hsqldb_demo.sales.emp;
 
 explain plan for 
 select deptno, sum(sal), count(*)

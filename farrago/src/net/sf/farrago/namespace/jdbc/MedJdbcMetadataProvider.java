@@ -22,7 +22,11 @@
 package net.sf.farrago.namespace.jdbc;
 
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 
+import net.sf.farrago.namespace.impl.*;
+
+import java.util.*;
 
 /**
  * MedJdbcMetadataProvider supplies metadata to the optimizer about JDBC
@@ -36,6 +40,13 @@ public class MedJdbcMetadataProvider
 {
     //~ Methods ----------------------------------------------------------------
 
+    public MedJdbcMetadataProvider()
+    {
+        mapParameterTypes(
+            "areColumnsUnique",
+            Collections.singletonList((Class) BitSet.class));
+    }
+
     public Boolean canRestart(MedJdbcQueryRel rel)
     {
         // We don't support restarting a JDBC query.  We could do it via scroll
@@ -44,6 +55,20 @@ public class MedJdbcMetadataProvider
         // adds overhead.  So, get the optimizer to force the buffering inside
         // of Farrago as needed.
         return false;
+    }
+
+    public Set<BitSet> getUniqueKeys(MedJdbcQueryRel rel)
+    {
+        return rel.uniqueKeys;
+    }
+
+    public Boolean areColumnsUnique(
+        MedJdbcQueryRel rel,
+        BitSet columns)
+    {
+        Set<BitSet> uniqueColSets = rel.uniqueKeys;
+        return MedAbstractColumnMetadata.areColumnsUniqueForKeys(
+            uniqueColSets, columns);
     }
 }
 

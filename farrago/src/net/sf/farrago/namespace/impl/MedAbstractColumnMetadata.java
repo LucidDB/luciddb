@@ -150,6 +150,13 @@ public abstract class MedAbstractColumnMetadata
         FarragoRepos repos)
     {
         Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos);
+        return areColumnsUniqueForKeys(uniqueColSets, columns);
+    }
+
+    public static Boolean areColumnsUniqueForKeys(
+        Set<BitSet> uniqueColSets,
+        BitSet columns)
+    {
         if (uniqueColSets == null) {
             return null;
         }

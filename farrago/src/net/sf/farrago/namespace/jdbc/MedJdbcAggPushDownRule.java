@@ -27,6 +27,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.*;
 
+import java.util.*;
+
 /**
  * MedJdbcAggPushDownRule is a rule to push aggregations down into
  * JDBC sources.
@@ -93,7 +95,7 @@ class MedJdbcAggPushDownRule
                 selectList,
                 queryRel.getSql(),
                 null,
-                groupBy,
+                (groupBy.size() == 0) ? null : groupBy,
                 null,
                 null,
                 null,
@@ -102,6 +104,14 @@ class MedJdbcAggPushDownRule
         if (!dir.isRemoteSqlValid(selectWithAgg)) {
             return;
         }
+
+        // mark the aggregation key as unique; the planner may
+        // rely on having this info available
+        Set<BitSet> uniqueKeys = new HashSet<BitSet>();
+        BitSet uniqueKey = new BitSet(aggRel.getRowType().getFieldCount());
+        uniqueKey.set(0, aggRel.getGroupCount());
+        uniqueKeys.add(uniqueKey);
+
         RelNode rel =
             new MedJdbcQueryRel(
                 queryRel.columnSet,
@@ -109,7 +119,8 @@ class MedJdbcAggPushDownRule
                 aggRel.getRowType(),
                 queryRel.connection,
                 queryRel.dialect,
-                selectWithAgg);
+                selectWithAgg,
+                uniqueKeys);
         call.transformTo(rel);
     }
 }

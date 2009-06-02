@@ -36,6 +36,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * MedJdbcQueryRel adapts JdbcQuery to the SQL/MED framework.
@@ -51,6 +52,7 @@ public class MedJdbcQueryRel
     MedJdbcColumnSet columnSet;
     RelOptConnection connection;
     SqlDialect dialect;
+    Set<BitSet> uniqueKeys;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,6 +64,18 @@ public class MedJdbcQueryRel
         SqlDialect dialect,
         SqlSelect sql)
     {
+        this(columnSet, cluster, rowType, connection, dialect, sql, null);
+    }
+
+    public MedJdbcQueryRel(
+        MedJdbcColumnSet columnSet,
+        RelOptCluster cluster,
+        RelDataType rowType,
+        RelOptConnection connection,
+        SqlDialect dialect,
+        SqlSelect sql,
+        Set<BitSet> uniqueKeys)
+    {
         super(
             cluster,
             rowType,
@@ -72,6 +86,7 @@ public class MedJdbcQueryRel
         this.columnSet = columnSet;
         this.connection = connection;
         this.dialect = dialect;
+        this.uniqueKeys = uniqueKeys;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -110,7 +125,8 @@ public class MedJdbcQueryRel
                 getRowType(),
                 connection,
                 dialect,
-                getSql());
+                getSql(),
+                uniqueKeys);
         clone.inheritTraitsFrom(this);
         return clone;
     }

@@ -120,6 +120,7 @@ public class MedJdbcColumnSet
             return rel;
         }
 
+        // TODO jvs 30-May-2009:  include unique key info
         rel =
             new MedJdbcQueryRel(
                 this,

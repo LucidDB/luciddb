@@ -281,6 +281,7 @@ class MedJdbcPushDownRule
             rt = typeFactory.createStructType(fieldTypes, fieldNames);
         }
 
+        // TODO jvs 30-May-2009:  preserve unique key info where warranted
         RelNode rel =
             new MedJdbcQueryRel(
                 queryRel.columnSet,

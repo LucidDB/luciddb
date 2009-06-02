@@ -185,6 +185,13 @@
   <result DNAME="RESEARCH"/>
 </resultset>
 > 
+> -- full-table agg which can be pushed down to foreign DBMS
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+<resultset>
+  <result EXPR$0="29025"/>
+</resultset>
+> 
 > -- GROUP BY which can be pushed down to foreign DBMS
 > select deptno, sum(sal), count(*)
 > from hsqldb_demo.sales.emp
@@ -398,6 +405,15 @@
 '  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
 'FROM "SALES"."DEPT"'
 'WHERE "DEPTNO" = 20])'
+> 
+> explain plan for 
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT SUM("SAL")'
+'FROM (SELECT "SAL"'
+'FROM "SALES"."EMP")])'
 > 
 > explain plan for 
 > select deptno, sum(sal), count(*)
