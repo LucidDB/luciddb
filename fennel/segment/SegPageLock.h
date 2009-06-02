@@ -339,9 +339,10 @@ public:
         // that other was a scratch page
         // TODO:  correctly swap footers as well?
         Segment &segment = *(segmentAccessor.pSegment);
-        memcpy(other.pPage->getWritableData() + segment.getUsablePageSize(),
-               pPage->getReadableData() +  segment.getUsablePageSize(),
-               segment.getFullPageSize() - segment.getUsablePageSize());
+        memcpy(
+            other.pPage->getWritableData() + segment.getUsablePageSize(),
+            pPage->getReadableData() +  segment.getUsablePageSize(),
+            segment.getFullPageSize() - segment.getUsablePageSize());
         pPage->swapBuffers(*other.pPage);
     }
 

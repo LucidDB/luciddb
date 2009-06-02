@@ -105,7 +105,8 @@ public class MockRelOptPlanner
         int ordinalInParent)
     {
         List<RelNode> bindings = new ArrayList<RelNode>();
-        if (match(rule.getOperand(),
+        if (match(
+                rule.getOperand(),
                 rel,
                 bindings))
         {
@@ -165,7 +166,8 @@ public class MockRelOptPlanner
             return false;
         }
         for (int i = 0; i < n; ++i) {
-            if (!match(childOperands[i],
+            if (!match(
+                    childOperands[i],
                     childRels[i],
                     bindings))
             {

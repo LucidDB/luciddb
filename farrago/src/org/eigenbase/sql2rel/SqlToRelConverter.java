@@ -875,7 +875,8 @@ public class SqlToRelConverter
             return;
         case SqlKind.MultisetQueryConstructorORDINAL:
         case SqlKind.MultisetValueConstructorORDINAL:
-            converted = convertMultisets(new SqlNode[] { node },
+            converted = convertMultisets(
+                new SqlNode[] { node },
                 bb);
             break;
         case SqlKind.InORDINAL:

@@ -44,7 +44,9 @@ class LhxHashTableTest : virtual public SegStorageTestBase
     LhxHashInfo hashInfo;
     uint buildInputIndex;
 
-    uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable,
+    uint writeHashTable(
+        LhxHashInfo const &hashInfo,
+        LhxHashTable &hashTable,
         SharedLhxPartition destPartition);
 
     uint readPartition(
@@ -106,8 +108,10 @@ void LhxHashTableTest::testCaseTearDown()
     SegStorageTestBase::testCaseTearDown();
 }
 
-uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
-    LhxHashTable &hashTable, SharedLhxPartition destPartition)
+uint LhxHashTableTest::writeHashTable(
+    LhxHashInfo const &hashInfo,
+    LhxHashTable &hashTable,
+    SharedLhxPartition destPartition)
 {
     uint tuplesWritten = 0;
     LhxPartitionWriter writer;
@@ -130,8 +134,10 @@ uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
     return tuplesWritten;
 }
 
-uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
-    SharedLhxPartition srcPartition, ostringstream &dataTrace)
+uint LhxHashTableTest::readPartition(
+    LhxHashInfo &hashInfo,
+    SharedLhxPartition srcPartition,
+    ostringstream &dataTrace)
 {
     LhxPartitionReader reader;
     uint tuplesRead = 0;
@@ -341,8 +347,10 @@ void LhxHashTableTest::testInsert(
 
         //write to a paritition
         uint tuplesWritten =
-            writeHashTable((LhxHashInfo const &)hashInfo,
-                hashTable, partition);
+            writeHashTable(
+                (LhxHashInfo const &)hashInfo,
+                hashTable,
+                partition);
 
         //read from the same paritition
         ostringstream dataTrace;
@@ -382,8 +390,10 @@ void LhxHashTableTest::testInsert(
                 SharedLhxPartition(new LhxPartition(NULL)));
             partitions[j]->inputIndex = 1;
             tuplesWritten[j] =
-                writeHashTable((LhxHashInfo const &)hashInfo,
-                    hashTable, partitions[j]);
+                writeHashTable(
+                    (LhxHashInfo const &)hashInfo,
+                    hashTable,
+                    partitions[j]);
         }
 
         assert (tuplesWritten[0] == numRows &&
@@ -433,8 +443,10 @@ void LhxHashTableTest::testInsert(
                           << "recursion depth" << recursivePartitioning
                           << "inputindex " << j << "\n";
                 tuplesRead[j] +=
-                    readPartition(hashInfo,
-                            leafPlan->getPartition(j), dataTrace);
+                    readPartition(
+                        hashInfo,
+                        leafPlan->getPartition(j),
+                        dataTrace);
                 if (dumpHashTable) {
                     LhxHashTableDump hashTableDump(
                         TRACE_INFO,

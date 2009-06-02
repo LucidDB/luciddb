@@ -137,7 +137,10 @@ void LhxAggExecStream::open(bool restart)
     partitionList.push_back(buildPart);
 
     rootPlan = SharedLhxPlan(new LhxPlan());
-    rootPlan->init(WeakLhxPlan(), partitionLevel, partitionList,
+    rootPlan->init(
+        WeakLhxPlan(),
+        partitionLevel,
+        partitionList,
         enableSubPartStat);
 
     /*
@@ -215,13 +218,17 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                     if (curPlan->getPartitionLevel() < forcePartitionLevel ||
                         !hashTable.addTuple(inputTuple)) {
                         if (isTopPlan) {
-                            partInfo.open(&hashTableReader,
-                                          &buildReader, inputTuple,
-                                          &aggComputers);
+                            partInfo.open(
+                                &hashTableReader,
+                                &buildReader,
+                                inputTuple,
+                                &aggComputers);
                         } else {
-                            partInfo.open(&hashTableReader,
-                                          &buildReader, inputTuple,
-                                          &partialAggComputers);
+                            partInfo.open(
+                                &hashTableReader,
+                                &buildReader,
+                                inputTuple,
+                                &partialAggComputers);
                         }
                         aggState = Partition;
                         break;
@@ -272,13 +279,17 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      */
                     if (!hashTable.addTuple(inputTuple)) {
                         if (isTopPlan) {
-                            partInfo.open(&hashTableReader,
-                                          &buildReader, inputTuple,
-                                          &aggComputers);
+                            partInfo.open(
+                                &hashTableReader,
+                                &buildReader,
+                                inputTuple,
+                                &aggComputers);
                         } else {
-                            partInfo.open(&hashTableReader,
-                                          &buildReader, inputTuple,
-                                          &partialAggComputers);
+                            partInfo.open(
+                                &hashTableReader,
+                                &buildReader,
+                                inputTuple,
+                                &partialAggComputers);
                         }
                         aggState = Partition;
                         break;
@@ -337,14 +348,21 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  * Hash table needs to aggregate partial results using the
                  * correct agg computer interface.
                  */
-                hashTable.init(curPlan->getPartitionLevel(), hashInfo,
-                    &partialAggComputers, buildInputIndex);
-                hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
+                hashTable.init(
+                    curPlan->getPartitionLevel(),
+                    hashInfo,
+                    &partialAggComputers,
+                    buildInputIndex);
+                hashTableReader.init(
+                    &hashTable,
+                    hashInfo,
+                    buildInputIndex);
 
                 bool status = hashTable.allocateResources();
                 assert(status);
 
-                buildReader.open(curPlan->getPartition(buildInputIndex),
+                buildReader.open(
+                    curPlan->getPartition(buildInputIndex),
                     hashInfo);
 
                 aggState =
@@ -366,13 +384,17 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * Hash table needs to aggregate partial results using the
                      * correct agg computer interface.
                      */
-                    hashTable.init(curPlan->getPartitionLevel(), hashInfo,
-                        &partialAggComputers, buildInputIndex);
+                    hashTable.init(
+                        curPlan->getPartitionLevel(),
+                        hashInfo,
+                        &partialAggComputers,
+                        buildInputIndex);
                     hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
                     bool status = hashTable.allocateResources();
                     assert(status);
 
-                    buildReader.open(curPlan->getPartition(buildInputIndex),
+                    buildReader.open(
+                        curPlan->getPartition(buildInputIndex),
                         hashInfo);
 
                     aggState =

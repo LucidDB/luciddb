@@ -37,21 +37,38 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
-    void testSequentialImpl(uint numRows, uint forcePartitionLevel,
-        bool enableJoinFilter, bool enableSubPartStat);
-    void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight,
-        uint forcePartitionLevel, bool enableJoinFilter,bool enableSubPartStat,
-        bool needSort, bool fakeInterrupt);
+    void testSequentialImpl(
+        uint numRows,
+        uint forcePartitionLevel,
+        bool enableJoinFilter,
+        bool enableSubPartStat);
+
+    void testDupImpl(
+        uint numRows,
+        uint cndKeyLeft,
+        uint cndKeyRight,
+        uint forcePartitionLevel,
+        bool enableJoinFilter,
+        bool enableSubPartStat,
+        bool needSort,
+        bool fakeInterrupt);
 
     void testImpl(
-        uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
-        TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
+        uint numInputRows,
+        uint keyCount,
+        uint cndKeys,
+        uint numResultRows,
+        TupleDescriptor &inputDesc,
+        TupleDescriptor &outputDesc,
         TupleProjection &outputProj,
         SharedMockProducerExecStreamGenerator pLeftGenerator,
         SharedMockProducerExecStreamGenerator pRightGenerator,
         CompositeExecStreamGenerator &verifier,
-        uint forcePartitionLevel, bool enableJoinFilter,bool enableSubPartStat,
-        bool needSort, bool fakeInterrupt);
+        uint forcePartitionLevel,
+        bool enableJoinFilter,
+        bool enableSubPartStat,
+        bool needSort,
+        bool fakeInterrupt);
 
 public:
     explicit LhxJoinExecStreamTest()
@@ -62,39 +79,54 @@ public:
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
 
 /*
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testSequentialPartition);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup1Partition);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup2Partition);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testConstPartition);
 
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testSequentialPartitionFilter);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup1PartitionFilter);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup2PartitionFilter);
 
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testSequentialPartitionStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup1PartitionStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup2PartitionStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testConstPartitionStat);
 */
 
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testSequentialPartitionFilterStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup1PartitionFilterStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testDup2PartitionFilterStat);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LhxJoinExecStreamTest,
             testConstPartitionFilterStat);
 
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
@@ -327,15 +359,22 @@ void LhxJoinExecStreamTest::testSequentialImpl(
     bool needSort = (forcePartitionLevel > 0) ? true : false;
     bool fakeInterrupt = false;
 
-    testImpl(numRows, keyCount, cndKeys, numRows, inputDesc, outputDesc,
+    testImpl(
+        numRows, keyCount, cndKeys, numRows, inputDesc, outputDesc,
         outputProj, pLeftGenerator, pRightGenerator, verifier,
         forcePartitionLevel, enableJoinFilter, enableSubPartStat,
         needSort, fakeInterrupt);
 }
 
-void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
-    uint cndKeyRight, uint forcePartitionLevel, bool enableJoinFilter,
-    bool enableSubPartStat, bool needSort, bool fakeInterrupt)
+void LhxJoinExecStreamTest::testDupImpl(
+    uint numRows,
+    uint cndKeyLeft,
+    uint cndKeyRight,
+    uint forcePartitionLevel,
+    bool enableJoinFilter,
+    bool enableSubPartStat,
+    bool needSort,
+    bool fakeInterrupt)
 {
     assert (!fakeInterrupt || !needSort);
 
@@ -403,7 +442,8 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
         (numRows * numRows / cndKeyLeft) :
         (numRows * numRows / cndKeyRight);
 
-    testImpl(numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
+    testImpl(
+        numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
         outputProj, pLeftGenerator, pRightGenerator, verifier,
         forcePartitionLevel, enableJoinFilter, enableSubPartStat, needSort,
         fakeInterrupt);
@@ -518,9 +558,11 @@ void LhxJoinExecStreamTest::testImpl(
     // after partitioning the order might not be the same as the input, so add
     // a sort before verifying the output
 
-    verifyOutput(*pOutputStream,
+    verifyOutput(
+        *pOutputStream,
         fakeInterrupt ? 1 : numResultRows,
-        verifier, fakeInterrupt);
+        verifier,
+        fakeInterrupt);
 
     if (fakeInterrupt) {
         // simulate error cleanup

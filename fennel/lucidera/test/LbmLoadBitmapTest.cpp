@@ -420,10 +420,11 @@ void LbmLoadBitmapTest::testLoad(
             ostringstream traceName;
             traceName << testName << " Index " << i;
             boost::shared_ptr<LbmEntryDump> pEntryDump =
-                boost::shared_ptr<LbmEntryDump>
-                (new LbmEntryDump(TRACE_INFO,
-                                  shared_from_this(),
-                                  traceName.str()));
+                boost::shared_ptr<LbmEntryDump>(
+                    new LbmEntryDump(
+                        TRACE_INFO,
+                        shared_from_this(),
+                        traceName.str()));
             entryDumps.push_back(pEntryDump);
         }
 

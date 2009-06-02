@@ -103,8 +103,7 @@ public class OJTypeFactoryImpl
             final RelDataType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer, fieldType, this);
         }
-        return ojClassMap.createProject(declarer, fieldClasses,
-            fieldNames);
+        return ojClassMap.createProject(declarer, fieldClasses, fieldNames);
     }
 
     public OJClass toOJClass(

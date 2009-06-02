@@ -178,7 +178,8 @@ public class LcsIndexAggRule
      * @return whether the projection can meet the group by requirements of an
      * aggregate
      */
-    private boolean projectionSatisfiesGroupBy(Integer [] proj,
+    private boolean projectionSatisfiesGroupBy(
+        Integer [] proj,
         int groupCount)
     {
         if (proj == null) {

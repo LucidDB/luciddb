@@ -80,7 +80,9 @@ private:
      * @param [in] inputCol input TupleDatum
      * @param [in] isVarChar if col is varchar type
      */
-    void hashOneColumn(uint &hashValue, TupleDatum const &inputCol,
+    void hashOneColumn(
+        uint &hashValue,
+        TupleDatum const &inputCol,
         LhxHashTrim isVarChar);
 
 public:
@@ -106,7 +108,8 @@ public:
      *
      * @return the hash value
      */
-    uint hash(TupleData const &inputTuple,
+    uint hash(
+        TupleData const &inputTuple,
         TupleProjection const &keyProjection,
         vector<LhxHashTrim> const &isKeyColVarChar);
 

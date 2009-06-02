@@ -63,8 +63,9 @@ class ExecStreamSubFactory_lu
         for (; pClusterScan; ++pClusterScan) {
             LcsClusterScanDef clusterScanParam;
             clusterScanParam.pCacheAccessor = params.pCacheAccessor;
-            pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
-                                                      *pClusterScan);
+            pExecStreamFactory->readBTreeStreamParams(
+                clusterScanParam,
+                *pClusterScan);
             pExecStreamFactory->readTupleDescriptor(
                 clusterScanParam.clusterTupleDesc,
                 pClusterScan->getClusterTupleDesc());
@@ -116,8 +117,9 @@ class ExecStreamSubFactory_lu
 
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         readClusterScan(streamDef, params);
-        CmdInterpreter::readTupleProjection(params.outputProj,
-                                            streamDef.getOutputProj());
+        CmdInterpreter::readTupleProjection(
+            params.outputProj,
+            streamDef.getOutputProj());
         params.isFullScan = streamDef.isFullScan();
         params.hasExtraFilter = streamDef.isHasExtraFilter();
 
@@ -129,7 +131,8 @@ class ExecStreamSubFactory_lu
             LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
         params.samplingRowCount = streamDef.getSamplingRowCount();
 
-        CmdInterpreter::readTupleProjection(params.residualFilterCols,
+        CmdInterpreter::readTupleProjection(
+            params.residualFilterCols,
             streamDef.getResidualFilterColumns());
         pEmbryo->init(new LcsRowScanExecStream(), params);
     }

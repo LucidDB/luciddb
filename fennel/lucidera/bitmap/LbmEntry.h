@@ -505,14 +505,16 @@ class FENNEL_LBM_EXPORT LbmEntry
     /**
      * Print a bitmap segment as RIDs.
      */
-    static string dumpSegRID(PBuffer segDesc, PBuffer segDescEnd, PBuffer seg,
-                             string prefix, LcsRid srid);
+    static string dumpSegRID(
+        PBuffer segDesc, PBuffer segDescEnd, PBuffer seg,
+        string prefix, LcsRid srid);
 
     /**
      * Print a single bitmap segment as RIDs.
      */
-    static string dumpBitmapRID(PBuffer seg, uint segBytes,
-                                string prefix, LcsRid srid);
+    static string dumpBitmapRID(
+        PBuffer seg, uint segBytes,
+        string prefix, LcsRid srid);
 
     /**
      * Generate a vector of the RIDs contained in a bitmap segment
@@ -586,7 +588,8 @@ public:
      *          1 if this.entryTuple > inputEntry.entryTuple.
      *
      */
-    int compareEntry(TupleData const &inputTuple,
+    int compareEntry(
+        TupleData const &inputTuple,
         TupleDescriptor const &tupleDesc) const;
 
     /**

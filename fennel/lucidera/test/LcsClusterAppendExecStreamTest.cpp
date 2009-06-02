@@ -84,30 +84,42 @@ protected:
 public:
     explicit LcsClusterAppendExecStreamTest()
     {
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColNoDupNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColNoDupOldRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColConstNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColConstOldRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColStairNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testSingleColStairOldRoot);
 
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColNoDupNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColNoDupOldRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColConstNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColConstOldRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColStairNewRoot);
-        FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
+        FENNEL_UNIT_TEST_CASE(
+            LcsClusterAppendExecStreamTest,
             testMultiColStairOldRoot);
     }
     void testCaseSetUp();
@@ -166,8 +178,10 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(
         // make sure the rid on the btree matches the rid on the cluster
         // page
         BOOST_CHECK_EQUAL(pageData.bTreeRid, pBlock->firstRID);
-        clusterDump.dump(opaqueToInt(pageData.clusterPageId), pBlock,
-                         blockSize);
+        clusterDump.dump(
+            opaqueToInt(pageData.clusterPageId),
+            pBlock,
+            blockSize);
     } while (found = clusterVerifier.getNextClusterPageForRead(pBlock));
 }
 
@@ -337,8 +351,9 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
       Now use the above initialized parameter
      */
     ExecStreamEmbryo lcsAppendStreamEmbryo;
-    lcsAppendStreamEmbryo.init(new LcsClusterAppendExecStream(),
-                               lcsAppendParams);
+    lcsAppendStreamEmbryo.init(
+        new LcsClusterAppendExecStream(),
+        lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(

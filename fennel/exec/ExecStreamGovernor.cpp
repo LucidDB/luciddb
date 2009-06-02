@@ -57,19 +57,22 @@ void ExecStreamGovernor::traceCachePageRequest(
 {
     switch (reqt.optType) {
     case EXEC_RESOURCE_ACCURATE:
-        FENNEL_TRACE(TRACE_FINER,
+        FENNEL_TRACE(
+            TRACE_FINER,
             "Stream " << name << " assigned " << assigned <<
             " pages based on accurate (min,opt) request of " << "(" <<
             reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
     case EXEC_RESOURCE_ESTIMATE:
-        FENNEL_TRACE(TRACE_FINER,
+        FENNEL_TRACE(
+            TRACE_FINER,
             "Stream " << name << " assigned " << assigned <<
             " pages based on estimated (min,opt) request of " << "(" <<
             reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
     case EXEC_RESOURCE_UNBOUNDED:
-        FENNEL_TRACE(TRACE_FINER,
+        FENNEL_TRACE(
+            TRACE_FINER,
             "Stream " << name << " assigned " << assigned <<
             " pages based on an unbounded opt request with " <<
             reqt.minReqt << " min pages");

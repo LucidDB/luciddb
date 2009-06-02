@@ -1534,7 +1534,8 @@ public class RelDecorrelator
             RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator)
         {
-            this(rexBuilder,
+            this(
+                rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 null, null);
         }
@@ -1556,7 +1557,8 @@ public class RelDecorrelator
             boolean projectPulledAboveLeftCorrelator,
             Set<Integer> isCount)
         {
-            this(rexBuilder,
+            this(
+                rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 null, isCount);
         }

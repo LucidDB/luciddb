@@ -78,7 +78,8 @@ public class SqlParserTest
         return new SqlParser(sql).parseStmt();
     }
 
-    protected void checkExp(String sql,
+    protected void checkExp(
+        String sql,
         String expected)
     {
         getTester().checkExp(sql, expected);
@@ -1301,7 +1302,8 @@ public class SqlParserTest
     public void testMultilineComment()
     {
         // on single line
-        check("select 1 /* , 2 */, 3 from t",
+        check(
+            "select 1 /* , 2 */, 3 from t",
             "SELECT 1, 3" + NL
             + "FROM `T`");
 
@@ -1314,7 +1316,8 @@ public class SqlParserTest
             + "FROM `T`");
 
         // stuff inside comment
-        check("values ( /** 1, 2 + ** */ 3)",
+        check(
+            "values ( /** 1, 2 + ** */ 3)",
             "(VALUES (ROW(3)))");
 
         // comment in string is preserved
@@ -1398,7 +1401,8 @@ public class SqlParserTest
             TestUtil.fold("(VALUES (ROW('abc'\n'def')))"));
 
         // comment which starts as soon as it has begun
-        check("values /**/ (1)",
+        check(
+            "values /**/ (1)",
             "(VALUES (ROW(1)))");
     }
 
@@ -2106,7 +2110,8 @@ public class SqlParserTest
 
     public void testNullIf()
     {
-        checkExp("nullif(v1,v2)",
+        checkExp(
+            "nullif(v1,v2)",
             "NULLIF(`V1`, `V2`)");
         checkExpFails(
             "1 ^+^ nullif + 3",
@@ -2115,11 +2120,14 @@ public class SqlParserTest
 
     public void testCoalesce()
     {
-        checkExp("coalesce(v1)",
+        checkExp(
+            "coalesce(v1)",
             "COALESCE(`V1`)");
-        checkExp("coalesce(v1,v2)",
+        checkExp(
+            "coalesce(v1,v2)",
             "COALESCE(`V1`, `V2`)");
-        checkExp("coalesce(v1,v2,v3)",
+        checkExp(
+            "coalesce(v1,v2,v3)",
             "COALESCE(`V1`, `V2`, `V3`)");
     }
 
@@ -2501,7 +2509,8 @@ public class SqlParserTest
 
     public void testOver()
     {
-        checkExp("sum(sal) over ()",
+        checkExp(
+            "sum(sal) over ()",
             "(SUM(`SAL`) OVER ())");
         checkExp(
             "sum(sal) over (partition by x, y)",
@@ -2557,7 +2566,8 @@ public class SqlParserTest
     public void testMemberOf()
     {
         checkExp("a member of b", "(`A` MEMBER OF `B`)");
-        checkExp("a member of multiset[b]",
+        checkExp(
+            "a member of multiset[b]",
             "(`A` MEMBER OF (MULTISET [`B`]))");
     }
 
@@ -5180,7 +5190,8 @@ public class SqlParserTest
 
     public void testUnnest()
     {
-        check("select*from unnest(x)",
+        check(
+            "select*from unnest(x)",
             "SELECT *\n"
             + "FROM (UNNEST(`X`))");
         check(
@@ -5189,7 +5200,8 @@ public class SqlParserTest
             + "FROM (UNNEST(`X`)) AS `T`");
 
         // UNNEST cannot be first word in query
-        checkFails("^unnest^(x)",
+        checkFails(
+            "^unnest^(x)",
             "(?s)Encountered \"unnest\" at.*");
     }
 
@@ -5218,7 +5230,8 @@ public class SqlParserTest
         // Parentheses around JOINs are OK, and sometimes necessary.
         if (false) {
             // todo:
-            check("select * from (emp join dept using (deptno))",
+            check(
+                "select * from (emp join dept using (deptno))",
                 "xx");
 
             check(

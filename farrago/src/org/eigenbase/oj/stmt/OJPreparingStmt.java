@@ -248,9 +248,9 @@ public abstract class OJPreparingStmt
             runtimeContextClass = connection.getClass();
         }
 
-        final Argument [] arguments =
-        {
-            new Argument(connectionVariable,
+        final Argument [] arguments = {
+            new Argument(
+                connectionVariable,
                 runtimeContextClass,
                 connection)
         };

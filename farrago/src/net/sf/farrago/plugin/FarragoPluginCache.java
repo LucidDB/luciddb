@@ -126,7 +126,8 @@ public abstract class FarragoPluginCache
         addAllocation(entry);
 
         Object obj = entry.getValue();
-        mapMofIdToPlugin.put((String) entry.getKey(),
+        mapMofIdToPlugin.put(
+            (String) entry.getKey(),
             obj);
         return obj;
     }

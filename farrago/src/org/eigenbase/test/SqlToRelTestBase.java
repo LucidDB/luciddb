@@ -359,7 +359,8 @@ public abstract class SqlToRelTestBase
             return parent.getRelOptSchema();
         }
 
-        public RelNode toRel(RelOptCluster cluster,
+        public RelNode toRel(
+            RelOptCluster cluster,
             RelOptConnection connection)
         {
             return new TableAccessRel(cluster, this, connection);

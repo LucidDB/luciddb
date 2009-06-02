@@ -253,7 +253,8 @@ public class FarragoDatabase
                 // shutdown activity.
                 Timer timer = new Timer("Farrago Watchdog Timer");
                 new FarragoTimerAllocation(this, timer);
-                timer.schedule(new WatchdogTask(),
+                timer.schedule(
+                    new WatchdogTask(),
                     1000,
                     1000);
 
@@ -563,7 +564,8 @@ public class FarragoDatabase
         NativeTrace.createInstance("net.sf.fennel.");
 
         fennelDbHandle =
-            new FennelDbHandleImpl(systemRepos,
+            new FennelDbHandleImpl(
+                systemRepos,
                 this,
                 cmdExecutor,
                 cmd);

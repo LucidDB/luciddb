@@ -52,8 +52,10 @@ class FENNEL_LBM_EXPORT LbmEntryDump
     TraceLevel traceLevel;
 
 public:
-    explicit LbmEntryDump(TraceLevel traceLevelInit,
+    explicit LbmEntryDump(
+        TraceLevel traceLevelInit,
         SharedTraceTarget pTraceTarget, string name);
+
     uint dump(BTreeDescriptor const &treeDescriptor, bool printRID = false);
 };
 

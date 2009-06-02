@@ -113,7 +113,8 @@ inline void SortedAggExecStream::clearAccumulator()
 inline void SortedAggExecStream::updateAccumulator()
 {
     for (int i = 0; i < aggComputers.size(); ++i) {
-        aggComputers[i].updateAccumulator(prevTuple[i + groupByKeyCount],
+        aggComputers[i].updateAccumulator(
+            prevTuple[i + groupByKeyCount],
             inputTuple);
     }
 }
@@ -139,9 +140,10 @@ inline int SortedAggExecStream::compareGroupByKeys()
       refer to the same fields. Compare only the prefixes.
     */
     int ret =
-        (pInAccessor->getTupleDesc()).compareTuplesKey(prevTuple,
-                                                  inputTuple,
-                                                  groupByKeyCount);
+        (pInAccessor->getTupleDesc()).compareTuplesKey(
+            prevTuple,
+            inputTuple,
+            groupByKeyCount);
     return ret;
 }
 
@@ -154,7 +156,8 @@ inline void SortedAggExecStream::computeOutput()
     }
 
     for (i = 0; i < aggComputers.size(); i ++) {
-        aggComputers[i].computeOutput(outputTuple[i + groupByKeyCount],
+        aggComputers[i].computeOutput(
+            outputTuple[i + groupByKeyCount],
             prevTuple[i + groupByKeyCount]);
     }
 }

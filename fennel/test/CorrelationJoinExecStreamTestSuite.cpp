@@ -85,9 +85,10 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
 
     StairCaseExecStreamGenerator rampExpectedGenerator(
         1, paramsMockRight.nRows);
-    verifyOutput(*pOutputStream,
-                 paramsMockLeft.nRows * paramsMockRight.nRows,
-                 rampExpectedGenerator);
+    verifyOutput(
+        *pOutputStream,
+        paramsMockLeft.nRows * paramsMockRight.nRows,
+        rampExpectedGenerator);
 }
 
 // End CorrelationJoinExecStreamTestSuite.cpp

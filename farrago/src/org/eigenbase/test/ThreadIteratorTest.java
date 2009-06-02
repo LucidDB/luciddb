@@ -118,14 +118,16 @@ public class ThreadIteratorTest
     public void testEmpty()
     {
         Object [] empty = new Object[0];
-        assertEquals(new ArrayIterator(empty),
+        assertEquals(
+            new ArrayIterator(empty),
             empty);
     }
 
     public void testXyz()
     {
         String [] xyz = new String[] { "x", "y", "z" };
-        assertEquals(new ArrayIterator(xyz),
+        assertEquals(
+            new ArrayIterator(xyz),
             xyz);
     }
 

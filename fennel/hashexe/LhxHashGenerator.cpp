@@ -83,7 +83,9 @@ void LhxHashGenerator::init(uint levelInit)
 // gone.  Boris L. will be so disappointed.  I guess it will have to be
 // someone's science fair project to see if any of it was worthwhile.
 
-void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
+void LhxHashGenerator::hashOneBuffer(
+    uint &hashValue,
+    PConstBuffer pBuf,
     uint bufSize)
 {
     uint numValueBytes = sizeof(uint);

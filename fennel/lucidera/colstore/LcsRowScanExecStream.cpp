@@ -100,7 +100,8 @@ void LcsRowScanExecStream::prepareResidualFilters(
                         filter.hasResidualFilters = true;
 
                         filter.readerKeyProj.push_back(valueCols[j]);
-                        filter.inputKeyDesc.projectFrom(projDescriptor,
+                        filter.inputKeyDesc.projectFrom(
+                            projDescriptor,
                             filter.readerKeyProj);
                         filter.attrAccessor.compute(
                             filter.inputKeyDesc[0]);
@@ -278,7 +279,8 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
                 filterData->boundBuf.reset(
                     new FixedBuffer[inputAccessor.getCurrentByteCount()]);
 
-                memcpy(filterData->boundBuf.get(),
+                memcpy(
+                    filterData->boundBuf.get(),
                     pInAccessor->getConsumptionStart(),
                     inputAccessor.getCurrentByteCount());
 
@@ -676,8 +678,9 @@ void LcsRowScanExecStream::closeImpl()
     }
 }
 
-void LcsRowScanExecStream::buildOutputProj(TupleProjection &outputProj,
-                            LcsRowScanBaseExecStreamParams const &params)
+void LcsRowScanExecStream::buildOutputProj(
+    TupleProjection &outputProj,
+    LcsRowScanBaseExecStreamParams const &params)
 {
     LcsRowScanExecStreamParams const &rowScanParams =
         dynamic_cast<const LcsRowScanExecStreamParams&>(params);
