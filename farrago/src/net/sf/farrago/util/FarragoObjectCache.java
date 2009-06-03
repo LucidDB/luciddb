@@ -188,7 +188,8 @@ public class FarragoObjectCache
                             // new value is not stale-on-arrival?  Maybe
                             // only when trace is on?
                             success = true;
-                            tracer.finer("initialized new cache entry");
+                            tracer.finer("initialized new cache entry " +
+                                entry.getKey() + "=" + entry.getValue());
                         } finally {
                             // NOTE: an exception can leave a failed entry lying
                             // around.  It would be nice to get rid of it
@@ -382,6 +383,10 @@ public class FarragoObjectCache
 
     private void adjustMemoryUsage(long incBytes)
     {
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("cache size before discards = " + bytesUsed +
+                " increasing by " + incBytes);
+        }
         List<FarragoCacheEntry> discards;
 
         synchronized (mapKeyToEntry) {
@@ -415,7 +420,7 @@ public class FarragoObjectCache
         for (FarragoCacheEntry discard : discards) {
             discardEntry(discard);
         }
-        if (tracer.isLoggable(Level.FINE)) {
+        if (tracer.isLoggable(Level.FINER)) {
             tracer.finer("cache size after discards = " + bytesUsed);
         }
 
@@ -590,6 +595,17 @@ public class FarragoObjectCache
     {
         discardAll();
         assert (bytesUsed == 0);
+    }
+
+    public void dumpCache()
+    {
+        Iterator<Map.Entry<Object, FarragoCacheEntry>> it =
+            mapKeyToEntry.entryIterMulti();
+        while (it.hasNext()) {
+            Map.Entry<Object, FarragoCacheEntry> entry = it.next();
+            tracer.fine("objectCache[" + entry.getKey().getClass().getName() +
+                "," + entry.getKey() + "]=" + entry.getValue().getValue());
+        }
     }
 
     //~ Inner Interfaces -------------------------------------------------------

@@ -76,7 +76,7 @@ public class FarragoDbSession
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger tracer =
+    protected static final Logger tracer =
         FarragoTrace.getDatabaseSessionTracer();
 
     private static final Logger sqlTimingTracer =
