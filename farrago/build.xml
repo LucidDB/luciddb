@@ -266,7 +266,7 @@ ${farrago.test.jvmargs}
 
   <!-- create rmi stubs and skeletons -->
   <target name="rmi" depends="compile">
-    <rmic base="${farrago.classes.dir}"
+    <rmic base="${farrago.classes.dir}" compiler="xnew"
       classpathref="farrago.build.classpath">
       <include name="**/server/FarragoRJConnectionServer.class" />
       <include name="**/server/FarragoRJMedDataWrapperServer.class" />
