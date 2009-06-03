@@ -212,7 +212,8 @@ public class DateTimeUtil
                 int ms =
                     (int) Math.round(
                         num.longValue()
-                        * Math.pow(10,
+                        * Math.pow(
+                            10,
                             3 - secFraction.length()));
                 cal.add(Calendar.MILLISECOND, ms);
             }

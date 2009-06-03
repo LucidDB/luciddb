@@ -478,7 +478,8 @@ uint LbmEntry::getRowCount(
         lastZeroRIDs = 0;
     } else {
         rowCount =
-            getCompressedRowCount(pSegDescStart, pSegDescEnd,
+            getCompressedRowCount(
+                pSegDescStart, pSegDescEnd,
                 lastSegDescByte, lastZeroRIDs);
     }
     return rowCount;
@@ -505,7 +506,8 @@ uint LbmEntry::getRowCount(TupleData const &inputTuple)
             (PBuffer)(inputTuple[inputTuple.size() - 2].pData +
                       inputTuple[inputTuple.size() - 2].cbData);
         rowCount =
-            getCompressedRowCount(pDescStart, pDescEnd,
+            getCompressedRowCount(
+                pDescStart, pDescEnd,
                 lastSegDescByte, lastZeroRIDs);
     }
     return rowCount;
@@ -617,9 +619,10 @@ int LbmEntry::compareEntry(
     TupleData const &inputTuple,
     TupleDescriptor const &tupleDesc) const
 {
-    return tupleDesc.compareTuplesKey(entryTuple,
-                                      inputTuple,
-                                      entryTuple.size() - 3);
+    return tupleDesc.compareTuplesKey(
+        entryTuple,
+        inputTuple,
+        entryTuple.size() - 3);
 }
 
 
@@ -987,7 +990,9 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
          * Copy the segment descriptors only if the tuples are not single
          * bitmaps. Single bitmaps do not have segment descriptors.
          */
-        memcpy(pSegDescEnd, inputTuple[inputTuple.size() - 2].pData,
+        memcpy(
+            pSegDescEnd,
+            inputTuple[inputTuple.size() - 2].pData,
             inputSegDescLength);
         pSegDescEnd += inputSegDescLength;
         currentEntrySize += inputSegDescLength;
@@ -1004,9 +1009,10 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * segment grows backwards.
      */
     pSegEnd -= inputSegLength;
-    memcpy(pSegEnd,
-           inputTuple[inputTuple.size() - 1].pData,
-           inputSegLength);
+    memcpy(
+        pSegEnd,
+        inputTuple[inputTuple.size() - 1].pData,
+        inputSegLength);
     currentEntrySize += inputSegLength;
     validateEntrySize();
     return true;
@@ -1834,20 +1840,22 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
             PBuffer segDescEnd = segDesc + inputTuple[tupleSize - 2].cbData;
 
             tupleTrace <<
-                dumpSegRID(segDesc,
-                           segDescEnd,
-                           seg,
-                           keyTrace.str(),
-                           inputStartRID);
+                dumpSegRID(
+                    segDesc,
+                    segDescEnd,
+                    seg,
+                    keyTrace.str(),
+                    inputStartRID);
         } else {
             /*
              * An entry with a single bitmap segement.
              */
             tupleTrace <<
-                dumpBitmapRID(seg,
-                              inputTuple[tupleSize - 1].cbData,
-                              keyTrace.str(),
-                              inputStartRID);
+                dumpBitmapRID(
+                    seg,
+                    inputTuple[tupleSize - 1].cbData,
+                    keyTrace.str(),
+                    inputStartRID);
         }
     }
 

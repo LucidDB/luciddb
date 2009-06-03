@@ -699,7 +699,8 @@ public class FarragoJdbcTest
             throwable = ex;
         }
 
-        checkThrowable("parameter not set",
+        checkThrowable(
+            "parameter not set",
             ".*Value is missing.*",
             throwable);
 
@@ -712,7 +713,8 @@ public class FarragoJdbcTest
             throwable = ex;
         }
 
-        checkThrowable("parameter not set",
+        checkThrowable(
+            "parameter not set",
             ".*Value is missing.*",
             throwable);
     }
@@ -881,7 +883,8 @@ public class FarragoJdbcTest
     private void checkSetBigDecimal()
         throws Exception
     {
-        checkSet(TestJavaType.BigDecimal, TestSqlType.all,
+        checkSet(
+            TestJavaType.BigDecimal, TestSqlType.all,
             bigDecimalValue);
         checkResults(TestJavaType.BigDecimal);
     }
@@ -1980,7 +1983,8 @@ public class FarragoJdbcTest
                 assertEquals(
                     maxInt,
                     resultSet.getInt(BIGINT));
-                assertEquals(-2147483648,
+                assertEquals(
+                    -2147483648,
                     resultSet.getInt(REAL));
                 assertEquals(
                     maxInt,
@@ -2824,7 +2828,8 @@ public class FarragoJdbcTest
                 assertEquals(
                     1,
                     resultSet.getByte(1));
-                assertEquals(-128,
+                assertEquals(
+                    -128,
                     resultSet.getByte(2));
                 break;
             case 102:
@@ -2839,7 +2844,8 @@ public class FarragoJdbcTest
                 assertEquals(
                     3,
                     resultSet.getInt(1));
-                assertEquals(-234234,
+                assertEquals(
+                    -234234,
                     resultSet.getInt(2));
                 break;
             case 104:
@@ -2871,7 +2877,8 @@ public class FarragoJdbcTest
                     0.0001);
                 break;
             case 107:
-                assertEquals(new BigDecimal(2.0),
+                assertEquals(
+                    new BigDecimal(2.0),
                     resultSet.getBigDecimal(1));
                 assertEquals(
                     new BigDecimal(88.23432432),

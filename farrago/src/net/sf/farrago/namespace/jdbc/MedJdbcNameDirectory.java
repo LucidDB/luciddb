@@ -523,7 +523,8 @@ public class MedJdbcNameDirectory
                                 MedJdbcDataServer.PROP_SCHEMA_NAME,
                                 schemaName);
                         }
-                        props.put(MedJdbcDataServer.PROP_TABLE_NAME,
+                        props.put(
+                            MedJdbcDataServer.PROP_TABLE_NAME,
                             tableName);
 
                         // table mapping

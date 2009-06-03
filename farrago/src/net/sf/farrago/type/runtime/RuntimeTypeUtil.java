@@ -160,7 +160,8 @@ public class RuntimeTypeUtil
         }
     }
 
-    private static String sqlSimilarRewrite(String sqlPattern,
+    private static String sqlSimilarRewrite(
+        String sqlPattern,
         char escapeChar)
     {
         boolean insideCharacterEnumeration = false;

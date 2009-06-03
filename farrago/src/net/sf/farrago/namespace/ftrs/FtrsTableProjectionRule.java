@@ -172,7 +172,8 @@ class FtrsTableProjectionRule
                     if (projectedScan.getTraits().
                         getTrait(trait.getTraitDef()) != null)
                     {
-                        projectedScan.getTraits().setTrait(trait.getTraitDef(),
+                        projectedScan.getTraits().setTrait(
+                            trait.getTraitDef(),
                             trait);
                     } else {
                         projectedScan.getTraits().addTrait(trait);
@@ -197,9 +198,10 @@ class FtrsTableProjectionRule
                 for (int i = 0; i < projectedScan.getTraits().size(); i++) {
                     RelTrait trait = projectedScan.getTraits().getTrait(i);
                     if (trait.getTraitDef() !=
-                        CallingConventionTraitDef.instance &&
-                        null == modRelNode.getTraits().
-                        getTrait(trait.getTraitDef())) {
+                        CallingConventionTraitDef.instance
+                        && null == modRelNode.getTraits().getTrait(
+                            trait.getTraitDef()))
+                    {
                         modRelNode.getTraits().addTrait(trait);
                     }
                 }
@@ -208,11 +210,15 @@ class FtrsTableProjectionRule
                 // AbstractConverter to be created which causes problems
                 // because the subsets will be merged by the transformTo
                 // call at the end of this method.
-                if (!equalTraitSets(origProject.getTraits(),
-                    modRelNode.getTraits()) &&
-                    !projectedScan.getTraits().equals(modRelNode.getTraits())) {
+                if (!equalTraitSets(
+                    origProject.getTraits(),
+                    modRelNode.getTraits())
+                    && !projectedScan.getTraits().equals(
+                        modRelNode.getTraits()))
+                {
                     modRelNode =
-                        call.getPlanner().changeTraits(modRelNode,
+                        call.getPlanner().changeTraits(
+                            modRelNode,
                             projectedScan.getTraits());
                 }
             }

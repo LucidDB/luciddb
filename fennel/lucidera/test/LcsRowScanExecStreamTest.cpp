@@ -63,7 +63,10 @@ protected:
     /**
      * Serially loads nClusters, each cluster containing nCols and nRows
      */
-    void loadClusters(uint nRows, uint nCols, uint nClusters,
+    void loadClusters(
+        uint nRows,
+        uint nCols,
+        uint nClusters,
         bool compressed);
 
     /**
@@ -74,9 +77,12 @@ protected:
      *      column2 - colStart+2, colStart+3, ..., colStart+nRows+1
      *      ...
      */
-    void loadOneCluster(uint nRows, uint nCols, int colStart,
-                        BTreeDescriptor &bTreeDescriptor,
-                        bool compressed);
+    void loadOneCluster(
+        uint nRows,
+        uint nCols,
+        int colStart,
+        BTreeDescriptor &bTreeDescriptor,
+        bool compressed);
 
     /**
      * Reads rows from clusters.  Assumes clusters have been loaded by
@@ -96,9 +102,13 @@ protected:
      * normally should be the same as nRows unless skipping rows or
      * testing exception cases
      */
-    void testScanCols(uint nRows, uint nCols, uint nClusters,
-                      TupleProjection proj, uint skipRows,
-                      uint expectedNumRows);
+    void testScanCols(
+        uint nRows,
+        uint nCols,
+        uint nClusters,
+        TupleProjection proj,
+        uint skipRows,
+        uint expectedNumRows);
 
     /**
      * Filter rows from clusters.  Assumes clusters have been loaded by
@@ -120,15 +130,24 @@ protected:
      *
      * @param compressed testing compressed bitmap optimization
      */
-    void testFilterCols(uint nRows, uint nCols, uint nClusters,
-                        TupleProjection proj, uint skipRows,
-                        uint expectedNumRows, bool compressed);
-
+    void testFilterCols(
+        uint nRows,
+        uint nCols,
+        uint nClusters,
+        TupleProjection proj,
+        uint skipRows,
+        uint expectedNumRows,
+        bool compressed);
 
     void setSearchKey(
-          char lowerDirective, char upperDirective, uint64_t lowerVal,
-          uint64_t upperVal, PBuffer inputBuf, uint &offset,
-          TupleAccessor &inputTupleAccessor, TupleData &inputTupleData);
+        char lowerDirective,
+        char upperDirective,
+        uint64_t lowerVal,
+        uint64_t upperVal,
+        PBuffer inputBuf,
+        uint &offset,
+        TupleAccessor &inputTupleAccessor,
+        TupleData &inputTupleData);
 
     /**
      * Sample rows from clusters.  Assumes clusters have been loaded by
@@ -159,10 +178,18 @@ protected:
      * normally should be the same as nRows unless skipping rows or
      * testing exception cases
      */
-    void testSampleScanCols(uint nRows, uint nRowsActual, uint nCols,
-                            uint nClusters, TupleProjection proj, uint skipRows,
-                            TableSamplingMode mode, float rate,
-                            int seed, uint clumps, uint expectedNumRows);
+    void testSampleScanCols(
+        uint nRows,
+        uint nRowsActual,
+        uint nCols,
+        uint nClusters,
+        TupleProjection proj,
+        uint skipRows,
+        TableSamplingMode mode,
+        float rate,
+        int seed,
+        uint clumps,
+        uint expectedNumRows);
 
     /**
      * Generate bitmaps to pass as input into row scan exec stream
@@ -210,16 +237,18 @@ public:
     void testSystemSampling();
 };
 
-void LcsRowScanExecStreamTest::loadClusters(uint nRows, uint nCols,
-                                            uint nClusters,
-                                            bool compressed)
+void LcsRowScanExecStreamTest::loadClusters(
+    uint nRows,
+    uint nCols,
+    uint nClusters,
+    bool compressed)
 {
     for (uint i = 0; i < nClusters; i++) {
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
         bTreeClusters.push_back(pBTreeDesc);
-        loadOneCluster(nRows, nCols, i * nCols, *(bTreeClusters[i]),
-            compressed);
+        loadOneCluster(
+            nRows, nCols, i * nCols, *(bTreeClusters[i]), compressed);
         resetExecStreamTest();
     }
 }
@@ -243,9 +272,10 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     for (uint i = 0; i < nCols; i++) {
         SharedInt64ColumnGenerator col =
             SharedInt64ColumnGenerator(
-            compressed ?
-            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS,
-            i + colStart,500) : new SeqColumnGenerator(i + colStart));
+            compressed
+            ? (Int64ColumnGenerator *) new MixedDupColumnGenerator(
+                NDUPS, i + colStart, 500)
+            : new SeqColumnGenerator(i + colStart));
         columnGenerators.push_back(col);
     }
     mockParams.pGenerator.reset(
@@ -310,11 +340,13 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
-                                            uint nClusters,
-                                            TupleProjection proj,
-                                            uint skipRows,
-                                            uint expectedNumRows)
+void LcsRowScanExecStreamTest::testScanCols(
+    uint nRows,
+    uint nCols,
+    uint nClusters,
+    TupleProjection proj,
+    uint skipRows,
+    uint expectedNumRows)
 {
     // setup input rid stream
 
@@ -394,8 +426,10 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
     for (uint i = 0; i < proj.size(); i++) {
         SharedInt64ColumnGenerator col =
-            SharedInt64ColumnGenerator(new SeqColumnGenerator(proj[i],
-                                                              skipRows));
+            SharedInt64ColumnGenerator(
+                new SeqColumnGenerator(
+                    proj[i],
+                    skipRows));
         columnGenerators.push_back(col);
     }
 
@@ -735,12 +769,14 @@ void LcsRowScanExecStreamTest::setSearchKey(
     offset += inputTupleAccessor.getCurrentByteCount();
 }
 
-void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
-                                            uint nClusters,
-                                            TupleProjection proj,
-                                            uint skipRows,
-                                            uint expectedNumRows,
-                                            bool compressed)
+void LcsRowScanExecStreamTest::testFilterCols(
+    uint nRows,
+    uint nCols,
+    uint nClusters,
+    TupleProjection proj,
+    uint skipRows,
+    uint expectedNumRows,
+    bool compressed)
 {
     // setup input rid stream
 
@@ -930,14 +966,18 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
 }
 
 
-void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
-                                                  uint nCols, uint nClusters,
-                                                  TupleProjection proj,
-                                                  uint skipRows,
-                                                  TableSamplingMode mode,
-                                                  float rate, int seed,
-                                                  uint clumps,
-                                                  uint expectedNumRows)
+void LcsRowScanExecStreamTest::testSampleScanCols(
+    uint nRows,
+    uint nRowsActual,
+    uint nCols,
+    uint nClusters,
+    TupleProjection proj,
+    uint skipRows,
+    TableSamplingMode mode,
+    float rate,
+    int seed,
+    uint clumps,
+    uint expectedNumRows)
 {
     // setup input rid stream
 
@@ -1029,8 +1069,10 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
     for (uint i = 0; i < proj.size(); i++) {
         SharedInt64ColumnGenerator col =
-            SharedInt64ColumnGenerator(new SeqColumnGenerator(proj[i],
-                                                              skipRows));
+            SharedInt64ColumnGenerator(
+                new SeqColumnGenerator(
+                    proj[i],
+                    skipRows));
         columnGenerators.push_back(col);
     }
 

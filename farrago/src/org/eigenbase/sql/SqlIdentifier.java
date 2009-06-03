@@ -101,7 +101,8 @@ public class SqlIdentifier
         SqlCollation collation,
         SqlParserPos pos)
     {
-        this(new String[] { name },
+        this(
+            new String[] { name },
             collation,
             pos,
             null);
@@ -114,7 +115,8 @@ public class SqlIdentifier
         String name,
         SqlParserPos pos)
     {
-        this(new String[] { name },
+        this(
+            new String[] { name },
             null,
             pos,
             null);

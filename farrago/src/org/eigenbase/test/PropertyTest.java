@@ -82,10 +82,8 @@ public class PropertyTest
 
         int prev = props.intPropNoDefault.set(-56);
         Assert.assertEquals(0, prev);
-        Assert.assertEquals(-56,
-            props.intPropNoDefault.get());
-        Assert.assertEquals(-56,
-            props.intPropNoDefault.get(17));
+        Assert.assertEquals(-56, props.intPropNoDefault.get());
+        Assert.assertEquals(-56, props.intPropNoDefault.get(17));
 
         // Second time set returns the previous value.
         prev = props.intPropNoDefault.set(12345);
@@ -178,10 +176,8 @@ public class PropertyTest
         // prev is "no value" == 0; set value is limited
         int prev = props.intPropLimitNoDefault.set(-100);
         assertEquals(0, prev);
-        assertEquals(-5,
-            props.intPropLimitNoDefault.get());
-        assertEquals(-5,
-            props.intPropLimitNoDefault.get(0));
+        assertEquals(-5, props.intPropLimitNoDefault.get());
+        assertEquals(-5, props.intPropLimitNoDefault.get(0));
 
         // prev is "no value" == 1; set value is limited
         prev = props.intPropLimitNoDefault2.set(100);
@@ -210,16 +206,11 @@ public class PropertyTest
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals(-3.14,
-            props.doubleProp.get());
-        Assert.assertEquals(
-            .789,
-            props.doubleProp.get(.789));
+        Assert.assertEquals(-3.14, props.doubleProp.get());
+        Assert.assertEquals(.789, props.doubleProp.get(.789));
 
         double prev = props.doubleProp.set(.8);
-        Assert.assertEquals(
-            .8,
-            props.doubleProp.get());
+        Assert.assertEquals(.8, props.doubleProp.get());
         Assert.assertEquals(-3.14, prev);
 
         prev = props.doubleProp.set(.0);
@@ -240,10 +231,8 @@ public class PropertyTest
 
         double prev = props.doublePropNoDefault.set(-.56);
         Assert.assertEquals(.0, prev);
-        Assert.assertEquals(-.56,
-            props.doublePropNoDefault.get());
-        Assert.assertEquals(-.56,
-            props.doublePropNoDefault.get(.17));
+        Assert.assertEquals(-.56, props.doublePropNoDefault.get());
+        Assert.assertEquals(-.56, props.doublePropNoDefault.get(.17));
 
         // Second time set returns the previous value.
         prev = props.doublePropNoDefault.set(.12345);
@@ -274,13 +263,11 @@ public class PropertyTest
         assertEquals(
             Math.PI,
             props.doublePropLimit.get(5.1));
-        assertEquals(-Math.PI,
-            props.doublePropLimit.get(-4.0));
+        assertEquals(-Math.PI, props.doublePropLimit.get(-4.0));
         assertEquals(
             Math.PI,
             props.doublePropLimit.get(Double.MAX_VALUE));
-        assertEquals(-Math.PI,
-            props.doublePropLimit.get(-Double.MAX_VALUE));
+        assertEquals(-Math.PI, props.doublePropLimit.get(-Double.MAX_VALUE));
 
         double prev = props.doublePropLimit.set(2.5);
         assertEquals(
@@ -295,8 +282,7 @@ public class PropertyTest
         assertEquals(2.5, prev);
 
         prev = props.doublePropLimit.set(-10.0);
-        assertEquals(-Math.PI,
-            props.doublePropLimit.get());
+        assertEquals(-Math.PI, props.doublePropLimit.get());
         assertEquals(Math.PI, prev);
 
         // set string isn't limited until read
@@ -306,8 +292,7 @@ public class PropertyTest
             props.doublePropLimit.get());
 
         props.doublePropLimit.setString("-20.2");
-        assertEquals(-Math.PI,
-            props.doublePropLimit.get());
+        assertEquals(-Math.PI, props.doublePropLimit.get());
 
         // Setting null is not OK.
         try {
@@ -332,10 +317,8 @@ public class PropertyTest
         // prev is "no value" == 0.0; set value is limited
         double prev = props.doublePropLimitNoDefault.set(-100.0);
         assertEquals(0.0, prev);
-        assertEquals(-1.0,
-            props.doublePropLimitNoDefault.get());
-        assertEquals(-1.0,
-            props.doublePropLimitNoDefault.get(0));
+        assertEquals(-1.0, props.doublePropLimitNoDefault.get());
+        assertEquals(-1.0, props.doublePropLimitNoDefault.get(0));
 
         // prev is "no value" == 1.0; set value is limited
         prev = props.doublePropLimitNoDefault2.set(100);
@@ -612,8 +595,7 @@ public class PropertyTest
                 path,
                 false);
 
-        assertTrue("Check property value NOT false",
-            (!boolProp.get()));
+        assertTrue("Check property value NOT false", !boolProp.get());
 
         // set via the 'set' method
         final boolean prevBoolean = boolProp.set(true);
@@ -624,8 +606,7 @@ public class PropertyTest
         assertEquals("true", prevObject);
 
         String v = props.getProperty(path);
-        assertTrue("Check property value is null",
-            (v != null));
+        assertTrue("Check property value is null", v != null);
         assertTrue(
             "Check property value is true",
             (!Boolean.valueOf(v).booleanValue()));
@@ -661,7 +642,8 @@ public class PropertyTest
         String trueStr = "true";
         props.setProperty(path, trueStr);
 
-        assertTrue("Check trigger was NOT called",
+        assertTrue(
+            "Check trigger was NOT called",
             state.triggerCalled);
         assertTrue(
             "Check trigger value was null",
@@ -691,7 +673,8 @@ public class PropertyTest
         props.setProperty(path, "false");
 
         String v = props.getProperty(path);
-        assertTrue("Check property value is null",
+        assertTrue(
+            "Check property value is null",
             (v != null));
         assertTrue(
             "Check property value is true",
@@ -819,13 +802,15 @@ public class PropertyTest
 
         String falseStr = "false";
         props.setProperty(path, falseStr);
-        assertTrue("Check trigger was called",
+        assertTrue(
+            "Check trigger was called",
             (state.callCounter == 0));
 
         String trueStr = "true";
         props.setProperty(path, trueStr);
 
-        assertTrue("Check trigger was NOT called",
+        assertTrue(
+            "Check trigger was NOT called",
             (state.callCounter != 0));
         assertTrue(
             "Check triggers was NOT called correct number of times",
@@ -888,7 +873,8 @@ public class PropertyTest
         state.tertiaryTwo = 0;
 
         props.setProperty(path, falseStr);
-        assertTrue("Check trigger was NOT called",
+        assertTrue(
+            "Check trigger was NOT called",
             (state.callCounter != 0));
         assertTrue(
             "Check triggers was NOT called correct number of times",
@@ -941,14 +927,16 @@ public class PropertyTest
                 path,
                 -1);
 
-        assertTrue("Check property value NOT false",
+        assertTrue(
+            "Check property value NOT false",
             (intProp.get() == -1));
 
         // now explicitly set the property
         props.setProperty(path, "-1");
 
         String v = props.getProperty(path);
-        assertTrue("Check property value is null",
+        assertTrue(
+            "Check property value is null",
             (v != null));
 
         assertTrue(

@@ -92,7 +92,8 @@ public class TableAccessMap
         // want to retain any rel references after preparation completes.
 
         accessMap = new HashMap<List<String>, Mode>();
-        RelOptUtil.go(new TableRelVisitor(),
+        RelOptUtil.go(
+            new TableRelVisitor(),
             rel);
     }
 

@@ -190,7 +190,8 @@ bool LcsRowScanBaseExecStream::readColVals(
 
             attrAccessors[idx].loadValue(tupleData[idx], curValue);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
-                if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
+                if (!pScan->clusterCols[iCluCol].applyFilters(
+                    projDescriptor,
                     tupleData))
                 {
                     return false;
@@ -201,8 +202,9 @@ bool LcsRowScanBaseExecStream::readColVals(
     return true;
 }
 
-void LcsRowScanBaseExecStream::buildOutputProj(TupleProjection &outputProj,
-                            LcsRowScanBaseExecStreamParams const &params)
+void LcsRowScanBaseExecStream::buildOutputProj(
+    TupleProjection &outputProj,
+    LcsRowScanBaseExecStreamParams const &params)
 {
     /*
      * Copy the projection

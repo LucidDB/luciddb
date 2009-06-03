@@ -67,7 +67,10 @@ void LhxPartitionWriter::open(
     uint savedNumCachePages = hashInfo.numCachePages;
     hashInfo.numCachePages = numWriterCachePages;
 
-    hashTable.init(partitionLevel, hashInfo, aggList,
+    hashTable.init(
+        partitionLevel,
+        hashInfo,
+        aggList,
         destPartition->inputIndex);
     hashTableReader.init(&hashTable, hashInfo, destPartition->inputIndex);
 
@@ -403,8 +406,11 @@ void LhxPartitionInfo::open(
          */
         joinFilterList.push_back(shared_ptr<dynamic_bitset<> >());
 
-        writerList[i]->open(destPartitionList[i], *hashInfo, aggList,
-                            numWriterCachePages);
+        writerList[i]->open(
+            destPartitionList[i],
+            *hashInfo,
+            aggList,
+            numWriterCachePages);
         filteredRowCountList[i] = 0;
     }
 
@@ -455,7 +461,8 @@ void LhxPlan::init(
         filteredRows.push_back(0);
     }
 
-    init(parentPlanInit, partitionLevelInit, partitionsInit,
+    init(
+        parentPlanInit, partitionLevelInit, partitionsInit,
         subPartStatsInit, joinFilterInit, filteredRows,
         enableSubPartStat, false);
 }
@@ -664,7 +671,8 @@ LhxPartitionState LhxPlan::generatePartitions(
         while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
             writeToPartition = false;
 
-            hashKey = hashGen.hash(hashTableTuple,
+            hashKey = hashGen.hash(
+                hashTableTuple,
                 hashInfo.keyProj[curInputIndex],
                 hashInfo.isKeyColVarChar[curInputIndex]);
 
@@ -679,7 +687,8 @@ LhxPartitionState LhxPlan::generatePartitions(
                     writeToPartition = true;
                 } else {
                     prevHashKey =
-                        hashGenPrev.hash(hashTableTuple,
+                        hashGenPrev.hash(
+                            hashTableTuple,
                             hashInfo.keyProj[curInputIndex],
                             hashInfo.isKeyColVarChar[curInputIndex]);
                     if (joinFilter &&
@@ -699,7 +708,8 @@ LhxPartitionState LhxPlan::generatePartitions(
             if (writeToPartition) {
                 writerList[childPartIndex]->marshalTuple(hashTableTuple);
 
-                nextHashKey = hashGenNext.hash(hashTableTuple,
+                nextHashKey = hashGenNext.hash(
+                    hashTableTuple,
                     hashInfo.keyProj[curInputIndex],
                     hashInfo.isKeyColVarChar[curInputIndex]);
 
@@ -801,13 +811,15 @@ LhxPartitionState LhxPlan::generatePartitions(
 
         writeToPartition = false;
 
-        hashKey = hashGen.hash(inputTuple,
+        hashKey = hashGen.hash(
+            inputTuple,
             hashInfo.keyProj[curInputIndex],
             hashInfo.isKeyColVarChar[curInputIndex]);
 
         childPartIndex = calculateChildIndex(hashKey, curInputIndex);
 
-        nextHashKey = hashGenNext.hash(inputTuple,
+        nextHashKey = hashGenNext.hash(
+            inputTuple,
             hashInfo.keyProj[curInputIndex],
             hashInfo.isKeyColVarChar[curInputIndex]);
 
@@ -828,7 +840,8 @@ LhxPartitionState LhxPlan::generatePartitions(
                         writeToPartition = true;
                     } else {
                         prevHashKey =
-                            hashGenPrev.hash(inputTuple,
+                            hashGenPrev.hash(
+                                inputTuple,
                                 hashInfo.keyProj[curInputIndex],
                                 hashInfo.isKeyColVarChar[curInputIndex]);
                         if (joinFilter &&
@@ -887,7 +900,8 @@ LhxPartitionState LhxPlan::generatePartitions(
     }
 }
 
-void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
+void LhxPlan::createChildren(
+    LhxHashInfo const &hashInfo,
     bool enableSubPartStat)
 {
     LhxHashGenerator hashGen;
@@ -932,7 +946,9 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
             }
 
             childNum =
-                hashGen.hash(outputTuple, hashInfo.keyProj[j],
+                hashGen.hash(
+                    outputTuple,
+                    hashInfo.keyProj[j],
                     hashInfo.isKeyColVarChar[j]) % LhxChildPartCount;
 
             writerList[childNum].marshalTuple(outputTuple);
@@ -977,8 +993,10 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
     }
 }
 
-void LhxPlan::createChildren(LhxPartitionInfo &partInfo,
-    bool enableSubPartStat, bool enableSwing)
+void LhxPlan::createChildren(
+    LhxPartitionInfo &partInfo,
+    bool enableSubPartStat,
+    bool enableSwing)
 {
     uint i, j;
 

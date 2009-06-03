@@ -152,8 +152,9 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
         switch (rc) {
         case EXECRC_EOS:
             // find a consumer that is not in EOS state
-            if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
-                                  EXECBUF_EOS)) {
+            if (!findNextConsumer(
+                graphImpl, graphRep, stream, edge, current, EXECBUF_EOS))
+            {
                 return graphImpl.getBufAccessorFromEdge(edge);
             }
             // if all were in eos, just use the last consumer
@@ -161,8 +162,9 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
         case EXECRC_BUF_OVERFLOW:
             // find a consumer that is not in underflow state; i.e., not
             // waiting on this producer to continue execution
-            if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
-                                  EXECBUF_UNDERFLOW)) {
+            if (!findNextConsumer(
+                graphImpl, graphRep, stream, edge, current, EXECBUF_UNDERFLOW))
+            {
                 return graphImpl.getBufAccessorFromEdge(edge);
             }
             break;

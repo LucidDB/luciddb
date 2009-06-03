@@ -686,7 +686,8 @@ public class FarragoRexToOJTranslator
             lhsExp = varResult;
         } else {
             lhsExp =
-                new FieldAccess(varResult,
+                new FieldAccess(
+                    varResult,
                     NullablePrimitive.VALUE_FIELD_NAME);
         }
         if (!SqlTypeUtil.isJavaPrimitive(retType) || retType.isNullable()) {

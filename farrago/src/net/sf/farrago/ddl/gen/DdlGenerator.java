@@ -300,7 +300,8 @@ public abstract class DdlGenerator
                 JmiAssocMapping.COPY);
 
             JmiDependencyGraph dependencyGraph =
-                new JmiDependencyGraph((Collection) exportList,
+                new JmiDependencyGraph(
+                    (Collection) exportList,
                     transform);
 
             if (debug) {

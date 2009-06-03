@@ -389,8 +389,8 @@ void LcsClusterAppendExecStream::startNewBlock()
 
     // reset Hashes
     for (uint i = 0; i < numColumns; i++) {
-        hash[i].init(hashBlock[i],
-            lcsBlockBuilder, colTupleDesc[i], i, blockSize);
+        hash[i].init(
+            hashBlock[i], lcsBlockBuilder, colTupleDesc[i], i, blockSize);
     }
 
     // reset row count

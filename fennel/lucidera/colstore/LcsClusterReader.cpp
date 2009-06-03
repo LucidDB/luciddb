@@ -182,8 +182,8 @@ bool LcsClusterReader::searchForRid(LcsRid rid)
 {
     bTreeTupleData[0].pData = (PConstBuffer) &rid;
     // position on greatest lower bound of key
-    bTreeReader->searchForKey(bTreeTupleData, DUP_SEEK_BEGIN,
-                                           false);
+    bTreeReader->searchForKey(
+        bTreeTupleData, DUP_SEEK_BEGIN, false);
     if (bTreeReader->isSingular()) {
         return false;
     }

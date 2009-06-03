@@ -103,12 +103,16 @@ class FENNEL_HASHEXE_EXPORT LhxPartitionWriter
     TupleData partialAggTuple;
 
 public:
-    void open(SharedLhxPartition destPartitionInit,
+    void open(
+        SharedLhxPartition destPartitionInit,
         LhxHashInfo const &hashInfo);
-    void open(SharedLhxPartition destPartitionInit,
+
+    void open(
+        SharedLhxPartition destPartitionInit,
         LhxHashInfo &hashInfo,
         AggComputerList *aggList,
         uint numWriterCachePages);
+
     inline void allocateResources();
     inline void releaseResources();
     void marshalTuple(TupleData const &inputTuple);
@@ -150,8 +154,10 @@ class FENNEL_HASHEXE_EXPORT LhxPartitionReader
     SharedExecStreamBufAccessor streamBufAccessor;
 
 public:
-    void open(SharedLhxPartition srcPartition,
-              LhxHashInfo const &hashInfo);
+    void open(
+        SharedLhxPartition srcPartition,
+        LhxHashInfo const &hashInfo);
+
     bool isTupleConsumptionPending();
     bool demandData();
     void unmarshalTuple(TupleData &outputTuple);
@@ -391,7 +397,9 @@ public:
     /**
      * Create child plan from partitions provided via partInfo.
      */
-    void createChildren(LhxPartitionInfo &partInfo, bool enableSubPartStat,
+    void createChildren(
+        LhxPartitionInfo &partInfo,
+        bool enableSubPartStat,
         bool enableSwing);
 
     /**

@@ -176,13 +176,15 @@ public class UtilTest
         byte [] bytes1 = { 3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
         assertEquals(
             "ID$0$_3__c_6_17__21__17__2d__15__7f__6cd9__fffd_",
-            Util.toJavaId(new String(bytes1, "EUC-JP"),
+            Util.toJavaId(
+                new String(bytes1, "EUC-JP"),
                 0));
         byte [] bytes2 =
         { 64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
         assertEquals(
             "ID$0$_30c__3617__2117__2d15__7fde__a48f_",
-            Util.toJavaId(new String(bytes1, "UTF-16"),
+            Util.toJavaId(
+                new String(bytes1, "UTF-16"),
                 0));
     }
 
@@ -516,7 +518,8 @@ public class UtilTest
             "CET1CEST1,M3.5.0/2,M10.5.0/3",
             Util.toPosix(TimeZone.getTimeZone("Europe/Paris"), true));
 
-        assertEquals("UTC0",
+        assertEquals(
+            "UTC0",
             Util.toPosix(TimeZone.getTimeZone("UTC"), true));
     }
 

@@ -97,10 +97,12 @@ public class DmvTransformXmlReader
                 Node node = nodeList.item(i);
                 String nodeName = node.getNodeName();
                 if (nodeName.equals(ELEMENT_SET_ALL_BY_AGGREGATION)) {
-                    setAllByAggregation((Element) node,
+                    setAllByAggregation(
+                        (Element) node,
                         transform);
                 } else if (nodeName.equals(ELEMENT_SET_BY_REF_ASSOC)) {
-                    setByRefAssoc((Element) node,
+                    setByRefAssoc(
+                        (Element) node,
                         transform);
                 }
             }

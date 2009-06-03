@@ -212,7 +212,8 @@ public abstract class MedAbstractFennelProjectionRule
                 // register projectedScan == mergedProjectedScan
                 // so mergedProjectedScan will have a RelSet later on
                 projectedScan =
-                    planner.ensureRegistered(mergedProjectedScan,
+                    planner.ensureRegistered(
+                        mergedProjectedScan,
                         projectedScan);
             }
             scanRel =

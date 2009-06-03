@@ -137,7 +137,8 @@ public class AbstractConverter
             final RelSubset converterSubset = planner.getSubset(converter);
             final RelNode child = converter.getChild();
             RelNode converted =
-                planner.changeTraitsUsingConverters(child,
+                planner.changeTraitsUsingConverters(
+                    child,
                     converter.traits);
             if (converted != null) {
                 call.transformTo(converted);

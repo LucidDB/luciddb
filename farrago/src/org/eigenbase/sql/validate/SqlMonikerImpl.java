@@ -61,7 +61,8 @@ public class SqlMonikerImpl
      */
     public SqlMonikerImpl(String name, SqlMonikerType type)
     {
-        this(new String[] { name },
+        this(
+            new String[] { name },
             type);
     }
 

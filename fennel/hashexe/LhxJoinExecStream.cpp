@@ -102,7 +102,9 @@ void LhxJoinExecStream::prepare(
      * Calculate the number of blocks required to perform the join, as given by
      * the optimizer, completely in memory.
      */
-    hashTable.calculateSize(hashInfo, DefaultBuildInputIndex,
+    hashTable.calculateSize(
+        hashInfo,
+        DefaultBuildInputIndex,
         numBlocksHashTable);
 
     TupleDescriptor outputDesc;
@@ -197,8 +199,15 @@ void LhxJoinExecStream::open(bool restart)
      * No input join filter for root plan.
      */
     rootPlan =  SharedLhxPlan(new LhxPlan());
-    rootPlan->init(WeakLhxPlan(), partitionLevel, partitionList, subPartStats,
-        joinFilterInit, filteredRows,  enableSubPartStat, enableSwing);
+    rootPlan->init(
+        WeakLhxPlan(),
+        partitionLevel,
+        partitionList,
+        subPartStats,
+        joinFilterInit,
+        filteredRows,
+        enableSubPartStat,
+        enableSwing);
 
     /*
      * Initialize recursive partitioning context.
@@ -208,7 +217,9 @@ void LhxJoinExecStream::open(bool restart)
     curPlan = rootPlan.get();
     isTopPlan = true;
 
-    hashTable.init(curPlan->getPartitionLevel(), hashInfo,
+    hashTable.init(
+        curPlan->getPartitionLevel(),
+        hashInfo,
         curPlan->getBuildInput());
     hashTableReader.init(&hashTable, hashInfo, curPlan->getBuildInput());
 
@@ -239,7 +250,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * break out of this loop, and start probing.
                              */
                             buildReader.close();
-                            probeReader.open(curPlan->getProbePartition(),
+                            probeReader.open(
+                                curPlan->getProbePartition(),
                                 hashInfo);
                             joinState = Probe;
                             numTuplesProduced = 0;
@@ -302,7 +314,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * break out of this loop, and start probing.
                              */
                             buildReader.close();
-                            probeReader.open(curPlan->getProbePartition(),
+                            probeReader.open(
+                                curPlan->getProbePartition(),
                                 hashInfo);
                             joinState = Probe;
                             numTuplesProduced = 0;
@@ -373,7 +386,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 /*
                  * Link the newly created partitioned in the plan tree.
                  */
-                curPlan->createChildren(partInfo, enableSubPartStat,
+                curPlan->createChildren(
+                    partInfo,
+                    enableSubPartStat,
                     enableSwing);
 
                 FENNEL_TRACE(TRACE_FINE, curPlan->toString());
@@ -386,9 +401,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 
                 hashTable.releaseResources();
 
-                hashTable.init(curPlan->getPartitionLevel(), hashInfo,
+                hashTable.init(
+                    curPlan->getPartitionLevel(),
+                    hashInfo,
                     curPlan->getBuildInput());
-                hashTableReader.init(&hashTable, hashInfo,
+                hashTableReader.init(
+                    &hashTable,
+                    hashInfo,
                     curPlan->getBuildInput());
 
                 bool status = hashTable.allocateResources();
@@ -409,9 +428,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 curPlan = curPlan->getNextLeaf();
 
                 if (curPlan) {
-                    hashTable.init(curPlan->getPartitionLevel(), hashInfo,
+                    hashTable.init(
+                        curPlan->getPartitionLevel(),
+                        hashInfo,
                         curPlan->getBuildInput());
-                    hashTableReader.init(&hashTable, hashInfo,
+                    hashTableReader.init(
+                        &hashTable,
+                        hashInfo,
                         curPlan->getBuildInput());
 
                     bool status = hashTable.allocateResources();
@@ -515,7 +538,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     if (!filterNullProbe ||
                         !probeTuple.containsNull(filterNullProbeKeyProj)) {
                         keyBuf =
-                            hashTable.findKey(probeTuple, probeKeyProj,
+                            hashTable.findKey(
+                                probeTuple,
+                                probeKeyProj,
                                 removeDuplicateProbe);
                     }
 

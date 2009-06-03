@@ -436,7 +436,8 @@ public abstract class SqlOperatorTests
         checkCastToString("CAST(0 AS DOUBLE)", "CHAR(3)", "0E0");
         checkCastToString("-1.20e-07", "CHAR(7)", "-1.2E-7");
         checkCastToString("cast(0e0 as varchar(5))", "CHAR(3)", "0E0");
-        checkCastToString("cast(-45e-2 as varchar(17))", "CHAR(7)",
+        checkCastToString(
+            "cast(-45e-2 as varchar(17))", "CHAR(7)",
             "-4.5E-1");
         checkCastToString(
             "cast(4683442.3432498375e0 as varchar(20))",
@@ -2507,7 +2508,8 @@ public abstract class SqlOperatorTests
     {
         getTester().setFor(SqlStdOperatorTable.isNullOperator);
         getTester().checkBoolean("true is null", Boolean.FALSE);
-        getTester().checkBoolean("cast(null as boolean) is null",
+        getTester().checkBoolean(
+            "cast(null as boolean) is null",
             Boolean.TRUE);
     }
 
@@ -3346,7 +3348,8 @@ public abstract class SqlOperatorTests
             "nullif(3.4, 1.5e0)",
             "DECIMAL(2, 1)",
             "3.4");
-        getTester().checkString("nullif('a','bc')",
+        getTester().checkString(
+            "nullif('a','bc')",
             "a",
             "CHAR(1)");
         getTester().checkString(

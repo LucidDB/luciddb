@@ -219,7 +219,8 @@ public class FarragoOJRexBuiltinImplementor
                     "log",
                     new ExpressionList(new Literal(Literal.DOUBLE, "10.0")));
             logFunc =
-                new BinaryExpression(logFunc,
+                new BinaryExpression(
+                    logFunc,
                     BinaryExpression.DIVIDE,
                     ln10);
         }

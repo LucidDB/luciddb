@@ -20,4 +20,4 @@ from table(cancel_test.noise_with_cancel(1000000, 0, 5000)) order by 1;
 
 -- Likewise for hash partitioning (LDB-122).
 select count(distinct b) 
-from table(cancel_test.noise_with_cancel(1000000, 0, 5000));
+from table(cancel_test.noise_with_cancel(2000000, 0, 5000));

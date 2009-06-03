@@ -85,9 +85,11 @@ public class FarragoOJRexUnaryExpressionImplementor
 
         Expression nullTest = null;
         nullTest =
-            translator.createNullTest(call.operands[0], operands[0],
+            translator.createNullTest(
+                call.operands[0],
+                operands[0],
                 nullTest);
-        assert (nullTest != null);
+        assert nullTest != null;
 
         // TODO:  generalize to stuff other than NullablePrimitive
         Statement assignmentStmt =
@@ -126,7 +128,8 @@ public class FarragoOJRexUnaryExpressionImplementor
 
         FarragoTypeFactory factory = translator.getFarragoTypeFactory();
         Expression expr =
-            new UnaryExpression(operands[0],
+            new UnaryExpression(
+                operands[0],
                 ojUnaryExpressionOrdinal);
         if ((returnType.getSqlTypeName() != SqlTypeName.BOOLEAN)
             && (factory.getClassForPrimitive(returnType) != null))

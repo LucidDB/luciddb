@@ -180,7 +180,8 @@ public class RelOptRuleOperand
      * @param dummy Dummy argument to distinguish this constructor from other
      * overloaded forms
      */
-    public RelOptRuleOperand(Class<? extends RelNode> clazz,
+    public RelOptRuleOperand(
+        Class<? extends RelNode> clazz,
         Dummy dummy)
     {
         this(clazz, null, false, (RelOptRuleOperand []) null);

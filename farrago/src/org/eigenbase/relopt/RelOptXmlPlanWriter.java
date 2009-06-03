@@ -91,7 +91,8 @@ public class RelOptXmlPlanWriter
      * @param terms
      * @param values
      */
-    private void explainGeneric(RelNode rel,
+    private void explainGeneric(
+        RelNode rel,
         String [] terms,
         Object [] values)
     {
@@ -152,7 +153,8 @@ public class RelOptXmlPlanWriter
      * @param terms
      * @param values
      */
-    private void explainSpecific(RelNode rel,
+    private void explainSpecific(
+        RelNode rel,
         String [] terms,
         Object [] values)
     {

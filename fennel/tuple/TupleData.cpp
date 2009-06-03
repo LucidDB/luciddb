@@ -36,7 +36,8 @@ void TupleDatum::memCopyFrom(TupleDatum const &other)
      * Sets pData to NULL if it is NULL in "other".
      */
     if (other.pData) {
-        memcpy(const_cast<PBuffer>(pData),
+        memcpy(
+            const_cast<PBuffer>(pData),
             other.pData,
             other.cbData);
     } else {

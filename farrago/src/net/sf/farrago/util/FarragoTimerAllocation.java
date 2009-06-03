@@ -79,7 +79,8 @@ public class FarragoTimerAllocation
         // to request immediate execution.  If there is already a task in
         // progress, it will complete first.
         synchronized (shutdownSynch) {
-            timer.schedule(new CancelTask(),
+            timer.schedule(
+                new CancelTask(),
                 0);
             while (timer != null) {
                 try {

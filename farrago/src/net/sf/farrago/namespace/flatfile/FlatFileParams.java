@@ -339,7 +339,8 @@ class FlatFileParams
     private char decodeSpecialChar(String specialChar, String defaultChar)
     {
         if (specialChar == null) {
-            Util.pre(defaultChar.length() > 0,
+            Util.pre(
+                defaultChar.length() > 0,
                 "defaultChar.length() > 0");
             return defaultChar.charAt(0);
         } else if (specialChar.length() == 0) {

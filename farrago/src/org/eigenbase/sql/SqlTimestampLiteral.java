@@ -60,7 +60,8 @@ public class SqlTimestampLiteral
         String format,
         SqlParserPos pos)
     {
-        super(cal, hasTimeZone, SqlTypeName.TIMESTAMP, precision,
+        super(
+            cal, hasTimeZone, SqlTypeName.TIMESTAMP, precision,
             format, pos);
     }
 
