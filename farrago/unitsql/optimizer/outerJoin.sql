@@ -765,6 +765,49 @@ select A.* from A left outer join Buniq B1 on A.a = B1.b
     left outer join Buniq B2 on B2.b = B1.k
     order by a;
 
+-- same as above but with a nullable unique key
+create table BUniq2(k int, b int unique);
+insert into BUniq2 values (1, 2), (2, 3), (3, 4), (null, null);
+
+!set outputformat csv
+explain plan for
+    select A.* from A left outer join BUniq2 on a = b;
+explain plan for
+    select A.* from A left outer join BUniq2 on b = a;
+explain plan for
+    select A.* from BUniq2 right outer join A on a = b;
+explain plan for
+    select a from (select a, b from A left outer join BUniq2 on a = b), C
+        where a = c;
+-- two join keys
+explain plan for 
+    select A.* from A left outer join BUniq2 B on a = b and A.k = B.k;
+-- multiple tables that can be removed
+explain plan for
+    select A.* from A left outer join Buniq2 B1 on A.a = B1.b
+        left outer join Buniq2 B2 on B2.b = B1.k;
+
+!set outputformat table
+select A.* from A left outer join BUniq2 on a = b order by a;
+select A.* from A left outer join BUniq2 on b = a order by a;
+select A.* from Buniq2 right outer join A on a = b order by a;
+select a from (select a, b from A left outer join Buniq2 on a = b), C
+    where a = c order by a;
+select A.* from A left outer join Buniq2 B on a = b and A.k = B.k order by a;
+select A.* from A left outer join Buniq2 B1 on A.a = B1.b
+    left outer join Buniq2 B2 on B2.b = B1.k
+    order by a;
+
+-- Both tables in the outer join have nullable keys.  The row with the null
+-- value from the preserved table still needs to be in the output (even though
+-- it doesn't join with the null-generating table) because of the outer join.
+!set outputformat csv
+explain plan for
+    select B1.* from BUniq2 B1 left outer join BUniq2 B2 on B1.b = B2.b;
+!set outputformat table
+select B1.* from BUniq2 B1 left outer join BUniq2 B2 on B1.b = B2.b
+    order by B1.b;
+
 ----------------------------
 -- non-removable outer joins
 ----------------------------

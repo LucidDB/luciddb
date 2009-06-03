@@ -250,8 +250,13 @@ class FtrsDataServer
                 Collections.singletonList((Class) BitSet.class));
 
             mapParameterTypes(
-                "areColumnsUnique",
-                Collections.singletonList((Class) BitSet.class));
+                "getUniqueKeys",
+                Collections.singletonList((Class) Boolean.TYPE));
+
+            args = new ArrayList<Class>();
+            args.add((Class) BitSet.class);
+            args.add((Class) Boolean.TYPE);
+            mapParameterTypes("areColumnsUnique", args);
         }
 
         public Double getDistinctRowCount(
@@ -267,14 +272,19 @@ class FtrsDataServer
             return columnMd.getPopulationSize(rel, groupKey);
         }
 
-        public Set<BitSet> getUniqueKeys(FtrsIndexScanRel rel)
+        public Set<BitSet> getUniqueKeys(
+            FtrsIndexScanRel rel,
+            boolean ignoreNulls)
         {
-            return columnMd.getUniqueKeys(rel, repos);
+            return columnMd.getUniqueKeys(rel, repos, ignoreNulls);
         }
 
-        public Boolean areColumnsUnique(FtrsIndexScanRel rel, BitSet columns)
+        public Boolean areColumnsUnique(
+            FtrsIndexScanRel rel,
+            BitSet columns,
+            boolean ignoreNulls)
         {
-            return columnMd.areColumnsUnique(rel, columns, repos);
+            return columnMd.areColumnsUnique(rel, columns, repos, ignoreNulls);
         }
     }
 

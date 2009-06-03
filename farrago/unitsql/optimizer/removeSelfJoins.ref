@@ -755,4 +755,37 @@
 '      FennelCalcRel(expr#0..4=[{inputs}], expr#5=[ABS($t0)], proj#0..5=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
 > 
+> ---------------------------------------------
+> -- Try cases where the unique key is nullable
+> ---------------------------------------------
+> 
+> create table nullableSales(
+>     sid int unique, product_id int, salesperson int, customer int,
+>     quantity int);
+> insert into nullableSales select * from sales;
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'NULLABLESALES',
+>     100000);
+> insert into nullableSales values(null, null, null, null, null);
+> explain plan for
+> select s1.* from nullableSales s1, nullableSales s2 where s1.sid = s2.sid;
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NOT NULL($t0)], proj#0..4=[{exprs}], $condition=[$t5])'
+'  FennelToIteratorConverter'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, NULLABLESALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$NULLABLESALES$CUSTOMER, SYS$CLUSTERED_INDEX$NULLABLESALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$NULLABLESALES$QUANTITY, SYS$CLUSTERED_INDEX$NULLABLESALES$SALESPERSON, SYS$CLUSTERED_INDEX$NULLABLESALES$SID]])'
+> !set outputformat table
+> select s1.* from nullableSales s1, nullableSales s2 where s1.sid = s2.sid
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  |
++------+-------------+--------------+-----------+-----------+
+| 1    | 1           | 1            | 1         | 10        |
+| 2    | 1           | 1            | 2         | 20        |
+| 3    | 1           | 2            | 1         | 30        |
+| 4    | 1           | 2            | 2         | 40        |
+| 5    | 2           | 1            | 1         | 50        |
+| 6    | 2           | 1            | 2         | 60        |
+| 7    | 2           | 2            | 1         | 70        |
+| 8    | 2           | 2            | 2         | 80        |
++------+-------------+--------------+-----------+-----------+
+> 
 > !quit

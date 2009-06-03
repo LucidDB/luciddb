@@ -253,6 +253,54 @@ public class RelMdUtil
     }
 
     /**
+     * Returns true if the columns represented in a bit mask are definitely
+     * known to form a unique column set, when nulls have been filtered from
+     * the columns.
+     *
+     * @param rel the relnode that the column mask correponds to
+     * @param colMask bit mask containing columns that will be tested for
+     * uniqueness
+     *
+     * @return true if bit mask represents a unique column set; false if not (or
+     * if no metadata is available)
+     */
+    public static boolean areColumnsDefinitelyUniqueWhenNullsFiltered(
+        RelNode rel,
+        BitSet colMask)
+    {
+        Boolean b =
+            RelMetadataQuery.areColumnsUnique(rel, colMask, true);
+        if (b == null) {
+            return false;
+        }
+        return b;
+    }
+
+    public static Boolean areColumnsUniqueWhenNullsFiltered(
+        RelNode rel,
+        List<RexInputRef> columnRefs)
+    {
+        BitSet colMask = new BitSet();
+
+        for (int i = 0; i < columnRefs.size(); i++) {
+            colMask.set(columnRefs.get(i).getIndex());
+        }
+
+        return RelMetadataQuery.areColumnsUnique(rel, colMask, true);
+    }
+
+    public static boolean areColumnsDefinitelyUniqueWhenNullsFiltered(
+        RelNode rel,
+        List<RexInputRef> columnRefs)
+    {
+        Boolean b = areColumnsUniqueWhenNullsFiltered(rel, columnRefs);
+        if (b == null) {
+            return false;
+        }
+        return b;
+    }
+
+    /**
      * Sets a bitmap corresponding to a list of keys.
      *
      * @param keys list of keys

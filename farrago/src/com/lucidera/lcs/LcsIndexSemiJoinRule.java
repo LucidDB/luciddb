@@ -224,14 +224,18 @@ public class LcsIndexSemiJoinRule
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 projectRel);
 
-        // create a distinct agg on top of the project to remove duplicate
-        // keys, unless they're already unique
+        // Create a distinct agg on top of the project to remove duplicate
+        // keys, unless they're already unique.  Note that we can ignore
+        // nulls in the keys because nulls are filtered out above.
         RelNode distinctRel;
         BitSet rightJoinCols = new BitSet();
         for (Integer rightOrdinal : rightOrdinals) {
             rightJoinCols.set(rightOrdinal);
         }
-        if (RelMdUtil.areColumnsDefinitelyUnique(rightRel, rightJoinCols)) {
+        if (RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
+                rightRel,
+                rightJoinCols))
+        {
             distinctRel = distInput;
         } else {
             distinctRel = RelOptUtil.createDistinctRel(distInput);

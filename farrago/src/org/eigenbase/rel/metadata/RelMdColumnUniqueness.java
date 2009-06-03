@@ -26,7 +26,9 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -46,32 +48,57 @@ public class RelMdColumnUniqueness
         // Tell superclass reflection about parameter types expected
         // for various metadata queries.
 
-        // This corresponds to areColumnsUnique(rel, BitSet columns);
+        // This corresponds to areColumnsUnique(rel, BitSet columns,
+        // boolean ignoreNulls);
         // note that we don't specify the rel type because we always overload
         // on that.
+        List<Class> args = new ArrayList<Class>();
+        args.add((Class) BitSet.class);
+        args.add((Class) Boolean.TYPE);
         mapParameterTypes(
             "areColumnsUnique",
-            Collections.singletonList((Class) BitSet.class));
+            args);
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public Boolean areColumnsUnique(FilterRelBase rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        FilterRelBase rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
-        return RelMetadataQuery.areColumnsUnique(rel.getChild(), columns);
+        return RelMetadataQuery.areColumnsUnique(
+            rel.getChild(),
+            columns,
+            ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(SortRel rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        SortRel rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
-        return RelMetadataQuery.areColumnsUnique(rel.getChild(), columns);
+        return RelMetadataQuery.areColumnsUnique(
+            rel.getChild(),
+            columns,
+            ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(CorrelatorRel rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        CorrelatorRel rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
-        return RelMetadataQuery.areColumnsUnique(rel.getLeft(), columns);
+        return RelMetadataQuery.areColumnsUnique(
+            rel.getLeft(),
+            columns,
+            ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(ProjectRelBase rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        ProjectRelBase rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
         // ProjectRel maps a set of rows to a different set;
         // Without knowledge of the mapping function(whether it
@@ -91,15 +118,53 @@ public class RelMdColumnUniqueness
             RexNode projExpr = projExprs[bit];
             if (projExpr instanceof RexInputRef) {
                 childColumns.set(((RexInputRef) projExpr).getIndex());
+            } else if (projExpr instanceof RexCall && ignoreNulls) {
+                // If the expression is a cast such that the types are the same
+                // except for the nullability, then if we're ignoring nulls,
+                // it doesn't matter whether the underlying column reference
+                // is nullable.  Check that the types are the same by making a
+                // nullable copy of both types and then comparing them.
+                RexCall call = (RexCall) projExpr;
+                if (call.getOperator() != SqlStdOperatorTable.castFunc) {
+                    continue;
+                }
+                RexNode castOperand = call.getOperands()[0];
+                if (!(castOperand instanceof RexInputRef)) {
+                    continue;
+                }
+                RelDataTypeFactory typeFactory =
+                    rel.getCluster().getTypeFactory();
+                RelDataType castType =
+                    typeFactory.createTypeWithNullability(
+                        projExpr.getType(), true);
+                RelDataType origType = typeFactory.createTypeWithNullability(
+                    castOperand.getType(),
+                    true);
+                if (castType.equals(origType)) {
+                    childColumns.set(((RexInputRef) castOperand).getIndex());
+                }
             } else {
-                return null;
+                // If the expression will not influence uniqueness of the
+                // projection, then skip it.
+                continue;
             }
         }
 
-        return RelMetadataQuery.areColumnsUnique(rel.getChild(), childColumns);
+        // If no columns can affect uniqueness, then return unknown
+        if (childColumns.cardinality() == 0) {
+            return null;
+        }
+
+        return RelMetadataQuery.areColumnsUnique(
+            rel.getChild(),
+            childColumns,
+            ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(JoinRelBase rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        JoinRelBase rel,
+        BitSet columns, boolean
+        ignoreNulls)
     {
         if (columns.cardinality() == 0) {
             return false;
@@ -129,9 +194,9 @@ public class RelMdColumnUniqueness
         // right hand side, then the columns are unique if and only if they're
         // unique for their respective join inputs
         Boolean leftUnique =
-            RelMetadataQuery.areColumnsUnique(left, leftColumns);
+            RelMetadataQuery.areColumnsUnique(left, leftColumns, ignoreNulls);
         Boolean rightUnique =
-            RelMetadataQuery.areColumnsUnique(right, rightColumns);
+            RelMetadataQuery.areColumnsUnique(right, rightColumns, ignoreNulls);
         if ((leftColumns.cardinality() > 0)
             && (rightColumns.cardinality() > 0))
         {
@@ -162,7 +227,10 @@ public class RelMdColumnUniqueness
                 return false;
             }
             Boolean rightJoinColsUnique =
-                RelMetadataQuery.areColumnsUnique(right, rightJoinCols);
+                RelMetadataQuery.areColumnsUnique(
+                    right,
+                    rightJoinCols,
+                    ignoreNulls);
             if ((rightJoinColsUnique == null) || (leftUnique == null)) {
                 return null;
             }
@@ -172,7 +240,10 @@ public class RelMdColumnUniqueness
                 return false;
             }
             Boolean leftJoinColsUnique =
-                RelMetadataQuery.areColumnsUnique(left, leftJoinCols);
+                RelMetadataQuery.areColumnsUnique(
+                    left,
+                    leftJoinCols,
+                    ignoreNulls);
             if ((leftJoinColsUnique == null) || (rightUnique == null)) {
                 return null;
             }
@@ -183,14 +254,23 @@ public class RelMdColumnUniqueness
         return null;
     }
 
-    public Boolean areColumnsUnique(SemiJoinRel rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        SemiJoinRel rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
         // only return the unique keys from the LHS since a semijoin only
         // returns the LHS
-        return RelMetadataQuery.areColumnsUnique(rel.getLeft(), columns);
+        return RelMetadataQuery.areColumnsUnique(
+            rel.getLeft(),
+            columns,
+            ignoreNulls);
     }
 
-    public Boolean areColumnsUnique(AggregateRelBase rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        AggregateRelBase rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
         // group by keys form a unique key
         if (rel.getGroupCount() > 0) {
@@ -210,7 +290,10 @@ public class RelMdColumnUniqueness
     }
 
     // Catch-all rule when none of the others apply.
-    public Boolean areColumnsUnique(RelNode rel, BitSet columns)
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        boolean ignoreNulls)
     {
         // no information available
         return null;

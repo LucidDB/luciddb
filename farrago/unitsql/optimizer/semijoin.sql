@@ -181,10 +181,10 @@ create index i_sales_sp on sales(salesperson);
 create index i_sales_cust on sales(customer);
 
 create table product(
-    id int unique not null, name char(20), color char(10), size char(1));
+    id int unique, name char(20), color char(10), size char(1));
 create table salesperson(id int unique not null, name char(20), age int);
 create table customer(
-    id int unique not null, company char(20), city char(20) not null);
+    id int unique, company char(20), city char(20) not null);
 create table state(city char(20) unique not null, state char(20));
 
 create index i_product_color on product(color);
@@ -193,10 +193,12 @@ create index i_customer_city on customer(city);
 
 insert into product values(1, 'radio', 'black', 'S');
 insert into product values(2, 'phone', 'white', 'M');
+insert into product values(null, null, null, null);
 insert into salesperson values(1, 'XYZ', 30);
 insert into salesperson values(2, 'UVW', 40);
 insert into customer values(1, 'ABC', 'San Mateo');
 insert into customer values(2, 'DEF', 'New York City');
+insert into customer values(null, null, 'Foo');
 insert into state values('San Mateo', 'CA');
 insert into state values('New York City', 'New York');
 insert into sales values(1, 1, 1, 1, 10);
@@ -207,6 +209,7 @@ insert into sales values(5, 2, 1, 1, 50);
 insert into sales values(6, 2, 1, 2, 60);
 insert into sales values(7, 2, 2, 1, 70);
 insert into sales values(8, 2, 2, 2, 80);
+insert into sales values(9, null, null, null, null);
 
 -- more faking of stats; note also that the predicates chosen in the
 -- actual queries aren't necessarily selective in reality but the stats

@@ -38,24 +38,39 @@ import org.eigenbase.rex.*;
 public class RelMdUniqueKeys
     extends ReflectiveRelMetadataProvider
 {
+    //~ Constructors -----------------------------------------------------------
+
+    RelMdUniqueKeys()
+    {
+        // Tell superclass reflection about parameter types expected
+        // for various metadata queries.
+
+        // This corresponds to getUniqueKeys(rel, boolean ignoreNulls);
+        // note that we don't specify the rel type because we always overload
+        // on that.
+        mapParameterTypes(
+            "getUniqueKeys",
+            Collections.singletonList((Class) Boolean.TYPE));
+    }
+
     //~ Methods ----------------------------------------------------------------
 
-    public Set<BitSet> getUniqueKeys(FilterRelBase rel)
+    public Set<BitSet> getUniqueKeys(FilterRelBase rel, boolean ignoreNulls)
     {
-        return RelMetadataQuery.getUniqueKeys(rel.getChild());
+        return RelMetadataQuery.getUniqueKeys(rel.getChild(), ignoreNulls);
     }
 
-    public Set<BitSet> getUniqueKeys(SortRel rel)
+    public Set<BitSet> getUniqueKeys(SortRel rel, boolean ignoreNulls)
     {
-        return RelMetadataQuery.getUniqueKeys(rel.getChild());
+        return RelMetadataQuery.getUniqueKeys(rel.getChild(), ignoreNulls);
     }
 
-    public Set<BitSet> getUniqueKeys(CorrelatorRel rel)
+    public Set<BitSet> getUniqueKeys(CorrelatorRel rel, boolean ignoreNulls)
     {
-        return RelMetadataQuery.getUniqueKeys(rel.getLeft());
+        return RelMetadataQuery.getUniqueKeys(rel.getLeft(), ignoreNulls);
     }
 
-    public Set<BitSet> getUniqueKeys(ProjectRelBase rel)
+    public Set<BitSet> getUniqueKeys(ProjectRelBase rel, boolean ignoreNulls)
     {
         // ProjectRel maps a set of rows to a different set;
         // Without knowledge of the mapping function(whether it
@@ -70,7 +85,7 @@ public class RelMdUniqueKeys
 
         Set<BitSet> projUniqueKeySet = new HashSet<BitSet>();
 
-        // Build an input to ouput position map.
+        // Build an input to output position map.
         for (int i = 0; i < projExprs.length; i++) {
             RexNode projExpr = projExprs[i];
             if (projExpr instanceof RexInputRef) {
@@ -87,15 +102,15 @@ public class RelMdUniqueKeys
         }
 
         Set<BitSet> childUniqueKeySet =
-            RelMetadataQuery.getUniqueKeys(rel.getChild());
+            RelMetadataQuery.getUniqueKeys(rel.getChild(), ignoreNulls);
 
         if (childUniqueKeySet != null) {
             // Now add to the projUniqueKeySet the child keys that are fully
             // projected.
-            Iterator itChild = childUniqueKeySet.iterator();
+            Iterator<BitSet> itChild = childUniqueKeySet.iterator();
 
             while (itChild.hasNext()) {
-                BitSet colMask = (BitSet) itChild.next();
+                BitSet colMask = itChild.next();
                 BitSet tmpMask = new BitSet();
                 boolean completeKeyProjected = true;
                 for (
@@ -121,7 +136,7 @@ public class RelMdUniqueKeys
         return projUniqueKeySet;
     }
 
-    public Set<BitSet> getUniqueKeys(JoinRelBase rel)
+    public Set<BitSet> getUniqueKeys(JoinRelBase rel, boolean ignoreNulls)
     {
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
@@ -136,17 +151,18 @@ public class RelMdUniqueKeys
         // an alternative way of getting unique key information.
 
         Set<BitSet> retSet = new HashSet<BitSet>();
-        Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
+        Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left, ignoreNulls);
         Set<BitSet> rightSet = null;
 
-        Set<BitSet> tmpRightSet = RelMetadataQuery.getUniqueKeys(right);
+        Set<BitSet> tmpRightSet =
+            RelMetadataQuery.getUniqueKeys(right, ignoreNulls);
         int nFieldsOnLeft = left.getRowType().getFieldCount();
 
         if (tmpRightSet != null) {
             rightSet = new HashSet<BitSet>();
-            Iterator itRight = tmpRightSet.iterator();
+            Iterator<BitSet> itRight = tmpRightSet.iterator();
             while (itRight.hasNext()) {
-                BitSet colMask = (BitSet) itRight.next();
+                BitSet colMask = itRight.next();
                 BitSet tmpMask = new BitSet();
                 for (
                     int bit = colMask.nextSetBit(0);
@@ -162,9 +178,9 @@ public class RelMdUniqueKeys
                 itRight = rightSet.iterator();
                 while (itRight.hasNext()) {
                     BitSet colMaskRight = (BitSet) itRight.next();
-                    Iterator itLeft = leftSet.iterator();
+                    Iterator<BitSet> itLeft = leftSet.iterator();
                     while (itLeft.hasNext()) {
-                        BitSet colMaskLeft = (BitSet) itLeft.next();
+                        BitSet colMaskLeft = itLeft.next();
                         BitSet colMaskConcat = new BitSet();
                         colMaskConcat.or(colMaskLeft);
                         colMaskConcat.or(colMaskRight);
@@ -187,9 +203,12 @@ public class RelMdUniqueKeys
         // determine if either or both the LHS and RHS are unique on the
         // equijoin columns
         Boolean leftUnique =
-            RelMetadataQuery.areColumnsUnique(left, leftJoinCols);
+            RelMetadataQuery.areColumnsUnique(left, leftJoinCols, ignoreNulls);
         Boolean rightUnique =
-            RelMetadataQuery.areColumnsUnique(right, rightJoinCols);
+            RelMetadataQuery.areColumnsUnique(
+                right,
+                rightJoinCols,
+                ignoreNulls);
 
         // if the right hand side is unique on its equijoin columns, then we can
         // add the unique keys from left if the left hand side is not null
@@ -214,14 +233,14 @@ public class RelMdUniqueKeys
         return retSet;
     }
 
-    public Set<BitSet> getUniqueKeys(SemiJoinRel rel)
+    public Set<BitSet> getUniqueKeys(SemiJoinRel rel, boolean ignoreNulls)
     {
         // only return the unique keys from the LHS since a semijoin only
         // returns the LHS
-        return RelMetadataQuery.getUniqueKeys(rel.getLeft());
+        return RelMetadataQuery.getUniqueKeys(rel.getLeft(), ignoreNulls);
     }
 
-    public Set<BitSet> getUniqueKeys(AggregateRelBase rel)
+    public Set<BitSet> getUniqueKeys(AggregateRelBase rel, boolean ignoreNulls)
     {
         Set<BitSet> retSet = new HashSet<BitSet>();
 
@@ -237,7 +256,7 @@ public class RelMdUniqueKeys
     }
 
     // Catch-all rule when none of the others apply.
-    public Set<BitSet> getUniqueKeys(RelNode rel)
+    public Set<BitSet> getUniqueKeys(RelNode rel, boolean ignoreNulls)
     {
         // no information available
         return null;

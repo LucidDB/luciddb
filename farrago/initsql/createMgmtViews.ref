@@ -453,6 +453,54 @@
 > ;
 > 
 > --
+> -- Indexes
+> --
+> 
+> create or replace view dba_indexes_internal as
+>     select
+>         cast(t.table_cat as varchar(128)) as catalog_name,
+>         cast(t.table_schem as varchar(128)) as schema_name,
+>         cast(i."name" as varchar(128)) as index_name,
+>         cast(ai."name" as varchar(128)) as creator,
+>         cast(i."creationTimestamp" as timestamp) as creation_timestamp,
+>         cast(t.table_name as varchar(128)) as table_name,
+>         i."isUnique" as is_unique,
+>         i."isClustered" as is_clustered,
+>         cast(i."description" as varchar(65535)) as remarks,
+>         i."mofId" as mof_id,
+>         i."lineageId" as lineage_id
+>     from
+>         sys_boot.jdbc_metadata.tables_view_internal t
+>     inner join
+>         sys_fem."MED"."LocalIndex" i
+>     on
+>         t."mofId" = i."spannedClass"
+>     inner join
+>         sys_fem."Security"."Grant" g
+>     on
+>         i."mofId" = g."Element"
+>     inner join
+>         sys_fem."Security"."AuthId" ai
+>     on
+>         g."Grantee" = ai."mofId"
+>     where
+>         g."action" = 'CREATION'
+> ;
+> 
+> create or replace view dba_index_columns_internal as
+>     select
+>         i."mofId" as mof_id,
+>         c."name" as column_name,
+>         c."ordinal" as ordinal_position
+>     from
+>         sys_boot.jdbc_metadata.index_info_internal i
+>     inner join
+>         sys_fem."MED"."LocalIndexColumn" c
+>     on
+>         i."mofId" = c."index"
+> ;
+> 
+> --
 > -- Database admin internal views and functions
 > --
 > 

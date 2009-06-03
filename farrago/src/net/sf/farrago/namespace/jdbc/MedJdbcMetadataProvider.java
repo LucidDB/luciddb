@@ -42,9 +42,10 @@ public class MedJdbcMetadataProvider
 
     public MedJdbcMetadataProvider()
     {
-        mapParameterTypes(
-            "areColumnsUnique",
-            Collections.singletonList((Class) BitSet.class));
+        List<Class> args = new ArrayList<Class>();
+        args.add((Class) BitSet.class);
+        args.add((Class) Boolean.TYPE);
+        mapParameterTypes("areColumnsUnique", args);
     }
 
     public Boolean canRestart(MedJdbcQueryRel rel)
@@ -64,7 +65,8 @@ public class MedJdbcMetadataProvider
 
     public Boolean areColumnsUnique(
         MedJdbcQueryRel rel,
-        BitSet columns)
+        BitSet columns,
+        boolean ignoreNulls)
     {
         Set<BitSet> uniqueColSets = rel.uniqueKeys;
         return MedAbstractColumnMetadata.areColumnsUniqueForKeys(

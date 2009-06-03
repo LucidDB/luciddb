@@ -682,8 +682,12 @@ public class LoptSemiJoinOptimizer
                 1.0,
                 factCost.getRows());
 
-        // additional savings if the dimension columns are unique
-        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(dimRel, dimCols);
+        // Additional savings if the dimension columns are unique.  We can
+        // ignore nulls since they will be filtered out by the semijoin.
+        boolean uniq =
+            RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
+                dimRel,
+                dimCols);
         if (uniq) {
             savings *= 2.0;
         }
@@ -734,14 +738,17 @@ public class LoptSemiJoinOptimizer
             return;
         }
 
-        // check if the semijoin keys corresponding to the dimension table
-        // are unique
+        // Check if the semijoin keys corresponding to the dimension table
+        // are unique.  The semijoin will filter out the nulls.
         BitSet dimKeys = new BitSet();
         for (Integer key : semiJoin.getRightKeys()) {
             dimKeys.set(key);
         }
         RelNode dimRel = multiJoin.getJoinFactor(dimIdx);
-        if (!RelMdUtil.areColumnsDefinitelyUnique(dimRel, dimKeys)) {
+        if (!RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
+                dimRel,
+                dimKeys))
+        {
             return;
         }
 
@@ -834,12 +841,10 @@ public class LoptSemiJoinOptimizer
     //~ Inner Classes ----------------------------------------------------------
 
     private class FactorCostComparator
-        implements Comparator
+        implements Comparator<Integer>
     {
-        public int compare(Object o1, Object o2)
+        public int compare(Integer rel1Idx, Integer rel2Idx)
         {
-            int rel1Idx = (Integer) o1;
-            int rel2Idx = (Integer) o2;
             RelOptCost c1 =
                 RelMetadataQuery.getCumulativeCost(chosenSemiJoins[rel1Idx]);
             RelOptCost c2 =

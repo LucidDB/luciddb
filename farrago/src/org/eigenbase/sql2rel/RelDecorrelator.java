@@ -1920,12 +1920,11 @@ public class RelDecorrelator
                 // refs. These comparisons are AND'ed together.
                 List<RexNode> tmpRightJoinKeys = new ArrayList<RexNode>();
                 List<RexNode> correlatedJoinKeys = new ArrayList<RexNode>();
-                RexNode nonEquiCond =
-                    RelOptUtil.splitCorrelatedFilterCondition(
-                        filterRel,
-                        tmpRightJoinKeys,
-                        correlatedJoinKeys,
-                        false);
+                RelOptUtil.splitCorrelatedFilterCondition(
+                    filterRel,
+                    tmpRightJoinKeys,
+                    correlatedJoinKeys,
+                    false);
 
                 // check that the columns referenced in these comparisons form
                 // an unique key of the filterInputRel
@@ -1941,7 +1940,9 @@ public class RelDecorrelator
                     return;
                 }
 
-                if (!RelMdUtil.areColumnsDefinitelyUnique(
+                // The join filters out the nulls.  So, it's ok if there are
+                // nulls in the join keys.
+                if (!RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
                         rightInputRel,
                         rightJoinKeys))
                 {
@@ -2152,12 +2153,11 @@ public class RelDecorrelator
                 // expressions. These comparisons are AND'ed together.
                 List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
                 List<RexNode> tmpCorrelatedJoinKeys = new ArrayList<RexNode>();
-                RexNode nonEquiCond =
-                    RelOptUtil.splitCorrelatedFilterCondition(
-                        filterRel,
-                        rightJoinKeys,
-                        tmpCorrelatedJoinKeys,
-                        true);
+                RelOptUtil.splitCorrelatedFilterCondition(
+                    filterRel,
+                    rightJoinKeys,
+                    tmpCorrelatedJoinKeys,
+                    true);
 
                 // make sure the correlated reference forms a unique key check
                 // that the columns referenced in these comparisons form an
@@ -2184,7 +2184,9 @@ public class RelDecorrelator
                     return;
                 }
 
-                if (!RelMdUtil.areColumnsDefinitelyUnique(
+                // The join filters out the nulls.  So, it's ok if there are
+                // nulls in the join keys.
+                if (!RelMdUtil.areColumnsDefinitelyUniqueWhenNullsFiltered(
                         leftInputRel,
                         correlatedInputRefJoinKeys))
                 {

@@ -27,7 +27,6 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.rel.*;
-import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -51,9 +50,20 @@ public abstract class MedAbstractColumnMetadata
 {
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * @deprecated
+     */
     public Set<BitSet> getUniqueKeys(
         RelNode rel,
         FarragoRepos repos)
+    {
+        return getUniqueKeys(rel, repos, false);
+    }
+
+    public Set<BitSet> getUniqueKeys(
+        RelNode rel,
+        FarragoRepos repos,
+        boolean ignoreNulls)
     {
         // this method only handles table level relnodes
         if (rel.getTable() == null) {
@@ -89,7 +99,7 @@ public abstract class MedAbstractColumnMetadata
                 rel,
                 repos,
                 (List) uniqueConstraint.getFeature(),
-                true,
+                !ignoreNulls,
                 retSet);
         }
 
@@ -144,12 +154,24 @@ public abstract class MedAbstractColumnMetadata
         RelNode rel,
         FemAbstractColumn keyCol);
 
+    /**
+     * @deprecated
+     */
     public Boolean areColumnsUnique(
         RelNode rel,
         BitSet columns,
         FarragoRepos repos)
     {
-        Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos);
+        return areColumnsUnique(rel, columns, repos, false);
+    }
+
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        FarragoRepos repos,
+        boolean ignoreNulls)
+    {
+        Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos, ignoreNulls);
         return areColumnsUniqueForKeys(uniqueColSets, columns);
     }
 

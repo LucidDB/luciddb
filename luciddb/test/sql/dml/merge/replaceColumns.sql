@@ -34,10 +34,20 @@ insert into tempemps
         from emps;
 select * from tempemps order by t_empno;
 
+create table nullableTempEmps(
+    t_empno int unique, t_name varchar(25), t_deptno int,
+    t_gender char(1), t_city char(35), t_age int);
+insert into nullableTempEmps select * from tempemps;
+insert into nullableTempEmps values
+    (null, 'Unknown', null, null, 'Unknown', null);
+select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
+
 -- Set fake stats so index-only scans will be used in cases where filtering is
 -- done on indexed columns.
 call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'EMPS', 1000);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'TEMPEMPS', 1000);
+call sys_boot.mgmt.stat_set_row_count
+    ('LOCALDB', 'RC', 'NULLABLETEMPEMPS', 1000);
 
 ------------------------------------------------------------------------------
 -- Cases where the optimization can be used.  Note that we can verify that it
@@ -237,17 +247,31 @@ alter session set "label" = null;
 create table nonUniqueEmps(
     empno int not null, name varchar(20) not null, deptno int,
     gender char(1), city char(30), age smallint, salary numeric(10,2));
-call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 insert into nonUniqueEmps select * from emps;
 insert into nonUniqueEmps values(
     110, 'EricJr', 20, 'M', 'San Francisco', 40, 36000);
 insert into nonUniqueEmps values(130, 'JohnJr', 40, 'M', 'Vancouver', 10, null);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 select lcs_rid(empno), * from nonUniqueEmps order by empno;
 merge into nonUniqueEmps e
     using tempemps t on t.t_empno = e.empno
     when matched then
         update set city = upper(t.t_city);
 select lcs_rid(empno), * from nonUniqueEmps order by empno;
+-- And also if the join key from the source is nullable
+merge into nonUniqueEmps e
+    using nullableTempEmps t on t.t_empno = e.empno
+    when matched then
+        update set city = lower(t.t_city);
+select lcs_rid(empno), * from nonUniqueEmps order by empno;
+-- Source has a non-nullable key while target has a nullable one.  The row
+-- with the null key should not be updated.
+select * from emps order by empno;
+merge into nullableTempEmps t
+    using emps e on t.t_empno = e.empno
+    when matched then
+        update set t_city = upper(e.city);
+select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
 
 ---------------------------------------------------------------------------
 -- Exercise cases where the optimization cannot be used.  In this case, the

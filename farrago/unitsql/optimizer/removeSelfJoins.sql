@@ -289,3 +289,20 @@ explain plan for select * from sales s1, sales s2
 -- join keys are derived
 explain plan for select * from sales s1, sales s2
     where abs(s1.sid) = abs(s2.sid);
+
+---------------------------------------------
+-- Try cases where the unique key is nullable
+---------------------------------------------
+
+create table nullableSales(
+    sid int unique, product_id int, salesperson int, customer int,
+    quantity int);
+insert into nullableSales select * from sales;
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'NULLABLESALES',
+    100000);
+insert into nullableSales values(null, null, null, null, null);
+explain plan for
+select s1.* from nullableSales s1, nullableSales s2 where s1.sid = s2.sid;
+!set outputformat table
+select s1.* from nullableSales s1, nullableSales s2 where s1.sid = s2.sid
+    order by s1.sid;
