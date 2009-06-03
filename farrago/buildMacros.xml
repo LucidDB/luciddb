@@ -819,7 +819,6 @@ ${farrago.test.jvmargs}
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="-XX:MaxPermSize=160m" />
-        <jvmarg line="-Djava.util.logging.config.file=/home/hunter/sqlstream2/aspen/trace/AspenTrace.properties" />
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>
         <formatter type="plain"/>
