@@ -1,0 +1,25 @@
+#!/bin/bash
+# $Id$
+# Run the sqlline command-line SQL interpreter 
+# with an embedded Firewater engine
+
+SESSION_FACTORY="./plugin/firewater.jar"
+
+SERVER_JAVA_ARGS="-Xms512m -Xmx512m -ea -esa \
+  -cp ../luciddb/classes:`cat ../farrago/classpath.gen`:../farrago/plugin/FarragoMedJdbc.jar \
+  -Dnet.sf.farrago.home=`pwd`/../luciddb \
+  -Dnet.sf.farrago.catalog=`pwd`/../luciddb/catalog \
+  -Djava.util.logging.config.file=../luciddb/trace/LucidDbTrace.properties \
+  -Dnet.sf.farrago.defaultSessionFactoryLibraryName=${SESSION_FACTORY}"
+
+SQLLINE_JAVA_ARGS="sqlline.SqlLine"
+
+if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:luciddb: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
+    -n sa $*;
+then
+    echo
+else
+    tset
+    echo "Terminal reset because sqlline crashed"
+fi
