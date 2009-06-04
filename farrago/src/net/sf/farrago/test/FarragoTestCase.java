@@ -965,7 +965,6 @@ public abstract class FarragoTestCase
                         list.add(name);
                     }
                 }
-                schemas.close();
             }
 
             tracer.finer("Schema name list has " + list.size() + " entries");

@@ -1024,6 +1024,7 @@ SUBSET_LOOP:
                 // Remove rel from its subset. (This may leave the subset
                 // empty, but if so, that will be dealt with when the sets
                 // get merged.)
+                tracer.finest("Removing rel " + rel + " from mapRel2Subset");
                 final RelSubset subset = mapRel2Subset.remove(rel);
                 assert subset != null;
                 boolean existed = subset.rels.remove(rel);
@@ -1053,6 +1054,7 @@ SUBSET_LOOP:
         RelSet set,
         RelNode rel)
     {
+        tracer.finest("reregistering " + rel);
         // Is there an equivalent relational expression? (This might have
         // just occurred because the relational expression's child was just
         // found to be equivalent to another set.)
@@ -1069,6 +1071,9 @@ SUBSET_LOOP:
         // Add the relational expression into the correct set and subset.
         RelSubset subset2 = set.add(rel);
         mapRel2Subset.put(rel, subset2);
+        tracer.finest(
+            "reregistered " + rel + " with subset " + subset2
+            + " in mapRel2Subset");
     }
 
     /**
@@ -1295,6 +1300,9 @@ SUBSET_LOOP:
                     digest = rel.recomputeDigest();
                     RelNode equivRel = mapDigestToRel.get(digest);
                     if ((equivRel != rel) && (equivRel != null)) {
+                        tracer.info(
+                            "There is already an equivalent expression for " +
+                            rel + " which is " + equivRel);
                         // make sure this bad rel didn't get into the
                         // set in any way (fixupInputs will do this but it
                         // doesn't know if it should so it does it anyway)
@@ -1330,6 +1338,9 @@ SUBSET_LOOP:
         registerCount++;
         RelSubset subset = set.add(rel);
         mapRel2Subset.put(rel, subset);
+        tracer.finest(
+            "registering " + rel + " with subset " + subset
+            + " in mapRel2Subset");
         final RelNode xx = mapDigestToRel.put(digest, rel);
         assert ((xx == null) || (xx == rel));
 
@@ -1430,7 +1441,8 @@ SUBSET_LOOP:
      * Normalizes references to subsets within the string representation of a
      * plan.
      *
-     * <p>This is useful when writing tests: it helps to ensure that tests don't
+     * <p>This is useful when writing tests: it helps to ensure that tests
+     * don't
      * break when an extra rule is introduced that generates a new subset and
      * causes subsequent subset numbers to be off by one.
      *
@@ -1438,27 +1450,27 @@ SUBSET_LOOP:
      *
      * <blockquote>
      * FennelAggRel.FENNEL_EXEC(child=Subset#17.FENNEL_EXEC,groupCount=1,
-     *   EXPR$1=COUNT())<br/>
+     * EXPR$1=COUNT())
      * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#2.FENNEL_EXEC,
-     *   key=[0], discardDuplicates=false)<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(
-     *   child=Subset#4.FENNEL_EXEC, expr#0..8={inputs}, expr#9=3456,
-     *   DEPTNO=$t7, $f0=$t9)<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(
-     *   table=[CATALOG, SALES, EMP])</blockquote>
+     * key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#4.
+     * FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.
+     * FENNEL_EXEC(table=[CATALOG,
+     * SALES, EMP])</blockquote>
      *
      * becomes
      *
      * <blockquote>
-     * FennelAggRel.FENNEL_EXEC(child=Subset#{0}.FENNEL_EXEC, groupCount=1,
-     *   EXPR$1=COUNT())<br/>
+     * FennelAggRel.FENNEL_EXEC(child=Subset#{0}.FENNEL_EXEC,groupCount=1,
+     * EXPR$1=COUNT())
      * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#{1}.FENNEL_EXEC,
-     *   key=[0], discardDuplicates=false)<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(
-     *   child=Subset#{2}.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,
-     *   $f0=$t9)<br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(
-     *   table=[CATALOG, SALES, EMP])</blockquote>
+     * key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#{2}.
+     * FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.
+     * FENNEL_EXEC(table=[CATALOG,
+     * SALES, EMP])</blockquote>
      *
      * @param plan Plan
      *
