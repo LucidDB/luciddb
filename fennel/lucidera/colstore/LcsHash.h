@@ -391,7 +391,8 @@ public:
      * less than value at offset loocated at colKeyOffsetIndex2
      *
      */
-    bool lessThan(const uint16_t colKeyOffsetIndex1,
+    bool lessThan(
+        const uint16_t colKeyOffsetIndex1,
         const uint16_t colKeyOffsetIndex2);
 };
 
@@ -430,7 +431,8 @@ public:
      * less than value at offset loocated at colKeyOffsetIndex2
      *
      */
-    inline bool operator()(const uint16_t colKeyOffsetIndex1,
+    inline bool operator()(
+        const uint16_t colKeyOffsetIndex1,
         const uint16_t colKeyOffsetIndex2);
 };
 
@@ -548,7 +550,8 @@ private:
      *
      * @return true if a match in both the key and the data value is found
      */
-    bool search(uint key, PBuffer dataWithLen,
+    bool search(
+        uint key, PBuffer dataWithLen,
         LcsHashValOrd *valOrd, LcsHashValueNode **v);
 
 public:
@@ -875,7 +878,8 @@ inline LcsCompare::LcsCompare(
     compareInstance = compareInstanceInit;
 }
 
-inline bool LcsCompare::operator()(const uint16_t colKeyOffsetIndex1,
+inline bool LcsCompare::operator()(
+    const uint16_t colKeyOffsetIndex1,
     const uint16_t colKeyOffsetIndex2)
 {
     return compareInstance->lessThan(colKeyOffsetIndex1, colKeyOffsetIndex2);

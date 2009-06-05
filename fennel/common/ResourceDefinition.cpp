@@ -33,8 +33,9 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace std;
 
-ResourceDefinition::ResourceDefinition(ResourceBundle *bundle,
-                                       const string &key)
+ResourceDefinition::ResourceDefinition(
+    ResourceBundle *bundle,
+    const string &key)
     : _key(key), _bundle(bundle)
 {
     assert(!key.empty());

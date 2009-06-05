@@ -151,14 +151,17 @@ public class SqlValidatorTest
 
         checkWholeExpFails("TRUE OR 1", ANY);
 
-        checkWholeExpFails("unknown OR 1.0",
+        checkWholeExpFails(
+            "unknown OR 1.0",
             ANY);
 
-        checkWholeExpFails("true OR 1.0e4",
+        checkWholeExpFails(
+            "true OR 1.0e4",
             ANY);
 
         if (todo) {
-            checkWholeExpFails("TRUE OR (TIME '12:00' AT LOCAL)",
+            checkWholeExpFails(
+                "TRUE OR (TIME '12:00' AT LOCAL)",
                 ANY);
         }
     }
@@ -173,7 +176,8 @@ public class SqlValidatorTest
             "select ^NOT 'abc'^ from (values(true))",
             ANY);
 
-        assertExceptionIsThrown("select ^NOT 1^ from (values(true))",
+        assertExceptionIsThrown(
+            "select ^NOT 1^ from (values(true))",
             ANY);
     }
 
@@ -979,7 +983,8 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "LOCALTIME(4)",
             "Argument to function 'LOCALTIME' must be a valid precision between '0' and '3'");
-        checkWholeExpFails("LOCALTIME('foo')",
+        checkWholeExpFails(
+            "LOCALTIME('foo')",
             "(?s).*Cannot apply.*");
 
         // LOCALTIMESTAMP
@@ -1001,7 +1006,8 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "LOCALTIMESTAMP(4)",
             "Argument to function 'LOCALTIMESTAMP' must be a valid precision between '0' and '3'");
-        checkWholeExpFails("LOCALTIMESTAMP('foo')",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // CURRENT_DATE
@@ -1040,7 +1046,8 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "CURRENT_TIME(4)",
             "Argument to function 'CURRENT_TIME' must be a valid precision between '0' and '3'");
-        checkWholeExpFails("current_time('foo')",
+        checkWholeExpFails(
+            "current_time('foo')",
             "(?s).*Cannot apply.*");
 
         // current_timestamp
@@ -1064,7 +1071,8 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "CURRENT_TIMESTAMP(4)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a valid precision between '0' and '3'");
-        checkWholeExpFails("CURRENT_TIMESTAMP('foo')",
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // Date literals
@@ -4203,7 +4211,8 @@ public class SqlValidatorTest
         checkWinFuncExp(
             "sum(sal) over ^(partition by deptno range 5 preceding)^",
             "Window specification must contain an ORDER BY clause");
-        checkWinFuncExp("sum(sal) over ^w1^",
+        checkWinFuncExp(
+            "sum(sal) over ^w1^",
             "Window 'W1' not found");
         checkWinFuncExp(
             "sum(sal) OVER (^w1^ "
@@ -4632,7 +4641,8 @@ public class SqlValidatorTest
     {
         // dtbug 282 -- "select r.* from sales.depts" gives NPE.
         // dtbug 318 -- error location should be ^r^ not ^r.*^.
-        checkFails("select ^r^.* from dept",
+        checkFails(
+            "select ^r^.* from dept",
             "Unknown identifier 'R'");
 
         check("select e.* from emp as e");
@@ -4711,9 +4721,11 @@ public class SqlValidatorTest
             "select empno in (1, nullif(empno,empno), 2) from emp",
             "BOOLEAN");
 
-        checkExpFails("1 in ^(2, 'c')^",
+        checkExpFails(
+            "1 in ^(2, 'c')^",
             ERR_IN_VALUES_INCOMPATIBLE);
-        checkExpFails("1 in ^((2), (3,4))^",
+        checkExpFails(
+            "1 in ^((2), (3,4))^",
             ERR_IN_VALUES_INCOMPATIBLE);
         checkExpFails(
             "false and ^1 in ('b', 'c')^",
@@ -6123,7 +6135,8 @@ public class SqlValidatorTest
             + " BOOLEAN NOT NULL SLACKER) NOT NULL";
         checkResultType("select * from (table emp)", empRecordType);
         checkResultType("table emp", empRecordType);
-        checkFails("table ^nonexistent^",
+        checkFails(
+            "table ^nonexistent^",
             "Table 'NONEXISTENT' not found");
     }
 

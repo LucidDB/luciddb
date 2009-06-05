@@ -245,7 +245,8 @@ public class FarragoJdbcFennelTupleParamDef
         setDouble(datum, (double) val, false);
     }
 
-    private void setDouble(FennelTupleDatum datum,
+    private void setDouble(
+        FennelTupleDatum datum,
         double val,
         boolean isFloat)
     {

@@ -52,8 +52,9 @@ void CorrelationJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
-    correlations.assign(params.correlations.begin(),
-                        params.correlations.end());
+    correlations.assign(
+        params.correlations.begin(),
+        params.correlations.end());
     //correlations.resize(correlations.size());
     //assert(correlations.size() > 0);
     assert(correlations.size() <= nLeftAttributes);

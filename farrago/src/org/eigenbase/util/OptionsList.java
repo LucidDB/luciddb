@@ -555,12 +555,14 @@ public class OptionsList
         {
             try {
                 final long value = Long.parseLong(arg);
-                set(new Long(value),
+                set(
+                    new Long(value),
                     true);
             } catch (NumberFormatException e) {
                 try {
                     final double doubleValue = Double.parseDouble(arg);
-                    set(new Double(doubleValue),
+                    set(
+                        new Double(doubleValue),
                         true);
                 } catch (NumberFormatException e1) {
                     valueError(arg);

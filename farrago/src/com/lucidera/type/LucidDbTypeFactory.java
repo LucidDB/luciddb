@@ -94,7 +94,8 @@ public class LucidDbTypeFactory
                     scale -= adjustment;
                 }
                 precision =
-                    Math.min(precision,
+                    Math.min(
+                        precision,
                         SqlTypeName.MAX_NUMERIC_PRECISION);
 
                 RelDataType ret =
@@ -140,7 +141,8 @@ public class LucidDbTypeFactory
             int s2 = type2.getScale();
 
             int dout =
-                Math.min(p1 - s1 + s2,
+                Math.min(
+                    p1 - s1 + s2,
                     SqlTypeName.MAX_NUMERIC_PRECISION);
 
             int scale = Math.max(6, s1 + p2 + 1);
@@ -148,7 +150,8 @@ public class LucidDbTypeFactory
             // LucidDb preserves the scale, but caps it, in order to
             // preserve the integral part of the result.
             scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
-            dout = Math.min(dout,
+            dout = Math.min(
+                dout,
                 SqlTypeName.MAX_NUMERIC_PRECISION - scale);
 
             int precision = dout + scale;

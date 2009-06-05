@@ -300,8 +300,9 @@ class FENNEL_LCS_EXPORT LcsRowScanExecStream
      * @param params the LcsRowScanBaseExecStreamParams
      *
      */
-    virtual void buildOutputProj(TupleProjection &outputProj,
-                                 LcsRowScanBaseExecStreamParams const &params);
+    virtual void buildOutputProj(
+        TupleProjection &outputProj,
+        LcsRowScanBaseExecStreamParams const &params);
 
     /**
      * initializes the filter data structures

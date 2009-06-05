@@ -142,8 +142,9 @@ protected:
      * @param params the LcsRowScanBaseExecStreamParams
      *
      */
-    virtual void buildOutputProj(TupleProjection &outputProj,
-                            LcsRowScanBaseExecStreamParams const &params);
+    virtual void buildOutputProj(
+        TupleProjection &outputProj,
+        LcsRowScanBaseExecStreamParams const &params);
 
 public:
     explicit LcsRowScanBaseExecStream();

@@ -444,7 +444,8 @@ public:
      * @param [in] inputTuple
      * @param [out] inputKeyProj the key fields.
      */
-    bool matches(TupleData const &inputTuple,
+    bool matches(
+        TupleData const &inputTuple,
         TupleProjection const &inputKeyProj);
 
     /**
@@ -1134,7 +1135,8 @@ inline uint LhxHashDataAccessor::getDiskStorageSize(
     return dataAccessor.getByteCount(inputTuple);
 }
 
-inline void LhxHashDataAccessor::checkStorageSize(TupleData const &inputTuple,
+inline void LhxHashDataAccessor::checkStorageSize(
+    TupleData const &inputTuple,
     uint maxBufferSize)
 {
     uint storageSize = getStorageSize(inputTuple);
@@ -1208,8 +1210,10 @@ inline PBuffer LhxHashKeyAccessor::getFirstData()
 
 inline void LhxHashKeyAccessor::setFirstData(PBuffer inputFirstData)
 {
-    memcpy((PBuffer)(getCurrent()+firstDataOffset), (PBuffer)&inputFirstData,
-            sizeof(PBuffer));
+    memcpy(
+        (PBuffer)(getCurrent() + firstDataOffset),
+        (PBuffer)&inputFirstData,
+        sizeof(PBuffer));
 }
 
 inline PBuffer *LhxHashKeyAccessor::getNextSlot()
@@ -1224,7 +1228,9 @@ inline PBuffer *LhxHashKeyAccessor::getNextSlot()
 
 inline void LhxHashKeyAccessor::setNextSlot(PBuffer *nextSlot)
 {
-    memcpy((PBuffer)(getCurrent()+nextSlotOffset), (PBuffer)&nextSlot,
+    memcpy(
+        (PBuffer)(getCurrent() + nextSlotOffset),
+        (PBuffer)&nextSlot,
         sizeof(PBuffer*));
 }
 
@@ -1238,7 +1244,8 @@ inline void LhxHashKeyAccessor::setMatched(bool matched)
     *(getCurrent() + isMatchedOffset) = (matched ? 0x01 : 0);
 }
 
-inline void LhxHashKeyAccessor::checkStorageSize(TupleData const &inputTuple,
+inline void LhxHashKeyAccessor::checkStorageSize(
+    TupleData const &inputTuple,
     uint maxBufferSize)
 {
     uint storageSize = getStorageSize(inputTuple);

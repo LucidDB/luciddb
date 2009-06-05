@@ -146,12 +146,15 @@ void StandardTypeTest::testStandardTypeIsNativeNotBool()
             v == STANDARD_TYPE_BINARY ||
             v == STANDARD_TYPE_VARBINARY ||
             v == STANDARD_TYPE_UNICODE_CHAR ||
-            v == STANDARD_TYPE_UNICODE_VARCHAR) {
-            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNativeNotBool(v),
-                              false);
+            v == STANDARD_TYPE_UNICODE_VARCHAR)
+        {
+            BOOST_CHECK_EQUAL(
+                StandardTypeDescriptor::isNativeNotBool(v),
+                false);
         } else {
-            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNativeNotBool(v),
-                              true);
+            BOOST_CHECK_EQUAL(
+                StandardTypeDescriptor::isNativeNotBool(v),
+                true);
         }
     }
 }

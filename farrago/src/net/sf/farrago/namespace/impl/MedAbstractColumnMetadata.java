@@ -172,6 +172,13 @@ public abstract class MedAbstractColumnMetadata
         boolean ignoreNulls)
     {
         Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos, ignoreNulls);
+        return areColumnsUniqueForKeys(uniqueColSets, columns);
+    }
+
+    public static Boolean areColumnsUniqueForKeys(
+        Set<BitSet> uniqueColSets,
+        BitSet columns)
+    {
         if (uniqueColSets == null) {
             return null;
         }

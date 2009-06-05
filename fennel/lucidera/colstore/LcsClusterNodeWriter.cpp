@@ -120,8 +120,9 @@ bool LcsClusterNodeWriter::getLastClusterPageForWrite(
     bTreeWriter->endSearch();
 
     if (isTracingLevel(TRACE_FINE)) {
-        FENNEL_TRACE(TRACE_FINE,
-                     "Calling ClusterDump from getLastClusterPageForWrite");
+        FENNEL_TRACE(
+            TRACE_FINE,
+            "Calling ClusterDump from getLastClusterPageForWrite");
         clusterDump->dump(opaqueToInt(clusterPageId), pBlock, szBlock);
     }
 
@@ -329,8 +330,10 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     } else if (batchDirs[column].mode == LCS_FIXED) {
         // fixed size record batch
         // copy the values into the given buffer
-        memcpy(pBuf, pBlock[column] + batchDirs[column].oVal,
-                batchDirs[column].nRow * batchDirs[column].recSize);
+        memcpy(
+            pBuf,
+            pBlock[column] + batchDirs[column].oVal,
+            batchDirs[column].nRow * batchDirs[column].recSize);
     } else {
         // variable sized records (batch.mode == LCS_VARIABLE)
         // get the address of the batches value offsets
@@ -353,8 +356,10 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     batchOffset[column] = batchDirs[column].oVal;
 
     // copy the batch dir back to the end of the prev batch.
-    memmove(pBlock[column] + batchOffset[column], pBatch,
-            batchCount[column] * sizeof(LcsBatchDir));
+    memmove(
+        pBlock[column] + batchOffset[column],
+        pBatch,
+        batchCount[column] * sizeof(LcsBatchDir));
 
     // recalc size left
     // leave place for one new batch(the rolled back one will be rewriten)
@@ -593,21 +598,30 @@ void LcsClusterNodeWriter::putCompressedBatch(
 
         case 4:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
-                setBits(p[j] + i / 2 , 4, (i % 2) * 4,
+                setBits(
+                    p[j] + i / 2 ,
+                    4,
+                    (i % 2) * 4,
                     (uint16_t)(((uint16_t *) pRows)[i] >> b));
             }
             break;
 
         case 2:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
-                setBits(p[j] + i / 4 , 2, (i % 4) * 2,
+                setBits(
+                    p[j] + i / 4 ,
+                    2,
+                    (i % 4) * 2,
                     (uint16_t)(((uint16_t *) pRows)[i] >> b));
             }
             break;
 
         case 1:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
-                setBits(p[j] + i / 8 , 1, (i % 8),
+                setBits(
+                    p[j] + i / 8 ,
+                    1,
+                    (i % 8),
                     (uint16_t)(((uint16_t *)pRows)[i] >> b));
             }
             break;
@@ -681,8 +695,9 @@ void LcsClusterNodeWriter::putFixedVarBatch(
         for (i = 0; i < batchRows; i++) {
             // valueSource determines by the offset whether the value comes from
             // the bank of from the block
-            src = valueSource(localLastVal, localpValBank, localoValBank,
-                                localpBlock, pRows[i]);
+            src = valueSource(
+                localLastVal, localpValBank, localoValBank,
+                localpBlock, pRows[i]);
             uint len = attrAccessors[column].getStoredByteCount(src);
             memcpy(pVal, src, len);
             pVal += batchRecSize;
@@ -710,8 +725,9 @@ void LcsClusterNodeWriter::putFixedVarBatch(
         // valueSource determines by the offset whether the value comes from
         // the bank or from the block. if the value bank is not used
         // valueSource will get all the values fron the block
-        src = valueSource(localLastVal, localpValBank, localoValBank,
-                            localpBlock, pRows[i]);
+        src = valueSource(
+            localLastVal, localpValBank, localoValBank,
+            localpBlock, pRows[i]);
         uint len = attrAccessors[column].getStoredByteCount(src);
         memcpy(pVal, src, len);
         pVal += batchRecSize;
@@ -838,8 +854,10 @@ void LcsClusterNodeWriter::pickCompressionMode(
                 // save the values obtained while this batch was in
                 // variable mode
                 if (deltaVal) {
-                    memcpy(pValBank[column],
-                           pBlock[column] + lastVal[column], deltaVal);
+                    memcpy(
+                        pValBank[column],
+                        pBlock[column] + lastVal[column],
+                        deltaVal);
                 }
 
                 valBankStart[column] = 0;
@@ -905,8 +923,10 @@ void LcsClusterNodeWriter::pickCompressionMode(
     // Slide down the batch directories to make room for new batch data (batch
     // directories occur after the batches).
     pBatch = (PLcsBatchDir)(pBlock[column] + batchOffset[column] + nByte);
-    memmove(pBatch, pBlock[column] + batchOffset[column],
-            batchCount[column]*sizeof(LcsBatchDir));
+    memmove(
+        pBatch,
+        pBlock[column] + batchOffset[column],
+        batchCount[column] * sizeof(LcsBatchDir));
 
     // adjust szLeft for the space used by the next batch to reflect only
     // its batch directory

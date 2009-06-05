@@ -420,7 +420,8 @@ class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
     int64_t curValue;
 
 public:
-    explicit DupRepeatingSeqColumnGenerator(int numSequenceInit,
+    explicit DupRepeatingSeqColumnGenerator(
+        int numSequenceInit,
         int numDupsInit)
     {
         assert(numSequenceInit > 0);

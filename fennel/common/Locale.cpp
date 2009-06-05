@@ -54,9 +54,10 @@ Locale::Locale(const string &language, const string &country)
     assert(country.empty() || country.length() == 2);
 }
 
-Locale::Locale(const string &language,
-               const string &country,
-               const string &variant)
+Locale::Locale(
+    const string &language,
+    const string &country,
+    const string &variant)
     : _lang(language), _country(country), _variant(variant)
 {
     // either language, country and variant are empty or language must

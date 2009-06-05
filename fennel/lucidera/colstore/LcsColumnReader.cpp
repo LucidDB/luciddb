@@ -161,8 +161,8 @@ void LcsColumnReader::readCompressedBatch(
     uint count, uint16_t *pValCodes, uint *pActCount)
 {
     *pActCount = std::min(count, pScan->getRangeRowsLeft());
-    readBitVecs(pValCodes, iV, width, origin, pScan->getRangePos(),
-                *pActCount);
+    readBitVecs(
+        pValCodes, iV, width, origin, pScan->getRangePos(), *pActCount);
 }
 
 uint16_t LcsColumnReader::getCurrentValueCode() const
@@ -301,10 +301,14 @@ void LcsColumnReader::findBounds(
     bool getUpperBoundStrict =
         filter->upperBoundDirective != SEARCH_CLOSED_UPPER;
 
-    nLoVal = (getLowerSet ? findVal(filterPos, false, getLowerBoundStrict,
-        readerKeyData) : 0);
-    nHiVal = (getUpperSet ? findVal(filterPos, true, getUpperBoundStrict,
-        readerKeyData) : getBatchValCount());
+    nLoVal =
+        getLowerSet
+        ? findVal(filterPos, false, getLowerBoundStrict, readerKeyData)
+        : 0;
+    nHiVal =
+        getUpperSet
+        ? findVal(filterPos, true, getUpperBoundStrict, readerKeyData)
+        : getBatchValCount();
 }
 
 void LcsColumnReader::buildContainsMap()

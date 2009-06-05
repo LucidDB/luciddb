@@ -171,8 +171,9 @@ bool LhxHashKeyAccessor::matches(
 
     currentKey.projectFrom(keyTuple, keyColsProj);
 
-    return (keyColsDesc.compareTuples(keyTuple, keyColsProj,
-            inputTuple, inputKeyProj) == 0);
+    return keyColsDesc.compareTuples(
+        keyTuple, keyColsProj,
+        inputTuple, inputKeyProj) == 0;
 }
 
 string LhxHashKeyAccessor::toString()
@@ -197,7 +198,9 @@ void LhxHashBlockAccessor::init(uint usablePageSize)
     numSlotsPerBlock = blockUsableSize / sizeof(PBuffer);
 }
 
-void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid,
+void LhxHashBlockAccessor::setCurrent(
+    PBuffer blockPtrInit,
+    bool valid,
     bool clearContent)
 {
     LhxHashNodeAccessor::setCurrent(blockPtrInit);
@@ -496,7 +499,8 @@ void LhxHashTable::releaseResources(bool reuse)
      * other clients of the shared scratchAccessor.
      */
     if (!reuse && scratchAccessor.pSegment) {
-        scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID,
+        scratchAccessor.pSegment->deallocatePageRange(
+            NULL_PAGE_ID,
             NULL_PAGE_ID);
         firstBlock = NULL;
         currentBlockCount = 0;
@@ -894,7 +898,8 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
     bool isProbing = false;
     bool removeDuplicateProbe = false;
     PBuffer destKeyLoc =
-        findKeyLocation(inputTuple, keyColsProj, isProbing,
+        findKeyLocation(
+            inputTuple, keyColsProj, isProbing,
             removeDuplicateProbe);
 
     if (!destKeyLoc) {
@@ -941,7 +946,8 @@ PBuffer LhxHashTable::findKey(
     PBuffer destKeyLoc;
     bool isProbing = true;
     destKeyLoc =
-        findKeyLocation(inputTuple, inputKeyProj, isProbing,
+        findKeyLocation(
+            inputTuple, inputKeyProj, isProbing,
             removeDuplicateProbe);
 
     if (destKeyLoc) {

@@ -58,12 +58,13 @@ class FENNEL_EXEC_EXPORT DfsTreeExecStreamScheduler
      *
      * @return false if reached sink vertex, else true
      */
-    bool findNextConsumer(ExecStreamGraphImpl &graphImpl,
-                          const ExecStreamGraphImpl::GraphRep &graphRep,
-                          const ExecStream &stream,
-                          ExecStreamGraphImpl::Edge &edge,
-                          ExecStreamId &current,
-                          ExecStreamBufState skipState);
+    bool findNextConsumer(
+        ExecStreamGraphImpl &graphImpl,
+        const ExecStreamGraphImpl::GraphRep &graphRep,
+        const ExecStream &stream,
+        ExecStreamGraphImpl::Edge &edge,
+        ExecStreamId &current,
+        ExecStreamBufState skipState);
 
 public:
     /**

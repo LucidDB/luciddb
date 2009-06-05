@@ -1536,7 +1536,8 @@ public class FarragoPreparingStmt
         return getSession().getSessionVariables().schemaName;
     }
 
-    public void addDependency(CwmModelElement supplier,
+    public void addDependency(
+        CwmModelElement supplier,
         PrivilegedAction action)
     {
         if (!isExpandingDefinition()) {
@@ -1728,7 +1729,8 @@ public class FarragoPreparingStmt
             this.inputTable = inputTable;
         }
 
-        public RelNode toRel(RelOptCluster cluster,
+        public RelNode toRel(
+            RelOptCluster cluster,
             RelOptConnection connection)
         {
             final RelNode inputRel = inputTable.toRel(cluster, connection);

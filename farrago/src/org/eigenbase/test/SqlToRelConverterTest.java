@@ -65,7 +65,8 @@ public class SqlToRelConverterTest
 
     public void testIntegerLiteral()
     {
-        check("select 1 from emp",
+        check(
+            "select 1 from emp",
             "${plan}");
     }
 
@@ -112,7 +113,8 @@ public class SqlToRelConverterTest
 
     public void testJoinNatural()
     {
-        check("SELECT * FROM emp NATURAL JOIN dept",
+        check(
+            "SELECT * FROM emp NATURAL JOIN dept",
             "${plan}");
     }
 
@@ -141,7 +143,8 @@ public class SqlToRelConverterTest
 
     public void testGroup()
     {
-        check("select deptno from emp group by deptno",
+        check(
+            "select deptno from emp group by deptno",
             "${plan}");
     }
 
@@ -165,7 +168,8 @@ public class SqlToRelConverterTest
     public void testHaving()
     {
         // empty group-by clause, having
-        check("select sum(sal + sal) from emp having sum(sal) > 10",
+        check(
+            "select sum(sal + sal) from emp having sum(sal) > 10",
             "${plan}");
     }
 
@@ -201,13 +205,15 @@ public class SqlToRelConverterTest
 
     public void testSelectDistinct()
     {
-        check("select distinct sal + 5 from emp",
+        check(
+            "select distinct sal + 5 from emp",
             "${plan}");
     }
 
     public void testSelectDistinctGroup()
     {
-        check("select distinct sum(sal) from emp group by deptno",
+        check(
+            "select distinct sum(sal) from emp group by deptno",
             "${plan}");
     }
 
@@ -224,7 +230,8 @@ public class SqlToRelConverterTest
 
     public void testOrder()
     {
-        check("select empno from emp order by empno",
+        check(
+            "select empno from emp order by empno",
             "${plan}");
     }
 
@@ -380,13 +387,15 @@ public class SqlToRelConverterTest
 
     public void testExplicitTable()
     {
-        check("table emp",
+        check(
+            "table emp",
             "${plan}");
     }
 
     public void testCollectionTable()
     {
-        check("select * from table(ramp(3))",
+        check(
+            "select * from table(ramp(3))",
             "${plan}");
     }
 
@@ -455,13 +464,15 @@ public class SqlToRelConverterTest
 
     public void testUnnest()
     {
-        check("select*from unnest(multiset[1,2])",
+        check(
+            "select*from unnest(multiset[1,2])",
             "${plan}");
     }
 
     public void testUnnestSubquery()
     {
-        check("select*from unnest(multiset(select*from dept))",
+        check(
+            "select*from unnest(multiset(select*from dept))",
             "${plan}");
     }
 
@@ -474,13 +485,15 @@ public class SqlToRelConverterTest
 
     public void testMultiset()
     {
-        check("select 'a',multiset[10] from dept",
+        check(
+            "select 'a',multiset[10] from dept",
             "${plan}");
     }
 
     public void testMultisetOfColumns()
     {
-        check("select 'abc',multiset[deptno,sal] from emp",
+        check(
+            "select 'abc',multiset[deptno,sal] from emp",
             "${plan}");
     }
 
@@ -548,13 +561,15 @@ public class SqlToRelConverterTest
 
     public void testElement()
     {
-        check("select element(multiset[5]) from emp",
+        check(
+            "select element(multiset[5]) from emp",
             "${plan}");
     }
 
     public void testElementInValues()
     {
-        check("values element(multiset[5])",
+        check(
+            "values element(multiset[5])",
             "${plan}");
     }
 
@@ -569,7 +584,8 @@ public class SqlToRelConverterTest
     public void testUnion()
     {
         // union without all
-        check("select empno from emp union select deptno from dept",
+        check(
+            "select empno from emp union select deptno from dept",
             "${plan}");
     }
 
@@ -597,20 +613,23 @@ public class SqlToRelConverterTest
 
     public void testIsDistinctFrom()
     {
-        check("select 1 is distinct from 2 from (values(true))",
+        check(
+            "select 1 is distinct from 2 from (values(true))",
             "${plan}");
     }
 
     public void testIsNotDistinctFrom()
     {
-        check("select 1 is not distinct from 2 from (values(true))",
+        check(
+            "select 1 is not distinct from 2 from (values(true))",
             "${plan}");
     }
 
     public void testNotLike()
     {
         // note that 'x not like y' becomes 'not(x like y)'
-        check("values ('a' not like 'b' escape 'c')",
+        check(
+            "values ('a' not like 'b' escape 'c')",
             "${plan}");
     }
 
@@ -635,7 +654,8 @@ public class SqlToRelConverterTest
      */
     public void testCase()
     {
-        check("values (case 'a' when 'a' then 1 end)",
+        check(
+            "values (case 'a' when 'a' then 1 end)",
             "${plan}");
     }
 
@@ -647,7 +667,8 @@ public class SqlToRelConverterTest
     public void testCharLength()
     {
         // Note that CHARACTER_LENGTH becomes CHAR_LENGTH.
-        check("values (character_length('foo'))",
+        check(
+            "values (character_length('foo'))",
             "${plan}");
     }
 

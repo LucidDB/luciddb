@@ -281,7 +281,8 @@ public:
      *
      * returns true iff the tuple passes the predicates
      */
-    bool applyFilters(TupleDescriptor &projDescriptor,
+    bool applyFilters(
+        TupleDescriptor &projDescriptor,
         TupleData &outputTupleData);
 };
 

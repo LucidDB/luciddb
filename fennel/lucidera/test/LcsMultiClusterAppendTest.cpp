@@ -73,8 +73,8 @@ protected:
      * nClusters clusters, each with nCols.  Therefore, the table has
      * in total nCols*nClusters columns.
      */
-    void scanCols(uint nRows, uint nCols, uint nClusters,
-                      TupleProjection proj);
+    void scanCols(
+        uint nRows, uint nCols, uint nClusters, TupleProjection proj);
 
 public:
     explicit LcsMultiClusterAppendTest()
@@ -108,8 +108,10 @@ void LcsMultiClusterAppendTest::testLoad()
     scanCols(nRows, nCols, nClusters, proj);
 }
 
-void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
-                                             uint nClusters)
+void LcsMultiClusterAppendTest::loadClusters(
+    uint nRows,
+    uint nCols,
+    uint nClusters)
 {
     // setup input stream
 
@@ -220,9 +222,11 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
-                                             uint nClusters,
-                                             TupleProjection proj)
+void LcsMultiClusterAppendTest::scanCols(
+    uint nRows,
+    uint nCols,
+    uint nClusters,
+    TupleProjection proj)
 {
     // setup parameters into scan
     //  nClusters cluster with nCols columns each

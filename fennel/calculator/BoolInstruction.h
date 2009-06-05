@@ -148,9 +148,10 @@ class FENNEL_CALCULATOR_EXPORT BoolAnd
 {
 public:
     explicit
-    BoolAnd(RegisterRef<bool>* result,
-            RegisterRef<bool>* op1,
-            RegisterRef<bool>* op2)
+    BoolAnd(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
     {}
 

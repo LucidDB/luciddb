@@ -545,7 +545,8 @@ public final class SqlParserUtil
      * example, if list contains <code>{A, B, C, D, E}</code> then <code>
      * replaceSublist(list, X, 1, 4)</code> returns <code>{A, X, E}</code>.
      */
-    public static <T> void replaceSublist(List<T> list,
+    public static <T> void replaceSublist(
+        List<T> list,
         int start,
         int end,
         T o)
@@ -816,7 +817,8 @@ outer:
         private final Locale locale;
         private final String strength;
 
-        public ParsedCollation(Charset charset,
+        public ParsedCollation(
+            Charset charset,
             Locale locale,
             String strength)
         {

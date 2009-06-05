@@ -98,13 +98,16 @@ public class SargTest
         stringType = typeFactory.createTypeWithNullability(stringType, true);
 
         rexBuilder = new RexBuilder(typeFactory);
-        intLiteral7 = rexBuilder.makeExactLiteral(new BigDecimal(7),
+        intLiteral7 = rexBuilder.makeExactLiteral(
+            new BigDecimal(7),
             intType);
         intLiteral490 =
-            rexBuilder.makeExactLiteral(new BigDecimal(490),
+            rexBuilder.makeExactLiteral(
+                new BigDecimal(490),
                 intType);
         intLiteral8point5 =
-            rexBuilder.makeExactLiteral(new BigDecimal("8.5"),
+            rexBuilder.makeExactLiteral(
+                new BigDecimal("8.5"),
                 intType);
 
         sargFactory = new SargFactory(rexBuilder);

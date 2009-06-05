@@ -136,7 +136,8 @@ public class SqlBinaryOperator
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =
-                SqlCollation.getCoercibilityDyadicOperator(col1,
+                SqlCollation.getCoercibilityDyadicOperator(
+                    col1,
                     col2);
 
             if (SqlTypeUtil.inCharFamily(type)) {
@@ -183,7 +184,8 @@ public class SqlBinaryOperator
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =
-                SqlCollation.getCoercibilityDyadicOperator(col1,
+                SqlCollation.getCoercibilityDyadicOperator(
+                    col1,
                     col2);
 
             if (SqlTypeUtil.inCharFamily(type)) {

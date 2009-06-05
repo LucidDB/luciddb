@@ -91,9 +91,11 @@ public abstract class FarragoManagementUDR
                 if (stmtInfo != null) {
                     int i = 0;
                     resultInserter.setLong(++i, id);
-                    resultInserter.setLong(++i,
+                    resultInserter.setLong(
+                        ++i,
                         info.getId());
-                    resultInserter.setString(++i,
+                    resultInserter.setString(
+                        ++i,
                         stmtInfo.getSql());
                     resultInserter.setTimestamp(
                         ++i,
@@ -130,7 +132,8 @@ public abstract class FarragoManagementUDR
                     List<String> mofIds = stmtInfo.getObjectsInUse();
                     for (String mofId : mofIds) {
                         int i = 0;
-                        resultInserter.setLong(++i,
+                        resultInserter.setLong(
+                            ++i,
                             info.getId());
                         resultInserter.setLong(++i, id);
                         resultInserter.setString(++i, mofId);
@@ -158,9 +161,11 @@ public abstract class FarragoManagementUDR
             int i = 0;
             FarragoSessionVariables v = s.getSessionVariables();
             FarragoSessionInfo info = s.getSessionInfo();
-            resultInserter.setLong(++i,
+            resultInserter.setLong(
+                ++i,
                 info.getId());
-            resultInserter.setString(++i,
+            resultInserter.setString(
+                ++i,
                 s.getUrl());
             resultInserter.setString(++i, v.currentUserName);
             resultInserter.setString(++i, v.currentRoleName);
@@ -172,11 +177,14 @@ public abstract class FarragoManagementUDR
             resultInserter.setLong(++i, v.processId);
             resultInserter.setString(++i, v.catalogName);
             resultInserter.setString(++i, v.schemaName);
-            resultInserter.setBoolean(++i,
+            resultInserter.setBoolean(
+                ++i,
                 s.isClosed());
-            resultInserter.setBoolean(++i,
+            resultInserter.setBoolean(
+                ++i,
                 s.isAutoCommit());
-            resultInserter.setBoolean(++i,
+            resultInserter.setBoolean(
+                ++i,
                 s.isTxnInProgress());
             resultInserter.setString(
                 ++i,
@@ -326,14 +334,16 @@ public abstract class FarragoManagementUDR
             Properties props = loader.getStorageProperties();
             int i = 0;
             resultInserter.setString(++i, STORAGEFACTORY_PROP_NAME);
-            resultInserter.setString(++i,
+            resultInserter.setString(
+                ++i,
                 loader.getStorageFactoryClassName());
             resultInserter.executeUpdate();
 
             for (String propName : STORAGE_PROP_NAMES) {
                 i = 0;
                 resultInserter.setString(++i, propName);
-                resultInserter.setString(++i,
+                resultInserter.setString(
+                    ++i,
                     props.getProperty(propName));
                 resultInserter.executeUpdate();
             }

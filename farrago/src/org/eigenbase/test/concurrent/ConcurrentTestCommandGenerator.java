@@ -551,7 +551,8 @@ public class ConcurrentTestCommandGenerator
 
             if (commands.size() < maxCommands) {
                 for (int j = commands.size() + 1; j <= maxCommands; j++) {
-                    commands.put(new Integer(j),
+                    commands.put(
+                        new Integer(j),
                         null);
                 }
             }
@@ -588,7 +589,8 @@ public class ConcurrentTestCommandGenerator
                 synchronizedCommands.put(
                     new Integer((orderKey * 2) - 1),
                     new AutoSynchronizationCommand());
-                synchronizedCommands.put(new Integer(orderKey * 2),
+                synchronizedCommands.put(
+                    new Integer(orderKey * 2),
                     command);
             }
 

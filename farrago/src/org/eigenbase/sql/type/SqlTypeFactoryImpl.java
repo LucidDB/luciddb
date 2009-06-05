@@ -83,7 +83,8 @@ public class SqlTypeFactoryImpl
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createMultisetType(RelDataType type,
+    public RelDataType createMultisetType(
+        RelDataType type,
         long maxCardinality)
     {
         assert (maxCardinality == -1);

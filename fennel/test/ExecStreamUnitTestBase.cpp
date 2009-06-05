@@ -69,14 +69,17 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     // connect streams in a cascade
     ExecStreamEmbryo& previousStream = sourceStreamEmbryo;
     for (it = transforms.begin(); it != transforms.end(); ++it) {
-        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
-                                  (*it).getStream()->getName());
+        pGraphEmbryo->addDataflow(
+            previousStream.getStream()->getName(),
+            (*it).getStream()->getName());
         previousStream = *it;
     }
 
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
-                                    BUFPROV_PRODUCER);
+        pGraphEmbryo->addAdapterFor(
+            previousStream.getStream()->getName(),
+            0,
+            BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
     pGraphEmbryo->prepareGraph(shared_from_this(), "");
@@ -131,15 +134,18 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
     }
 
     for (it = transforms.begin(); it != transforms.end(); ++it) {
-        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
-                                  (*it).getStream()->getName());
+        pGraphEmbryo->addDataflow(
+            previousStream.getStream()->getName(),
+            (*it).getStream()->getName());
         previousStream = *it;
     }
 
 
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
-                                    BUFPROV_PRODUCER);
+        pGraphEmbryo->addAdapterFor(
+            previousStream.getStream()->getName(),
+            0,
+            BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
     pGraphEmbryo->prepareGraph(shared_from_this(), "");

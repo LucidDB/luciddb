@@ -12,6 +12,16 @@
 >     extent_name 'MOF', 
 >     schema_name 'MODEL');
 > 
+> -- special foreign server with some pushdown rules disabled
+> create server hsqldb_demo_limited_pushdown
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     disabled_pushdown_rel_pattern '.*on proj.*',
+>     table_types 'TABLE,VIEW');
+> 
 > -- single-table projection with no filters
 > select "name" from mof_repository.model."Exception" order by 1;
 +------------------+
@@ -174,7 +184,37 @@
 <resultset>
   <result DNAME="RESEARCH"/>
 </resultset>
->     
+> 
+> -- full-table agg which can be pushed down to foreign DBMS
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+<resultset>
+  <result EXPR$0="29025"/>
+</resultset>
+> 
+> -- GROUP BY which can be pushed down to foreign DBMS
+> select deptno, sum(sal), count(*)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+<resultset>
+  <result DEPTNO="10" EXPR$1="8750" EXPR$2="3"/>
+  <result DEPTNO="20" EXPR$1="10875" EXPR$2="5"/>
+  <result DEPTNO="30" EXPR$1="9400" EXPR$2="6"/>
+</resultset>
+> 
+> -- GROUP BY with standalone count(distinct) can be pushed down
+> -- as two-level agg
+> select deptno, count(distinct sal)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+<resultset>
+  <result DEPTNO="10" EXPR$1="3"/>
+  <result DEPTNO="20" EXPR$1="4"/>
+  <result DEPTNO="30" EXPR$1="5"/>
+</resultset>
+> 
 > -- now explain plans for above queries
 > !set outputformat csv
 > 
@@ -353,6 +393,59 @@
 '  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
 'FROM "SALES"."DEPT"'
 'WHERE "DEPTNO" = 20])'
+> 
+> -- verify that even with complex pushdown rules disabled, we can
+> -- still push down both projection and filter
+> explain plan for 
+> select dname 
+> from hsqldb_demo_limited_pushdown.sales.dept
+> where deptno=20;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
+'FROM "SALES"."DEPT"'
+'WHERE "DEPTNO" = 20])'
+> 
+> explain plan for 
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT SUM("SAL")'
+'FROM (SELECT "SAL"'
+'FROM "SALES"."EMP")])'
+> 
+> explain plan for 
+> select deptno, sum(sal), count(*)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      ResultSetToFarragoIteratorConverter'
+'        MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO", SUM("SAL"), COUNT(*)'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM "SALES"."EMP")'
+'GROUP BY "DEPTNO"])'
+> 
+> explain plan for 
+> select deptno, count(distinct sal)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      ResultSetToFarragoIteratorConverter'
+'        MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO", COUNT("SAL")'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM "SALES"."EMP")'
+'GROUP BY "DEPTNO", "SAL")'
+'GROUP BY "DEPTNO"])'
 > 
 > -- join on pseudocolumn (FRG-69)
 > 

@@ -461,7 +461,9 @@ void BTreeWriter::grow(
     nodeAccessor.clearNode(newLeftNode,getSegment()->getUsablePageSize());
     // 1. copy the content of old root page to the new page2. (left).
     newLeftNode = node;
-    memcpy(newLeftNode.getDataForWrite(), node.getDataForRead(),
+    memcpy(
+        newLeftNode.getDataForWrite(),
+        node.getDataForRead(),
         getSegment()->getUsablePageSize() - sizeof(BTreeNode));
 
     // 1a. fix the prefetch links to match the games we're playing

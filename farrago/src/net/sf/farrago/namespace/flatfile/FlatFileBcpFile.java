@@ -475,7 +475,8 @@ class FlatFileBcpFile
                         }
                         types[index] =
                             typeFactory.createTypeWithNullability(
-                                typeFactory.createSqlType(typeName,
+                                typeFactory.createSqlType(
+                                    typeName,
                                     typeLen),
                                 true);
                     }

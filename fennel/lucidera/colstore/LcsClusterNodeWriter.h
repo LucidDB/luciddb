@@ -478,9 +478,10 @@ public:
      *
      * @param compressionMode returns the chosen compression mode
      */
-    void pickCompressionMode(uint column, uint fixedSize, uint nRows,
-                                uint16_t **pValOffset,
-                                LcsBatchMode &compressionMode);
+    void pickCompressionMode(
+        uint column, uint fixedSize, uint nRows,
+        uint16_t **pValOffset,
+        LcsBatchMode &compressionMode);
 
     /**
      * Returns true if there is no space left in the cluster page

@@ -213,7 +213,8 @@ class MedMdrNameDirectory
         throws SQLException
     {
         RefPackage subPackage =
-            lookupRefPackage(new String[] { foreignName },
+            lookupRefPackage(
+                new String[] { foreignName },
                 1);
         if (subPackage == null) {
             return null;

@@ -134,7 +134,8 @@ class MedMqlDataServer
                         new RelOptRuleOperand(
                             FilterRel.class,
                             new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(ProjectRel.class,
+                                new RelOptRuleOperand(
+                                    ProjectRel.class,
                                     new RelOptRuleOperand[] {
                                         new RelOptRuleOperand(
                                             MedMqlTableRel.class) }) }) }),
@@ -146,7 +147,8 @@ class MedMqlDataServer
             new MedMqlPushDownRule(
                 new RelOptRuleOperand(
                     FilterRel.class, new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(ProjectRel.class,
+                        new RelOptRuleOperand(
+                            ProjectRel.class,
                             new RelOptRuleOperand[] {
                                 new RelOptRuleOperand(
                                     MedMqlTableRel.class) }) }),

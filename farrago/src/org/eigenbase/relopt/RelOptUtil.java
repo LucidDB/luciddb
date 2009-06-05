@@ -710,8 +710,7 @@ public abstract class RelOptUtil
             return rel;
         }
 
-        return CalcRel.createFilter(rel,
-            condition);
+        return CalcRel.createFilter(rel, condition);
     }
 
     /**

@@ -532,7 +532,8 @@ public abstract class JmiMemFactory
                     getClass().getClassLoader(),
                     new Class[] { clazz, Element.class },
                     this);
-            mapMofId((RefBaseObject) proxy,
+            mapMofId(
+                (RefBaseObject) proxy,
                 proxyRefMofId());
         }
 
@@ -1044,7 +1045,8 @@ public abstract class JmiMemFactory
             ElementImpl impl = createImpl(createClass, immediatePkg, false);
 
             Iterator featureIter =
-                JmiObjUtil.getFeatures((RefClass) wrap(),
+                JmiObjUtil.getFeatures(
+                    (RefClass) wrap(),
                     Attribute.class,
                     true).iterator();
 

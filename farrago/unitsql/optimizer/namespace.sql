@@ -12,6 +12,16 @@ options(
     extent_name 'MOF', 
     schema_name 'MODEL');
 
+-- special foreign server with some pushdown rules disabled
+create server hsqldb_demo_limited_pushdown
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    disabled_pushdown_rel_pattern '.*on proj.*',
+    table_types 'TABLE,VIEW');
+
 -- single-table projection with no filters
 select "name" from mof_repository.model."Exception" order by 1;
 
@@ -115,7 +125,24 @@ order by
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;
-    
+
+-- full-table agg which can be pushed down to foreign DBMS
+select sum(sal)
+from hsqldb_demo.sales.emp;
+
+-- GROUP BY which can be pushed down to foreign DBMS
+select deptno, sum(sal), count(*)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
+-- GROUP BY with standalone count(distinct) can be pushed down
+-- as two-level agg
+select deptno, count(distinct sal)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
 -- now explain plans for above queries
 !set outputformat csv
 
@@ -220,6 +247,29 @@ explain plan for
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;
+
+-- verify that even with complex pushdown rules disabled, we can
+-- still push down both projection and filter
+explain plan for 
+select dname 
+from hsqldb_demo_limited_pushdown.sales.dept
+where deptno=20;
+
+explain plan for 
+select sum(sal)
+from hsqldb_demo.sales.emp;
+
+explain plan for 
+select deptno, sum(sal), count(*)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
+
+explain plan for 
+select deptno, count(distinct sal)
+from hsqldb_demo.sales.emp
+group by deptno
+order by deptno;
 
 -- join on pseudocolumn (FRG-69)
 

@@ -162,8 +162,8 @@ void LcsHash::insert(
          */
         *undoInsert =
             hash.isFull() ||
-            !clusterBlockWriter->addValue(columnId, dataWithLen,
-                &newValueOffset);
+            !clusterBlockWriter->addValue(
+                columnId, dataWithLen, &newValueOffset);
 
         if (*undoInsert) {
             /*
@@ -370,8 +370,10 @@ void LcsHash::prepareCompressedBatch(
     /*
      * Sorts the value ordinals based on the key values.
      */
-    std::sort(offsetIndexVector, offsetIndexVector + (*numVals),
-              LcsCompare(compareInst));
+    std::sort(
+        offsetIndexVector,
+        offsetIndexVector + (*numVals),
+        LcsCompare(compareInst));
 
     /*
      * Now OffsetIndexVector is sorted. Sets sortedOrd, which is basically index
@@ -477,7 +479,8 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
             }
         }
 
-        lastValOff = clusterBlockWriter->getNextVal(columnId,
+        lastValOff = clusterBlockWriter->getNextVal(
+            columnId,
             (uint16_t)lastValOff);
     }
 }

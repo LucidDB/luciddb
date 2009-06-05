@@ -153,8 +153,9 @@ public abstract class FarragoTestConcurrentTestCase
         if (synchronizeClockTicks) {
             cmdGen.synchronizeCommandSets();
         }
-        assertTrue("test case has invalid synchronization",
-                   cmdGen.hasValidSynchronization());
+        assertTrue(
+            "test case has invalid synchronization",
+            cmdGen.hasValidSynchronization());
         cmdGen.execute();
     }
 
@@ -164,11 +165,11 @@ public abstract class FarragoTestConcurrentTestCase
             System.err.println("Testcase: " + getName());
             for (ConcurrentTestCommandGenerator.FailedThread f :
                      cmdGen.getFailedThreads())
-                {
-                    System.err.println(f.name + " failed " + f.location);
-                    f.failure.printStackTrace(System.err);
-                    System.err.println();
-                }
+            {
+                System.err.println(f.name + " failed " + f.location);
+                f.failure.printStackTrace(System.err);
+                System.err.println();
+            }
             System.err.println("-----\n");
             fail();
         }

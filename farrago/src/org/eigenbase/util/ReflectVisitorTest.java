@@ -56,7 +56,8 @@ public class ReflectVisitorTest
 
         // verify that negater is capable of handling integers
         result = negater.negate(new Integer(5));
-        assertEquals(-5,
+        assertEquals(
+            -5,
             result.intValue());
     }
 
@@ -71,7 +72,8 @@ public class ReflectVisitorTest
         // verify that negater is capable of handling integers,
         // and that result comes back with same type
         result = negater.negate(new Integer(5));
-        assertEquals(-5,
+        assertEquals(
+            -5,
             result.intValue());
         assertTrue(result instanceof Integer);
 
@@ -79,7 +81,8 @@ public class ReflectVisitorTest
         // even though it doesn't provide an explicit implementation,
         // it should inherit the one from CarelessNumberNegater
         result = negater.negate(new Long(5));
-        assertEquals(-5,
+        assertEquals(
+            -5,
             result.longValue());
     }
 
@@ -94,7 +97,8 @@ public class ReflectVisitorTest
         // verify that negater is capable of handling shorts,
         // and that result comes back with same type
         result = negater.negate(new Short((short) 5));
-        assertEquals(-5,
+        assertEquals(
+            -5,
             result.shortValue());
         assertTrue(result instanceof Short);
 

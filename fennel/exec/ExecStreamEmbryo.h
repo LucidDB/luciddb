@@ -84,7 +84,7 @@ public:
         P *pParamCopy = new P(paramsInit);
         pParams.reset(pParamCopy);
         prepareFunction = boost::bind(
-            &S::prepare, pStreamInit, boost::cref(*pParamCopy));
+            &S::prepare, pStreamInit, boost::ref(*pParamCopy));
     }
 
     inline SharedExecStream &getStream()

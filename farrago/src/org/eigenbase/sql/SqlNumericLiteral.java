@@ -54,7 +54,9 @@ public class SqlNumericLiteral
         boolean isExact,
         SqlParserPos pos)
     {
-        super(value, isExact ? SqlTypeName.DECIMAL : SqlTypeName.DOUBLE,
+        super(
+            value,
+            isExact ? SqlTypeName.DECIMAL : SqlTypeName.DOUBLE,
             pos);
         this.prec = prec;
         this.scale = scale;

@@ -641,7 +641,8 @@ public class RexBuilder
     {
         return makeLiteral(
             ByteBuffer.wrap(byteArray),
-            typeFactory.createSqlType(SqlTypeName.BINARY,
+            typeFactory.createSqlType(
+                SqlTypeName.BINARY,
                 byteArray.length),
             SqlTypeName.BINARY);
     }

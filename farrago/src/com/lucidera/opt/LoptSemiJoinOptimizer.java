@@ -75,7 +75,8 @@ public class LoptSemiJoinOptimizer
 
     //~ Constructors -----------------------------------------------------------
 
-    public LoptSemiJoinOptimizer(LoptMultiJoin multiJoin,
+    public LoptSemiJoinOptimizer(
+        LoptMultiJoin multiJoin,
         RexBuilder rexBuilder)
     {
         // there are no semijoins yet, so initialize to the original

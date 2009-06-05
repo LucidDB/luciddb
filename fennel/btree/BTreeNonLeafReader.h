@@ -85,8 +85,10 @@ public:
      * @return true if tuple found; false if not found, in which case reader is
      * positioned on tuple depending on leastUpper parameter
      */
-    virtual bool searchForKey(TupleData const &key,DuplicateSeek dupSeek,
-                      bool leastUpper = true);
+    virtual bool searchForKey(
+        TupleData const &key,
+        DuplicateSeek dupSeek,
+        bool leastUpper = true);
 
     /**
      * Searches for the next tuple at the level just above the leaf.  Can be
