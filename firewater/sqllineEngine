@@ -7,9 +7,9 @@ SESSION_FACTORY="./plugin/firewater.jar"
 
 SERVER_JAVA_ARGS="-Xms512m -Xmx512m -ea -esa \
   -cp ../luciddb/classes:`cat ../farrago/classpath.gen`:../farrago/plugin/FarragoMedJdbc.jar \
-  -Dnet.sf.farrago.home=`pwd`/../luciddb \
-  -Dnet.sf.farrago.catalog=`pwd`/../luciddb/catalog \
-  -Djava.util.logging.config.file=../luciddb/trace/LucidDbTrace.properties \
+  -Dnet.sf.farrago.home=`pwd` \
+  -Dnet.sf.farrago.catalog=`pwd`/catalog/data \
+  -Djava.util.logging.config.file=./trace/FirewaterTrace.properties \
   -Dnet.sf.farrago.defaultSessionFactoryLibraryName=${SESSION_FACTORY}"
 
 SQLLINE_JAVA_ARGS="sqlline.SqlLine"

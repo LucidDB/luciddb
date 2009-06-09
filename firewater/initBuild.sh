@@ -23,6 +23,7 @@ cd ../luciddb
 ant restoreCatalog
 cd ../firewater
 ant createPlugin
+ant initFiles
 cd ../farrago
 ant restoreCatalog
 cd ../firewater
@@ -34,5 +35,5 @@ cd ../firewater
 junitSingle initsql/installSystemObjects.sql
 # cd ../luciddb
 # sed -i -e 's/AUTO_VIEW/VIEW/g' catalog/ReposStorage.properties
-cd ../firewater
+# cd ../firewater
 ant backupCatalog

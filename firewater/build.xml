@@ -137,27 +137,49 @@
         </classpath>
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="net.sf.farrago.home"
-          file="../luciddb"/>
+          file="."/>
         <sysproperty key="net.sf.farrago.catalog"
-          file="../luciddb/catalog"/>
+          file="./catalog/data"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="${fileset.unitsql}"/>
         <sysproperty key="net.sf.farrago.defaultSessionFactoryLibraryName"
           value="${test.sessionfactory}"/>
         <sysproperty key="java.util.logging.config.file"
-          value="../luciddb/trace/LucidDbTrace.properties"/>
+          value="./trace/FirewaterTrace.properties"/>
       </junitargs>
     </farrago.runTests>
   </target>
   
   <target name="backupCatalog">
-    <farrago.backupCatalog catalogDir="../luciddb/catalog" 
-      backupDir="./backup"/>
+    <farrago.backupCatalog catalogDir="./catalog/data" 
+      backupDir="./catalog/backup"/>
   </target>
   
   <target name="restoreCatalog">
-    <farrago.restoreCatalog catalogDir="../luciddb/catalog" 
-      backupDir="./backup"/>
+    <farrago.restoreCatalog catalogDir="./catalog/data" 
+      backupDir="./catalog/backup"/>
+  </target>
+
+  <target name="initFiles">
+    <!-- TODO:  factor up from luciddb copyFarragoCatalog -->
+    <delete quiet="true">
+      <fileset dir="./catalog/data"/>
+    </delete>
+    <mkdir dir="./catalog/data"/>
+    <copy 
+      todir="./catalog/data"
+      file="../luciddb/catalog/ReposStorage.properties"
+      overwrite="true" />
+    <copy todir="./catalog/data">
+      <fileset dir="../luciddb/catalog/backup" includes="*"/>
+    </copy>
+    <copy todir="./plugin">
+      <fileset dir="../farrago/plugin" includes="FarragoMedJdbc.jar"/>
+    </copy>
+    <farrago.configureTrace 
+      propFile="./trace/FirewaterTrace.properties"
+      logFile="./trace/FirewaterTrace.log"
+      />
   </target>
 
   <!-- generate Emacs tags -->
