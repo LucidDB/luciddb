@@ -116,6 +116,35 @@ public class FarragoQueryTest
     }
 
     /**
+     * Tests a query which involves a dynamic parameter in the FROM clause.
+     */
+    public void testDynamicParamInUdx()
+        throws Exception
+    {
+        String sql = "create schema piu";
+        stmt.execute(sql);
+        sql = "create function piu.ramp(n int) returns table(i int) "
+            + "language java parameter style system defined java no sql "
+            + "external name 'class net.sf.farrago.test.FarragoTestUDR.ramp'";
+        stmt.execute(sql);
+
+        sql = "select * from table(piu.ramp(cast(? as integer)))";
+        preparedStmt = connection.prepareStatement(sql);
+        preparedStmt.setInt(1, 3);
+        resultSet = preparedStmt.executeQuery();
+        List<String> refList = new ArrayList<String>();
+        refList.add("0");
+        refList.add("1");
+        refList.add("2");
+        compareResultList(refList);
+        preparedStmt.close();
+        preparedStmt = null;
+
+        sql = "drop schema piu cascade";
+        stmt.execute(sql);
+    }
+
+    /**
      * Tests a query which involves sorting VARBINARY values.
      */
     public void testOrderByVarbinary()

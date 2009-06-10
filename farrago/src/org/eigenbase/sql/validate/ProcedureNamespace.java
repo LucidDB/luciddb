@@ -58,6 +58,7 @@ public class ProcedureNamespace
 
     public RelDataType validateImpl()
     {
+        validator.inferUnknownTypes(validator.unknownType, scope, call);
         return validator.deriveTypeImpl(scope, call);
     }
 
