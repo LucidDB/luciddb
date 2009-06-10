@@ -90,7 +90,7 @@
     </farrago.javaCompile>
   </target>
 
-  <target name="jar" depends="compile, plugin.buildJar">
+  <target name="jar" depends="compile, copyProperties, plugin.buildJar">
     <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF" mode="update">
       <attribute
         name="SessionFactoryClassName"
@@ -105,6 +105,41 @@
     <mkdir dir="testclasses"/>
     <copy todir="testclasses">
       <fileset dir="classes" includes="**/*Test*.class"/>
+    </copy>
+    <jar jarfile="plugin/firewater-jdbc.jar"
+      filesetmanifest="skip">
+      <zipgroupfileset dir="${vjdbc.dir}/lib">
+        <include name="vjdbc.jar"/>
+        <include name="commons-logging-1.1.jar"/>
+      </zipgroupfileset>
+      <fileset dir="classes">
+        <include name="FarragoRelease.properties"/>
+        <include name="net/sf/firewater/jdbc/**/*.class"/>
+      </fileset>
+      <fileset dir="${farrago.classes.dir}">
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="copyProperties">
+    <copy todir="classes" overwrite="true">
+      <fileset dir="catalog/xmi" includes="FarragoRelease.properties"/>
     </copy>
   </target>
 
@@ -129,7 +164,7 @@
       </testfileset>
       <junitargs>
         <classpath>
-          <pathelement path="../luciddb/plugin/LucidDbClient.jar"/>
+          <pathelement path="plugin/firewater-jdbc.jar"/>
           <pathelement path="${farrago.sqlline.classpath}"/>
           <pathelement path="${plugin.3p.classpath}"/>
           <pathelement path="${farrago.run.classpath}"/>
@@ -140,6 +175,8 @@
           file="."/>
         <sysproperty key="net.sf.farrago.catalog"
           file="./catalog/data"/>
+        <sysproperty key="net.sf.farrago.test.jdbcDriverClass"
+          value="net.sf.firewater.jdbc.FirewaterLocalDriver"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="${fileset.unitsql}"/>
         <sysproperty key="net.sf.farrago.defaultSessionFactoryLibraryName"

@@ -6,7 +6,7 @@
 SESSION_FACTORY="./plugin/firewater.jar"
 
 SERVER_JAVA_ARGS="-Xms512m -Xmx512m -ea -esa \
-  -cp ../luciddb/classes:`cat ../farrago/classpath.gen`:../farrago/plugin/FarragoMedJdbc.jar \
+  -cp ./plugin/firewater-jdbc.jar:`cat ../farrago/classpath.gen`:../farrago/plugin/FarragoMedJdbc.jar \
   -Dnet.sf.farrago.home=`pwd` \
   -Dnet.sf.farrago.catalog=`pwd`/catalog/data \
   -Djava.util.logging.config.file=./trace/FirewaterTrace.properties \
@@ -15,7 +15,7 @@ SERVER_JAVA_ARGS="-Xms512m -Xmx512m -ea -esa \
 SQLLINE_JAVA_ARGS="sqlline.SqlLine"
 
 if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
-    -u jdbc:luciddb: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
+    -u jdbc:firewater: -d net.sf.firewater.jdbc.FirewaterLocalDriver \
     -n sa $*;
 then
     echo

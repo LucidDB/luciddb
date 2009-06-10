@@ -5,14 +5,14 @@
 > foreign data wrapper sys_firewater_remote_wrapper
 > options(
 > user_name 'sa',
-> url 'jdbc:luciddb:rmi://localhost'
+> url 'jdbc:firewater_storage:remote:rmi://localhost:5434'
 > );
 > 
 > create server remote_node2
 > foreign data wrapper sys_firewater_remote_wrapper
 > options(
 > user_name 'sa',
-> url 'jdbc:luciddb:rmi://localhost'
+> url 'jdbc:firewater_storage:remote:rmi://localhost:5434'
 > );
 > 
 > create partition rp1 on (remote_node1);

@@ -38,7 +38,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fwm.distributed.*;
 
-import com.lucidera.jdbc.*;
+import net.sf.firewater.jdbc.*;
 
 /**
  * FirewaterDdlHandler implements the {@Link FarragoSessionDdlHandler} pattern
@@ -143,10 +143,10 @@ public class FirewaterDdlHandler extends DdlHandler
         // TODO jvs 19-May-2009:  delegate this to wrapper
         Driver driver;
         if (url == null) {
-            driver = new LucidDbLocalDriver();
-            url = "jdbc:luciddb:";
+            driver = new FirewaterEmbeddedStorageDriver();
+            url = "jdbc:firewater_storage:embedded:";
         } else {
-            driver = new LucidDbRmiDriver();
+            driver = new FirewaterRemoteStorageDriver();
         }
         Properties props = new Properties();
         props.setProperty("user", "sa");
@@ -239,7 +239,7 @@ public class FirewaterDdlHandler extends DdlHandler
             FarragoCatalogUtil.getStorageOptionsAsProperties(repos, node);
         String url = nodeProps.getProperty("URL");
         boolean fail = false;
-        if ((url != null) && !(url.startsWith("jdbc:luciddb:"))) {
+        if ((url != null) && !(url.startsWith("jdbc:firewater_storage:"))) {
             fail = true;
         }
         if (!wrapperName.equals("SYS_FIREWATER_EMBEDDED_WRAPPER")

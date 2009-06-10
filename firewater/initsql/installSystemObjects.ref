@@ -11,8 +11,8 @@
 > create or replace server sys_firewater_data_server
 > local data wrapper sys_firewater_distributed_wrapper
 > options (
->     driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
->     url 'jdbc:luciddb:',
+>     driver_class 'net.sf.firewater.jdbc.FirewaterEmbeddedStorageDriver',
+>     url 'jdbc:firewater_storage:embedded:',
 >     user_name 'sa',
 >     qualifying_catalog_name 'SYS_FIREWATER');
 > 
@@ -20,8 +20,8 @@
 > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 > language java
 > options(
->   driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
->   url 'jdbc:luciddb:'
+>   driver_class 'net.sf.firewater.jdbc.FirewaterEmbeddedStorageDriver',
+>   url 'jdbc:firewater_storage:embedded:'
 > );
 > 
 > -- TODO:  move this to test harness init script
@@ -29,16 +29,16 @@
 > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 > language java
 > options(
->   driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
->   url 'jdbc:luciddb:'
+>   driver_class 'net.sf.firewater.jdbc.FirewaterEmbeddedStorageDriver',
+>   url 'jdbc:firewater_storage:embedded:'
 > );
 > 
 > create or replace foreign data wrapper sys_firewater_remote_wrapper
 > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 > language java
 > options(
->   driver_class 'com.lucidera.jdbc.LucidDbRmiDriver',
->   url 'jdbc:luciddb:rmi:'
+>   driver_class 'net.sf.firewater.jdbc.FirewaterRemoteStorageDriver',
+>   url 'jdbc:firewater_storage:remote:rmi:'
 > );
 > 
 > create or replace server sys_firewater_embedded_server
