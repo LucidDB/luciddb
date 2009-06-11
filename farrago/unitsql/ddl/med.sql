@@ -354,6 +354,50 @@ create foreign table demo_schema.dept_extra_col(
 server hsqldb_demo
 options(schema_name 'SALES', table_name 'DEPT');
 
+-- test trusting mode (skip type check when local catalog already has type 
+-- info)
+create server hsqldb_trusting
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    skip_type_check 'true'
+);
+
+-- should succeed even though column names are wrong
+create foreign table demo_schema.dept_missing_col_trust(
+    dno integer,
+    dname char(20))
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed even though column type mismatch
+create foreign table demo_schema.dept_wrong_col_trust(
+    dno date,
+    dname char(20))
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed even though column doesn't exist
+create foreign table demo_schema.dept_extra_col_trust(
+    dno integer,
+    dname char(20),
+    loc char(20),
+    extra_col integer)
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+select * from demo_schema.dept_missing_col_trust;
+
+-- failure will be deferred to execution time instead
+select * from demo_schema.dept_wrong_col_trust;
+select * from demo_schema.dept_extra_col_trust;
+
+-- various options
 create server hsqldb_opts1
 foreign data wrapper sys_jdbc
 options(
