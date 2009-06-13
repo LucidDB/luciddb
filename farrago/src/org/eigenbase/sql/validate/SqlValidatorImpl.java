@@ -1588,7 +1588,7 @@ public class SqlValidatorImpl
                 signature));
     }
 
-    private void inferUnknownTypes(
+    protected void inferUnknownTypes(
         RelDataType inferredType,
         SqlValidatorScope scope,
         SqlNode node)

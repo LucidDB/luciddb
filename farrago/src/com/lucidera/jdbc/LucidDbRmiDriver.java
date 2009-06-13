@@ -24,8 +24,8 @@ import net.sf.farrago.jdbc.client.*;
 
 
 /**
- * LucidDbLocalDriver is a JDBC driver for the LucidDB server for use by remote
- * clients. It is based on VJDBC.
+ * LucidDbRmiDriver is a JDBC driver for the LucidDB server for use by remote
+ * clients communicating via RMI. It is based on VJDBC.
  *
  * @author John V. Sichi
  * @version $Id$

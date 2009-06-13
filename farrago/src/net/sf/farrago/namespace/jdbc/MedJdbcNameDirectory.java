@@ -240,6 +240,20 @@ public class MedJdbcNameDirectory
                 null,
                 SqlParserPos.ZERO);
 
+        if (server.skipTypeCheck && (rowType != null)) {
+            origRowType = rowType;
+            mdRowType = rowType;
+            return new MedJdbcColumnSet(
+                this,
+                foreignQualifiedName,
+                localName,
+                select,
+                dialect,
+                rowType,
+                origRowType,
+                mdRowType);
+        }
+
         String sql = select.toSqlString(dialect);
         sql = normalizeQueryString(sql);
 
