@@ -1023,6 +1023,29 @@ Warning: Statement execution encountered recoverable exceptions; errors: 9; warn
 '    LcsIndexSearchRel(table=[[LOCALDB, LBM, T3]], index=[IT3A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '      FennelValuesRel(tuples=[[{ '[', 'a', ']', 'a' }]])'
 > 
+> -- LER-11056 -- When rebuilding unique indexes for the alter table rebuild,
+> -- rids in the current deletion index should be ignored
+> create table uu(a int unique, b int, c int, d int, e int);
+> insert into uu values(0,0,0,0,0),(1,1,1,1,1);
+> update uu set b = b + 1, c = c + 1, d = d + 1, e = e + 1;
+> alter table uu rebuild;
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'UU', 10000);
+> -- make sure the index is being used
+> !set outputformat csv
+> explain plan for select * from uu where a = 0;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, UU]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$UU$A, SYS$CLUSTERED_INDEX$UU$B, SYS$CLUSTERED_INDEX$UU$C, SYS$CLUSTERED_INDEX$UU$D, SYS$CLUSTERED_INDEX$UU$E]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, UU]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$UU$A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
+> !set outputformat table
+> select * from uu where a = 0;
++----+----+----+----+----+
+| A  | B  | C  | D  | E  |
++----+----+----+----+----+
+| 0  | 1  | 1  | 1  | 1  |
++----+----+----+----+----+
+> 
 > -- cleanup
 > drop server test_data cascade;
 > 

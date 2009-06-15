@@ -629,16 +629,19 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
     // insert/update a single rid
     if (nKeyRows == 0) {
         assert(getUpsertRidPtr() == NULL);
-        // Loop until we find a non-deleted rid.  Deleted rids should only
-        // occur when rebuilding an existing index.  I.e., the index started
-        // out empty.
-        do {
-            LcsRid rid = inputRidReader.getNext();
-            if (!isEmpty() || !deletionReader.searchForRid(rid)) {
-                setUpsertRid(rid);
-                break;
-            }
-        } while (inputRidReader.hasNext());
+        if (!createNewIndex) {
+            setUpsertRid(inputRidReader.getNext());
+        } else {
+            // Loop until we find a non-deleted rid.  Deleted rids only occur
+            // when rebuilding an existing index.
+            do {
+                LcsRid rid = inputRidReader.getNext();
+                if (!deletionReader.searchForRid(rid)) {
+                    setUpsertRid(rid);
+                    break;
+                }
+            } while (inputRidReader.hasNext());
+        }
         nKeyRows++;
     }
 
@@ -652,7 +655,7 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
             permAssert(false);
         }
         LcsRid rid = inputRidReader.peek();
-        if (isEmpty() && deletionReader.searchForRid(rid)) {
+        if (createNewIndex && deletionReader.searchForRid(rid)) {
             inputRidReader.advance();
             continue;
         }

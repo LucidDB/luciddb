@@ -677,6 +677,19 @@ select * from t3 where a = 'a';
 !set outputformat csv
 explain plan for select * from t3 where a = 'a';
 
+-- LER-11056 -- When rebuilding unique indexes for the alter table rebuild,
+-- rids in the current deletion index should be ignored
+create table uu(a int unique, b int, c int, d int, e int);
+insert into uu values(0,0,0,0,0),(1,1,1,1,1);
+update uu set b = b + 1, c = c + 1, d = d + 1, e = e + 1;
+alter table uu rebuild;
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'UU', 10000);
+-- make sure the index is being used
+!set outputformat csv
+explain plan for select * from uu where a = 0;
+!set outputformat table
+select * from uu where a = 0;
+
 -- cleanup
 drop server test_data cascade;
 
