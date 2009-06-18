@@ -34,10 +34,9 @@ usage() {
     echo "            [--without-dist-build] (default with) "
     echo "            [--with-repos-type=REPOS_TYPE]"
     echo "              where REPOS_TYPE may be:"
-    echo "                 default            (Enki/Hibernate + HSQLDB)"
+    echo "                 default            (Enki/Netbeans + HSQLDB)"
     echo "                 mysql/hibernate    (Enki/Hibernate + MySQL)"
     echo "                 hsqldb/hibernate   (Enki/Hibernate + HSQLDB)"
-    echo "                 hsqldb/netbeans    (Enki/Netbeans + HSQLDB)"
     echo "                 psql/netbeans      (Enki/Netbeans + psql)"
 }
 
@@ -89,7 +88,7 @@ while [ -n "$1" ]; do
 
         # We match all the possibilities here so that we don't get a 
         # confusing usage message from Farrago's initBuild.sh
-        --with-repos-type=@(default|mysql/hibernate|hsqldb/hibernate|psql/netbeans|hsqldb/netbeans))
+        --with-repos-type=@(default|mysql/hibernate|hsqldb/hibernate|psql/netbeans))
             with_repos_type=true
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 

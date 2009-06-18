@@ -117,7 +117,12 @@
       extMofBasename="${plugin.model.basename}Mof"
       xmiDir="${plugin.xmi.dir}"/>
     <farrago.antFork dir="${plugin.dir}" 
-      target="plugin.forked_generateMetamodelCode"/>
+      target="plugin.forked_generateMetamodelCode">
+      <jvmargs>
+        <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+        <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+      </jvmargs>
+    </farrago.antFork>
     <farrago.javaCompile
       srcdir="${plugin.catalog.src.dir}"
       destdir="${plugin.catalog.src.dir}"
@@ -130,11 +135,21 @@
       <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
       <then>
         <farrago.antFork dir="${plugin.dir}" 
-          target="plugin.forked_configureMetamodelSchema"/>
+          target="plugin.forked_configureMetamodelSchema">
+          <jvmargs>
+            <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+            <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+          </jvmargs>
+        </farrago.antFork>
       </then>
     </ac:if>
     <farrago.antFork dir="${plugin.dir}" 
-      target="plugin.forked_importMetamodel"/>
+      target="plugin.forked_importMetamodel">
+      <jvmargs>
+        <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+        <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+      </jvmargs>
+    </farrago.antFork>
     <farrago.javaExec
       classname="net.sf.farrago.catalog.FarragoReposUtil"
       classpathref="farrago.run.classpath">

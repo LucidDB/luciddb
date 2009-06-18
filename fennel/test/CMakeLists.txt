@@ -4,7 +4,7 @@ include_directories(${DEFAULT_INCLUDE})
 
 link_directories(${DEFAULT_LIB})
 
-add_library(fenneltest SHARED 
+add_library(fenneltest STATIC
 CacheTestBase.cpp
 ExecStreamTestBase.cpp
 ExecStreamUnitTestBase.cpp
@@ -15,7 +15,10 @@ SegmentTestBase.cpp
 SegStorageTestBase.cpp
 SnapshotSegmentTestBase.cpp
 ThreadedTestBase.cpp
+CollectExecStreamTestSuite.cpp
+CorrelationJoinExecStreamTestSuite.cpp
 )
+
 target_link_libraries(
 fenneltest 
 ${STD_LIBS}
@@ -31,8 +34,45 @@ fennel_cache
 fennel_device
 fennel_common
 )
+
 set_target_properties(
 fenneltest PROPERTIES COMPILE_DEFINITIONS FENNEL_TEST_EXPORTS)
+
+# TODO add if for cygwin and Mingw so it does NOT build the shared test lib
+# in those environments
+add_library(fenneltestdyn SHARED
+CacheTestBase.cpp
+ExecStreamTestBase.cpp
+ExecStreamUnitTestBase.cpp
+ExecStreamTestSuite.cpp
+PagingTestBase.cpp
+TestBase.cpp
+SegmentTestBase.cpp
+SegStorageTestBase.cpp
+SnapshotSegmentTestBase.cpp
+ThreadedTestBase.cpp
+CollectExecStreamTestSuite.cpp
+CorrelationJoinExecStreamTestSuite.cpp
+)
+
+target_link_libraries(
+fenneltestdyn
+${STD_LIBS}
+${BOOST_TESTLIB}
+fennel_ftrs
+fennel_db
+fennel_btree
+fennel_exec
+fennel_tuple
+fennel_txn
+fennel_segment
+fennel_cache
+fennel_device
+fennel_common
+)
+
+set_target_properties(
+fenneltestdyn PROPERTIES COMPILE_DEFINITIONS FENNEL_TEST_EXPORTS)
 
 set(PROGRAMS
 ExternalSortExecStreamTest

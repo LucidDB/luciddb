@@ -69,7 +69,7 @@ class VolcanoRuleMatch
         // Try to deduce which subset the result will belong to. Assume --
         // for now -- that the set is the same as the root relexp.
         targetSet = volcanoPlanner.getSet(rels[0]);
-        assert targetSet != null;
+        assert targetSet != null : rels[0].toString() + " isn't in a set";
         digest = computeDigest();
     }
 

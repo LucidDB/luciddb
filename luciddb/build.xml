@@ -1290,7 +1290,12 @@ ${farrago.test.jvmargs}
         <jar update="true"
           destfile="${lib.farrago.jar}"
           basedir="${jar.tmp.dir}"
-          keepcompression="true"/>
+          keepcompression="true"
+          excludes="**/disruptivetech/**"/>
+
+        <delete quiet="false" includeEmptyDirs="true">
+          <fileset dir="${dist.dir}" includes="**/*_dt*.so*"/>
+        </delete>
 
         <delete dir="${jar.tmp.dir}" quiet="true"/>
       </then>

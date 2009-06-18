@@ -165,36 +165,6 @@
 > 
 > grant select on dba_stored_tables to public;
 > 
-> create or replace view dba_unclustered_indexes as
->     select
->         i.catalog_name,
->         i.schema_name,
->         i.index_name,
->         i.creator,
->         i.creation_timestamp,
->         i.table_name,
->         cast(ic.concatenated_child_values as varchar(4096))
->             as index_column_names,
->         i.is_unique,
->         i.remarks,
->         i.mof_id,
->         i.lineage_id
->     from
->         sys_boot.mgmt.dba_indexes_internal i
->     inner join
->         table(applib.collapse_rows(cursor(
->             select mof_id, column_name
->                 from sys_boot.mgmt.dba_index_columns_internal
->                 order by mof_id, ordinal_position),
->             ',')) ic
->     on
->         i.mof_id = ic.parent_value
->     where
->         i.is_clustered is false
-> ;
-> 
-> grant select on dba_unclustered_indexes to public;
-> 
 > create or replace view dba_routines as
 >   select
 >     catalog_name,

@@ -116,17 +116,11 @@ public class LucidDbSqlTest extends FarragoTestCase
     }
 
     protected void runTest()
-        throws Throwable
+        throws Exception
     {
         // mask out source control Id, etc
         setRefFileDiffMasks();
         runSqlLineTest(getName());
-    }
-
-    protected void runTestSuper()
-        throws Throwable
-    {
-        super.runTest();
     }
 
     public interface LucidDbSqlTestFactory
@@ -190,5 +184,3 @@ public class LucidDbSqlTest extends FarragoTestCase
     }
 
 }
-
-// End LucidDbSqlTest.java
