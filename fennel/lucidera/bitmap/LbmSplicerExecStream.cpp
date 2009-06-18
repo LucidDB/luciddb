@@ -565,131 +565,130 @@ void LbmSplicerExecStream::upsertSingleton(TupleData const &bitmapEntry)
 
 ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
 {
-    if (!currValidation) {
-        if (!pInAccessor->demandData()) {
-            return EXECRC_BUF_UNDERFLOW;
+    while (true) {
+        if (!currValidation) {
+            if (!pInAccessor->demandData()) {
+                return EXECRC_BUF_UNDERFLOW;
+            }
+
+            if (computeRowCount) {
+                pInAccessor->unmarshalTuple(singletonTuple);
+                inputTuple[0] = singletonTuple[0];
+                inputTuple[1].pData = NULL;
+                inputTuple[1].cbData = 0;
+                inputTuple[2].pData = NULL;
+                inputTuple[2].cbData = 0;
+                numRowsLoaded++;
+            } else {
+                pInAccessor->unmarshalTuple(inputTuple);
+            }
+
+            FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
+            FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));
+
+            // If we're creating a new index, we need to defer creating it until
+            // we know that there are new input tuples.  Otherwise, there's no
+            // point in creating it.
+            if (createNewIndex && !newIndexCreated) {
+                newIndexCreated = true;
+                writeBTreeDesc.rootPageId = NULL_PAGE_ID;
+                BTreeBuilder builder(
+                    writeBTreeDesc,
+                    writeBTreeDesc.segmentAccessor.pSegment);
+                builder.createEmptyRoot();
+                writeBTreeDesc.rootPageId = builder.getRootPageId();
+                emptyTable = true;
+                emptyTableUnknown = false;
+                bTreeWriter = SharedBTreeWriter(
+                    new BTreeWriter(
+                        writeBTreeDesc,
+                        scratchAccessor,
+                        emptyTable));
+            }
+
+            if (!uniqueRequired(inputTuple)) {
+                return EXECRC_YIELD;
+            }
+
+            // count existing entries for key, if the key has not been seen yet
+            if (firstValidation
+                || bitmapTupleDesc.compareTuplesKey(
+                    inputTuple, currUniqueKey, nIdxKeys) != 0)
+            {
+                firstValidation = false;
+                currUniqueKey.resetBuffer();
+                for (uint i = 0; i < nIdxKeys; i++) {
+                    currUniqueKey[i].memCopyFrom(inputTuple[i]);
+                }
+                nKeyRows = countKeyRows(inputTuple);
+            }
+
+            // prepare to emit rids for key violations
+            inputRidReader.init(inputTuple);
+            nullUpsertRid = true;
+            currValidation = true;
         }
 
-        if (computeRowCount) {
-            pInAccessor->unmarshalTuple(singletonTuple);
-            inputTuple[0] = singletonTuple[0];
-            inputTuple[1].pData = NULL;
-            inputTuple[1].cbData = 0;
-            inputTuple[2].pData = NULL;
-            inputTuple[2].cbData = 0;
-            numRowsLoaded++;
-        } else {
-            pInAccessor->unmarshalTuple(inputTuple);
+        // if there were no undeleted values for the current key, we can
+        // insert/update a single rid
+        if (nKeyRows == 0) {
+            assert(getUpsertRidPtr() == NULL);
+            if (!createNewIndex) {
+                setUpsertRid(inputRidReader.getNext());
+                nKeyRows++;
+            } else {
+                // Loop until we find a non-deleted rid.  Deleted rids only
+                // occur when rebuilding an existing index.
+                do {
+                    LcsRid rid = inputRidReader.getNext();
+                    if (!deletionReader.searchForRid(rid)) {
+                        setUpsertRid(rid);
+                        nKeyRows++;
+                        break;
+                    }
+                } while (inputRidReader.hasNext());
+            }
         }
 
-        FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
-        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));
-
-        // If we're creating a new index, we need to defer creating it until
-        // we know that there are new input tuples.  Otherwise, there's no
-        // point in creating it.
-        if (createNewIndex && !newIndexCreated) {
-            newIndexCreated = true;
-            writeBTreeDesc.rootPageId = NULL_PAGE_ID;
-            BTreeBuilder builder(
-                writeBTreeDesc,
-                writeBTreeDesc.segmentAccessor.pSegment);
-            builder.createEmptyRoot();
-            writeBTreeDesc.rootPageId = builder.getRootPageId();
-            emptyTable = true;
-            emptyTableUnknown = false;
-            bTreeWriter = SharedBTreeWriter(
-                new BTreeWriter(writeBTreeDesc, scratchAccessor, emptyTable));
+        // all other rids are rejected as duplicate keys, unless they're deleted
+        // rids
+        while (inputRidReader.hasNext()) {
+            if (!violationTuple.size()) {
+                // if there is a possibility of violations, the splicer should
+                // have been initialized with a second output
+                permAssert(false);
+            }
+            LcsRid rid = inputRidReader.peek();
+            if (createNewIndex && deletionReader.searchForRid(rid)) {
+                inputRidReader.advance();
+                continue;
+            }
+            violationTuple[0].pData = reinterpret_cast<PConstBuffer>(&rid);
+            violationTuple[0].cbData = 8;
+            if (!violationAccessor->produceTuple(violationTuple)) {
+                return EXECRC_BUF_OVERFLOW;
+            }
+            postViolation(inputTuple, violationTuple);
+            inputRidReader.advance();
         }
+        currValidation = false;
 
-        if (!uniqueRequired(inputTuple)) {
+        if (getUpsertRidPtr() != NULL) {
+            // since a rid was accepted, return it as a validated tuple
+            inputTuple[nIdxKeys].pData =
+                reinterpret_cast<PConstBuffer>(getUpsertRidPtr());
+            inputTuple[nIdxKeys].cbData = 8;
+            inputTuple[nIdxKeys + 1].pData = NULL;
+            inputTuple[nIdxKeys + 1].cbData = 0;
+            inputTuple[nIdxKeys + 2].pData = NULL;
+            inputTuple[nIdxKeys + 2].cbData = 0;
             return EXECRC_YIELD;
         }
 
-        // count existing entries for key, if the key has not been seen yet
-        if (firstValidation
-            || bitmapTupleDesc.compareTuplesKey(
-                inputTuple, currUniqueKey, nIdxKeys) != 0)
-        {
-            firstValidation = false;
-            currUniqueKey.resetBuffer();
-            for (uint i = 0; i < nIdxKeys; i++) {
-                currUniqueKey[i].memCopyFrom(inputTuple[i]);
-            }
-            nKeyRows = countKeyRows(inputTuple);
-        }
-
-        // prepare to emit rids for key violations
-        inputRidReader.init(inputTuple);
-        nullUpsertRid = true;
-        currValidation = true;
+        // every rid in the current tuple was either rejected or already
+        // deleted, so try the next tuple
+        pInAccessor->consumeTuple();
     }
-
-    // if there were no undeleted values for the current key, we can
-    // insert/update a single rid
-    if (nKeyRows == 0) {
-        assert(getUpsertRidPtr() == NULL);
-        if (!createNewIndex) {
-            setUpsertRid(inputRidReader.getNext());
-        } else {
-            // Loop until we find a non-deleted rid.  Deleted rids only occur
-            // when rebuilding an existing index.
-            do {
-                LcsRid rid = inputRidReader.getNext();
-                if (!deletionReader.searchForRid(rid)) {
-                    setUpsertRid(rid);
-                    break;
-                }
-            } while (inputRidReader.hasNext());
-        }
-        nKeyRows++;
-    }
-
-    // all other rids are rejected as duplicate keys, unless they're deleted
-    // rids
-    bool reject = false;
-    while (inputRidReader.hasNext()) {
-        if (!violationTuple.size()) {
-            // if there is a possibility of violations, the splicer should
-            // have been initialized with a second output
-            permAssert(false);
-        }
-        LcsRid rid = inputRidReader.peek();
-        if (createNewIndex && deletionReader.searchForRid(rid)) {
-            inputRidReader.advance();
-            continue;
-        }
-        violationTuple[0].pData = reinterpret_cast<PConstBuffer>(&rid);
-        violationTuple[0].cbData = 8;
-        if (!violationAccessor->produceTuple(violationTuple)) {
-            return EXECRC_BUF_OVERFLOW;
-        }
-        reject = true;
-        postViolation(inputTuple, violationTuple);
-        inputRidReader.advance();
-    }
-    currValidation = false;
-
-    if (getUpsertRidPtr() != NULL) {
-        // since a rid was accepted, return it as a validated tuple
-        inputTuple[nIdxKeys].pData =
-            reinterpret_cast<PConstBuffer>(getUpsertRidPtr());
-        inputTuple[nIdxKeys].cbData = 8;
-        inputTuple[nIdxKeys + 1].pData = NULL;
-        inputTuple[nIdxKeys + 1].cbData = 0;
-        inputTuple[nIdxKeys + 2].pData = NULL;
-        inputTuple[nIdxKeys + 2].cbData = 0;
-        return EXECRC_YIELD;
-    }
-
-    // Otherwise every rid of the current tuple was either rejected or
-    // already deleted, so continue to the next tuple.  In the case where all
-    // of the rids were deleted rids, we need to revalidate the next key.
-    if (!reject) {
-        firstValidation = true;
-    }
-    pInAccessor->consumeTuple();
-    return getValidatedTuple();
 }
 
 bool LbmSplicerExecStream::uniqueRequired(const TupleData &tuple)
