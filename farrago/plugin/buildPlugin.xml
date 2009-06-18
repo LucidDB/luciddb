@@ -159,10 +159,6 @@
     <farrago.configureTrace
       propFile="${FarragoMdrBuildTrace.properties}" logFile="${FarragoMdrBuildTrace.log}"/>
 
-    <!-- Make sure the MDR build trace file is configured. -->
-    <farrago.configureTrace
-      propFile="${FarragoMdrBuildTrace.properties}" logFile="${FarragoMdrBuildTrace.log}"/>
-
     <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
       <mapJava
         file="${plugin.xmi.dir}/FarragoMetamodel.xmi"

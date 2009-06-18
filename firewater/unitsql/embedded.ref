@@ -1,0 +1,98 @@
+> -- $Id$
+> -- Tests for Firewater query optimization distributed over embedded
+> -- partitions (no remote SQL)
+> 
+> create partition qp1 on (sys_firewater_embedded_server);
+> 
+> create partition qp2 on (sys_firewater_embedded_server);
+> 
+> create schema m;
+> 
+> create table m.t1(i int, j int);
+> 
+> !set outputformat csv
+> 
+> -- test basic table access
+> explain plan for select * from m.t1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'    LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+> 
+> -- test projection pushdown through union
+> explain plan for select i from m.t1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[QP1, M, T1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I]])'
+'    LcsRowScanRel(table=[[QP2, M, T1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I]])'
+> 
+> -- test filter pushdown through union
+> explain plan for select i from m.t1 where j > 3;
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[QP1, M, T1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$J, SYS$CLUSTERED_INDEX$T1$I]], residual columns=[[1]])'
+'      FennelValuesRel(tuples=[[{ '(', 3, '+', null }]])'
+'    LcsRowScanRel(table=[[QP2, M, T1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$J, SYS$CLUSTERED_INDEX$T1$I]], residual columns=[[1]])'
+'      FennelValuesRel(tuples=[[{ '(', 3, '+', null }]])'
+> 
+> -- test GROUP BY pushdown through union
+> explain plan for select i,sum(j),count(*) from m.t1 group by i;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t2):BIGINT NOT NULL], proj#0..1=[{exprs}], EXPR$2=[$t3])'
+'  FennelToIteratorConverter'
+'    LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[SUM($2)])'
+'      FennelMergeRel'
+'        LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])'
+'          LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'        LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)], EXPR$2=[COUNT()])'
+'          LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+> 
+> -- test GROUP BY with AVG
+> explain plan for select i,avg(j) from m.t1 group by i;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t2):BIGINT NOT NULL], expr#4=[CAST($t1):DOUBLE], expr#5=[CAST($t3):DOUBLE NOT NULL], expr#6=[/($t4, $t5)], expr#7=[1E6], expr#8=[*($t6, $t7)], expr#9=[CAST($t8):BIGINT], expr#10=[Reinterpret($t9)], expr#11=[Reinterpret($t10)], expr#12=[0], expr#13=[>($t11, $t12)], expr#14=[500000], expr#15=[+($t11, $t14)], expr#16=[-($t11, $t14)], expr#17=[CASE($t13, $t15, $t16)], expr#18=[1000000], expr#19=[/INT($t17, $t18)], expr#20=[CAST($t19):INTEGER], I=[$t0], EXPR$1=[$t20])'
+'  FennelToIteratorConverter'
+'    LhxAggRel(groupCount=[1], agg#0=[SUM($1)], agg#1=[SUM($2)])'
+'      FennelMergeRel'
+'        LhxAggRel(groupCount=[1], agg#0=[SUM($1)], agg#1=[COUNT($1)])'
+'          LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'        LhxAggRel(groupCount=[1], agg#0=[SUM($1)], agg#1=[COUNT($1)])'
+'          LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+> 
+> -- test GROUP BY with DISTINCT COUNT
+> explain plan for select i,count(distinct j), sum(j) from m.t1 group by i;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER I, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      LhxAggRel(groupCount=[1], EXPR$2=[SUM($1)])'
+'        FennelMergeRel'
+'          LhxAggRel(groupCount=[1], EXPR$2=[SUM($1)])'
+'            LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'          LhxAggRel(groupCount=[1], EXPR$2=[SUM($1)])'
+'            LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelMergeRel'
+'            LhxAggRel(groupCount=[2])'
+'              LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+'            LhxAggRel(groupCount=[2])'
+'              LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]])'
+> 
+> -- test pushdown of GROUP BY with filter
+> explain plan for select i,sum(j) from m.t1 where i > 100 group by i;
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'    FennelMergeRel'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'        LcsRowScanRel(table=[[QP1, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]], residual columns=[[0]])'
+'          FennelValuesRel(tuples=[[{ '(', 100, '+', null }]])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'        LcsRowScanRel(table=[[QP2, M, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$I, SYS$CLUSTERED_INDEX$T1$J]], residual columns=[[0]])'
+'          FennelValuesRel(tuples=[[{ '(', 100, '+', null }]])'
+> 
+> !quit

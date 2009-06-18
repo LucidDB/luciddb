@@ -129,6 +129,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#8 $");
 
 // End LbmSegmentWriter.cpp

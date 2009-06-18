@@ -248,6 +248,7 @@ class FtrsScanToSearchRule
                 keyRowType,
                 origScan.getCluster(),
                 sargExpr);
+
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits,
