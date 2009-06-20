@@ -195,8 +195,8 @@ void VersionedRandomAllocationSegment::deferDeallocation(PageId pageId)
         extentAllocLock.getNodeForWrite();
     VersionedPageEntry &pageEntry = extentNode.getPageEntry(iPageInExtent);
     assert(
-        pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
-        !isDeallocatedPageOwnerId(pageEntry.ownerId));
+        pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID
+        && !isDeallocatedPageOwnerId(pageEntry.ownerId));
     // Set the deallocation txnId to an arbitrary value, for now.  It will
     // get overwritten with a real txnId at commit time.
     pageEntry.ownerId = makeDeallocatedPageOwnerId(TxnId(0));
@@ -370,9 +370,9 @@ void VersionedRandomAllocationSegment::chainPageEntries(
     SegmentAccessor segAccessor(allocNodeSegment, pCache);
     VersionedExtentAllocLock extentAllocLock(segAccessor);
     PageId extentPageId =
-        (thisSegment) ?
-            getExtentAllocPageId(extentNum) :
-            getExtAllocPageIdForWrite(extentNum);
+        (thisSegment)
+        ? getExtentAllocPageId(extentNum)
+        : getExtAllocPageIdForWrite(extentNum);
 
     extentAllocLock.lockExclusive(extentPageId);
     VersionedExtentAllocationNode &extentNode =
@@ -416,8 +416,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
         // No need to order updates to the extent and page entries because no
         // other thread should be modifying the permanent allocation node
         // pages at the same time.
-        if ((pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
-           (pModEntry->lastModType == ModifiedPageEntry::DEALLOCATED))
+        if ((pModEntry->lastModType == ModifiedPageEntry::ALLOCATED)
+            || (pModEntry->lastModType == ModifiedPageEntry::DEALLOCATED))
         {
             updateExtentEntry(
                 iSegAlloc,
@@ -763,19 +763,19 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
 
                 // Skip over pages that have no snapshots, unless the page
                 // is deallocation-deferred
-                if (pageEntry.versionChainPageId == pageId &&
-                    !isDeallocatedPageOwnerId(pageEntry.ownerId))
+                if (pageEntry.versionChainPageId == pageId
+                    && !isDeallocatedPageOwnerId(pageEntry.ownerId))
                 {
                     continue;
                 }
 
                 // Only consider deallocation-deferred pages if there are no
                 // longer any active txns that might be accessing the pages
-                if ((!isDeallocatedPageOwnerId(pageEntry.ownerId) &&
-                        pageEntry.allocationCsn < oldestActiveTxnId) ||
-                    (isDeallocatedPageOwnerId(pageEntry.ownerId) &&
-                        getDeallocatedTxnId(pageEntry.ownerId) <
-                            oldestActiveTxnId))
+                if ((!isDeallocatedPageOwnerId(pageEntry.ownerId)
+                     && pageEntry.allocationCsn < oldestActiveTxnId)
+                    || (isDeallocatedPageOwnerId(pageEntry.ownerId)
+                        && getDeallocatedTxnId(pageEntry.ownerId)
+                        < oldestActiveTxnId))
                 {
                     ++numOldPages;
                     oldPageSet.insert(oldPageSet.end(), pageId);
@@ -902,15 +902,15 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
             return NULL_TXN_ID;
         }
 
-        if (anchorCsn == NULL_TXN_ID ||
-            pageEntry.allocationCsn < anchorCsn)
+        if (anchorCsn == NULL_TXN_ID
+            || pageEntry.allocationCsn < anchorCsn)
         {
             anchorCsn = pageEntry.allocationCsn;
             anchorPageId = chainPageId;
         }
         if (pageEntry.allocationCsn < oldestActiveTxnId) {
-            if (newestOldCsn == NULL_TXN_ID ||
-                pageEntry.allocationCsn > newestOldCsn)
+            if (newestOldCsn == NULL_TXN_ID
+                || pageEntry.allocationCsn > newestOldCsn)
             {
                 if (newestOldCsn != NULL_TXN_ID) {
                     nextNewestOldCsn = newestOldCsn;
@@ -919,9 +919,9 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
                 newestOldCsn = pageEntry.allocationCsn;
                 newestOldPageId = chainPageId;
             } else {
-                if (((nextNewestOldCsn == NULL_TXN_ID) ||
-                        (pageEntry.allocationCsn > nextNewestOldCsn)) &&
-                    (pageEntry.allocationCsn != newestOldCsn))
+                if (((nextNewestOldCsn == NULL_TXN_ID)
+                     || (pageEntry.allocationCsn > nextNewestOldCsn))
+                    && (pageEntry.allocationCsn != newestOldCsn))
                 {
                     // It's possible to have two page entries with the same csn
                     // if a page is truncated and then versioned within the
@@ -944,8 +944,8 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     // in the page chain.  Add the pages we know are old to the
     // deallocatedPageSet so we can directly skip over them if we encounter
     // them again.
-    if (nextNewestOldPageId == anchorPageId ||
-        nextNewestOldPageId == NULL_PAGE_ID)
+    if (nextNewestOldPageId == anchorPageId
+        || nextNewestOldPageId == NULL_PAGE_ID)
     {
         deallocatedPageSet.insert(anchorPageId);
         deallocatedPageSet.insert(pageId);
@@ -1034,8 +1034,8 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
     VersionedPageEntry prevPageEntry;
     getCommittedPageEntryCopy(anchorPageId, prevPageEntry);
     assert(
-        prevPageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
-        !isDeallocatedPageOwnerId(prevPageEntry.ownerId));
+        prevPageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID
+        && !isDeallocatedPageOwnerId(prevPageEntry.ownerId));
 
     // See if the page is in the process of being marked
     // deallocation-deferred.  If it is, then don't deallocate any of the
@@ -1261,10 +1261,10 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
                     checkAbort(abortFlag);
                     VersionedPageEntry const &pageEntry =
                         extentNode.getPageEntry(j);
-                    if (pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
-                       (lowerBoundCsn == NULL_TXN_ID ||
-                           pageEntry.allocationCsn > lowerBoundCsn) &&
-                       (pageEntry.allocationCsn <= upperBoundCsn))
+                    if (pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID
+                        && (lowerBoundCsn == NULL_TXN_ID
+                            || pageEntry.allocationCsn > lowerBoundCsn)
+                        && (pageEntry.allocationCsn <= upperBoundCsn))
                     {
                         nDataPages++;
                     }
@@ -1329,10 +1329,9 @@ void VersionedRandomAllocationSegment::locateDataPages(
             segAllocLock.unlock();
         }
         SegmentAllocationNode const &segAllocNode =
-            (isBackup) ?
-                *reinterpret_cast<SegmentAllocationNode const *>
-                    (segNodeBuffer) :
-                segAllocLock.getNodeForRead();
+            (isBackup)
+            ? *reinterpret_cast<SegmentAllocationNode const *>(segNodeBuffer)
+            : segAllocLock.getNodeForRead();
         ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
 
         for (uint i = relativeExtentNum; i < segAllocNode.nExtents;
@@ -1356,10 +1355,10 @@ void VersionedRandomAllocationSegment::locateDataPages(
                 extentAllocLock.unlock();
             }
             VersionedExtentAllocationNode const &extentNode =
-                (isBackup) ?
-                    *reinterpret_cast<VersionedExtentAllocationNode const *>
-                        (extentNodeBuffer) :
-                    extentAllocLock.getNodeForRead();
+                (isBackup)
+                ? *reinterpret_cast<VersionedExtentAllocationNode const *>(
+                    extentNodeBuffer)
+                : extentAllocLock.getNodeForRead();
 
             // Start at pageEntry 1 to skip past the extent header page
             for (uint j = 1; j < nPagesPerExtent; j++) {
@@ -1367,10 +1366,10 @@ void VersionedRandomAllocationSegment::locateDataPages(
                 VersionedPageEntry const &pageEntry =
                     extentNode.getPageEntry(j);
                 // Ignore pages outside the csn boundaries
-                if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID ||
-                   (lowerBoundCsn != NULL_TXN_ID &&
-                       pageEntry.allocationCsn <= lowerBoundCsn) ||
-                   (pageEntry.allocationCsn > upperBoundCsn))
+                if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID
+                    || (lowerBoundCsn != NULL_TXN_ID
+                        && pageEntry.allocationCsn <= lowerBoundCsn)
+                    || (pageEntry.allocationCsn > upperBoundCsn))
                 {
                     continue;
                 }
@@ -1478,6 +1477,6 @@ void VersionedRandomAllocationSegment::checkAbort(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#14 $");
 
 // End VersionedRandomAllocationSegment.cpp

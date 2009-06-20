@@ -96,8 +96,9 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
@@ -170,8 +171,9 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
@@ -245,8 +247,9 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
@@ -320,8 +323,9 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
@@ -414,11 +418,10 @@ public:
             TExceptionCBData tE(
                 NativeNativeInstruction<TMPLT>::fnSetRegisterToNull,
                 NativeNativeInstruction<TMPLT>::mResult);
-            NativeNativeInstruction<TMPLT>::mResult->
-               value(
-                   Noisy<TMPLT>::neg(
-                       pc - 1,
-                       NativeInstruction<TMPLT>::mOp1->value(), &tE));
+            NativeNativeInstruction<TMPLT>::mResult->value(
+                Noisy<TMPLT>::neg(
+                    pc - 1,
+                    NativeInstruction<TMPLT>::mOp1->value(), &tE));
         }
     }
 
@@ -638,8 +641,8 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        NativeNativeInstruction<TMPLT>::mResult->
-            refer(NativeInstruction<TMPLT>::mOp1);
+        NativeNativeInstruction<TMPLT>::mResult->refer(
+            NativeInstruction<TMPLT>::mOp1);
     }
 
     static char const * const longName()
@@ -747,7 +750,6 @@ class FENNEL_CALCULATOR_EXPORT NativeNativeInstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const & t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.

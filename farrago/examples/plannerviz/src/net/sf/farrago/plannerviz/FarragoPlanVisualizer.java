@@ -340,8 +340,8 @@ public class FarragoPlanVisualizer
                 newStatus = "New expression added to "
                     + type.toLowerCase() + " equivalence class";
             } else {
-                newStatus = type + " equivalence found for " +
-                    event.getEquivalenceClass();
+                newStatus = type + " equivalence found for "
+                    + event.getEquivalenceClass();
             }
             if (ruleName != null) {
                 newStatus += " by rule " + ruleName;

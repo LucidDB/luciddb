@@ -73,7 +73,7 @@ void DynamicDelegatingSegment::setPageSuccessor(
     PageId successorId)
 {
     SharedSegment pDelegateSegment = delegateSegment.lock();
-    pDelegateSegment->setPageSuccessor(pageId,successorId);
+    pDelegateSegment->setPageSuccessor(pageId, successorId);
 }
 
 BlockId DynamicDelegatingSegment::translatePageId(PageId pageId)
@@ -105,7 +105,7 @@ void DynamicDelegatingSegment::deallocatePageRange(
     PageId endPageId)
 {
     SharedSegment pDelegateSegment = delegateSegment.lock();
-    pDelegateSegment->deallocatePageRange(startPageId,endPageId);
+    pDelegateSegment->deallocatePageRange(startPageId, endPageId);
 }
 
 bool DynamicDelegatingSegment::isPageIdAllocated(PageId pageId)
@@ -141,7 +141,7 @@ void DynamicDelegatingSegment::notifyAfterPageRead(CachePage &page)
 void DynamicDelegatingSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
     SharedSegment pDelegateSegment = delegateSegment.lock();
-    pDelegateSegment->notifyPageDirty(page,bDataValid);
+    pDelegateSegment->notifyPageDirty(page, bDataValid);
 }
 
 void DynamicDelegatingSegment::notifyBeforePageFlush(CachePage &page)

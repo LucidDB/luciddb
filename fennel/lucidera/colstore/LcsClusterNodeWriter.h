@@ -360,8 +360,8 @@ public:
      */
     inline bool noCompressMode(uint column) const
     {
-        return bForceMode[column] == fixed ||
-                bForceMode[column] == variable;
+        return bForceMode[column] == fixed
+            || bForceMode[column] == variable;
     };
 
     /**

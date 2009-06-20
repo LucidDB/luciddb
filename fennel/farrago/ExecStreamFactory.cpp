@@ -336,7 +336,7 @@ void ExecStreamFactory::visit(ProxySortedAggStreamDef &streamDef)
 void ExecStreamFactory::implementSortWithBTree(ProxySortingStreamDef &streamDef)
 {
     BTreeSortExecStreamParams params;
-    readTupleStreamParams(params,streamDef);
+    readTupleStreamParams(params, streamDef);
     params.distinctness = streamDef.getDistinctness();
     params.monotonic = false;
     params.pSegment = pDatabase->getTempSegment();
@@ -705,7 +705,7 @@ void ExecStreamFactory::readTupleStreamParams(
     SingleOutputExecStreamParams &params,
     ProxyTupleStreamDef &streamDef)
 {
-    readExecStreamParams(params,streamDef);
+    readExecStreamParams(params, streamDef);
     readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
 }
 
@@ -779,8 +779,8 @@ void ExecStreamFactory::readBTreeParams(
 {
     params.rootPageIdParamId =
         readDynamicParamId(streamDef.getRootPageIdParamId());
-    if (params.rootPageIdParamId > DynamicParamId(0) &&
-        streamDef.getRootPageId() == -1)
+    if (params.rootPageIdParamId > DynamicParamId(0)
+        && streamDef.getRootPageId() == -1)
     {
         // In the case where the btree is dynamically created during
         // runtime, the btree will be created in the temp segment
@@ -886,7 +886,7 @@ void ExecStreamFactory::readAggStreamParams(
     SortedAggExecStreamParams &params,
     ProxyAggStreamDef &streamDef)
 {
-    readTupleStreamParams(params,streamDef);
+    readTupleStreamParams(params, streamDef);
     SharedProxyAggInvocation pAggInvocation = streamDef.getAggInvocation();
     for (; pAggInvocation; ++pAggInvocation) {
         AggInvocation aggInvocation;

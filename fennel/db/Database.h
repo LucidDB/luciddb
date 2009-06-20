@@ -153,7 +153,7 @@ class FENNEL_DB_EXPORT Database
 
     void createTxnLog(DeviceMode);
 
-    SharedSegment createTxnLogSegment(DeviceMode,PageId);
+    SharedSegment createTxnLogSegment(DeviceMode, PageId);
 
     SharedSegment createShadowLog(DeviceMode);
 

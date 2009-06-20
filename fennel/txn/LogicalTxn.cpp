@@ -150,7 +150,7 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
 
     {
         state = STATE_ROLLING_BACK;
-        LogicalRecoveryTxn recoveryTxn(pInputStream,NULL);
+        LogicalRecoveryTxn recoveryTxn(pInputStream, NULL);
         recoveryTxn.undoActions(svpt);
     }
 
@@ -219,8 +219,8 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
     assert(svpt.cbLogged == pInputStream->getOffset());
     {
         state = STATE_ROLLING_BACK;
-        LogicalRecoveryTxn recoveryTxn(pInputStream,NULL);
-        recoveryTxn.undoActions(svpt,MAXU,oldSvpt.cbLogged);
+        LogicalRecoveryTxn recoveryTxn(pInputStream, NULL);
+        recoveryTxn.undoActions(svpt, MAXU, oldSvpt.cbLogged);
         state = STATE_LOGGING_TXN;
     }
     pInputStream.reset();
@@ -229,10 +229,10 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
     std::for_each(
         participants.begin(),
         participants.end(),
-        boost::bind(&LogicalTxnParticipant::enableLogging,_1,true));
+        boost::bind(&LogicalTxnParticipant::enableLogging, _1, true));
 
     // write log entry noting the partial rollback
-    beginLogicalAction(NULL,ACTION_TXN_ROLLBACK_TO_SAVEPOINT);
+    beginLogicalAction(NULL, ACTION_TXN_ROLLBACK_TO_SAVEPOINT);
     pOutputStream->writeValue(oldSvpt);
     endLogicalAction();
 }

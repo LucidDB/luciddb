@@ -68,7 +68,7 @@ SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     assert(classId == getParticipantClassId());
 
     TupleDescriptor clusteredTupleDesc;
-    clusteredTupleDesc.readPersistent(logStream,typeFactory);
+    clusteredTupleDesc.readPersistent(logStream, typeFactory);
 
     uint nIndexes;
     logStream.readValue(nIndexes);
@@ -77,7 +77,7 @@ SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     params.indexParams.resize(nIndexes);
 
     for (uint i = 0; i < nIndexes; ++i) {
-        loadIndex(clusteredTupleDesc,params.indexParams[i],logStream);
+        loadIndex(clusteredTupleDesc, params.indexParams[i], logStream);
     }
 
     params.updateProj.readPersistent(logStream);
@@ -101,7 +101,7 @@ void FtrsTableWriterFactory::loadIndex(
     if (params.inputProj.empty()) {
         params.tupleDesc = clusteredTupleDesc;
     } else {
-        params.tupleDesc.projectFrom(clusteredTupleDesc,params.inputProj);
+        params.tupleDesc.projectFrom(clusteredTupleDesc, params.inputProj);
     }
     params.pCacheAccessor = pCacheAccessor;
     SharedSegment pSegment;
@@ -114,6 +114,6 @@ LogicalTxnClassId FtrsTableWriterFactory::getParticipantClassId()
     return LogicalTxnClassId(0xaa6576b8efadbcdcLL);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#8 $");
 
 // End FtrsTableWriterFactory.cpp

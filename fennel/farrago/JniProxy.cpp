@@ -37,7 +37,7 @@ JniProxy::~JniProxy()
     jObject = NULL;
 }
 
-void JniProxy::init(JniEnvRef pEnvInit,jobject jObjectInit)
+void JniProxy::init(JniEnvRef pEnvInit, jobject jObjectInit)
 {
     pEnv = pEnvInit;
     jObject = jObjectInit;

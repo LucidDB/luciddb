@@ -70,7 +70,7 @@ void RandomAllocationSegmentBase::format()
     uint nSegAllocPages = inferSegAllocCount();
 
     // calculate number of extents in all but last SegAllocNode
-    ExtentNum nExtents = (nSegAllocPages-1)*nExtentsPerSegAlloc;
+    ExtentNum nExtents = (nSegAllocPages - 1) * nExtentsPerSegAlloc;
 
     // calculate number of pages in last SegAllocNode
     BlockNum nRemainderPages = DelegatingSegment::getAllocatedSizeInPages();
@@ -123,7 +123,7 @@ void RandomAllocationSegmentBase::format()
 
         // format extent array
         segAllocNode.nPagesPerExtent = nPagesPerExtent;
-        segAllocNode.nExtents = std::min(nExtents,nExtentsPerSegAlloc);
+        segAllocNode.nExtents = std::min(nExtents, nExtentsPerSegAlloc);
         nExtents -= segAllocNode.nExtents;
 
         // format each extent node within the page
@@ -144,8 +144,8 @@ uint RandomAllocationSegmentBase::inferSegAllocCount()
 {
     BlockNum nPages = DelegatingSegment::getAllocatedSizeInPages();
     // round up
-    return nPages / nPagesPerSegAlloc +
-        (nPages % nPagesPerSegAlloc ? 1 : 0);
+    return nPages / nPagesPerSegAlloc
+        + (nPages % nPagesPerSegAlloc ? 1 : 0);
 }
 
 PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
@@ -185,7 +185,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
                 // a seat when we get on
                 segAllocLock.unlock();
                 incrementPageCounters();
-                return allocateFromExtent(extentNum,ownerId);
+                return allocateFromExtent(extentNum, ownerId);
             }
         }
 
@@ -210,7 +210,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             // current SegAllocNode.
             try {
                 if (!DelegatingSegment::ensureAllocatedSize(
-                        makePageNum(extentNum,nPagesPerExtent)))
+                        makePageNum(extentNum, nPagesPerExtent)))
                 {
                     // couldn't grow
                     undoSegAllocPageWrite(origSegAllocPageId);
@@ -247,7 +247,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         // makePageNum request enough space to fit the first extent of a new
         // SegAllocNode.
         if (!DelegatingSegment::ensureAllocatedSize(
-                makePageNum(extentNum + 1,0)))
+                makePageNum(extentNum + 1, 0)))
         {
             // couldn't grow
             return NULL_PAGE_ID;
@@ -277,7 +277,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
 }
 
 void RandomAllocationSegmentBase::splitPageId(
-    PageId pageId,uint &iSegAlloc,
+    PageId pageId, uint &iSegAlloc,
     ExtentNum &extentNum,BlockNum &iPageInExtent) const
 {
     // calculate block number relative to containing SegAllocNode
@@ -347,7 +347,7 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     ExtentNum extentNum;
     BlockNum iPageInExtent;
     uint iSegAlloc;
-    splitPageId(pageId,iSegAlloc,extentNum,iPageInExtent);
+    splitPageId(pageId, iSegAlloc, extentNum, iPageInExtent);
     permAssert(iPageInExtent);
 
     // note that we mark the free PageId on the extent page BEFORE
@@ -394,7 +394,7 @@ bool RandomAllocationSegmentBase::testPageId(
     uint iSegAlloc;
     ExtentNum extentNum;
     BlockNum iPageInExtent;
-    splitPageId(pageId,iSegAlloc,extentNum,iPageInExtent);
+    splitPageId(pageId, iSegAlloc, extentNum, iPageInExtent);
     if (!iPageInExtent) {
         // header pages are valid but not allocated (from the
         // perspective of the RandomAllocationSegment, not the
@@ -411,12 +411,12 @@ bool RandomAllocationSegmentBase::testPageId(
 
 bool RandomAllocationSegmentBase::isPageIdValid(PageId pageId)
 {
-    return testPageId(pageId,false,true);
+    return testPageId(pageId, false, true);
 }
 
 bool RandomAllocationSegmentBase::isPageIdAllocated(PageId pageId)
 {
-    return testPageId(pageId,true,true);
+    return testPageId(pageId, true, true);
 }
 
 BlockNum RandomAllocationSegmentBase::getAllocatedSizeInPages()

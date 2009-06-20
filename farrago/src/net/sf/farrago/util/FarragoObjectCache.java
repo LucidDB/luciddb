@@ -188,8 +188,9 @@ public class FarragoObjectCache
                             // new value is not stale-on-arrival?  Maybe
                             // only when trace is on?
                             success = true;
-                            tracer.finer("initialized new cache entry " +
-                                entry.getKey() + "=" + entry.getValue());
+                            tracer.finer(
+                                "initialized new cache entry " + entry.getKey()
+                                + "=" + entry.getValue());
                         } finally {
                             // NOTE: an exception can leave a failed entry lying
                             // around.  It would be nice to get rid of it
@@ -384,8 +385,9 @@ public class FarragoObjectCache
     private void adjustMemoryUsage(long incBytes)
     {
         if (tracer.isLoggable(Level.FINER)) {
-            tracer.finer("cache size before discards = " + bytesUsed +
-                " increasing by " + incBytes);
+            tracer.finer(
+                "cache size before discards = " + bytesUsed
+                + " increasing by " + incBytes);
         }
         List<FarragoCacheEntry> discards;
 
@@ -603,8 +605,9 @@ public class FarragoObjectCache
             mapKeyToEntry.entryIterMulti();
         while (it.hasNext()) {
             Map.Entry<Object, FarragoCacheEntry> entry = it.next();
-            tracer.fine("objectCache[" + entry.getKey().getClass().getName() +
-                "," + entry.getKey() + "]=" + entry.getValue().getValue());
+            tracer.fine(
+                "objectCache[" + entry.getKey().getClass().getName()
+                + "," + entry.getKey() + "]=" + entry.getValue().getValue());
         }
     }
 

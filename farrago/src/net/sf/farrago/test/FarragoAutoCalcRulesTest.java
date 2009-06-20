@@ -236,7 +236,8 @@ public class FarragoAutoCalcRulesTest
                 null,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
-                SqlFunctionCategory.Numeric) {
+                SqlFunctionCategory.Numeric)
+            {
                 public RelDataType inferReturnType(
                     SqlOperatorBinding opBinding)
                 {

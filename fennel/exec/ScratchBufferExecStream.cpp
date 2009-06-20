@@ -39,7 +39,7 @@ void ScratchBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // one scratch page
     minQuantity.nCachePages += 1;

@@ -85,8 +85,8 @@ int TupleDescriptor::compareTuples(
 {
     int keyComp;
     // REVIEW:  should pass n as a param instead of recalculating it each time
-    size_t keyCount = std::min(tuple1.size(),tuple2.size());
-    keyCount = std::min(keyCount,size());
+    size_t keyCount = std::min(tuple1.size(), tuple2.size());
+    keyCount = std::min(keyCount, size());
     keyComp = compareTuplesKey(tuple1, tuple2, keyCount);
     return keyComp;
 }
@@ -177,7 +177,7 @@ void TupleDescriptor::visit(
             if (visitLengths) {
                 dataVisitor.visitUnsignedInt(0);
             }
-            dataVisitor.visitBytes(NULL,0);
+            dataVisitor.visitBytes(NULL, 0);
         } else {
             if (visitLengths) {
                 dataVisitor.visitUnsignedInt(tuple[i].cbData);
@@ -231,7 +231,7 @@ void TupleDescriptor::readPersistent(
         TupleStorageByteLength cbStorage = ntohl(iData);
         push_back(
             TupleAttributeDescriptor(
-                typeDescriptor,isNullable,cbStorage));
+                typeDescriptor, isNullable, cbStorage));
     }
 }
 
@@ -294,9 +294,10 @@ bool TupleDescriptor::storageEqual(
     for (uint i = 0; i < sz; ++i) {
         us = &(*this)[i];
         them = &other[i];
-        if ((us->pTypeDescriptor->getOrdinal() !=
-             them->pTypeDescriptor->getOrdinal()) ||
-            us->cbStorage != them->cbStorage) {
+        if ((us->pTypeDescriptor->getOrdinal()
+             != them->pTypeDescriptor->getOrdinal())
+            || us->cbStorage != them->cbStorage)
+        {
             return false;
         }
     }

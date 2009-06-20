@@ -929,7 +929,8 @@ public class FarragoTypeFactoryImpl
         }
         ClassDeclaration decl =
             new ClassDeclaration(
-                new ModifierList(ModifierList.PUBLIC
+                new ModifierList(
+                    ModifierList.PUBLIC
                     | ModifierList.STATIC),
                 "Oj_inner_" + generateClassId(),
                 superDecl,

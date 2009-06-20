@@ -58,7 +58,7 @@ protected:
     virtual void closeImpl();
 
     explicit SegInputStream(
-        SegmentAccessor const &,PageId,uint cbExtraHeader = 0);
+        SegmentAccessor const &, PageId, uint cbExtraHeader = 0);
 
     virtual void lockBuffer();
 

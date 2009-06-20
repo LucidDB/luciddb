@@ -153,7 +153,7 @@ public:
     void deallocateCheckpointedLog(CheckpointType checkpointType);
 
     // implement the Segment interface
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
 

@@ -75,9 +75,9 @@ void LbmExecStreamTestBase::generateBitmaps(
         if (level <= TRACE_FINER) {
             std::cout << "Set value: " << rid << std::endl;
         }
-        if ((rid > LcsRid(0) &&
-                opaqueToInt(rid % (input.bitmapSize*8)) == 0) ||
-            !lbmEntry.setRID(LcsRid(rid)))
+        if ((rid > LcsRid(0)
+             && opaqueToInt(rid % (input.bitmapSize*8)) == 0)
+            || !lbmEntry.setRID(LcsRid(rid)))
         {
             // either hit desired number of rids per bitmap segment or
             // exhausted buffer space, so write the tuple to the output

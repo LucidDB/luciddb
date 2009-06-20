@@ -108,7 +108,7 @@ void VersionedSegment::delegatedCheckpoint(
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         MappedPageListenerPredicate pagePredicate(delegatingSegment);
         fuzzyCheckpointSet.setDelegatePagePredicate(pagePredicate);
-        pCache->checkpointPages(fuzzyCheckpointSet,checkpointType);
+        pCache->checkpointPages(fuzzyCheckpointSet, checkpointType);
         fuzzyCheckpointSet.finishCheckpoint();
         if (lastCheckpointLogPageId != NULL_PAGE_ID) {
             oldestLogPageId = logSegment->getPageSuccessor(
@@ -118,7 +118,7 @@ void VersionedSegment::delegatedCheckpoint(
         }
     } else {
         DelegatingSegment::delegatedCheckpoint(
-            delegatingSegment,checkpointType);
+            delegatingSegment, checkpointType);
         fuzzyCheckpointSet.clear();
         oldestLogPageId = NULL_PAGE_ID;
     }
@@ -137,32 +137,32 @@ void VersionedSegment::deallocateCheckpointedLog(CheckpointType checkpointType)
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         if (lastCheckpointLogPageId != NULL_PAGE_ID) {
             logSegment->deallocatePageRange(
-                NULL_PAGE_ID,lastCheckpointLogPageId);
+                NULL_PAGE_ID, lastCheckpointLogPageId);
             if (lastCheckpointLogPageId == newestLogPageId) {
                 newestLogPageId = NULL_PAGE_ID;
             }
         }
     } else {
-        logSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        logSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
         newestLogPageId = NULL_PAGE_ID;
     }
     lastCheckpointLogPageId = newestLogPageId;
 }
 
 void VersionedSegment::deallocatePageRange(
-    PageId startPageId,PageId endPageId)
+    PageId startPageId, PageId endPageId)
 {
     // TODO:  support real truncations?
     assert(startPageId == endPageId);
     assert(startPageId != NULL_PAGE_ID);
 
     // TODO:  need to log copy of deallocated page
-    DelegatingSegment::deallocatePageRange(startPageId,endPageId);
+    DelegatingSegment::deallocatePageRange(startPageId, endPageId);
 }
 
 void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
-    DelegatingSegment::notifyPageDirty(page,bDataValid);
+    DelegatingSegment::notifyPageDirty(page, bDataValid);
 
     if (inRecovery) {
         // REVIEW jvs 8-Aug-2006: It would be nice to assert instead.  But we
@@ -190,7 +190,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
     }
 
     // write before-image to the log
-    SegmentAccessor logSegmentAccessor(logSegment,pCache);
+    SegmentAccessor logSegmentAccessor(logSegment, pCache);
     SegPageLock logPageLock(logSegmentAccessor);
     PageId logPageId = logPageLock.allocatePage();
 
@@ -231,7 +231,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 SegVersionNum VersionedSegment::computeChecksum(void const *pPageData)
 {
     crcComputer.reset();
-    crcComputer.process_bytes(pPageData,getUsablePageSize());
+    crcComputer.process_bytes(pPageData, getUsablePageSize());
     return crcComputer.checksum();
 }
 
@@ -306,8 +306,8 @@ void VersionedSegment::recover(
 
     // TODO:  what about when one shadow log stores pages for multiple
     // VersionedSegments?
-    SegmentAccessor logSegmentAccessor(logSegment,pCache);
-    SegmentAccessor dataSegmentAccessor(pDelegatingSegment,pCache);
+    SegmentAccessor logSegmentAccessor(logSegment, pCache);
+    SegmentAccessor dataSegmentAccessor(pDelegatingSegment, pCache);
     for (; firstLogPageId != NULL_PAGE_ID;
          firstLogPageId = logSegment->getPageSuccessor(firstLogPageId))
     {

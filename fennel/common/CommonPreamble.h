@@ -245,11 +245,11 @@ FENNEL_END_NAMESPACE
 namespace std
 {
 
-template<class T,class Dummy>
+template<class T, class Dummy>
 struct hash
-< fennel::OpaqueInteger<T,Dummy> >
+< fennel::OpaqueInteger<T, Dummy> >
 {
-    size_t operator() (const fennel::OpaqueInteger<T,Dummy> &key) const
+    size_t operator() (const fennel::OpaqueInteger<T, Dummy> &key) const
     {
         return hash<T>()(fennel::opaqueToInt(key));
     }

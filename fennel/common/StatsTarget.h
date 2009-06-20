@@ -65,7 +65,7 @@ public:
      *
      * @param value snapshot value
      */
-    virtual void writeCounter(std::string name,int64_t value) = 0;
+    virtual void writeCounter(std::string name, int64_t value) = 0;
 };
 
 FENNEL_END_NAMESPACE

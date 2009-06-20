@@ -66,7 +66,7 @@ PageId DelegatingSegment::getPageSuccessor(PageId pageId)
 
 void DelegatingSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    pDelegateSegment->setPageSuccessor(pageId,successorId);
+    pDelegateSegment->setPageSuccessor(pageId, successorId);
 }
 
 BlockId DelegatingSegment::translatePageId(PageId pageId)
@@ -89,9 +89,10 @@ bool DelegatingSegment::ensureAllocatedSize(BlockNum nPages)
     return pDelegateSegment->ensureAllocatedSize(nPages);
 }
 
-void DelegatingSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void DelegatingSegment::deallocatePageRange(
+    PageId startPageId, PageId endPageId)
 {
-    pDelegateSegment->deallocatePageRange(startPageId,endPageId);
+    pDelegateSegment->deallocatePageRange(startPageId, endPageId);
 }
 
 bool DelegatingSegment::isPageIdAllocated(PageId pageId)
@@ -121,7 +122,7 @@ void DelegatingSegment::notifyAfterPageRead(CachePage &page)
 
 void DelegatingSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
-    pDelegateSegment->notifyPageDirty(page,bDataValid);
+    pDelegateSegment->notifyPageDirty(page, bDataValid);
 }
 
 void DelegatingSegment::notifyBeforePageFlush(CachePage &page)
@@ -142,7 +143,7 @@ bool DelegatingSegment::canFlushPage(CachePage &page)
 void DelegatingSegment::delegatedCheckpoint(
     Segment &delegatingSegment,CheckpointType checkpointType)
 {
-    pDelegateSegment->delegatedCheckpoint(delegatingSegment,checkpointType);
+    pDelegateSegment->delegatedCheckpoint(delegatingSegment, checkpointType);
 }
 
 PageId DelegatingSegment::updatePage(PageId pageId, bool needsTranslation)

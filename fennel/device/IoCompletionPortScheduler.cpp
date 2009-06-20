@@ -124,7 +124,7 @@ void IoCompletionPortScheduler::stop()
     // post dummy wakeup notifications; threads will see these and
     // exit
     for (uint i = 0; i < threads.size(); ++i) {
-        if (!PostQueuedCompletionStatus(hCompletionPort,0,0,NULL)) {
+        if (!PostQueuedCompletionStatus(hCompletionPort, 0, 0, NULL)) {
             throw SysCallExcn("PostQueuedCompletionStatus failed");
         }
     }

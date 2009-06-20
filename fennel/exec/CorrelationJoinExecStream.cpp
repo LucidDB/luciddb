@@ -46,8 +46,8 @@ void CorrelationJoinExecStream::prepare(
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
 
     TupleDescriptor outputDesc;
-    outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
-    outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
+    outputDesc.insert(outputDesc.end(), leftDesc.begin(), leftDesc.end());
+    outputDesc.insert(outputDesc.end(), rightDesc.begin(), rightDesc.end());
     outputData.compute(outputDesc);
     pOutAccessor->setTupleShape(outputDesc);
 
@@ -124,7 +124,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             }
 
             // restart right input stream
-            pGraph->getStreamInput(getStreamId(),1)->open(true);
+            pGraph->getStreamInput(getStreamId(), 1)->open(true);
 
             // make runnable
             if (++leftRowCount == 1) {

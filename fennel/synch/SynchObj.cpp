@@ -28,7 +28,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void convertTimeout(uint iMilliseconds,boost::xtime &atv)
+void convertTimeout(uint iMilliseconds, boost::xtime &atv)
 {
     boost::xtime_get(&atv,boost::TIME_UTC);
     if (isMAXU(iMilliseconds)) {
@@ -39,7 +39,7 @@ void convertTimeout(uint iMilliseconds,boost::xtime &atv)
         atv.sec += 36000;
     } else if (iMilliseconds) {
         long sec = iMilliseconds / 1000;
-        long nsec = (iMilliseconds%1000)*1000000;
+        long nsec = (iMilliseconds % 1000) * 1000000;
         atv.sec += sec;
         atv.nsec += nsec;
     }

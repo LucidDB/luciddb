@@ -43,12 +43,12 @@ struct FENNEL_SEGMENT_EXPORT ExtentAllocationNode
 
     PageEntry &getPageEntry(uint i)
     {
-        return reinterpret_cast<PageEntry *>(this+1)[i];
+        return reinterpret_cast<PageEntry *>(this + 1)[i];
     }
 
     PageEntry const &getPageEntry(uint i) const
     {
-        return reinterpret_cast<PageEntry const *>(this+1)[i];
+        return reinterpret_cast<PageEntry const *>(this + 1)[i];
     }
 };
 

@@ -576,8 +576,8 @@ public class FarragoRuntimeContext
             return transformMap.get(key);
         }
         // protect fennel from crashing
-        throw new RuntimeException("cannot find farrago transform for stream "
-            + key);
+        throw new RuntimeException(
+            "cannot find farrago transform for stream " + key);
     }
 
     /**

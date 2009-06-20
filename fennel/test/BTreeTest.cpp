@@ -70,40 +70,40 @@ class BTreeTest : virtual public SegStorageTestBase
     int32_t readSecondKey();
     int32_t readValue();
     int32_t readMultiKeyValue();
-    void verifyTree(uint nRecordsExpected,uint nLevelsExpected);
+    void verifyTree(uint nRecordsExpected, uint nLevelsExpected);
 
     void testBulkLoadOneLevelNewRoot()
     {
-        testBulkLoad(200,1,true);
+        testBulkLoad(200, 1, true);
     }
 
     void testBulkLoadOneLevelReuseRoot()
     {
-        testBulkLoad(200,1,false);
+        testBulkLoad(200, 1, false);
     }
 
     void testBulkLoadTwoLevelsNewRoot()
     {
-        testBulkLoad(20000,2,true);
+        testBulkLoad(20000, 2, true);
     }
 
     void testBulkLoadTwoLevelsReuseRoot()
     {
-        testBulkLoad(20000,2,false);
+        testBulkLoad(20000, 2, false);
     }
 
     void testBulkLoadThreeLevels()
     {
-        testBulkLoad(200000,3,true);
+        testBulkLoad(200000, 3, true);
     }
 
-    void testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot);
+    void testBulkLoad(uint nRecords, uint nLevelsExpected, bool newRoot);
     void testScan(
         SharedByteInputStream,
         uint nRecords,
         bool alternating,
         bool deletion);
-    void testSearch(SharedByteInputStream,uint nRecords,bool leastUpper);
+    void testSearch(SharedByteInputStream, uint nRecords, bool leastUpper);
     void testSearchLast();
 
     void testSequentialInserts()
@@ -145,20 +145,20 @@ class BTreeTest : virtual public SegStorageTestBase
 public:
     explicit BTreeTest()
     {
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadOneLevelNewRoot);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadOneLevelReuseRoot);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsNewRoot);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsReuseRoot);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadThreeLevels);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testSequentialInserts);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testRandomInserts);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInserts);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBulkLoadOneLevelNewRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBulkLoadOneLevelReuseRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBulkLoadTwoLevelsNewRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBulkLoadTwoLevelsReuseRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBulkLoadThreeLevels);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testSequentialInserts);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testRandomInserts);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testMonotonicInserts);
 
         // Since these two testcases convert the single key descriptor into a
         // multi-key descriptor, any tests that require the single key
         // descriptor should run before these.
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testSmallMultiKeySearches);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testBigMultiKeySearches);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testSmallMultiKeySearches);
+        FENNEL_UNIT_TEST_CASE(BTreeTest, testBigMultiKeySearches);
 
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -216,13 +216,13 @@ void BTreeTest::unmarshalRecord(SharedByteInputStream pInputStream)
     pInputStream->consumeReadPointer(cbTuple);
 }
 
-void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
+void BTreeTest::testBulkLoad(uint nRecords, uint nLevelsExpected, bool newRoot)
 {
     BlockNum nPagesAllocatedInitially =
         pRandomSegment->getAllocatedSizeInPages();
 
     descriptor.rootPageId = NULL_PAGE_ID;
-    BTreeBuilder builder(descriptor,pRandomSegment);
+    BTreeBuilder builder(descriptor, pRandomSegment);
 
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
@@ -242,7 +242,7 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
     }
 
     // Generate random key/value data
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     SharedSegOutputStream pOutputStream =
         SegOutputStream::newSegOutputStream(segmentAccessor);
     std::subtractive_rng randomNumberGenerator(nRandomSeed);
@@ -255,46 +255,46 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
         marshalRecord();
         uint cbTuple = tupleAccessor.getCurrentByteCount();
         PBuffer pBuffer = pOutputStream->getWritePointer(cbTuple);
-        memcpy(pBuffer,recordBuf.get(),cbTuple);
+        memcpy(pBuffer, recordBuf.get(), cbTuple);
         pOutputStream->consumeWritePointer(cbTuple);
     }
     PageId pageId = pOutputStream->getFirstPageId();
     pOutputStream.reset();
     SharedSegInputStream pInputStream =
-        SegInputStream::newSegInputStream(segmentAccessor,pageId);
+        SegInputStream::newSegInputStream(segmentAccessor, pageId);
     SegStreamPosition startPos;
     pInputStream->getSegPos(startPos);
 
     // Load the data into the tree
-    builder.build(*pInputStream,nRecords,1.0);
+    builder.build(*pInputStream, nRecords, 1.0);
     descriptor.rootPageId = builder.getRootPageId();
 
     // Check tree integrity
-    verifyTree(nRecords,nLevelsExpected);
+    verifyTree(nRecords, nLevelsExpected);
 
     // Make sure we can search for each key individually
     pInputStream->seekSegPos(startPos);
-    testSearch(pInputStream,nRecords,true);
+    testSearch(pInputStream, nRecords, true);
 
     // Do same search, but searching for greatest lower bound during
     // intermediate searches
     pInputStream->seekSegPos(startPos);
-    testSearch(pInputStream,nRecords,false);
+    testSearch(pInputStream, nRecords, false);
 
     // Make sure we can scan all tuples
     pInputStream->seekSegPos(startPos);
-    testScan(pInputStream,nRecords,false,false);
+    testScan(pInputStream, nRecords, false, false);
 
     // Now delete every other tuple
     pInputStream->seekSegPos(startPos);
-    testScan(pInputStream,nRecords,true,true);
+    testScan(pInputStream, nRecords, true, true);
 
     // Recheck tree integriy
-    verifyTree(nRecords / 2,nLevelsExpected);
+    verifyTree(nRecords / 2, nLevelsExpected);
 
     // Rescan to make sure deletions were performed correctly
     pInputStream->seekSegPos(startPos);
-    testScan(pInputStream,nRecords,true,false);
+    testScan(pInputStream, nRecords, true, false);
 
     // Deallocate the test data storage
     pInputStream->seekSegPos(startPos);
@@ -310,44 +310,47 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
         nPagesAllocatedInitially);
 }
 
-void BTreeTest::verifyTree(uint nRecordsExpected,uint nLevelsExpected)
+void BTreeTest::verifyTree(uint nRecordsExpected, uint nLevelsExpected)
 {
     BTreeVerifier verifier(descriptor);
     verifier.verify();
 
     BTreeStatistics const &stats = verifier.getStatistics();
-    BOOST_CHECK_EQUAL(stats.nLevels,nLevelsExpected);
-    BOOST_CHECK_EQUAL(stats.nTuples,nRecordsExpected);
+    BOOST_CHECK_EQUAL(stats.nLevels, nLevelsExpected);
+    BOOST_CHECK_EQUAL(stats.nTuples, nRecordsExpected);
 }
 
 void BTreeTest::testSearch(
-    SharedByteInputStream pInputStream,uint nRecords,bool leastUpper)
+    SharedByteInputStream pInputStream, uint nRecords, bool leastUpper)
 {
     BTreeReader reader(descriptor);
     for (uint i = 0; i < nRecords; ++i) {
         unmarshalRecord(pInputStream);
-        if (!reader.searchForKey(keyData,DUP_SEEK_ANY,leastUpper)) {
-            BOOST_FAIL("LeastUpper:" << leastUpper <<
-                       ". Could not find key #" << i << ":  " << record.key);
+        if (!reader.searchForKey(keyData, DUP_SEEK_ANY, leastUpper)) {
+            BOOST_FAIL(
+                "LeastUpper:" << leastUpper
+                << ". Could not find key #" << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(record.key,readKey());
-        BOOST_CHECK_EQUAL(record.value,readValue());
+        BOOST_CHECK_EQUAL(record.key, readKey());
+        BOOST_CHECK_EQUAL(record.value, readValue());
         if (!(i % 10000)) {
             BOOST_MESSAGE(
                 "found value = " << readValue()
                 << " key = " << readKey());
         }
         record.key++;
-        if (reader.searchForKey(keyData,DUP_SEEK_ANY)) {
+        if (reader.searchForKey(keyData, DUP_SEEK_ANY)) {
             BOOST_FAIL("Found key " << record.key << " (shouldn't exist!)");
         }
     }
 }
 
 void BTreeTest::testScan(
-    SharedByteInputStream pInputStream,uint nRecords,
-    bool alternating,bool deletion)
+    SharedByteInputStream pInputStream,
+    uint nRecords,
+    bool alternating,
+    bool deletion)
 {
     BTreeReader realReader(descriptor);
 
@@ -355,7 +358,7 @@ void BTreeTest::testScan(
         pCache,
         1);
 
-    BTreeWriter writer(descriptor,scratchAccessor);
+    BTreeWriter writer(descriptor, scratchAccessor);
 
     bool found;
     int32_t lastKey = -1;
@@ -373,13 +376,14 @@ void BTreeTest::testScan(
             unmarshalRecord(pInputStream);
         }
         if (!found) {
-            BOOST_FAIL("Could not searchNext for key #"
-                       << i << ":  " << record.key);
+            BOOST_FAIL(
+                "Could not searchNext for key #"
+                << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         lastKey = readKey();
-        BOOST_CHECK_EQUAL(record.key,lastKey);
-        BOOST_CHECK_EQUAL(record.value,readValue());
+        BOOST_CHECK_EQUAL(record.key, lastKey);
+        BOOST_CHECK_EQUAL(record.value, readValue());
         if (!(i % 10000)) {
             BOOST_MESSAGE(
                 "scanned value = " << readValue()
@@ -401,7 +405,7 @@ void BTreeTest::testScan(
             BOOST_FAIL("searchLast found nothing");
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(lastKey,readKey());
+        BOOST_CHECK_EQUAL(lastKey, readKey());
         reader.endSearch();
     }
 }
@@ -443,7 +447,7 @@ void BTreeTest::testInserts(InsertType insertType)
 {
     uint nRecords = 200000;
     descriptor.rootPageId = NULL_PAGE_ID;
-    BTreeBuilder builder(descriptor,pRandomSegment);
+    BTreeBuilder builder(descriptor, pRandomSegment);
 
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
@@ -458,7 +462,7 @@ void BTreeTest::testInserts(InsertType insertType)
         1);
 
     bool monotonic = (insertType == MONOTONIC);
-    BTreeWriter writer(descriptor,scratchAccessor,monotonic);
+    BTreeWriter writer(descriptor, scratchAccessor, monotonic);
 
     std::vector<int32_t> keys;
     for (uint i = 0; i < nRecords; i++) {
@@ -482,12 +486,12 @@ void BTreeTest::testInserts(InsertType insertType)
     for (uint i = 0; i < nRecords; ++i) {
         record.key = i;
         record.value = -i;
-        if (!reader.searchForKey(keyData,DUP_SEEK_ANY)) {
+        if (!reader.searchForKey(keyData, DUP_SEEK_ANY)) {
             BOOST_FAIL("Could not find key #" << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(record.key,readKey());
-        BOOST_CHECK_EQUAL(record.value,readValue());
+        BOOST_CHECK_EQUAL(record.key, readKey());
+        BOOST_CHECK_EQUAL(record.value, readValue());
     }
 }
 
@@ -513,7 +517,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
     // The first index key will contain nKey1 distinct values with the second
     // key sequencing from 0 to nKey2-1
     descriptor.rootPageId = NULL_PAGE_ID;
-    BTreeBuilder builder(descriptor,pRandomSegment);
+    BTreeBuilder builder(descriptor, pRandomSegment);
 
     tupleData.compute(descriptor.tupleDescriptor);
 
@@ -524,7 +528,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         pCache,
         1);
 
-    BTreeWriter writer(descriptor,scratchAccessor,false);
+    BTreeWriter writer(descriptor, scratchAccessor, false);
 
     for (uint i = 0; i < nKey1; i++) {
         for (uint j = 0; j < nKey2; j++) {
@@ -547,17 +551,17 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
     for (uint i = 0; i < nKey1; ++i) {
         record.key = i;
 
-        if (!reader.searchForKey(keyData,DUP_SEEK_BEGIN)) {
+        if (!reader.searchForKey(keyData, DUP_SEEK_BEGIN)) {
             BOOST_FAIL("Could not find begin key #" << i);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(i,readKey());
-        BOOST_CHECK_EQUAL(0,readSecondKey());
-        BOOST_CHECK_EQUAL(i,readMultiKeyValue());
+        BOOST_CHECK_EQUAL(i, readKey());
+        BOOST_CHECK_EQUAL(0, readSecondKey());
+        BOOST_CHECK_EQUAL(i, readMultiKeyValue());
 
         // NOTE jvs 27-May-2007:  due to FNL-65, ignore bogus return
         // value for DUP_SEEK_END
-        reader.searchForKey(keyData,DUP_SEEK_END);
+        reader.searchForKey(keyData, DUP_SEEK_END);
 
         if (i == nKey1 - 1) {
             if (!reader.isSingular()) {
@@ -566,9 +570,9 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
             }
         } else {
             reader.getTupleAccessorForRead().unmarshal(tupleData);
-            BOOST_CHECK_EQUAL(i + 1,readKey());
-            BOOST_CHECK_EQUAL(0,readSecondKey());
-            BOOST_CHECK_EQUAL(i + 1,readMultiKeyValue());
+            BOOST_CHECK_EQUAL(i + 1, readKey());
+            BOOST_CHECK_EQUAL(0, readSecondKey());
+            BOOST_CHECK_EQUAL(i + 1, readMultiKeyValue());
         }
     }
     reader.endSearch();
@@ -592,7 +596,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         for (uint j = 0; j < nKey2; j++) {
             record.key = i;
             record.secondKey = j;
-            if (!writer.searchForKey(multiKeyData,DUP_SEEK_ANY)) {
+            if (!writer.searchForKey(multiKeyData, DUP_SEEK_ANY)) {
                 BOOST_FAIL("Could not find key #" << i);
             }
             writer.deleteCurrent();
@@ -606,15 +610,15 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
     writer.endSearch();
     for (uint i = 0; i < nKey1; i++) {
         record.key = i;
-        if (!reader.searchForKey(keyData,DUP_SEEK_BEGIN)) {
+        if (!reader.searchForKey(keyData, DUP_SEEK_BEGIN)) {
             BOOST_FAIL("Could not find begin key #" << i);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(i,readKey());
-        BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-        BOOST_CHECK_EQUAL(i + nKey2,readMultiKeyValue());
+        BOOST_CHECK_EQUAL(i, readKey());
+        BOOST_CHECK_EQUAL(nKey2, readSecondKey());
+        BOOST_CHECK_EQUAL(i + nKey2, readMultiKeyValue());
 
-        reader.searchForKey(keyData,DUP_SEEK_END);
+        reader.searchForKey(keyData, DUP_SEEK_END);
 
         if (i == nKey1 - 1) {
             if (!reader.isSingular()) {
@@ -623,18 +627,18 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
             }
         } else {
             reader.getTupleAccessorForRead().unmarshal(tupleData);
-            BOOST_CHECK_EQUAL(i + 1,readKey());
-            BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-            BOOST_CHECK_EQUAL(i + 1 + nKey2,readMultiKeyValue());
+            BOOST_CHECK_EQUAL(i + 1, readKey());
+            BOOST_CHECK_EQUAL(nKey2, readSecondKey());
+            BOOST_CHECK_EQUAL(i + 1 + nKey2, readMultiKeyValue());
         }
 
         record.secondKey = 0;
-        reader.searchForKey(multiKeyData,DUP_SEEK_END);
+        reader.searchForKey(multiKeyData, DUP_SEEK_END);
 
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(i,readKey());
-        BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-        BOOST_CHECK_EQUAL(i + nKey2,readMultiKeyValue());
+        BOOST_CHECK_EQUAL(i, readKey());
+        BOOST_CHECK_EQUAL(nKey2, readSecondKey());
+        BOOST_CHECK_EQUAL(i + nKey2, readMultiKeyValue());
     }
 }
 

@@ -40,8 +40,8 @@ ExternalSortMerger::ExternalSortMerger(ExternalSortInfo &sortInfoIn)
     keyData.compute(sortInfo.keyDesc);
     keyData2 = keyData;
 
-    keyAccessor.bind(tupleAccessor,sortInfo.keyProj);
-    keyAccessor2.bind(tupleAccessor2,sortInfo.keyProj);
+    keyAccessor.bind(tupleAccessor, sortInfo.keyProj);
+    keyAccessor2.bind(tupleAccessor2, sortInfo.keyProj);
 
     nMergeMemPages = sortInfo.nSortMemPages + 1;
 
@@ -49,7 +49,7 @@ ExternalSortMerger::ExternalSortMerger(ExternalSortInfo &sortInfoIn)
     ppFetchArrays.reset(new ExternalSortFetchArray *[nMergeMemPages]);
 
     pOrds.reset(new uint[nMergeMemPages]);
-    memset(pOrds.get(),0,sizeof(uint) * nMergeMemPages);
+    memset(pOrds.get(), 0, sizeof(uint) * nMergeMemPages);
 
     mergeInfo.reset(new ExternalSortMergeInfo[nMergeMemPages]);
 
@@ -122,9 +122,9 @@ inline uint ExternalSortMerger::heapRight(uint i)
     return (i << 1) + 1;
 }
 
-inline void ExternalSortMerger::heapExchange(uint i,uint j)
+inline void ExternalSortMerger::heapExchange(uint i, uint j)
 {
-    std::swap(mergeInfo[i],mergeInfo[j]);
+    std::swap(mergeInfo[i], mergeInfo[j]);
 }
 
 inline ExternalSortMergeInfo &ExternalSortMerger::getMergeHigh()
@@ -144,7 +144,7 @@ void ExternalSortMerger::heapify(uint i)
         tupleAccessor2.setCurrentTupleBuf(mergeInfo[i].val);
         keyAccessor.unmarshal(keyData);
         keyAccessor2.unmarshal(keyData2);
-        if (sortInfo.compareKeys(keyData,keyData2) < 0) {
+        if (sortInfo.compareKeys(keyData, keyData2) < 0) {
             highest = l;
         }
     }
@@ -154,13 +154,13 @@ void ExternalSortMerger::heapify(uint i)
         tupleAccessor2.setCurrentTupleBuf(mergeInfo[highest].val);
         keyAccessor.unmarshal(keyData);
         keyAccessor2.unmarshal(keyData2);
-        if (sortInfo.compareKeys(keyData,keyData2) < 0) {
+        if (sortInfo.compareKeys(keyData, keyData2) < 0) {
             highest = r;
         }
     }
 
     if (highest != i) {
-        heapExchange(highest,i);
+        heapExchange(highest, i);
         heapify(highest);
     }
 }

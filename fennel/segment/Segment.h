@@ -53,7 +53,7 @@ class FENNEL_SEGMENT_EXPORT Segment
 
 protected:
 
-    typedef std::hash_map<PageId,PageId> PageMap;
+    typedef std::hash_map<PageId, PageId> PageMap;
     typedef PageMap::const_iterator PageMapConstIter;
 
     /**
@@ -84,7 +84,7 @@ protected:
      * An implementation of setPageSuccessor suitable for
      * LINEAR_ALLOCATION.
      */
-    void setLinearPageSuccessor(PageId pageId,PageId successorId);
+    void setLinearPageSuccessor(PageId pageId, PageId successorId);
 
     /**
      * An implementation of isPageIdAllocated suitable for

@@ -54,8 +54,8 @@ struct LbmEntryInfo
     bool inuse;
 };
 
-struct LbmGeneratorExecStreamParams :
-    public BTreeExecStreamParams, public LcsRowScanBaseExecStreamParams
+struct LbmGeneratorExecStreamParams
+    : public BTreeExecStreamParams, public LcsRowScanBaseExecStreamParams
 {
     /**
      * Parameter id of dynamic parameter used to pass along number of rows

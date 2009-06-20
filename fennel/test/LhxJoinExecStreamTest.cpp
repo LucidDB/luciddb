@@ -73,10 +73,10 @@ class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 public:
     explicit LhxJoinExecStreamTest()
     {
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest, testSequential);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest, testDup1);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest, testDup2);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest, testConst);
 
 /*
         FENNEL_UNIT_TEST_CASE(
@@ -129,7 +129,7 @@ public:
             LhxJoinExecStreamTest,
             testConstPartitionFilterStat);
 
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest, testConstCleanup);
     }
 
     /*
@@ -405,11 +405,12 @@ void LhxJoinExecStreamTest::testDupImpl(
 
     for (i = 0; i < numColsLeft; i++) {
         leftColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows / cndKeyLeft)));
+            SharedInt64ColumnGenerator(
+                new DupColumnGenerator(numRows / cndKeyLeft)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
+            SharedInt64ColumnGenerator(
+                new DupColumnGenerator(
+                    numRows * numRows / cndKeyLeft / cndKeyRight)));
 
         inputDesc.push_back(attrDesc);
         outputDesc.push_back(attrDesc);
@@ -418,11 +419,12 @@ void LhxJoinExecStreamTest::testDupImpl(
 
     for (; i < numColsLeft + numColsRight; i++) {
         rightColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows / cndKeyRight)));
+            SharedInt64ColumnGenerator(
+                new DupColumnGenerator(numRows / cndKeyRight)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
+            SharedInt64ColumnGenerator(
+                new DupColumnGenerator(
+                    numRows * numRows / cndKeyLeft / cndKeyRight)));
 
         outputDesc.push_back(attrDesc);
         outputProj.push_back(i);
@@ -438,9 +440,10 @@ void LhxJoinExecStreamTest::testDupImpl(
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    uint numResRows = (cndKeyLeft > cndKeyRight) ?
-        (numRows * numRows / cndKeyLeft) :
-        (numRows * numRows / cndKeyRight);
+    uint numResRows =
+        (cndKeyLeft > cndKeyRight)
+        ? (numRows * numRows / cndKeyLeft)
+        : (numRows * numRows / cndKeyRight);
 
     testImpl(
         numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
@@ -471,7 +474,7 @@ void LhxJoinExecStreamTest::testImpl(
 
     mockParams.pGenerator = pLeftGenerator;
     ExecStreamEmbryo leftInputStreamEmbryo;
-    leftInputStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    leftInputStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     leftInputStreamEmbryo.getStream()->setName("LeftInputExecStream");
 
     /*
@@ -479,7 +482,7 @@ void LhxJoinExecStreamTest::testImpl(
      */
     mockParams.pGenerator = pRightGenerator;
     ExecStreamEmbryo rightInputStreamEmbryo;
-    rightInputStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    rightInputStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     rightInputStreamEmbryo.getStream()->setName("RightInputExecStream");
 
     /*
@@ -525,7 +528,7 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.pTempSegment = pRandomSegment;
 
     ExecStreamEmbryo joinStreamEmbryo;
-    joinStreamEmbryo.init(new LhxJoinExecStream(),joinParams);
+    joinStreamEmbryo.init(new LhxJoinExecStream(), joinParams);
     joinStreamEmbryo.getStream()->setName("LhxJoinExecStream");
 
     SharedExecStream pOutputStream;
@@ -544,7 +547,7 @@ void LhxJoinExecStreamTest::testImpl(
         sortParams.earlyClose = false;
         ExecStreamEmbryo sortStreamEmbryo;
         sortStreamEmbryo.init(
-            ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+            ExternalSortExecStream::newExternalSortExecStream(), sortParams);
         sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
 
         pOutputStream = prepareConfluenceTransformGraph(

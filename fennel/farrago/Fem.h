@@ -34,7 +34,7 @@ FENNEL_BEGIN_NAMESPACE
 
 #include "fennel/farrago/FemGeneratedClasses.h"
 
-extern void staticInitFem(JniEnvRef,JniProxyVisitTableBase &);
+extern void staticInitFem(JniEnvRef, JniProxyVisitTableBase &);
 
 FENNEL_END_NAMESPACE
 

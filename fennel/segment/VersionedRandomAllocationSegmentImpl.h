@@ -45,12 +45,12 @@ struct FENNEL_SEGMENT_EXPORT VersionedExtentAllocationNode
 
     VersionedPageEntry &getPageEntry(uint i)
     {
-        return reinterpret_cast<VersionedPageEntry *>(this+1)[i];
+        return reinterpret_cast<VersionedPageEntry *>(this + 1)[i];
     }
 
     VersionedPageEntry const &getPageEntry(uint i) const
     {
-        return reinterpret_cast<VersionedPageEntry const *>(this+1)[i];
+        return reinterpret_cast<VersionedPageEntry const *>(this + 1)[i];
     }
 };
 
@@ -144,8 +144,8 @@ inline bool VersionedRandomAllocationSegment::isDeallocatedPageOwnerId(
     PageOwnerId pageOwnerId)
 {
     return
-        (pageOwnerId != ANON_PAGE_OWNER_ID &&
-        (opaqueToInt(pageOwnerId) & DEALLOCATED_PAGE_OWNER_ID_MASK));
+        (pageOwnerId != ANON_PAGE_OWNER_ID
+        && (opaqueToInt(pageOwnerId) & DEALLOCATED_PAGE_OWNER_ID_MASK));
 }
 
 inline TxnId VersionedRandomAllocationSegment::getDeallocatedTxnId(

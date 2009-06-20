@@ -127,8 +127,8 @@ public class LcsIndexGuide
         // Create a mapping from flattened ordinal to its corresponding cluster
         ordinalToClusterMap = new HashMap<Integer, FemLocalIndex>();
         for (FemLocalIndex cluster : clusteredIndexes) {
-            for (CwmIndexedFeature indexedFeature :
-                cluster.getIndexedFeature())
+            for (CwmIndexedFeature indexedFeature
+                : cluster.getIndexedFeature())
             {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();

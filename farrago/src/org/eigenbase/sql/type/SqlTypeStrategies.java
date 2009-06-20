@@ -153,7 +153,8 @@ public abstract class SqlTypeStrategies
      */
     public static final SqlSingleOperandTypeChecker otcPositiveIntLit =
         new FamilyOperandTypeChecker(
-            SqlTypeFamily.INTEGER) {
+            SqlTypeFamily.INTEGER)
+        {
             public boolean checkSingleOperandType(
                 SqlCallBinding callBinding,
                 SqlNode node,
@@ -363,7 +364,8 @@ public abstract class SqlTypeStrategies
         new FamilyOperandTypeChecker(
             SqlTypeFamily.DATETIME,
             SqlTypeFamily.DATETIME,
-            SqlTypeFamily.DATETIME_INTERVAL) {
+            SqlTypeFamily.DATETIME_INTERVAL)
+        {
             public boolean checkOperandTypes(
                 SqlCallBinding callBinding,
                 boolean throwOnFailure)

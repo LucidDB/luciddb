@@ -250,13 +250,11 @@ void ResourceBundle::loadMessages()
     string fileName;
 
     if (_locale == Locale("")) {
-        fileName.assign(_baseName
-                        + ".properties");
+        fileName.assign(
+            _baseName + ".properties");
     } else {
-        fileName.assign(_baseName
-                        + "_"
-                        + _locale.getDisplayName()
-                        + ".properties");
+        fileName.assign(
+            _baseName + "_" + _locale.getDisplayName() + ".properties");
     }
 
     // look in _location first

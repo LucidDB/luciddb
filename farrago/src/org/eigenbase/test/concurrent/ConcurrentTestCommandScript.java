@@ -430,9 +430,10 @@ public class ConcurrentTestCommandScript
                     continue;
                 }
 
-                if (line.startsWith("select") ||
-                    line.startsWith("values") ||
-                    line.startsWith("explain")) {
+                if (line.startsWith("select")
+                    || line.startsWith("values")
+                    || line.startsWith("explain"))
+                {
                     return true;
                 } else {
                     return false;
@@ -500,7 +501,7 @@ public class ConcurrentTestCommandScript
 
     public void printResults(BufferedWriter out) throws IOException
     {
-        final Map<Integer,String[]> results = collectResults();
+        final Map<Integer, String[]> results = collectResults();
         printThreadResults(out, results.get(SETUP_THREAD_ID));
         for (Integer id : results.keySet()) {
             if (id < 0) {

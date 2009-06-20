@@ -79,8 +79,9 @@ class FENNEL_SEGMENT_EXPORT SegPageLock
                 || origLockMode == LOCKMODE_X_NOWAIT)
             {
                 return
-                    (origLockMode == LOCKMODE_X) ?
-                        LOCKMODE_S : LOCKMODE_S_NOWAIT;
+                    (origLockMode == LOCKMODE_X)
+                    ? LOCKMODE_S
+                    : LOCKMODE_S_NOWAIT;
             }
         }
 
@@ -151,7 +152,7 @@ public:
         if (pageId == NULL_PAGE_ID) {
             return pageId;
         }
-        lockPage(pageId,LOCKMODE_X,false);
+        lockPage(pageId, LOCKMODE_X, false);
         newPage = true;
         return pageId;
     }
@@ -164,7 +165,7 @@ public:
         PageId pageId = segmentAccessor.pSegment->translateBlockId(blockId);
         // we rely on the segment to decide whether to discard the block
         // from cache
-        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
+        segmentAccessor.pSegment->deallocatePageRange(pageId, pageId);
     }
 
     inline void deallocateUnlockedPage(PageId pageId)
@@ -173,7 +174,7 @@ public:
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
         // we rely on the segment to decide whether to discard the block
         // from cache
-        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
+        segmentAccessor.pSegment->deallocatePageRange(pageId, pageId);
     }
 
     inline void unlock()
@@ -192,7 +193,7 @@ public:
     }
 
     inline void lockPage(
-        PageId pageId,LockMode lockModeInit,
+        PageId pageId, LockMode lockModeInit,
         bool readIfUnmapped = true)
     {
         // if the page we want to lock is already locked in the desired
@@ -212,7 +213,7 @@ public:
     }
 
     inline void lockPageWithCoupling(
-        PageId pageId,LockMode lockModeInit)
+        PageId pageId, LockMode lockModeInit)
     {
         assert(lockModeInit < LOCKMODE_S_NOWAIT);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
@@ -231,23 +232,23 @@ public:
 
     inline void lockShared(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_S);
+        lockPage(pageId, LOCKMODE_S);
     }
 
     inline void lockExclusive(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_X);
+        lockPage(pageId, LOCKMODE_X);
     }
 
     inline void lockSharedNoWait(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_S_NOWAIT);
+        lockPage(pageId, LOCKMODE_S_NOWAIT);
         lockMode = LOCKMODE_S;
     }
 
     inline void lockExclusiveNoWait(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_X_NOWAIT);
+        lockPage(pageId, LOCKMODE_X_NOWAIT);
         lockMode = LOCKMODE_X;
     }
 
@@ -259,8 +260,8 @@ public:
         // lock the page that will be updated
         if (!newPage) {
             PageId origPageId =
-                segmentAccessor.pSegment->translateBlockId(getPage().
-                    getBlockId());
+                segmentAccessor.pSegment->translateBlockId(
+                    getPage().getBlockId());
             PageId updatePageId =
                 segmentAccessor.pSegment->updatePage(origPageId);
             if (updatePageId != NULL_PAGE_ID) {

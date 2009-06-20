@@ -41,7 +41,7 @@ TupleOverflowExcn::TupleOverflowExcn(
 {
     std::ostringstream oss;
     TuplePrinter tuplePrinter;
-    tuplePrinter.print(oss,tupleDesc,tupleData);
+    tuplePrinter.print(oss, tupleDesc, tupleData);
     msg = oss.str();
     msg = FennelResource::instance().rowTooLong(cbActual, cbMax, msg);
 }

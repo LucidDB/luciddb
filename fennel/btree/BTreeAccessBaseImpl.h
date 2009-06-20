@@ -57,13 +57,13 @@ inline PageId BTreeAccessBase::getChildForCurrent()
 {
     TupleDatum &childDatum = pNonLeafNodeAccessor->tupleData.back();
     pChildAccessor->unmarshalValue(
-        pNonLeafNodeAccessor->tupleAccessor,childDatum);
+        pNonLeafNodeAccessor->tupleAccessor, childDatum);
     return *reinterpret_cast<PageId const *>(childDatum.pData);
 }
 
 inline PageId BTreeAccessBase::getChild(BTreeNode const &node,uint iChild)
 {
-    getNonLeafNodeAccessor(node).accessTuple(node,iChild);
+    getNonLeafNodeAccessor(node).accessTuple(node, iChild);
     return getChildForCurrent();
 }
 
@@ -75,7 +75,7 @@ inline PageId BTreeAccessBase::getRightSibling(PageId pageId)
 inline void BTreeAccessBase::setRightSibling(
     BTreeNode &leftNode,PageId leftPageId,PageId rightPageId)
 {
-    getSegment()->setPageSuccessor(leftPageId,rightPageId);
+    getSegment()->setPageSuccessor(leftPageId, rightPageId);
     leftNode.rightSibling = rightPageId;
 }
 

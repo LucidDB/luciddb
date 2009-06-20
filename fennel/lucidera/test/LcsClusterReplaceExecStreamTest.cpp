@@ -44,8 +44,8 @@ using namespace fennel;
  * is derived from SnapshotSegmentTestBase, which allows the underlying segment
  * it uses for storage to be versioned.
  */
-class LcsClusterReplaceExecStreamTest :
-    public ExecStreamUnitTestBase, public SnapshotSegmentTestBase
+class LcsClusterReplaceExecStreamTest
+    : public ExecStreamUnitTestBase, public SnapshotSegmentTestBase
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;

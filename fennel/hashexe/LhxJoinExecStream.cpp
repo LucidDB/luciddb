@@ -117,9 +117,10 @@ void LhxJoinExecStream::prepare(
 
     outputTuple.compute(outputDesc);
 
-    assert (outputTuple.size() == (inputTupleSize[0] + inputTupleSize[1]) ||
-        outputTuple.size() == inputTupleSize[0]||
-        outputTuple.size() == inputTupleSize[1]);
+    assert(
+        outputTuple.size() == (inputTupleSize[0] + inputTupleSize[1])
+        || outputTuple.size() == inputTupleSize[0]
+        || outputTuple.size() == inputTupleSize[1]);
 
     pOutAccessor->setTupleShape(outputDesc);
 
@@ -134,7 +135,7 @@ void LhxJoinExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity,
     ExecStreamResourceSettingType &optType)
 {
-    ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConfluenceExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     uint minPages = LhxHashTable::LhxHashTableMinPages + numMiscCacheBlocks;
     minQuantity.nCachePages += minPages;
@@ -282,8 +283,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * NOTE: This is a testing state. Always partition up to
                      * forcePartitionLevel.
                      */
-                    if (curPlan->getPartitionLevel() < forcePartitionLevel ||
-                        !hashTable.addTuple(buildTuple)) {
+                    if (curPlan->getPartitionLevel() < forcePartitionLevel
+                        || !hashTable.addTuple(buildTuple))
+                    {
                         /*
                          * If hash table is full, partition input data.
                          *
@@ -364,7 +366,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 for (;;) {
                     if (curPlan->generatePartitions(hashInfo, partInfo)
-                        == PartitionUnderflow) {
+                        == PartitionUnderflow)
+                    {
                         /*
                          * Request more data from producer.
                          */
@@ -462,11 +465,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 bool filterNullProbe = regularJoin;
 
                 uint probeFieldOffset =
-                    returnBuild(curPlan) ?
-                    buildTupleSize * curPlan->getProbeInput() : 0;
+                    returnBuild(curPlan)
+                    ? buildTupleSize * curPlan->getProbeInput()
+                    : 0;
                 uint buildFieldOffset =
-                    returnProbe(curPlan) ?
-                    probeTupleSize * curPlan->getBuildInput() : 0;
+                    returnProbe(curPlan)
+                    ? probeTupleSize * curPlan->getBuildInput()
+                    : 0;
                 uint probeFieldLength =
                     returnProbe(curPlan) ? probeTupleSize : 0;
                 uint buildFieldLength =
@@ -535,8 +540,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * If this tuple does contain null in its key columns, it
                      * will not join so hash table lookup is not needed.
                      */
-                    if (!filterNullProbe ||
-                        !probeTuple.containsNull(filterNullProbeKeyProj)) {
+                    if (!filterNullProbe
+                        || !probeTuple.containsNull(filterNullProbeKeyProj))
+                    {
                         keyBuf =
                             hashTable.findKey(
                                 probeTuple,
@@ -572,8 +578,10 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             joinState = ProduceBuild;
                             nextState.push_back(Probe);
                             break;
-                        } else if (returnProbeInner(curPlan) &&
-                            !returnProbeOuter() && !returnBuild(curPlan)) {
+                        } else if (returnProbeInner(curPlan)
+                            && !returnProbeOuter()
+                            && !returnBuild(curPlan))
+                        {
                             /*
                              * Join types that return (distinct) matching
                              * tuples from the probe input: LeftSemiJoin
@@ -638,8 +646,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 uint probeTupleSize = inputTupleSize[curPlan->getProbeInput()];
                 uint buildTupleSize = inputTupleSize[curPlan->getBuildInput()];
                 uint buildFieldOffset =
-                    returnProbe(curPlan) ?
-                    probeTupleSize * curPlan->getBuildInput() : 0;
+                    returnProbe(curPlan)
+                    ? probeTupleSize * curPlan->getBuildInput()
+                    : 0;
                 uint buildFieldLength =
                     returnBuild(curPlan) ? buildTupleSize : 0;
 

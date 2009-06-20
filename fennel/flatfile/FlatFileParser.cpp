@@ -47,8 +47,8 @@ void FlatFileColumnParseResult::setResult(
     }
 }
 
-FlatFileRowDescriptor::FlatFileRowDescriptor() :
-    std::vector<FlatFileColumnDescriptor>()
+FlatFileRowDescriptor::FlatFileRowDescriptor()
+    : std::vector<FlatFileColumnDescriptor>()
 {
     bounded = true;
 }
@@ -141,7 +141,7 @@ void FlatFileParser::scanRow(
             done = true;
             break;
         case FlatFileColumnParseResult::ROW_DELIM:
-            if (strict && (i+1 != columns.size())) {
+            if (strict && (i + 1 != columns.size())) {
                 if (i == 0) {
                     result.status = FlatFileRowParseResult::NO_COLUMN_DELIM;
                 } else {
@@ -153,7 +153,7 @@ void FlatFileParser::scanRow(
             break;
         case FlatFileColumnParseResult::MAX_LENGTH:
         case FlatFileColumnParseResult::FIELD_DELIM:
-            if (strict && (i+1 == columns.size())) {
+            if (strict && (i + 1 == columns.size())) {
                 result.status = FlatFileRowParseResult::TOO_MANY_COLUMNS;
                 done = true;
             }

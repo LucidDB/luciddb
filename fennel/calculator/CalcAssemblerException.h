@@ -157,8 +157,8 @@ public:
             // would be to fix the bug that causes a supposedly valid
             // mLoc to have wildly out-of-range values.
 
-            if (mLoc.first_pos <= mLoc.last_pos &&
-                mLoc.first_pos < s.length())
+            if (mLoc.first_pos <= mLoc.last_pos
+                && mLoc.first_pos < s.length())
             {
                 mCodeSnippet =
                     s.substr(

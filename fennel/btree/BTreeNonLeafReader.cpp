@@ -84,9 +84,8 @@ bool BTreeNonLeafReader::isPositionedOnInfinityKey()
 {
     assert(pageLock.isLocked());
     BTreeNode const &node = pageLock.getNodeForRead();
-    return
-        (node.rightSibling == NULL_PAGE_ID &&
-            iTupleOnLowestLevel == node.nEntries - 1);
+    return node.rightSibling == NULL_PAGE_ID
+        && iTupleOnLowestLevel == node.nEntries - 1;
 }
 
 BTreeNodeAccessor &BTreeNonLeafReader::getNonLeafNodeAccessor()

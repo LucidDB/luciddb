@@ -133,7 +133,7 @@ public:
     template <class PageOrBlockId>
     static void incBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId) + 1);
+        setBlockNum(pageId, getBlockNum(pageId) + 1);
     }
 
     /**
@@ -144,7 +144,7 @@ public:
     template <class PageOrBlockId>
     static void decBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId) - 1);
+        setBlockNum(pageId, getBlockNum(pageId) - 1);
     }
 
     /**
@@ -240,7 +240,7 @@ public:
      * @return memcmp convention (negative if p1 is less than p2; zero if
      * equal; positive if greater)
      */
-    static int comparePageIds(PageId p1,PageId p2)
+    static int comparePageIds(PageId p1, PageId p2)
     {
         return (p1 > p2) ? 1
             : ((p1 < p2) ? -1 : 0);
@@ -256,7 +256,7 @@ public:
      * @return memcmp convention (negative if t1 is less than t2; zero if
      * equal; positive if greater)
      */
-    static int compareSegByteIds(SegByteId t1,SegByteId t2)
+    static int compareSegByteIds(SegByteId t1, SegByteId t2)
     {
         return (t1 > t2) ? 1
             : ((t1 < t2) ? -1 : 0);

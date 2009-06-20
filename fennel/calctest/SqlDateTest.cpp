@@ -88,7 +88,7 @@ class SqlDateTest : virtual public TestBase, public TraceSource
 
 public:
     explicit SqlDateTest()
-        : TraceSource(shared_from_this(),"SqlDateTest")
+        : TraceSource(shared_from_this(), "SqlDateTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlDateToStr_Ascii);
@@ -157,11 +157,11 @@ SqlDateTest::testSqlDateToStr_Ascii()
         leftbump, rightbump);
 
     storage = 10;
-    SqlDateToStr<1,1,SQLDATE>(s1.mStr, storage, 0);
+    SqlDateToStr<1, 1, SQLDATE>(s1.mStr, storage, 0);
     BOOST_CHECK(s1.verify());
-    SqlDateToStr<1,1,SQLDATE>(s1.mStr, storage, ticks_per_day);
+    SqlDateToStr<1, 1, SQLDATE>(s1.mStr, storage, ticks_per_day);
     BOOST_CHECK(s1.verify());
-    SqlDateToStr<1,1,SQLDATE>(s1.mStr, storage, ticks_per_month);
+    SqlDateToStr<1, 1, SQLDATE>(s1.mStr, storage, ticks_per_month);
     BOOST_CHECK(s1.verify());
 
     int size, leftpad, rightpad;
@@ -178,7 +178,7 @@ SqlDateTest::testSqlDateToStr_Ascii()
 
                 bool caught = false;
                 try {
-                    SqlDateToStr<1,1,SQLDATE>(
+                    SqlDateToStr<1, 1, SQLDATE>(
                         t.mStr,
                         storage,
                         ticks_per_year
@@ -186,7 +186,7 @@ SqlDateTest::testSqlDateToStr_Ascii()
                         + storage * ticks_per_day);
                 } catch (const char *str) {
                     caught = true;
-                    BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
+                    BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                     BOOST_CHECK(t.verify());
                     BOOST_CHECK(storage < 10);
                 } catch (...) {
@@ -215,13 +215,13 @@ SqlDateTest::testSqlTimeToStr_Ascii()
         leftbump, rightbump);
 
     storage = 10;
-    SqlDateToStr<1,1,SQLTIME>(s1.mStr, storage, 0);
+    SqlDateToStr<1, 1, SQLTIME>(s1.mStr, storage, 0);
     BOOST_CHECK(s1.verify());
-    SqlDateToStr<1,1,SQLTIME>(s1.mStr, storage, ticks_per_hour);
+    SqlDateToStr<1, 1, SQLTIME>(s1.mStr, storage, ticks_per_hour);
     BOOST_CHECK(s1.verify());
-    SqlDateToStr<1,1,SQLTIME>(s1.mStr, storage, 13LL * ticks_per_hour);
+    SqlDateToStr<1, 1, SQLTIME>(s1.mStr, storage, 13LL * ticks_per_hour);
     BOOST_CHECK(s1.verify());
-    SqlDateToStr<1,1,SQLTIME>(s1.mStr, storage, 1000*57601000LL);
+    SqlDateToStr<1, 1, SQLTIME>(s1.mStr, storage, 1000*57601000LL);
     BOOST_CHECK(s1.verify());
     //    cout << s1.mStr << endl;
 
@@ -239,7 +239,7 @@ SqlDateTest::testSqlTimeToStr_Ascii()
 
                 bool caught = false;
                 try {
-                    SqlDateToStr<1,1,SQLTIME>(
+                    SqlDateToStr<1, 1, SQLTIME>(
                         t.mStr,
                         storage,
                         ticks_per_hour
@@ -247,7 +247,7 @@ SqlDateTest::testSqlTimeToStr_Ascii()
                         + storage * ticks_per_sec);
                 } catch (const char *str) {
                     caught = true;
-                    BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
+                    BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                     BOOST_CHECK(t.verify());
                     BOOST_CHECK(storage < 10);
                 } catch (...) {
@@ -321,9 +321,9 @@ SqlDateTest::testSqlStrToDate_Ascii()
         StrToDate, oct2k, "2000-2-30", 10, true);
 
     int64_t fourteen21 =
-        (ticks_per_hour * 14 +
-         ticks_per_minute * 21 +
-         ticks_per_sec * 1) / 1000;
+        (ticks_per_hour * 14
+         + ticks_per_minute * 21
+         + ticks_per_sec * 1) / 1000;
     testSqlStrToDate_Ascii_Helper(
         StrToTime, fourteen21, "14:21:01", 8, false);
     testSqlStrToDate_Ascii_Helper(

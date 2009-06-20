@@ -174,19 +174,19 @@ public:
         return nullMutex;
     }
 
-    std::pair<PageIterator,PageIterator> getVictimRange()
+    std::pair<PageIterator, PageIterator> getVictimRange()
     {
         uint iPage = randomNumberGenerator(pages.size());
         uint iPageEnd = iPage ? iPage-1 : pages.size();
-        return std::pair<PageIterator,PageIterator>(
+        return std::pair<PageIterator, PageIterator>(
             PageIterator(*this,iPage),
             PageIterator(*this,iPageEnd));
     }
 
-    std::pair<DirtyPageIterator,DirtyPageIterator> getDirtyVictimRange()
+    std::pair<DirtyPageIterator, DirtyPageIterator> getDirtyVictimRange()
     {
         return
-            static_cast<std::pair<DirtyPageIterator,DirtyPageIterator> >(
+            static_cast<std::pair<DirtyPageIterator, DirtyPageIterator> >(
                 getVictimRange());
     }
 };

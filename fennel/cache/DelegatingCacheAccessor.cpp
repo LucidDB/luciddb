@@ -40,7 +40,7 @@ CachePage *DelegatingCacheAccessor::lockPage(
     TxnId txnId)
 {
     return pDelegate->lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
+        blockId, lockMode, readIfUnmapped, pMappedPageListener, txnId);
 }
 
 void DelegatingCacheAccessor::unlockPage(
@@ -48,7 +48,7 @@ void DelegatingCacheAccessor::unlockPage(
     LockMode lockMode,
     TxnId txnId)
 {
-    pDelegate->unlockPage(page,lockMode,txnId);
+    pDelegate->unlockPage(page, lockMode, txnId);
 }
 
 void DelegatingCacheAccessor::discardPage(
@@ -61,19 +61,19 @@ bool DelegatingCacheAccessor::prefetchPage(
     BlockId blockId,
     MappedPageListener *pMappedPageListener)
 {
-    return pDelegate->prefetchPage(blockId,pMappedPageListener);
+    return pDelegate->prefetchPage(blockId, pMappedPageListener);
 }
 
 void DelegatingCacheAccessor::prefetchBatch(
-    BlockId blockId,uint nPages,
+    BlockId blockId, uint nPages,
     MappedPageListener *pMappedPageListener)
 {
-    pDelegate->prefetchBatch(blockId,nPages,pMappedPageListener);
+    pDelegate->prefetchBatch(blockId, nPages, pMappedPageListener);
 }
 
 void DelegatingCacheAccessor::flushPage(CachePage &page,bool async)
 {
-    pDelegate->flushPage(page,async);
+    pDelegate->flushPage(page, async);
 }
 
 void DelegatingCacheAccessor::nicePage(CachePage &page)

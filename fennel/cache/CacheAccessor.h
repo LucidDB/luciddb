@@ -164,7 +164,7 @@ public:
      * subsequent lock requests for the same page mapping
      */
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
     /**

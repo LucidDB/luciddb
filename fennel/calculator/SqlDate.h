@@ -56,7 +56,7 @@ enum SqlDateTimeType {
     SQLTIMESTAMP
 };
 
-boost::posix_time::ptime const epoc(boost::gregorian::date(1970,1,1));
+boost::posix_time::ptime const epoc(boost::gregorian::date(1970, 1, 1));
 
 int FENNEL_CALCULATOR_EXPORT TimeToIsoString(
     char *dest, boost::posix_time::ptime t);
@@ -102,7 +102,7 @@ SqlDateToStr(
             // the only way i could find didn't use an explicit long
             // parameter, instead of the type parameter, since
             // int64_t == (long long) on (fc1) linux.
-            boost::posix_time::ptime t = epoc + time_duration(0,0,0,d);
+            boost::posix_time::ptime t = epoc + time_duration(0, 0, 0, d);
 
             int len;
             char buf[20];
@@ -115,7 +115,7 @@ SqlDateToStr(
                     // truncation"
                     throw "22001";
                 }
-                memcpy(dest,buf,len);
+                memcpy(dest, buf, len);
                 break;
             case SQLTIME:
                 len = TimeToIsoString(buf, t);
@@ -125,7 +125,7 @@ SqlDateToStr(
                     // truncation"
                     throw "22001";
                 }
-                memcpy(dest,buf,len);
+                memcpy(dest, buf, len);
                 break;
             case SQLTIMESTAMP:
                 len = TimestampToIsoString(buf, t);
@@ -135,7 +135,7 @@ SqlDateToStr(
                     // truncation"
                     throw "22001";
                 }
-                memcpy(dest,buf,len);
+                memcpy(dest, buf, len);
                 break;
             default:
                 throw std::logic_error("bad dateTimeType" + dateTimeType);
@@ -175,11 +175,11 @@ SqlStrToDate(char *src, int len)
 
             switch (dateTimeType) {
             case SQLDATE:
-                return IsoStringToDate(src,len);
+                return IsoStringToDate(src, len);
             case SQLTIME:
-                return IsoStringToTime(src,len);
+                return IsoStringToTime(src, len);
             case SQLTIMESTAMP:
-                return IsoStringToTimestamp(src,len);
+                return IsoStringToTimestamp(src, len);
             }
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here

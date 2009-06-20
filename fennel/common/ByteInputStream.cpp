@@ -45,14 +45,14 @@ uint ByteInputStream::readBytes(
         }
         if (cbRequested <= cbAvailable) {
             if (pData) {
-                memcpy(pData,pNextByte,cbRequested);
+                memcpy(pData, pNextByte, cbRequested);
             }
             pNextByte += cbRequested;
             cbActual += cbRequested;
             break;
         }
         if (pData) {
-            memcpy(pData,pNextByte,cbAvailable);
+            memcpy(pData, pNextByte, cbAvailable);
             pData = static_cast<char *>(pData) + cbAvailable;
         }
         cbRequested -= cbAvailable;

@@ -89,10 +89,10 @@ inline void BTreeReader::accessTupleInline(BTreeNode const &node, uint iEntry)
 inline void BTreeReader::accessLeafTuple()
 {
     BTreeNode const &node = pageLock.getNodeForRead();
-    getLeafNodeAccessor(node).accessTuple(node,iTupleOnLowestLevel);
+    getLeafNodeAccessor(node).accessTuple(node, iTupleOnLowestLevel);
 }
 
-template <bool leafLockCoupling,class PageStack>
+template <bool leafLockCoupling, class PageStack>
 inline bool BTreeReader::searchForKeyTemplate(
     TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
     PageStack &pageStack, PageId startPageId, LockMode initialLockMode,
@@ -111,9 +111,9 @@ inline bool BTreeReader::searchForKeyTemplate(
     bool foundKeyAndMovedRight = false;
     for (;;) {
         if (leafLockCoupling && lockCoupling) {
-            pageLock.lockPageWithCoupling(pageId,lockMode);
+            pageLock.lockPageWithCoupling(pageId, lockMode);
         } else {
-            pageLock.lockPage(pageId,lockMode);
+            pageLock.lockPage(pageId, lockMode);
         }
 
         BTreeNode const *pNode = &(pageLock.getNodeForRead());
@@ -140,8 +140,10 @@ inline bool BTreeReader::searchForKeyTemplate(
         // find an exact match, and we're positioned at the rightmost
         // key entry, need to search the first key in the right sibling
         // to be sure we have the correct glb
-        if (!leastUpper && !found && iKeyBound == pNode->nEntries - 1 &&
-            pNode->rightSibling != NULL_PAGE_ID)
+        if (!leastUpper
+            && !found
+            && iKeyBound == pNode->nEntries - 1
+            && pNode->rightSibling != NULL_PAGE_ID)
         {
             // not currently handling leaf lock coupling for reads,
             // which is the only time we're searching for glb
@@ -240,8 +242,8 @@ inline bool BTreeReader::searchForKeyTemplate(
         // That condition occurs if the last key was deleted from the leaf.
         // Because we didn't make a corresponding update in the parent node,
         // we find a match in the parent, but not the leaf.
-        if ((*pSearchKey).size() == keyDescriptor.size() &&
-            dupSeek != DUP_SEEK_END)
+        if ((*pSearchKey).size() == keyDescriptor.size()
+            && dupSeek != DUP_SEEK_END)
         {
             if (iKeyBound < (pNode->nEntries - 1)) {
                 rightSearchTerminator = getChild(*pNode,iKeyBound + 1);

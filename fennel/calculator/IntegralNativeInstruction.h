@@ -115,8 +115,9 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // SQL99 Part 2 Section 6.17 General Rule 10
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             // encourage into register
@@ -191,13 +192,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->value(
-                NativeInstruction<TMPLT>::mOp1->value() &
-                NativeInstruction<TMPLT>::mOp2->value());
+                NativeInstruction<TMPLT>::mOp1->value()
+                & NativeInstruction<TMPLT>::mOp2->value());
         }
         pc++;
     }
@@ -261,8 +263,9 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->value(
@@ -330,13 +333,14 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->value(
-                NativeInstruction<TMPLT>::mOp1->value() <<
-                NativeInstruction<TMPLT>::mOp2->value());
+                NativeInstruction<TMPLT>::mOp1->value()
+                << NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -400,13 +404,14 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->value(
-                NativeInstruction<TMPLT>::mOp1->value() >>
-                NativeInstruction<TMPLT>::mOp2->value());
+                NativeInstruction<TMPLT>::mOp1->value()
+                >> NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -459,7 +464,6 @@ class FENNEL_CALCULATOR_EXPORT IntegralNativeInstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.

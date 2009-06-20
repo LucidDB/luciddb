@@ -40,7 +40,7 @@ void DoubleBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // two scratch pages
     minQuantity.nCachePages += 2;

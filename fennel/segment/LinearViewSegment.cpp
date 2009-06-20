@@ -56,7 +56,7 @@ PageId LinearViewSegment::translateBlockId(BlockId blockId)
     PageId underlyingPageId =
         DelegatingSegment::translateBlockId(blockId);
     std::vector<PageId>::const_iterator pFound;
-    pFound = std::find(pageTable.begin(),pageTable.end(),underlyingPageId);
+    pFound = std::find(pageTable.begin(), pageTable.end(), underlyingPageId);
     assert(pFound != pageTable.end());
     return getLinearPageId(pFound - pageTable.begin());
 }
@@ -74,14 +74,15 @@ PageId LinearViewSegment::allocatePageId(PageOwnerId ownerId)
     }
     if (!pageTable.empty()) {
         DelegatingSegment::setPageSuccessor(
-            pageTable.back(),underlyingPageId);
+            pageTable.back(), underlyingPageId);
     }
     PageId pageId = getLinearPageId(pageTable.size());
     pageTable.push_back(underlyingPageId);
     return pageId;
 }
 
-void LinearViewSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void LinearViewSegment::deallocatePageRange(
+    PageId startPageId, PageId endPageId)
 {
     // TODO:  support truncation with startPageId != NULL_PAGE_ID
     assert(startPageId == NULL_PAGE_ID);
@@ -108,9 +109,9 @@ PageId LinearViewSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void LinearViewSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void LinearViewSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder LinearViewSegment::getAllocationOrder() const
@@ -126,6 +127,6 @@ PageId LinearViewSegment::updatePage(PageId pageId, bool needsTranslation)
     return DelegatingSegment::updatePage(underlyingPageId, needsTranslation);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/LinearViewSegment.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/LinearViewSegment.cpp#8 $");
 
 // End LinearViewSegment.cpp

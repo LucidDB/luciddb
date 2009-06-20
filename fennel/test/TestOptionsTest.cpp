@@ -44,7 +44,7 @@ class TestOptionsTest : public TestBase, public TraceSource
 
 public:
     explicit TestOptionsTest()
-        : TraceSource(shared_from_this(),"TestOptionsTest")
+        : TraceSource(shared_from_this(), "TestOptionsTest")
     {
         FENNEL_UNIT_TEST_CASE(TestOptionsTest, test1);
         FENNEL_UNIT_TEST_CASE(TestOptionsTest, test2);

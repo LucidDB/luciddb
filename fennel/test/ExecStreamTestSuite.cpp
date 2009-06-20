@@ -69,15 +69,15 @@ void ExecStreamTestSuite::testScratchBufferExecStream()
     mockParams.pGenerator.reset(new RampExecStreamGenerator());
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     ScratchBufferExecStreamParams bufParams;
     bufParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,1);
+        pSegmentFactory->newScratchSegment(pCache, 1);
 
     ExecStreamEmbryo bufStreamEmbryo;
-    bufStreamEmbryo.init(new ScratchBufferExecStream(),bufParams);
+    bufStreamEmbryo.init(new ScratchBufferExecStream(), bufParams);
     bufStreamEmbryo.getStream()->setName("ScratchBufferExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
@@ -102,15 +102,15 @@ void ExecStreamTestSuite::testDoubleBufferExecStream()
     mockParams.pGenerator.reset(new RampExecStreamGenerator());
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     DoubleBufferExecStreamParams bufParams;
     bufParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,1);
+        pSegmentFactory->newScratchSegment(pCache, 1);
 
     ExecStreamEmbryo bufStreamEmbryo;
-    bufStreamEmbryo.init(new DoubleBufferExecStream(),bufParams);
+    bufStreamEmbryo.init(new DoubleBufferExecStream(), bufParams);
     bufStreamEmbryo.getStream()->setName("DoubleBufferExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
@@ -133,18 +133,18 @@ void ExecStreamTestSuite::testCopyExecStream()
     mockParams.nRows = 10000;   // at least two buffers
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     CopyExecStreamParams copyParams;
     copyParams.outputTupleDesc.push_back(attrDesc);
 
     ExecStreamEmbryo copyStreamEmbryo;
-    copyStreamEmbryo.init(new CopyExecStream(),copyParams);
+    copyStreamEmbryo.init(new CopyExecStream(), copyParams);
     copyStreamEmbryo.getStream()->setName("CopyExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,copyStreamEmbryo);
+        mockStreamEmbryo, copyStreamEmbryo);
 
     int32_t zero = 0;
     TupleDescriptor expectedDesc;
@@ -171,11 +171,11 @@ void ExecStreamTestSuite::testMergeExecStream()
     paramsMock.nRows = 10000; // at least two buffers
 
     ExecStreamEmbryo mockStreamEmbryo1;
-    mockStreamEmbryo1.init(new MockProducerExecStream(),paramsMock);
+    mockStreamEmbryo1.init(new MockProducerExecStream(), paramsMock);
     mockStreamEmbryo1.getStream()->setName("MockProducerExecStream1");
 
     ExecStreamEmbryo mockStreamEmbryo2;
-    mockStreamEmbryo2.init(new MockProducerExecStream(),paramsMock);
+    mockStreamEmbryo2.init(new MockProducerExecStream(), paramsMock);
     mockStreamEmbryo2.getStream()->setName("MockProducerExecStream2");
 
     MergeExecStreamParams paramsMerge;
@@ -185,7 +185,7 @@ void ExecStreamTestSuite::testMergeExecStream()
     }
 
     ExecStreamEmbryo mergeStreamEmbryo;
-    mergeStreamEmbryo.init(new MergeExecStream(),paramsMerge);
+    mergeStreamEmbryo.init(new MergeExecStream(), paramsMerge);
     mergeStreamEmbryo.getStream()->setName("MergeExecStream");
 
     SharedExecStream pOutputStream = prepareConfluenceGraph(
@@ -216,7 +216,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     mockParams.nRows = 10000;     // at least two buffers
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     SegBufferExecStreamParams bufParams;
@@ -225,7 +225,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     bufParams.multipass = false;
 
     ExecStreamEmbryo bufStreamEmbryo;
-    bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+    bufStreamEmbryo.init(new SegBufferExecStream(), bufParams);
     bufStreamEmbryo.getStream()->setName("SegBufferExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
@@ -244,7 +244,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
 }
 
 void ExecStreamTestSuite::testCartesianJoinExecStream(
-    uint nRowsOuter,uint nRowsInner)
+    uint nRowsOuter, uint nRowsInner)
 {
     // simulate SELECT * FROM t1, t2
 
@@ -257,21 +257,21 @@ void ExecStreamTestSuite::testCartesianJoinExecStream(
     paramsMockOuter.nRows = nRowsOuter;
 
     ExecStreamEmbryo outerStreamEmbryo;
-    outerStreamEmbryo.init(new MockProducerExecStream(),paramsMockOuter);
+    outerStreamEmbryo.init(new MockProducerExecStream(), paramsMockOuter);
     outerStreamEmbryo.getStream()->setName("OuterProducerExecStream");
 
     MockProducerExecStreamParams paramsMockInner(paramsMockOuter);
     paramsMockInner.nRows = nRowsInner;
 
     ExecStreamEmbryo innerStreamEmbryo;
-    innerStreamEmbryo.init(new MockProducerExecStream(),paramsMockInner);
+    innerStreamEmbryo.init(new MockProducerExecStream(), paramsMockInner);
     innerStreamEmbryo.getStream()->setName("InnerProducerExecStream");
 
     CartesianJoinExecStreamParams paramsJoin;
     paramsJoin.leftOuter = false;
 
     ExecStreamEmbryo joinStreamEmbryo;
-    joinStreamEmbryo.init(new CartesianJoinExecStream(),paramsJoin);
+    joinStreamEmbryo.init(new CartesianJoinExecStream(), paramsJoin);
     joinStreamEmbryo.getStream()->setName("CartesianJoinExecStream");
 
     SharedExecStream pOutputStream = prepareConfluenceGraph(
@@ -304,7 +304,7 @@ void ExecStreamTestSuite::testCountAggExecStream()
     mockParams.nRows = 10000;   // at least two buffers
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // simulate SELECT COUNT(*) FROM t10k
@@ -317,11 +317,11 @@ void ExecStreamTestSuite::testCountAggExecStream()
     aggParams.aggInvocations.push_back(countInvocation);
 
     ExecStreamEmbryo aggStreamEmbryo;
-    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new SortedAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // set up a generator which can produce the expected output
     // (a count of 10000)
@@ -342,7 +342,7 @@ void ExecStreamTestSuite::testSumAggExecStream()
     mockParams.pGenerator.reset(new RampExecStreamGenerator());
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // simulate SELECT SUM(x) FROM t10k with x iterating from 0 to 9999
@@ -356,16 +356,16 @@ void ExecStreamTestSuite::testSumAggExecStream()
     aggParams.aggInvocations.push_back(sumInvocation);
 
     ExecStreamEmbryo aggStreamEmbryo;
-    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new SortedAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // set up a generator which can produce the expected output
     // (a count of 5000*9999)
     RampExecStreamGenerator expectedResultGenerator(
-        (mockParams.nRows-1)*mockParams.nRows/2);
+        (mockParams.nRows - 1) * mockParams.nRows / 2);
 
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
@@ -384,7 +384,7 @@ void ExecStreamTestSuite::testGroupAggExecStreamNrows(uint nrows)
     mockParams.pGenerator.reset(new RampDuplicateExecStreamGenerator());
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // simulate SELECT col, COUNT(*) FROM t10k GROUP BY col;
@@ -399,11 +399,11 @@ void ExecStreamTestSuite::testGroupAggExecStreamNrows(uint nrows)
 
     ExecStreamEmbryo aggStreamEmbryo;
 
-    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new SortedAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // Result should be a sequence of values in the first column
     // and 2 for the second column
@@ -460,7 +460,7 @@ void ExecStreamTestSuite::testReshapeExecStream(
         new CompositeExecStreamGenerator(columnGenerators));
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // Setup stream parameters as follows:
@@ -571,7 +571,7 @@ void ExecStreamTestSuite::testReshapeExecStream(
     }
 
     ExecStreamEmbryo rsStreamEmbryo;
-    rsStreamEmbryo.init(new ReshapeExecStream(),rsParams);
+    rsStreamEmbryo.init(new ReshapeExecStream(), rsParams);
     rsStreamEmbryo.getStream()->setName("ReshapeExecStream");
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, rsStreamEmbryo);
@@ -620,11 +620,11 @@ void ExecStreamTestSuite::testSingleValueAggExecStream()
 
     ExecStreamEmbryo aggStreamEmbryo;
 
-    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new SortedAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // Result should be a sequence of values in both columns
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsOut;
@@ -989,7 +989,7 @@ void ExecStreamTestSuite::testSplitterPlusBarrier()
         aggParams.aggInvocations.push_back(countInvocation);
 
         ExecStreamEmbryo aggStreamEmbryo;
-        aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+        aggStreamEmbryo.init(new SortedAggExecStream(), aggParams);
         std::ostringstream oss;
         oss << "AggExecStream" << "#" << i;
         aggStreamEmbryo.getStream()->setName(oss.str());
@@ -1092,7 +1092,7 @@ void ExecStreamTestSuite::testSegBufferReaderWriterExecStream(
         bufParams.multipass = false;
 
         ExecStreamEmbryo bufStreamEmbryo;
-        bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+        bufStreamEmbryo.init(new SegBufferExecStream(), bufParams);
         bufStreamEmbryo.getStream()->setName("SegBufferExecStream1");
         readerInput.push_back(bufStreamEmbryo);
     }
@@ -1109,7 +1109,7 @@ void ExecStreamTestSuite::testSegBufferReaderWriterExecStream(
         }
 
         ExecStreamEmbryo bufStreamEmbryo;
-        bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+        bufStreamEmbryo.init(new SegBufferExecStream(), bufParams);
         bufStreamEmbryo.getStream()->setName("SegBufferExecStream2");
         readerInput.push_back(bufStreamEmbryo);
     }

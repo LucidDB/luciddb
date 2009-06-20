@@ -91,8 +91,8 @@ public:
         testSkipWrite(5);
         // Make sure new pages have been allocated before we roll them back
         assert(
-            pVersionedRandomSegment->getAllocatedSizeInPages() ==
-            nDiskPages + nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0));
+            pVersionedRandomSegment->getAllocatedSizeInPages()
+            == nDiskPages + nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0));
         commit = false;
         closeStorage();
         commit = true;
@@ -201,10 +201,10 @@ public:
         closeStorage();
 
         uint totalPages =
-            nDiskPages +
-            nDiskPages / 3 + ((nDiskPages % 3) ? 1 : 0) +
-            nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0) +
-            nDiskPages / 7 + ((nDiskPages % 7) ? 1 : 0);
+            nDiskPages
+            + nDiskPages / 3 + ((nDiskPages % 3) ? 1 : 0)
+            + nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0)
+            + nDiskPages / 7 + ((nDiskPages % 7) ? 1 : 0);
 
         // Deallocate pages -- set the oldestActiveTxnId at TxnId(3).  No
         // pages should be deallocated.
@@ -218,7 +218,8 @@ public:
         // pages with both TxnId(3) and TxnId(5) in their page chain should
         // be deallocated, with only the TxnId(3) pages being deallocated.
         uint nPages =
-            totalPages - (nDiskPages/(3*5) + ((nDiskPages % (3*5)) ? 1 : 0));
+            totalPages
+            - (nDiskPages / (3 * 5) + ((nDiskPages % (3 * 5)) ? 1 : 0));
         deallocateOldPages(TxnId(6), totalPages, nPages, 6, 8);
 
         // Deallocate pages -- set the oldestActiveTxnId at TxnId(8).  Pages
@@ -226,10 +227,10 @@ public:
         // the older of the two being deallocated.
         totalPages = nPages;
         nPages =
-            totalPages -
-                (nDiskPages/(5*7) + ((nDiskPages % (5*7)) ? 1 : 0)) -
-                (nDiskPages/(3*7) + ((nDiskPages % (3*7)) ? 1 : 0)) +
-                (nDiskPages/(3*5*7) + ((nDiskPages % (3*5*7)) ? 1 : 0));
+            totalPages
+            - (nDiskPages / (5 * 7) + ((nDiskPages % (5 * 7)) ? 1 : 0))
+            - (nDiskPages / (3 * 7) + ((nDiskPages % (3 * 7)) ? 1 : 0))
+            + (nDiskPages / (3 * 5 * 7) + ((nDiskPages % (3 * 5 * 7)) ? 1 : 0));
         deallocateOldPages(TxnId(8), totalPages, nPages, 8, 8);
 
         // Deallocate the first 100 pages.  They won't actually be freed but
@@ -269,8 +270,9 @@ public:
         // take into account old pages that have already been deallocated
         // above.
         int nPagesFreed =
-            100 + 100/3 + 100/5 + 100/7 - 100/(3*5) - 100/(3*7) - 100/(5*7)
-            - 100/(3*5*7);
+            100 + 100 / 3 + 100 / 5 + 100 / 7
+            - 100 / (3 * 5) - 100 / (3 * 7) - 100 / (5 * 7)
+            - 100 / (3 * 5 * 7);
         deallocateOldPages(TxnId(10), nPages, nPages - nPagesFreed, 1, 0);
     }
 

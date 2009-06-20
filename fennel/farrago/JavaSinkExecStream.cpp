@@ -98,8 +98,8 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         break;
     default:
         FENNEL_TRACE(TRACE_FINER, "input rows:");
-        getGraph().getScheduler()->
-            traceStreamBufferContents(*this, inAccessor, TRACE_FINER);
+        getGraph().getScheduler()
+            ->traceStreamBufferContents(*this, inAccessor, TRACE_FINER);
         break;
     }
 
@@ -171,8 +171,8 @@ void JavaSinkExecStream::stuffByteBuffer(
         PBuffer buf = (PBuffer) dst;
         ba.provideBufferForConsumption(buf, buf + size);
         FENNEL_TRACE(TRACE_FINER, "output rows:");
-        getGraph().getScheduler()->
-            traceStreamBufferContents(*this, ba, TRACE_FINER);
+        getGraph().getScheduler()
+            ->traceStreamBufferContents(*this, ba, TRACE_FINER);
     }
 
     // unpin

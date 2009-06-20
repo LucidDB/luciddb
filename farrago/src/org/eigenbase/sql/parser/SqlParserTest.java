@@ -1328,11 +1328,13 @@ public class SqlParserTest
         // SQL:2003, 5.2, syntax rule # 8 "There shall be no <separator>
         // separating the <minus sign>s of a <simple comment introducer>".
 
-        check("values (- -1" + NL
+        check(
+            "values (- -1" + NL
             + ")",
             "(VALUES (ROW((- -1))))");
 
-        check("values (--1+" + NL
+        check(
+            "values (--1+" + NL
             + "2)",
             "(VALUES (ROW(2)))");
 
@@ -2017,7 +2019,8 @@ public class SqlParserTest
         // valid syntax, but should give a validator error
         check(
             "select N'1' '2' from t",
-            TestUtil.fold("SELECT _ISO-8859-1'1'\n'2'\n"
+            TestUtil.fold(
+                "SELECT _ISO-8859-1'1'\n'2'\n"
                 + "FROM `T`"));
     }
 

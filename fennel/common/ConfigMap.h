@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
  */
 class FENNEL_COMMON_EXPORT ConfigMap : public TraceSource
 {
-    typedef std::map<std::string,std::string> StringMap;
+    typedef std::map<std::string, std::string> StringMap;
     typedef StringMap::iterator StringMapIter;
     typedef StringMap::const_iterator StringMapConstIter;
 

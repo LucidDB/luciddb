@@ -46,7 +46,7 @@ void BTreeInsertExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    BTreeExecStream::getResourceRequirements(minQuantity,optQuantity);
+    BTreeExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // max number of pages locked during tree update (REVIEW),
     // including BTreeWriter's private scratch page
@@ -133,7 +133,7 @@ ExecStreamResult BTreeInsertExecStream::execute(
 
     for (;;) {
         PConstBuffer pTupleBuf = pInAccessor->getConsumptionStart();
-        uint cb = pWriter->insertTupleFromBuffer(pTupleBuf,distinctness);
+        uint cb = pWriter->insertTupleFromBuffer(pTupleBuf, distinctness);
         pInAccessor->consumeData(pTupleBuf + cb);
         ++nTuples;
         if (nTuples > quantum.nTuplesMax) {

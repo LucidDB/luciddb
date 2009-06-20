@@ -126,9 +126,9 @@ void SegPageIter::prefetchPage(PageId pageId)
     if (!forceReject && !noPrefetch) {
         blockId = segmentAccessor.pSegment->translatePageId(pageId);
     }
-    if (!forceReject &&
-        (noPrefetch ||
-            segmentAccessor.pCacheAccessor->prefetchPage(
+    if (!forceReject
+        && (noPrefetch
+            || segmentAccessor.pCacheAccessor->prefetchPage(
                 blockId,
                 segmentAccessor.pSegment->getMappedPageListener(blockId))))
     {

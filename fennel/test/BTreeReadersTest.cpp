@@ -95,9 +95,9 @@ class BTreeReadersTest : virtual public SegStorageTestBase
 public:
     explicit BTreeReadersTest()
     {
-        FENNEL_UNIT_TEST_CASE(BTreeReadersTest,testOneLevel);
-        FENNEL_UNIT_TEST_CASE(BTreeReadersTest,testTwoLevels);
-        FENNEL_UNIT_TEST_CASE(BTreeReadersTest,testThreeLevels);
+        FENNEL_UNIT_TEST_CASE(BTreeReadersTest, testOneLevel);
+        FENNEL_UNIT_TEST_CASE(BTreeReadersTest, testTwoLevels);
+        FENNEL_UNIT_TEST_CASE(BTreeReadersTest, testThreeLevels);
 
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -168,7 +168,7 @@ void BTreeReadersTest::testReaders(uint nRecords)
     treeDescriptor.rootPageId = builder.getRootPageId();
 
     // Generate random key/value data
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     SharedSegOutputStream pOutputStream =
         SegOutputStream::newSegOutputStream(segmentAccessor);
     std::subtractive_rng randomNumberGenerator(nRandomSeed);
@@ -181,13 +181,13 @@ void BTreeReadersTest::testReaders(uint nRecords)
         marshalLeafRecord();
         uint cbTuple = leafTupleAccessor.getCurrentByteCount();
         PBuffer pBuffer = pOutputStream->getWritePointer(cbTuple);
-        memcpy(pBuffer,leafRecordBuf.get(),cbTuple);
+        memcpy(pBuffer, leafRecordBuf.get(), cbTuple);
         pOutputStream->consumeWritePointer(cbTuple);
     }
     PageId pageId = pOutputStream->getFirstPageId();
     pOutputStream.reset();
     SharedSegInputStream pInputStream =
-        SegInputStream::newSegInputStream(segmentAccessor,pageId);
+        SegInputStream::newSegInputStream(segmentAccessor, pageId);
     SegStreamPosition startPos;
     pInputStream->getSegPos(startPos);
 
@@ -197,11 +197,11 @@ void BTreeReadersTest::testReaders(uint nRecords)
 
     // Make sure we can search for each key individually
     pInputStream->seekSegPos(startPos);
-    testSearch(pInputStream,nRecords);
+    testSearch(pInputStream, nRecords);
 
     // Make sure we can scan all tuples
     pInputStream->seekSegPos(startPos);
-    testScan(pInputStream,nRecords);
+    testScan(pInputStream, nRecords);
 
     // Deallocate the test data storage
     pInputStream->seekSegPos(startPos);
@@ -233,8 +233,8 @@ void BTreeReadersTest::testSearch(
             nonLeafReader.searchForKey(keyData, DUP_SEEK_ANY);
             BOOST_CHECK(!nonLeafReader.isSingular());
             nonLeafReader.getTupleAccessorForRead().unmarshal(nonLeafTupleData);
-            if (!nonLeafReader.isPositionedOnInfinityKey() &&
-                readNonLeafKey() < leafRecord.key)
+            if (!nonLeafReader.isPositionedOnInfinityKey()
+                && readNonLeafKey() < leafRecord.key)
             {
                 BOOST_FAIL(
                     "Non-leaf key is less than expected key.  Expected key = "
@@ -285,8 +285,8 @@ void BTreeReadersTest::testScan(
         } else {
             // Read the non-leaf record to locate the leaf pageId.
             nonLeafReader.getTupleAccessorForRead().unmarshal(nonLeafTupleData);
-            if (!nonLeafReader.isPositionedOnInfinityKey() &&
-                readNonLeafKey() < leafRecord.key)
+            if (!nonLeafReader.isPositionedOnInfinityKey()
+                && readNonLeafKey() < leafRecord.key)
             {
                 BOOST_FAIL(
                     "Non-leaf key is less than expected key.  Expected key = "

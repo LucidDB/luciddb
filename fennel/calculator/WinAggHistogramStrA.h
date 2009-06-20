@@ -100,7 +100,7 @@ public:
         bool operator () (const StringDesc& str1, const StringDesc& str2) const
         {
             if (!str1.isNull() && !str2.isNull()) {
-                int32_t result = SqlStrCmp<1,1>(
+                int32_t result = SqlStrCmp<1, 1>(
                     str1.pointer(), str1.stringLength(),
                     str2.pointer(), str2.stringLength());
                 return result < 0;
@@ -110,7 +110,7 @@ public:
         }
     } StringDescCompare;
 
-    typedef multiset<StringDesc,StringDescCompare> WinAggData;
+    typedef multiset<StringDesc, StringDescCompare> WinAggData;
 
     typedef deque<StringDesc> WinAggQueue;
 

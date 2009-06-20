@@ -33,7 +33,7 @@ SharedSegInputStream CrcSegInputStream::newCrcSegInputStream(
 {
     return SharedSegInputStream(
         new CrcSegInputStream(
-            segmentAccessor,onlineUuid,beginPageId),
+            segmentAccessor, onlineUuid, beginPageId),
         ClosableObjectDestructor());
 }
 
@@ -41,7 +41,7 @@ CrcSegInputStream::CrcSegInputStream(
     SegmentAccessor const &segmentAccessorInit,
     PseudoUuid onlineUuidInit,
     PageId beginPageId)
-    : SegInputStream(segmentAccessorInit,beginPageId,sizeof(SegStreamCrc))
+    : SegInputStream(segmentAccessorInit, beginPageId, sizeof(SegStreamCrc))
 {
     onlineUuid = onlineUuidInit;
 }
@@ -68,13 +68,13 @@ bool CrcSegInputStream::lockBufferParanoid()
         return false;
     }
     crcComputer.reset();
-    crcComputer.process_bytes(pCrc + 1,node.cbData);
+    crcComputer.process_bytes(pCrc + 1, node.cbData);
     if (pCrc->checksum != crcComputer.checksum()) {
         return false;
     }
     PConstBuffer pFirstByte =
         reinterpret_cast<PConstBuffer>(&node) + cbPageHeader;
-    setBuffer(pFirstByte,node.cbData);
+    setBuffer(pFirstByte, node.cbData);
     return true;
 }
 

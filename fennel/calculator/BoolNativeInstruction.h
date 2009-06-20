@@ -78,11 +78,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() ==
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+        } else if (NativeInstruction<TMPLT>::mOp1->value()
+            == NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -149,11 +151,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() ==
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+        } else if (NativeInstruction<TMPLT>::mOp1->value()
+            == NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
@@ -220,11 +224,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
         } else if (NativeInstruction<TMPLT>::mOp1->value() >
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+                   NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -291,11 +297,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() >=
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+        } else if (NativeInstruction<TMPLT>::mOp1->value()
+            >= NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -362,11 +370,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() <
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+        } else if (NativeInstruction<TMPLT>::mOp1->value()
+                   < NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -433,11 +443,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
-            NativeInstruction<TMPLT>::mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()
+            || NativeInstruction<TMPLT>::mOp2->isNull())
+        {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() <=
-                   NativeInstruction<TMPLT>::mOp2->value()) {
+        } else if (NativeInstruction<TMPLT>::mOp1->value()
+            <= NativeInstruction<TMPLT>::mOp2->value())
+        {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -617,7 +629,8 @@ public:
 };
 
 class FENNEL_CALCULATOR_EXPORT BoolNativeInstructionRegister
-    : InstructionRegister {
+    : InstructionRegister
+{
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename> class INSTCLASS2 >

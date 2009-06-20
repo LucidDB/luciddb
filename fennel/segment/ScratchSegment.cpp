@@ -50,7 +50,7 @@ void ScratchSegment::clearPages()
 
     for (PageListIter ppPage = pages.begin(); ppPage != pages.end(); ++ppPage) {
         CachePage &page = **ppPage;
-        getCache()->unlockPage(page,LOCKMODE_X);
+        getCache()->unlockPage(page, LOCKMODE_X);
     }
     pages.clear();
 }
@@ -59,7 +59,7 @@ BlockId ScratchSegment::translatePageId(PageId pageId)
 {
     assert(isPageIdAllocated(pageId));
     BlockId blockId(0);
-    CompoundId::setDeviceId(blockId,Cache::NULL_DEVICE_ID);
+    CompoundId::setDeviceId(blockId, Cache::NULL_DEVICE_ID);
     CompoundId::setBlockNum(
         blockId,
         getLinearBlockNum(pageId));
@@ -102,7 +102,7 @@ PageId ScratchSegment::allocatePageId(PageOwnerId)
     return getLinearPageId(blockNum);
 }
 
-void ScratchSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void ScratchSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     assert(endPageId == NULL_PAGE_ID);
@@ -121,9 +121,9 @@ PageId ScratchSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void ScratchSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void ScratchSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder ScratchSegment::getAllocationOrder() const
@@ -171,7 +171,7 @@ bool ScratchSegment::prefetchPage(
 }
 
 void ScratchSegment::prefetchBatch(
-    BlockId,uint,
+    BlockId, uint,
     MappedPageListener *)
 {
 }

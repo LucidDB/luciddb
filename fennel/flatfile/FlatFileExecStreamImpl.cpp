@@ -76,7 +76,7 @@ void FlatFileExecStreamImpl::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    SingleOutputExecStream::getResourceRequirements(minQuantity,optQuantity);
+    SingleOutputExecStream::getResourceRequirements(minQuantity, optQuantity);
     minQuantity.nCachePages += 2;
     optQuantity = minQuantity;
 }
@@ -180,7 +180,8 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
     }
     // detect whether output buffer is capable of accepting more data
     if (pOutAccessor->getState() == EXECBUF_OVERFLOW
-        || pOutAccessor->getState() == EXECBUF_EOS) {
+        || pOutAccessor->getState() == EXECBUF_EOS)
+    {
         return EXECRC_BUF_OVERFLOW;
     }
 
@@ -201,7 +202,7 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
                 break;
             }
             pParser->scanRow(
-                pBuffer->getReadPtr(),pBuffer->getSize(),rowDesc,lastResult);
+                pBuffer->getReadPtr(), pBuffer->getSize(), rowDesc, lastResult);
             nTuples++;
 
             switch (lastResult.status) {

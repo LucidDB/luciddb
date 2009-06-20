@@ -556,14 +556,14 @@ inline bool LhxPlan::isProbeChildPart(uint childPartIndex)
 
 inline uint LhxPlan::getBuildChildPart(uint childPartIndex)
 {
-    return ((childPartIndex % LhxChildPartCount) +
-            getBuildInput() * LhxChildPartCount);
+    return (childPartIndex % LhxChildPartCount)
+        + getBuildInput() * LhxChildPartCount;
 }
 
 inline uint LhxPlan::getProbeChildPart(uint childPartIndex)
 {
-    return ((childPartIndex % LhxChildPartCount) +
-            getProbeInput() * LhxChildPartCount);
+    return (childPartIndex % LhxChildPartCount)
+        + getProbeInput() * LhxChildPartCount;
 }
 
 FENNEL_END_NAMESPACE

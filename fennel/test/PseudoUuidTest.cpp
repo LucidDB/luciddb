@@ -43,7 +43,7 @@ class PseudoUuidTest : public TestBase, public TraceSource
 
 public:
     explicit PseudoUuidTest()
-        : TraceSource(shared_from_this(),"PseudoUuidTest")
+        : TraceSource(shared_from_this(), "PseudoUuidTest")
     {
         FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testGeneration);
         FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testInvalid);

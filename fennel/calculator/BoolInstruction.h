@@ -642,8 +642,9 @@ public:
         } else {
             bool op1 = mOp1->value();
             bool op2 = mOp2->value();
-            if ((op1 == true && op2 == false) ||
-                op1 == op2) {
+            if ((op1 == true && op2 == false)
+                || op1 == op2)
+            {
                 mResult->value(true);
             } else {
                 mResult->value(false);
@@ -751,8 +752,9 @@ public:
         } else {
             bool op1 = mOp1->value();
             bool op2 = mOp2->value();
-            if ((op1 == false && op2 == true) ||
-                op1 == op2) {
+            if ((op1 == false && op2 == true)
+                || op1 == op2)
+            {
                 mResult->value(true);
             } else {
                 mResult->value(false);
@@ -909,7 +911,8 @@ public:
 };
 
 class FENNEL_CALCULATOR_EXPORT BoolInstructionRegister
-    : InstructionRegister {
+    : InstructionRegister
+{
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < class INSTCLASS2 >

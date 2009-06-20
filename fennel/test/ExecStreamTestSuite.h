@@ -40,7 +40,7 @@ class FENNEL_TEST_EXPORT ExecStreamTestSuite
     : public ExecStreamUnitTestBase
 {
 protected:
-    void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
+    void testCartesianJoinExecStream(uint nRowsLeft, uint nRowsRight);
     void testGroupAggExecStreamNrows(uint nrows);
     void testReshapeExecStream(
         bool cast, bool filter, uint expectedNRows, int expectedStart,
@@ -64,28 +64,28 @@ public:
     {
         if (initTestCases) {
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testScratchBufferExecStream);
+                ExecStreamTestSuite, testScratchBufferExecStream);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testDoubleBufferExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
+                ExecStreamTestSuite, testDoubleBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testCopyExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testMergeExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testSegBufferExecStream);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+                ExecStreamTestSuite, testCartesianJoinExecStreamOuter);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testCartesianJoinExecStreamInner);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
+                ExecStreamTestSuite, testCartesianJoinExecStreamInner);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testCountAggExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testSumAggExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream1);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream2);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream3);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream4);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamCastFilter);
+                ExecStreamTestSuite, testReshapeExecStreamCastFilter);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
+                ExecStreamTestSuite, testReshapeExecStreamNoCastFilter);
             FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
+                ExecStreamTestSuite, testReshapeExecStreamDynamicParams);
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testSingleValueAggExecStream);
@@ -137,13 +137,13 @@ public:
     void testCartesianJoinExecStreamOuter()
     {
         // iterate multiple outer buffers
-        testCartesianJoinExecStream(10000,5);
+        testCartesianJoinExecStream(10000, 5);
     }
 
     void testCartesianJoinExecStreamInner()
     {
         // iterate multiple inner buffers
-        testCartesianJoinExecStream(5,10000);
+        testCartesianJoinExecStream(5, 10000);
     }
 
     void testGroupAggExecStream1()

@@ -31,9 +31,9 @@ LcsClusterNodeWriter::LcsClusterNodeWriter(
     SegmentAccessor const &accessorInit,
     TupleDescriptor const &colTupleDescInit,
     SharedTraceTarget pTraceTargetInit,
-    std::string nameInit) :
-        LcsClusterAccessBase(treeDescriptorInit),
-        TraceSource(pTraceTargetInit, nameInit)
+    std::string nameInit)
+    : LcsClusterAccessBase(treeDescriptorInit),
+      TraceSource(pTraceTargetInit, nameInit)
 {
     scratchAccessor = accessorInit;
     bufferLock.accessSegment(scratchAccessor);
@@ -173,8 +173,9 @@ void LcsClusterNodeWriter::init(
 
     setHdrOffsets(pHdr);
 
-    minSzLeft = nClusterCols * (LcsMaxLeftOver * sizeof(uint16_t) +
-                     sizeof(LcsBatchDir));
+    minSzLeft =
+        nClusterCols
+        * (LcsMaxLeftOver * sizeof(uint16_t) + sizeof(LcsBatchDir));
 
     allocArrays();
 }
@@ -210,8 +211,10 @@ void LcsClusterNodeWriter::openNew(LcsRid startRID)
     // account for the header size, account for at least 1 batch for each column
     // and leave space for one addtional batch for a "left-over" batch
 
-    szLeft = szBlock - hdrSize -
-                (2 * sizeof(LcsBatchDir)) * nClusterCols;
+    szLeft =
+        szBlock
+        - hdrSize
+        - (2 * sizeof(LcsBatchDir)) * nClusterCols;
     szLeft = std::max(szLeft, 0);
     assert(szLeft >= 0);
 }
@@ -222,8 +225,10 @@ bool LcsClusterNodeWriter::openAppend(
     int i;
 
     // leave space for one batch for each column entry
-    szLeft = lastVal[nClusterCols - 1] - pHdr->oBatch -
-                (pHdr->nBatch + 2* nClusterCols) * sizeof(LcsBatchDir);
+    szLeft =
+        lastVal[nClusterCols - 1]
+        - pHdr->oBatch
+        - (pHdr->nBatch + 2* nClusterCols) * sizeof(LcsBatchDir);
     szLeft = std::max(szLeft, 0);
     assert(szLeft >= 0);
 
@@ -265,8 +270,8 @@ uint16_t LcsClusterNodeWriter::getNextVal(uint column, uint16_t thisVal)
 {
     if (thisVal && thisVal != szBlock) {
         return
-            (uint16_t) (thisVal +
-                attrAccessors[column].getStoredByteCount(
+            (uint16_t) (thisVal
+                + attrAccessors[column].getStoredByteCount(
                     pBlock[column] + thisVal));
     } else {
         return 0;
@@ -293,8 +298,10 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     batchDirs[column]  = pBatch[batchCount[column] -1];
 
     // compute size left in temporary block before roll back
-    origSzLeft = lastVal[column] - batchOffset[column] -
-                    (batchCount[column]+2)*sizeof(LcsBatchDir);
+    origSzLeft =
+        lastVal[column]
+        - batchOffset[column]
+        - (batchCount[column] + 2) * sizeof(LcsBatchDir);
 
     if ((batchDirs[column].nRow > 8) || (batchDirs[column].nRow % 8) == 0) {
         return;
@@ -305,8 +312,8 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
         iV = bitVecWidth(calcWidth(batchDirs[column].nVal), w);
 
         // this is where the bit vectors start
-        pBit = pBlock[column] + batchDirs[column].oVal +
-                batchDirs[column].nVal * sizeof(uint16_t);
+        pBit = pBlock[column] + batchDirs[column].oVal
+            + batchDirs[column].nVal * sizeof(uint16_t);
 
         // nByte are taken by the bit vectors
         bitVecPtr(batchDirs[column].nRow, iV, w, p, pBit);
@@ -366,8 +373,8 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     // and possibley one to follow.  Subtract the difference of the new size
     // and the original size and add this to szLeft in index variable
     int newSz;
-    newSz = lastVal[column] - batchOffset[column] -
-            (batchCount[column] + 2) * sizeof(LcsBatchDir);
+    newSz = lastVal[column] - batchOffset[column]
+        - (batchCount[column] + 2) * sizeof(LcsBatchDir);
     szLeft += (newSz - origSzLeft);
     szLeft = std::max(szLeft, 0);
     assert(szLeft >= 0);
@@ -431,8 +438,8 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
     // will now be taking more space
     if (bForceMode[column] == fixed) {
         if (szVal > maxValueSize[column]) {
-            szLeft -= batchDirs[column].nVal *
-                (szVal - maxValueSize[column]);
+            szLeft -= batchDirs[column].nVal
+                * (szVal - maxValueSize[column]);
             maxValueSize[column] = szVal;
         }
     }
@@ -577,8 +584,8 @@ void LcsClusterNodeWriter::putCompressedBatch(
     iV = bitVecWidth(nBits[column], w);
 
     // this is where the bit vectors start
-    pBit = pBlock[column] + batchDirs[column].oVal +
-            batchDirs[column].nVal*sizeof(uint16_t);
+    pBit = pBlock[column] + batchDirs[column].oVal
+        + batchDirs[column].nVal*sizeof(uint16_t);
 
     // nByte are taken by the bit vectors, clear them befor OR-ing
     nByte = bitVecPtr(batchDirs[column].nRow, iV, w, p, pBit);
@@ -803,20 +810,20 @@ void LcsClusterNodeWriter::pickCompressionMode(
     // of 8. all but the last batch in a load will be greater then 8.
     batchRows = (nRow > 8) ? nRow & 0xfffffff8 : nRow;
 
-    szCompressed = batchDirs[column].nVal*sizeof(uint16_t) +
-                        (nBits[column]*nRow + LcsMaxSzLeftError * 8) / 8
-                   + (batchDirs[column].oLastValHighMark - lastVal[column]);
+    szCompressed = batchDirs[column].nVal * sizeof(uint16_t)
+        + (nBits[column]*nRow + LcsMaxSzLeftError * 8) / 8
+        + (batchDirs[column].oLastValHighMark - lastVal[column]);
 
     // the variable size batch does not have the bit vectors
     szVariable = batchDirs[column].nRow * sizeof(uint16_t)
-                   + (batchDirs[column].oLastValHighMark - lastVal[column]);
+        + (batchDirs[column].oLastValHighMark - lastVal[column]);
 
     // calculate the size required for the non compressed fixed mode
     // add max left overs to allow left overs to be added back
     uint    leftOverSize;
-    leftOverSize = LcsMaxLeftOver * sizeof(uint16_t) +
-                    (3 * LcsMaxLeftOver + LcsMaxSzLeftError * 8) / 8
-                       + LcsMaxLeftOver * recSize;
+    leftOverSize = LcsMaxLeftOver * sizeof(uint16_t)
+        + (3 * LcsMaxLeftOver + LcsMaxSzLeftError * 8) / 8
+        + LcsMaxLeftOver * recSize;
     szFixed = nRow * recSize + leftOverSize;
 
     szNonCompressed = std::min(szFixed, szVariable);
@@ -829,7 +836,8 @@ void LcsClusterNodeWriter::pickCompressionMode(
     // test if the compressed size is bigger then the non compressed size
 
     if ((fixed == bForceMode[column] || variable == bForceMode[column])
-        || szCompressed > szNonCompressed) {
+        || szCompressed > szNonCompressed)
+    {
         // switch to one of the noncompressed modes
         *pValOffset = NULL;
         batchDirs[column].nVal = 0;
@@ -909,8 +917,8 @@ void LcsClusterNodeWriter::pickCompressionMode(
 
         // nByte is the # bytes taken by the batch, it is the sum of
         // the bit vectors size and the value offsets
-        nByte = sizeofBitVec(batchRows, iV, w) +
-                batchDirs[column].nVal * sizeof(uint16_t);
+        nByte = sizeofBitVec(batchRows, iV, w)
+            + batchDirs[column].nVal * sizeof(uint16_t);
 
         // Adjust szLeft since we have freed up some space in the block
         assert(szVariable >= szCompressed);

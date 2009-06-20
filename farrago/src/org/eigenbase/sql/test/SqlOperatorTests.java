@@ -2902,15 +2902,15 @@ public abstract class SqlOperatorTests
             // some negative tests
             getTester().checkFails(
                 "'yd' similar to '[x-ze-a]d'",
-                "Illegal character range near index 6" + NL +
-                "\\[x-ze-a\\]d" + NL + "      \\^",
+                "Illegal character range near index 6" + NL
+                + "\\[x-ze-a\\]d" + NL + "      \\^",
                 true);   // illegal range
 
             getTester().checkFails(
                 "'yd3223' similar to '[:LOWER:]{2}[:DIGIT:]{,5}'",
-                "Illegal repetition near index 20" + NL +
-                "\\[\\:LOWER\\:\\]\\{2\\}\\[\\:DIGIT\\:\\]\\{,5\\}" + NL +
-                "                    \\^",
+                "Illegal repetition near index 20" + NL
+                + "\\[\\:LOWER\\:\\]\\{2\\}\\[\\:DIGIT\\:\\]\\{,5\\}" + NL
+                + "                    \\^",
                 true);
 
             getTester().checkFails(
@@ -2977,8 +2977,8 @@ public abstract class SqlOperatorTests
                 Boolean.FALSE);
 
             getTester().checkBoolean(
-                "'YD  3223' similar to " +
-                "'[:UPPER:]{2}||[:WHITESPACE:]*[:DIGIT:]{4}'",
+                "'YD  3223' similar to "
+                + "'[:UPPER:]{2}||[:WHITESPACE:]*[:DIGIT:]{4}'",
                 Boolean.TRUE);
 
             getTester().checkBoolean(
@@ -2986,13 +2986,13 @@ public abstract class SqlOperatorTests
                 Boolean.FALSE);
 
             getTester().checkBoolean(
-                "'YD\t3223' similar to " +
-                "'[:UPPER:]{2}[:WHITESPACE:]*[:DIGIT:]{4}'",
+                "'YD\t3223' similar to "
+                + "'[:UPPER:]{2}[:WHITESPACE:]*[:DIGIT:]{4}'",
                 Boolean.TRUE);
 
             getTester().checkBoolean(
-                "'YD\t\t3223' similar to " +
-                "'([:UPPER:]{2}[:WHITESPACE:]+)||[:DIGIT:]{4}'",
+                "'YD\t\t3223' similar to "
+                + "'([:UPPER:]{2}[:WHITESPACE:]+)||[:DIGIT:]{4}'",
                 Boolean.TRUE);
         }
     }

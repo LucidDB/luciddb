@@ -35,10 +35,10 @@ using namespace fennel;
 CollectExecStreamTestSuite::CollectExecStreamTestSuite(bool addAllTests)
 {
     if (addAllTests) {
-        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectInts);
-        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectUncollect);
+        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite, testCollectInts);
+        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite, testCollectUncollect);
         FENNEL_UNIT_TEST_CASE(
-            CollectExecStreamTestSuite,testCollectCollectUncollectUncollect);
+            CollectExecStreamTestSuite, testCollectCollectUncollectUncollect);
     }
 
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -89,8 +89,9 @@ void CollectExecStreamTestSuite::testCollectInts()
     twoData[0].pData = (PConstBuffer) &two;
     TupleAccessor twoAccessor;
     twoAccessor.compute(descInt64);
-    assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount()) <=
-           sizeof(intArrayBuff));
+    assert(
+        (oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount())
+        <= sizeof(intArrayBuff));
     twoAccessor.marshal(
         twoData,
         ((PBuffer)intArrayBuff) + oneAccessor.getMaxByteCount());

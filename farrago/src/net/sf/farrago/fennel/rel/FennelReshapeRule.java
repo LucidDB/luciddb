@@ -242,13 +242,9 @@ public class FennelReshapeRule
         return ((origType == castType)
             || ((origTypeName == SqlTypeName.CHAR)
                 && (castTypeName == SqlTypeName.VARCHAR))
-            ||
-
-            ((origTypeName == SqlTypeName.VARCHAR)
+            || ((origTypeName == SqlTypeName.VARCHAR)
                 && (castTypeName == SqlTypeName.VARCHAR))
-            ||
-
-            ((origTypeName == castTypeName)
+            || ((origTypeName == castTypeName)
                 && (origType.getPrecision() == castType.getPrecision())
                 && ((origTypeName != SqlTypeName.DECIMAL)
                     || (origType.getScale() == castType.getScale()))

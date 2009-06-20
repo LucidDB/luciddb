@@ -920,7 +920,8 @@ public class MedJdbcDataServer
                 RelNode.class,
                 CallingConvention.RESULT_SET,
                 CallingConvention.ITERATOR,
-                "ResultSetToFarragoIteratorRule") {
+                "ResultSetToFarragoIteratorRule")
+            {
                 public RelNode convert(RelNode rel)
                 {
                     return new ResultSetToFarragoIteratorConverter(
@@ -941,7 +942,8 @@ public class MedJdbcDataServer
                 RelNode.class,
                 CallingConvention.RESULT_SET,
                 FennelRel.FENNEL_EXEC_CONVENTION,
-                "ResultSetToFennelRule") {
+                "ResultSetToFennelRule")
+            {
                 public RelNode convert(RelNode rel)
                 {
                     return new IteratorToFennelConverter(

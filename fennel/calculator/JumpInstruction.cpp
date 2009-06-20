@@ -64,96 +64,115 @@ Jump::longName()
 {
     return "Jump";
 }
+
 const char *
 Jump::shortName()
 {
     return "JMP";
 }
+
 int
 Jump::numArgs()
 {
     return 0;  // PC is not counted
 }
+
 void
 Jump::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
+
 
 const char *
 JumpTrue::longName()
 {
     return "JumpTrue";
 }
+
 const char *
 JumpTrue::shortName()
 {
     return "JMPT";
 }
+
 int
 JumpTrue::numArgs()
 {
     return 1;  // PC is not counted
 }
+
 void
 JumpTrue::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
+
 
 const char *
 JumpFalse::longName()
 {
     return "JumpFalse";
 }
+
 const char *
 JumpFalse::shortName()
 {
     return "JMPF";
 }
+
 int
 JumpFalse::numArgs()
 {
     return 1;  // PC is not counted
 }
+
 void
 JumpFalse::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
+
 
 const char *
 JumpNull::longName()
 {
     return "JumpNull";
 }
+
 const char *
 JumpNull::shortName()
 {
     return "JMPN";
 }
+
 int
 JumpNull::numArgs()
 {
     return 1;  // PC is not counted
 }
+
 void
 JumpNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
+
 
 const char *
 JumpNotNull::longName()
 {
     return "JumpNotNull";
 }
+
 const char *
 JumpNotNull::shortName()
 {
     return "JMPNN";
 }
+
 int
 JumpNotNull::numArgs()
 {
     return 1;  // PC is not counted
 }
+
 void
 JumpNotNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());

@@ -69,7 +69,7 @@ protected:
      *
      * @param cbBuffer number of bytes in buffer
      */
-    void setBuffer(PBuffer pBuffer,uint cbBuffer);
+    void setBuffer(PBuffer pBuffer, uint cbBuffer);
 
     /**
      * @return number of bytes remaining to be written in current buffer
@@ -101,7 +101,7 @@ public:
      *
      * @return pointer to cbActual bytes of writable buffer space
      */
-    PBuffer getWritePointer(uint cbRequested,uint *pcbActual = NULL);
+    PBuffer getWritePointer(uint cbRequested, uint *pcbActual = NULL);
 
     /**
      * Advances stream position after a call to getWritePointer.
@@ -139,7 +139,7 @@ public:
 };
 
 inline PBuffer ByteOutputStream::getWritePointer(
-    uint cbRequested,uint *pcbActual)
+    uint cbRequested, uint *pcbActual)
 {
     if (cbWritable < cbRequested) {
         flushBuffer(cbRequested);
@@ -159,7 +159,7 @@ inline void ByteOutputStream::consumeWritePointer(uint cbUsed)
     cbOffset += cbUsed;
 }
 
-inline void ByteOutputStream::setBuffer(PBuffer pBuffer,uint cbBuffer)
+inline void ByteOutputStream::setBuffer(PBuffer pBuffer, uint cbBuffer)
 {
     pNextByte = pBuffer;
     cbWritable = cbBuffer;

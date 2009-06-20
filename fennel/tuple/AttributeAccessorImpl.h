@@ -72,7 +72,7 @@ public:
         PBuffer pDestData,
         TupleDatum const &value) const
     {
-        memcpy(pDestData,value.pData,value.cbData);
+        memcpy(pDestData, value.pData, value.cbData);
     }
 };
 
@@ -102,7 +102,7 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint16_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data16 = ntohs(*reinterpret_cast<uint16_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data16));
     }
@@ -129,7 +129,7 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint32_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data32 = ntohl(*reinterpret_cast<uint32_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data32));
     }
@@ -156,7 +156,7 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint64_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data64 = ntohll(*reinterpret_cast<uint64_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data64));
     }
@@ -249,10 +249,10 @@ public:
     void unmarshalValue(
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
-        if (Accessor::unmarshalNullableValue(tupleAccessor,value)) {
+        if (Accessor::unmarshalNullableValue(tupleAccessor, value)) {
             return;
         }
-        return Accessor::unmarshalValue(tupleAccessor,value);
+        return Accessor::unmarshalValue(tupleAccessor, value);
     }
 };
 

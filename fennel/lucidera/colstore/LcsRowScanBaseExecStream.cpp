@@ -84,16 +84,16 @@ void LcsRowScanBaseExecStream::prepare(
 
         // setup the cluster and column readers to only read the columns
         // that are going to be projected
-        uint clusterEnd = clusterStart +
-            params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
+        uint clusterEnd = clusterStart
+            + params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
 
         // create a vector of the columns that are projected from
         // this cluster and recompute the projection list
         // based on the individual cluster projections
         TupleProjection clusterProj;
         for (uint j = 0; j < newProj.size(); j++) {
-            if (outputProj[j] >= clusterStart &&
-                outputProj[j] <= clusterEnd)
+            if (outputProj[j] >= clusterStart
+                && outputProj[j] <= clusterEnd)
             {
                 clusterProj.push_back(outputProj[j] - clusterStart);
                 newProj[j] = projCount++;
@@ -114,8 +114,8 @@ void LcsRowScanBaseExecStream::prepare(
         if (!allSpecial) {
             for (uint j = 0; j < pClu->nColsToRead; j++) {
                 allClusterTupleDesc.push_back(
-                    params.lcsClusterScanDefs[i].
-                        clusterTupleDesc[clusterProj[j]]);
+                    params.lcsClusterScanDefs[i]
+                        .clusterTupleDesc[clusterProj[j]]);
             }
         }
     }

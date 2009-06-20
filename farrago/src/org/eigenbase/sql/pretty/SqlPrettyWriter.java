@@ -585,7 +585,8 @@ public class SqlPrettyWriter
                         indentation,
                         false,
                         false,
-                        false) {
+                        false)
+                    {
                         protected void _before()
                         {
                             newlineAndIndent();
@@ -608,7 +609,8 @@ public class SqlPrettyWriter
                         0,
                         false,
                         false,
-                        false) {
+                        false)
+                    {
                         protected void _before()
                         {
                             nextWhitespace = NL;
@@ -730,7 +732,8 @@ public class SqlPrettyWriter
                     0, // all clauses appear below SELECT
                     isClauseStartsLine(), // newline after UNION, EXCEPT
                     false,
-                    false) {
+                    false)
+                {
                     protected void sep(boolean printFirst, String sep)
                     {
                         boolean newlineBefore =

@@ -125,7 +125,7 @@ class FENNEL_SORTER_EXPORT ExternalSortMerger
     inline uint heapParent(uint i);
     inline uint heapLeft(uint i);
     inline uint heapRight(uint i);
-    inline void heapExchange(uint i,uint j);
+    inline void heapExchange(uint i, uint j);
     void heapify(uint i);
     void heapBuild();
 

@@ -214,8 +214,9 @@ bool LcsClusterReader::moveToBlockWithRid(LcsRid rid)
     // the queue.
     for (;;) {
         std::pair<PageId, LcsRid> &prefetchEntry =
-            (nextPrefetchEntry.second == LcsRid(MAXU)) ?
-            *prefetchQueue : nextPrefetchEntry;
+            (nextPrefetchEntry.second == LcsRid(MAXU))
+            ? *prefetchQueue
+            : nextPrefetchEntry;
 
         clusterPageId = prefetchEntry.first;
         if (clusterPageId == NULL_PAGE_ID) {
@@ -230,8 +231,8 @@ bool LcsClusterReader::moveToBlockWithRid(LcsRid rid)
         // entries if dumb pre-fetches are being used.
         ++prefetchQueue;
         nextPrefetchEntry = *prefetchQueue;
-        if (nextPrefetchEntry.first == NULL_PAGE_ID ||
-            rid < nextPrefetchEntry.second)
+        if (nextPrefetchEntry.first == NULL_PAGE_ID
+            || rid < nextPrefetchEntry.second)
         {
             break;
         } else {
@@ -252,7 +253,8 @@ bool LcsClusterReader::positionInBlock(LcsRid rid)
     // Go forward through the ranges in the current block until we find the
     // right one, or until we hit the end of the block
     while (rid >= getRangeEndRid()
-           && pRangeBatches + nClusterCols < pBatches + pLHdr->nBatch) {
+           && pRangeBatches + nClusterCols < pBatches + pLHdr->nBatch)
+    {
         rangeStartRid += pRangeBatches->nRow;
 
         pRangeBatches += nClusterCols;            // go to start of next range
@@ -330,8 +332,8 @@ PageId LcsClusterReader::getNextPageForPrefetch(LcsRid &rid, bool &found)
             }
         }
 
-        if (!(nextBTreeEntry.second == LcsRid(MAXU) &&
-            nextBTreeEntry.first == PageId(0)))
+        if (!(nextBTreeEntry.second == LcsRid(MAXU)
+            && nextBTreeEntry.first == PageId(0)))
         {
             // If we hit the end of the btree on the last iteration, then
             // there are no more pages.
@@ -402,9 +404,9 @@ LcsRid LcsClusterReader::getFetchRids(
             nextRid = currRidRun.startRid + 1;
             return currRidRun.startRid;
         } else if (
-            (currRidRun.nRids == RecordNum(MAXU) &&
-                nextRid >= currRidRun.startRid) ||
-            (nextRid < currRidRun.startRid + currRidRun.nRids))
+            (currRidRun.nRids == RecordNum(MAXU)
+                && nextRid >= currRidRun.startRid)
+            || (nextRid < currRidRun.startRid + currRidRun.nRids))
         {
             return nextRid++;
         } else {

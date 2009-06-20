@@ -49,7 +49,7 @@ int DateToIsoString(char *dest, boost::posix_time::ptime t)
     int y = t.date().year();
     int m =  t.date().month();
     int dy = t.date().day();
-    return snprintf(dest,11, "%4d-%02d-%02d", y,m, dy);
+    return snprintf(dest, 11, "%4d-%02d-%02d", y, m, dy);
 }
 
 
@@ -59,7 +59,7 @@ int TimeToIsoString(char *dest, boost::posix_time::ptime t)
     int h = td.hours();
     int m = td.minutes();
     int s = td.seconds();
-    return snprintf(dest,9, "%02d:%02d:%02d", h, m, s);
+    return snprintf(dest, 9, "%02d:%02d:%02d", h, m, s);
 }
 
 int TimestampToIsoString(char *dest, boost::posix_time::ptime t)
@@ -73,7 +73,7 @@ int TimestampToIsoString(char *dest, boost::posix_time::ptime t)
     int mon = t.date().month();
     int dy  = t.date().day();
     return snprintf(
-        dest, 20, "%4d-%02d-%02d %02d:%02d:%02d", y,mon, dy, h, min, s);
+        dest, 20, "%4d-%02d-%02d %02d:%02d:%02d", y, mon, dy, h, min, s);
 }
 
 int64_t milliseconds_per_day = 24 * 60 * 60 * 1000LL;
@@ -95,7 +95,7 @@ static inline void trimSpaces(std::string &s)
 
 int64_t IsoStringToDate(const char * const src, int len)
 {
-    std::string s(src,len);
+    std::string s(src, len);
     trimSpaces(s);
 
     boost::regex dateExp("\\d+-\\d+-\\d+");
@@ -130,9 +130,10 @@ int64_t IsoStringToTime(const char * const src, int len)
             int min = atoi(what[2].first);
             int sec = atoi(what[3].first);
 
-            if ((hour >= 0) && (hour < 24) &&
-                (min >= 0) && (min < 60) &&
-                (sec >= 0) && (sec < 60)) {
+            if ((hour >= 0) && (hour < 24)
+                && (min >= 0) && (min < 60)
+                && (sec >= 0) && (sec < 60))
+            {
                 time_duration td = duration_from_string(s);
                 return td.total_milliseconds();
             }
@@ -156,17 +157,19 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
     boost::cmatch what;
-    boost::regex timestampExp("\\d+-\\d+-\\d+ +"
-                       "(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
+    boost::regex timestampExp(
+        "\\d+-\\d+-\\d+ +"
+        "(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
     if (boost::regex_match(s.c_str(), what, timestampExp)) {
         try {
             int hour = atoi(what[1].first);
             int min = atoi(what[2].first);
             int sec = atoi(what[3].first);
 
-            if ((hour >= 0) && (hour < 24) &&
-                (min >= 0) && (min < 60) &&
-                (sec >= 0) && (sec < 60)) {
+            if ((hour >= 0) && (hour < 24)
+                && (min >= 0) && (min < 60)
+                && (sec >= 0) && (sec < 60))
+            {
                 ptime p(time_from_string(s));
                 time_duration td = p - epoc;
                 return td.total_milliseconds();

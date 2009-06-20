@@ -49,7 +49,7 @@ CachePage *QuotaCacheAccessor::lockPage(
     TxnId txnId)
 {
     CachePage *pPage = TransactionalCacheAccessor::lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
+        blockId, lockMode, readIfUnmapped, pMappedPageListener, txnId);
     if (pPage) {
         incrementUsage();
     }
@@ -62,7 +62,7 @@ void QuotaCacheAccessor::unlockPage(
     TxnId txnId)
 {
     decrementUsage();
-    TransactionalCacheAccessor::unlockPage(page,lockMode,txnId);
+    TransactionalCacheAccessor::unlockPage(page, lockMode, txnId);
 }
 
 void QuotaCacheAccessor::incrementUsage()

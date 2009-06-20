@@ -109,8 +109,8 @@ public abstract class FarragoReduceExpressionsRule
                     if (newConditionExp instanceof RexCall) {
                         RexCall rexCall = (RexCall) newConditionExp;
                         boolean reverse =
-                            (rexCall.getOperator() ==
-                                SqlStdOperatorTable.notOperator);
+                            (rexCall.getOperator()
+                             == SqlStdOperatorTable.notOperator);
                         if (reverse) {
                             rexCall = (RexCall) rexCall.getOperands()[0];
                         }
@@ -138,8 +138,8 @@ public abstract class FarragoReduceExpressionsRule
                 // it with an EmptyRel.
                 SqlOperator op = rexCall.getOperator();
                 boolean alwaysTrue;
-                if (op == SqlStdOperatorTable.isNullOperator ||
-                    op == SqlStdOperatorTable.isUnknownOperator)
+                if (op == SqlStdOperatorTable.isNullOperator
+                    || op == SqlStdOperatorTable.isUnknownOperator)
                 {
                     alwaysTrue = false;
                 } else if (op == SqlStdOperatorTable.isNotNullOperator) {

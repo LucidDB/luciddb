@@ -43,7 +43,7 @@ LogicalRecoveryLog::LogicalRecoveryLog(
       logSegmentAccessor(logSegmentAccessorInit)
 {
     pInputStream = CrcSegInputStream::newCrcSegInputStream(
-        logSegmentAccessor,onlineUuid);
+        logSegmentAccessor, onlineUuid);
 }
 
 SharedLogicalRecoveryLog LogicalRecoveryLog::newLogicalRecoveryLog(
@@ -54,7 +54,8 @@ SharedLogicalRecoveryLog LogicalRecoveryLog::newLogicalRecoveryLog(
 {
     return SharedLogicalRecoveryLog(
         new LogicalRecoveryLog(
-            participantFactory,logSegmentAccessor,onlineUuid,pSegmentFactory));
+            participantFactory, logSegmentAccessor, onlineUuid,
+            pSegmentFactory));
 }
 
 LogicalRecoveryLog::~LogicalRecoveryLog()
@@ -90,7 +91,7 @@ void LogicalRecoveryLog::recover(
         switch (txnMemento.event) {
         case LogicalTxnEventMemento::EVENT_COMMIT:
             if (pTxnEntry == checkpointTxnMap.end()) {
-                redoTxn(txnMemento,NULL,pTxnInputStream);
+                redoTxn(txnMemento, NULL, pTxnInputStream);
             } else {
                 redoTxn(
                     txnMemento,
@@ -101,7 +102,7 @@ void LogicalRecoveryLog::recover(
             break;
         case LogicalTxnEventMemento::EVENT_ROLLBACK:
             assert(pTxnEntry != checkpointTxnMap.end());
-            undoTxn(pTxnEntry->second,pTxnInputStream);
+            undoTxn(pTxnEntry->second, pTxnInputStream);
             checkpointTxnMap.erase(txnId);
             break;
         case LogicalTxnEventMemento::EVENT_CHECKPOINT:
@@ -115,7 +116,7 @@ void LogicalRecoveryLog::recover(
     {
         SharedSegInputStream pTxnInputStream =
             openLongLogStream(pTxnEntry->first);
-        undoTxn(pTxnEntry->second,pTxnInputStream);
+        undoTxn(pTxnEntry->second, pTxnInputStream);
     }
     checkpointTxnMap.clear();
 }

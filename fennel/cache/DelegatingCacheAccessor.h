@@ -60,7 +60,7 @@ public:
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void flushPage(CachePage &page,bool async);
     virtual void nicePage(CachePage &page);

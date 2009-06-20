@@ -46,24 +46,24 @@ void SegmentTestBase::openStorage(DeviceMode openMode)
 
 CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
 {
-    SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+    SegmentAccessor segmentAccessor(pLinearSegment, pCache);
     SegPageLock pageLock(segmentAccessor);
     if (opType == OP_ALLOCATE) {
         PageId pageId = pageLock.allocatePage(objId);
         assert(Segment::getLinearBlockNum(pageId) == iPage);
         CachePage &page = pageLock.getPage();
-        fillPage(page,iPage);
+        fillPage(page, iPage);
         pageLock.dontUnlock();
         return &page;
     } else {
         PageId pageId = Segment::getLinearPageId(iPage);
         // Prepare the page for update before locking it
-        if (opType == OP_WRITE_SEQ || opType == OP_WRITE_RAND ||
-            opType == OP_WRITE_SKIP)
+        if (opType == OP_WRITE_SEQ || opType == OP_WRITE_RAND
+            || opType == OP_WRITE_SKIP)
         {
             pLinearSegment->updatePage(pageId, true);
         }
-        pageLock.lockPage(pageId,getLockMode(opType));
+        pageLock.lockPage(pageId, getLockMode(opType));
         CachePage *pPage = pageLock.isLocked() ? &(pageLock.getPage()) : NULL;
         pageLock.dontUnlock();
         return pPage;
@@ -72,17 +72,17 @@ CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
 
 void SegmentTestBase::unlockPage(CachePage &page,LockMode lockMode)
 {
-    getCache().unlockPage(page,lockMode);
+    getCache().unlockPage(page, lockMode);
 }
 
 void SegmentTestBase::prefetchPage(uint iPage)
 {
     PageId pageId = Segment::getLinearPageId(iPage);
     BlockId blockId = pLinearSegment->translatePageId(pageId);
-    getCache().prefetchPage(blockId,pLinearSegment.get());
+    getCache().prefetchPage(blockId, pLinearSegment.get());
 }
 
-void SegmentTestBase::prefetchBatch(uint,uint)
+void SegmentTestBase::prefetchBatch(uint, uint)
 {
     permAssert(false);
 }
@@ -92,7 +92,7 @@ void SegmentTestBase::testAllocate()
     assert(pRandomSegment);
 
     uint i;
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     for (i = 0; i < nRandomOps; ++i) {
 #ifdef HAVE_SCHED_H
         sched_yield();
@@ -119,7 +119,7 @@ void SegmentTestBase::testDeallocate()
     assert(pRandomSegment);
 
     uint i;
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     for (i = 0; i < nRandomOps; ++i) {
 #ifdef HAVE_SCHED_H
         sched_yield();

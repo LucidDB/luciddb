@@ -5243,28 +5243,29 @@ public class SqlValidatorTest
             "select empno as x from emp order by empno",
 
             // in sql92, empno is obscured by the alias
-            conformance.isSortByAliasObscures() ? "unknown column empno"
-            :
+            conformance.isSortByAliasObscures()
+            ? "unknown column empno"
             // otherwise valid
-            null);
+            : null);
 
         checkFails(
             "select empno as x from emp order by ^x^",
 
             // valid in oracle and pre-99 sql
-            conformance.isSortByAlias() ? null
-            :
+            conformance.isSortByAlias()
+            ? null
             // invalid in sql:2003
-            "Column 'X' not found in any table");
+            : "Column 'X' not found in any table");
 
         checkFails(
             "select empno as x from emp order by ^10^",
 
             // invalid in oracle and pre-99
-            conformance.isSortByOrdinal() ? "Ordinal out of range" :
+            conformance.isSortByOrdinal()
+            ? "Ordinal out of range"
             // valid from sql:99 onwards (but sorting by constant achieves
             // nothing!)
-            null);
+            : null);
 
         // Has different meanings in different dialects (which makes it very
         // confusing!) but is always valid.
@@ -5283,9 +5284,10 @@ public class SqlValidatorTest
             // Alias 'deptno' is closer in scope than 'emp.deptno'
             // and 'dept.deptno', and is therefore not ambiguous.
             // Checked Oracle10G -- it is valid.
-            conformance.isSortByAlias() ? null :
+            conformance.isSortByAlias()
+            ? null
             // Ambiguous in SQL:2003
-            "col ambig");
+            : "col ambig");
 
         check(
             "select deptno from dept" + NL

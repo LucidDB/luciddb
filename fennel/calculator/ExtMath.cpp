@@ -147,8 +147,8 @@ mathPow(
         result->toNull();
     } else {
         double r = pow(x->value(), y->value());
-        if ((x->value() == 0.0 && y->value() < 0.0) ||
-            (x->value() <  0.0 && isnan(r)))
+        if ((x->value() == 0.0 && y->value() < 0.0)
+            || (x->value() <  0.0 && isnan(r)))
         {
             // we should get here when x^y have
             // x=0 AND y < 0 OR

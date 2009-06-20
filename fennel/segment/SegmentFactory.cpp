@@ -47,7 +47,7 @@ SharedSegmentFactory SegmentFactory::newSegmentFactory(
     SharedTraceTarget pTraceTarget)
 {
     return SharedSegmentFactory(
-        new SegmentFactory(configMap,pTraceTarget));
+        new SegmentFactory(configMap, pTraceTarget));
 }
 
 SegmentFactory::SegmentFactory(
@@ -76,10 +76,10 @@ SharedSegment SegmentFactory::newLinearDeviceSegment(
     LinearDeviceSegmentParams const &params)
 {
     SharedSegment pSegment(
-        new LinearDeviceSegment(cache,params),
+        new LinearDeviceSegment(cache, params),
         ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"LinearDeviceSegment");
+        newTracingSegment(pSegment, "LinearDeviceSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }
@@ -91,13 +91,13 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
 {
     RandomAllocationSegment *pRandomSegment =
         new RandomAllocationSegment(delegateSegment);
-    SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
+    SharedSegment pSegment(pRandomSegment, ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"RandomAllocationSegment");
+        newTracingSegment(pSegment, "RandomAllocationSegment");
     // Format the segment through the tracing segment so the operation
     // is traced
     if (bFormat) {
-        tracingSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     }
     if (!deferInit) {
         tracingSegment->initForUse();
@@ -165,7 +165,7 @@ SharedSegment SegmentFactory::newWALSegment(
         new WALSegment(logSegment),
         ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"WALSegment");
+        newTracingSegment(pSegment, "WALSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }
@@ -175,10 +175,10 @@ SharedSegment SegmentFactory::newLinearViewSegment(
     PageId firstPageId)
 {
     SharedSegment pSegment(
-        new LinearViewSegment(delegateSegment,firstPageId),
+        new LinearViewSegment(delegateSegment, firstPageId),
         ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"LinearViewSegment");
+        newTracingSegment(pSegment, "LinearViewSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }
@@ -190,10 +190,11 @@ SharedSegment SegmentFactory::newVersionedSegment(
     SegVersionNum versionNumber)
 {
     SharedSegment pSegment(
-        new VersionedSegment(dataSegment,logSegment,onlineUuid,versionNumber),
+        new VersionedSegment(
+            dataSegment, logSegment, onlineUuid, versionNumber),
         ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"VersionedSegment");
+        newTracingSegment(pSegment, "VersionedSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }
@@ -203,10 +204,10 @@ SegmentAccessor SegmentFactory::newScratchSegment(
     uint nPagesMax)
 {
     boost::shared_ptr<ScratchSegment> pSegment(
-        new ScratchSegment(pCache,nPagesMax),
+        new ScratchSegment(pCache, nPagesMax),
         ClosableObjectDestructor());
     SegmentAccessor segmentAccessor;
-    segmentAccessor.pSegment = newTracingSegment(pSegment,"ScratchSegment");
+    segmentAccessor.pSegment = newTracingSegment(pSegment, "ScratchSegment");
     segmentAccessor.pSegment->initForUse();
     segmentAccessor.pCacheAccessor = pSegment;
     return segmentAccessor;
@@ -222,10 +223,10 @@ SharedSegment SegmentFactory::newCircularSegment(
         new CircularSegment(
             delegateSegment,
             pCheckpointProvider,
-            oldestPageId,newestPageId),
+            oldestPageId, newestPageId),
         ClosableObjectDestructor());
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"CircularSegment");
+        newTracingSegment(pSegment, "CircularSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }
@@ -248,7 +249,7 @@ SharedSegment SegmentFactory::newTracingSegment(
         return pSegment;
     }
     SharedSegment pTracingSegment(
-        new TracingSegment(pSegment,pTraceTarget,sourceName),
+        new TracingSegment(pSegment, pTraceTarget, sourceName),
         ClosableObjectDestructor());
 
     pSegment->setTracingSegment(WeakSegment(pTracingSegment));
@@ -270,20 +271,20 @@ SharedSegment SegmentFactory::newTempDeviceSegment(
     // TODO: depending on config params?
     // deviceMode.temporary = true;
     SharedRandomAccessDevice pDevice(
-        new RandomAccessFileDevice(deviceFileName,deviceMode));
-    pCache->registerDevice(deviceId,pDevice);
+        new RandomAccessFileDevice(deviceFileName, deviceMode));
+    pCache->registerDevice(deviceId, pDevice);
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,deviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, deviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     deviceParams.nPagesAllocated = 0;
     if (!deviceMode.create) {
         deviceParams.nPagesAllocated = MAXU;
     }
     SharedSegment pSegment(
-        new LinearDeviceSegment(pCache,deviceParams),
+        new LinearDeviceSegment(pCache, deviceParams),
         TempSegDestructor(shared_from_this()));
     SharedSegment tracingSegment =
-        newTracingSegment(pSegment,"TempLinearDeviceSegment");
+        newTracingSegment(pSegment, "TempLinearDeviceSegment");
     tracingSegment->initForUse();
     return tracingSegment;
 }

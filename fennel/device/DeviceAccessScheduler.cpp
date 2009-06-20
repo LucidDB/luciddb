@@ -120,7 +120,7 @@ RandomAccessRequestBinding::RandomAccessRequestBinding()
 {
 #ifdef __MSVC__
     // TODO:  only create this when ThreadPoolScheduler is being used?
-    hEvent = CreateEvent(NULL,1,0,NULL);
+    hEvent = CreateEvent(NULL, 1, 0, NULL);
     if (!hEvent) {
         throw new SysCallExcn("CreateEvent failed");
     }

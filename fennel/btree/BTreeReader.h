@@ -200,7 +200,7 @@ protected:
      *
      * @param readMode which node types should be searched
      */
-    template <bool leafLockCoupling,class PageStack>
+    template <bool leafLockCoupling, class PageStack>
     inline bool searchForKeyTemplate(
         TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
         PageStack &pageStack, PageId startPageId, LockMode initialLockMode,

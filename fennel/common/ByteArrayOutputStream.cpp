@@ -31,7 +31,7 @@ SharedByteArrayOutputStream ByteArrayOutputStream::newByteArrayOutputStream(
     uint cbBuffer)
 {
     return SharedByteArrayOutputStream(
-        new ByteArrayOutputStream(pBuffer,cbBuffer),
+        new ByteArrayOutputStream(pBuffer, cbBuffer),
         ClosableObjectDestructor());
 }
 
@@ -41,7 +41,7 @@ ByteArrayOutputStream::ByteArrayOutputStream(
 {
     pBuffer = pBufferInit;
     cbBuffer = cbBufferInit;
-    setBuffer(pBuffer,cbBuffer);
+    setBuffer(pBuffer, cbBuffer);
 }
 
 void ByteArrayOutputStream::flushBuffer(uint)
@@ -56,7 +56,7 @@ void ByteArrayOutputStream::closeImpl()
 
 void ByteArrayOutputStream::clear()
 {
-    setBuffer(pBuffer,cbBuffer);
+    setBuffer(pBuffer, cbBuffer);
 }
 
 FENNEL_END_CPPFILE("$Id$");

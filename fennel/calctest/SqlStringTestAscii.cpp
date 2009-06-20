@@ -194,7 +194,7 @@ class SqlStringTest : virtual public TestBase, public TraceSource
 
 public:
     explicit SqlStringTest()
-        : TraceSource(shared_from_this(),"SqlStringTest")
+        : TraceSource(shared_from_this(), "SqlStringTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringClass);
@@ -389,9 +389,9 @@ SqlStringTest::testSqlStringAsciiCatF()
                                             strcmp(str, "22001"),
                                             0);
                                         BOOST_CHECK(
-                                            (src1_storage +
-                                             src2_storage +
-                                             src3_storage)
+                                            (src1_storage
+                                             + src2_storage
+                                             + src3_storage)
                                             > dst_storage);
                                         BOOST_CHECK(dst.verify());
                                         BOOST_CHECK(src1.verify());
@@ -407,9 +407,9 @@ SqlStringTest::testSqlStringAsciiCatF()
                                         BOOST_CHECK(src3.verify());
                                         BOOST_CHECK_EQUAL(
                                             newlen,
-                                            (src1_storage +
-                                             src2_storage +
-                                             src3_storage));
+                                            (src1_storage
+                                             + src2_storage
+                                             + src3_storage));
 
                                         string result(dst.mStr, newlen);
                                         string expect(src1.mStr, src1_storage);
@@ -595,11 +595,12 @@ SqlStringTest::testSqlStringAsciiCmpFHelper(
     BOOST_CHECK(src2.verify());
 
 #if 0
-    BOOST_MESSAGE(" src1=|" << s1 << "|" <<
-                  " src2=|" << s2 << "|" <<
-                  " expect=" << expected <<
-                  " expect2=" << expected2 <<
-                  " result=" << result);
+    BOOST_MESSAGE(
+        " src1=|" << s1 << "|"
+        << " src2=|" << s2 << "|"
+        << " expect=" << expected
+        << " expect2=" << expected2
+        << " result=" << result);
 #endif
     BOOST_CHECK_EQUAL(result, expected);
 
@@ -715,11 +716,12 @@ SqlStringTest::testSqlStringAsciiCmpVHelper(
     BOOST_CHECK(src2.verify());
 
 #if 0
-    BOOST_MESSAGE(" src1=|" << s1 << "|" <<
-                  " src2=|" << s2 << "|" <<
-                  " expect=" << expected <<
-                  " expect2=" << expected2 <<
-                  " result=" << result);
+    BOOST_MESSAGE(
+        " src1=|" << s1 << "|"
+        << " src2=|" << s2 << "|"
+        << " expect=" << expected
+        << " expect2=" << expected2
+        << " result=" << result);
 #endif
     BOOST_CHECK_EQUAL(result, expected);
 
@@ -922,12 +924,13 @@ SqlStringTest::testSqlStringAsciiOverlay()
                             length = lengthI;
                         }
 #if 0
-                        BOOST_MESSAGE(" dst_storage=" << dst_storage <<
-                                      " src_storage=" << src_storage <<
-                                      " over_storage=" << over_storage <<
-                                      " pos=" << position <<
-                                      " length=" << length <<
-                                      " spec=" << lenSpecified);
+                        BOOST_MESSAGE(
+                            " dst_storage=" << dst_storage
+                            << " src_storage=" << src_storage
+                            << " over_storage=" << over_storage
+                            << " pos=" << position
+                            << " length=" << length
+                            << " spec=" << lenSpecified);
 #endif
                         SqlStringTestGen dst(
                             dst_storage, dst_storage,
@@ -1112,12 +1115,12 @@ SqlStringTest::testSqlStringAsciiSubStr()
                         src.randomize();
 #if 0
                         BOOST_MESSAGE(
-                            "src =|" << src.mLeftP <<
-                            "| dest_storage=" << dst_storage <<
-                            " src_storage=" << src_storage <<
-                            " src_len=" << src_len <<
-                            " sub_start=" << sub_start <<
-                            " sub_len=" << sub_len);
+                            "src =|" << src.mLeftP
+                            << "| dest_storage=" << dst_storage
+                            << " src_storage=" << src_storage
+                            << " src_len=" << src_len
+                            << " sub_start=" << sub_start
+                            << " sub_len=" << sub_len);
 #endif
                         int exsubstart = sub_start;
                         int exlen = sub_len;
@@ -1181,8 +1184,9 @@ SqlStringTest::testSqlStringAsciiSubStr()
 
                         // length unspecified mode
                         // test when length is at or past the storage
-                        if (sub_start > 0 && sub_len > 0 &&
-                            sub_start + sub_len - 1 > src_storage) {
+                        if (sub_start > 0 && sub_len > 0
+                            && sub_start + sub_len - 1 > src_storage)
+                        {
                             caught = false;
                             try {
                                 newlen = SqlStrAsciiSubStr(

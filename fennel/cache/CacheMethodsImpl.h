@@ -41,8 +41,8 @@ FENNEL_BEGIN_NAMESPACE
 // Public entry points
 // ----------------------------------------------------------------------
 
-template <class PageT,class VictimPolicyT>
-CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+CacheImpl<PageT, VictimPolicyT>
 ::CacheImpl(
     CacheParams const &params,
     CacheAllocator *pBufferAllocatorInit)
@@ -50,8 +50,8 @@ CacheImpl<PageT,VictimPolicyT>
     deviceTable(CompoundId::getMaxDeviceCount()),
     pageTable(),
     bufferAllocator(
-        pBufferAllocatorInit ?
-        *pBufferAllocatorInit
+        pBufferAllocatorInit
+        ? *pBufferAllocatorInit
         : *new VMAllocator(params.cbPage,0)),
     pBufferAllocator(pBufferAllocatorInit ? NULL : &bufferAllocator),
     victimPolicy(params),
@@ -101,8 +101,8 @@ CacheImpl<PageT,VictimPolicyT>
     prefetchThrottleRate = params.prefetchThrottleRate;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::getPrefetchParams(
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::getPrefetchParams(
     uint &prefetchPagesMax,
     uint &prefetchThrottleRate)
 {
@@ -110,8 +110,8 @@ void CacheImpl<PageT,VictimPolicyT>::getPrefetchParams(
     prefetchThrottleRate = this->prefetchThrottleRate;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::initializeStats()
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::initializeStats()
 {
     // clear instantaneous counters too just to avoid confusion
     statsSinceInit.nHits = 0;
@@ -144,8 +144,8 @@ void CacheImpl<PageT,VictimPolicyT>::initializeStats()
     statsSinceInit.nMemPagesMax = 0;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::allocatePages(CacheParams const &params)
 {
     static const int allocErrorMsgSize = 255;
     uint nPagesMax = 0;
@@ -251,28 +251,28 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
     victimPolicy.setAllocatedPageCount(nPages);
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::calcDirtyThreshholds(uint nCachePages)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::calcDirtyThreshholds(uint nCachePages)
 {
     dirtyHighWaterMark = nCachePages * dirtyHighWaterPercent / 100;
     dirtyLowWaterMark = nCachePages * dirtyLowWaterPercent / 100;
 }
 
-template <class PageT,class VictimPolicyT>
-uint CacheImpl<PageT,VictimPolicyT>::getAllocatedPageCount()
+template <class PageT, class VictimPolicyT>
+uint CacheImpl<PageT, VictimPolicyT>::getAllocatedPageCount()
 {
     SXMutexSharedGuard guard(unallocatedBucket.mutex);
     return pages.size() - unallocatedBucket.pageList.size();
 }
 
-template <class PageT,class VictimPolicyT>
-uint CacheImpl<PageT,VictimPolicyT>::getMaxAllocatedPageCount()
+template <class PageT, class VictimPolicyT>
+uint CacheImpl<PageT, VictimPolicyT>::getMaxAllocatedPageCount()
 {
     return pages.size();
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::setAllocatedPageCount(
     uint nMemPagesDesired)
 {
     assert(nMemPagesDesired <= pages.size());
@@ -353,11 +353,11 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
     victimPolicy.setAllocatedPageCount(nMemPagesDesired);
 }
 
-template <class PageT,class VictimPolicyT>
-PageT *CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+PageT *CacheImpl<PageT, VictimPolicyT>
 ::lockPage(
-    BlockId blockId,LockMode lockMode,bool readIfUnmapped,
-    MappedPageListener *pMappedPageListener,TxnId txnId)
+    BlockId blockId, LockMode lockMode, bool readIfUnmapped,
+    MappedPageListener *pMappedPageListener, TxnId txnId)
 {
     // first find the page and increment its reference count
 
@@ -380,7 +380,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
         // count
 
         PageT &mappedPage = mapPage(
-            bucket,*page,blockId,pMappedPageListener,readIfUnmapped);
+            bucket, *page, blockId, pMappedPageListener, readIfUnmapped);
         if (&mappedPage == page) {
             // mapPage found no existing mapping, so initiate read from disk if
             // necessary
@@ -407,10 +407,11 @@ PageT *CacheImpl<PageT,VictimPolicyT>
 
     // now acquire the requested lock
 
-    if (!page->lock.waitFor(lockMode,ETERNITY,txnId)) {
+    if (!page->lock.waitFor(lockMode, ETERNITY, txnId)) {
         // NoWait failed; release reference
-        assert((lockMode == LOCKMODE_S_NOWAIT) ||
-               (lockMode == LOCKMODE_X_NOWAIT));
+        assert(
+               (lockMode == LOCKMODE_S_NOWAIT)
+               || (lockMode == LOCKMODE_X_NOWAIT));
         StrictMutexGuard pageGuard(page->mutex);
         page->nReferences--;
         if (!page->nReferences) {
@@ -453,10 +454,10 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     return page;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::unlockPage(
-    CachePage &vPage,LockMode lockMode,TxnId txnId)
+    CachePage &vPage, LockMode lockMode, TxnId txnId)
 {
     assert(lockMode < LOCKMODE_S_NOWAIT);
     PageT &page = static_cast<PageT &>(vPage);
@@ -475,7 +476,7 @@ void CacheImpl<PageT,VictimPolicyT>
             throw new SysCallExcn("memory protection failed", errorCode);
         }
 
-        page.lock.release(lockMode,txnId);
+        page.lock.release(lockMode, txnId);
     }
     page.nReferences--;
     if (!page.nReferences) {
@@ -498,8 +499,8 @@ void CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-bool CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+bool CacheImpl<PageT, VictimPolicyT>
 ::isPageMapped(BlockId blockId)
 {
     PageBucketT &bucket = getHashBucket(blockId);
@@ -515,8 +516,8 @@ bool CacheImpl<PageT,VictimPolicyT>
     return false;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::discardPage(BlockId blockId)
 {
     assert(blockId != NULL_BLOCK_ID);
@@ -541,8 +542,8 @@ void CacheImpl<PageT,VictimPolicyT>
     unmapAndFreeDiscardedPage(*page,pageGuard);
 }
 
-template <class PageT,class VictimPolicyT>
-PageT &CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+PageT &CacheImpl<PageT, VictimPolicyT>
 ::lockScratchPage(BlockNum blockNum)
 {
     PageT *page;
@@ -557,15 +558,15 @@ PageT &CacheImpl<PageT,VictimPolicyT>
     // scratch pages are locked for the duration of their use so they're
     // never candidates for victimization or flushing.
     page->dataStatus = CachePage::DATA_DIRTY;
-    CompoundId::setDeviceId(page->blockId,NULL_DEVICE_ID);
-    CompoundId::setBlockNum(page->blockId,blockNum);
+    CompoundId::setDeviceId(page->blockId, NULL_DEVICE_ID);
+    CompoundId::setBlockNum(page->blockId, blockNum);
 
     return *page;
 }
 
-template <class PageT,class VictimPolicyT>
-bool CacheImpl<PageT,VictimPolicyT>
-::prefetchPage(BlockId blockId,MappedPageListener *pMappedPageListener)
+template <class PageT, class VictimPolicyT>
+bool CacheImpl<PageT, VictimPolicyT>
+::prefetchPage(BlockId blockId, MappedPageListener *pMappedPageListener)
 {
     assert(blockId != NULL_BLOCK_ID);
     if (isPageMapped(blockId)) {
@@ -588,7 +589,7 @@ bool CacheImpl<PageT,VictimPolicyT>
     // doesn't actually want a reference until it locks the page later
     bool bIncRef = false;
     PageT &mappedPage = mapPage(
-        bucket,*page,blockId,pMappedPageListener,bPendingRead,bIncRef);
+        bucket, *page, blockId, pMappedPageListener, bPendingRead, bIncRef);
     if (&mappedPage == page) {
         if (readPageAsync(*page)) {
             successfulPrefetch();
@@ -604,10 +605,10 @@ bool CacheImpl<PageT,VictimPolicyT>
     return true;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::prefetchBatch(
-    BlockId blockId,uint nPagesPerBatch,
+    BlockId blockId, uint nPagesPerBatch,
     MappedPageListener *pMappedPageListener)
 {
     assert(blockId != NULL_BLOCK_ID);
@@ -633,7 +634,8 @@ void CacheImpl<PageT,VictimPolicyT>
         bool bPendingRead = true;
         bool bIncRef = false;
         PageT &mappedPage = mapPage(
-            bucket,*page,blockIdi,pMappedPageListener,bPendingRead,bIncRef);
+            bucket, *page, blockIdi, pMappedPageListener, bPendingRead,
+            bIncRef);
         if (&mappedPage != page) {
             // This page already mapped; can't do batch prefetch.  For the
             // pages which we've already mapped, initiate transfer.
@@ -672,29 +674,29 @@ void CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::successfulPrefetch()
 {
     incrementStatsCounter(nSuccessfulCachePrefetches);
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::rejectedPrefetch()
 {
     incrementStatsCounter(nRejectedCachePrefetches);
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::ioRetry()
 {
     incrementStatsCounter(nIoRetries);
 }
 
-template <class PageT,class VictimPolicyT>
-uint CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+uint CacheImpl<PageT, VictimPolicyT>
 ::checkpointPages(
     PagePredicate &pagePredicate,CheckpointType checkpointType)
 {
@@ -751,9 +753,9 @@ uint CacheImpl<PageT,VictimPolicyT>
                 // in the outermost for loop in this method when we're
                 // unmapping cache entries, we will not unmap this page
                 // because we've changed the listener.
-                if (page.pMappedPageListener &&
-                    page.pMappedPageListener == origListener &&
-                    page.getBlockId() == origBlockId)
+                if (page.pMappedPageListener
+                    && page.pMappedPageListener == origListener
+                    && page.getBlockId() == origBlockId)
                 {
                     MappedPageListener *newListener =
                     page.pMappedPageListener->notifyAfterPageCheckpointFlush(
@@ -764,7 +766,7 @@ uint CacheImpl<PageT,VictimPolicyT>
                 }
             } else {
                 if (checkpointType <= CHECKPOINT_FLUSH_AND_UNMAP) {
-                    unmapAndFreeDiscardedPage(page,pageGuard);
+                    unmapAndFreeDiscardedPage(page, pageGuard);
                 }
             }
         }
@@ -783,9 +785,9 @@ uint CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
-::flushPage(CachePage &page,bool async)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
+::flushPage(CachePage &page, bool async)
 {
     StrictMutexGuard pageGuard(page.mutex);
     assert(page.isExclusiveLockHeld());
@@ -813,37 +815,37 @@ void CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::nicePage(CachePage &page)
 {
     victimPolicy.notifyPageNice(static_cast<PageT &>(page));
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
-::registerDevice(DeviceId deviceId,SharedRandomAccessDevice pDevice)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
+::registerDevice(DeviceId deviceId, SharedRandomAccessDevice pDevice)
 {
     assert(deviceTable[opaqueToInt(deviceId)] == NULL);
     deviceTable[opaqueToInt(deviceId)] = pDevice;
     pDeviceAccessScheduler->registerDevice(pDevice);
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::unregisterDevice(DeviceId deviceId)
 {
     SharedRandomAccessDevice &pDevice = getDevice(deviceId);
     assert(pDevice);
     DeviceIdPagePredicate pagePredicate(deviceId);
-    uint nPages = checkpointPages(pagePredicate,CHECKPOINT_DISCARD);
+    uint nPages = checkpointPages(pagePredicate, CHECKPOINT_DISCARD);
     assert(!nPages);
     pDeviceAccessScheduler->unregisterDevice(pDevice);
     pDevice.reset();
 }
 
-template <class PageT,class VictimPolicyT>
-SharedRandomAccessDevice &CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+SharedRandomAccessDevice &CacheImpl<PageT, VictimPolicyT>
 ::getDevice(DeviceId deviceId)
 {
     return deviceTable[opaqueToInt(deviceId)];
@@ -853,8 +855,8 @@ SharedRandomAccessDevice &CacheImpl<PageT,VictimPolicyT>
 // Notification methods called from friend Page
 // ----------------------------------------------------------------------
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::notifyTransferCompletion(CachePage &page,bool bSuccess)
 {
     StrictMutexGuard pageGuard(page.mutex);
@@ -867,8 +869,8 @@ void CacheImpl<PageT,VictimPolicyT>
     case CachePage::DATA_WRITE:
         {
             if (!bSuccess) {
-                std::cerr << "Write failed for page 0x" << std::hex <<
-                    opaqueToInt(page.getBlockId());
+                std::cerr << "Write failed for page 0x" << std::hex
+                          << opaqueToInt(page.getBlockId());
                 ::abort();
             }
             decrementCounter(nDirtyPages);
@@ -900,8 +902,8 @@ void CacheImpl<PageT,VictimPolicyT>
     page.ioCompletionCondition.notify_all();
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::markPageDirty(CachePage &page)
 {
     StrictMutexGuard pageGuard(page.mutex);
@@ -916,7 +918,7 @@ void CacheImpl<PageT,VictimPolicyT>
     // the page (otherwise an infinite loop would occur).
     pageGuard.unlock();
     if (page.pMappedPageListener) {
-        page.pMappedPageListener->notifyPageDirty(page,bValid);
+        page.pMappedPageListener->notifyPageDirty(page, bValid);
     }
 }
 
@@ -924,15 +926,15 @@ void CacheImpl<PageT,VictimPolicyT>
 // Implementation of TimerThreadClient interface
 // ----------------------------------------------------------------------
 
-template <class PageT,class VictimPolicyT>
-uint CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+uint CacheImpl<PageT, VictimPolicyT>
 ::getTimerIntervalMillis()
 {
     return idleFlushInterval;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::onTimerInterval()
 {
     flushSomePages();
@@ -942,8 +944,8 @@ void CacheImpl<PageT,VictimPolicyT>
 // Private implementation methods
 // ----------------------------------------------------------------------
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>::closeImpl()
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>::closeImpl()
 {
     if (timerThread.isStarted()) {
         timerThread.stop();
@@ -992,11 +994,11 @@ void CacheImpl<PageT,VictimPolicyT>::closeImpl()
     }
 }
 
-template <class PageT,class VictimPolicyT>
-PageT *CacheImpl<PageT,VictimPolicyT>
-::lookupPage(PageBucketT &bucket,BlockId blockId, bool pin)
+template <class PageT, class VictimPolicyT>
+PageT *CacheImpl<PageT, VictimPolicyT>
+::lookupPage(PageBucketT &bucket, BlockId blockId, bool pin)
 {
-    assertCorrectBucket(bucket,blockId);
+    assertCorrectBucket(bucket, blockId);
     SXMutexSharedGuard bucketGuard(bucket.mutex);
     for (PageBucketIter iter(bucket.pageList); iter; ++iter) {
         StrictMutexGuard pageGuard(iter->mutex);
@@ -1012,8 +1014,8 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     return NULL;
 }
 
-template <class PageT,class VictimPolicyT>
-PageT *CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+PageT *CacheImpl<PageT, VictimPolicyT>
 ::findFreePage()
 {
     // Check unmappedBucket first.  Note the use of the double-checked locking
@@ -1033,7 +1035,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     uint nToFlush = 10;
 
     VictimSharedGuard victimSharedGuard(victimPolicy.getMutex());
-    std::pair<VictimPageIterator,VictimPageIterator> victimRange(
+    std::pair<VictimPageIterator, VictimPageIterator> victimRange(
         victimPolicy.getVictimRange());
     for (; victimRange.first != victimRange.second; ++(victimRange.first)) {
         PageT &page = *(victimRange.first);
@@ -1050,8 +1052,8 @@ PageT *CacheImpl<PageT,VictimPolicyT>
                 if (!nToFlush) {
                     continue;
                 }
-                if (page.pMappedPageListener &&
-                    !page.pMappedPageListener->canFlushPage(page))
+                if (page.pMappedPageListener
+                    && !page.pMappedPageListener->canFlushPage(page))
                 {
                     continue;
                 }
@@ -1067,7 +1069,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
             // NOTE:  have to do this early since unmapPage will
             // call back into victimPolicy, which could deadlock
             victimSharedGuard.unlock();
-            unmapPage(page,pageGuard,false);
+            unmapPage(page, pageGuard, false);
             incrementStatsCounter(nVictimizations);
             return &page;
         }
@@ -1077,13 +1079,13 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     // no free pages, so wait for one (with timeout just in case)
     StrictMutexGuard freePageGuard(freePageMutex);
     boost::xtime atv;
-    convertTimeout(100,atv);
-    freePageCondition.timed_wait(freePageGuard,atv);
+    convertTimeout(100, atv);
+    freePageCondition.timed_wait(freePageGuard, atv);
     return NULL;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::collectStats(CacheStats &stats)
 {
     stats.nHits = nCacheHits;
@@ -1150,12 +1152,12 @@ void CacheImpl<PageT,VictimPolicyT>
         statsSinceInit.nCheckpointWritesSinceInit;
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
 ::flushSomePages()
 {
     // TODO:  parameterize
-    uint nToFlush = std::min<uint>(5,nDirtyPages);
+    uint nToFlush = std::min<uint>(5, nDirtyPages);
     if (!nToFlush) {
         // in case there aren't any dirty buffers to start with
         return;
@@ -1176,7 +1178,7 @@ void CacheImpl<PageT,VictimPolicyT>
     incrementStatsCounter(nLazyWriteCalls);
     uint nFlushed = 0;
     VictimSharedGuard victimSharedGuard(victimPolicy.getMutex());
-    std::pair<DirtyVictimPageIterator,DirtyVictimPageIterator> victimRange(
+    std::pair<DirtyVictimPageIterator, DirtyVictimPageIterator> victimRange(
         victimPolicy.getDirtyVictimRange());
     for (; victimRange.first != victimRange.second; ++(victimRange.first)) {
         PageT &page = *(victimRange.first);
@@ -1199,8 +1201,8 @@ void CacheImpl<PageT,VictimPolicyT>
             // release our test lock just acquired
             page.lock.release(LOCKMODE_S);
         }
-        if (page.pMappedPageListener &&
-            !page.pMappedPageListener->canFlushPage(page))
+        if (page.pMappedPageListener
+            && !page.pMappedPageListener->canFlushPage(page))
         {
             continue;
         }
@@ -1217,9 +1219,9 @@ void CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
-::unmapPage(PageT &page,StrictMutexGuard &pageGuard, bool discard)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
+::unmapPage(PageT &page, StrictMutexGuard &pageGuard, bool discard)
 {
     assert(!page.nReferences);
     assert(pageGuard.owns_lock());
@@ -1248,30 +1250,30 @@ void CacheImpl<PageT,VictimPolicyT>
     assert(bFound);
 }
 
-template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
-::unmapAndFreeDiscardedPage(PageT &page,StrictMutexGuard &pageGuard)
+template <class PageT, class VictimPolicyT>
+void CacheImpl<PageT, VictimPolicyT>
+::unmapAndFreeDiscardedPage(PageT &page, StrictMutexGuard &pageGuard)
 {
     while (page.isTransferInProgress()) {
         page.waitForPendingIO(pageGuard);
     }
-    unmapPage(page,pageGuard,true);
+    unmapPage(page, pageGuard, true);
     pageGuard.lock();
     assert(!page.nReferences);
     freePage(page);
 }
 
-template <class PageT,class VictimPolicyT>
-PageT &CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+PageT &CacheImpl<PageT, VictimPolicyT>
 ::mapPage(
-    PageBucketT &bucket,PageT &page,BlockId blockId,
+    PageBucketT &bucket, PageT &page, BlockId blockId,
     MappedPageListener *pMappedPageListener,
-    bool bPendingRead,bool bIncRef)
+    bool bPendingRead, bool bIncRef)
 {
     assert(!page.hasBlockId());
     assert(!page.isDirty());
     assert(getDevice(CompoundId::getDeviceId(blockId)).get());
-    assertCorrectBucket(bucket,blockId);
+    assertCorrectBucket(bucket, blockId);
 
     // check existing pages in hash bucket in case someone else just mapped the
     // same page
@@ -1311,8 +1313,8 @@ PageT &CacheImpl<PageT,VictimPolicyT>
     return page;
 }
 
-template <class PageT,class VictimPolicyT>
-bool CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+bool CacheImpl<PageT, VictimPolicyT>
 ::transferPageAsync(PageT &page)
 {
     SharedRandomAccessDevice &pDevice =
@@ -1335,15 +1337,15 @@ bool CacheImpl<PageT,VictimPolicyT>
     return rc;
 }
 
-template <class PageT,class VictimPolicyT>
-CacheAllocator &CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+CacheAllocator &CacheImpl<PageT, VictimPolicyT>
 ::getAllocator() const
 {
     return bufferAllocator;
 }
 
-template <class PageT,class VictimPolicyT>
-inline bool CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline bool CacheImpl<PageT, VictimPolicyT>
 ::readPageAsync(PageT &page)
 {
     page.dataStatus = CachePage::DATA_READ;
@@ -1351,8 +1353,8 @@ inline bool CacheImpl<PageT,VictimPolicyT>
     return transferPageAsync(page);
 }
 
-template <class PageT,class VictimPolicyT>
-inline bool CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline bool CacheImpl<PageT, VictimPolicyT>
 ::writePageAsync(PageT &page)
 {
     assert(page.isDirty());
@@ -1369,16 +1371,16 @@ inline bool CacheImpl<PageT,VictimPolicyT>
     }
 }
 
-template <class PageT,class VictimPolicyT>
-inline FileSize CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline FileSize CacheImpl<PageT, VictimPolicyT>
 ::getPageOffset(BlockId const &blockId)
 {
     return ((FileSize) CompoundId::getBlockNum(blockId))
         * (FileSize) cbPage;
 }
 
-template <class PageT,class VictimPolicyT>
-inline PageBucket<PageT> &CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline PageBucket<PageT> &CacheImpl<PageT, VictimPolicyT>
 ::getHashBucket(BlockId const &blockId)
 {
     std::hash<BlockId> hasher;
@@ -1386,23 +1388,23 @@ inline PageBucket<PageT> &CacheImpl<PageT,VictimPolicyT>
     return *(pageTable[hashCode % pageTable.size()]);
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
-::assertCorrectBucket(PageBucketT &bucket,BlockId const &blockId)
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
+::assertCorrectBucket(PageBucketT &bucket, BlockId const &blockId)
 {
     assert(&bucket == &(getHashBucket(blockId)));
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
 ::freePage(PageT &page)
 {
     SXMutexExclusiveGuard unmappedBucketGuard(unmappedBucket.mutex);
     unmappedBucket.pageList.push_back(page);
 }
 
-template <class PageT,class VictimPolicyT>
-inline bool CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline bool CacheImpl<PageT, VictimPolicyT>
 ::canVictimizePage(PageT &page)
 {
     // NOTE:  the hasBlockId() check is to prevent us from trying to
@@ -1414,29 +1416,29 @@ inline bool CacheImpl<PageT,VictimPolicyT>
         && !page.isTransferInProgress();
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
 ::incrementCounter(AtomicCounter &x)
 {
     ++x;
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
 ::decrementCounter(AtomicCounter &x)
 {
     --x;
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
 ::incrementStatsCounter(AtomicCounter &x)
 {
     incrementCounter(x);
 }
 
-template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+template <class PageT, class VictimPolicyT>
+inline void CacheImpl<PageT, VictimPolicyT>
 ::decrementStatsCounter(AtomicCounter &x)
 {
     decrementCounter(x);

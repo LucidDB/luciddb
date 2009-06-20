@@ -51,7 +51,7 @@ class CalcExtDateTimeTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtDateTimeTest()
-        : TraceSource(shared_from_this(),"CalcExtDateTimeTest")
+        : TraceSource(shared_from_this(), "CalcExtDateTimeTest")
     {
         srand(time(NULL));
         CalcInit::instance();

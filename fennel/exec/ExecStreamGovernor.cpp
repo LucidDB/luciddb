@@ -40,8 +40,8 @@ ExecStreamGovernor::ExecStreamGovernor(
         knobSettingsInit.expectedConcurrentStatements;
 
     resourcesAvailable.nCachePages =
-        resourcesAvailableInit.nCachePages *
-        (100 - knobSettings.cacheReservePercentage) / 100;
+        resourcesAvailableInit.nCachePages
+        * (100 - knobSettings.cacheReservePercentage) / 100;
     resourcesAssigned.nCachePages = 0;
 }
 
@@ -59,23 +59,23 @@ void ExecStreamGovernor::traceCachePageRequest(
     case EXEC_RESOURCE_ACCURATE:
         FENNEL_TRACE(
             TRACE_FINER,
-            "Stream " << name << " assigned " << assigned <<
-            " pages based on accurate (min,opt) request of " << "(" <<
-            reqt.minReqt << "," << reqt.optReqt << ") pages");
+            "Stream " << name << " assigned " << assigned
+            << " pages based on accurate (min,opt) request of " << "("
+            << reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
     case EXEC_RESOURCE_ESTIMATE:
         FENNEL_TRACE(
             TRACE_FINER,
-            "Stream " << name << " assigned " << assigned <<
-            " pages based on estimated (min,opt) request of " << "(" <<
-            reqt.minReqt << "," << reqt.optReqt << ") pages");
+            "Stream " << name << " assigned " << assigned
+            << " pages based on estimated (min,opt) request of " << "("
+            << reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
     case EXEC_RESOURCE_UNBOUNDED:
         FENNEL_TRACE(
             TRACE_FINER,
-            "Stream " << name << " assigned " << assigned <<
-            " pages based on an unbounded opt request with " <<
-            reqt.minReqt << " min pages");
+            "Stream " << name << " assigned " << assigned
+            << " pages based on an unbounded opt request with "
+            << reqt.minReqt << " min pages");
     }
 }
 

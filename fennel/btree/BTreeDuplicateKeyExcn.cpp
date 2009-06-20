@@ -40,7 +40,7 @@ BTreeDuplicateKeyExcn::BTreeDuplicateKeyExcn(
     std::ostringstream oss;
     // TODO:  nicer formatting
     TuplePrinter tuplePrinter;
-    tuplePrinter.print(oss,keyDescriptor,keyData);
+    tuplePrinter.print(oss, keyDescriptor, keyData);
     msg = oss.str();
     msg = FennelResource::instance().duplicateKeyDetected(msg);
 }

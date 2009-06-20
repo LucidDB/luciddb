@@ -35,9 +35,9 @@ public:
     explicit
     ExtRegExpContext(
         boost::regex const & re,
-        string const pat) :
-        regex(re),
-        pattern(pat)
+        string const pat)
+        : regex(re),
+          pattern(pat)
     {
     }
     boost::regex regex;
@@ -57,9 +57,10 @@ strLikeEscapeA(
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
 
     // SQL99 Part 2 Section 8.5 General Rule 3.a, cases i & ii
-    if (matchValue->isNull() ||
-        pattern->isNull() ||
-        (escape ? escape->isNull() : false)) {
+    if (matchValue->isNull()
+        || pattern->isNull()
+        || (escape ? escape->isNull() : false))
+    {
         result->toNull();
         result->length(0);
     } else {
@@ -70,7 +71,7 @@ strLikeEscapeA(
         ctxP = static_cast<ExtRegExpContext*>(context.get());
         if (!ctxP) {
             string pat;
-            SqlLikePrep<1,1>(
+            SqlLikePrep<1, 1>(
                 pattern->pointer(),
                 pattern->length(),
                 (escape ? escape->pointer() : 0),
@@ -92,7 +93,7 @@ strLikeEscapeA(
         patP = &(ctxP->pattern);
 
         result->value(
-            SqlRegExp<1,1>(
+            SqlRegExp<1, 1>(
                 matchValue->pointer(),
                 matchValue->length(),
                 pattern->length(),
@@ -124,9 +125,10 @@ strSimilarEscapeA(
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
 
     // SQL2003 Part 2 Section 8.5 General Rule 4.a,b
-    if (matchValue->isNull() ||
-        pattern->isNull() ||
-        (escape ? escape->isNull() : false)) {
+    if (matchValue->isNull()
+        || pattern->isNull()
+        || (escape ? escape->isNull() : false))
+    {
         result->toNull();
         result->length(0);
     } else {
@@ -137,7 +139,7 @@ strSimilarEscapeA(
         ctxP = static_cast<ExtRegExpContext*>(context.get());
         if (!ctxP) {
             string pat;
-            SqlSimilarPrep<1,1>(
+            SqlSimilarPrep<1, 1>(
                 pattern->pointer(),
                 pattern->length(),
                 (escape ? escape->pointer() : 0),
@@ -158,7 +160,7 @@ strSimilarEscapeA(
         patP = &(ctxP->pattern);
 
         result->value(
-            SqlRegExp<1,1>(
+            SqlRegExp<1, 1>(
                 matchValue->pointer(),
                 matchValue->length(),
                 pattern->length(),

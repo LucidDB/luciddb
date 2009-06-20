@@ -127,7 +127,7 @@ PageId CircularSegment::allocatePageId(PageOwnerId)
     return pageId;
 }
 
-void CircularSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void CircularSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     if (endPageId == NULL_PAGE_ID) {
@@ -156,10 +156,10 @@ PageId CircularSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void CircularSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void CircularSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
     // Don't delegate this!
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

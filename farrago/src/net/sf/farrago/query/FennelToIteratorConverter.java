@@ -102,7 +102,8 @@ public class FennelToIteratorConverter
             RelNode.class,
             FennelRel.FENNEL_EXEC_CONVENTION,
             CallingConvention.ITERATOR,
-            "FennelToIteratorRule") {
+            "FennelToIteratorRule")
+        {
             public RelNode convert(RelNode rel)
             {
                 return new FennelToIteratorConverter(

@@ -90,7 +90,7 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtCastTest()
-        : TraceSource(shared_from_this(),"CalcExtCastTest")
+        : TraceSource(shared_from_this(), "CalcExtCastTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -234,7 +234,7 @@ CalcExtCastTest::cmpTupBool(TupleDatum const & tup, bool val)
 int
 CalcExtCastTest::cmpTupNull(TupleDatum const & tup)
 {
-    return ((const_cast<PBuffer>(tup.pData)) == NULL)? 1 : 0;
+    return ((const_cast<PBuffer>(tup.pData)) == NULL) ? 1 : 0;
 }
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
@@ -1825,8 +1825,8 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
     for (int i = 0; i < 10; i++) {
         factor *= 10;
     }
-    int64_t smax = std::numeric_limits<int64_t>::max()/factor + 1;
-    int64_t smin = std::numeric_limits<int64_t>::min()/factor - 1;
+    int64_t smax = std::numeric_limits<int64_t>::max() / factor + 1;
+    int64_t smin = std::numeric_limits<int64_t>::min() / factor - 1;
 
     // MIN -> decimal(9,-10) = ok
     BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[11], smin));

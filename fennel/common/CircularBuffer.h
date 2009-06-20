@@ -279,8 +279,8 @@ public:
     {
         assert(!pCircularBuffer->empty());
         assert(
-            currPos >= pCircularBuffer->getFirstPos() &&
-            currPos <= pCircularBuffer->getLastPos());
+            currPos >= pCircularBuffer->getFirstPos()
+            && currPos <= pCircularBuffer->getLastPos());
         return (*pCircularBuffer)[currPos];
     }
 
@@ -290,9 +290,8 @@ public:
      */
     bool end()
     {
-        return
-            (pCircularBuffer->empty() ||
-                currPos > pCircularBuffer->getLastPos());
+        return pCircularBuffer->empty()
+            || currPos > pCircularBuffer->getLastPos();
     }
 
     /**

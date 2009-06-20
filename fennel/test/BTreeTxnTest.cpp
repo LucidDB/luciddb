@@ -122,13 +122,13 @@ public:
 
 BTreeTxnTest::BTreeTxnTest()
 {
-    nInsertsPerTxn = configMap.getIntParam("insertsPerTxn",5);
-    nDeletesPerTxn = configMap.getIntParam("deletesPerTxn",5);
-    nKeysPerScan = configMap.getIntParam("keysPerScan",5);
-    iKeyMax = configMap.getIntParam("maxKey",1000000);
-    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval",20);
+    nInsertsPerTxn = configMap.getIntParam("insertsPerTxn", 5);
+    nDeletesPerTxn = configMap.getIntParam("deletesPerTxn", 5);
+    nKeysPerScan = configMap.getIntParam("keysPerScan", 5);
+    iKeyMax = configMap.getIntParam("maxKey", 1000000);
+    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval", 20);
     testRollback = configMap.getIntParam(
-        "testRollback",1);
+        "testRollback", 1);
 
     threadCounts.resize(OP_MAX,-1);
 
@@ -145,7 +145,7 @@ BTreeTxnTest::BTreeTxnTest()
         threadCounts[OP_CHECKPOINT] = 0;
     }
 
-    FENNEL_UNIT_TEST_CASE(BTreeTxnTest,testTxns);
+    FENNEL_UNIT_TEST_CASE(BTreeTxnTest, testTxns);
 }
 
 void BTreeTxnTest::testCaseSetUp()
@@ -153,16 +153,16 @@ void BTreeTxnTest::testCaseSetUp()
     // TODO:  cleanup
 
     configMap.setStringParam(
-        Database::paramDatabaseDir,".");
+        Database::paramDatabaseDir, ".");
     configMap.setStringParam(
-        "databaseInitSize","1000");
+        "databaseInitSize", "1000");
     configMap.setStringParam(
-        "tempInitSize","1000");
+        "tempInitSize", "1000");
     configMap.setStringParam(
-        "databaseShadowLogInitSize","2000");
+        "databaseShadowLogInitSize", "2000");
     if (!configMap.isParamSet("databaseTxnLogInitSize")) {
         configMap.setStringParam(
-            "databaseTxnLogInitSize","2000");
+            "databaseTxnLogInitSize", "2000");
     }
 
     CacheParams cacheParams;
@@ -205,7 +205,7 @@ void BTreeTxnTest::createTree()
     treeDescriptor.segmentAccessor.pCacheAccessor = pCache;
     treeDescriptor.rootPageId = rootPageId;
 
-    BTreeBuilder builder(treeDescriptor,pDatabase->getDataSegment());
+    BTreeBuilder builder(treeDescriptor, pDatabase->getDataSegment());
     builder.createEmptyRoot();
     treeDescriptor.rootPageId = builder.getRootPageId();
 }
@@ -223,7 +223,7 @@ void BTreeTxnTest::threadInit()
             1);
 
     pTestThreadData->pWriter.reset(
-        new BTreeWriter(treeDescriptor,scratchAccessor));
+        new BTreeWriter(treeDescriptor, scratchAccessor));
 }
 
 void BTreeTxnTest::threadTerminate()
@@ -276,7 +276,7 @@ void BTreeTxnTest::testTxns()
         pDatabase->getSegmentFactory()->newScratchSegment(
             pCache,
             1);
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     BTreeRecoveryFactory btreeRecoveryFactory(
         segmentAccessor,
         scratchAccessor,
@@ -296,8 +296,8 @@ void BTreeTxnTest::testTxns()
     // care of.  Tautological checks are just to shut warnings up.
 
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);
-    BOOST_CHECK_EQUAL(nEntries,nEntries);
-    BOOST_CHECK_EQUAL(nEntriesRecovered,nEntriesRecovered);
+    BOOST_CHECK_EQUAL(nEntries, nEntries);
+    BOOST_CHECK_EQUAL(nEntriesRecovered, nEntriesRecovered);
 }
 
 void BTreeTxnTest::insertTxn()
@@ -324,7 +324,7 @@ void BTreeTxnTest::deleteTxn()
     for (uint i = 0; i < nDeletesPerTxn; ++i) {
         int32_t key = generateRandomNumber(iKeyMax);
         bindKey(key);
-        if (writer.searchForKey(getKeyData(),DUP_SEEK_ANY)) {
+        if (writer.searchForKey(getKeyData(), DUP_SEEK_ANY)) {
             writer.deleteCurrent();
         }
         writer.endSearch();
@@ -337,7 +337,7 @@ void BTreeTxnTest::scanTxn()
     BTreeReader &reader = getReader();
     int32_t key = generateRandomNumber(iKeyMax);
     bindKey(key);
-    if (reader.searchForKey(getKeyData(),DUP_SEEK_ANY)) {
+    if (reader.searchForKey(getKeyData(), DUP_SEEK_ANY)) {
         for (uint i = 0; i < nKeysPerScan; ++i) {
             if (!reader.searchNext()) {
                 break;
@@ -363,7 +363,7 @@ void BTreeTxnTest::endTxn(SharedLogicalTxn pTxn)
 bool BTreeTxnTest::testThreadedOp(int iOp)
 {
     SXMutexSharedGuard checkpointSharedGuard(
-        pDatabase->getCheckpointThread()->getActionMutex(),false);
+        pDatabase->getCheckpointThread()->getActionMutex(), false);
     assert(iOp < OP_MAX);
     OpType op = static_cast<OpType>(iOp);
     switch (op) {
@@ -396,12 +396,12 @@ void BTreeTxnTest::testCheckpoint()
 {
     snooze(nSecondsBetweenCheckpoints);
     CheckpointType checkpointType;
-    if (configMap.getIntParam("fuzzyCheckpoint",1)) {
+    if (configMap.getIntParam("fuzzyCheckpoint", 1)) {
         checkpointType = CHECKPOINT_FLUSH_FUZZY;
     } else {
         checkpointType = CHECKPOINT_FLUSH_ALL;
     }
-    pDatabase->requestCheckpoint(checkpointType,false);
+    pDatabase->requestCheckpoint(checkpointType, false);
 }
 
 RecordNum BTreeTxnTest::verifyTree()

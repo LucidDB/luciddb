@@ -402,8 +402,8 @@ bool LbmEntry::setZeroLength(
              * encode the zero bytes.
              */
             *(pLenDesc) |=
-                (uint8_t) ((lengthBytes + LbmZeroLengthCompact) &
-                    LbmZeroLengthMask);
+                (uint8_t) ((lengthBytes + LbmZeroLengthCompact)
+                           & LbmZeroLengthMask);
         } else {
             return false;
         }
@@ -503,8 +503,8 @@ uint LbmEntry::getRowCount(TupleData const &inputTuple)
         uint lastZeroRIDs = 0;
         PBuffer pDescStart = (PBuffer)inputTuple[inputTuple.size() - 2].pData;
         PBuffer pDescEnd   =
-            (PBuffer)(inputTuple[inputTuple.size() - 2].pData +
-                      inputTuple[inputTuple.size() - 2].cbData);
+            (PBuffer)(inputTuple[inputTuple.size() - 2].pData
+                      + inputTuple[inputTuple.size() - 2].cbData);
         rowCount =
             getCompressedRowCount(
                 pDescStart, pDescEnd,
@@ -673,11 +673,11 @@ uint LbmEntry::getMergeSpaceRequired(TupleData const &inputTuple)
      */
 
     uint inputSegDescLength =
-        inputTuple[inputTuple.size() - 2].pData ?
-        inputTuple[inputTuple.size() - 2].cbData : 0;
+        inputTuple[inputTuple.size() - 2].pData
+        ? inputTuple[inputTuple.size() - 2].cbData : 0;
     uint inputSegLength =
-        inputTuple[inputTuple.size() - 1].pData ?
-        inputTuple[inputTuple.size() - 1].cbData : 0;
+        inputTuple[inputTuple.size() - 1].pData
+        ? inputTuple[inputTuple.size() - 1].cbData : 0;
 
     if (isSingleton(inputTuple)) {
         // singleton
@@ -801,8 +801,8 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
     } else {
         currSegByte = pSegEnd;
         uint8_t inputFirstSegByte =
-            *(uint8_t *)(inputTuple[inputTuple.size() - 1].pData +
-                inputTuple[inputTuple.size() - 1].cbData - 1);
+            *(uint8_t *)(inputTuple[inputTuple.size() - 1].pData
+                         + inputTuple[inputTuple.size() - 1].cbData - 1);
         *currSegByte |= inputFirstSegByte;
 
         /*
@@ -929,8 +929,8 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * input entry to the last byte of this entry. Modify inputTuple,
      * inputStartRID.
      */
-    if (inputStartRID <= endRID &&
-        inputStartRID >= roundToByteBoundary(endRID))
+    if (inputStartRID <= endRID
+        && inputStartRID >= roundToByteBoundary(endRID))
     {
         if (adjustEntry(inputTuple)) {
             validateEntrySize();
@@ -976,11 +976,11 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * bitmap doesn't exceed the segment field size.
      */
     uint inputSegDescLength =
-        inputTuple[inputTuple.size() - 2].pData ?
-        inputTuple[inputTuple.size() - 2].cbData : 0;
+        inputTuple[inputTuple.size() - 2].pData
+        ? inputTuple[inputTuple.size() - 2].cbData : 0;
     uint inputSegLength =
-        inputTuple[inputTuple.size() - 1].pData ?
-        inputTuple[inputTuple.size() - 1].cbData : 0;
+        inputTuple[inputTuple.size() - 1].pData
+        ? inputTuple[inputTuple.size() - 1].cbData : 0;
     if (pSegStart - pSegEnd + inputSegLength > bitmapSegSize) {
         return false;
     }
@@ -1062,12 +1062,12 @@ bool LbmEntry::spliceSingleton(TupleData &inputTuple)
             readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
 
             // input rid is within the range of an existing set of rids
-            if (inputStartRID >= srid &&
-                inputStartRID < srid + (segBytes * LbmOneByteSize))
+            if (inputStartRID >= srid
+                && inputStartRID < srid + (segBytes * LbmOneByteSize))
             {
                 setRIDSegByte(
-                    seg - 1 -
-                        opaqueToInt(inputStartRID - srid) / LbmOneByteSize,
+                    seg - 1
+                    - opaqueToInt(inputStartRID - srid) / LbmOneByteSize,
                     inputStartRID);
                 return true;
             }
@@ -1150,10 +1150,10 @@ bool LbmEntry::addNewSegment(
 
     // new byte is either at the very end of the previous segment or the
     // very start of the next segment
-    if ((inputStartRID >= prevEridPlus1 &&
-            inputStartRID < prevEridPlus1 + LbmOneByteSize) ||
-        (inputStartRID >= nextSrid - LbmOneByteSize &&
-            inputStartRID < nextSrid))
+    if ((inputStartRID >= prevEridPlus1
+         && inputStartRID < prevEridPlus1 + LbmOneByteSize)
+        || (inputStartRID >= nextSrid - LbmOneByteSize
+            && inputStartRID < nextSrid))
     {
         return addNewAdjacentSegment(
             inputTuple, prevSrid, prevSegDesc, nextSegDesc, prevSeg,
@@ -1177,13 +1177,13 @@ bool LbmEntry::addNewMiddleSegment(
     LcsRid inputStartRID =
         *((LcsRid*) inputTuple[inputTuple.size() - 3].pData);
     LcsRid prevEridPlus1 = prevSrid + (prevSegBytes * LbmOneByteSize);
-    uint leftZeroBytes = opaqueToInt(inputStartRID - prevEridPlus1) /
-        LbmOneByteSize;
+    uint leftZeroBytes = opaqueToInt(inputStartRID - prevEridPlus1)
+        / LbmOneByteSize;
     uint rightZeroBytes = prevZeroBytes - leftZeroBytes - 1;
     uint spaceRequired = 2;
     int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes);
-    int spaceNeededAfter = computeSpaceForZeroBytes(leftZeroBytes) +
-        computeSpaceForZeroBytes(rightZeroBytes);
+    int spaceNeededAfter = computeSpaceForZeroBytes(leftZeroBytes)
+        + computeSpaceForZeroBytes(rightZeroBytes);
     spaceRequired += (spaceNeededAfter - spaceNeededBefore);
     assert(spaceRequired >= 1);
     if (spaceRequired + currentEntrySize > scratchBufferUsableSize) {
@@ -1267,8 +1267,8 @@ bool LbmEntry::addNewAdjacentSegment(
     // adjust the segment length of either the previous segment or the
     // next segment, depending on where the new segment is placed
     bool rc;
-    if (inputStartRID >= prevEridPlus1 &&
-        inputStartRID < prevEridPlus1 + LbmOneByteSize)
+    if (inputStartRID >= prevEridPlus1
+        && inputStartRID < prevEridPlus1 + LbmOneByteSize)
     {
         uint segLen = prevSegBytes + 1;
         if (combine) {
@@ -1457,8 +1457,8 @@ void LbmEntry::mergeIntoSplitEntry(
     pSegStart = scratchBuffer + scratchBufferSize;
     pSegEnd = pSegStart - splitEntry[ridField + 2].cbData;
     currentEntrySize =
-        keySize + splitEntry[ridField + 1].cbData +
-            splitEntry[ridField + 2].cbData;
+        keySize + splitEntry[ridField + 1].cbData
+        + splitEntry[ridField + 2].cbData;
 
     // splice the input into the split entry that now occupies the current
     // entry
@@ -1534,8 +1534,8 @@ TupleData const &LbmEntry::produceEntryTuple()
          */
         uint rowCount = getRowCount();
 
-        if (rowCount == entryTuple[segmentField].cbData * 8 &&
-            rowCount <= maxSegSize * 8)
+        if (rowCount == entryTuple[segmentField].cbData * 8
+            && rowCount <= maxSegSize * 8)
         {
             /*
              * All the RIDs are in the bitmap segments. There is no "gap"
@@ -1839,8 +1839,8 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
              */
             PBuffer segDescEnd = segDesc + inputTuple[tupleSize - 2].cbData;
 
-            tupleTrace <<
-                dumpSegRID(
+            tupleTrace
+                << dumpSegRID(
                     segDesc,
                     segDescEnd,
                     seg,
@@ -1850,8 +1850,8 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
             /*
              * An entry with a single bitmap segement.
              */
-            tupleTrace <<
-                dumpBitmapRID(
+            tupleTrace
+                << dumpBitmapRID(
                     seg,
                     inputTuple[tupleSize - 1].cbData,
                     keyTrace.str(),

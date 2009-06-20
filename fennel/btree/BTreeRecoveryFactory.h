@@ -45,7 +45,7 @@ class FENNEL_BTREE_EXPORT BTreeRecoveryFactory
     SegmentAccessor scratchAccessor;
     StoredTypeDescriptorFactory const &typeFactory;
 
-    std::hash_map<PageId,SharedLogicalTxnParticipant> writerMap;
+    std::hash_map<PageId, SharedLogicalTxnParticipant> writerMap;
 
 public:
     explicit BTreeRecoveryFactory(

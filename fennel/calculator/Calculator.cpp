@@ -29,22 +29,22 @@ using boost::format;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-Calculator::Calculator(DynamicParamManager* dynamicParamManager) :
-    mIsUsingAssembler(true),
-    mIsAssembling(false),
-    mPDynamicParamManager(dynamicParamManager)
+Calculator::Calculator(DynamicParamManager* dynamicParamManager)
+    : mIsUsingAssembler(true),
+      mIsAssembling(false),
+      mPDynamicParamManager(dynamicParamManager)
 {
-    init(0,0,0,0,0,0);
+    init(0, 0, 0, 0, 0, 0);
 }
 
 
 Calculator::Calculator(
     DynamicParamManager* dynamicParamManager,
     int codeSize, int literalSize, int inputSize,
-    int outputSize, int localSize, int statusSize) :
-    mIsUsingAssembler(false),
-    mIsAssembling(false),
-    mPDynamicParamManager(dynamicParamManager)
+    int outputSize, int localSize, int statusSize)
+    : mIsUsingAssembler(false),
+      mIsAssembling(false),
+      mPDynamicParamManager(dynamicParamManager)
 {
     init(
         codeSize, literalSize, inputSize, outputSize,
@@ -66,7 +66,8 @@ Calculator::init(
     int i;
     for (i = RegisterReference::EFirstSet;
          i < RegisterReference::ELastSet;
-         i++) {
+         i++)
+    {
         // explicitly clear registers. allows detection of rebinding
         // local & literal
         mRegisterSetBinding[i] = NULL;
@@ -85,7 +86,8 @@ Calculator::~Calculator()
     uint i;
     for (i = RegisterReference::EFirstSet;
          i < RegisterReference::ELastSet;
-         i++) {
+         i++)
+    {
         unbind((RegisterReference::ERegisterSet)i);
     }
 
@@ -93,7 +95,8 @@ Calculator::~Calculator()
         // Assembler created all these register references, let's delete them
         for (i = RegisterReference::EFirstSet;
              i < RegisterReference::ELastSet;
-             i++) {
+             i++)
+        {
             for (uint reg = 0; reg < mRegisterRef[i].size(); reg++) {
                 if (mRegisterRef[i][reg]) {
                     delete mRegisterRef[i][reg];
@@ -130,12 +133,12 @@ Calculator::assemble(const char *program)
 
     FENNEL_TRACE(
         TRACE_FINEST,
-        "Calculator instructions:" << endl <<
-        InstructionFactory::signatures());
+        "Calculator instructions:" << endl
+        << InstructionFactory::signatures());
     FENNEL_TRACE(
         TRACE_FINEST,
-        "Calculator extended instructions:" << endl <<
-        InstructionFactory::extendedSignatures());
+        "Calculator extended instructions:" << endl
+        << InstructionFactory::extendedSignatures());
     FENNEL_TRACE(
         TRACE_FINE,
         "Calculator assembly = |" << endl
@@ -175,18 +178,23 @@ void Calculator::bind(
     // If rebinding these register sets is a required feature, you
     // must reset each RegisterReference that points to these
     // tuples
-    assert((regset == RegisterReference::ELiteral) ?
-           !mRegisterSetBinding[RegisterReference::ELiteral] : true);
-    assert((regset == RegisterReference::ELocal) ?
-           !mRegisterSetBinding[RegisterReference::ELocal] : true);
+    assert(
+        (regset == RegisterReference::ELiteral)
+        ? !mRegisterSetBinding[RegisterReference::ELiteral]
+        : true);
+    assert(
+        (regset == RegisterReference::ELocal)
+        ? !mRegisterSetBinding[RegisterReference::ELocal]
+        : true);
 
     unbind(regset);
     mRegisterSetBinding[regset] = new RegisterSetBinding(data);
     mRegisterSetDescriptor[regset] = new TupleDescriptor(desc);
 
     // cache pointers for local and literal sets only
-    if (regset == RegisterReference::ELiteral ||
-        regset == RegisterReference::ELocal) {
+    if (regset == RegisterReference::ELiteral
+        || regset == RegisterReference::ELocal)
+    {
         for_each(
             mRegisterRef[regset].begin(),
             mRegisterRef[regset].end(),
@@ -197,8 +205,8 @@ void Calculator::bind(
     // trade memory for speed - vector should never have to reallocate
     // TODO: This calls reserve twice, which is wasteful, even at startup.
     size_t totalResetableRegisters =
-        mRegisterRef[RegisterReference::ELiteral].size() +
-        mRegisterRef[RegisterReference::ELocal].size();
+        mRegisterRef[RegisterReference::ELiteral].size()
+        + mRegisterRef[RegisterReference::ELocal].size();
     mRegisterReset.reserve(totalResetableRegisters);
 }
 

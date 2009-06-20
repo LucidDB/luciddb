@@ -114,9 +114,9 @@ void BTreePrefetchSearchExecStream::open(bool restart)
 
     if (!restart) {
         uint nPrefetchEntries =
-            (bigMaxKey) ?
-                nPrefetchScratchPages / 2 :
-                nPrefetchScratchPages * nEntriesPerScratchPage;
+            (bigMaxKey)
+            ? nPrefetchScratchPages / 2
+            : nPrefetchScratchPages * nEntriesPerScratchPage;
         leafPageQueue.resize(nPrefetchEntries);
         allocateScratchPages();
         leafPageQueue.setPrefetchSource(*this);
@@ -194,8 +194,8 @@ bool BTreePrefetchSearchExecStream::innerSearchLoop()
     while (!pReader->isPositioned()) {
         // Make sure there's input available, in case we're going to
         // pre-fetch some pages.
-        if (pInAccessor->getState() != EXECBUF_EOS &&
-            !pInAccessor->demandData())
+        if (pInAccessor->getState() != EXECBUF_EOS
+            && !pInAccessor->demandData())
         {
             return false;
         }

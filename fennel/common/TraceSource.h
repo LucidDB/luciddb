@@ -80,7 +80,7 @@ public:
      *
      * @param message the text of the message
      */
-    void trace(TraceLevel level,std::string message) const;
+    void trace(TraceLevel level, std::string message) const;
 
     /**
      * @return true iff tracing is enabled for this source
@@ -152,13 +152,13 @@ public:
  * isn't a TraceSource but belongs to and traces as one.
  * msg can be an ostream expression like a << b << c.
  */
-#define FENNEL_TRACE(level,msg) FENNEL_DELEGATE_TRACE(level,this,msg)
-#define FENNEL_DELEGATE_TRACE(level,tracer,msg) \
+#define FENNEL_TRACE(level, msg) FENNEL_DELEGATE_TRACE(level, this, msg)
+#define FENNEL_DELEGATE_TRACE(level, tracer, msg) \
 do { \
     if ((tracer)->isTracingLevel(level)) { \
         std::ostringstream oss; \
         oss << msg; \
-        (tracer)->trace(level,oss.str()); \
+        (tracer)->trace(level, oss.str()); \
     } \
 } while (false)
 
@@ -181,7 +181,7 @@ inline char *get_tid(char *tidstr, int cb)
     char tidstr[32]; \
     FENNEL_TRACE(\
         level, \
-        "[thread " << fennel::get_tid(tidstr,sizeof(tidstr)) << "] " << expr); \
+        "[thread " << fennel::get_tid(tidstr, sizeof(tidstr)) << "] " << expr); \
 }
 
 FENNEL_END_NAMESPACE

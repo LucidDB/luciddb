@@ -258,7 +258,7 @@ void FlatFileExecStreamTest::testStream()
 
     FlatFileExecStreamParams flatfileParams;
     flatfileParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,1);
+        pSegmentFactory->newScratchSegment(pCache, 1);
      flatfileParams.outputTupleDesc.push_back(attrDesc);
     flatfileParams.outputTupleDesc.push_back(attrDesc);
     flatfileParams.dataFilePath = "flatfile/stream";
@@ -318,20 +318,20 @@ void FlatFileExecStreamTest::verifyOutput(
             }
             BOOST_REQUIRE(nRows < nRowsExpected);
             bufAccessor.unmarshalTuple(inputTuple);
-            tuplePrinter.print(oss,bufAccessor.getTupleDesc(),inputTuple);
+            tuplePrinter.print(oss, bufAccessor.getTupleDesc(), inputTuple);
             std::string actualValue = oss.str();
             oss.str("");
             const std::string &expectedValue = generator.generateValue(nRows);
             if (actualValue.compare(expectedValue)) {
                 std::cout << "(Row) = (" << nRows << ")" << std::endl;
-                BOOST_CHECK_EQUAL(expectedValue,actualValue);
+                BOOST_CHECK_EQUAL(expectedValue, actualValue);
                 return;
             }
             bufAccessor.consumeTuple();
             ++nRows;
         }
     }
-    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 FENNEL_UNIT_TEST_SUITE(FlatFileExecStreamTest);

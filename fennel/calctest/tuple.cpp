@@ -107,7 +107,7 @@ tupleFiddle()
 
     for (i = 0; i < num; i++, itr++) {
         char buf[bufferlen * 10];
-        sprintf(buf,"%d-A-%d-B-%d-C-", i, i, i); // longer than buflen
+        sprintf(buf, "%d-A-%d-B-%d-C-", i, i, i); // longer than buflen
         strncpy(
             (reinterpret_cast<char *>(const_cast<PBuffer>(itr->pData))),
             buf, bufferlen);

@@ -39,8 +39,8 @@ LinearDeviceSegmentParams::LinearDeviceSegmentParams()
 
 BlockNum LinearDeviceSegment::getAvailableDevicePages() const
 {
-    return pDevice->getSizeInBytes() / getFullPageSize() -
-        CompoundId::getBlockNum(firstBlockId);
+    return pDevice->getSizeInBytes() / getFullPageSize()
+        - CompoundId::getBlockNum(firstBlockId);
 }
 
 LinearDeviceSegment::LinearDeviceSegment(
@@ -58,8 +58,8 @@ LinearDeviceSegment::LinearDeviceSegment(
     BlockNum nPagesActual = getAvailableDevicePages();
     if (nPagesActual < params.nPagesMin) {
         pDevice->setSizeInBytes(
-            pDevice->getSizeInBytes() +
-            (params.nPagesMin - nPagesActual)*getFullPageSize());
+            pDevice->getSizeInBytes()
+            + (params.nPagesMin - nPagesActual) * getFullPageSize());
         nPagesActual = params.nPagesMin;
     }
     if (isMAXU(nPagesAllocated)) {
@@ -120,7 +120,7 @@ PageId LinearDeviceSegment::allocatePageId(PageOwnerId)
 }
 
 void LinearDeviceSegment::deallocatePageRange(
-    PageId startPageId,PageId endPageId)
+    PageId startPageId, PageId endPageId)
 {
     if (endPageId != NULL_PAGE_ID) {
         // REVIEW:  Technically, this should assert; instead, we let it slip so
@@ -145,9 +145,9 @@ PageId LinearDeviceSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void LinearDeviceSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void LinearDeviceSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder LinearDeviceSegment::getAllocationOrder() const
@@ -174,7 +174,8 @@ bool LinearDeviceSegment::ensureAllocatedSize(BlockNum nPages)
         if (!nPagesIncrement) {
             return false;
         }
-        BlockNum nNewPages = std::max(nPagesIncrement,nPages - nPagesAvailable);
+        BlockNum nNewPages =
+            std::max(nPagesIncrement, nPages - nPagesAvailable);
         if (!isMAXU(nPagesMax) && (nPagesAvailable + nNewPages > nPagesMax)) {
             nNewPages = nPagesMax - nPagesAvailable;
         }
@@ -191,7 +192,7 @@ void LinearDeviceSegment::delegatedCheckpoint(
     Segment &delegatingSegment,
     CheckpointType checkpointType)
 {
-    Segment::delegatedCheckpoint(delegatingSegment,checkpointType);
+    Segment::delegatedCheckpoint(delegatingSegment, checkpointType);
     if (checkpointType != CHECKPOINT_DISCARD) {
         pDevice->flush();
     }

@@ -36,14 +36,14 @@ TracingSegment::TracingSegment(
     SharedTraceTarget pTraceTarget,
     std::string sourceName)
     : DelegatingSegment(pDelegateSegment),
-      TraceSource(pTraceTarget,sourceName)
+      TraceSource(pTraceTarget, sourceName)
 {
-    FENNEL_TRACE(TRACE_FINE,"constructor");
+    FENNEL_TRACE(TRACE_FINE, "constructor");
 }
 
 TracingSegment::~TracingSegment()
 {
-    FENNEL_TRACE(TRACE_FINE,"destructor");
+    FENNEL_TRACE(TRACE_FINE, "destructor");
 }
 
 void TracingSegment::setPageSuccessor(PageId pageId, PageId successorId)
@@ -52,7 +52,7 @@ void TracingSegment::setPageSuccessor(PageId pageId, PageId successorId)
         TRACE_FINER,
         "setPageSuccessor of PageId " << std::hex << pageId
         << " to PageId " << std::hex << successorId);
-    DelegatingSegment::setPageSuccessor(pageId,successorId);
+    DelegatingSegment::setPageSuccessor(pageId, successorId);
 }
 
 BlockId TracingSegment::translatePageId(PageId pageId)
@@ -95,13 +95,13 @@ bool TracingSegment::ensureAllocatedSize(BlockNum nPages)
     return b;
 }
 
-void TracingSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void TracingSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     FENNEL_TRACE(
         TRACE_FINE,
         "deallocatePageRange " << std::hex << startPageId << ", "
         << std::hex << endPageId);
-    DelegatingSegment::deallocatePageRange(startPageId,endPageId);
+    DelegatingSegment::deallocatePageRange(startPageId, endPageId);
 }
 
 void TracingSegment::notifyPageMap(CachePage &page)
@@ -137,7 +137,7 @@ void TracingSegment::notifyPageDirty(CachePage &page,bool bDataValid)
         TRACE_FINER,
         "notifyPageDirty @" << &page << " BlockId "
         << std::hex << page.getBlockId());
-    DelegatingSegment::notifyPageDirty(page,bDataValid);
+    DelegatingSegment::notifyPageDirty(page, bDataValid);
 }
 
 void TracingSegment::notifyBeforePageFlush(CachePage &page)
@@ -165,7 +165,7 @@ void TracingSegment::delegatedCheckpoint(
     FENNEL_TRACE(
         TRACE_FINER,
         "checkpoint type=" << checkpointType);
-    DelegatingSegment::delegatedCheckpoint(delegatingSegment,checkpointType);
+    DelegatingSegment::delegatedCheckpoint(delegatingSegment, checkpointType);
 }
 
 MappedPageListener *TracingSegment::getMappedPageListener(BlockId blockId)
@@ -194,14 +194,14 @@ MappedPageListener *TracingSegment::notifyAfterPageCheckpointFlush(
     if (pListener == NULL) {
         FENNEL_TRACE(
             TRACE_FINER,
-            "notifyAfterPageCheckpointFlush for blockId " << std::hex <<
-                page.getBlockId() << " = NULL");
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex
+            << page.getBlockId() << " = NULL");
         return pListener;
     } else {
         FENNEL_TRACE(
             TRACE_FINER,
-            "notifyAfterPageCheckpointFlush for blockId " << std::hex <<
-                page.getBlockId() << " = " << std::hex << pListener);
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex
+            << page.getBlockId() << " = " << std::hex << pListener);
         return pListener->getTracingListener();
     }
 }
@@ -209,7 +209,7 @@ MappedPageListener *TracingSegment::notifyAfterPageCheckpointFlush(
 bool TracingSegment::isWriteVersioned()
 {
     bool b = getDelegateSegment()->isWriteVersioned();
-    FENNEL_TRACE(TRACE_FINEST,"isWriteVersioned returns " << b);
+    FENNEL_TRACE(TRACE_FINEST, "isWriteVersioned returns " << b);
     return b;
 }
 

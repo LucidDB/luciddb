@@ -51,7 +51,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void FileSystem::remove(char const *fileName)
 {
     if (doesFileExist(fileName)) {
-        setFileAttributes(fileName,0);
+        setFileAttributes(fileName, 0);
         if (::unlink(fileName)) {
             std::ostringstream oss;
             oss << "Failed to remove file " << fileName;
@@ -62,7 +62,7 @@ void FileSystem::remove(char const *fileName)
 
 bool FileSystem::doesFileExist(char const *filename)
 {
-    return !::access(filename,0);
+    return !::access(filename, 0);
 }
 
 bool FileSystem::setFileAttributes(char const *filename,bool readOnly)
@@ -71,7 +71,7 @@ bool FileSystem::setFileAttributes(char const *filename,bool readOnly)
     if (!readOnly) {
         mode |= S_IWUSR;
     }
-    return ::chmod(filename,mode) ? 0 : 1;
+    return ::chmod(filename, mode) ? 0 : 1;
 }
 
 void FileSystem::getDiskFreeSpace(char const *path, FileSize &availableSpace)

@@ -52,7 +52,7 @@ class LogicalTxnTest
     SavepointId svptId;
     PseudoUuid onlineUuid;
 
-    typedef std::pair<int,int> ExpectedRange;
+    typedef std::pair<int, int> ExpectedRange;
     std::vector<ExpectedRange> expected;
 
     void rollbackFull();
@@ -68,21 +68,21 @@ public:
         // TODO jvs 26-Oct-2007:  need multi-threading tests,
         // e.g. for FNL-68
 
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testTxnIdSequence);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackShort);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackLong);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackSavepointNoGap);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackSavepointGap);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitSavepoint);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitEmpty);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitShort);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitLong);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitEmpty);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitShort);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitLong);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointRollbackShort);
-        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointRollbackLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testTxnIdSequence);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testRollbackEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testRollbackShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testRollbackLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testRollbackSavepointNoGap);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testRollbackSavepointGap);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointCommitSavepoint);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCommitEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCommitShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCommitLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointCommitEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointCommitShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointCommitLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointRollbackShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest, testCheckpointRollbackLong);
     }
 
     void testCaseSetUp()
@@ -91,7 +91,7 @@ public:
     }
 
     void testTxn(int nActions,int iCheckpoint = -1,int iSvpt = -1);
-    void testActions(int nActions,int iFirst);
+    void testActions(int nActions, int iFirst);
 
     void testRollback(
         int nActions,
@@ -106,7 +106,7 @@ public:
     void testRollbackSavepoint(bool gap);
     void testCheckpointCommitSavepoint();
 
-    void testCommit(int nActions,bool checkpoint = false);
+    void testCommit(int nActions, bool checkpoint = false);
     void testCommitEmpty();
     void testCommitShort();
     void testCommitLong();
@@ -158,12 +158,12 @@ void LogicalTxnTest::undoLogicalAction(
     ByteInputStream &logStream)
 {
     // TODO:  symbolic const
-    BOOST_CHECK_EQUAL(actionType,ACTION_TEST);
+    BOOST_CHECK_EQUAL(actionType, ACTION_TEST);
     int i;
     logStream.readValue(i);
     BOOST_CHECK(!expected.empty());
     ExpectedRange &range = expected.front();
-    BOOST_CHECK_EQUAL(i,range.first);
+    BOOST_CHECK_EQUAL(i, range.first);
     range.first--;
     if (range.first < range.second) {
         expected.erase(expected.begin());
@@ -175,12 +175,12 @@ void LogicalTxnTest::redoLogicalAction(
     ByteInputStream &logStream)
 {
     // TODO:  symbolic const
-    BOOST_CHECK_EQUAL(actionType,ACTION_TEST);
+    BOOST_CHECK_EQUAL(actionType, ACTION_TEST);
     int i;
     logStream.readValue(i);
     BOOST_CHECK(!expected.empty());
     ExpectedRange &range = expected.front();
-    BOOST_CHECK_EQUAL(i,range.first);
+    BOOST_CHECK_EQUAL(i, range.first);
     range.first++;
     if (range.first > range.second) {
         expected.erase(expected.begin());
@@ -231,24 +231,24 @@ void LogicalTxnTest::testRollbackSavepoint(bool gap)
     testTxn(100,-1,50);
 
     // rollback 99 through 51
-    expected.push_back(ExpectedRange(99,51));
+    expected.push_back(ExpectedRange(99, 51));
     getLogicalTxn()->rollback(&svptId);
     BOOST_CHECK(expected.empty());
 
     if (gap) {
         // log 40 new actions (200 through 239)
-        testActions(40,200);
-        expected.push_back(ExpectedRange(239,200));
+        testActions(40, 200);
+        expected.push_back(ExpectedRange(239, 200));
     }
 
     // roll everything back
-    expected.push_back(ExpectedRange(50,0));
+    expected.push_back(ExpectedRange(50, 0));
     rollbackFull();
 }
 
 SharedLogicalRecoveryLog LogicalTxnTest::createRecoveryLog()
 {
-    SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+    SegmentAccessor segmentAccessor(pLinearSegment, pCache);
     SharedLogicalRecoveryLog pRecoveryLog =
         LogicalRecoveryLog::newLogicalRecoveryLog(
             *this,
@@ -262,15 +262,15 @@ void LogicalTxnTest::testCheckpointCommitSavepoint()
 {
     // log actions 0 through 99, checkpointing after 75 and creating a
     // savepoint after 50
-    testTxn(100,75,50);
+    testTxn(100, 75, 50);
 
     // rollback 99 through 51
-    expected.push_back(ExpectedRange(99,51));
+    expected.push_back(ExpectedRange(99, 51));
     getLogicalTxn()->rollback(&svptId);
     BOOST_CHECK(expected.empty());
 
     // log 40 new actions (200 through 239)
-    testActions(40,200);
+    testActions(40, 200);
 
     commit();
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
@@ -278,9 +278,9 @@ void LogicalTxnTest::testCheckpointCommitSavepoint()
     // recovery should first see 76 through 99 (redo),
     // then 99 through 51 (undo),
     // then 200 through 239 (redo)
-    expected.push_back(ExpectedRange(76,99));
-    expected.push_back(ExpectedRange(99,51));
-    expected.push_back(ExpectedRange(200,239));
+    expected.push_back(ExpectedRange(76, 99));
+    expected.push_back(ExpectedRange(99, 51));
+    expected.push_back(ExpectedRange(200, 239));
     pRecoveryLog->recover(intermediateCheckpointMemento);
     BOOST_CHECK(expected.empty());
     assert(pRecoveryLog.unique());
@@ -288,12 +288,12 @@ void LogicalTxnTest::testCheckpointCommitSavepoint()
 
 void LogicalTxnTest::testCheckpointRollbackShort()
 {
-    testRollback(10,true);
+    testRollback(10, true);
 }
 
 void LogicalTxnTest::testCheckpointRollbackLong()
 {
-    testRollback(10000,true);
+    testRollback(10000, true);
 }
 
 void LogicalTxnTest::testCommitEmpty()
@@ -313,17 +313,17 @@ void LogicalTxnTest::testCommitLong()
 
 void LogicalTxnTest::testCheckpointCommitEmpty()
 {
-    testCommit(0,true);
+    testCommit(0, true);
 }
 
 void LogicalTxnTest::testCheckpointCommitShort()
 {
-    testCommit(10,true);
+    testCommit(10, true);
 }
 
 void LogicalTxnTest::testCheckpointCommitLong()
 {
-    testCommit(10000,true);
+    testCommit(10000, true);
 }
 
 void LogicalTxnTest::testRollback(
@@ -331,10 +331,10 @@ void LogicalTxnTest::testRollback(
     bool checkpoint)
 {
     int iCheckpoint = checkpoint ? (nActions / 2) : -1;
-    testTxn(nActions,iCheckpoint);
+    testTxn(nActions, iCheckpoint);
     if (checkpoint) {
         SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
-        expected.push_back(ExpectedRange(iCheckpoint,0));
+        expected.push_back(ExpectedRange(iCheckpoint, 0));
         pRecoveryLog->recover(intermediateCheckpointMemento);
         BOOST_CHECK(expected.empty());
         assert(pRecoveryLog.unique());
@@ -362,10 +362,10 @@ void LogicalTxnTest::commit()
     pTxnLog.reset();
 }
 
-void LogicalTxnTest::testCommit(int nActions,bool checkpoint)
+void LogicalTxnTest::testCommit(int nActions, bool checkpoint)
 {
     int iCheckpoint = checkpoint ? (nActions / 2) : -1;
-    testTxn(nActions,iCheckpoint);
+    testTxn(nActions, iCheckpoint);
     commit();
 
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
@@ -384,12 +384,12 @@ void LogicalTxnTest::testCommit(int nActions,bool checkpoint)
     assert(pRecoveryLog.unique());
 }
 
-void LogicalTxnTest::testTxn(int nActions,int iCheckpoint,int iSvpt)
+void LogicalTxnTest::testTxn(int nActions, int iCheckpoint, int iSvpt)
 {
     openStorage(DeviceMode::createNew);
-    SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+    SegmentAccessor segmentAccessor(pLinearSegment, pCache);
     pTxnLog = LogicalTxnLog::newLogicalTxnLog(
-        segmentAccessor,onlineUuid,pSegmentFactory);
+        segmentAccessor, onlineUuid, pSegmentFactory);
     checkpointTxnLog(firstCheckpointMemento);
     SharedLogicalTxn pTxn = pTxnLog->newLogicalTxn(pCache);
     pTxn->addParticipant(
@@ -397,7 +397,7 @@ void LogicalTxnTest::testTxn(int nActions,int iCheckpoint,int iSvpt)
             shared_from_this()));
     for (int i = 0; i < nActions; ++i) {
         ByteOutputStream &logStream =
-            getLogicalTxn()->beginLogicalAction(*this,ACTION_TEST);
+            getLogicalTxn()->beginLogicalAction(*this, ACTION_TEST);
         logStream.writeValue(i);
         getLogicalTxn()->endLogicalAction();
         if (i == iCheckpoint) {
@@ -412,11 +412,11 @@ void LogicalTxnTest::testTxn(int nActions,int iCheckpoint,int iSvpt)
     }
 }
 
-void LogicalTxnTest::testActions(int nActions,int iFirst)
+void LogicalTxnTest::testActions(int nActions, int iFirst)
 {
     for (int i = 0; i < nActions; ++i) {
         ByteOutputStream &logStream =
-            getLogicalTxn()->beginLogicalAction(*this,ACTION_TEST);
+            getLogicalTxn()->beginLogicalAction(*this, ACTION_TEST);
         int x = iFirst + i;
         logStream.writeValue(x);
         getLogicalTxn()->endLogicalAction();
@@ -427,10 +427,10 @@ SharedLogicalTxnParticipant LogicalTxnTest::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &logStream)
 {
-    BOOST_CHECK_EQUAL(classId,getParticipantClassId());
+    BOOST_CHECK_EQUAL(classId, getParticipantClassId());
     int x;
     logStream.readValue(x);
-    BOOST_CHECK_EQUAL(x,participantDescription);
+    BOOST_CHECK_EQUAL(x, participantDescription);
     return boost::dynamic_pointer_cast<LogicalTxnParticipant>(
         shared_from_this());
 }

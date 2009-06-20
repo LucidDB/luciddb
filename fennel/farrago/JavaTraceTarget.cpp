@@ -51,10 +51,10 @@ JavaTraceTarget::JavaTraceTarget()
     assert(javaTrace);
 
     methTrace = pEnv->GetMethodID(
-        classNativeTrace,"trace",
+        classNativeTrace, "trace",
         "(Ljava/lang/String;ILjava/lang/String;)V");
     methGetSourceTraceLevel = pEnv->GetMethodID(
-        classNativeTrace,"getSourceTraceLevel",
+        classNativeTrace, "getSourceTraceLevel",
         "(Ljava/lang/String;)I");
 }
 
@@ -85,7 +85,7 @@ JavaTraceTarget::~JavaTraceTarget()
 }
 
 void JavaTraceTarget::notifyTrace(
-    std::string source,TraceLevel level,std::string message)
+    std::string source, TraceLevel level, std::string message)
 {
     JniEnvAutoRef pEnv;
 
@@ -96,7 +96,7 @@ void JavaTraceTarget::notifyTrace(
     JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jstring javaMessage = pEnv->NewStringUTF(message.c_str());
     JniLocalRefReaper javaMessageReaper(pEnv, javaMessage);
-    pEnv->CallVoidMethod(javaTrace,methTrace,javaSource,level,javaMessage);
+    pEnv->CallVoidMethod(javaTrace, methTrace, javaSource, level, javaMessage);
 }
 
 TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
@@ -104,7 +104,7 @@ TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
     JniEnvAutoRef pEnv;
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
     int level = pEnv->CallIntMethod(
-        javaTrace,methGetSourceTraceLevel,javaSource);
+        javaTrace, methGetSourceTraceLevel, javaSource);
     return static_cast<TraceLevel>(level);
 }
 

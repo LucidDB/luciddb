@@ -185,7 +185,8 @@ public class FarragoMetadataTest
         FarragoSessionPlanner planner =
             new FarragoTestPlanner(
                 program,
-                stmt) {
+                stmt)
+            {
                 // TODO jvs 11-Apr-2006: eliminate this once we switch to Hep
                 // permanently for LucidDB; this is to make sure that
                 // LoptMetadataProvider gets used for the duration of this test
@@ -602,8 +603,8 @@ public class FarragoMetadataTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         transformQuery(
             programBuilder.createProgram(),
-            "select c1, cast(c2 as int) from tab where " +
-            " c1 is not null and c2 is not null "
+            "select c1, cast(c2 as int) from tab where "
+            + " c1 is not null and c2 is not null "
             + "order by c1");
 
         Boolean res =

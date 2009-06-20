@@ -27,8 +27,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 LbmEntryDump::LbmEntryDump(
     TraceLevel traceLevelInit,
     SharedTraceTarget pTraceTargetInit,
-    string nameInit) :
-    TraceSource(pTraceTargetInit, nameInit)
+    string nameInit)
+    : TraceSource(pTraceTargetInit, nameInit)
 {
     traceLevel = traceLevelInit;
 }

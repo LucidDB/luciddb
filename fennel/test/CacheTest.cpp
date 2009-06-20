@@ -58,8 +58,8 @@ public:
     {
         assert(i < nDiskPages);
         BlockId blockId(0);
-        CompoundId::setDeviceId(blockId,dataDeviceId);
-        CompoundId::setBlockNum(blockId,i);
+        CompoundId::setDeviceId(blockId, dataDeviceId);
+        CompoundId::setBlockNum(blockId, i);
         return blockId;
     }
 
@@ -67,12 +67,12 @@ public:
     {
         BlockId blockId = makeBlockId(iPage);
         return getCache().lockPage(
-            blockId,getLockMode(opType),opType != OP_ALLOCATE);
+            blockId, getLockMode(opType), opType != OP_ALLOCATE);
     }
 
     virtual void unlockPage(CachePage &page,LockMode lockMode)
     {
-        getCache().unlockPage(page,lockMode);
+        getCache().unlockPage(page, lockMode);
     }
 
     virtual void prefetchPage(uint iPage)
@@ -81,10 +81,10 @@ public:
         getCache().prefetchPage(blockId);
     }
 
-    virtual void prefetchBatch(uint iPage,uint nPagesPerBatch)
+    virtual void prefetchBatch(uint iPage, uint nPagesPerBatch)
     {
         BlockId blockId = makeBlockId(iPage);
-        getCache().prefetchBatch(blockId,nPagesPerBatch);
+        getCache().prefetchBatch(blockId, nPagesPerBatch);
     }
 
     explicit CacheTest()
@@ -95,13 +95,13 @@ public:
 
         cbPageUsable = cbPageFull;
 
-        FENNEL_UNIT_TEST_CASE(CacheTest,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(CacheTest,testQuotaCacheAccessor);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(CacheTest, testSingleThread);
+        FENNEL_UNIT_TEST_CASE(CacheTest, testQuotaCacheAccessor);
+        FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
 
 #ifdef RLIMIT_AS
-        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest,testLargeCacheInit);
-        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest,testLargeCacheRequest);
+        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest, testLargeCacheInit);
+        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest, testLargeCacheRequest);
 #endif
     }
 
@@ -125,14 +125,14 @@ public:
     {
         openStorage(DeviceMode::createNew);
         QuotaCacheAccessor *pQuota = new QuotaCacheAccessor(
-            SharedQuotaCacheAccessor(),pCache,5);
+            SharedQuotaCacheAccessor(), pCache, 5);
         SharedCacheAccessor pSharedQuota(pQuota);
-        BOOST_CHECK_EQUAL(pQuota->getMaxLockedPages(),5U);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0U);
-        CachePage *pPage = pQuota->lockPage(makeBlockId(0),LOCKMODE_S,0);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),1U);
-        pQuota->unlockPage(*pPage,LOCKMODE_S);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0U);
+        BOOST_CHECK_EQUAL(pQuota->getMaxLockedPages(), 5U);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(), 0U);
+        CachePage *pPage = pQuota->lockPage(makeBlockId(0), LOCKMODE_S, 0);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(), 1U);
+        pQuota->unlockPage(*pPage, LOCKMODE_S);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(), 0U);
         pSharedQuota.reset();
         closeStorage();
     }

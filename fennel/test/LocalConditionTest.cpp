@@ -39,7 +39,7 @@ public:
     explicit LocalConditionTest()
     {
         bFlag = 0;
-        FENNEL_UNIT_TEST_CASE(LocalConditionTest,testNotifyAll);
+        FENNEL_UNIT_TEST_CASE(LocalConditionTest, testNotifyAll);
     }
 
     virtual ~LocalConditionTest()

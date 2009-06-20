@@ -65,11 +65,11 @@ public:
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual BlockNum getAllocatedSizeInPages();
     virtual PageId getPageSuccessor(PageId pageId);
-    virtual void setPageSuccessor(PageId pageId,PageId successorId);
+    virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual AllocationOrder getAllocationOrder() const;
     virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
 };

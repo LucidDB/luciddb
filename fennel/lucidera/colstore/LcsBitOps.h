@@ -105,7 +105,7 @@ inline uint bitVecWidth(uint l, WidthVec w)
     uint8_t po2;
     uint iW;
     WidthVec t;
-    int i,j;
+    int i, j;
 
     for (po2 = 1, iW = 0; l ; l >>= 1, po2 *= 2) {
         if (l & 0x1) {
@@ -291,7 +291,7 @@ inline void readBitVec4(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
+    readBits(p[0][pos / 2], 4, (pos * 4) % 8, v, 0);
 }
 
 /**
@@ -307,7 +307,7 @@ inline void readBitVec2(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
+    readBits(p[0][pos / 4], 2, (pos * 2) % 8, v, 0);
 }
 
 /**
@@ -338,7 +338,7 @@ inline void readBitVec1(uint16_t *v, const PtrVec p, uint pos)
 inline void readBitVec12(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    readBits(p[1][pos/2], 4, (pos*4) % 8, v, 8);
+    readBits(p[1][pos / 2], 4, (pos * 4) % 8, v, 8);
 }
 
 /**
@@ -353,7 +353,7 @@ inline void readBitVec12(uint16_t *v, const PtrVec p, uint pos)
 inline void readBitVec10(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    readBits(p[1][pos/4], 2, (pos*2) % 8, v, 8);
+    readBits(p[1][pos / 4], 2, (pos * 2) % 8, v, 8);
 }
 
 /**
@@ -384,8 +384,8 @@ inline void readBitVec6(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    readBits(p[1][pos/4], 2, (pos*2) % 8, v, 4);
+    readBits(p[0][pos / 2], 4, (pos * 4) % 8, v, 0);
+    readBits(p[1][pos / 4], 2, (pos * 2) % 8, v, 4);
 }
 
 /**

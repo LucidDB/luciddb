@@ -420,10 +420,10 @@ class SparseBitmapTest : virtual public TestBase
 public:
     explicit SparseBitmapTest()
     {
-        FENNEL_UNIT_TEST_CASE(SparseBitmapTest,testBasic);
-        FENNEL_UNIT_TEST_CASE(SparseBitmapTest,testSpread);
-        FENNEL_UNIT_TEST_CASE(SparseBitmapTest,testSizes);
-        FENNEL_UNIT_TEST_CASE(SparseBitmapTest,testFullDirectory);
+        FENNEL_UNIT_TEST_CASE(SparseBitmapTest, testBasic);
+        FENNEL_UNIT_TEST_CASE(SparseBitmapTest, testSpread);
+        FENNEL_UNIT_TEST_CASE(SparseBitmapTest, testSizes);
+        FENNEL_UNIT_TEST_CASE(SparseBitmapTest, testFullDirectory);
     }
 
     virtual void testCaseTearDown();

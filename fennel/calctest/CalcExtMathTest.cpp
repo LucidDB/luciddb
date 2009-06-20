@@ -57,7 +57,7 @@ class CalcExtMathTest : virtual public TestBase, public TraceSource
     string mProgramPower;
 public:
     explicit CalcExtMathTest()
-        : TraceSource(shared_from_this(),"CalcExtMathTest")
+        : TraceSource(shared_from_this(), "CalcExtMathTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -201,7 +201,7 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
         TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
         calc.bind(&inTuple, &outTuple);
-        checkWarnings(calc,"22023");
+        checkWarnings(calc, "22023");
         if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }
@@ -255,28 +255,28 @@ CalcExtMathTest::testCalcExtMathAbs()
 
     BOOST_CHECK(
         fabs(
-            *(reinterpret_cast<double*>
-              (const_cast<PBuffer>(outTuple[0].pData))) -
-            0)
+            *(reinterpret_cast<double*>(
+                const_cast<PBuffer>(outTuple[0].pData)))
+            - 0)
         < epsilon);
 
     BOOST_CHECK(
         fabs(
-            *(reinterpret_cast<double*>
-              (const_cast<PBuffer>(outTuple[1].pData))) -
-            1234567890123.0)
+            *(reinterpret_cast<double*>(
+                const_cast<PBuffer>(outTuple[1].pData)))
+            - 1234567890123.0)
         < epsilon);
 
     BOOST_CHECK(
         fabs(
-            *(reinterpret_cast<double*>
-              (const_cast<PBuffer>(outTuple[2].pData))) -
-            1234567890123.0)
+            *(reinterpret_cast<double*>(
+                const_cast<PBuffer>(outTuple[2].pData)))
+            - 1234567890123.0)
         < epsilon);
 
     BOOST_CHECK_EQUAL(
         *(reinterpret_cast<uint64_t*>
-          (const_cast<PBuffer>(outTuple[3].pData))),0);
+          (const_cast<PBuffer>(outTuple[3].pData))), 0);
 
     BOOST_CHECK_EQUAL(
         *(reinterpret_cast<uint64_t*>(
@@ -359,7 +359,7 @@ CalcExtMathTest::testCalcExtMathPowFails()
         TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
         calc.bind(&inTuple, &outTuple);
-        checkWarnings(calc,"22023");
+        checkWarnings(calc, "22023");
         if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }

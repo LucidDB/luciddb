@@ -55,7 +55,7 @@ class CalcExtContextTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtContextTest()
-        : TraceSource(shared_from_this(),"CalcExtContextTest")
+        : TraceSource(shared_from_this(), "CalcExtContextTest")
     {
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtContextTest, testCalcExtContext);
@@ -190,7 +190,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
         ctxInst1);
     inst = (*eit)["ctxInst1(bo)"];
     BOOST_REQUIRE(inst);
-    BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst1"));
+    BOOST_CHECK_EQUAL(inst->getName(), string("ctxInst1"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 1);
 
 
@@ -198,11 +198,11 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     eit->add(
         "ctxInst2", params,
-        (ExtendedInstruction2Context<bool,bool>*) NULL,
+        (ExtendedInstruction2Context<bool, bool>*) NULL,
         ctxInst2);
     inst = (*eit)["ctxInst2(bo,bo)"];
     BOOST_REQUIRE(inst);
-    BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst2"));
+    BOOST_CHECK_EQUAL(inst->getName(), string("ctxInst2"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 2);
 
 
@@ -210,11 +210,11 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     eit->add(
         "ctxInst3", params,
-        (ExtendedInstruction3Context<bool,bool,bool>*) NULL,
+        (ExtendedInstruction3Context<bool, bool, bool>*) NULL,
         ctxInst3);
     inst = (*eit)["ctxInst3(bo,bo,bo)"];
     BOOST_REQUIRE(inst);
-    BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst3"));
+    BOOST_CHECK_EQUAL(inst->getName(), string("ctxInst3"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 3);
 
 
@@ -222,11 +222,11 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     eit->add(
         "ctxInst4", params,
-        (ExtendedInstruction4Context<bool,bool,bool,bool>*) NULL,
+        (ExtendedInstruction4Context<bool, bool, bool, bool>*) NULL,
         ctxInst4);
     inst = (*eit)["ctxInst4(bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
-    BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst4"));
+    BOOST_CHECK_EQUAL(inst->getName(), string("ctxInst4"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 4);
 
 
@@ -234,11 +234,11 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     eit->add(
         "ctxInst5", params,
-        (ExtendedInstruction5Context<bool,bool,bool,bool,bool>*) NULL,
+        (ExtendedInstruction5Context<bool, bool, bool, bool, bool>*) NULL,
         ctxInst5);
     inst = (*eit)["ctxInst5(bo,bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
-    BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst5"));
+    BOOST_CHECK_EQUAL(inst->getName(), string("ctxInst5"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 5);
 
 }

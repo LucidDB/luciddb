@@ -51,8 +51,8 @@ public:
     explicit LhxHashTableDump(
         TraceLevel traceLevelInit,
         SharedTraceTarget pTraceTargetInit,
-        string nameInit)  :
-        TraceSource(pTraceTargetInit, nameInit)
+        string nameInit)
+        : TraceSource(pTraceTargetInit, nameInit)
     {
         traceLevel = traceLevelInit;
     }

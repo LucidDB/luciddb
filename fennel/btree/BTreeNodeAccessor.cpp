@@ -65,12 +65,12 @@ void BTreeNodeAccessor::dumpNode(
     TuplePrinter tuplePrinter;
     // TODO:  print "+infinity" for last key on right fringe
     for (uint i = 0; i < node.nEntries; ++i) {
-        PConstBuffer pEntry = getEntryForRead(node,i);
+        PConstBuffer pEntry = getEntryForRead(node, i);
         os << "offset = "
            << pEntry - reinterpret_cast<PConstBuffer>(&node) << std::endl;
         tupleAccessor.setCurrentTupleBuf(pEntry);
         tupleAccessor.unmarshal(tupleData);
-        tuplePrinter.print(os,tupleDescriptor,tupleData);
+        tuplePrinter.print(os, tupleDescriptor, tupleData);
         os << std::endl;
     }
     os << std::endl;
@@ -83,10 +83,10 @@ void BTreeNodeAccessor::compactNode(BTreeNode &node,BTreeNode &scratchNode)
 {
     assert(!scratchNode.nEntries);
     for (uint i = 0; i < node.nEntries; ++i) {
-        accessTuple(node,i);
+        accessTuple(node, i);
         uint cbTuple = tupleAccessor.getCurrentByteCount();
-        PBuffer pBuffer = allocateEntry(scratchNode,i,cbTuple);
-        memcpy(pBuffer,tupleAccessor.getCurrentTupleBuf(),cbTuple);
+        PBuffer pBuffer = allocateEntry(scratchNode, i, cbTuple);
+        memcpy(pBuffer, tupleAccessor.getCurrentTupleBuf(), cbTuple);
     }
 
     if (!isMAXU(node.cbCompactFree)) {
@@ -125,7 +125,7 @@ void BTreeNodeAccessor::splitNode(
     uint cbBalance = cbNeeded;
     if (!monotonic) {
         cbBalance = (node.cbTotalFree + newNode.cbTotalFree - cbNeeded) / 2;
-        cbBalance = std::max(cbNeeded,cbBalance);
+        cbBalance = std::max(cbNeeded, cbBalance);
     }
 
     // Calculate the corresponding split point in terms of tuples
@@ -133,17 +133,17 @@ void BTreeNodeAccessor::splitNode(
     uint iSplitTuple = node.nEntries;
     while (cbFreeAfterSplit < cbBalance) {
         --iSplitTuple;
-        accessTuple(node,iSplitTuple);
+        accessTuple(node, iSplitTuple);
         uint cbTuple = tupleAccessor.getCurrentByteCount();
         cbFreeAfterSplit += getEntryByteCount(cbTuple);
     }
 
     // Copy tuples accordingly.
     for (uint i = iSplitTuple; i < node.nEntries; ++i) {
-        accessTuple(node,i);
+        accessTuple(node, i);
         uint cbTuple = tupleAccessor.getCurrentByteCount();
-        PBuffer pNewEntry = allocateEntry(newNode,newNode.nEntries,cbTuple);
-        memcpy(pNewEntry,tupleAccessor.getCurrentTupleBuf(),cbTuple);
+        PBuffer pNewEntry = allocateEntry(newNode, newNode.nEntries, cbTuple);
+        memcpy(pNewEntry, tupleAccessor.getCurrentTupleBuf(), cbTuple);
     }
 
     // Truncate old node.  NOTE: This isn't kosher, since it assumes too much

@@ -76,9 +76,9 @@ void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
         usingDefaultSchedulerType = true;
     }
     nThreads = configMap.getIntParam(
-        paramThreadCount,nThreads);
+        paramThreadCount, nThreads);
     maxRequests = configMap.getIntParam(
-        paramMaxRequests,maxRequests);
+        paramMaxRequests, maxRequests);
 }
 
 FENNEL_END_CPPFILE("$Id$");

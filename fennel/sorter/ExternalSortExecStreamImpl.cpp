@@ -93,7 +93,7 @@ void ExternalSortExecStreamImpl::prepare(
     sortInfo.keyProj = params.keyProj;
     assert(params.outputTupleDesc == srcRecDef);
     sortInfo.tupleDesc = srcRecDef;
-    sortInfo.keyDesc.projectFrom(sortInfo.tupleDesc,params.keyProj);
+    sortInfo.keyDesc.projectFrom(sortInfo.tupleDesc, params.keyProj);
     sortInfo.descendingKeyColumns = params.descendingKeyColumns;
     if (sortInfo.descendingKeyColumns.empty()) {
         // default is all ascending
@@ -111,7 +111,7 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity,
     ExecStreamResourceSettingType &optType)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // REVIEW
     uint minPages = 3;
@@ -126,10 +126,11 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
         // use the average of the min and max rowsizes
         // TODO - use stats to come up with a more accurate average
         RecordNum nPages =
-            estimatedNumRows *
-            ((pOutAccessor->getScratchTupleAccessor().getMaxByteCount() +
-            pOutAccessor->getScratchTupleAccessor().getMinByteCount()) / 2) /
-            sortInfo.memSegmentAccessor.pSegment->getUsablePageSize();
+            estimatedNumRows
+            * ((pOutAccessor->getScratchTupleAccessor().getMaxByteCount()
+                + pOutAccessor->getScratchTupleAccessor().getMinByteCount())
+               / 2)
+            / sortInfo.memSegmentAccessor.pSegment->getUsablePageSize();
         uint numPages;
         if (nPages >= uint(MAXU)) {
             numPages = uint(MAXU) - 1;
@@ -323,7 +324,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
                 storedRuns.begin() + iFirstRun, nRunsToMerge);
             if ((iFirstRun > 0) || storeFinalRun) {
                 storeRun(*pMerger);
-                deleteStoredRunInfo(iFirstRun,nRunsToMerge);
+                deleteStoredRunInfo(iFirstRun, nRunsToMerge);
             }
         }
 
@@ -358,12 +359,12 @@ void ExternalSortExecStreamImpl::optimizeRunOrder()
            && (storedRuns[i]->getWrittenPageCount()
                > storedRuns[i - 1]->getWrittenPageCount()))
     {
-        std::swap(storedRuns[i],storedRuns[i - 1]);
+        std::swap(storedRuns[i], storedRuns[i - 1]);
         i--;
     }
 }
 
-void ExternalSortExecStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
+void ExternalSortExecStreamImpl::deleteStoredRunInfo(uint iFirstRun, uint nRuns)
 {
     StrictMutexGuard mutexGuard(storedRunMutex);
     storedRuns.erase(

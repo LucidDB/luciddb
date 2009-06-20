@@ -104,7 +104,7 @@ inline uint BTreeHeapNodeAccessor::getEntryOffsetArrayByteSize(uint nEntries)
 inline PConstBuffer BTreeHeapNodeAccessor::getEntryForReadInline(
     BTreeNode const &node,uint iEntry)
 {
-    uint offset = getEntryOffset(node,iEntry);
+    uint offset = getEntryOffset(node, iEntry);
     return reinterpret_cast<PConstBuffer>(&node) + offset;
 }
 

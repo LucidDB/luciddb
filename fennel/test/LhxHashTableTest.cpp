@@ -396,8 +396,9 @@ void LhxHashTableTest::testInsert(
                     partitions[j]);
         }
 
-        assert (tuplesWritten[0] == numRows &&
-                tuplesWritten[0] == tuplesWritten[1]);
+        assert(
+            tuplesWritten[0] == numRows
+            && tuplesWritten[0] == tuplesWritten[1]);
 
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
@@ -458,9 +459,10 @@ void LhxHashTableTest::testInsert(
             leafPlan = leafPlan->getNextLeaf();
         }
 
-        assert (numLeafPlanRead == numLeafPlanCreated);
-        assert ((tuplesRead[0] == tuplesRead[1]) &&
-            (tuplesRead[0] == numRows));
+        assert(numLeafPlanRead == numLeafPlanCreated);
+        assert(
+            (tuplesRead[0] == tuplesRead[1])
+            && (tuplesRead[0] == numRows));
     }
 
     hashTable.releaseResources();

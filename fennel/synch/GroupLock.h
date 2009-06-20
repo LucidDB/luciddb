@@ -50,7 +50,7 @@ public:
     explicit GroupLock();
     ~GroupLock();
 
-    bool waitFor(uint iGroup,uint iTimeout = ETERNITY);
+    bool waitFor(uint iGroup, uint iTimeout = ETERNITY);
 
     /**
      * // TODO:  pass the group key to release as well,

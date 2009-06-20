@@ -38,7 +38,7 @@ SharedSpillOutputStream SpillOutputStream::newSpillOutputStream(
     std::string spillFileName)
 {
     return SharedSpillOutputStream(
-        new SpillOutputStream(pSegmentFactory,pCacheAccessor,spillFileName),
+        new SpillOutputStream(pSegmentFactory, pCacheAccessor, spillFileName),
         ClosableObjectDestructor());
 }
 
@@ -84,7 +84,7 @@ void SpillOutputStream::flushBuffer(uint cbRequested)
     if (cbRequested) {
         PBuffer pBuffer =
             pSegOutputStream->getWritePointer(cbRequested,&cbBuffer);
-        setBuffer(pBuffer,cbBuffer);
+        setBuffer(pBuffer, cbBuffer);
     } else {
         pSegOutputStream->hardPageBreak();
         cbBuffer = 0;
@@ -131,7 +131,7 @@ void SpillOutputStream::spill()
             scratchPageLock.getCacheAccessor()->getCache(),
             devMode,
             spillFileName);
-    SegmentAccessor segmentAccessor(pLongLogSegment,pCacheAccessor);
+    SegmentAccessor segmentAccessor(pLongLogSegment, pCacheAccessor);
     pSegOutputStream = SegOutputStream::newSegOutputStream(segmentAccessor);
     pSegOutputStream->setWriteLatency(writeLatency);
     pSegOutputStream->writeBytes(
@@ -160,7 +160,7 @@ SharedByteInputStream SpillOutputStream::getInputStream(
         if (seekPosition == SEEK_STREAM_END) {
             pSegOutputStream->getSegPos(endPos);
         }
-        SegmentAccessor segmentAccessor(pSegment,pCacheAccessor);
+        SegmentAccessor segmentAccessor(pSegment, pCacheAccessor);
         SharedSegInputStream pInputStream =
             SegInputStream::newSegInputStream(segmentAccessor);
         if (seekPosition == SEEK_STREAM_END) {

@@ -31,7 +31,7 @@ void BTreeExecStream::prepare(BTreeExecStreamParams const &params)
 {
     SingleOutputExecStream::prepare(params);
 
-    copyParamsToDescriptor(treeDescriptor,params,params.pCacheAccessor);
+    copyParamsToDescriptor(treeDescriptor, params, params.pCacheAccessor);
     scratchAccessor = params.scratchAccessor;
     pRootMap = params.pRootMap;
     rootPageIdParamId = params.rootPageIdParamId;
@@ -75,7 +75,7 @@ SharedBTreeReader BTreeExecStream::newReader()
 SharedBTreeWriter BTreeExecStream::newWriter(bool monotonic)
 {
     SharedBTreeWriter pWriter = SharedBTreeWriter(
-        new BTreeWriter(treeDescriptor,scratchAccessor,monotonic));
+        new BTreeWriter(treeDescriptor, scratchAccessor, monotonic));
     pBTreeAccessBase = pBTreeReader = pWriter;
     return pWriter;
 }
@@ -84,10 +84,10 @@ SharedBTreeWriter BTreeExecStream::newWriter(
     BTreeExecStreamParams const &params)
 {
     BTreeDescriptor treeDescriptor;
-    copyParamsToDescriptor(treeDescriptor,params,params.pCacheAccessor);
+    copyParamsToDescriptor(treeDescriptor, params, params.pCacheAccessor);
     return SharedBTreeWriter(
         new BTreeWriter(
-            treeDescriptor,params.scratchAccessor));
+            treeDescriptor, params.scratchAccessor));
 }
 
 void BTreeExecStream::copyParamsToDescriptor(

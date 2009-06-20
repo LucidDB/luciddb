@@ -38,11 +38,11 @@ CalcExecStreamTestSuite::CalcExecStreamTestSuite(bool addAllTests)
     uint64Desc = attrDesc;
 
     if (addAllTests) {
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantOneForOne);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testEmptyInput);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantTwoForOne);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantOneForTwo);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testTupleOverflow);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantOneForOne);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testEmptyInput);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantTwoForOne);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantOneForTwo);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testTupleOverflow);
     }
 }
 

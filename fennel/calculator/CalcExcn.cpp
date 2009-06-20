@@ -43,7 +43,7 @@ CalcExcn::CalcExcn(
     oss << "could not calculate results for the following row:" << std::endl;
     // TODO:  nicer formatting
     TuplePrinter tuplePrinter;
-    tuplePrinter.print(oss,inputDescriptor,inputData);
+    tuplePrinter.print(oss, inputDescriptor, inputData);
     oss << std::endl << "Messages:" << std::endl << warnings;
     msg = oss.str();
 }

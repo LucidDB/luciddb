@@ -93,31 +93,31 @@ TxnId CmdInterpreter::getCsn(SharedProxyCsnHandle pHandle)
 }
 
 void CmdInterpreter::setDbHandle(
-    SharedProxyDbHandle,DbHandle *pHandle)
+    SharedProxyDbHandle, DbHandle *pHandle)
 {
     resultHandle = reinterpret_cast<int64_t>(pHandle);
 }
 
 void CmdInterpreter::setTxnHandle(
-    SharedProxyTxnHandle,TxnHandle *pHandle)
+    SharedProxyTxnHandle, TxnHandle *pHandle)
 {
     resultHandle = reinterpret_cast<int64_t>(pHandle);
 }
 
 void CmdInterpreter::setStreamGraphHandle(
-    SharedProxyStreamGraphHandle,StreamGraphHandle *pHandle)
+    SharedProxyStreamGraphHandle, StreamGraphHandle *pHandle)
 {
     resultHandle = reinterpret_cast<int64_t>(pHandle);
 }
 
 void CmdInterpreter::setExecStreamHandle(
-    SharedProxyStreamHandle,ExecStream *pStream)
+    SharedProxyStreamHandle, ExecStream *pStream)
 {
     resultHandle = reinterpret_cast<int64_t>(pStream);
 }
 
 void CmdInterpreter::setSvptHandle(
-    SharedProxySvptHandle,SavepointId svptId)
+    SharedProxySvptHandle, SavepointId svptId)
 {
     resultHandle = opaqueToInt(svptId);
 }
@@ -184,7 +184,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 
     SharedProxyDatabaseParam pParam = cmd.getParams();
     for (; pParam; ++pParam) {
-        configMap.setStringParam(pParam->getName(),pParam->getValue());
+        configMap.setStringParam(pParam->getName(), pParam->getValue());
     }
 
     CacheParams cacheParams;
@@ -258,8 +258,8 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 
     // Cache initialization may have been unable to allocate the requested
     // number of pages -- check for this case and report it in the log.
-    if (pCache->getMaxAllocatedPageCount() != cacheParams.nMemPagesMax ||
-        pCache->getAllocatedPageCount() != cacheParams.nMemPagesInit)
+    if (pCache->getMaxAllocatedPageCount() != cacheParams.nMemPagesMax
+        || pCache->getAllocatedPageCount() != cacheParams.nMemPagesInit)
     {
         FENNEL_DELEGATE_TRACE(
             TRACE_WARNING,
@@ -273,7 +273,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
             << " cache pages.");
     }
 
-    setDbHandle(cmd.getResultHandle(),pDbHandle.release());
+    setDbHandle(cmd.getResultHandle(), pDbHandle.release());
 }
 
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
@@ -336,8 +336,8 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         int nStatements = boost::lexical_cast<int>(pParam->getValue());
         SharedCache pCache = pDbHandle->pDb->getCache();
         // need to set aside at least 5 pages per statement
-        if (nStatements <= 0 ||
-            nStatements > pCache->getMaxLockedPages() / 5)
+        if (nStatements <= 0
+            || nStatements > pCache->getMaxLockedPages() / 5)
         {
             throw InvalidParamExcn("1", "'cachePagesInit/5'");
         }
@@ -373,7 +373,7 @@ void CmdInterpreter::getBTreeForIndexCmd(
         *(cmd.getTupleDesc()),pTxnHandle->pDb->getTypeFactory());
 
     CmdInterpreter::readTupleProjection(
-        treeDescriptor.keyProjection,cmd.getKeyProj());
+        treeDescriptor.keyProjection, cmd.getKeyProj());
 
     treeDescriptor.pageOwnerId = PageOwnerId(cmd.getIndexId());
     treeDescriptor.segmentId = SegmentId(cmd.getSegmentId());
@@ -393,7 +393,7 @@ void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
 
     BTreeDescriptor treeDescriptor;
-    getBTreeForIndexCmd(cmd,NULL_PAGE_ID,treeDescriptor);
+    getBTreeForIndexCmd(cmd, NULL_PAGE_ID, treeDescriptor);
     BTreeBuilder builder(treeDescriptor);
     builder.createEmptyRoot();
     resultHandle = opaqueToInt(builder.getRootPageId());
@@ -417,7 +417,7 @@ void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
 
     BTreeDescriptor treeDescriptor;
-    getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
+    getBTreeForIndexCmd(cmd, PageId(cmd.getRootPageId()), treeDescriptor);
     TupleProjection leafPageIdProj;
     if (cmd.getLeafPageIdProj()) {
         CmdInterpreter::readTupleProjection(
@@ -452,7 +452,7 @@ void CmdInterpreter::dropOrTruncateIndex(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
 
     BTreeDescriptor treeDescriptor;
-    getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
+    getBTreeForIndexCmd(cmd, PageId(cmd.getRootPageId()), treeDescriptor);
     TupleProjection leafPageIdProj;
     if (cmd.getLeafPageIdProj()) {
         CmdInterpreter::readTupleProjection(
@@ -521,7 +521,7 @@ void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
         assert(csn == NULL_TXN_ID);
     }
 
-    setTxnHandle(cmd.getResultHandle(),pTxnHandle.release());
+    setTxnHandle(cmd.getResultHandle(), pTxnHandle.release());
 }
 
 void CmdInterpreter::visit(ProxyCmdBeginTxnWithCsn &cmd)
@@ -752,7 +752,7 @@ PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
     JniEnvAutoRef pEnv;
     jlong x = opaqueToInt(pageOwnerId);
     x = pEnv->CallLongMethod(
-        javaRuntimeContext,JniUtil::methGetIndexRoot,x);
+        javaRuntimeContext, JniUtil::methGetIndexRoot, x);
     return PageId(x);
 }
 
@@ -768,7 +768,7 @@ void CmdInterpreter::readTupleDescriptor(
             typeFactory.newDataType(pAttr->getTypeOrdinal());
         tupleDesc.push_back(
             TupleAttributeDescriptor(
-                typeDescriptor,pAttr->isNullable(),pAttr->getByteLength()));
+                typeDescriptor, pAttr->isNullable(), pAttr->getByteLength()));
     }
 }
 

@@ -65,7 +65,8 @@ public abstract class FarragoReduceValuesRule
                 FilterRel.class,
                 new RelOptRuleOperand(
                     ValuesRel.class)),
-            "FilterRel") {
+            "FilterRel")
+        {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(
@@ -86,7 +87,8 @@ public abstract class FarragoReduceValuesRule
                 ProjectRel.class,
                 new RelOptRuleOperand(
                     ValuesRel.class)),
-            "ProjectRel") {
+            "ProjectRel")
+        {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(
@@ -109,7 +111,8 @@ public abstract class FarragoReduceValuesRule
                     FilterRel.class,
                     new RelOptRuleOperand(
                         ValuesRel.class))),
-            "ProjectRel+FilterRel") {
+            "ProjectRel+FilterRel")
+        {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(

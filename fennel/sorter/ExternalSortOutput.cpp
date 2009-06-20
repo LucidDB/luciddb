@@ -83,7 +83,7 @@ ExecStreamResult ExternalSortOutput::fetch(
                 }
                 goto done;
             }
-            memcpy(pNextTuple,pSrcTuple,cbTuple);
+            memcpy(pNextTuple, pSrcTuple, cbTuple);
             cbRemaining -= cbTuple;
             pNextTuple += cbTuple;
             iCurrentTuple++;

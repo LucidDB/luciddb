@@ -40,7 +40,7 @@ std::string FileStatsTarget::getFilename() const
 void FileStatsTarget::beginSnapshot()
 {
     assert(!filename.empty());
-    snapshotStream.open(filename.c_str(),std::ios::trunc);
+    snapshotStream.open(filename.c_str(), std::ios::trunc);
 
     // TODO:  re-enable this.  I disabled it since /tmp/fennel.stats
     // can't be opened on mingw; need to parameterize it better
@@ -54,7 +54,7 @@ void FileStatsTarget::endSnapshot()
     snapshotStream.close();
 }
 
-void FileStatsTarget::writeCounter(std::string name,int64_t value)
+void FileStatsTarget::writeCounter(std::string name, int64_t value)
 {
     snapshotStream << name << ' ' << value << std::endl;
 }

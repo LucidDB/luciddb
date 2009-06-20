@@ -399,8 +399,8 @@ public class FarragoRelImplementor
     private String printTransformMap()
     {
         StringBuilder buf = new StringBuilder("{");
-        for (Map.Entry<String, FarragoTransformDef> e :
-             transformMap.entrySet())
+        for (Map.Entry<String, FarragoTransformDef> e
+            : transformMap.entrySet())
         {
             buf.append("\n").append(e.getKey()).append(" => ").append(
                 e.getValue());

@@ -235,30 +235,30 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classFarragoRuntimeContext = pEnv->FindClass(
         "net/sf/farrago/runtime/FarragoRuntimeContext");
     methGetClassName = pEnv->GetMethodID(
-        classClass,"getName","()Ljava/lang/String;");
+        classClass, "getName", "()Ljava/lang/String;");
     methGetInterfaces = pEnv->GetMethodID(
-        classClass,"getInterfaces","()[Ljava/lang/Class;");
+        classClass, "getInterfaces", "()[Ljava/lang/Class;");
     methGetModifiers = pEnv->GetMethodID(
-        classClass,"getModifiers","()I");
+        classClass, "getModifiers", "()I");
 
     jclass tempClassModifier = pEnv->FindClass("java/lang/reflect/Modifier");
     classModifier = (jclass)pEnv->NewGlobalRef(tempClassModifier);
     methIsPublic = pEnv->GetStaticMethodID(classModifier, "isPublic", "(I)Z");
 
     methIterator = pEnv->GetMethodID(
-        classCollection,"iterator","()Ljava/util/Iterator;");
+        classCollection, "iterator", "()Ljava/util/Iterator;");
     methHasNext = pEnv->GetMethodID(
-        classIterator,"hasNext","()Z");
+        classIterator, "hasNext", "()Z");
     methNext = pEnv->GetMethodID(
-        classIterator,"next","()Ljava/lang/Object;");
+        classIterator, "next", "()Ljava/lang/Object;");
     methGetJavaStreamHandle = pEnv->GetMethodID(
-        classFennelJavaStreamMap,"getJavaStreamHandle",
+        classFennelJavaStreamMap, "getJavaStreamHandle",
         "(I)J");
     methGetIndexRoot = pEnv->GetMethodID(
-        classFennelJavaStreamMap,"getIndexRoot",
+        classFennelJavaStreamMap, "getIndexRoot",
         "(J)J");
     methToString = pEnv->GetMethodID(
-        classObject,"toString","()Ljava/lang/String;");
+        classObject, "toString", "()Ljava/lang/String;");
 
     jclass tempClassLong = pEnv->FindClass("java/lang/Long");
     classLong = (jclass)pEnv->NewGlobalRef(tempClassLong);
@@ -300,9 +300,9 @@ jint JniUtil::init(JavaVM *pVmInit)
     methBooleanValue = pEnv->GetMethodID(classBoolean, "booleanValue", "()Z");
 
     methBase64Decode = pEnv->GetStaticMethodID(
-        classRhBase64,"decode","(Ljava/lang/String;)[B");
+        classRhBase64, "decode", "(Ljava/lang/String;)[B");
     methRandomUUID = pEnv->GetStaticMethodID(
-        classUUID,"randomUUID","()Ljava/util/UUID;");
+        classUUID, "randomUUID", "()Ljava/util/UUID;");
 
     methFarragoTransformInit = pEnv->GetMethodID(
         classFarragoTransform, "init",
@@ -347,7 +347,7 @@ JNIEnv *JniUtil::getAttachedJavaEnv(bool &needDetach)
         return static_cast<JNIEnv *>(pEnv);
     }
     needDetach = true;
-    rc = pVm->AttachCurrentThread(&pEnv,NULL);
+    rc = pVm->AttachCurrentThread(&pEnv, NULL);
     assert(rc == 0);
     assert(pEnv);
     return static_cast<JNIEnv *>(pEnv);
@@ -363,9 +363,9 @@ std::string JniUtil::getClassName(jclass jClass)
 {
     JniEnvAutoRef pEnv;
     jstring jString = reinterpret_cast<jstring>(
-        pEnv->CallObjectMethod(jClass,methGetClassName));
+        pEnv->CallObjectMethod(jClass, methGetClassName));
     assert(jString);
-    return toStdString(pEnv,jString);
+    return toStdString(pEnv, jString);
 }
 
 std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
@@ -398,22 +398,22 @@ std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
     return std::string("(none)");
 }
 
-std::string JniUtil::toStdString(JniEnvRef pEnv,jstring jString)
+std::string JniUtil::toStdString(JniEnvRef pEnv, jstring jString)
 {
-    const char *pChars = pEnv->GetStringUTFChars(jString,NULL);
+    const char *pChars = pEnv->GetStringUTFChars(jString, NULL);
     assert(pChars);
-    std::string str(pChars,pEnv->GetStringUTFLength(jString));
-    pEnv->ReleaseStringUTFChars(jString,pChars);
+    std::string str(pChars, pEnv->GetStringUTFLength(jString));
+    pEnv->ReleaseStringUTFChars(jString, pChars);
     return str;
 }
 
-jstring JniUtil::toString(JniEnvRef pEnv,jobject jObject)
+jstring JniUtil::toString(JniEnvRef pEnv, jobject jObject)
 {
     return reinterpret_cast<jstring>(
-        pEnv->CallObjectMethod(jObject,methToString));
+        pEnv->CallObjectMethod(jObject, methToString));
 }
 
-uint JniUtil::lookUpEnum(std::string *pSymbols,std::string const &symbol)
+uint JniUtil::lookUpEnum(std::string *pSymbols, std::string const &symbol)
 {
     for (uint i = 0; ; ++i) {
         assert(pSymbols[i].size());
@@ -423,17 +423,17 @@ uint JniUtil::lookUpEnum(std::string *pSymbols,std::string const &symbol)
     }
 }
 
-jobject JniUtil::getIter(JniEnvRef pEnv,jobject jCollection)
+jobject JniUtil::getIter(JniEnvRef pEnv, jobject jCollection)
 {
-    return pEnv->CallObjectMethod(jCollection,methIterator);
+    return pEnv->CallObjectMethod(jCollection, methIterator);
 }
 
-jobject JniUtil::getNextFromIter(JniEnvRef pEnv,jobject jIter)
+jobject JniUtil::getNextFromIter(JniEnvRef pEnv, jobject jIter)
 {
-    if (!pEnv->CallBooleanMethod(jIter,methHasNext)) {
+    if (!pEnv->CallBooleanMethod(jIter, methHasNext)) {
         return NULL;
     }
-    return pEnv->CallObjectMethod(jIter,methNext);
+    return pEnv->CallObjectMethod(jIter, methNext);
 }
 
 void JniUtil::incrementHandleCount(const char *pType, const void *pHandle)
@@ -459,8 +459,10 @@ void JniUtil::traceHandleCount(
         handleCountTraceStream
             << pAction << " " << pType << ": " << pHandle << std::endl;
 
-        if (handleCount == 0 && closeHandleCountTraceOnZero &&
-            strcmp(pAction, "DEC") == 0) {
+        if (handleCount == 0
+            && closeHandleCountTraceOnZero
+            && strcmp(pAction, "DEC") == 0)
+        {
             traceHandleCountEnabled = false;
             closeHandleCountTraceOnZero = false;
 
@@ -563,9 +565,9 @@ void JniEnvRef::handleExcn(std::exception &ex)
     jclass classSQLException = pEnv->FindClass("java/sql/SQLException");
     jstring jMessage = pEnv->NewStringUTF(what.c_str());
     jmethodID constructor = pEnv->GetMethodID(
-        classSQLException,"<init>","(Ljava/lang/String;)V");
+        classSQLException, "<init>", "(Ljava/lang/String;)V");
     jthrowable t = (jthrowable)
-        pEnv->NewObject(classSQLException,constructor,jMessage);
+        pEnv->NewObject(classSQLException, constructor, jMessage);
     pEnv->Throw(t);
 }
 

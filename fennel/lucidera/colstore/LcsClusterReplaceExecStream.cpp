@@ -227,8 +227,8 @@ void LcsClusterReplaceExecStream::readOrigClusterRow()
     // those TupleDatum's into the TupleData that's used to load the
     // cluster.
     bool needSync = true;
-    if (pOrigClusterReader->isPositioned() &&
-        currLoadRid < pOrigClusterReader->getRangeEndRid())
+    if (pOrigClusterReader->isPositioned()
+        && currLoadRid < pOrigClusterReader->getRangeEndRid())
     {
         needSync = false;
     }

@@ -39,7 +39,7 @@ void BTreeReadExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    BTreeExecStream::getResourceRequirements(minQuantity,optQuantity);
+    BTreeExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // one page for BTreeReader
     minQuantity.nCachePages += 1;

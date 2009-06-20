@@ -80,7 +80,7 @@ class FENNEL_SORTER_EXPORT ExternalSortRunAccessor
     {
         fetchArray.nTuples = 0;
         fetchArray.ppTupleBuffers = ppTupleBuffers;
-        memset(ppTupleBuffers,0,sizeof(ppTupleBuffers));
+        memset(ppTupleBuffers, 0, sizeof(ppTupleBuffers));
     }
 
 public:

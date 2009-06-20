@@ -50,7 +50,7 @@ public:
      * locked in memory, and that no more than the specified number
      * will be allocated at any one time
      */
-    explicit VMAllocator(size_t cbAlloc,size_t nLocked = 0);
+    explicit VMAllocator(size_t cbAlloc, size_t nLocked = 0);
 
     virtual ~VMAllocator();
 

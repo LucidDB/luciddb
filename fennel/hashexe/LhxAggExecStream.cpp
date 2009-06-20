@@ -75,7 +75,7 @@ void LhxAggExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity,
     ExecStreamResourceSettingType &optType)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     uint minPages =
         LhxHashTable::LhxHashTableMinPages * LhxPlan::LhxChildPartCount
@@ -215,8 +215,9 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * NOTE: This is a testing state. Always partition up to
                      * forcePartitionLevel.
                      */
-                    if (curPlan->getPartitionLevel() < forcePartitionLevel ||
-                        !hashTable.addTuple(inputTuple)) {
+                    if (curPlan->getPartitionLevel() < forcePartitionLevel
+                        || !hashTable.addTuple(inputTuple))
+                    {
                         if (isTopPlan) {
                             partInfo.open(
                                 &hashTableReader,
@@ -302,7 +303,8 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 for (;;) {
                     if (curPlan->generatePartitions(hashInfo, partInfo)
-                        == PartitionUnderflow) {
+                        == PartitionUnderflow)
+                    {
                         /*
                          * Request more data from producer.
                          */
@@ -524,8 +526,9 @@ void LhxAggExecStream::setAggComputers(
             partialAggFunction = pInvocation->aggFunction;
             break;
         default:
-            permFail("unknown aggregation function: "
-                     << pInvocation->aggFunction);
+            permFail(
+                "unknown aggregation function: "
+                << pInvocation->aggFunction);
             break;
         }
 

@@ -39,7 +39,8 @@ class VolcanoCost
         new VolcanoCost(
             Double.POSITIVE_INFINITY,
             Double.POSITIVE_INFINITY,
-            Double.POSITIVE_INFINITY) {
+            Double.POSITIVE_INFINITY)
+        {
             public String toString()
             {
                 return "{inf}";

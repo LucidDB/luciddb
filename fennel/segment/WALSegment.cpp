@@ -31,8 +31,8 @@ WALSegment::WALSegment(SharedSegment logSegment)
     : DelegatingSegment(logSegment)
 {
     assert(
-        DelegatingSegment::getAllocationOrder() >=
-        Segment::ASCENDING_ALLOCATION);
+        DelegatingSegment::getAllocationOrder()
+        >= Segment::ASCENDING_ALLOCATION);
 }
 
 WALSegment::~WALSegment()
@@ -42,11 +42,11 @@ WALSegment::~WALSegment()
 
 void WALSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
-    DelegatingSegment::notifyPageDirty(page,bDataValid);
+    DelegatingSegment::notifyPageDirty(page, bDataValid);
     PageId logPageId = translateBlockId(
         page.getBlockId());
     StrictMutexGuard mutexGuard(mutex);
-    dirtyPageSet.insert(dirtyPageSet.end(),logPageId);
+    dirtyPageSet.insert(dirtyPageSet.end(), logPageId);
 }
 
 void WALSegment::notifyAfterPageFlush(CachePage &page)

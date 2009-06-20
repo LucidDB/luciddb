@@ -83,10 +83,10 @@ void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
     boost::io::ios_all_saver streamStateSaver(o);
 
     PConstBuffer b = (PConstBuffer) v;
-    uint cbLine = 16,cbThis;
+    uint cbLine = 16, cbThis;
     o.fill('0');
     for (; cb; cb -= cbThis, cbDone += cbThis) {
-        cbThis = std::min(cbLine,cb);
+        cbThis = std::min(cbLine, cb);
         o << std::hex;
         o.width(4);
         o << cbDone << ": ";

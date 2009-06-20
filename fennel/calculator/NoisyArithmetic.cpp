@@ -166,7 +166,7 @@ DO(long double)
         const type right, TExceptionCBData *pExData) throw(CalcMessage) \
     {                                                                   \
         register type result = left + right;                            \
-        if (left < 0 && right < 0 && result >=0) {                      \
+        if (left < 0 && right < 0 && result >= 0) {                     \
             Raise(pExData, pc, S_OVER);                                 \
         }                                                               \
         if (left > 0 && right > 0 && result <= 0) {                     \
@@ -274,7 +274,7 @@ DO(long double)
         result = 0;                                                     \
         while (1) {                                                     \
             if (l & 0x1) {                                              \
-                result=Noisy<type>::add(pc, result, r, pExData);        \
+                result = Noisy<type>::add(pc, result, r, pExData);      \
             }                                                           \
             l >>= 1;                                                    \
             if (!l) {                                                   \

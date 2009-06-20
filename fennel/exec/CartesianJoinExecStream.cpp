@@ -48,19 +48,19 @@ void CartesianJoinExecStream::prepare(
     assert(pRightInput);
     FENNEL_TRACE(
         TRACE_FINE,
-        "left input " << pLeftInput->getStreamId() <<
-        ' ' << pLeftInput->getName() <<
-        ", right input " << pRightInput->getStreamId() <<
-        ' ' << pRightInput->getName());
+        "left input " << pLeftInput->getStreamId()
+        << ' ' << pLeftInput->getName()
+        << ", right input " << pRightInput->getStreamId()
+        << ' ' << pRightInput->getName());
 
 
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
 
     TupleDescriptor outputDesc;
-    outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
+    outputDesc.insert(outputDesc.end(), leftDesc.begin(), leftDesc.end());
     uint iFirstRight = outputDesc.size();
-    outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
+    outputDesc.insert(outputDesc.end(), rightDesc.begin(), rightDesc.end());
     if (leftOuter) {
         // Right side is null-generating; have to adjust tuple descriptor
         // accordingly.
@@ -127,8 +127,8 @@ ExecStreamResult CartesianJoinExecStream::execute(
             if (!pLeftBufAccessor->demandData()) {
                 FENNEL_TRACE_THREAD(
                     TRACE_FINE,
-                    "left underflow; left input " << pLeftBufAccessor <<
-                    " right input " << pRightBufAccessor);
+                    "left underflow; left input " << pLeftBufAccessor
+                    << " right input " << pRightBufAccessor);
                 return EXECRC_BUF_UNDERFLOW;
             }
             pLeftBufAccessor->unmarshalTuple(outputData);
@@ -175,8 +175,8 @@ ExecStreamResult CartesianJoinExecStream::execute(
                 if (!pRightBufAccessor->demandData()) {
                     FENNEL_TRACE_THREAD(
                         TRACE_FINE,
-                        "right underflow; left input " << pLeftBufAccessor <<
-                        " right input " << pRightBufAccessor);
+                        "right underflow; left input " << pLeftBufAccessor
+                        << " right input " << pRightBufAccessor);
                     return EXECRC_BUF_UNDERFLOW;
                 }
                 rightInputEmpty = false;

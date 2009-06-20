@@ -166,11 +166,11 @@ class FtrsTableProjectionRule
             // copy over other traits
             for (int i = 0; i < origScan.getTraits().size(); i++) {
                 RelTrait trait = origScan.getTraits().getTrait(i);
-                if (trait.getTraitDef() !=
-                    CallingConventionTraitDef.instance)
+                if (trait.getTraitDef()
+                    != CallingConventionTraitDef.instance)
                 {
-                    if (projectedScan.getTraits().
-                        getTrait(trait.getTraitDef()) != null)
+                    if (projectedScan.getTraits().getTrait(trait.getTraitDef())
+                        != null)
                     {
                         projectedScan.getTraits().setTrait(
                             trait.getTraitDef(),
@@ -197,8 +197,8 @@ class FtrsTableProjectionRule
                 // copy over non CC traits if necessary
                 for (int i = 0; i < projectedScan.getTraits().size(); i++) {
                     RelTrait trait = projectedScan.getTraits().getTrait(i);
-                    if (trait.getTraitDef() !=
-                        CallingConventionTraitDef.instance
+                    if (trait.getTraitDef()
+                        != CallingConventionTraitDef.instance
                         && null == modRelNode.getTraits().getTrait(
                             trait.getTraitDef()))
                     {

@@ -208,7 +208,6 @@ class FENNEL_CALCULATOR_EXPORT IntegralPointerInstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.

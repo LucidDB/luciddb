@@ -37,8 +37,8 @@ namespace boost
 {
 enum vertex_data_t { vertex_data };
 enum edge_data_t { edge_data };
-BOOST_INSTALL_PROPERTY(vertex,data);
-BOOST_INSTALL_PROPERTY(edge,data);
+BOOST_INSTALL_PROPERTY(vertex, data);
+BOOST_INSTALL_PROPERTY(edge, data);
 }
 
 FENNEL_BEGIN_NAMESPACE
@@ -55,10 +55,10 @@ public:
         boost::vecS,
         boost::vecS,
         boost::bidirectionalS,
-        boost::property<boost::vertex_data_t,SharedExecStream>,
+        boost::property<boost::vertex_data_t, SharedExecStream>,
         boost::property<
-        boost::edge_data_t,SharedExecStreamBufAccessor,
-        boost::property<boost::edge_weight_t,int> > >
+        boost::edge_data_t, SharedExecStreamBufAccessor,
+        boost::property<boost::edge_weight_t, int> > >
     FullGraphRep;
 
     typedef boost::graph_traits<FullGraphRep>::vertex_descriptor Vertex;
@@ -68,10 +68,10 @@ public:
     typedef boost::graph_traits<FullGraphRep>::edge_iterator FgEdgeIter;
     typedef boost::graph_traits<FullGraphRep>::out_edge_iterator FgOutEdgeIter;
     typedef boost::graph_traits<FullGraphRep>::in_edge_iterator FgInEdgeIter;
-    typedef std::pair<FgVertexIter,FgVertexIter> FgVertexIterPair;
-    typedef std::pair<FgEdgeIter,FgEdgeIter> FgEdgeIterPair;
-    typedef std::pair<FgOutEdgeIter,FgOutEdgeIter> FgOutEdgeIterPair;
-    typedef std::pair<FgInEdgeIter,FgInEdgeIter> FgInEdgeIterPair;
+    typedef std::pair<FgVertexIter, FgVertexIter> FgVertexIterPair;
+    typedef std::pair<FgEdgeIter, FgEdgeIter> FgEdgeIterPair;
+    typedef std::pair<FgOutEdgeIter, FgOutEdgeIter> FgOutEdgeIterPair;
+    typedef std::pair<FgInEdgeIter, FgInEdgeIter> FgInEdgeIterPair;
 
     typedef boost::property_map<FullGraphRep, boost::edge_weight_t>::type
         EdgeWeightMap;
@@ -104,10 +104,10 @@ public:
     typedef boost::graph_traits<GraphRep>::edge_iterator EdgeIter;
     typedef boost::graph_traits<GraphRep>::out_edge_iterator OutEdgeIter;
     typedef boost::graph_traits<GraphRep>::in_edge_iterator InEdgeIter;
-    typedef std::pair<VertexIter,VertexIter> VertexIterPair;
-    typedef std::pair<EdgeIter,EdgeIter> EdgeIterPair;
-    typedef std::pair<OutEdgeIter,OutEdgeIter> OutEdgeIterPair;
-    typedef std::pair<InEdgeIter,InEdgeIter> InEdgeIterPair;
+    typedef std::pair<VertexIter, VertexIter> VertexIterPair;
+    typedef std::pair<EdgeIter, EdgeIter> EdgeIterPair;
+    typedef std::pair<OutEdgeIter, OutEdgeIter> OutEdgeIterPair;
+    typedef std::pair<InEdgeIter, InEdgeIter> InEdgeIterPair;
 
 
 protected:
@@ -123,7 +123,7 @@ protected:
 
     GraphRep filteredGraph;
 
-    typedef std::map<std::string,ExecStreamId> StreamMap;
+    typedef std::map<std::string, ExecStreamId> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
     typedef std::map<std::pair<std::string, uint>,ExecStreamId> EdgeMap;
 
@@ -330,14 +330,14 @@ inline ExecStreamGraphImpl::FullGraphRep const &
 inline SharedExecStream ExecStreamGraphImpl::getStreamFromVertex(
     Vertex vertex)
 {
-    return boost::get(boost::vertex_data,graphRep)[vertex];
+    return boost::get(boost::vertex_data, graphRep)[vertex];
 }
 
 inline SharedExecStreamBufAccessor &
     ExecStreamGraphImpl::getSharedBufAccessorFromEdge(
         Edge edge)
 {
-    return boost::get(boost::edge_data,graphRep)[edge];
+    return boost::get(boost::edge_data, graphRep)[edge];
 }
 
 inline ExecStreamBufAccessor &ExecStreamGraphImpl::getBufAccessorFromEdge(

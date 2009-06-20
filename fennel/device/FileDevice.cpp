@@ -42,7 +42,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 FileDevice::FileDevice(
-    std::string filenameInit,DeviceMode openMode,FileSize initialSize)
+    std::string filenameInit, DeviceMode openMode, FileSize initialSize)
 {
     filename = filenameInit;
     mode = openMode;
@@ -143,7 +143,7 @@ FileDevice::FileDevice(
     if (flock(handle, LOCK_SH | LOCK_NB) < 0) {
         throw SysCallExcn("File lock failed");
     }
-    cbFile = ::lseek(handle,0,SEEK_END);
+    cbFile = ::lseek(handle, 0, SEEK_END);
 
     // Preallocate the file if we're creating the file, and an initial size
     // is specified.
@@ -200,14 +200,14 @@ void FileDevice::setSizeInBytes(FileSize cbFileNew)
 #ifdef __MSVC__
     LARGE_INTEGER cbLarge;
     cbLarge.QuadPart = cbFileNew;
-    if (!SetFilePointerEx(HANDLE(handle),cbLarge,NULL,FILE_BEGIN)) {
+    if (!SetFilePointerEx(HANDLE(handle), cbLarge, NULL, FILE_BEGIN)) {
         throw SysCallExcn("Resize file failed:  SetFilePointer");
     }
     if (!SetEndOfFile(HANDLE(handle))) {
         throw SysCallExcn("Resize file failed:  SetEndOfFile");
     }
 #else
-    if (::ftruncate(handle,cbFileNew)) {
+    if (::ftruncate(handle, cbFileNew)) {
         throw SysCallExcn("Resize file failed");
     }
 #endif

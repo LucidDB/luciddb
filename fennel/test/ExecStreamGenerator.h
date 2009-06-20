@@ -106,8 +106,8 @@ class StairCaseExecStreamGenerator : public MockProducerExecStreamGenerator
     int h;
     int w;
 public:
-    StairCaseExecStreamGenerator(int height, uint width, int start = 0) :
-        s(start),
+    StairCaseExecStreamGenerator(int height, uint width, int start = 0)
+        : s(start),
         h(height),
         w(width)
     {
@@ -520,8 +520,8 @@ class StairCaseColumnGenerator : public ColumnGenerator<int64_t>
     uint iRow;
 
 public:
-    StairCaseColumnGenerator(int height, uint width, int start = 0) :
-        s(start),
+    StairCaseColumnGenerator(int height, uint width, int start = 0)
+        : s(start),
         h(height),
         w(width),
         iRow(0)

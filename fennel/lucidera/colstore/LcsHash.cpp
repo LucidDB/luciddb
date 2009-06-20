@@ -78,8 +78,8 @@ void LcsHash::init(
     /*
      * clears and sets up hash block
      */
-    memset(hashBlockInit,0,blockSizeInit);
-    hash.init(hashBlockInit,  blockSizeInit);
+    memset(hashBlockInit, 0, blockSizeInit);
+    hash.init(hashBlockInit, blockSizeInit);
 
     columnId                = columnIdInit;
     valCnt                  = 0;
@@ -161,8 +161,8 @@ void LcsHash::insert(
          * then returns and indicates the need to undo the insert.
          */
         *undoInsert =
-            hash.isFull() ||
-            !clusterBlockWriter->addValue(
+            hash.isFull()
+            || !clusterBlockWriter->addValue(
                 columnId, dataWithLen, &newValueOffset);
 
         if (*undoInsert) {
@@ -456,7 +456,7 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
     bool noCompress = clusterBlockWriter->noCompressMode(columnId);
 
     for (i = 0; i < numVals && !(hash.isFull()); i++) {
-        dataWithLen = clusterBlockWriter->getOffsetPtr(columnId,lastValOff);
+        dataWithLen = clusterBlockWriter->getOffsetPtr(columnId, lastValOff);
         key = noCompress ? 0 : computeKey(dataWithLen);
 
         /*
@@ -491,8 +491,8 @@ void LcsHash::startNewBatch(uint leftOvers)
      * If the hash is full we need to start over. Otherwise just clear the
      * entries used in building th eprevious batch.
      */
-    if (clusterBlockWriter->noCompressMode(columnId) ||
-        hash.isFull(leftOvers))
+    if (clusterBlockWriter->noCompressMode(columnId)
+        || hash.isFull(leftOvers))
     {
         hash.resetHash();
         valCnt       = 0;
@@ -509,7 +509,7 @@ void LcsHash::startNewBatch(uint leftOvers)
 
 uint LcsHash::computeKey(PBuffer dataWithLen)
 {
-    uint8_t  keyVal[2] = {0,0}, oldKeyVal[2]={0,17};
+    uint8_t  keyVal[2] = {0, 0}, oldKeyVal[2] = {0, 17};
     uint     i, colSize = attrAccessor.getStoredByteCount(dataWithLen);
 
     /*
@@ -542,8 +542,8 @@ void LcsHashTable::init(PBuffer hashBlockInit, uint hashBlockSizeInit)
      * hashTableSize is the size for entry array. Reserve space assuming no
      * one valueNode for each entry(no empty entry, and no overflow).
      */
-    hashTableSize = hashBlockSize /
-        (sizeof(uint16_t) + sizeof(LcsHashValueNode));
+    hashTableSize = hashBlockSize
+        / (sizeof(uint16_t) + sizeof(LcsHashValueNode));
 
     /*
      * entry points to the beginning of the hashBlock

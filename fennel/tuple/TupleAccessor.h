@@ -338,7 +338,7 @@ public:
      * @return pointer to data offset
      */
     static StoredValueOffset *referenceIndirectOffset(
-        PBuffer pTupleBuf,uint iIndirectOffset)
+        PBuffer pTupleBuf, uint iIndirectOffset)
     {
         return reinterpret_cast<StoredValueOffset *>(
             pTupleBuf + iIndirectOffset);

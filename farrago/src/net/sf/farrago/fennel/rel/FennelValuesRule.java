@@ -71,8 +71,8 @@ public class FennelValuesRule
         for (int i = 0; i < traitSet.size(); i++) {
             RelTrait trait = traitSet.getTrait(i);
             if (trait.getTraitDef() != getTraitDef()) {
-                if (fennelRel.getTraits().getTrait(trait.getTraitDef()) !=
-                    null)
+                if (fennelRel.getTraits().getTrait(trait.getTraitDef())
+                    != null)
                 {
                     fennelRel.getTraits().setTrait(trait.getTraitDef(), trait);
                 } else {

@@ -105,8 +105,8 @@ public class RelOptUtilTest
             fail("expected exception");
         } catch (RuntimeException e) {
             assertEquals(
-                "Derived description of rule class com.foo.Bar$1 is an " +
-                    "integer, not valid. Supply a description manually.",
+                "Derived description of rule class com.foo.Bar$1 is an "
+                + "integer, not valid. Supply a description manually.",
                 e.getMessage());
         }
     }

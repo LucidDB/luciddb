@@ -37,8 +37,8 @@ public:
     explicit LinearViewSegmentTest()
     {
         nDiskPagesTotal = nDiskPages;
-        FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(SegmentTestBase, testSingleThread);
+        FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
     }
 
     virtual void openSegmentStorage(DeviceMode openMode)
@@ -48,12 +48,12 @@ public:
             firstPageId = NULL_PAGE_ID;
         }
         SharedSegment pDeviceSegment = createLinearDeviceSegment(
-            dataDeviceId,nDiskPages);
+            dataDeviceId, nDiskPages);
         pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-            pDeviceSegment,openMode.create);
+            pDeviceSegment, openMode.create);
         nDiskPages /= 2;
         SharedSegment pLinearViewSegment =
-            pSegmentFactory->newLinearViewSegment(pRandomSegment,firstPageId);
+            pSegmentFactory->newLinearViewSegment(pRandomSegment, firstPageId);
         pLinearSegment = pLinearViewSegment;
     }
 
