@@ -62,7 +62,7 @@ public:
 
     virtual void prefetchPage(uint iPage);
 
-    virtual void prefetchBatch(uint,uint);
+    virtual void prefetchBatch(uint, uint);
 
     virtual void testAllocate();
 

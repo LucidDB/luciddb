@@ -49,19 +49,19 @@ public:
     explicit ExternalSortExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testPresortedInMem);
+            ExternalSortExecStreamTest, testPresortedInMem);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testPresortedExternal);
+            ExternalSortExecStreamTest, testPresortedExternal);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomInMem);
+            ExternalSortExecStreamTest, testRandomInMem);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomDescInMem);
+            ExternalSortExecStreamTest, testRandomDescInMem);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternal);
+            ExternalSortExecStreamTest, testRandomExternal);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternalStoreFinal);
+            ExternalSortExecStreamTest, testRandomExternalStoreFinal);
         FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternalFault);
+            ExternalSortExecStreamTest, testRandomExternalFault);
     }
 
     void testPresortedInMem();
@@ -169,7 +169,7 @@ void ExternalSortExecStreamTest::testImpl(
     mockParams.pGenerator = pGenerator;
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     ExternalSortExecStreamParams sortParams;
@@ -188,7 +188,7 @@ void ExternalSortExecStreamTest::testImpl(
 
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
-        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+        ExternalSortExecStream::newExternalSortExecStream(), sortParams);
     sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(

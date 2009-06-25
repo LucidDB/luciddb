@@ -306,10 +306,10 @@ public:
      * @return a pair of PageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range
      */
-    std::pair<PageIterator,PageIterator> getVictimRange()
+    std::pair<PageIterator, PageIterator> getVictimRange()
     {
-        return std::pair<PageIterator,PageIterator>(
-            PageIterator(pageLRU),PageIterator());
+        return std::pair<PageIterator, PageIterator>(
+            PageIterator(pageLRU), PageIterator());
     }
 
     /**
@@ -318,10 +318,10 @@ public:
      * @return a pair of DirtyPageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range
      */
-    std::pair<DirtyPageIterator,DirtyPageIterator> getDirtyVictimRange()
+    std::pair<DirtyPageIterator, DirtyPageIterator> getDirtyVictimRange()
     {
         return
-            static_cast<std::pair<DirtyPageIterator,DirtyPageIterator> >(
+            static_cast<std::pair<DirtyPageIterator, DirtyPageIterator> >(
                 getVictimRange());
     }
 };

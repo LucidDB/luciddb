@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  * methods in the BTreeNodeAccessor interface.  It requires the class used to
  * instantiate NodeAccessor to implement a getEntryForReadInline method.
  */
-template <class NodeAccessor,class KeyAccessor>
+template <class NodeAccessor, class KeyAccessor>
 class BTreeKeyedNodeAccessor : public NodeAccessor
 {
 public:
@@ -45,12 +45,12 @@ public:
     {
         assert(iEntry < node.nEntries);
         NodeAccessor::tupleAccessor.setCurrentTupleBuf(
-            NodeAccessor::getEntryForReadInline(node,iEntry));
+            NodeAccessor::getEntryForReadInline(node, iEntry));
     }
 
     virtual void accessTuple(BTreeNode const &node,uint iEntry)
     {
-        return accessTupleInline(node,iEntry);
+        return accessTupleInline(node, iEntry);
     }
 
     virtual void unmarshalKey(TupleData &keyData)
@@ -74,10 +74,10 @@ public:
         while (nKeys > 0) {
             uint split = nKeys >> 1;
             probe = base + split;
-            accessTupleInline(node,probe);
+            accessTupleInline(node, probe);
             pKeyAccessor->unmarshal(scratchKey);
             int j = keyDescriptor.compareTuples(
-                searchKey,scratchKey);
+                searchKey, scratchKey);
             if (j == 0) {
                 found = true;
                 switch (dupSeek) {
@@ -103,11 +103,11 @@ public:
         if (!found && !leastUpper && (base > 0)) {
             base--;
         }
-        if (((base != probe) && (base < node.nEntries)) ||
-            ((node.nEntries == 1) && (node.height != 0)))
+        if (((base != probe) && (base < node.nEntries))
+            || ((node.nEntries == 1) && (node.height != 0)))
         {
             // one entry: +infinity
-            accessTupleInline(node,base);
+            accessTupleInline(node, base);
         }
         return base;
     }
@@ -130,7 +130,7 @@ public:
 
     virtual PConstBuffer getEntryForRead(BTreeNode const &node,uint iEntry)
     {
-        return NodeAccessor::getEntryForReadInline(node,iEntry);
+        return NodeAccessor::getEntryForReadInline(node, iEntry);
     }
 };
 

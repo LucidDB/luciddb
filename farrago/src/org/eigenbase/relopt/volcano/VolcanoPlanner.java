@@ -973,8 +973,9 @@ SUBSET_LOOP:
                     if (importance != null) {
                         pw.print(", importance=" + importance);
                     }
-                    pw.print(", rowcount=" +
-                        RelMetadataQuery.getRowCount(rel));
+                    pw.print(
+                        ", rowcount="
+                        + RelMetadataQuery.getRowCount(rel));
                     pw.println(", cumulative cost=" + getCost(rel));
                 }
             }

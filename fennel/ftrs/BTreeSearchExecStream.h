@@ -49,8 +49,8 @@ struct FENNEL_FTRS_EXPORT BTreeSearchKeyParameter
 
     BTreeSearchKeyParameter(
         DynamicParamId id,
-        uint offset) :
-        dynamicParamId(id),
+        uint offset)
+        : dynamicParamId(id),
         keyOffset(offset)
     {
     }
@@ -120,7 +120,7 @@ protected:
     TupleProjectionAccessor directiveAccessor;
     TupleProjectionAccessor upperBoundAccessor;
     TupleDescriptor inputKeyDesc, upperBoundDesc;
-    TupleData inputKeyData,upperBoundData,readerKeyData,directiveData,
+    TupleData inputKeyData, upperBoundData, readerKeyData, directiveData,
         *pSearchKey;
     bool outerJoin;
     bool preFilterNulls;

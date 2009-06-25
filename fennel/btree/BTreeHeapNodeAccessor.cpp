@@ -32,7 +32,7 @@ BTreeHeapNodeAccessor::BTreeHeapNodeAccessor()
 
 void BTreeHeapNodeAccessor::clearNode(BTreeNode &node,uint cbPage)
 {
-    BTreeNodeAccessor::clearNode(node,cbPage);
+    BTreeNodeAccessor::clearNode(node, cbPage);
     node.cbCompactFree = node.cbTotalFree;
 }
 
@@ -71,7 +71,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
 void BTreeHeapNodeAccessor::deallocateEntry(
     BTreeNode &node,uint iEntry)
 {
-    tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node,iEntry));
+    tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node, iEntry));
     uint cbEntry = tupleAccessor.getCurrentByteCount();
 
     // see comments in BTreeCompactNodeAccessor::deallocateEntry

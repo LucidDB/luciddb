@@ -686,7 +686,7 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testLoadMultiCol(15000, 12, true,  pGenerator,"testMultiColNoDupOldRoot");
+    testLoadMultiCol(15000, 12, true,  pGenerator, "testMultiColNoDupOldRoot");
     resetExecStreamTest();
     testScanMultiCol(15000, 12, pRidGenerator, pResultGenerator);
 

@@ -240,8 +240,8 @@ public:
 
         // Check type of output registers and value
         for (uint i = 0; i < outputTupleDesc.size(); i++) {
-            if (outputTupleDesc[i].pTypeDescriptor->getOrdinal() !=
-                static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal))
+            if (outputTupleDesc[i].pTypeDescriptor->getOrdinal()
+                != static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal))
             {
                 ostringstream message("");
                 message << "Type ordinal mismatch: Expected ";
@@ -762,7 +762,7 @@ protected:
 
 public:
     explicit CalcAssemblerTest()
-        : TraceSource(shared_from_this(),"CalcAssemblerTest")
+        : TraceSource(shared_from_this(), "CalcAssemblerTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -904,18 +904,18 @@ void CalcAssemblerTestCase::writeMaxData(TupleDatum &datum, uint typeOrdinal)
             std::numeric_limits<double>::max();
         break;
     case STANDARD_TYPE_BINARY:
-        memset(pData,0xFF,datum.cbData);
+        memset(pData, 0xFF, datum.cbData);
         break;
     case STANDARD_TYPE_CHAR:
-        memset(pData,'z',datum.cbData);
+        memset(pData, 'z', datum.cbData);
         break;
     case STANDARD_TYPE_VARCHAR:
         datum.cbData = MAX_WIDTH;
-        memset(pData,'z',datum.cbData);
+        memset(pData, 'z', datum.cbData);
         break;
     case STANDARD_TYPE_VARBINARY:
         datum.cbData = MAX_WIDTH;
-        memset(pData,0xFF,datum.cbData);
+        memset(pData, 0xFF, datum.cbData);
         break;
     default:
         permAssert(false);
@@ -971,10 +971,10 @@ void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
             std::numeric_limits<double>::min();
         break;
     case STANDARD_TYPE_BINARY:
-        memset(pData,0,datum.cbData);
+        memset(pData, 0, datum.cbData);
         break;
     case STANDARD_TYPE_CHAR:
-        memset(pData,'A',datum.cbData);
+        memset(pData, 'A', datum.cbData);
         break;
     case STANDARD_TYPE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
@@ -2386,25 +2386,29 @@ void CalcAssemblerTest::testAdd()
     }
 
     CalcAssemblerTestCase testCase2(
-        __LINE__, "ADD UNKNOWN INST",
+        __LINE__,
+        "ADD UNKNOWN INST",
         "I u2, u4;\nO u4;\nT;\nADD O0, I0, I1;");
     testCase2.expectAssemblerError("not a registered instruction");
     testCase2.assemble();
 
     CalcAssemblerTestCase testCase3(
-        __LINE__, "ADD O0 I0",
+        __LINE__,
+        "ADD O0 I0",
         "I u2, u4;\nO u4;\nT;\nADD O0, I0;");
     testCase3.expectAssemblerError("not a registered instruction");
     testCase3.assemble();
 
-    CalcAssemblerTestCase testCase4(__LINE__, "ADD FLOAT", "I r, r;\nO r, r;\n"
-                                    "C r, r;\nV 0.3, -2.3;\n"
-                                    "T;\nADD O0, I0, C0;\nADD O1, I1, C1;");
+    CalcAssemblerTestCase testCase4(
+        __LINE__,
+        "ADD FLOAT", "I r, r;\nO r, r;\n"
+        "C r, r;\nV 0.3, -2.3;\n"
+        "T;\nADD O0, I0, C0;\nADD O1, I1, C1;");
     if (testCase4.assemble()) {
         testCase4.setInput<float>(0, 200);
         testCase4.setInput<float>(1, 3000);
-        testCase4.setExpectedOutput<float>(0, 200+0.3);
-        testCase4.setExpectedOutput<float>(1, 3000-2.3);
+        testCase4.setExpectedOutput<float>(0, 200 + 0.3);
+        testCase4.setExpectedOutput<float>(1, 3000 - 2.3);
         testCase4.test();
     }
 }

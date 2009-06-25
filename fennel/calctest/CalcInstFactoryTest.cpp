@@ -63,7 +63,7 @@ class CalcInstFactoryTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcInstFactoryTest()
-        : TraceSource(shared_from_this(),"CalcInstFactoryTest")
+        : TraceSource(shared_from_this(), "CalcInstFactoryTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -283,8 +283,8 @@ CalcInstFactoryTest::testIntegralPointer()
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
-    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b") <<
-        ", 1, 0, 1;" << endl;
+    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b")
+       << ", 1, 0, 1;" << endl;
     pg << "T;" << endl;
 
     int inst, type;
@@ -328,8 +328,8 @@ CalcInstFactoryTest::testPointerIntegral()
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
-    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b") <<
-        ", 1, 0, 1;" << endl;
+    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b")
+       << ", 1, 0, 1;" << endl;
     pg << "T;" << endl;
 
     int inst, type;
@@ -374,8 +374,8 @@ CalcInstFactoryTest::testBoolPointer()
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
-    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b") <<
-        ", 1, 0, 1;" << endl;
+    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b")
+       << ", 1, 0, 1;" << endl;
     pg << "T;" << endl;
 
     int inst, type;
@@ -516,8 +516,8 @@ CalcInstFactoryTest::testPointerPointer()
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
-    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b") <<
-        ", 1, 0, 1;" << endl;
+    pg << "V 0x" << stringToHex("a") << ", 0x" << stringToHex("b")
+       << ", 1, 0, 1;" << endl;
     pg << "T;" << endl;
 
     int inst, type;

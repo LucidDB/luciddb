@@ -164,15 +164,16 @@ protected:
     virtual TxnHandle *newTxnHandle();  /// factory method
     void deleteDbHandle(DbHandle *);
 
-    void setDbHandle(SharedProxyDbHandle,DbHandle *);
-    void setTxnHandle(SharedProxyTxnHandle,TxnHandle *);
-    void setStreamGraphHandle(SharedProxyStreamGraphHandle,StreamGraphHandle *);
-    void setExecStreamHandle(SharedProxyStreamHandle,ExecStream *);
+    void setDbHandle(SharedProxyDbHandle, DbHandle *);
+    void setTxnHandle(SharedProxyTxnHandle, TxnHandle *);
+    void setStreamGraphHandle(
+        SharedProxyStreamGraphHandle, StreamGraphHandle *);
+    void setExecStreamHandle(SharedProxyStreamHandle, ExecStream *);
     void setSvptHandle(
-        SharedProxySvptHandle,SavepointId);
+        SharedProxySvptHandle, SavepointId);
     void setCsnHandle(SharedProxyCsnHandle, TxnId);
 
-    void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
+    void getBTreeForIndexCmd(ProxyIndexCmd &, PageId, BTreeDescriptor &);
     void dropOrTruncateIndex(
         ProxyCmdDropIndex &cmd, bool drop);
 

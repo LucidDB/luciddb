@@ -43,7 +43,7 @@ void TuplePrinter::print(
     pStream = &stream;
     iValue = 0;
     (*pStream) << "[ ";
-    tupleDesc.visit(tupleData,*this,false);
+    tupleDesc.visit(tupleData, *this, false);
     (*pStream) << " ]";
     pStream = NULL;
 }
@@ -70,7 +70,7 @@ void TuplePrinter::visitString(std::string s)
 
 void TuplePrinter::visitChars(char const *c, TupleStorageByteLength n)
 {
-    std::string s(c,n);
+    std::string s(c, n);
     visitString(s);
 }
 

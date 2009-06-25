@@ -54,17 +54,17 @@ void SegStorageTestBase::openRandomSegment()
 }
 
 SharedSegment SegStorageTestBase::createLinearDeviceSegment(
-    DeviceId deviceId,uint nPages)
+    DeviceId deviceId, uint nPages)
 {
     BlockId blockId(0);
-    CompoundId::setDeviceId(blockId,deviceId);
-    CompoundId::setBlockNum(blockId,0);
+    CompoundId::setDeviceId(blockId, deviceId);
+    CompoundId::setBlockNum(blockId, 0);
     LinearDeviceSegmentParams deviceParams;
     deviceParams.firstBlockId = blockId;
     deviceParams.nPagesMin = nPages;
     deviceParams.nPagesAllocated = nPages;
     return pSegmentFactory->newLinearDeviceSegment(
-        pCache,deviceParams);
+        pCache, deviceParams);
 }
 
 void SegStorageTestBase::closeLinearSegment()
@@ -111,7 +111,7 @@ void SegStorageTestBase::closeStorage()
 SegStorageTestBase::SegStorageTestBase()
 {
     pSegmentFactory =
-        SegmentFactory::newSegmentFactory(configMap,shared_from_this());
+        SegmentFactory::newSegmentFactory(configMap, shared_from_this());
 }
 
 // End SegStorageTestBase.cpp

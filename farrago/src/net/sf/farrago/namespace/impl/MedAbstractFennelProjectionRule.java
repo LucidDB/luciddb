@@ -210,7 +210,7 @@ public abstract class MedAbstractFennelProjectionRule
                 RelOptPlanner planner =
                     projectedScan.getCluster().getPlanner();
                 // register projectedScan == mergedProjectedScan
-                // so mergedProjectedScan will have a RelSet later on
+                // so mergedProjectedScan will have a set later on
                 projectedScan =
                     planner.ensureRegistered(
                         mergedProjectedScan,

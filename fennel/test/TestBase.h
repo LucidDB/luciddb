@@ -158,7 +158,7 @@ public:
     virtual ~TestBase();
 
     // helpers for FENNEL_UNIT_TEST_SUITE etc. below
-    static void readParams(int argc,char **argv);
+    static void readParams(int argc, char **argv);
     TestSuite *releaseTestSuite();
     void beforeTestCase(std::string testCaseName);
     void afterTestCase(std::string testCaseName);
@@ -177,7 +177,7 @@ public:
 
     // implement TraceTarget
     virtual void notifyTrace(
-        std::string source,TraceLevel level,std::string message);
+        std::string source, TraceLevel level, std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
 };
 
@@ -246,7 +246,7 @@ bool init_unit_test() \
         boost::unit_test::framework::master_test_suite().argv); \
     std::string paramKey(TestBase::paramTestSuiteName); \
     std::string paramVal(#UserTestClass); \
-    TestBase::configMap.setStringParam(paramKey,paramVal); \
+    TestBase::configMap.setStringParam(paramKey, paramVal); \
     UserTestClass *pTestObj = new UserTestClass(); \
     TestBase::configMap.disableTracing(); \
     boost::unit_test::framework::master_test_suite().add( \
@@ -267,16 +267,16 @@ int main(int argc, char **argv) \
 // FENNEL_EXTRA_UNIT_TEST_CASE to define an extra test case that is run only
 // when selected from the command line, either by "-t TESTNAME" or by "-all".
 
-#define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
-  FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests,UserTestClass,testMethodName)
+#define FENNEL_UNIT_TEST_CASE(UserTestClass, testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests, UserTestClass, testMethodName)
 
-#define FENNEL_EXTRA_UNIT_TEST_CASE(UserTestClass,testMethodName) \
-  FENNEL_DEFINE_UNIT_TEST_CASE(extraTests,UserTestClass,testMethodName)
+#define FENNEL_EXTRA_UNIT_TEST_CASE(UserTestClass, testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(extraTests, UserTestClass, testMethodName)
 
 // This macro is based on BOOST_PARAM_CLASS_TEST_CASE():
 // make_test_case() below actually returns a test_unit_generator, not a
 // test_case. The generator emits one test.
-#define FENNEL_DEFINE_UNIT_TEST_CASE(group,UserTestClass,testMethodName) \
+#define FENNEL_DEFINE_UNIT_TEST_CASE(group, UserTestClass, testMethodName) \
 do { \
     typedef TestWrapperTemplate<UserTestClass> TestWrapper; \
     boost::shared_ptr<UserTestClass> pDerivedTestObj = \

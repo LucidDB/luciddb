@@ -90,8 +90,8 @@ class FENNEL_CALCULATOR_EXPORT RaiseInstruction
 {
 public:
     explicit
-    RaiseInstruction(RegisterRef<char*>* code) :
-        mCode(code)
+    RaiseInstruction(RegisterRef<char*>* code)
+        : mCode(code)
     {}
 
     virtual
@@ -141,7 +141,8 @@ private:
 };
 
 class FENNEL_CALCULATOR_EXPORT ReturnInstructionRegister
-    : InstructionRegister {
+    : InstructionRegister
+{
 public:
     static void
     registerInstructions()

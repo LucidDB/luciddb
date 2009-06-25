@@ -39,7 +39,7 @@ StoredTypeDescriptorFactory::~StoredTypeDescriptorFactory()
 {
 }
 
-template <class T,StandardTypeDescriptorOrdinal typeOrdinal>
+template <class T, StandardTypeDescriptorOrdinal typeOrdinal>
 class NumericType : public StoredTypeDescriptor
 {
     virtual Ordinal getOrdinal() const
@@ -103,7 +103,7 @@ class NumericType : public StoredTypeDescriptor
 };
 
 template<>
-void NumericType<double,STANDARD_TYPE_DOUBLE>::visitValue(
+void NumericType<double, STANDARD_TYPE_DOUBLE>::visitValue(
     DataVisitor &dataVisitor,
     void const *pData,
     TupleStorageByteLength cbData) const
@@ -114,7 +114,7 @@ void NumericType<double,STANDARD_TYPE_DOUBLE>::visitValue(
 }
 
 template<>
-void NumericType<float,STANDARD_TYPE_REAL>::visitValue(
+void NumericType<float, STANDARD_TYPE_REAL>::visitValue(
     DataVisitor &dataVisitor,
     void const *pData,
     TupleStorageByteLength cbData) const
@@ -125,7 +125,7 @@ void NumericType<float,STANDARD_TYPE_REAL>::visitValue(
 }
 
 template<>
-uint NumericType<bool,STANDARD_TYPE_BOOL>::getBitCount() const
+uint NumericType<bool, STANDARD_TYPE_BOOL>::getBitCount() const
 {
     return 1;
 }
@@ -163,7 +163,7 @@ class CharType : public StoredTypeDescriptor
         TupleStorageByteLength cbData) const
     {
         char const *pStr = static_cast<char const *>(pData);
-        dataVisitor.visitChars(pStr,cbData);
+        dataVisitor.visitChars(pStr, cbData);
     }
 
     virtual int compareValues(
@@ -174,7 +174,7 @@ class CharType : public StoredTypeDescriptor
     {
         assert(cbData1 == cbData2);
         // REVIEW jvs:  should be using strncmp here and below?
-        return memcmp(pData1,pData2,cbData1);
+        return memcmp(pData1, pData2, cbData1);
     }
 };
 
@@ -212,7 +212,7 @@ class UnicodeCharType : public StoredTypeDescriptor
     {
         assert((cbData & 1) == 0);
         Ucs2ConstBuffer pStr = static_cast<Ucs2ConstBuffer>(pData);
-        dataVisitor.visitUnicodeChars(pStr,(cbData >> 1));
+        dataVisitor.visitUnicodeChars(pStr, (cbData >> 1));
     }
 
     virtual int compareValues(
@@ -280,7 +280,7 @@ class VarCharType : public StoredTypeDescriptor
         TupleStorageByteLength cbData) const
     {
         char const *pStr = static_cast<char const *>(pData);
-        dataVisitor.visitChars(pStr,cbData);
+        dataVisitor.visitChars(pStr, cbData);
     }
 
     virtual int compareValues(
@@ -289,7 +289,7 @@ class VarCharType : public StoredTypeDescriptor
         void const *pData2,
         TupleStorageByteLength cbData2) const
     {
-        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
+        TupleStorageByteLength cbMin = std::min(cbData1, cbData2);
         int rc = memcmp(pData1, pData2, cbMin);
         if (rc) {
             return rc;
@@ -299,7 +299,7 @@ class VarCharType : public StoredTypeDescriptor
         }
         PConstBuffer pBuf1 = static_cast<PConstBuffer>(pData1);
         PConstBuffer pBuf2 = static_cast<PConstBuffer>(pData2);
-        PConstBuffer trailStart,trailEnd;
+        PConstBuffer trailStart, trailEnd;
         if (cbData1 > cbData2) {
             trailStart = pBuf1 + cbMin;
             trailEnd = pBuf1 + cbData1;
@@ -352,7 +352,7 @@ class UnicodeVarCharType : public StoredTypeDescriptor
     {
         assert((cbData & 1) == 0);
         Ucs2ConstBuffer pStr = static_cast<Ucs2ConstBuffer>(pData);
-        dataVisitor.visitUnicodeChars(pStr,(cbData >> 1));
+        dataVisitor.visitUnicodeChars(pStr, (cbData >> 1));
     }
 
     virtual int compareValues(
@@ -365,7 +365,7 @@ class UnicodeVarCharType : public StoredTypeDescriptor
         assert((cbData2 & 1) == 0);
         Ucs2ConstBuffer pStr1 = static_cast<Ucs2ConstBuffer>(pData1);
         Ucs2ConstBuffer pStr2 = static_cast<Ucs2ConstBuffer>(pData2);
-        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
+        TupleStorageByteLength cbMin = std::min(cbData1, cbData2);
         uint nCharsMin = (cbMin >> 1);
         int rc = UnicodeCharType::compareStrings(pStr1, pStr2, nCharsMin);
         if (rc) {
@@ -374,7 +374,7 @@ class UnicodeVarCharType : public StoredTypeDescriptor
         if (cbData1 == cbData2) {
             return 0;
         }
-        Ucs2ConstBuffer trailStart,trailEnd;
+        Ucs2ConstBuffer trailStart, trailEnd;
         if (cbData1 > cbData2) {
             trailStart = pStr1 + nCharsMin;
             trailEnd = pStr1 + (cbData1 >> 1);
@@ -425,7 +425,7 @@ class BinaryType : public StoredTypeDescriptor
         void const *pData,
         TupleStorageByteLength cbData) const
     {
-        dataVisitor.visitBytes(pData,cbData);
+        dataVisitor.visitBytes(pData, cbData);
     }
 
     virtual int compareValues(
@@ -435,7 +435,7 @@ class BinaryType : public StoredTypeDescriptor
         TupleStorageByteLength cbData2) const
     {
         assert(cbData1 == cbData2);
-        return memcmp(pData1,pData2,cbData1);
+        return memcmp(pData1, pData2, cbData1);
     }
 };
 
@@ -471,7 +471,7 @@ class VarBinaryType : public StoredTypeDescriptor
         void const *pData,
         TupleStorageByteLength cbData) const
     {
-        dataVisitor.visitBytes(pData,cbData);
+        dataVisitor.visitBytes(pData, cbData);
     }
 
     virtual int compareValues(
@@ -480,7 +480,7 @@ class VarBinaryType : public StoredTypeDescriptor
         void const *pData2,
         TupleStorageByteLength cbData2) const
     {
-        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
+        TupleStorageByteLength cbMin = std::min(cbData1, cbData2);
         int rc = memcmp(pData1, pData2, cbMin);
         if (rc) {
             return rc;
@@ -496,17 +496,17 @@ class VarBinaryType : public StoredTypeDescriptor
     }
 };
 
-static NumericType<int8_t,STANDARD_TYPE_INT_8> stdINT_8;
-static NumericType<uint8_t,STANDARD_TYPE_UINT_8> stdUINT_8;
-static NumericType<int16_t,STANDARD_TYPE_INT_16> stdINT_16;
-static NumericType<uint16_t,STANDARD_TYPE_UINT_16> stdUINT_16;
-static NumericType<int32_t,STANDARD_TYPE_INT_32> stdINT_32;
-static NumericType<uint32_t,STANDARD_TYPE_UINT_32> stdUINT_32;
-static NumericType<int64_t,STANDARD_TYPE_INT_64> stdINT_64;
-static NumericType<uint64_t,STANDARD_TYPE_UINT_64> stdUINT_64;
-static NumericType<float,STANDARD_TYPE_REAL> stdREAL;
-static NumericType<double,STANDARD_TYPE_DOUBLE> stdDOUBLE;
-static NumericType<bool,STANDARD_TYPE_BOOL> stdBOOL;
+static NumericType<int8_t, STANDARD_TYPE_INT_8> stdINT_8;
+static NumericType<uint8_t, STANDARD_TYPE_UINT_8> stdUINT_8;
+static NumericType<int16_t, STANDARD_TYPE_INT_16> stdINT_16;
+static NumericType<uint16_t, STANDARD_TYPE_UINT_16> stdUINT_16;
+static NumericType<int32_t, STANDARD_TYPE_INT_32> stdINT_32;
+static NumericType<uint32_t, STANDARD_TYPE_UINT_32> stdUINT_32;
+static NumericType<int64_t, STANDARD_TYPE_INT_64> stdINT_64;
+static NumericType<uint64_t, STANDARD_TYPE_UINT_64> stdUINT_64;
+static NumericType<float, STANDARD_TYPE_REAL> stdREAL;
+static NumericType<double, STANDARD_TYPE_DOUBLE> stdDOUBLE;
+static NumericType<bool, STANDARD_TYPE_BOOL> stdBOOL;
 static CharType stdCHAR;
 static VarCharType stdVARCHAR;
 static BinaryType stdBINARY;

@@ -47,8 +47,8 @@ ExternalSortRunLoader::ExternalSortRunLoader(ExternalSortInfo &sortInfoIn)
     keyData.compute(sortInfo.keyDesc);
     keyData2 = keyData;
 
-    keyAccessor.bind(tupleAccessor,sortInfo.keyProj);
-    keyAccessor2.bind(tupleAccessor2,sortInfo.keyProj);
+    keyAccessor.bind(tupleAccessor, sortInfo.keyProj);
+    keyAccessor2.bind(tupleAccessor2, sortInfo.keyProj);
 
     // TODO:  utility methods for calculations below, and assert block
     // size is power of 2
@@ -86,9 +86,9 @@ void ExternalSortRunLoader::startRun()
     }
 
     freeBuffers.insert(
-        freeBuffers.end(),indexBuffers.begin(),indexBuffers.end());
+        freeBuffers.end(), indexBuffers.begin(), indexBuffers.end());
     freeBuffers.insert(
-        freeBuffers.end(),dataBuffers.begin(),dataBuffers.end());
+        freeBuffers.end(), dataBuffers.begin(), dataBuffers.end());
     indexBuffers.clear();
     dataBuffers.clear();
     pDataBuffer = NULL;
@@ -167,7 +167,7 @@ void ExternalSortRunLoader::releaseResources()
     // allocateBuffer()
 
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(
-        NULL_PAGE_ID,NULL_PAGE_ID);
+        NULL_PAGE_ID, NULL_PAGE_ID);
 }
 
 ExternalSortRC ExternalSortRunLoader::loadRun(
@@ -216,7 +216,7 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
             cbCopy += cbTuple;
         }
         if (cbCopy) {
-            memcpy(pDataBuffer,pSrc,cbCopy);
+            memcpy(pDataBuffer, pSrc, cbCopy);
             pDataBuffer += cbCopy;
             bufAccessor.consumeData(pSrc + cbCopy);
         }
@@ -233,7 +233,7 @@ void ExternalSortRunLoader::sort()
 {
     assert (nTuplesLoaded);
 
-    quickSort(0,nTuplesLoaded - 1);
+    quickSort(0, nTuplesLoaded - 1);
 }
 
 ExternalSortFetchArray &ExternalSortRunLoader::bindFetchArray()
@@ -250,16 +250,16 @@ ExternalSortRC ExternalSortRunLoader::fetch(uint nTuplesRequested)
     fetchArray.ppTupleBuffers = (PBuffer *)
         &(getPointerArrayEntry(nTuplesFetched));
     uint pageEnd = (nTuplesFetched | indexPageMask) + 1;
-    pageEnd = std::min(pageEnd,nTuplesLoaded);
-    fetchArray.nTuples = std::min(nTuplesRequested,pageEnd - nTuplesFetched);
+    pageEnd = std::min(pageEnd, nTuplesLoaded);
+    fetchArray.nTuples = std::min(nTuplesRequested, pageEnd - nTuplesFetched);
     nTuplesFetched += fetchArray.nTuples;
 
     return EXTSORT_SUCCESS;
 }
 
-inline void ExternalSortRunLoader::quickSortSwap(uint l,uint r)
+inline void ExternalSortRunLoader::quickSortSwap(uint l, uint r)
 {
-    std::swap(getPointerArrayEntry(l),getPointerArrayEntry(r));
+    std::swap(getPointerArrayEntry(l), getPointerArrayEntry(r));
 }
 
 // TODO:  move this
@@ -284,10 +284,10 @@ PBuffer ExternalSortRunLoader::quickSortFindPivot(uint l, uint r)
             tupleAccessor2.setCurrentTupleBuf(vals[j - 1]);
             keyAccessor.unmarshal(keyData);
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.compareKeys(keyData,keyData2) >= 0) {
+            if (sortInfo.compareKeys(keyData, keyData2) >= 0) {
                 break;
             }
-            std::swap(vals[j],vals[j - 1]);
+            std::swap(vals[j], vals[j - 1]);
             j--;
         }
     }
@@ -300,7 +300,7 @@ PBuffer ExternalSortRunLoader::quickSortFindPivot(uint l, uint r)
     return vals[(cnt >> 1)];
 }
 
-uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
+uint ExternalSortRunLoader::quickSortPartition(uint l, uint r, PBuffer pivot)
 {
     l--;
     r++;
@@ -312,7 +312,7 @@ uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
             ++l;
             tupleAccessor2.setCurrentTupleBuf(getPointerArrayEntry(l));
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.compareKeys(keyData2,keyData) >= 0) {
+            if (sortInfo.compareKeys(keyData2, keyData) >= 0) {
                 break;
             }
         }
@@ -320,7 +320,7 @@ uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
             --r;
             tupleAccessor2.setCurrentTupleBuf(getPointerArrayEntry(r));
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.compareKeys(keyData2,keyData) <= 0) {
+            if (sortInfo.compareKeys(keyData2, keyData) <= 0) {
                 break;
             }
         }
@@ -332,21 +332,21 @@ uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
     }
 }
 
-void ExternalSortRunLoader::quickSort(uint l,uint r)
+void ExternalSortRunLoader::quickSort(uint l, uint r)
 {
     PBuffer pPivotTuple;
     uint x;
 
-    pPivotTuple = quickSortFindPivot(l,r);
+    pPivotTuple = quickSortFindPivot(l, r);
     if (pPivotTuple) {
-        x = quickSortPartition(l,r,pPivotTuple);
+        x = quickSortPartition(l, r, pPivotTuple);
         if (x == l) {
             // pPivotTuple was lowest value in partition and was at position l
             // - move off of it and keep going
             x++;
         }
-        quickSort(l,x - 1);
-        quickSort(x,r);
+        quickSort(l, x - 1);
+        quickSort(x, r);
     }
 }
 

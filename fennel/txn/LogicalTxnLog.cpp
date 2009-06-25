@@ -58,7 +58,7 @@ LogicalTxnLog::LogicalTxnLog(
     // TODO: Support an option to skip CRC's for optimized non-durable logging.
     // Also support a paranoid option for recording CRC's for long logs.
     pOutputStream = CrcSegOutputStream::newCrcSegOutputStream(
-        logSegmentAccessor,onlineUuid);
+        logSegmentAccessor, onlineUuid);
 
     // NOTE:  We only write one page at a time to the main log, and we always
     // need to wait after each page.  So request synchronous writes.
@@ -84,7 +84,7 @@ SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
     SharedSegmentFactory pSegmentFactory)
 {
     return SharedLogicalTxnLog(
-        new LogicalTxnLog(logSegmentAccessor,onlineUuid,pSegmentFactory));
+        new LogicalTxnLog(logSegmentAccessor, onlineUuid, pSegmentFactory));
 }
 
 LogicalTxnLog::~LogicalTxnLog()
@@ -107,7 +107,7 @@ SharedLogicalTxn LogicalTxnLog::newLogicalTxn(
             2));
     pCacheAccessor->setTxnId(nextTxnId);
     SharedLogicalTxn pTxn(
-        new LogicalTxn(nextTxnId,shared_from_this(),pCacheAccessor));
+        new LogicalTxn(nextTxnId, shared_from_this(), pCacheAccessor));
     uncommittedTxns.push_back(pTxn);
     ++nextTxnId;
     return pTxn;
@@ -149,7 +149,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             removeTxn(pTxn);
             return;
         }
-        CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
+        CompoundId::setPageId(memento.logPosition.segByteId, NULL_PAGE_ID);
         CompoundId::setByteOffset(
             memento.logPosition.segByteId,
             pTxn->svpt.cbLogged);
@@ -163,7 +163,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             pTxn->pOutputStream->getInputStream();
         uint cbActual;
         PConstBuffer pBuffer = pInputStream->getReadPointer(1,&cbActual);
-        pOutputStream->writeBytes(pBuffer,cbActual);
+        pOutputStream->writeBytes(pBuffer, cbActual);
     }
 
     commitTxnWithGroup(mutexGuard);
@@ -174,7 +174,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
 {
     boost::xtime groupCommitExpiration;
     if (groupCommitInterval) {
-        convertTimeout(groupCommitInterval,groupCommitExpiration);
+        convertTimeout(groupCommitInterval, groupCommitExpiration);
     }
     SegStreamPosition logPos;
     pOutputStream->getSegPos(logPos);
@@ -182,7 +182,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
     for (;;) {
         bool timeout = true;
         if (groupCommitInterval) {
-            timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
+            timeout = !condition.timed_wait(mutexGuard, groupCommitExpiration);
 
             pOutputStream->getSegPos(logPos);
             PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
@@ -223,8 +223,8 @@ void LogicalTxnLog::rollbackTxn(SharedLogicalTxn pTxn)
     memento.txnId = pTxn->txnId;
     memento.cbActionLast = 0;
     memento.nParticipants = 0;
-    CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
-    CompoundId::setByteOffset(memento.logPosition.segByteId,0);
+    CompoundId::setPageId(memento.logPosition.segByteId, NULL_PAGE_ID);
+    CompoundId::setByteOffset(memento.logPosition.segByteId, 0);
     memento.logPosition.cbOffset = 0;
     memento.longLog = true;
     StrictMutexGuard mutexGuard(mutex);
@@ -256,7 +256,7 @@ void LogicalTxnLog::checkpoint(
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         // memento gets lastCheckpointMemento, and lastCheckpointMemento gets
         // new memento just created above
-        std::swap(memento,lastCheckpointMemento);
+        std::swap(memento, lastCheckpointMemento);
     }
 }
 
@@ -275,7 +275,7 @@ void LogicalTxnLog::deallocateCheckpointedLog(
                 lastObsoletePageId))
         {
             logSegmentAccessor.pSegment->deallocatePageRange(
-                NULL_PAGE_ID,lastObsoletePageId);
+                NULL_PAGE_ID, lastObsoletePageId);
         }
     }
 

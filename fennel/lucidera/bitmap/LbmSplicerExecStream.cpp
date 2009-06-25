@@ -388,8 +388,8 @@ bool LbmSplicerExecStream::findBTreeEntry(
                     assert(
                         LbmSegment::roundToByteBoundary(
                             *reinterpret_cast<LcsRid const *>(
-                                bTreeTupleData[nIdxKeys].pData)) ==
-                        LbmSegment::roundToByteBoundary(
+                                bTreeTupleData[nIdxKeys].pData))
+                        == LbmSegment::roundToByteBoundary(
                             *reinterpret_cast<LcsRid const *>(
                                 bitmapEntry[nIdxKeys].pData)));
                     return true;
@@ -470,8 +470,8 @@ void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
             LcsRid currRid =
                 LbmSegment::roundToByteBoundary(pCurrentEntry->getStartRID());
 
-            if ((currRid > newRid && currRid > bTreeRid) ||
-                (newRid >= bTreeRid && bTreeRid > currRid))
+            if ((currRid > newRid && currRid > bTreeRid)
+                || (newRid >= bTreeRid && bTreeRid > currRid))
             {
                 // If the current entry is a superset of the btree entry found,
                 // then ignore the btree entry, and continuing splicing into

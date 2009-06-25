@@ -55,7 +55,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     paramsMockLeft.nRows = 5000;
 
     ExecStreamEmbryo leftStreamEmbryo;
-    leftStreamEmbryo.init(new MockProducerExecStream(),paramsMockLeft);
+    leftStreamEmbryo.init(new MockProducerExecStream(), paramsMockLeft);
     leftStreamEmbryo.getStream()->setName("LeftProducerExecStream");
 
     DynamicParamId dynamicParamId(1);
@@ -66,7 +66,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     paramsMockRight.nRows = 10;
 
     ExecStreamEmbryo rightStreamEmbryo;
-    rightStreamEmbryo.init(new MockProducerExecStream(),paramsMockRight);
+    rightStreamEmbryo.init(new MockProducerExecStream(), paramsMockRight);
     rightStreamEmbryo.getStream()->setName("RightProducerExecStream");
 
     CorrelationJoinExecStreamParams paramsJoin;
@@ -75,7 +75,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     paramsJoin.correlations.push_back(correlation);
 
     ExecStreamEmbryo joinStreamEmbryo;
-    joinStreamEmbryo.init(new CorrelationJoinExecStream(),paramsJoin);
+    joinStreamEmbryo.init(new CorrelationJoinExecStream(), paramsJoin);
     joinStreamEmbryo.getStream()->setName("CorrelationJoinExecStream");
 
     SharedExecStream pOutputStream = prepareConfluenceGraph(

@@ -32,14 +32,14 @@ SharedSegOutputStream CrcSegOutputStream::newCrcSegOutputStream(
 {
     return SharedSegOutputStream(
         new CrcSegOutputStream(
-            segmentAccessor,onlineUuid),
+            segmentAccessor, onlineUuid),
         ClosableObjectDestructor());
 }
 
 CrcSegOutputStream::CrcSegOutputStream(
     SegmentAccessor const &segmentAccessorInit,
     PseudoUuid onlineUuidInit)
-    : SegOutputStream(segmentAccessorInit,sizeof(SegStreamCrc))
+    : SegOutputStream(segmentAccessorInit, sizeof(SegStreamCrc))
 {
     onlineUuid = onlineUuidInit;
 }
@@ -50,7 +50,7 @@ void CrcSegOutputStream::writeExtraHeaders(SegStreamNode &node)
     pCrc->onlineUuid = onlineUuid;
     pCrc->pageId = lastPageId;
     crcComputer.reset();
-    crcComputer.process_bytes(pCrc + 1,node.cbData);
+    crcComputer.process_bytes(pCrc + 1, node.cbData);
     pCrc->checksum = crcComputer.checksum();
 }
 

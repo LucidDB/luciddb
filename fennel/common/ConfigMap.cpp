@@ -40,7 +40,7 @@ ConfigMap::~ConfigMap()
 void ConfigMap::readParams(std::istream &paramStream)
 {
     for (;;) {
-        std::string name,value;
+        std::string name, value;
         paramStream >> name;
         if (name == "") {
             break;

@@ -39,8 +39,9 @@ TupleStorageByteLength
 StringDesc::stringLength() const
 {
     assert(StandardTypeDescriptor::isArray(mType));
-    return (StandardTypeDescriptor::isVariableLenArray(mType)) ?
-        cbData : cbStorage;
+    return (StandardTypeDescriptor::isVariableLenArray(mType))
+        ? cbData
+        : cbStorage;
 }
 
 void WinAggHistogramStrA::addRow(RegisterRef<char*>* node)

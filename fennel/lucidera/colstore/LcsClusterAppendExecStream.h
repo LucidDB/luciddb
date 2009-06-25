@@ -34,8 +34,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct LcsClusterAppendExecStreamParams :
-    public BTreeExecStreamParams, public ConduitExecStreamParams
+struct LcsClusterAppendExecStreamParams
+    : public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     /**
      * Projection list projecting out columns for this cluster
@@ -47,8 +47,8 @@ struct LcsClusterAppendExecStreamParams :
  * Given a stream of tuples corresponding to the column values in a cluster,
  * loads the cluster pages
  */
-class FENNEL_LCS_EXPORT LcsClusterAppendExecStream :
-    public BTreeExecStream, public ConduitExecStream
+class FENNEL_LCS_EXPORT LcsClusterAppendExecStream
+    : public BTreeExecStream, public ConduitExecStream
 {
 protected:
 

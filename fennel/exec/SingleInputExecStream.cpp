@@ -55,7 +55,7 @@ void SingleInputExecStream::open(bool restart)
     if (restart) {
         // restart input
         pInAccessor->clear();
-        pGraph->getStreamInput(getStreamId(),0)->open(true);
+        pGraph->getStreamInput(getStreamId(), 0)->open(true);
     }
 }
 

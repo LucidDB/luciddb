@@ -47,7 +47,7 @@ CachePage *TransactionalCacheAccessor::lockPage(
         txnId = implicitTxnId;
     }
     CachePage *pPage = DelegatingCacheAccessor::lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
+        blockId, lockMode, readIfUnmapped, pMappedPageListener, txnId);
     return pPage;
 }
 
@@ -59,7 +59,7 @@ void TransactionalCacheAccessor::unlockPage(
     if (txnId == IMPLICIT_TXN_ID) {
         txnId = implicitTxnId;
     }
-    DelegatingCacheAccessor::unlockPage(page,lockMode,txnId);
+    DelegatingCacheAccessor::unlockPage(page, lockMode, txnId);
 }
 
 void TransactionalCacheAccessor::setTxnId(TxnId txnId)

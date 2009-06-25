@@ -360,7 +360,7 @@ void ExecStreamUnitTestBase::verifyOutput(
                 if (actualValue != expectedValue) {
                     std::cout << "(Row, Col) = (" << nRows << ", " << col <<")"
                               << std::endl;
-                    BOOST_CHECK_EQUAL(expectedValue,actualValue);
+                    BOOST_CHECK_EQUAL(expectedValue, actualValue);
                     return;
                 }
             }
@@ -371,7 +371,7 @@ void ExecStreamUnitTestBase::verifyOutput(
             }
         }
     }
-    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 void ExecStreamUnitTestBase::verifyConstantOutput(
@@ -414,7 +414,7 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
             tuplePrinter.print(std::cout, statusDesc, expectedTuple);
             std::cout << std::endl;
 #endif
-            BOOST_CHECK_EQUAL(0,c);
+            BOOST_CHECK_EQUAL(0, c);
             break;
         }
     }
@@ -464,7 +464,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
             if (c) {
                 std::cout << "(Row) = (" << nRows << ")"
                     << " -- Tuples don't match"<< std::endl;
-                BOOST_CHECK_EQUAL(0,c);
+                BOOST_CHECK_EQUAL(0, c);
                 return;
             }
             bufAccessor.consumeTuple();
@@ -472,7 +472,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
             ++nRows;
         }
     }
-    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 FENNEL_END_CPPFILE("$Id$");

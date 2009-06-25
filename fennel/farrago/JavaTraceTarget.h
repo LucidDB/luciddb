@@ -66,13 +66,13 @@ public:
 
     // implement TraceTarget
     virtual void notifyTrace(
-        std::string source,TraceLevel level,std::string message);
+        std::string source, TraceLevel level, std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
 
     // implement StatsTarget
     virtual void beginSnapshot();
     virtual void endSnapshot();
-    virtual void writeCounter(std::string name,int64_t value);
+    virtual void writeCounter(std::string name, int64_t value);
     virtual void onThreadStart();
     virtual void onThreadEnd();
 };

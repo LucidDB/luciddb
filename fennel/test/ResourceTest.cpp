@@ -49,11 +49,11 @@ public:
 
 void ResourceTest::testEnUsLocale()
 {
-    Locale locale("en","US");
+    Locale locale("en", "US");
     std::string actual =
         FennelResource::instance(locale).sysCallFailed("swizzle");
     std::string expected = "System call failed:  swizzle";
-    BOOST_CHECK_EQUAL(expected,actual);
+    BOOST_CHECK_EQUAL(expected, actual);
 }
 
 class ResourceThread : public Thread

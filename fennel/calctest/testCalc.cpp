@@ -3466,8 +3466,8 @@ unitTestPointer()
 
     // putsize
     instP[pc++] = new PointerPutSize<char *>(cpOutP[outCp], lLiP[0], isVC);
-    instP[pc++] = new PointerPutSize<char *>(cpOutP[outCp+1], lLiP[1], isVC);
-    instP[pc++] = new PointerPutSize<char *>(cpOutP[outCp+2], lLiP[2], isVC);
+    instP[pc++] = new PointerPutSize<char *>(cpOutP[outCp + 1], lLiP[1], isVC);
+    instP[pc++] = new PointerPutSize<char *>(cpOutP[outCp + 2], lLiP[2], isVC);
     // putsize w/round trip through cached register set
     instP[pc++] = new PointerPutSize<char *>(cpLoP[localCp], lLiP[0], isVC);
 
@@ -3552,27 +3552,28 @@ unitTestPointer()
         fail("pointeradd2", __LINE__);
     }
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData)) +
-         *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 1].pData))))
-        {
+    if ((reinterpret_cast<const char *>(output[outCp].pData))
+        != ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData))
+         + *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 1].pData))))
+    {
         fail("pointeradd3", __LINE__);
-        }
-    if (output[outCp++].cbData !=
-        bufferlen - *(reinterpret_cast<const int32_t *>(
+    }
+    if (output[outCp++].cbData
+        != bufferlen
+        - *(reinterpret_cast<const int32_t *>(
             literal[ulongIdx + 1].pData)))
     {
         fail("pointeradd4", __LINE__);
     }
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData)) +
-         *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 2].pData))))
-        {
+    if ((reinterpret_cast<const char *>(output[outCp].pData))
+        != ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData))
+        + *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 2].pData))))
+    {
         fail("pointeradd5", __LINE__);
-        }
-    if (output[outCp++].cbData !=
-        bufferlen - *(reinterpret_cast<const int32_t *>(
+    }
+    if (output[outCp++].cbData
+        != bufferlen - *(reinterpret_cast<const int32_t *>(
             literal[ulongIdx + 2].pData)))
     {
         fail("pointeradd6", __LINE__);
@@ -3605,20 +3606,20 @@ unitTestPointer()
         fail("pointersub2", __LINE__);
     }
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData))))
-        {
+    if ((reinterpret_cast<const char *>(output[outCp].pData))
+        != ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData))))
+    {
         fail("pointersub3", __LINE__);
-        }
+    }
     if (output[outCp++].cbData != bufferlen) {
         fail("pointersub4", __LINE__);
     }
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData))))
-        {
+    if ((reinterpret_cast<const char *>(output[outCp].pData))
+        != ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData))))
+    {
         fail("pointersub5", __LINE__);
-        }
+    }
     if (output[outCp++].cbData != bufferlen) {
         fail("pointersub6", __LINE__);
     }
@@ -3657,9 +3658,9 @@ unitTestPointer()
         fail("pointermove4", __LINE__);
     }
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 3].pData))))
-        {
+    if ((reinterpret_cast<const char *>(output[outCp].pData))
+        != ((reinterpret_cast<const char *>(literal[pointerIdx + 3].pData))))
+    {
         fail("pointermove5", __LINE__);
         }
     if (output[outCp++].cbData != bufferlen) {

@@ -31,8 +31,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct LcsClusterReplaceExecStreamParams :
-    public LcsClusterAppendExecStreamParams
+struct LcsClusterReplaceExecStreamParams
+    : public LcsClusterAppendExecStreamParams
 {
 };
 

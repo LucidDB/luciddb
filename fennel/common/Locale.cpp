@@ -62,8 +62,11 @@ Locale::Locale(
 {
     // either language, country and variant are empty or language must
     // be non-empty
-    assert((language.empty() && country.empty() && variant.empty()) ||
-           !language.empty());
+    assert(
+        (language.empty()
+         && country.empty()
+         && variant.empty())
+        || !language.empty());
 
     assert(language.empty() || language.length() == 2);
     assert(country.empty() || country.length() == 2);
@@ -75,15 +78,15 @@ Locale::~Locale()
 
 bool Locale::operator==(const Locale &rhs) const
 {
-    return (_lang == rhs._lang &&
-            _country == rhs._country &&
-            _variant == rhs._variant);
+    return _lang == rhs._lang
+        && _country == rhs._country
+        && _variant == rhs._variant;
 }
 
 bool Locale::operator!=(const Locale &rhs) const {
-    return (_lang != rhs._lang ||
-            _country != rhs._country ||
-            _variant != rhs._variant);
+    return _lang != rhs._lang
+        || _country != rhs._country
+        || _variant != rhs._variant;
 }
 
 bool Locale::operator<(const Locale &rhs) const

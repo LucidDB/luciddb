@@ -56,9 +56,9 @@ LcsClusterDump::LcsClusterDump(
     TupleDescriptor const &colTupleDescInit,
     TraceLevel traceLevelInit,
     SharedTraceTarget pTraceTargetInit,
-    std::string nameInit) :
-        LcsClusterAccessBase(bTreeDescriptor),
-        TraceSource(pTraceTargetInit, nameInit)
+    std::string nameInit)
+    : LcsClusterAccessBase(bTreeDescriptor),
+      TraceSource(pTraceTargetInit, nameInit)
 {
     colTupleDesc = colTupleDescInit;
     traceLevel = traceLevelInit;

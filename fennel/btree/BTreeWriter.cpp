@@ -60,12 +60,12 @@ void BTreeWriter::insertTupleData(
     TupleData const &tupleData,Distinctness distinctness)
 {
     // TODO:  a small optimization is to use unmarshalled key data directly
-    pLeafNodeAccessor->tupleAccessor.marshal(tupleData,leafTupleBuffer.get());
-    insertTupleFromBuffer(leafTupleBuffer.get(),distinctness);
+    pLeafNodeAccessor->tupleAccessor.marshal(tupleData, leafTupleBuffer.get());
+    insertTupleFromBuffer(leafTupleBuffer.get(), distinctness);
 }
 
 uint BTreeWriter::insertTupleFromBuffer(
-    PConstBuffer pTupleBuffer,Distinctness distinctness)
+    PConstBuffer pTupleBuffer, Distinctness distinctness)
 {
     BTreeNodeAccessor &nodeAccessor = *pLeafNodeAccessor;
     nodeAccessor.tupleAccessor.setCurrentTupleBuf(pTupleBuffer);
@@ -107,7 +107,7 @@ uint BTreeWriter::insertTupleFromBuffer(
             default:
                 if (!searchKeyData.containsNull()) {
                     endSearch();
-                    throw BTreeDuplicateKeyExcn(keyDescriptor,searchKeyData);
+                    throw BTreeDuplicateKeyExcn(keyDescriptor, searchKeyData);
                 }
             }
         }
@@ -126,9 +126,9 @@ uint BTreeWriter::insertTupleFromBuffer(
     }
 
     bool split = !attemptInsertWithoutSplit(
-        pageLock,pTupleBuffer,cbTuple,iTupleOnLowestLevel);
+        pageLock, pTupleBuffer, cbTuple, iTupleOnLowestLevel);
     if (split) {
-        splitCurrentNode(pTupleBuffer,cbTuple,iTupleOnLowestLevel);
+        splitCurrentNode(pTupleBuffer, cbTuple, iTupleOnLowestLevel);
     }
 
     // restart the search after a split even if monotonic insert to
@@ -142,7 +142,7 @@ uint BTreeWriter::insertTupleFromBuffer(
 
 bool BTreeWriter::attemptInsertWithoutSplit(
     BTreePageLock &targetPageLock,
-    PConstBuffer pTupleBuffer,uint cbTuple,uint iPosition)
+    PConstBuffer pTupleBuffer, uint cbTuple, uint iPosition)
 {
     BTreeNode *pNode = &(targetPageLock.getNodeForWrite());
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(*pNode);
@@ -159,7 +159,7 @@ bool BTreeWriter::attemptInsertWithoutSplit(
 
 #if 0
         std::cerr << "AFTER COMPACTION:" << std::endl;
-        nodeAccessor.dumpNode(std::cerr,*pNode,pageId);
+        nodeAccessor.dumpNode(std::cerr, *pNode,pageId);
 #endif
 
         break;
@@ -167,7 +167,7 @@ bool BTreeWriter::attemptInsertWithoutSplit(
         return false;
     }
     PBuffer pBuffer = nodeAccessor.allocateEntry(*pNode,iPosition,cbTuple);
-    memcpy(pBuffer,pTupleBuffer,cbTuple);
+    memcpy(pBuffer, pTupleBuffer, cbTuple);
     return true;
 }
 
@@ -179,13 +179,13 @@ void BTreeWriter::compactNode(BTreePageLock &targetPageLock)
     }
     BTreeNode &scratchNode = scratchPageLock.getNodeForWrite();
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
-    nodeAccessor.clearNode(scratchNode,getSegment()->getUsablePageSize());
-    nodeAccessor.compactNode(node,scratchNode);
+    nodeAccessor.clearNode(scratchNode, getSegment()->getUsablePageSize());
+    nodeAccessor.compactNode(node, scratchNode);
     pageLock.swapBuffers(scratchPageLock);
 }
 
 void BTreeWriter::splitCurrentNode(
-    PConstBuffer pTupleBuffer,uint cbTuple,uint iNewTuple)
+    PConstBuffer pTupleBuffer, uint cbTuple, uint iNewTuple)
 {
     // Current node will be on left after split.
     PageId leftPageId = pageId;
@@ -196,23 +196,23 @@ void BTreeWriter::splitCurrentNode(
     BTreePageLock newPageLock(treeDescriptor.segmentAccessor);
     PageId newPageId = newPageLock.allocatePage(getPageOwnerId());
     BTreeNode &newNode = newPageLock.getNodeForWrite();
-    nodeAccessor.clearNode(newNode,getSegment()->getUsablePageSize());
+    nodeAccessor.clearNode(newNode, getSegment()->getUsablePageSize());
 
 #if 0
     std::cerr << "BEFORE SPLIT:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,node,pageId);
+    nodeAccessor.dumpNode(std::cerr, node, pageId);
 #endif
 
-    setRightSibling(newNode,newPageId,node.rightSibling);
-    setRightSibling(node,pageId,newPageId);
+    setRightSibling(newNode, newPageId, node.rightSibling);
+    setRightSibling(node, pageId, newPageId);
 
-    nodeAccessor.splitNode(node,newNode,cbTuple,monotonic);
+    nodeAccessor.splitNode(node, newNode, cbTuple, monotonic);
 
 #if 0
     std::cerr << "LEFT AFTER SPLIT:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,node,pageId);
+    nodeAccessor.dumpNode(std::cerr, node, pageId);
     std::cerr << "RIGHT AFTER SPLIT:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,newNode,newPageId);
+    nodeAccessor.dumpNode(std::cerr, newNode, newPageId);
 #endif
 
     // Figure out where new tuple goes
@@ -225,8 +225,8 @@ void BTreeWriter::splitCurrentNode(
         pLockForNewTuple = &newPageLock;
     } else {
         // could go either way depending on how the balancing worked out
-        if (nodeAccessor.calculateCapacity(newNode,cbTuple) !=
-            BTreeNodeAccessor::CAN_NOT_FIT)
+        if (nodeAccessor.calculateCapacity(newNode, cbTuple)
+            != BTreeNodeAccessor::CAN_NOT_FIT)
         {
             pLockForNewTuple = &newPageLock;
         } else {
@@ -274,7 +274,7 @@ void BTreeWriter::splitCurrentNode(
 
     // Prepare the parent entry to associate with the left node,
     // and marshal it into splitTupleBuffer.
-    nodeAccessor.accessTuple(leftNode,leftNode.nEntries - 1);
+    nodeAccessor.accessTuple(leftNode, leftNode.nEntries - 1);
     nodeAccessor.unmarshalKey(upperNodeAccessor.tupleData);
     upperNodeAccessor.tupleData.back().pData =
         reinterpret_cast<PConstBuffer>(&leftPageId);
@@ -287,7 +287,7 @@ void BTreeWriter::splitCurrentNode(
     // remain locked for the duration, because searchKeyData will point into
     // it.
     uint nRightKeys = nodeAccessor.getKeyCount(rightNode);
-    nodeAccessor.accessTuple(rightNode,nRightKeys - 1);
+    nodeAccessor.accessTuple(rightNode, nRightKeys - 1);
     nodeAccessor.unmarshalKey(searchKeyData);
 
     // Now, lock parent page and find the position of the entry pointing
@@ -307,7 +307,7 @@ void BTreeWriter::splitCurrentNode(
     BTreeNode &upperNode = pageLock.getNodeForWrite();
     upperNodeAccessor.tupleAccessor.setCurrentTupleBuf(
         const_cast<PBuffer>(
-            upperNodeAccessor.getEntryForRead(upperNode,iPosition)));
+            upperNodeAccessor.getEntryForRead(upperNode, iPosition)));
     TupleDatum &childDatum = upperNodeAccessor.tupleData.back();
     pChildAccessor->unmarshalValue(
         upperNodeAccessor.tupleAccessor,
@@ -322,7 +322,7 @@ void BTreeWriter::splitCurrentNode(
     upperNodeAccessor.tupleAccessor.setCurrentTupleBuf(splitTupleBuffer.get());
     cbTuple = upperNodeAccessor.tupleAccessor.getCurrentByteCount();
     inserted = attemptInsertWithoutSplit(
-        pageLock,splitTupleBuffer.get(),cbTuple,iPosition);
+        pageLock, splitTupleBuffer.get(), cbTuple, iPosition);
     if (inserted) {
         // The entry fit; no need for recursion.
         return;
@@ -333,7 +333,7 @@ void BTreeWriter::splitCurrentNode(
     // REVIEW jvs 12-Feb-2006:  split locking in general.
     newPageLock.unlock();
 
-    splitCurrentNode(splitTupleBuffer.get(),cbTuple,iPosition);
+    splitCurrentNode(splitTupleBuffer.get(), cbTuple, iPosition);
 }
 
 uint BTreeWriter::lockParentPage(uint height, bool rightMostNode)
@@ -344,11 +344,11 @@ uint BTreeWriter::lockParentPage(uint height, bool rightMostNode)
 
     uint iPosition;
     for (;;) {
-        pageLock.lockPageWithCoupling(pageId,LOCKMODE_X);
+        pageLock.lockPageWithCoupling(pageId, LOCKMODE_X);
 
         bool found;
         BTreeNode const &parentNode = pageLock.getNodeForRead();
-        if (pageId == getRootPageId() && parentNode.height != height+1) {
+        if (pageId == getRootPageId() && parentNode.height != height + 1) {
             // REVIEW jvs 12-Feb-2006:  I promised Xiaoyang I would
             // review this code, but I still haven't gotten to it.
             // Should only get here in page-level concurrency scenarios.
@@ -361,7 +361,7 @@ uint BTreeWriter::lockParentPage(uint height, bool rightMostNode)
             BTreePageLock stackPageLock(treeDescriptor.segmentAccessor);
             uint iPosition;
             for (;;) {
-                stackPageLock.lockPageWithCoupling(pageId,LOCKMODE_S);
+                stackPageLock.lockPageWithCoupling(pageId, LOCKMODE_S);
                 bool found;
                 BTreeNode const &node = stackPageLock.getNodeForRead();
                 if (node.height == height) {
@@ -397,7 +397,7 @@ uint BTreeWriter::lockParentPage(uint height, bool rightMostNode)
             pageId = pageStack.back();
             pageStack.pop_back();
             // now lock the real parent.
-            pageLock.lockPageWithCoupling(pageId,LOCKMODE_X);
+            pageLock.lockPageWithCoupling(pageId, LOCKMODE_X);
         }
 
         // we can not use parentNode because it might be changed.
@@ -450,15 +450,15 @@ void BTreeWriter::grow(
     // and the btree needs to keep the old root page id.
 #if  0
     std::cerr << "before grow root:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,node,pageId);
+    nodeAccessor.dumpNode(std::cerr, node, pageId);
     std::cerr << "before grow right:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,rightNode,rightPageId);
+    nodeAccessor.dumpNode(std::cerr, rightNode, rightPageId);
 #endif
 
     BTreePageLock newLeftPageLock(treeDescriptor.segmentAccessor);
     PageId newLeftPageId = newLeftPageLock.allocatePage(getPageOwnerId());
     BTreeNode &newLeftNode = newLeftPageLock.getNodeForWrite();
-    nodeAccessor.clearNode(newLeftNode,getSegment()->getUsablePageSize());
+    nodeAccessor.clearNode(newLeftNode, getSegment()->getUsablePageSize());
     // 1. copy the content of old root page to the new page2. (left).
     newLeftNode = node;
     memcpy(
@@ -474,7 +474,7 @@ void BTreeWriter::grow(
     // 2. clear the root page and set the right height.
     // we use the old nodeAccessor to clear the node.
 
-    nodeAccessor.clearNode(node,getSegment()->getUsablePageSize());
+    nodeAccessor.clearNode(node, getSegment()->getUsablePageSize());
     node.height = newLeftNode.height + 1;
     BTreeNodeAccessor &rootNodeAccessor = getNonLeafNodeAccessor(node);
 
@@ -486,9 +486,9 @@ void BTreeWriter::grow(
         reinterpret_cast<PConstBuffer>(&newLeftPageId);
     uint cb = rootNodeAccessor.tupleAccessor.getByteCount(
                         rootNodeAccessor.tupleData);
-    PBuffer pBuffer1 = rootNodeAccessor.allocateEntry(node,0,cb);
+    PBuffer pBuffer1 = rootNodeAccessor.allocateEntry(node, 0, cb);
     rootNodeAccessor.tupleAccessor.marshal(
-                rootNodeAccessor.tupleData, pBuffer1);
+        rootNodeAccessor.tupleData, pBuffer1);
 
     nodeAccessor.accessTuple(rightNode, rightNode.nEntries - 1);
     nodeAccessor.unmarshalKey(rootNodeAccessor.tupleData);
@@ -497,16 +497,16 @@ void BTreeWriter::grow(
     cb = rootNodeAccessor.tupleAccessor.getByteCount(
                 rootNodeAccessor.tupleData);
 
-    PBuffer pBuffer2 = rootNodeAccessor.allocateEntry(node,1,cb);
+    PBuffer pBuffer2 = rootNodeAccessor.allocateEntry(node, 1, cb);
     rootNodeAccessor.tupleAccessor.marshal(
-                        rootNodeAccessor.tupleData, pBuffer2);
+        rootNodeAccessor.tupleData, pBuffer2);
 #if 0
     std::cerr << "after grow root:" << std::endl;
-    rootNodeAccessor.dumpNode(std::cerr,node,pageId);
+    rootNodeAccessor.dumpNode(std::cerr, node, pageId);
     std::cerr << "after grow left:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,newLeftNode,newLeftPageId);
+    nodeAccessor.dumpNode(std::cerr, newLeftNode, newLeftPageId);
     std::cerr << "after grow right:" << std::endl;
-    nodeAccessor.dumpNode(std::cerr,rightNode,rightPageId);
+    nodeAccessor.dumpNode(std::cerr, rightNode, rightPageId);
 #endif
     if (monotonic) {
         newLeftPageLock.flushPage(true);
@@ -548,7 +548,7 @@ void BTreeWriter::deleteCurrent()
         getLogicalTxn()->endLogicalAction();
     }
 
-    nodeAccessor.deallocateEntry(node,iTupleOnLowestLevel);
+    nodeAccessor.deallocateEntry(node, iTupleOnLowestLevel);
 
     // precompensate for subsequent calls to searchNext()
     --iTupleOnLowestLevel;
@@ -572,8 +572,8 @@ bool BTreeWriter::updateCurrent(TupleData const &tupleData)
     if (nodeAccessor.hasFixedWidthEntries()) {
         // we can use a direct overwrite
         pTupleBuf = const_cast<PBuffer>(
-            nodeAccessor.getEntryForRead(*pNode,iTupleOnLowestLevel));
-        nodeAccessor.tupleAccessor.marshal(tupleData,pTupleBuf);
+            nodeAccessor.getEntryForRead(*pNode, iTupleOnLowestLevel));
+        nodeAccessor.tupleAccessor.marshal(tupleData, pTupleBuf);
         return true;
     }
 
@@ -608,7 +608,7 @@ bool BTreeWriter::updateCurrent(TupleData const &tupleData)
     }
 
     pTupleBuf = nodeAccessor.allocateEntry(*pNode,iTupleOnLowestLevel,cbTuple);
-    nodeAccessor.tupleAccessor.marshal(tupleData,pTupleBuf);
+    nodeAccessor.tupleAccessor.marshal(tupleData, pTupleBuf);
     return true;
 }
 
@@ -662,7 +662,7 @@ void BTreeWriter::insertLogged(ByteInputStream &logStream)
 {
     // REVIEW:  do we ever need to use a different Distinctness?
     uint cbTuple = insertTupleFromBuffer(
-        logStream.getReadPointer(1),DUP_ALLOW);
+        logStream.getReadPointer(1), DUP_ALLOW);
     logStream.consumeReadPointer(cbTuple);
 }
 
@@ -672,7 +672,7 @@ void BTreeWriter::deleteLogged(ByteInputStream &logStream)
         logStream.getReadPointer(1));
     uint cbTuple = pLeafNodeAccessor->tupleAccessor.getCurrentByteCount();
     pLeafNodeAccessor->unmarshalKey(searchKeyData);
-    if (searchForKey(searchKeyData,DUP_SEEK_ANY)) {
+    if (searchForKey(searchKeyData, DUP_SEEK_ANY)) {
         deleteCurrent();
     } else {
         // TODO:  assert?
@@ -692,7 +692,7 @@ bool BTreeWriter::positionSearchKey(BTreeNodeAccessor &nodeAccessor)
     pageStack.clear();
     DuplicateSeek seekMode = (monotonic) ? DUP_SEEK_END : DUP_SEEK_ANY;
     bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
-        searchKeyData,seekMode,true,pageStack,getRootPageId(),rootLockMode,
+        searchKeyData, seekMode, true, pageStack, getRootPageId(), rootLockMode,
         READ_ALL);
     return duplicate;
 }

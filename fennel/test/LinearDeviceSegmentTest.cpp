@@ -31,8 +31,8 @@ class LinearDeviceSegmentTest : virtual public SegmentTestBase
 public:
     explicit LinearDeviceSegmentTest()
     {
-        FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(SegmentTestBase, testSingleThread);
+        FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
     }
 };
 

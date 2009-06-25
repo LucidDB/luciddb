@@ -58,7 +58,6 @@ ${farrago.test.jvmargs}
   <!-- Definitions for Farrago build properties and macros -->
   <import file="buildMacros.xml"/>
 
-
   <!-- Directories -->
 
   <!-- directory for Farrago compiled classes which go into plugin .jars -->
@@ -267,7 +266,7 @@ ${farrago.test.jvmargs}
 
   <!-- create rmi stubs and skeletons -->
   <target name="rmi" depends="compile">
-    <rmic base="${farrago.classes.dir}"
+    <rmic base="${farrago.classes.dir}" compiler="xnew"
       classpathref="farrago.build.classpath">
       <include name="**/server/FarragoRJConnectionServer.class" />
       <include name="**/server/FarragoRJMedDataWrapperServer.class" />
@@ -589,7 +588,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">
@@ -819,8 +818,11 @@ ${farrago.test.jvmargs}
 
   <target name="populateTestSchema" depends="determineInitSql">
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-      tempdir="${testlog.dir}">
-      <classpath refid="farrago.sqlline.classpath"/>
+      clonevm="yes" tempdir="${testlog.dir}" includeantruntime="no">
+      <classpath>
+         <pathelement path="${farrago.sqlline.classpath}" />
+         <pathelement path="${ant.classpath}" />
+      </classpath>
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
@@ -1117,7 +1119,7 @@ ${farrago.test.jvmargs}
   <target name="junit" depends="cleanTestLogs">
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
-        <jvmarg line="-Xmx512m"/>
+        <jvmarg line="-Xmx768m"/>
         <jvmarg line="-Xss1536k"/>
         <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="${assertions.jvmarg}"/>

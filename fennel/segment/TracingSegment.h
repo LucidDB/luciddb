@@ -58,7 +58,7 @@ public:
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId = ANON_PAGE_OWNER_ID);
     virtual bool ensureAllocatedSize(BlockNum nPages);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
     virtual MappedPageListener *getMappedPageListener(BlockId blockId);

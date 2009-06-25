@@ -92,7 +92,7 @@ void ExternalSortRunAccessor::storeRun(
             PBuffer pSrcBuf = fetchArray.ppTupleBuffers[iTuple];
             uint cbTuple = tupleAccessor.getBufferByteCount(pSrcBuf);
             PBuffer pTarget = pSegOutputStream->getWritePointer(cbTuple);
-            memcpy(pTarget,pSrcBuf,cbTuple);
+            memcpy(pTarget, pSrcBuf, cbTuple);
             pSegOutputStream->consumeWritePointer(cbTuple);
         }
         iTuple = 0;

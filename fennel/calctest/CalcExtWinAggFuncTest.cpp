@@ -57,12 +57,12 @@ static const int64_t INT_TEST_MAX =  105; // max data value below
 
 static int64_t intTestData[][SAMPLE_SIZE] =
 {
-    { 12,  33, 52, 14, 10, 63,  5,  2, 49,105 },  // test data values
-    { 12,  12, 12, 12, 10, 10,  5,  2,  2,  2 },  // running MIN values
-    { 12,  33, 52, 52, 52, 63, 63, 63, 63,105 },  // running MAX values
-    { 12,  45, 97,111,121,184,189,191,240,345 },  // running SUM of test values
-    { 12,  12, 12, 12, 12, 12, 12, 12, 12, 12 },  // running FIRST_VALUE values
-    { 105,105,105,105,105,105,105,105,105,105 },  // running LAST_VALUE values
+    { 12,   33,  52,  14,  10,  63,   5,   2,  49, 105 }, // test data values
+    { 12,   12,  12,  12,  10,  10,   5,   2,   2,   2 }, // running MIN values
+    { 12,   33,  52,  52,  52,  63,  63,  63,  63, 105 }, // running MAX values
+    { 12,   45,  97, 111, 121, 184, 189, 191, 240, 345 }, // running SUM values
+    { 12,   12,  12,  12,  12,  12,  12,  12,  12,  12 }, // running FIRST_VALUE
+    { 105, 105, 105, 105, 105, 105, 105, 105, 105, 105 }, // running LAST_VALUE
 };
 
 
@@ -78,11 +78,11 @@ static double dblTestData[][SAMPLE_SIZE] =
     // running MAX
     { 63.5, 63.5, 92.9, 92.9, 92.9, 92.9, 92.9, 874.5, 874.5, 874.5 },
     // running SUM
-    { 63.5,126.6,219.5,221.0,227.3,265.8,288.9,1163.4,1208.1,1706.1 },
+    { 63.5, 126.6, 219.5, 221.0, 227.3, 265.8, 288.9, 1163.4, 1208.1, 1706.1 },
     // running FIRST_VALUE
     { 63.5, 63.5, 63.5, 63.5, 63.5, 63.5, 63.5,  63.5,  63.5,  63.5 },
     // running LAST_VALUE
-    {498.0,498.0,490.0,498.0,498.0,498.0,498.0, 498.0, 498.0, 498.0 },
+    { 498.0, 498.0, 490.0, 498.0, 498.0, 498.0, 498.0, 498.0, 498.0, 498.0 },
 };
 
 #define STR_SAMPLE_SIZE 4
@@ -135,7 +135,7 @@ class CalcExtWinAggFuncTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtWinAggFuncTest()
-        : TraceSource(shared_from_this(),"CalcExtWinAggFuncTest")
+        : TraceSource(shared_from_this(), "CalcExtWinAggFuncTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -342,7 +342,7 @@ WinAggDropTest(
 
     // Step backwards through the data table and remove each entry
     // from the window checking the function returns along the way.
-    for (int i=SAMPLE_SIZE-1; i >=0 ; i--) {
+    for (int i = SAMPLE_SIZE - 1; i >= 0; i--) {
         TupleData* inTuple = testTuples[i];
         TupleDatum* pTD = &(*inTuple)[0];
 

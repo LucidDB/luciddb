@@ -42,9 +42,9 @@ public:
     // typedefs for the list of Pages in this bucket; CachePage objects have
     // embedded links dedicated for this purpose to avoid dynamic allocation for
     // each map/unmap operation.
-    typedef IntrusiveList<PageT,PageBucketListNode> PageList;
-    typedef IntrusiveListIter<PageT,PageBucketListNode> PageListIter;
-    typedef IntrusiveListMutator<PageT,PageBucketListNode> PageListMutator;
+    typedef IntrusiveList<PageT, PageBucketListNode> PageList;
+    typedef IntrusiveListIter<PageT, PageBucketListNode> PageListIter;
+    typedef IntrusiveListMutator<PageT, PageBucketListNode> PageListMutator;
 
     /**
      * SXMutex protecting this bucket.

@@ -111,7 +111,7 @@ FENNEL_BEGIN_NAMESPACE
  * callbacks (e.g. idle flush).
  *
  */
-template <class PageT,class VictimPolicyT>
+template <class PageT, class VictimPolicyT>
 class CacheImpl : public Cache, private TimerThreadClient
 {
     // convenience typedef
@@ -475,7 +475,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     PageT &mapPage(
         PageBucketT &bucket,PageT &newPage,BlockId blockId,
         MappedPageListener *pMappedPageListener,
-        bool bPendingRead = true,bool bIncRef = true);
+        bool bPendingRead = true, bool bIncRef = true);
 
     /**
      * Places an unmapped page in unmappedBucket, making it available for
@@ -588,23 +588,23 @@ public:
     virtual uint getAllocatedPageCount();
     virtual uint getMaxAllocatedPageCount();
     virtual PageT *lockPage(
-        BlockId blockId,LockMode lockMode,bool readIfUnmapped,
-        MappedPageListener *pMappedPageListener,TxnId txnId);
+        BlockId blockId, LockMode lockMode, bool readIfUnmapped,
+        MappedPageListener *pMappedPageListener, TxnId txnId);
     virtual PageT &lockScratchPage(BlockNum blockNum);
     virtual void discardPage(BlockId blockId);
     virtual uint checkpointPages(
-        PagePredicate &pagePredicate,CheckpointType checkpointType);
+        PagePredicate &pagePredicate, CheckpointType checkpointType);
     virtual void collectStats(CacheStats &stats);
     virtual void registerDevice(
-        DeviceId deviceId,SharedRandomAccessDevice pDevice);
+        DeviceId deviceId, SharedRandomAccessDevice pDevice);
     virtual void unregisterDevice(DeviceId deviceId);
     virtual SharedRandomAccessDevice &getDevice(DeviceId deviceId);
     virtual bool prefetchPage(
-        BlockId blockId,MappedPageListener *pMappedPageListener);
+        BlockId blockId, MappedPageListener *pMappedPageListener);
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,MappedPageListener *pMappedPageListener);
-    virtual void flushPage(CachePage &page,bool async);
-    virtual void unlockPage(CachePage &page,LockMode lockMode,TxnId txnId);
+        BlockId blockId, uint nPages, MappedPageListener *pMappedPageListener);
+    virtual void flushPage(CachePage &page, bool async);
+    virtual void unlockPage(CachePage &page, LockMode lockMode, TxnId txnId);
     virtual void nicePage(CachePage &page);
     virtual bool isPageMapped(BlockId blockId);
     virtual CacheAllocator &getAllocator() const;

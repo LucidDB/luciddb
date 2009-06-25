@@ -1786,8 +1786,8 @@ public abstract class FarragoExportSchemaUDR
         }
 
         StringBuilder querySql =
-            new StringBuilder("select * from "
-                + oldQualifiedTable);
+            new StringBuilder(
+                "select * from " + oldQualifiedTable);
 
         switch (expType) {
         case FULL_EXPORT:

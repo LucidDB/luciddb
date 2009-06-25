@@ -60,7 +60,7 @@ void DfsTreeExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraphInit)
 
 void DfsTreeExecStreamScheduler::start()
 {
-    FENNEL_TRACE(TRACE_FINE,"start");
+    FENNEL_TRACE(TRACE_FINE, "start");
 
     // TODO jvs 2-Jan-2006:  rename this class now that it's no longer
     // restricted to trees; come up with something more generic in case
@@ -80,7 +80,7 @@ void DfsTreeExecStreamScheduler::setRunnable(ExecStream &, bool)
 
 void DfsTreeExecStreamScheduler::abort(ExecStreamGraph &)
 {
-    FENNEL_TRACE(TRACE_FINE,"abort requested");
+    FENNEL_TRACE(TRACE_FINE, "abort requested");
 
     aborted = true;
 }
@@ -88,14 +88,14 @@ void DfsTreeExecStreamScheduler::abort(ExecStreamGraph &)
 void DfsTreeExecStreamScheduler::checkAbort() const
 {
     if (aborted) {
-        FENNEL_TRACE(TRACE_FINE,"abort detected");
+        FENNEL_TRACE(TRACE_FINE, "abort detected");
         throw AbortExcn();
     }
 }
 
 void DfsTreeExecStreamScheduler::stop()
 {
-    FENNEL_TRACE(TRACE_FINE,"stop");
+    FENNEL_TRACE(TRACE_FINE, "stop");
 
     // nothing to do
     aborted = false;
@@ -116,7 +116,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     // assert that we're reading from a designated output stream
-    assert(boost::out_degree(current,graphRep) == 1);
+    assert(boost::out_degree(current, graphRep) == 1);
     assert(!graphImpl.getStreamFromVertex(
                boost::target(
                    *(boost::out_edges(current,graphRep).first),
@@ -126,14 +126,14 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
 
     for (;;) {
         ExecStreamGraphImpl::InEdgeIterPair inEdges =
-            boost::in_edges(current,graphRep);
+            boost::in_edges(current, graphRep);
         for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
             ExecStreamGraphImpl::Edge edge = *(inEdges.first);
             ExecStreamBufAccessor &bufAccessor =
                 graphImpl.getBufAccessorFromEdge(edge);
             if (bufAccessor.getState() == EXECBUF_UNDERFLOW) {
                 // move current upstream
-                current = boost::source(edge,graphRep);
+                current = boost::source(edge, graphRep);
                 break;
             }
         }
@@ -189,7 +189,7 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
     ExecStreamBufState skipState)
 {
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
-        boost::out_edges(current,graphRep);
+        boost::out_edges(current, graphRep);
 
     bool emptyFound = false;
     // dummy initializations to avoid compiler error
@@ -198,8 +198,8 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
 
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
         edge = *(outEdges.first);
-        current = boost::target(edge,graphRep);
-        if (boost::out_degree(current,graphRep) == 0) {
+        current = boost::target(edge, graphRep);
+        if (boost::out_degree(current, graphRep) == 0) {
             // we've hit the output sentinel
             assert(!graphImpl.getStreamFromVertex(current));
             FENNEL_TRACE(
@@ -228,16 +228,16 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
         if (bufAccessor.getState() != skipState) {
             break;
         }
-        assert(!(skipState == EXECBUF_UNDERFLOW &&
-                    bufAccessor.getState() == EXECBUF_EOS));
+        assert(!(skipState == EXECBUF_UNDERFLOW
+                 && bufAccessor.getState() == EXECBUF_EOS));
     }
 
     if (outEdges.first == outEdges.second && emptyFound) {
         edge = emptyEdge;
         current = emptyStreamId;
     } else {
-        assert(!(skipState == EXECBUF_UNDERFLOW &&
-                    outEdges.first == outEdges.second));
+        assert(!(skipState == EXECBUF_UNDERFLOW
+                 && outEdges.first == outEdges.second));
     }
 
     return true;

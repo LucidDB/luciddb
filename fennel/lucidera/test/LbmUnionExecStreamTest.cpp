@@ -287,28 +287,34 @@ void LbmUnionExecStreamTest::testBuffer(SharedByteBuffer pByteBuffer)
     // 0000 0011 1111 11xx
     mergeArea.advance(10000);
     mergeArea.mergeMem(10006, ones, 8);
-    FixedBuffer result0[16] = { 0,0,0,0, 0,0,1,1, 1,1,1,1, 1,1 };
+    FixedBuffer result0[16] = { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 };
     verifyMerge(mergeArea, result0);
 
     // xxxx x011 1111 11xx
     mergeArea.advance(10005);
-    FixedBuffer result1[16] = { 0,1,1, 1,1,1,1, 1,1 };
+    FixedBuffer result1[16] = { 0, 1, 1, 1, 1, 1, 1, 1, 1 };
     verifyMerge(mergeArea, result1);
 
     // merge area should wrap around
     // 2222 2011 3333 3322
     mergeArea.mergeMem(10008, twos, 13);
-    FixedBuffer result2[16] = { 0,1,1, 3,3,3,3, 3,3,2,2, 2,2,2,2, 2 };
+    FixedBuffer result2[16] = {
+        0, 1, 1, 3, 3, 3, 3, 3,
+        3, 2, 2, 2, 2, 2, 2, 2 };
     verifyMerge(mergeArea, result2);
 
     // 2222 2xx1 3333 3322
     mergeArea.advance(10007);
-    FixedBuffer result3[16] = { 1, 3,3,3,3, 3,3,2,2, 2,2,2,2, 2 };
+    FixedBuffer result3[16] = {
+        1, 3, 3, 3, 3, 3, 3,
+        2, 2, 2, 2, 2, 2, 2 };
     verifyMerge(mergeArea, result3);
 
     // 6662 2xx1 3377 7766
     mergeArea.mergeMem(10010, fours, 9);
-    FixedBuffer result4[16] = { 1, 3,3,7,7, 7,7,6,6, 6,6,6,2, 2 };
+    FixedBuffer result4[16] = {
+        1, 3, 3, 7, 7, 7, 7,
+        6, 6, 6, 6, 6, 2, 2 };
     verifyMerge(mergeArea, result4);
 
     // 0011 1122 2244 4400
@@ -317,7 +323,9 @@ void LbmUnionExecStreamTest::testBuffer(SharedByteBuffer pByteBuffer)
     mergeArea.mergeMem(10036, twos, 4);
     mergeArea.mergeMem(10032, ones, 4);
     mergeArea.mergeMem(10044, zeroes, 2);
-    FixedBuffer result5[16] = { 0,0,1,1, 1,1,2,2, 2,2,4,4, 4,4,0,0 };
+    FixedBuffer result5[16] = {
+        0, 0, 1, 1, 1, 1, 2, 2,
+        2, 2, 4, 4, 4, 4, 0, 0 };
     verifyMerge(mergeArea, result5);
 
     // index too low

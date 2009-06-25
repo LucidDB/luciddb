@@ -230,8 +230,9 @@ SqlStrCmp(
                 str1, str1TrimLenBytes,
                 str2, str2TrimLenBytes);
 #if 0
-            int minLenBytes = str1TrimLenBytes > str2TrimLenBytes ?
-                str2TrimLenBytes : str1TrimLenBytes;
+            int minLenBytes = str1TrimLenBytes > str2TrimLenBytes
+                ? str2TrimLenBytes
+                : str1TrimLenBytes;
 
 
             // To allow 0, "Null", values in string, uses memcmp over
@@ -1156,11 +1157,12 @@ SqlStrCastToExact(
                     // parse exponent, move into next state
                     ptr++;
                     if (ptr < end) {
-                        if (*ptr == '+' || *ptr == '-' ||
-                            (*ptr >= '0' && *ptr <= '9')) {
+                        if (*ptr == '+' || *ptr == '-'
+                            || (*ptr >= '0' && *ptr <= '9'))
+                        {
                             exponent = SqlStrCastToExact
-                                <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
-                                ((char const * const) ptr, end - ptr, padChar);
+                                <CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
+                                (char const * const) ptr, end - ptr, padChar);
                         } else {
                             parsed = false;
                         }
@@ -1254,7 +1256,8 @@ SqlStrCastToExact(
                     {
                         mantissa_digits++;
                         if (mantissa_digits - parsed_scale
-                            > precision - scale) {
+                            > precision - scale)
+                        {
                             // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
                             // data exception -- numeric value out of range
                             // (if leading significant digits are lost)

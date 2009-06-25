@@ -188,7 +188,8 @@ class MedJdbcPushDownRule
             // using RexToSqlNodeConverter
             RexToSqlNodeConverter exprConverter =
                 new RexToSqlNodeConverterImpl(
-                    new RexSqlStandardConvertletTable()) {
+                    new RexSqlStandardConvertletTable())
+                {
                     public SqlIdentifier convertInputRef(RexInputRef ref)
                     {
                         RelDataType fields = filterRel.getRowType();

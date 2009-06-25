@@ -37,7 +37,7 @@ SharedSegOutputStream SegOutputStream::newSegOutputStream(
 SegOutputStream::SegOutputStream(
     SegmentAccessor const &segmentAccessor,
     uint cbExtraHeader)
-    : SegStream(segmentAccessor,cbExtraHeader)
+    : SegStream(segmentAccessor, cbExtraHeader)
 {
     firstPageId = NULL_PAGE_ID;
     lastPageId = NULL_PAGE_ID;
@@ -92,7 +92,7 @@ void SegOutputStream::flushBuffer(uint cbRequested)
     if (firstPageId == NULL_PAGE_ID) {
         firstPageId = pageId;
     } else {
-        getSegment()->setPageSuccessor(lastPageId,pageId);
+        getSegment()->setPageSuccessor(lastPageId, pageId);
     }
     lastPageId = pageId;
     SegStreamNode &node = pageLock.getNodeForWrite();
@@ -114,14 +114,14 @@ uint SegOutputStream::getBytesWrittenThisPage() const
 
 void SegOutputStream::getSegPos(SegStreamPosition &pos)
 {
-    CompoundId::setPageId(pos.segByteId,lastPageId);
+    CompoundId::setPageId(pos.segByteId, lastPageId);
     if (getBytesAvailable()) {
-        CompoundId::setByteOffset(pos.segByteId,getBytesWrittenThisPage());
+        CompoundId::setByteOffset(pos.segByteId, getBytesWrittenThisPage());
     } else {
         // after a hard page break, use a special sentinel value to indicate
         // the last byte on the page
         CompoundId::setByteOffset(
-            pos.segByteId,CompoundId::MAX_BYTE_OFFSET);
+            pos.segByteId, CompoundId::MAX_BYTE_OFFSET);
     }
     pos.cbOffset = cbOffset;
 }

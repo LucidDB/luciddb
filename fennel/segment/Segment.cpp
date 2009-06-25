@@ -92,7 +92,7 @@ PageId Segment::getLinearPageSuccessor(PageId pageId)
     return pageId;
 }
 
-void Segment::setLinearPageSuccessor(PageId pageId,PageId successorId)
+void Segment::setLinearPageSuccessor(PageId pageId, PageId successorId)
 {
     assert(isPageIdAllocated(pageId));
     assert(isPageIdAllocated(successorId));
@@ -127,7 +127,7 @@ void Segment::delegatedCheckpoint(
     CheckpointType checkpointType)
 {
     MappedPageListenerPredicate pagePredicate(delegatingSegment);
-    pCache->checkpointPages(pagePredicate,checkpointType);
+    pCache->checkpointPages(pagePredicate, checkpointType);
 }
 
 uint Segment::getFullPageSize() const

@@ -91,14 +91,14 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
             upperBoundData.compute(upperBoundDesc);
 
             assert(
-                searchKeyParams.size() == 0 ||
-                (searchKeyParams.size() >= (n-1)*2+1 &&
-                    searchKeyParams.size() <= n*2));
+                searchKeyParams.size() == 0
+                || (searchKeyParams.size() >= (n - 1) * 2 + 1
+                    && searchKeyParams.size() <= n * 2));
         } else {
             assert(searchKeyParams.size() == 0);
         }
-        inputKeyAccessor.bind(inputAccessor,inputKeyProj);
-        inputKeyDesc.projectFrom(inputDesc,inputKeyProj);
+        inputKeyAccessor.bind(inputAccessor, inputKeyProj);
+        inputKeyDesc.projectFrom(inputDesc, inputKeyProj);
     } else {
         inputKeyDesc = inputDesc;
         assert(searchKeyParams.size() == 0);
@@ -112,8 +112,8 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
     }
 
     preFilterNulls = false;
-    if ((outerJoin && inputKeyDesc.containsNullable()) ||
-        searchKeyParams.size() > 0)
+    if ((outerJoin && inputKeyDesc.containsNullable())
+        || searchKeyParams.size() > 0)
     {
         // When we're doing an outer join or a lookup via dynamic parameters,
         // the input keys have not had nulls eliminated yet, so we have to
@@ -131,10 +131,10 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
         }
     }
 
-    inputJoinAccessor.bind(inputAccessor,params.inputJoinProj);
+    inputJoinAccessor.bind(inputAccessor, params.inputJoinProj);
 
     TupleDescriptor joinDescriptor;
-    joinDescriptor.projectFrom(inputDesc,params.inputJoinProj);
+    joinDescriptor.projectFrom(inputDesc, params.inputJoinProj);
 
     TupleProjection readerKeyProj = treeDescriptor.keyProjection;
     readerKeyProj.resize(inputKeyDesc.size());
@@ -248,7 +248,9 @@ void BTreeSearchExecStream::readSearchKey()
         }
         // If there are an odd number of parameters, determine whether the
         // next parameter corresponds to the lower or upper bound
-        if ((nParams%2) && searchKeyParams[nParams/2].keyOffset == nParams/2) {
+        if ((nParams % 2)
+            && searchKeyParams[nParams / 2].keyOffset == nParams / 2)
+        {
             inputKeyData[nParams / 2] =
                 pDynamicParamManager->getParam(
                     searchKeyParams[nParams / 2].dynamicParamId).getDatum();
@@ -317,8 +319,8 @@ bool BTreeSearchExecStream::searchForKey()
             // Searched past end of tree.
             match = false;
         } else {
-            if (preFilterNulls &&
-                upperBoundData.containsNull(upperBoundKeyProj))
+            if (preFilterNulls
+                && upperBoundData.containsNull(upperBoundKeyProj))
             {
                 match = false;
             } else {
@@ -413,8 +415,10 @@ bool BTreeSearchExecStream::testInterval()
             // it is possible that we are positioned one key to the left of
             // our desired key position; move forward one key to see if there
             // is a match
-            if (!leastUpper && lowerBoundDirective == SEARCH_CLOSED_LOWER &&
-                pSearchKey->size() > 1 && c > 0)
+            if (!leastUpper
+                && lowerBoundDirective == SEARCH_CLOSED_LOWER
+                && pSearchKey->size() > 1
+                && c > 0)
             {
                 return checkNextKey();
             }

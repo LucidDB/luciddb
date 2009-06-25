@@ -66,7 +66,7 @@ public:
 
     virtual void openRandomSegment();
 
-    SharedSegment createLinearDeviceSegment(DeviceId deviceId,uint nPages);
+    SharedSegment createLinearDeviceSegment(DeviceId deviceId, uint nPages);
 
     void closeLinearSegment();
 

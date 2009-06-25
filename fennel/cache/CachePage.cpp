@@ -66,7 +66,7 @@ void CachePage::swapBuffers(CachePage &other)
 {
     assert(isExclusiveLockHeld());
     assert(other.isExclusiveLockHeld());
-    std::swap(pBuffer,other.pBuffer);
+    std::swap(pBuffer, other.pBuffer);
 }
 
 bool CachePage::isScratchLocked() const

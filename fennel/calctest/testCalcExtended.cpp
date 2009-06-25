@@ -481,7 +481,7 @@ void testConvertDoubleToFloat(double val, float expected)
     table.add(
         "convert",
         parameterTypes,
-        (ExtendedInstruction2<float,double>*) NULL,
+        (ExtendedInstruction2<float, double>*) NULL,
         &convertDoubleToFloat);
     // lookup a function
     ExtendedInstructionDef *pDef = table["convert(r,d)"];
@@ -873,14 +873,14 @@ int main(int argc, char *argv[])
     ProgramName = argv[0];
     testConvertDoubleToFloat((double) 100.33, (float) 100.33);
     testConvertFloatToDouble((float) 33.3378, (double) 33.3378);
-    testConvertFloatToIntTypes("s1",(float) 45.65, 45);
-    testConvertFloatToIntTypes("u1",(float) 45.65, 45);
-    testConvertFloatToIntTypes("s2",(float) 45.65, 45);
-    testConvertFloatToIntTypes("u2",(float) 45.65, 45);
-    testConvertFloatToIntTypes("s4",(float) 45.65, 45);
-    testConvertFloatToIntTypes("u4",(float) 45.65, 45);
-    testConvertFloatToIntTypes("s8",(float) 45.65, 45);
-    testConvertFloatToIntTypes("u8",(float) 45.65, 45);
+    testConvertFloatToIntTypes("s1", (float) 45.65, 45);
+    testConvertFloatToIntTypes("u1", (float) 45.65, 45);
+    testConvertFloatToIntTypes("s2", (float) 45.65, 45);
+    testConvertFloatToIntTypes("u2", (float) 45.65, 45);
+    testConvertFloatToIntTypes("s4", (float) 45.65, 45);
+    testConvertFloatToIntTypes("u4", (float) 45.65, 45);
+    testConvertFloatToIntTypes("s8", (float) 45.65, 45);
+    testConvertFloatToIntTypes("u8", (float) 45.65, 45);
     testConvertIntTypesToFloat("s1", 4565, (float) 4565);
     testConvertIntTypesToFloat("u1", 4565, (float) 4565);
     testConvertIntTypesToFloat("s2", 4565, (float) 4565);

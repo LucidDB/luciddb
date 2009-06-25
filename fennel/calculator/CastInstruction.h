@@ -98,9 +98,10 @@ public:
 
             // Note: min() for approx type is the smallest positive
             // number, not the most negative number.
-            RESULT_T min = (numeric_limits<RESULT_T>::is_integer ?
-                            numeric_limits<RESULT_T>::min() :
-                            - numeric_limits<RESULT_T>::max());
+            RESULT_T min =
+                numeric_limits<RESULT_T>::is_integer
+                ? numeric_limits<RESULT_T>::min()
+                : - numeric_limits<RESULT_T>::max();
             RESULT_T max = numeric_limits<RESULT_T>::max();
 
             if (resultSigned == sourceSigned) {
@@ -188,7 +189,8 @@ public:
 #define TTT(a)
 
 class FENNEL_CALCULATOR_EXPORT CastInstructionRegister
-    : InstructionRegister {
+    : InstructionRegister
+{
 
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename, typename > class INSTCLASS2 >

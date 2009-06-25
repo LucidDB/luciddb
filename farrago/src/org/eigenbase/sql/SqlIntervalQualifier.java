@@ -96,9 +96,11 @@ public class SqlIntervalQualifier
     public enum TimeUnit
         implements SqlLiteral.SqlSymbol
     {
-        Year(true, 12 /* months */), Month(true, 1 /* months */),
+        Year(true, 12 /* months */),
+        Month(true, 1 /* months */),
         Day(false, 86400000 /* millis = 24 * 3600000 */),
-        Hour(false, 3600000 /* millis */), Minute(false, 60000 /* millis */),
+        Hour(false, 3600000 /* millis */),
+        Minute(false, 60000 /* millis */),
         Second(false, 1000 /* millis */);
 
         public final boolean yearMonth;

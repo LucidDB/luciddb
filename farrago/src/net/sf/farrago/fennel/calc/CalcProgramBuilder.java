@@ -707,8 +707,8 @@ public class CalcProgramBuilder
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() >= instructions.size()) {
                         throw FarragoResource.instance().ProgramCompilationError
-                        .ex("Line "
-                            + line.getLine() + " doesn't exist");
+                            .ex(
+                                "Line " + line.getLine() + " doesn't exist");
                     }
                 }
 

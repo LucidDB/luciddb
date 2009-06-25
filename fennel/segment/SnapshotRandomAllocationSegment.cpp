@@ -90,10 +90,10 @@ PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
         if (snapshotCsn >= pageEntry.allocationCsn) {
             // only consider uncommitted pageEntry's if they correspond to
             // the current txn
-            if ((!readOnlyCommittedData &&
-                    pageEntry.ownerId == UNCOMMITTED_PAGE_OWNER_ID &&
-                    snapshotCsn == pageEntry.allocationCsn) ||
-                pageEntry.ownerId != UNCOMMITTED_PAGE_OWNER_ID)
+            if ((!readOnlyCommittedData
+                 && pageEntry.ownerId == UNCOMMITTED_PAGE_OWNER_ID
+                 && snapshotCsn == pageEntry.allocationCsn)
+                || pageEntry.ownerId != UNCOMMITTED_PAGE_OWNER_ID)
             {
                 snapshotPageMap[pageId] = chainPageId;
                 return chainPageId;
@@ -406,11 +406,11 @@ void SnapshotRandomAllocationSegment::delegatedCheckpoint(
     //
     // Note that we need to define this method to avoid calling
     // delegatedCheckpoint on the underlying VersionedRandomAllocationSegment.
-    if (needPageFlush ||
-        (checkpointType == CHECKPOINT_FLUSH_AND_UNMAP && forceCacheUnmap))
+    if (needPageFlush
+        || (checkpointType == CHECKPOINT_FLUSH_AND_UNMAP && forceCacheUnmap))
     {
         MappedPageListenerPredicate pagePredicate(delegatingSegment);
-        pCache->checkpointPages(pagePredicate,checkpointType);
+        pCache->checkpointPages(pagePredicate, checkpointType);
         needPageFlush = false;
     }
 }

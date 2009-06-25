@@ -119,7 +119,7 @@ void LhxAggExecStreamTest::testCountImpl(uint forcePartitionLevel)
     mockParams.nRows = numRows;   // at least two buffers
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // simulate SELECT COUNT(*) FROM t10k
@@ -141,11 +141,11 @@ void LhxAggExecStreamTest::testCountImpl(uint forcePartitionLevel)
     aggParams.enableSubPartStat = true;
 
     ExecStreamEmbryo aggStreamEmbryo;
-    aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new LhxAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("LhxAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // set up a generator which can produce the expected output
     // (a count of 10000)
@@ -167,7 +167,7 @@ void LhxAggExecStreamTest::testSumImpl(uint forcePartitionLevel)
     mockParams.pGenerator.reset(new RampExecStreamGenerator());
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     // simulate SELECT SUM(x) FROM t10k with x iterating from 0 to 9999
@@ -190,16 +190,16 @@ void LhxAggExecStreamTest::testSumImpl(uint forcePartitionLevel)
     aggParams.enableSubPartStat = true;
 
     ExecStreamEmbryo aggStreamEmbryo;
-    aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new LhxAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("LhxAggExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo,aggStreamEmbryo);
+        mockStreamEmbryo, aggStreamEmbryo);
 
     // set up a generator which can produce the expected output
     // (a count of 5000*9999)
     RampExecStreamGenerator expectedResultGenerator(
-        (mockParams.nRows-1)*mockParams.nRows/2);
+        (mockParams.nRows - 1) * mockParams.nRows / 2);
 
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
@@ -245,7 +245,7 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
 
     ExecStreamEmbryo aggStreamEmbryo;
 
-    aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new LhxAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("LhxAggExecStream");
 
     ExternalSortExecStreamParams sortParams;
@@ -262,7 +262,7 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
 
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
-        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+        ExternalSortExecStream::newExternalSortExecStream(), sortParams);
     sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
 
     std::vector<ExecStreamEmbryo> transforms;
@@ -343,7 +343,7 @@ void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
 
     ExecStreamEmbryo aggStreamEmbryo;
 
-    aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
+    aggStreamEmbryo.init(new LhxAggExecStream(), aggParams);
     aggStreamEmbryo.getStream()->setName("LhxAggExecStream");
 
     ExternalSortExecStreamParams sortParams;
@@ -358,7 +358,7 @@ void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
 
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
-        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+        ExternalSortExecStream::newExternalSortExecStream(), sortParams);
     sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
 
     std::vector<ExecStreamEmbryo> transforms;

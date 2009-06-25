@@ -43,7 +43,7 @@ class TwoQPage : public CachePage, public TwoQVictim
 {
 public:
     TwoQPage(Cache &cache,PBuffer buffer)
-        : CachePage(cache,buffer)
+        : CachePage(cache, buffer)
     {
     }
 };
@@ -57,7 +57,7 @@ SharedCache Cache::newCache(
         TwoQVictimPolicy<TwoQPage>
         > TwoQCache;
     return SharedCache(
-        new TwoQCache(cacheParams,bufferAllocator),
+        new TwoQCache(cacheParams, bufferAllocator),
         ClosableObjectDestructor());
 }
 

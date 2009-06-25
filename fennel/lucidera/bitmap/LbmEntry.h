@@ -735,14 +735,14 @@ public:
 
 inline bool LbmEntry::isSingleton(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size() - 2].isNull() &&
-        inputTuple[inputTuple.size() - 1].isNull());
+    return inputTuple[inputTuple.size() - 2].isNull()
+        && inputTuple[inputTuple.size() - 1].isNull();
 }
 
 inline LcsRid LbmEntry::getStartRid(
     TupleData const &tuple)
 {
-    return *reinterpret_cast<LcsRid const *> (tuple[tuple.size()-3].pData);
+    return *reinterpret_cast<LcsRid const *> (tuple[tuple.size() - 3].pData);
 }
 
 inline bool LbmEntry::isSingleton() const
@@ -750,13 +750,11 @@ inline bool LbmEntry::isSingleton() const
     return (pSegStart == pSegEnd);
 }
 
-
 inline bool LbmEntry::isSingleBitmap(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size() - 2].isNull() &&
-        !inputTuple[inputTuple.size() - 1].isNull());
+    return inputTuple[inputTuple.size() - 2].isNull()
+        && !inputTuple[inputTuple.size() - 1].isNull();
 }
-
 
 inline bool LbmEntry::isSingleBitmap() const
 {

@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 class Cache;
 class MappedPageListener;
 
-template <class PageT,class VictimPolicyT>
+template <class PageT, class VictimPolicyT>
 class CacheImpl;
 
 /**
@@ -96,7 +96,7 @@ public:
     };
 
 private:
-    template <class PageT,class VictimPolicyT>
+    template <class PageT, class VictimPolicyT>
     friend class CacheImpl;
 
 // ----------------------------------------------------------------------

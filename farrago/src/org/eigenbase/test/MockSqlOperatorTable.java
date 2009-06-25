@@ -69,7 +69,8 @@ public class MockSqlOperatorTable
                 null,
                 null,
                 SqlTypeStrategies.otcNumeric,
-                SqlFunctionCategory.UserDefinedFunction) {
+                SqlFunctionCategory.UserDefinedFunction)
+            {
                 public RelDataType inferReturnType(
                     SqlOperatorBinding opBinding)
                 {
@@ -89,7 +90,8 @@ public class MockSqlOperatorTable
                 null,
                 null,
                 SqlTypeStrategies.otcVariadic,
-                SqlFunctionCategory.UserDefinedFunction) {
+                SqlFunctionCategory.UserDefinedFunction)
+            {
                 public RelDataType inferReturnType(
                     SqlOperatorBinding opBinding)
                 {

@@ -385,14 +385,16 @@ void LbmLoadBitmapTest::testLoad(
         // last one scans all columns
         if (i < nClusters) {
             DynamicParamId paramId =
-                (dynamicRootPageId) ?
-                    DynamicParamId(nClusters + i + 2) : DynamicParamId(0);
+                (dynamicRootPageId)
+                ? DynamicParamId(nClusters + i + 2)
+                : DynamicParamId(0);
             initClusterScanDef(generatorParams, clusterScanDef, i, paramId);
         } else {
             for (uint j = 0; j < nClusters; j++) {
                 DynamicParamId paramId =
-                    (dynamicRootPageId) ? DynamicParamId(nClusters + 2 + j) :
-                        DynamicParamId(0);
+                    (dynamicRootPageId)
+                    ? DynamicParamId(nClusters + 2 + j)
+                    : DynamicParamId(0);
                 initClusterScanDef(generatorParams, clusterScanDef, j, paramId);
             }
         }
@@ -588,8 +590,9 @@ void LbmLoadBitmapTest::initClusterScanDef(
     clusterScanDef.keyProj = bTreeClusters[bTreeIndex]->keyProjection;
     clusterScanDef.rootPageIdParamId = paramId;
     clusterScanDef.rootPageId =
-        (opaqueToInt(paramId) > 0) ?
-            NULL_PAGE_ID : bTreeClusters[bTreeIndex]->rootPageId;
+        (opaqueToInt(paramId) > 0)
+        ? NULL_PAGE_ID
+        : bTreeClusters[bTreeIndex]->rootPageId;
     clusterScanDef.pageOwnerId = bTreeClusters[bTreeIndex]->pageOwnerId;
     clusterScanDef.segmentId = bTreeClusters[bTreeIndex]->segmentId;
     clusterScanDef.pRootMap = 0;

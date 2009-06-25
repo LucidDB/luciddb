@@ -85,7 +85,7 @@ void LcsClusterAppendExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // REVIEW --
     // 4 pages per cluster column
@@ -192,8 +192,8 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
             outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
             pOutAccessor->provideBufferForConsumption(
                 outputTupleBuffer.get(),
-                outputTupleBuffer.get() +
-                    outputTupleAccessor->getCurrentByteCount());
+                outputTupleBuffer.get()
+                + outputTupleAccessor->getCurrentByteCount());
 
             isDone = true;
             return EXECRC_BUF_OVERFLOW;

@@ -232,42 +232,42 @@ typedef char const * const ParamVal;
 // settings, and if that high order bit is used and set, we need to be able
 // to distinguish an ownerId with that bit set from ANON_PAGE_OWNER_ID.  So,
 // that's why we also need to reserve the second highest bit.
-DEFINE_OPAQUE_INTEGER(PageOwnerId,uint64_t);
+DEFINE_OPAQUE_INTEGER(PageOwnerId, uint64_t);
 
 #define VALID_PAGE_OWNER_ID(pageOwnerId) \
     (!(opaqueToInt(pageOwnerId) & 0xC000000000000000LL))
 
 // DeviceID is an integer identifying a device.
-DEFINE_OPAQUE_INTEGER(DeviceId,uint);
+DEFINE_OPAQUE_INTEGER(DeviceId, uint);
 
 // SegmentId is an integer identifying a segment.
-DEFINE_OPAQUE_INTEGER(SegmentId,uint);
+DEFINE_OPAQUE_INTEGER(SegmentId, uint);
 
 // BlockId is a 64-bit identifier for a physical block on disk.
-DEFINE_OPAQUE_INTEGER(BlockId,uint64_t);
+DEFINE_OPAQUE_INTEGER(BlockId, uint64_t);
 
 // PageId is a 64-bit identifier for a logical page within the scope of a
 // particular segment.
-DEFINE_OPAQUE_INTEGER(PageId,uint64_t);
+DEFINE_OPAQUE_INTEGER(PageId, uint64_t);
 
 // SegByteId is the logical 64-bit address of a byte within the scope of a
 // particular segment.
-DEFINE_OPAQUE_INTEGER(SegByteId,uint64_t);
+DEFINE_OPAQUE_INTEGER(SegByteId, uint64_t);
 
 // TxnId is the 64-bit identifier for a transaction.  Only the low 63 bits
 // should be used, as the high order bit may be used to flag special settings.
-DEFINE_OPAQUE_INTEGER(TxnId,uint64_t);
+DEFINE_OPAQUE_INTEGER(TxnId, uint64_t);
 
 // TxnId is an integer identifier for a txn-relative savepoint.
-DEFINE_OPAQUE_INTEGER(SavepointId,uint);
+DEFINE_OPAQUE_INTEGER(SavepointId, uint);
 
 // LogicalTxnClassId is a magic number identifying the type of
 // a logged LogicalTxnParticipant.
-DEFINE_OPAQUE_INTEGER(LogicalTxnClassId,uint64_t);
+DEFINE_OPAQUE_INTEGER(LogicalTxnClassId, uint64_t);
 
 // DynamicParamId is an identifier for a dynamic parameter within the
 // scope of an ExecStreamGraph.
-DEFINE_OPAQUE_INTEGER(DynamicParamId,uint);
+DEFINE_OPAQUE_INTEGER(DynamicParamId, uint);
 
 // LogicalActionType enumerates the possible actions in a LogicalTxn in a
 // participant-defined manner.  Each participant class defines its own

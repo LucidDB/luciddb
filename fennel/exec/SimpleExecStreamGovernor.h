@@ -120,8 +120,8 @@ public:
 
 inline uint SimpleExecStreamGovernor::computePerGraphAllocation()
 {
-    return (resourcesAvailable.nCachePages + resourcesAssigned.nCachePages) /
-        knobSettings.expectedConcurrentStatements;
+    return (resourcesAvailable.nCachePages + resourcesAssigned.nCachePages)
+        / knobSettings.expectedConcurrentStatements;
 }
 
 FENNEL_END_NAMESPACE

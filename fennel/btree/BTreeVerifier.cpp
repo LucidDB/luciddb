@@ -106,14 +106,14 @@ PageId BTreeVerifier::verifyNode(
         keyData = lowerBoundKey;
         uint nKeys = nodeAccessor.getKeyCount(node);
         for (uint i = 0; i < nKeys; ++i) {
-            nodeAccessor.accessTuple(node,i);
+            nodeAccessor.accessTuple(node, i);
             nodeAccessor.unmarshalKey(keyData2);
             if (keyData.size()) {
-                int c = keyDescriptor.compareTuples(keyData,keyData2);
+                int c = keyDescriptor.compareTuples(keyData, keyData2);
 
                 // TODO:  move this somewhere else
                 if (c > 0) {
-                    nodeAccessor.dumpNode(std::cerr,node,pageId);
+                    nodeAccessor.dumpNode(std::cerr, node, pageId);
                 }
                 permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
@@ -132,7 +132,7 @@ PageId BTreeVerifier::verifyNode(
     // verify upper bound (using last key left over from previous loop)
     if (keyData.size() && upperBoundKey.size()) {
         keyData2 = upperBoundKey;
-        int c = keyDescriptor.compareTuples(keyData,keyData2);
+        int c = keyDescriptor.compareTuples(keyData, keyData2);
         permAssert(c <= 0);
     }
     if (node.height) {
@@ -157,15 +157,15 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
     for (uint i = 0; i < node.nEntries; ++i) {
         PageId nextChildPageId;
         if (i + 1 < node.nEntries) {
-            nextChildPageId = getChild(node,i + 1);
+            nextChildPageId = getChild(node, i + 1);
         } else {
             nextChildPageId = getFirstChild(node.rightSibling);
         }
-        PageId childPageId = getChild(node,i);
+        PageId childPageId = getChild(node, i);
         do {
             expectedRightSibling = nextChildPageId;
             expectedHeight = node.height - 1;
-            nodeAccessor.accessTuple(node,i);
+            nodeAccessor.accessTuple(node, i);
             nodeAccessor.unmarshalKey(keyData);
             if (nextChildPageId == NULL_PAGE_ID) {
                 // pretend last key is +infinity
@@ -175,7 +175,7 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
             }
             childPageId = verifyNode(childPageId);
         } while (childPageId != NULL_PAGE_ID);
-        nodeAccessor.accessTuple(node,i);
+        nodeAccessor.accessTuple(node, i);
         nodeAccessor.unmarshalKey(keyData);
         lowerBoundKey = keyData;
     }

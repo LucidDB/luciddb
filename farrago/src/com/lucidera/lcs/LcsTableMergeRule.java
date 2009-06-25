@@ -353,8 +353,8 @@ public class LcsTableMergeRule
         Map<Integer, FemLocalIndex> colOrdToClusterMap =
             new HashMap<Integer, FemLocalIndex>();
         for (FemLocalIndex cluster : clusteredIndexes) {
-            for (CwmIndexedFeature indexedFeature :
-                cluster.getIndexedFeature())
+            for (CwmIndexedFeature indexedFeature
+                : cluster.getIndexedFeature())
             {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();

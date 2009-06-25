@@ -44,17 +44,17 @@ ParamName TestBase::paramDegreeOfParallelism = "degreeOfParallelism";
 
 TestBase::TestBase()
     : statsTarget(
-        configMap.getStringParam(paramStatsFileName,"/tmp/fennel.stats")),
-      statsTimer(statsTarget,500),
+        configMap.getStringParam(paramStatsFileName, "/tmp/fennel.stats")),
+      statsTimer(statsTarget, 500),
       defaultTests(),
       extraTests()
 {
     pTestObj.reset(this);
     testName = configMap.getStringParam(paramTestSuiteName);
     traceLevel = static_cast<TraceLevel>(
-        configMap.getIntParam(paramTraceLevel,TRACE_CONFIG));
+        configMap.getIntParam(paramTraceLevel, TRACE_CONFIG));
     std::string traceStdoutParam =
-        configMap.getStringParam(paramTraceStdout,"");
+        configMap.getStringParam(paramTraceStdout, "");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
 
     std::string defaultTraceFileName;
@@ -105,7 +105,7 @@ TestBase::~TestBase()
 /// Configuration parameters can also be set ad hoc, from the command line,
 /// as pairs name=val. These take precedence.
 
-void TestBase::readParams(int argc,char **argv)
+void TestBase::readParams(int argc, char **argv)
 {
     bool verbose = false;
     ConfigMap adhocMap;
@@ -129,9 +129,9 @@ void TestBase::readParams(int argc,char **argv)
             int i = arg.find("=");
             if ((0 < i) && (i < arg.size())) {
                 // an ad hoc parameter
-                std::string key = arg.substr(0,i);
+                std::string key = arg.substr(0, i);
                 std::string val = arg.substr(i + 1);
-                adhocMap.setStringParam(key,val);
+                adhocMap.setStringParam(key, val);
             } else {
                 // a config file name
                 std::ifstream configFile(arg.c_str());
@@ -146,7 +146,7 @@ void TestBase::readParams(int argc,char **argv)
     // small non-random sorted data set
     if (!configMap.isParamSet(paramDictionaryFileName)) {
         std::string dictFileName = "dictWords";
-        configMap.setStringParam(paramDictionaryFileName,dictFileName);
+        configMap.setStringParam(paramDictionaryFileName, dictFileName);
     }
 
     if (verbose) {
@@ -213,7 +213,7 @@ void TestBase::TestCaseGroup::addAllToTestSuite(TestSuite *suite) const
 
 void TestBase::beforeTestCase(std::string testCaseName)
 {
-    notifyTrace(testName,TRACE_INFO,"ENTER:  " + testCaseName);
+    notifyTrace(testName, TRACE_INFO, "ENTER:  " + testCaseName);
 
     // Install the AutoBacktrace signal handler now, after
     // boost::execution_monitor::catch_signals() has installed its own, so that
@@ -229,7 +229,7 @@ void TestBase::afterTestCase(std::string testCaseName)
 {
     AutoBacktrace::setTraceTarget();
     configMap.disableTracing();
-    notifyTrace(testName,TRACE_INFO,"LEAVE:  " + testCaseName);
+    notifyTrace(testName, TRACE_INFO, "LEAVE:  " + testCaseName);
 }
 
 void TestBase::testCaseSetUp()
@@ -240,7 +240,7 @@ void TestBase::testCaseTearDown()
 {
 }
 
-void TestBase::notifyTrace(std::string source,TraceLevel,std::string message)
+void TestBase::notifyTrace(std::string source, TraceLevel, std::string message)
 {
     if (traceFile || traceStdout) {
         StrictMutexGuard traceMutexGuard(traceMutex);

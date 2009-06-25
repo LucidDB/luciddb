@@ -43,7 +43,7 @@ void SegBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // set aside 1 page for I/O
     minQuantity.nCachePages += 1;

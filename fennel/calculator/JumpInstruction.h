@@ -267,7 +267,6 @@ class FENNEL_CALCULATOR_EXPORT JumpInstructionRegister
     template < class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             InstructionSignature sig = INSTCLASS2::signature(type);

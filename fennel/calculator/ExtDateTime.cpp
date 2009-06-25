@@ -42,7 +42,7 @@ CastDateToStrA(
     } else {
         // Produce a result like "2004-05-12"
         int64_t v = date->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLDATE>(
+        int len = SqlDateToStr<1, 1, SQLDATE>(
             result->pointer(), result->storage(), v,
             (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
@@ -62,7 +62,7 @@ CastTimeToStrA(
         result->length(0);
     } else {
         int64_t v = time->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLTIME>(
+        int len = SqlDateToStr<1, 1, SQLTIME>(
             result->pointer(), result->storage(), v,
             (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
@@ -82,7 +82,7 @@ CastTimestampToStrA(
         result->length(0);
     } else {
         int64_t v = tstamp->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLTIMESTAMP>(
+        int len = SqlDateToStr<1, 1, SQLTIMESTAMP>(
             result->pointer(), result->storage(), v,
             (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
@@ -101,7 +101,7 @@ CastStrAToDate(
         result->toNull();
     } else {
         result->value(
-            SqlStrToDate<1,1,SQLDATE>(
+            SqlStrToDate<1, 1, SQLDATE>(
                 dateStr->pointer(),
                 dateStr->stringLength()));
     }
@@ -119,7 +119,7 @@ CastStrAToTime(
         result->toNull();
     } else {
         result->value(
-            SqlStrToDate<1,1,SQLTIME>(
+            SqlStrToDate<1, 1, SQLTIME>(
                 timeStr->pointer(),
                 timeStr->stringLength()));
     }
@@ -137,7 +137,7 @@ CastStrAToTimestamp(
         result->toNull();
     } else {
         result->value(
-            SqlStrToDate<1,1,SQLTIMESTAMP>(
+            SqlStrToDate<1, 1, SQLTIMESTAMP>(
                 timestampStr->pointer(),
                 timestampStr->stringLength()));
     }

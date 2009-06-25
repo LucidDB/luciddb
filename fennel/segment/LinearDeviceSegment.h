@@ -89,7 +89,7 @@ class FENNEL_SEGMENT_EXPORT LinearDeviceSegment
 
     SharedRandomAccessDevice pDevice;
     BlockId firstBlockId;
-    BlockNum nPagesMax,nPagesAllocated,nPagesIncrement,nPagesExtended;
+    BlockNum nPagesMax, nPagesAllocated, nPagesIncrement, nPagesExtended;
 
     explicit LinearDeviceSegment(
         SharedCache cache,
@@ -107,7 +107,7 @@ public:
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual BlockNum getAllocatedSizeInPages();
     virtual BlockNum getNumPagesOccupiedHighWater();

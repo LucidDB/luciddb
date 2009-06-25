@@ -143,8 +143,8 @@ void SnapshotSegmentTestBase::verifyPage(CachePage &page, uint x)
     // that smaller csn
     uint update = 0;
     for (int i = updatedCsns.size() - 1; i >= 0; i--) {
-        if (updatedCsns[i] <= currCsn &&
-            x % opaqueToInt(updatedCsns[i]) == 0)
+        if (updatedCsns[i] <= currCsn
+            && x % opaqueToInt(updatedCsns[i]) == 0)
         {
             update = opaqueToInt(updatedCsns[i]);
             break;

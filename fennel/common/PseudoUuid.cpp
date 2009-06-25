@@ -106,7 +106,7 @@ void PseudoUuid::generateInvalid()
 
 bool PseudoUuid::operator == (PseudoUuid const &other) const
 {
-    return (memcmp(data,other.data,sizeof(data)) == 0);
+    return (memcmp(data, other.data, sizeof(data)) == 0);
 }
 
 

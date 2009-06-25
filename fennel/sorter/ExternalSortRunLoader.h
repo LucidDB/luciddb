@@ -177,10 +177,10 @@ class FENNEL_SORTER_EXPORT ExternalSortRunLoader
      */
     inline PBuffer &getPointerArrayEntry(uint iTuple);
 
-    inline void quickSortSwap(uint l,uint r);
-    uint quickSortPartition(uint i,uint j,PBuffer pivot);
-    PBuffer quickSortFindPivot(uint l,uint r);
-    void quickSort(uint l,uint r);
+    inline void quickSortSwap(uint l, uint r);
+    uint quickSortPartition(uint i, uint j, PBuffer pivot);
+    PBuffer quickSortFindPivot(uint l, uint r);
+    void quickSort(uint l, uint r);
 
 public:
     /**

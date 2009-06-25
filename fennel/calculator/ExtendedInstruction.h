@@ -499,7 +499,7 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction2<T0,T1> > DefT;
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction2<T0, T1> > DefT;
 
 private:
     DefT _def;
@@ -524,12 +524,12 @@ public:
           _reg1(reg1)
     {}
 
-    static ExtendedInstruction2<T0,T1> *create(
+    static ExtendedInstruction2<T0, T1> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 2);
-        return new ExtendedInstruction2<T0,T1>(
+        return new ExtendedInstruction2<T0, T1>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]));
@@ -582,7 +582,7 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction2Context<T0,T1> >
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction2Context<T0, T1> >
         DefT;
 
 private:
@@ -610,12 +610,12 @@ public:
           _reg1(reg1)
     {}
 
-    static ExtendedInstruction2Context<T0,T1> *create(
+    static ExtendedInstruction2Context<T0, T1> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 2);
-        return new ExtendedInstruction2Context<T0,T1>(
+        return new ExtendedInstruction2Context<T0, T1>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]));
@@ -673,7 +673,8 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction3<T0,T1,T2> > DefT;
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction3<T0, T1, T2> >
+        DefT;
 
 private:
     DefT _def;
@@ -701,12 +702,12 @@ public:
           _reg2(reg2)
     {}
 
-    static ExtendedInstruction3<T0,T1,T2> *create(
+    static ExtendedInstruction3<T0, T1, T2> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 3);
-        return new ExtendedInstruction3<T0,T1,T2>(
+        return new ExtendedInstruction3<T0, T1, T2>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),
@@ -764,7 +765,7 @@ public:
      * The specific type of the definition of this instruction.
      */
     typedef
-        FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
+        FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0, T1, T2> >
         DefT;
 
 private:
@@ -795,12 +796,12 @@ public:
           _reg2(reg2)
     {}
 
-    static ExtendedInstruction3Context<T0,T1,T2> *create(
+    static ExtendedInstruction3Context<T0, T1, T2> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 3);
-        return new ExtendedInstruction3Context<T0,T1,T2>(
+        return new ExtendedInstruction3Context<T0, T1, T2>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),
@@ -863,7 +864,7 @@ public:
      * The specific type of the definition of this instruction.
      */
     typedef FunctorExtendedInstructionDef<
-        ExtendedInstruction4<T0,T1,T2,T3> > DefT;
+        ExtendedInstruction4<T0, T1, T2, T3> > DefT;
 
 private:
     DefT _def;
@@ -894,12 +895,12 @@ public:
           _reg3(reg3)
     {}
 
-    static ExtendedInstruction4<T0,T1,T2,T3> *create(
+    static ExtendedInstruction4<T0, T1, T2, T3> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 4);
-        return new ExtendedInstruction4<T0,T1,T2,T3>(
+        return new ExtendedInstruction4<T0, T1, T2, T3>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),
@@ -961,7 +962,7 @@ public:
      * The specific type of the definition of this instruction.
      */
     typedef FunctorExtendedInstructionDef<
-        ExtendedInstruction4Context<T0,T1,T2,T3> > DefT;
+        ExtendedInstruction4Context<T0, T1, T2, T3> > DefT;
 
 private:
     DefT _def;
@@ -994,12 +995,12 @@ public:
           _reg3(reg3)
     {}
 
-    static ExtendedInstruction4Context<T0,T1,T2,T3> *create(
+    static ExtendedInstruction4Context<T0, T1, T2, T3> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 4);
-        return new ExtendedInstruction4Context<T0,T1,T2,T3>(
+        return new ExtendedInstruction4Context<T0, T1, T2, T3>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),
@@ -1067,7 +1068,7 @@ public:
      * The specific type of the definition of this instruction.
      */
     typedef FunctorExtendedInstructionDef<
-        ExtendedInstruction5<T0,T1,T2,T3,T4> > DefT;
+        ExtendedInstruction5<T0, T1, T2, T3, T4> > DefT;
 
 private:
     DefT _def;
@@ -1101,12 +1102,12 @@ public:
           _reg4(reg4)
     {}
 
-    static ExtendedInstruction5<T0,T1,T2,T3,T4> *create(
+    static ExtendedInstruction5<T0, T1, T2, T3, T4> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 5);
-        return new ExtendedInstruction5<T0,T1,T2,T3,T4>(
+        return new ExtendedInstruction5<T0, T1, T2, T3, T4>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),
@@ -1173,7 +1174,7 @@ public:
      * The specific type of the definition of this instruction.
      */
     typedef FunctorExtendedInstructionDef<
-        ExtendedInstruction5Context<T0,T1,T2,T3,T4> > DefT;
+        ExtendedInstruction5Context<T0, T1, T2, T3, T4> > DefT;
 
 private:
     DefT _def;
@@ -1209,12 +1210,12 @@ public:
           _reg4(reg4)
     {}
 
-    static ExtendedInstruction5Context<T0,T1,T2,T3,T4> *create(
+    static ExtendedInstruction5Context<T0, T1, T2, T3, T4> *create(
         DefT &def,
         vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 5);
-        return new ExtendedInstruction5Context<T0,T1,T2,T3,T4>(
+        return new ExtendedInstruction5Context<T0, T1, T2, T3, T4>(
             def,
             static_cast<RegisterRef<T0> *>(regRefs[0]),
             static_cast<RegisterRef<T1> *>(regRefs[1]),

@@ -142,7 +142,7 @@ ExecStreamResult MockProducerExecStream::execute(
         cb -= cbBatch;
         nRowsProduced += nRows;
         PBuffer pBuffer = pOutAccessor->getProductionStart();
-        memset(pBuffer,0,cbBatch);
+        memset(pBuffer, 0, cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
     }

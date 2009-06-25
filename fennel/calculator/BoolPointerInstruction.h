@@ -91,11 +91,13 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
 
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() ==
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+            == BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -162,11 +164,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() ==
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+            == BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
@@ -233,11 +237,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+                   > BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -304,11 +310,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >=
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+            >= BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -375,11 +383,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+                   < BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -446,11 +456,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
-            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()
+            || BoolPointerInstruction<PTR_TYPE>::mOp2->isNull())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <=
-                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer()
+            <= BoolPointerInstruction<PTR_TYPE>::mOp2->pointer())
+        {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -637,7 +649,6 @@ class FENNEL_CALCULATOR_EXPORT BoolPointerInstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.

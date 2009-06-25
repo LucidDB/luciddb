@@ -50,7 +50,7 @@ protected:
     std::string constructString(jobject jStringObj)
     {
         jstring jString = reinterpret_cast<jstring>(jStringObj);
-        return JniUtil::toStdString(pEnv,jString);
+        return JniUtil::toStdString(pEnv, jString);
     }
 
     // helper for setters which take strings (returns local JNI reference)
@@ -159,7 +159,7 @@ public:
      *
      * @param jObject the Java object to be proxied
      */
-    void init(JniEnvRef pEnv,jobject jObject);
+    void init(JniEnvRef pEnv, jobject jObject);
 
     /**
      * @return name of the Java interface implemented by this proxy
@@ -202,7 +202,7 @@ public:
     {
         assert(jIter);
         boost::shared_ptr<T>::get()->jObject =
-            JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv,jIter);
+            JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv, jIter);
         if (!(boost::shared_ptr<T>::get()->jObject)) {
             // iteration exhausted, so become singular
             boost::shared_ptr<T>::reset();
@@ -251,7 +251,7 @@ public:
      * Dispatch table type.  The key is the Java class name, and the
      * value is the corresponding visit functor to be called.
      */
-    typedef std::map<std::string,SharedVisitorMethod> MethodMap;
+    typedef std::map<std::string, SharedVisitorMethod> MethodMap;
 
     /**
      * The dispatch table.
@@ -265,7 +265,7 @@ public:
      *
      * @param pMethod corresponding visit method to call
      */
-    void addMethod(jclass jClass,SharedVisitorMethod pMethod)
+    void addMethod(jclass jClass, SharedVisitorMethod pMethod)
     {
         assert(pMethod);
         methodMap[JniUtil::getClassName(jClass)] = pMethod;
@@ -290,10 +290,10 @@ public:
         SharedVisitorMethod pMethod = methodMap[className];
         if (!pMethod) {
             throw std::logic_error(
-                std::string("error: unknown method for proxy class '") +
-                className + "'");
+                std::string("error: unknown method for proxy class '")
+                + className + "'");
         }
-        pMethod->execute(visitor,proxy);
+        pMethod->execute(visitor, proxy);
     }
 };
 
@@ -327,7 +327,7 @@ public:
             // realize that the proxies themselves don't share the same
             // identity.
             ProxyImpl proxyImpl;
-            proxyImpl.init(proxy.pEnv,proxy.jObject);
+            proxyImpl.init(proxy.pEnv, proxy.jObject);
             // This binds to the correct visit overload.
             Visitor &visitorImpl = dynamic_cast<Visitor &>(visitor);
             visitorImpl.visit(proxyImpl);

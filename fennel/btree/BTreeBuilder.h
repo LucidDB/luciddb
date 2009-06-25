@@ -69,7 +69,7 @@ class FENNEL_BTREE_EXPORT BTreeBuilder
         RecordNum parentLevelProcessedEntries);
 
     static uint calculateNodesOnLevel(
-        uint nChildEntries,uint nEntriesPerChildNode);
+        uint nChildEntries, uint nEntriesPerChildNode);
 
     uint getRootHeight()
     {

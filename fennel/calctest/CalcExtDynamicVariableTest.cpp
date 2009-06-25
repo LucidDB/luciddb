@@ -48,7 +48,7 @@ class CalcExtDynamicVariableTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtDynamicVariableTest()
-        : TraceSource(shared_from_this(),"CalcExtDynamicVariableTest")
+        : TraceSource(shared_from_this(), "CalcExtDynamicVariableTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -245,9 +245,9 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
         - 3.14e300
         < 0.0001);
 
-    BOOST_CHECK(!memcmp("abc",outTuple[11].pData,3));
-    BOOST_CHECK(!memcmp("def",outTuple[12].pData,3));
-    BOOST_CHECK(!memcmp("ghi",outTuple[13].pData,3));
+    BOOST_CHECK(!memcmp("abc", outTuple[11].pData, 3));
+    BOOST_CHECK(!memcmp("def", outTuple[12].pData, 3));
+    BOOST_CHECK(!memcmp("ghi", outTuple[13].pData, 3));
 }
 
 FENNEL_UNIT_TEST_SUITE(CalcExtDynamicVariableTest);

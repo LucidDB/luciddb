@@ -433,7 +433,7 @@ void ExecStreamGraphImpl::sortStreams()
 {
     std::vector<Vertex> sortedVertices;
     boost::topological_sort(
-        graphRep,std::back_inserter(sortedVertices));
+        graphRep, std::back_inserter(sortedVertices));
     sortedStreams.resize(sortedVertices.size());
 
     // boost::topological_sort produces an ordering from consumers to
@@ -448,7 +448,7 @@ void ExecStreamGraphImpl::sortStreams()
     // now filter out the null vertices representing inputs and outputs
     sortedStreams.erase(
         std::remove(
-            sortedStreams.begin(),sortedStreams.end(),SharedExecStream()),
+            sortedStreams.begin(), sortedStreams.end(), SharedExecStream()),
         sortedStreams.end());
 }
 
@@ -461,7 +461,7 @@ void ExecStreamGraphImpl::prepare(ExecStreamScheduler &scheduler)
     EdgeIterPair edges = boost::edges(filteredGraph);
     for (; edges.first != edges.second; edges.first++) {
         SharedExecStreamBufAccessor pBufAccessor = scheduler.newBufAccessor();
-        boost::put(boost::edge_data,graphRep,*(edges.first),pBufAccessor);
+        boost::put(boost::edge_data, graphRep, *(edges.first), pBufAccessor);
     }
 
     // bind buffer accessors to streams
@@ -478,7 +478,7 @@ void ExecStreamGraphImpl::bindStreamBufAccessors(SharedExecStream pStream)
 
     // bind the input buffers (explicit dataflow only)
     InEdgeIterPair inEdges = boost::in_edges(
-        pStream->getStreamId(),filteredGraph);
+        pStream->getStreamId(), filteredGraph);
     for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
         SharedExecStreamBufAccessor pBufAccessor =
             getSharedBufAccessorFromEdge(*(inEdges.first));
@@ -489,7 +489,7 @@ void ExecStreamGraphImpl::bindStreamBufAccessors(SharedExecStream pStream)
 
     // bind the output buffers (explicit dataflow only)
     OutEdgeIterPair outEdges = boost::out_edges(
-        pStream->getStreamId(),filteredGraph);
+        pStream->getStreamId(), filteredGraph);
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
         SharedExecStreamBufAccessor pBufAccessor =
             getSharedBufAccessorFromEdge(*(outEdges.first));
@@ -559,7 +559,7 @@ void ExecStreamGraphImpl::closeImpl()
 
     // release any scratch memory
     if (pScratchSegment) {
-        pScratchSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        pScratchSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     }
 }
 
@@ -573,14 +573,14 @@ uint ExecStreamGraphImpl::getInputCount(
     ExecStreamId streamId)
 {
     Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    return boost::in_degree(streamVertex,filteredGraph);
+    return boost::in_degree(streamVertex, filteredGraph);
 }
 
 uint ExecStreamGraphImpl::getOutputCount(
     ExecStreamId streamId)
 {
     Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    return boost::out_degree(streamVertex,filteredGraph);
+    return boost::out_degree(streamVertex, filteredGraph);
 }
 
 ExecStreamGraphImpl::Edge ExecStreamGraphImpl::getInputEdge(
@@ -588,7 +588,7 @@ ExecStreamGraphImpl::Edge ExecStreamGraphImpl::getInputEdge(
     uint iInput)
 {
     Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    InEdgeIter pEdge = boost::in_edges(streamVertex,filteredGraph).first;
+    InEdgeIter pEdge = boost::in_edges(streamVertex, filteredGraph).first;
     for (int i = 0; i < iInput; ++i) {
         ++pEdge;
     }
@@ -600,7 +600,7 @@ SharedExecStream ExecStreamGraphImpl::getStreamInput(
     uint iInput)
 {
     Edge inputEdge = getInputEdge(streamId, iInput);
-    Vertex inputVertex = boost::source(inputEdge,graphRep);
+    Vertex inputVertex = boost::source(inputEdge, graphRep);
     return getStreamFromVertex(inputVertex);
 }
 
@@ -617,7 +617,7 @@ ExecStreamGraphImpl::Edge ExecStreamGraphImpl::getOutputEdge(
     uint iOutput)
 {
     Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    OutEdgeIter pEdge = boost::out_edges(streamVertex,filteredGraph).first;
+    OutEdgeIter pEdge = boost::out_edges(streamVertex, filteredGraph).first;
     for (int i = 0; i < iOutput; ++i) {
         ++pEdge;
     }
@@ -629,7 +629,7 @@ SharedExecStream ExecStreamGraphImpl::getStreamOutput(
     uint iOutput)
 {
     Edge outputEdge = getOutputEdge(streamId, iOutput);
-    Vertex outputVertex = boost::target(outputEdge,graphRep);
+    Vertex outputVertex = boost::target(outputEdge, graphRep);
     return getStreamFromVertex(outputVertex);
 }
 
@@ -748,7 +748,7 @@ void ExecStreamGraphImpl::closeProducers(ExecStreamId streamId)
     for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
         Edge edge = *(inEdges.first);
         // move streamId upstream
-        streamId = boost::source(edge,graphRep);
+        streamId = boost::source(edge, graphRep);
         // close the producers of this stream before closing the stream
         // itself, but only if it's possible to early close the stream
         SharedExecStream pStream = getStreamFromVertex(streamId);

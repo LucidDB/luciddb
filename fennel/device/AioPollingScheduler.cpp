@@ -57,7 +57,7 @@ bool AioPollingScheduler::schedule(RandomAccessRequest &request)
         newRequests.push_back(pBinding);
     }
     aiocb **pFirst = &(newRequests.front()) + iFirst;
-    int rc = lio_listio(LIO_NOWAIT,pFirst,newRequests.size() - iFirst,NULL);
+    int rc = lio_listio(LIO_NOWAIT, pFirst, newRequests.size() - iFirst, NULL);
     // TODO:  handle error cases
     assert(rc == 0);
     newRequestPending.notify_all();

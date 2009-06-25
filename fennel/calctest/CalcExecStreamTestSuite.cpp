@@ -38,11 +38,11 @@ CalcExecStreamTestSuite::CalcExecStreamTestSuite(bool addAllTests)
     uint64Desc = attrDesc;
 
     if (addAllTests) {
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantOneForOne);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testEmptyInput);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantTwoForOne);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantOneForTwo);
-        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testTupleOverflow);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantOneForOne);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testEmptyInput);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantTwoForOne);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testConstantOneForTwo);
+        FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite, testTupleOverflow);
     }
 }
 
@@ -148,9 +148,18 @@ void CalcExecStreamTestSuite::testTupleOverflow()
         40000);
     outputDesc.push_back(charDesc);
 
+    /*
     BOOST_CHECK_THROW(
         testConstant(program, inputDesc, outputDesc, 0),
         TupleOverflowExcn);
+    */
+    try {
+        testConstant(program, inputDesc, outputDesc, 0);
+        BOOST_ASSERT(false);
+    } catch (TupleOverflowExcn &excn) {
+    } catch (std::exception &stdExcn) {
+        BOOST_ASSERT(false);
+    }
 }
 
 void CalcExecStreamTestSuite::testConstant(

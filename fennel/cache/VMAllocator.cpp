@@ -35,14 +35,14 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
+VMAllocator::VMAllocator(size_t cbAllocInit, size_t nLocked)
 {
     cbAlloc = cbAllocInit;
     nAllocs = 0;
     if (nLocked) {
 #ifdef RLIMIT_MEMLOCK
         struct rlimit rl;
-        if (::getrlimit(RLIMIT_MEMLOCK,&rl)) {
+        if (::getrlimit(RLIMIT_MEMLOCK, &rl)) {
             throw SysCallExcn("getrlimit failed");
         }
         if (rl.rlim_cur != RLIM_INFINITY) {
@@ -50,7 +50,7 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
             // locked pages?
             rl.rlim_cur = nLocked*cbAlloc;
             rl.rlim_max = nLocked*cbAlloc;
-            if (::setrlimit(RLIMIT_MEMLOCK,&rl)) {
+            if (::setrlimit(RLIMIT_MEMLOCK, &rl)) {
                 throw SysCallExcn("setrlimit failed");
             }
         }
@@ -93,7 +93,7 @@ void *VMAllocator::allocate(int *pErrorCode)
 #endif
 
     void *v = ::mmap(
-        NULL,cbActualAlloc,
+        NULL, cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
     if (v == MAP_FAILED) {
         if (pErrorCode != NULL) {
@@ -109,7 +109,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         if (pErrorCode != NULL) {
             *pErrorCode = SysCallExcn::getCurrentErrorCode();
         }
-        ::munmap(v,cbAlloc);
+        ::munmap(v, cbAlloc);
         return NULL;
     }
     p += getpagesize();
@@ -121,17 +121,17 @@ void *VMAllocator::allocate(int *pErrorCode)
         if (pErrorCode != NULL) {
             *pErrorCode = SysCallExcn::getCurrentErrorCode();
         }
-        ::munmap(v,cbAlloc);
+        ::munmap(v, cbAlloc);
         return NULL;
     }
 #endif
 
     if (bLockPages) {
-        if (::mlock(v,cbAlloc)) {
+        if (::mlock(v, cbAlloc)) {
             if (pErrorCode != NULL) {
                 *pErrorCode = SysCallExcn::getCurrentErrorCode();
             }
-            ::munmap(v,cbAlloc);
+            ::munmap(v, cbAlloc);
             return NULL;
         }
     }
@@ -152,7 +152,7 @@ int VMAllocator::deallocate(void *p, int *pErrorCode)
 {
 #ifdef HAVE_MMAP
     if (bLockPages) {
-        if (::munlock(p,cbAlloc)) {
+        if (::munlock(p, cbAlloc)) {
             if (pErrorCode != NULL) {
                 *pErrorCode = SysCallExcn::getCurrentErrorCode();
             }
@@ -167,7 +167,7 @@ int VMAllocator::deallocate(void *p, int *pErrorCode)
     p = p2;
     cbActualAlloc += 2*getpagesize();
 #endif
-    if (::munmap((caddr_t)p,cbActualAlloc)) {
+    if (::munmap((caddr_t)p, cbActualAlloc)) {
         if (pErrorCode != NULL) {
             *pErrorCode = SysCallExcn::getCurrentErrorCode();
         }

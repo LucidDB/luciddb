@@ -101,7 +101,7 @@ void JavaTransformExecStream::open(bool restart)
         // restart inputs
         for (uint i = 0; i < inAccessors.size(); ++i) {
             inAccessors[i]->clear();
-            pGraph->getStreamInput(getStreamId(),i)->open(true);
+            pGraph->getStreamInput(getStreamId(), i)->open(true);
         }
 
         assert(farragoTransform);

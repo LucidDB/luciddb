@@ -53,7 +53,7 @@ class LRUPage : public CachePage, public LRUVictim
 {
 public:
     LRUPage(Cache &cache,PBuffer buffer)
-        : CachePage(cache,buffer)
+        : CachePage(cache, buffer)
     {
     }
 };
@@ -82,18 +82,18 @@ SharedCache CacheTestBase::newCache()
 }
 
 SharedRandomAccessDevice CacheTestBase::openDevice(
-    std::string devName,DeviceMode openMode,uint nDevicePages,
+    std::string devName, DeviceMode openMode, uint nDevicePages,
     DeviceId deviceId)
 {
     if (openMode.create) {
         FileSystem::remove(devName.c_str());
     }
     SharedRandomAccessDevice pDevice(
-        new RandomAccessFileDevice(devName,openMode));
+        new RandomAccessFileDevice(devName, openMode));
     if (openMode.create) {
         pDevice->setSizeInBytes(nDevicePages*cbPageFull);
     }
-    pCache->registerDevice(deviceId,pDevice);
+    pCache->registerDevice(deviceId, pDevice);
     return pDevice;
 }
 
@@ -109,12 +109,12 @@ void CacheTestBase::openStorage(DeviceMode openMode)
     statsTimer.start();
 
     pRandomAccessDevice = openDevice(
-        testDataFile.str(),openMode,nDiskPages,dataDeviceId);
+        testDataFile.str(), openMode, nDiskPages, dataDeviceId);
 }
 
 void CacheTestBase::closeStorage()
 {
-    closeDevice(dataDeviceId,pRandomAccessDevice);
+    closeDevice(dataDeviceId, pRandomAccessDevice);
     statsTimer.stop();
     if (pCache) {
         assert(pCache.unique());
@@ -128,13 +128,13 @@ void CacheTestBase::testCaseTearDown()
 }
 
 void CacheTestBase::closeDevice(
-    DeviceId deviceId,SharedRandomAccessDevice &pDevice)
+    DeviceId deviceId, SharedRandomAccessDevice &pDevice)
 {
     if (!pDevice) {
         return;
     }
     DeviceIdPagePredicate pagePredicate(deviceId);
-    pCache->checkpointPages(pagePredicate,CHECKPOINT_FLUSH_AND_UNMAP);
+    pCache->checkpointPages(pagePredicate, CHECKPOINT_FLUSH_AND_UNMAP);
     pCache->unregisterDevice(deviceId);
     assert(pDevice.unique());
     pDevice.reset();
@@ -144,12 +144,12 @@ CacheTestBase::CacheTestBase()
 {
     cacheParams.readConfig(configMap);
 
-    nDiskPages = configMap.getIntParam("diskPages",1000);
+    nDiskPages = configMap.getIntParam("diskPages", 1000);
     dataDeviceId = DeviceId(23);
     nMemPages = cacheParams.nMemPagesMax;
     cbPageFull = cacheParams.cbPage;
     std::string victimPolicyString = configMap.getStringParam(
-        "victimPolicy","twoq");
+        "victimPolicy", "twoq");
     if (victimPolicyString == "random") {
         victimPolicy = victimRandom;
     } else if (victimPolicyString == "lru") {

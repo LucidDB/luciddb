@@ -409,7 +409,8 @@ public abstract class AbstractRelNode
         RelOptPlanWriter pw =
             new RelOptPlanWriter(
                 new PrintWriter(sw),
-                SqlExplainLevel.DIGEST_ATTRIBUTES) {
+                SqlExplainLevel.DIGEST_ATTRIBUTES)
+            {
                 public void explain(
                     RelNode rel,
                     String [] terms,

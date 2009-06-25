@@ -44,7 +44,7 @@ BTreeBuilder::~BTreeBuilder()
 }
 
 uint BTreeBuilder::calculateNodesOnLevel(
-    uint nEntries,uint nEntriesPerNode)
+    uint nEntries, uint nEntriesPerNode)
 {
     uint nNodes = nEntries / nEntriesPerNode;
     if (nEntries % nEntriesPerNode) {
@@ -65,13 +65,13 @@ void BTreeBuilder::build(
         if (pLeafNodeAccessor->hasFixedWidthEntries()
             && pNonLeafNodeAccessor->hasFixedWidthEntries())
         {
-            buildBalanced(sortedInputStream,0,nEntriesTotal,fillFactor);
+            buildBalanced(sortedInputStream, 0, nEntriesTotal, fillFactor);
         } else if (pNonLeafNodeAccessor->hasFixedWidthEntries()) {
             buildTwoPass(
-                sortedInputStream,nEntriesTotal,fillFactor);
+                sortedInputStream, nEntriesTotal, fillFactor);
         } else {
             assert(!pLeafNodeAccessor->hasFixedWidthEntries());
-            buildUnbalanced(sortedInputStream,nEntriesTotal,fillFactor);
+            buildUnbalanced(sortedInputStream, nEntriesTotal, fillFactor);
         }
     } catch (...) {
         try {
@@ -259,7 +259,7 @@ void BTreeBuilder::buildBalanced(
                 BTreeNode &node = level.pageLock.getNodeForWrite();
                 assert(!node.nEntries);
                 level.nodeAccessor.clearNode(
-                    node,getSegment()->getUsablePageSize());
+                    node, getSegment()->getUsablePageSize());
                 node.height = i;
             }
         } else {
@@ -329,7 +329,7 @@ void BTreeBuilder::createEmptyRoot()
     treeDescriptor.rootPageId = pageLock.allocatePage(getPageOwnerId());
     BTreeNode &node = pageLock.getNodeForWrite();
     pLeafNodeAccessor->clearNode(
-        node,getSegment()->getUsablePageSize());
+        node, getSegment()->getUsablePageSize());
 }
 
 void BTreeBuilder::growTree()
@@ -382,7 +382,7 @@ void BTreeBuilder::truncate(
         treeDescriptor.rootPageId = NULL_PAGE_ID;
     } else {
         pLeafNodeAccessor->clearNode(
-            root,getSegment()->getUsablePageSize());
+            root, getSegment()->getUsablePageSize());
     }
 }
 
@@ -390,7 +390,7 @@ void BTreeBuilder::truncateChildren(BTreeNode const &node)
 {
     assert(node.height);
     assert(node.nEntries);
-    PageId pageId = getChild(node,0);
+    PageId pageId = getChild(node, 0);
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
     if (node.height > 1) {

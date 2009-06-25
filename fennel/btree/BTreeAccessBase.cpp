@@ -45,18 +45,18 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
 
     // supported leaf accessor types
     typedef BTreeKeyedNodeAccessor<
-        BTreeHeapNodeAccessor,TupleAccessor>
+        BTreeHeapNodeAccessor, TupleAccessor>
         VarNonLeafNodeAccessor;
     typedef BTreeKeyedNodeAccessor<
-        BTreeCompactNodeAccessor,TupleAccessor>
+        BTreeCompactNodeAccessor, TupleAccessor>
         FixedNonLeafNodeAccessor;
 
     // supported non-leaf accessor types
     typedef BTreeKeyedNodeAccessor<
-        BTreeHeapNodeAccessor,TupleProjectionAccessor>
+        BTreeHeapNodeAccessor, TupleProjectionAccessor>
         VarLeafNodeAccessor;
     typedef BTreeKeyedNodeAccessor<
-        BTreeCompactNodeAccessor,TupleProjectionAccessor>
+        BTreeCompactNodeAccessor, TupleProjectionAccessor>
         FixedLeafNodeAccessor;
 
     // REVIEW:  These are just for deciding between fixed and var.  Add an
@@ -131,7 +131,7 @@ PageId BTreeAccessBase::getFirstChild(PageId parentPageId)
         BTreeNode const &node = pageLock.getNodeForRead();
         assert(node.height);
         if (node.nEntries) {
-            return getChild(node,0);
+            return getChild(node, 0);
         }
         parentPageId = node.rightSibling;
     }

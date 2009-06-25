@@ -102,7 +102,7 @@ void ParallelExecStreamScheduler::removeGraph(
 
 void ParallelExecStreamScheduler::start()
 {
-    FENNEL_TRACE(TRACE_FINE,"start");
+    FENNEL_TRACE(TRACE_FINE, "start");
     assert(pGraph->isAcyclic());
     pPendingExcn.reset();
 
@@ -157,7 +157,7 @@ void ParallelExecStreamScheduler::makeRunnable(ExecStream &stream)
 void ParallelExecStreamScheduler::abort(ExecStreamGraph &graph)
 {
     StrictMutexGuard mutexGuard(mutex);
-    FENNEL_TRACE(TRACE_FINE,"abort requested");
+    FENNEL_TRACE(TRACE_FINE, "abort requested");
 
     if (!pPendingExcn) {
         pPendingExcn.reset(new AbortExcn());
@@ -174,7 +174,7 @@ void ParallelExecStreamScheduler::checkAbort() const
 
 void ParallelExecStreamScheduler::stop()
 {
-    FENNEL_TRACE(TRACE_FINE,"stop");
+    FENNEL_TRACE(TRACE_FINE, "stop");
 
     StrictMutexGuard mutexGuard(mutex);
     if (mgrState != MGR_STOPPED) {
@@ -227,7 +227,7 @@ void ParallelExecStreamScheduler::executeManager()
 
 void ParallelExecStreamScheduler::tryExecuteManager()
 {
-    FENNEL_TRACE(TRACE_FINE,"manager task starting");
+    FENNEL_TRACE(TRACE_FINE, "manager task starting");
     for (;;) {
         StrictMutexGuard mutexGuard(mutex);
         while (completedQueue.empty() && (mgrState == MGR_RUNNING)
@@ -268,7 +268,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     // assert that we're reading from a designated output stream
-    assert(boost::out_degree(current,graphRep) == 1);
+    assert(boost::out_degree(current, graphRep) == 1);
     ExecStreamGraphImpl::Edge edge =
         *(boost::out_edges(current,graphRep).first);
     ExecStreamBufAccessor &bufAccessor = graphImpl.getBufAccessorFromEdge(edge);
@@ -345,8 +345,8 @@ void ParallelExecStreamScheduler::processCompletedTask(
                     sawUnderflow = true;
                 }
             }
-            if (!sawUnderflow &&
-                (result.getResultCode() == EXECRC_BUF_UNDERFLOW))
+            if (!sawUnderflow
+                && (result.getResultCode() == EXECRC_BUF_UNDERFLOW))
             {
                 // sometimes, a stream may return underflow, even though none
                 // of its inputs are in underflow state; instead, some are in

@@ -153,8 +153,9 @@ const PBuffer LcsColumnReader::getFixedValue()
 
 const PBuffer LcsColumnReader::getVariableValue()
 {
-    return (const PBuffer) (getBatchBase() +
-        getBatchOffsets()[pScan->getRangePos()]);
+    return (const PBuffer)
+        (getBatchBase()
+         + getBatchOffsets()[pScan->getRangePos()]);
 }
 
 void LcsColumnReader::readCompressedBatch(
@@ -239,8 +240,9 @@ uint LcsColumnReader::findVal(
 
     uint iLo = 0, iHi = getBatchValCount(), iResult;
     int cmp = 0;
-    TupleProjection &boundProj = highBound ?
-        filters.upperBoundProj : filters.lowerBoundProj;
+    TupleProjection &boundProj = highBound
+        ? filters.upperBoundProj
+        : filters.lowerBoundProj;
 
     // If nVals == 0, then iLo == iHi == 0, and we return 0.
     while (iLo < iHi) {

@@ -46,7 +46,7 @@ public:
     virtual void run();
 };
 
-static void aio_handler(int,siginfo_t *pSiginfo,void *)
+static void aio_handler(int, siginfo_t *pSiginfo, void *)
 {
     assert(pSiginfo->si_code == SI_ASYNCIO);
     RandomAccessRequestBinding *pBinding =
@@ -76,7 +76,7 @@ AioSignalScheduler::AioSignalScheduler(
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask,SIGRTMIN);
-    rc = pthread_sigmask(SIG_BLOCK,&mask,NULL);
+    rc = pthread_sigmask(SIG_BLOCK, &mask, NULL);
     assert(!rc);
 
     // TODO:  come up with a way to ensure signal is blocked in all threads
@@ -149,7 +149,7 @@ void AioSignalScheduler::stop()
     }
     threads.clear();
 
-    int rc = sigaction(SIGRTMIN,&saOld,NULL);
+    int rc = sigaction(SIGRTMIN, &saOld, NULL);
     assert(!rc);
 }
 
@@ -161,7 +161,7 @@ void AioSignalHandlerThread::run()
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask,SIGRTMIN);
-    rc = pthread_sigmask(SIG_UNBLOCK,&mask,NULL);
+    rc = pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
     assert(!rc);
 
     // NOTE: had to boost priority of this thread to get signal handler
@@ -169,10 +169,10 @@ void AioSignalHandlerThread::run()
 #ifdef sun
     int policy;
     sched_param param;
-    rc = pthread_getschedparam(pthread_self(),&policy,&param);
+    rc = pthread_getschedparam(pthread_self(), &policy, &param);
     assert(!rc);
     param.sched_priority++;
-    rc = pthread_setschedparam(pthread_self(),SCHED_RR,&param);
+    rc = pthread_setschedparam(pthread_self(), SCHED_RR, &param);
     assert(!rc);
 #endif
 

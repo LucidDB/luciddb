@@ -41,12 +41,12 @@ void ByteOutputStream::writeBytes(void const *pData,uint cb)
     for (;;) {
         assert(cbWritable);
         if (cb <= cbWritable) {
-            memcpy(pNextByte,pData,cb);
+            memcpy(pNextByte, pData, cb);
             cbWritable -= cb;
             pNextByte += cb;
             return;
         }
-        memcpy(pNextByte,pData,cbWritable);
+        memcpy(pNextByte, pData, cbWritable);
         pData = static_cast<char const *>(pData) + cbWritable;
         cb -= cbWritable;
         cbWritable = 0;

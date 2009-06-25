@@ -175,9 +175,9 @@ public:
     void getAvg(RegisterRef<STDTYPE>* node)
     {
         node->value(
-            (0 != currentWindow.size()) ?
-            (currentSum / static_cast<STDTYPE>(currentWindow.size())) :
-            0);
+            (0 != currentWindow.size())
+            ? (currentSum / static_cast<STDTYPE>(currentWindow.size()))
+            : 0);
     }
 
     //! getFirstValue - returns the first value which entered the tree

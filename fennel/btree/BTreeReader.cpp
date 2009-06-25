@@ -57,7 +57,7 @@ bool BTreeReader::searchExtremeInternal(bool first, ReadMode readMode)
     pageId = getRootPageId();
     LockMode lockMode = rootLockMode;
     for (;;) {
-        pageLock.lockPage(pageId,lockMode);
+        pageLock.lockPage(pageId, lockMode);
         BTreeNode const &node = pageLock.getNodeForRead();
         switch (node.height) {
         case 0:
@@ -104,10 +104,10 @@ bool BTreeReader::searchExtremeInternal(bool first, ReadMode readMode)
         assert(node.nEntries);
         if (first) {
             // continue searching on first child
-            pageId = getChild(node,0);
+            pageId = getChild(node, 0);
         } else {
             // continue searching on last child
-            pageId = getChild(node,node.nEntries - 1);
+            pageId = getChild(node, node.nEntries - 1);
        }
     }
 }
@@ -136,7 +136,7 @@ bool BTreeReader::searchNextInternal()
             singular = true;
             return false;
         }
-        pageLock.lockPage(pageId,leafLockMode);
+        pageLock.lockPage(pageId, leafLockMode);
         iTupleOnLowestLevel = 0;
     }
     return true;
@@ -156,8 +156,8 @@ bool BTreeReader::searchForKeyInternal(
 {
     singular = false;
     NullPageStack nullPageStack;
-    bool found = searchForKeyTemplate<false,NullPageStack>(
-        key,dupSeek,leastUpper,nullPageStack,startPageId,initialLockMode,
+    bool found = searchForKeyTemplate<false, NullPageStack>(
+        key, dupSeek, leastUpper, nullPageStack, startPageId, initialLockMode,
         readMode);
     pSearchKey = NULL;
     return found;

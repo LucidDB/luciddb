@@ -74,7 +74,7 @@ public:
      * @param initialSize the initial size (in bytes) of the device, if
      * creating a new file
      */
-    FileDevice(std::string filename,DeviceMode mode,FileSize initialSize);
+    FileDevice(std::string filename, DeviceMode mode, FileSize initialSize);
     virtual ~FileDevice();
 
     /**

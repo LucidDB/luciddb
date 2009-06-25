@@ -208,6 +208,7 @@ public class RelSubset
         for (RelNode rel : parents) {
             final RelSubset subset =
                 ((VolcanoPlanner) getCluster().getPlanner()).getSubset(rel);
+            assert (subset != null) : rel.toString() + " has no subset";
             list.add(subset);
         }
         return list;

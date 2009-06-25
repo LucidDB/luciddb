@@ -130,7 +130,7 @@ void BackupRestoreTest::createSnapshotData()
     SnapshotRandomAllocationSegment *pSnapshotSegment =
         SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
             pSegment);
-    SegmentAccessor segmentAccessor(pSegment,pCache);
+    SegmentAccessor segmentAccessor(pSegment, pCache);
 
     TestPageLock pageLock(segmentAccessor);
     persistentPageId = pageLock.allocatePage();
@@ -150,19 +150,19 @@ void BackupRestoreTest::createSnapshotData()
 void BackupRestoreTest::testHeaderBackupRestore()
 {
     configMap.setStringParam(
-        Database::paramDatabaseDir,".");
+        Database::paramDatabaseDir, ".");
     configMap.setStringParam(
-        "databaseInitSize","1000");
+        "databaseInitSize", "1000");
     configMap.setStringParam(
-        "tempInitSize","1000");
+        "tempInitSize", "1000");
     configMap.setStringParam(
-        "databaseShadowLogInitSize","1000");
+        "databaseShadowLogInitSize", "1000");
     configMap.setStringParam(
-        "databaseTxnLogInitSize","1000");
+        "databaseTxnLogInitSize", "1000");
     configMap.setStringParam(
-        "forceTxns","true");
+        "forceTxns", "true");
     configMap.setStringParam(
-        "disableSnapshots","false");
+        "disableSnapshots", "false");
 
     CacheParams cacheParams;
     cacheParams.readConfig(configMap);
@@ -274,19 +274,19 @@ void BackupRestoreTest::testHeaderBackupRestore()
 void BackupRestoreTest::testBackupCleanup()
 {
     configMap.setStringParam(
-        Database::paramDatabaseDir,".");
+        Database::paramDatabaseDir, ".");
     configMap.setStringParam(
-        "databaseInitSize","1000");
+        "databaseInitSize", "1000");
     configMap.setStringParam(
-        "tempInitSize","1000");
+        "tempInitSize", "1000");
     configMap.setStringParam(
-        "databaseShadowLogInitSize","1000");
+        "databaseShadowLogInitSize", "1000");
     configMap.setStringParam(
-        "databaseTxnLogInitSize","1000");
+        "databaseTxnLogInitSize", "1000");
     configMap.setStringParam(
-        "forceTxns","true");
+        "forceTxns", "true");
     configMap.setStringParam(
-        "disableSnapshots","false");
+        "disableSnapshots", "false");
 
     CacheParams cacheParams;
     cacheParams.readConfig(configMap);
@@ -411,10 +411,10 @@ void BackupRestoreTest::verifySnapshotData(uint x)
             pDatabase->getDataSegment(),
             pDatabase->getDataSegment(),
             pDatabase->getLastCommittedTxnId());
-    SegmentAccessor segmentAccessor(pSegment,pCache);
+    SegmentAccessor segmentAccessor(pSegment, pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockShared(persistentPageId);
-    BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x,x);
+    BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x, x);
 }
 
 void BackupRestoreTest::testBackupRestore(bool isCompressed)

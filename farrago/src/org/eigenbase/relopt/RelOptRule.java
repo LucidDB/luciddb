@@ -425,9 +425,9 @@ public abstract class RelOptRule
         try {
             Integer.valueOf(description);
             throw new RuntimeException(
-                "Derived description of rule class " + className +
-                    " is an integer, not valid. " +
-                    "Supply a description manually.");
+                "Derived description of rule class " + className
+                + " is an integer, not valid. "
+                + "Supply a description manually.");
         } catch (NumberFormatException e) {
             // Good, the description is not a number.
             return description;

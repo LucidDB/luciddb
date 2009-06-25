@@ -73,12 +73,12 @@ void LcsRowScanExecStream::prepareResidualFilters(
     filters.reset(new PLcsResidualColumnFilters[nFilters]);
 
     for (uint i = 0; i < nClusters; i++) {
-        uint clusterEnd = clusterStart +
-            params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
+        uint clusterEnd = clusterStart
+            + params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
 
         for (uint j = 0; j < nFilters; j++) {
-            if (params.residualFilterCols[j] >= clusterStart &&
-                params.residualFilterCols[j] <= clusterEnd)
+            if (params.residualFilterCols[j] >= clusterStart
+                && params.residualFilterCols[j] <= clusterEnd)
             {
                 valueClus = i;
 
@@ -87,13 +87,13 @@ void LcsRowScanExecStream::prepareResidualFilters(
                  */
                 for (uint k = 0; k < projMap.size(); k++) {
                     if (projMap[k] == valueCols[j]) {
-                        clusterPos = k - realClusterStart -
-                            nonClusterCols.size();
+                        clusterPos = k - realClusterStart
+                            - nonClusterCols.size();
 
                         LcsResidualColumnFilters &filter =
-                            pClusters[valueClus]->
-                            clusterCols[clusterPos].
-                            getFilters();
+                            pClusters[valueClus]
+                            ->clusterCols[clusterPos]
+                            .getFilters();
 
                         filters[j] = &filter;
 
@@ -343,8 +343,8 @@ void LcsRowScanExecStream::initializeSystemSampling()
     int64_t sampleSize =
         static_cast<uint64_t>(
             round(
-                static_cast<double>(rowCount) *
-                static_cast<double>(samplingRate)));
+                static_cast<double>(rowCount)
+                * static_cast<double>(samplingRate)));
     if (sampleSize < numClumps) {
         // Read at least as many rows as there are clumps, even if sample rate
         // is very small.
@@ -363,8 +363,8 @@ void LcsRowScanExecStream::initializeSystemSampling()
     clumpSize =
         static_cast<uint64_t>(
             round(
-                static_cast<double>(sampleSize) /
-                static_cast<double>(numClumps)));
+                static_cast<double>(sampleSize)
+                / static_cast<double>(numClumps)));
     assert(sampleSize >= clumpSize);
     assert(clumpSize >= 1);
 
@@ -375,8 +375,8 @@ void LcsRowScanExecStream::initializeSystemSampling()
         clumpDistance =
             static_cast<uint64_t>(
                 round(
-                    static_cast<double>(rowCount - sampleSize) /
-                    static_cast<double>(numClumps - 1)));
+                    static_cast<double>(rowCount - sampleSize)
+                    / static_cast<double>(numClumps - 1)));
 
         // Rounding can cause us to push the final clump past the end of the
         // table.  Avoid this when possible.
@@ -541,8 +541,8 @@ ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
                     deletedRidEos = true;
                     if (samplingMode == SAMPLING_OFF) {
                         ridRunsBuilt = true;
-                    } else if (samplingMode == SAMPLING_SYSTEM &&
-                        numClumps == 0)
+                    } else if (samplingMode == SAMPLING_SYSTEM
+                        && numClumps == 0)
                     {
                         ridRunsBuilt = true;
                         break;
@@ -694,8 +694,8 @@ void LcsRowScanExecStream::buildOutputProj(
     for (uint i = 0; i < rowScanParams.residualFilterCols.size(); i++) {
         uint j;
         for (j = 0; j < rowScanParams.outputProj.size(); j++) {
-            if (rowScanParams.outputProj[j] ==
-                rowScanParams.residualFilterCols[i])
+            if (rowScanParams.outputProj[j]
+                == rowScanParams.residualFilterCols[i])
             {
                 break;
             }

@@ -64,26 +64,26 @@ void CacheParams::readConfig(ConfigMap const &configMap)
 {
     schedParams.readConfig(configMap);
     nMemPagesMax = configMap.getIntParam(
-        paramMaxPages,nMemPagesMax);
+        paramMaxPages, nMemPagesMax);
     cbPage = configMap.getIntParam(
-        paramPageSize,cbPage);
+        paramPageSize, cbPage);
     nMemPagesInit = configMap.getIntParam(
-        paramPagesInit,nMemPagesInit);
+        paramPagesInit, nMemPagesInit);
     if (!isMAXU(nMemPagesInit)) {
         if (nMemPagesMax < nMemPagesInit) {
             nMemPagesMax = nMemPagesInit;
         }
     }
     idleFlushInterval = configMap.getIntParam(
-        paramIdleFlushInterval,idleFlushInterval);
+        paramIdleFlushInterval, idleFlushInterval);
     freshmenQueuePercentage = configMap.getIntParam(
-        paramFreshmenQueuePercentage,freshmenQueuePercentage);
+        paramFreshmenQueuePercentage, freshmenQueuePercentage);
     pageHistoryQueuePercentage = configMap.getIntParam(
-        paramPageHistoryQueuePercentage,pageHistoryQueuePercentage);
+        paramPageHistoryQueuePercentage, pageHistoryQueuePercentage);
     prefetchPagesMax = configMap.getIntParam(
-        paramPrefetchPagesMax,prefetchPagesMax);
+        paramPrefetchPagesMax, prefetchPagesMax);
     prefetchThrottleRate = configMap.getIntParam(
-        paramPrefetchThrottleRate,prefetchThrottleRate);
+        paramPrefetchThrottleRate, prefetchThrottleRate);
 }
 
 FENNEL_END_CPPFILE("$Id$");

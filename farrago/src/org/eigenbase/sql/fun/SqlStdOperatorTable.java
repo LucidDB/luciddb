@@ -513,7 +513,8 @@ public class SqlStdOperatorTable
             40,
             SqlTypeStrategies.rtiBoolean,
             null,
-            SqlTypeStrategies.otcAny) {
+            SqlTypeStrategies.otcAny)
+        {
             public boolean argumentMustBeScalar(int ordinal)
             {
                 return false;
@@ -1239,7 +1240,8 @@ public class SqlStdOperatorTable
             false,
             SqlTypeStrategies.rtiMultisetFirstColumnMultiset,
             null,
-            SqlTypeStrategies.otcRecordMultiset) {
+            SqlTypeStrategies.otcRecordMultiset)
+        {
         };
 
     /**
@@ -1264,7 +1266,8 @@ public class SqlStdOperatorTable
             false,
             SqlTypeStrategies.rtiMultisetRecordMultiset,
             null,
-            SqlTypeStrategies.otcMultiset) {
+            SqlTypeStrategies.otcMultiset)
+        {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
@@ -1293,7 +1296,8 @@ public class SqlStdOperatorTable
             false,
             SqlTypeStrategies.rtiRecordToScalarType,
             null,
-            SqlTypeStrategies.otcRecordToScalarType) {
+            SqlTypeStrategies.otcRecordToScalarType)
+        {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
@@ -1359,7 +1363,8 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.rtiBigint,
             null,
             SqlTypeStrategies.otcCharString,
-            SqlFunctionCategory.System) {
+            SqlFunctionCategory.System)
+        {
             public boolean isDeterministic()
             {
                 return false;
@@ -1393,7 +1398,8 @@ public class SqlStdOperatorTable
             true,
             SqlTypeStrategies.rtiFirstArgType,
             null,
-            SqlTypeStrategies.otcVariadic) {
+            SqlTypeStrategies.otcVariadic)
+        {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,

@@ -99,7 +99,7 @@ Database::Database(
     DeviceMode openModeInit,
     SharedTraceTarget pTraceTarget,
     SharedPseudoUuidGenerator pUuidGeneratorInit)
-    : TraceSource(pTraceTarget,"database"),
+    : TraceSource(pTraceTarget, "database"),
       pCache(pCacheInit),
       configMap(configMapInit),
       pUuidGenerator(pUuidGeneratorInit)
@@ -156,7 +156,7 @@ void Database::init()
     nCheckpoints = nCheckpointsStat = 0;
 
     pSegmentFactory = SegmentFactory::newSegmentFactory(
-        configMap,getSharedTraceTarget());
+        configMap, getSharedTraceTarget());
 
     if (!openMode.create) {
         // TODO:  real excn
@@ -180,7 +180,7 @@ void Database::prepareForRecovery()
     loadHeader(true);
     writeHeader();
     SharedSegment pShadowLogSegment = createShadowLog(openMode);
-    createDataSegment(pShadowLogSegment,dataDeviceParams);
+    createDataSegment(pShadowLogSegment, dataDeviceParams);
 }
 
 void Database::openSegments()
@@ -345,16 +345,16 @@ void Database::deleteLogs()
 }
 
 SharedSegment Database::createTxnLogSegment(
-    DeviceMode txnLogMode,PageId oldestPageId)
+    DeviceMode txnLogMode, PageId oldestPageId)
 {
     SharedRandomAccessDevice pTxnLogDevice(
-        new RandomAccessFileDevice(txnLogDeviceName,txnLogMode));
-    pCache->registerDevice(txnLogDeviceId,pTxnLogDevice);
+        new RandomAccessFileDevice(txnLogDeviceName, txnLogMode));
+    pCache->registerDevice(txnLogDeviceId, pTxnLogDevice);
 
     LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramTxnLogPrefix,txnLogMode,deviceParams);
-    CompoundId::setDeviceId(deviceParams.firstBlockId,txnLogDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    readDeviceParams(paramTxnLogPrefix, txnLogMode, deviceParams);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, txnLogDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     if (forceTxns) {
         deviceParams.nPagesAllocated = 0;
     } else {
@@ -373,7 +373,7 @@ SharedSegment Database::createTxnLogSegment(
         pTxnLogSegment = pLinearSegment;
     } else {
         pTxnLogSegment = pSegmentFactory->newCircularSegment(
-            pLinearSegment,pCheckpointThread,oldestPageId);
+            pLinearSegment, pCheckpointThread, oldestPageId);
     }
 
     return pTxnLogSegment;
@@ -382,8 +382,8 @@ SharedSegment Database::createTxnLogSegment(
 void Database::createTxnLog(DeviceMode txnLogMode)
 {
     SharedSegment pTxnLogSegment = createTxnLogSegment(
-        txnLogMode,NULL_PAGE_ID);
-    SegmentAccessor segmentAccessor(pTxnLogSegment,pCache);
+        txnLogMode, NULL_PAGE_ID);
+    SegmentAccessor segmentAccessor(pTxnLogSegment, pCache);
     pTxnLog = LogicalTxnLog::newLogicalTxnLog(
         segmentAccessor,
         header.onlineUuid,
@@ -394,13 +394,13 @@ void Database::createTxnLog(DeviceMode txnLogMode)
 SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
 {
     SharedRandomAccessDevice pShadowDevice(
-        new RandomAccessFileDevice(shadowDeviceName,shadowLogMode));
-    pCache->registerDevice(shadowDeviceId,pShadowDevice);
+        new RandomAccessFileDevice(shadowDeviceName, shadowLogMode));
+    pCache->registerDevice(shadowDeviceId, pShadowDevice);
 
     LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramShadowLogPrefix,shadowLogMode,deviceParams);
-    CompoundId::setDeviceId(deviceParams.firstBlockId,shadowDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    readDeviceParams(paramShadowLogPrefix, shadowLogMode, deviceParams);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, shadowDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
 
     if (forceTxns) {
         if (shadowLogMode.create) {
@@ -439,7 +439,7 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
 
 void Database::createDataDevice(LinearDeviceSegmentParams &deviceParams)
 {
-    readDeviceParams(paramDatabasePrefix,openMode,deviceParams);
+    readDeviceParams(paramDatabasePrefix, openMode, deviceParams);
 
     FileSize initialSize = FileSize(0);
     if (shouldForceTxns()) {
@@ -453,7 +453,7 @@ void Database::createDataDevice(LinearDeviceSegmentParams &deviceParams)
                 dataDeviceName,
                 openMode,
                 initialSize));
-    pCache->registerDevice(dataDeviceId,pDataDevice);
+    pCache->registerDevice(dataDeviceId, pDataDevice);
 }
 
 void Database::createDataSegment(
@@ -461,8 +461,8 @@ void Database::createDataSegment(
     LinearDeviceSegmentParams &deviceParams)
 {
     // first data BlockId is located after the two database header pages
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,2);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 2);
 
     deviceParams.nPagesAllocated = MAXU;
 
@@ -508,22 +508,22 @@ void Database::createTempSegment()
     tempMode.create = !FileSystem::doesFileExist(tempDeviceName.c_str());
 
     LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramTempPrefix,tempMode,deviceParams);
+    readDeviceParams(paramTempPrefix, tempMode, deviceParams);
     FileSize initialSize = FileSize(0);
     if (shouldForceTxns()) {
         initialSize = deviceParams.nPagesMin * pCache->getPageSize();
     }
 
     SharedRandomAccessDevice pTempDevice(
-        new RandomAccessFileDevice(tempDeviceName,tempMode,initialSize));
-    pCache->registerDevice(tempDeviceId,pTempDevice);
+        new RandomAccessFileDevice(tempDeviceName, tempMode, initialSize));
+    pCache->registerDevice(tempDeviceId, pTempDevice);
 
     // This forces the full device size to be used.
     tempMode.create = false;
 
     // no header for temp device
-    CompoundId::setDeviceId(deviceParams.firstBlockId,tempDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, tempDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
 
     SharedSegment pTempDeviceSegment =
         pSegmentFactory->newLinearDeviceSegment(
@@ -591,14 +591,14 @@ SharedLogicalTxnLog Database::getTxnLog() const
 void Database::allocateHeader()
 {
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     pHeaderSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
             deviceParams);
 
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock(segmentAccessor);
 
     PageId pageId;
@@ -616,8 +616,8 @@ void Database::allocateHeader()
 void Database::loadHeader(bool recovery)
 {
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     deviceParams.nPagesAllocated = 2;
     deviceParams.nPagesMax = 2;
     pHeaderSegment =
@@ -625,7 +625,7 @@ void Database::loadHeader(bool recovery)
             pCache,
             deviceParams);
 
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock1(segmentAccessor);
     headerPageLock1.lockShared(headerPageId1);
     if (!headerPageLock1.checkMagicNumber()) {
@@ -687,7 +687,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
             // tests and CHECKPOINT_DISCARD used to implement rollback
             // as part of forceTxns.
             LogicalTxnLogCheckpointMemento crashMemento;
-            pTxnLog->checkpoint(crashMemento,checkpointType);
+            pTxnLog->checkpoint(crashMemento, checkpointType);
         }
         return;
     }
@@ -704,7 +704,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
     writeHeader();
     pVersionedSegment->deallocateCheckpointedLog(checkpointType);
     pTxnLog->deallocateCheckpointedLog(
-        header.txnLogCheckpointMemento,checkpointType);
+        header.txnLogCheckpointMemento, checkpointType);
 
     StrictMutexGuard mutexGuard(mutex);
     // TODO:  provide a counter which records the amount of data flushed by the
@@ -714,7 +714,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
     condition.notify_all();
 }
 
-void Database::requestCheckpoint(CheckpointType checkpointType,bool async)
+void Database::requestCheckpoint(CheckpointType checkpointType, bool async)
 {
     StrictMutexGuard mutexGuard(mutex);
     uint nCheckpointsBefore = nCheckpoints;
@@ -746,16 +746,16 @@ void Database::writeHeader()
     // before second one starts (otherwise a crash could leave both copies
     // corrupted)
 
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock(segmentAccessor);
 
     headerPageLock.lockExclusive(headerPageId1);
     headerPageLock.getNodeForWrite() = header;
-    pCache->flushPage(headerPageLock.getPage(),false);
+    pCache->flushPage(headerPageLock.getPage(), false);
 
     headerPageLock.lockExclusive(headerPageId2);
     headerPageLock.getNodeForWrite() = header;
-    pCache->flushPage(headerPageLock.getPage(),false);
+    pCache->flushPage(headerPageLock.getPage(), false);
 }
 
 void Database::recoverOnline()
@@ -793,7 +793,7 @@ void Database::recover(
         CompoundId::getPageId(
             header.txnLogCheckpointMemento.logPosition.segByteId));
 
-    SegmentAccessor logSegmentAccessor(pTxnLogSegment,pCache);
+    SegmentAccessor logSegmentAccessor(pTxnLogSegment, pCache);
 
     SharedLogicalRecoveryLog pRecoveryLog =
         LogicalRecoveryLog::newLogicalRecoveryLog(

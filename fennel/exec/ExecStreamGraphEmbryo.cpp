@@ -220,8 +220,9 @@ void ExecStreamGraphEmbryo::prepareGraph(
             SharedExecStreamBufAccessor outAccessor =
                 pGraph->getStreamOutputAccessor(streamId, i);
             if (outAccessor->getTupleDesc().empty()) {
-                permFail("Forgot to initialize output #" << i << "of stream '"
-                         << traceName << "'");
+                permFail(
+                    "Forgot to initialize output #" << i << "of stream '"
+                    << traceName << "'");
             }
         }
     }

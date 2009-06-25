@@ -113,8 +113,8 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (PointerPointerInstruction<
-                PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
-            PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp1->isNull()
+            || PointerPointerInstruction<
                 PTR_TYPE, PointerOperandT>::mOp2->isNull())
         {
             PointerPointerInstruction<
@@ -141,8 +141,8 @@ public:
                 PTR_TYPE, PointerOperandT>::mResult->pointer(
                     static_cast<PTR_TYPE>(
                         PointerPointerInstruction<
-                            PTR_TYPE, PointerOperandT>::mOp1->pointer()) +
-                    PointerPointerInstruction<
+                            PTR_TYPE, PointerOperandT>::mOp1->pointer())
+                    + PointerPointerInstruction<
                         PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
         }
@@ -218,9 +218,10 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (PointerPointerInstruction<
-                PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
-            PointerPointerInstruction<
-                PTR_TYPE, PointerOperandT>::mOp2->isNull()) {
+                PTR_TYPE, PointerOperandT>::mOp1->isNull()
+            || PointerPointerInstruction<
+                PTR_TYPE, PointerOperandT>::mOp2->isNull())
+        {
             PointerPointerInstruction<
                 PTR_TYPE, PointerOperandT>::mResult->toNull();
             PointerPointerInstruction<
@@ -231,8 +232,8 @@ public:
             // Instruction PointerPutLength
             uint newLength =
                 PointerPointerInstruction<
-                    PTR_TYPE, PointerOperandT>::mOp1->length() +
-                PointerPointerInstruction<
+                    PTR_TYPE, PointerOperandT>::mOp1->length()
+                + PointerPointerInstruction<
                     PTR_TYPE, PointerOperandT>::mOp2->value();
             uint maxLength =
                 PointerPointerInstruction<
@@ -244,8 +245,8 @@ public:
                 PTR_TYPE, PointerOperandT>::mResult->pointer(
                     static_cast<PTR_TYPE>(
                         PointerPointerInstruction<
-                            PTR_TYPE, PointerOperandT>::mOp1->pointer()) -
-                    PointerPointerInstruction<
+                            PTR_TYPE, PointerOperandT>::mOp1->pointer())
+                    - PointerPointerInstruction<
                         PTR_TYPE, PointerOperandT>::mOp2->value(),
                 newLength);
         }
@@ -384,8 +385,8 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->
-            refer(PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1);
+        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->refer(
+            PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1);
     }
 
     static const char* longName()
@@ -498,7 +499,6 @@ class FENNEL_CALCULATOR_EXPORT PointerPointerInstructionRegister
     template < template <typename> class INSTCLASS2 >
     static void
     registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
-
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.

@@ -36,7 +36,7 @@ TraceSource::TraceSource(
     SharedTraceTarget pTraceTargetInit,
     std::string nameInit)
 {
-    initTraceSource(pTraceTargetInit,nameInit);
+    initTraceSource(pTraceTargetInit, nameInit);
 }
 
 TraceSource::~TraceSource()
@@ -58,10 +58,10 @@ void TraceSource::initTraceSource(
     }
 }
 
-void TraceSource::trace(TraceLevel level,std::string message) const
+void TraceSource::trace(TraceLevel level, std::string message) const
 {
     if (isTracing()) {
-        getTraceTarget().notifyTrace(name,level,message);
+        getTraceTarget().notifyTrace(name, level, message);
     }
 }
 

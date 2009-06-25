@@ -73,8 +73,8 @@ public class FarragoJavaUdxRule
             // copy over other traits
             for (int j = 0; j < callRel.getTraits().size(); j++) {
                 RelTrait trait = callRel.getTraits().getTrait(j);
-                if (trait.getTraitDef() !=
-                    CallingConventionTraitDef.instance)
+                if (trait.getTraitDef()
+                    != CallingConventionTraitDef.instance)
                 {
                     if (traits.getTrait(trait.getTraitDef()) != null) {
                         traits.setTrait(trait.getTraitDef(), trait);

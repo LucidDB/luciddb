@@ -176,14 +176,14 @@ bool ReshapeExecStream::checkCastTypes(
         if (!(inputTupleDesc[i] == outputTupleDesc[i])) {
             // only allow not nullable -> nullable, unless nulls are being
             // filtered out from that column
-            if (inputTupleDesc[i].isNullable &&
-                !outputTupleDesc[i].isNullable)
+            if (inputTupleDesc[i].isNullable
+                && !outputTupleDesc[i].isNullable)
             {
                 assert(nullFilter(compareProj, i));
             } else {
                 assert(
-                    (inputTupleDesc[i].isNullable ==
-                        outputTupleDesc[i].isNullable)
+                    (inputTupleDesc[i].isNullable
+                     == outputTupleDesc[i].isNullable)
                     || (!inputTupleDesc[i].isNullable
                         && outputTupleDesc[i].isNullable));
             }

@@ -147,7 +147,7 @@ void ExecStreamScheduler::traceStreamBuffers(
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     ExecStreamGraphImpl::InEdgeIterPair inEdges =
-        boost::in_edges(stream.getStreamId(),graphRep);
+        boost::in_edges(stream.getStreamId(), graphRep);
     for (uint i = 0; inEdges.first != inEdges.second;
          ++(inEdges.first),  ++i)
     {
@@ -168,9 +168,10 @@ void ExecStreamScheduler::traceStreamBuffers(
     }
 
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
-        boost::out_edges(stream.getStreamId(),graphRep);
+        boost::out_edges(stream.getStreamId(), graphRep);
     for (uint i = 0; outEdges.first != outEdges.second;
-         ++(outEdges.first),  ++i) {
+         ++(outEdges.first),  ++i)
+    {
         ExecStreamGraphImpl::Edge edge = *(outEdges.first);
         ExecStreamBufAccessor &bufAccessor =
             graphImpl.getBufAccessorFromEdge(edge);
@@ -211,8 +212,8 @@ void ExecStreamScheduler::traceStreamBufferContents(
         // TODO:  sanity-check individual data values?
         std::ostringstream oss;
         TuplePrinter tuplePrinter;
-        tuplePrinter.print(oss,tupleDesc,tupleData);
-        stream.trace(traceLevel,oss.str());
+        tuplePrinter.print(oss, tupleDesc, tupleData);
+        stream.trace(traceLevel, oss.str());
     }
 }
 

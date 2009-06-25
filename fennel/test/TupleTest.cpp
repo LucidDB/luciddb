@@ -57,7 +57,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void testStandardTypesNotNull();
     void testStandardTypesNetworkNullable();
     void testStandardTypesNetworkNotNull();
-    void testStandardTypes(TupleFormat,bool nullable);
+    void testStandardTypes(TupleFormat, bool nullable);
     void testZeroByteTuple();
     void testDebugAccess();
     void testLoadStoreUnaligned();
@@ -70,25 +70,25 @@ class TupleTest : virtual public TestBase, public TraceSource
     {
         std::ostringstream oss;
         TuplePrinter tuplePrinter;
-        tuplePrinter.print(oss,tupleDesc,tupleData);
+        tuplePrinter.print(oss, tupleDesc, tupleData);
         std::string s = oss.str();
-        FENNEL_TRACE(TRACE_FINE,s);
+        FENNEL_TRACE(TRACE_FINE, s);
     }
 
 public:
     explicit TupleTest()
-        : TraceSource(shared_from_this(),"TupleTest")
+        : TraceSource(shared_from_this(), "TupleTest")
     {
-        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNotNull);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNullable);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNotNull);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNullable);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testZeroByteTuple);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testLoadStoreUnaligned);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testStandardTypesNotNull);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testStandardTypesNullable);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testStandardTypesNetworkNotNull);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testStandardTypesNetworkNullable);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testZeroByteTuple);
+        FENNEL_UNIT_TEST_CASE(TupleTest, testLoadStoreUnaligned);
 
         // This one should fail when TupleAccessor.cpp's DEBUG_TUPLE_ACCESS
         // is set to 1.
-        FENNEL_EXTRA_UNIT_TEST_CASE(TupleTest,testDebugAccess);
+        FENNEL_EXTRA_UNIT_TEST_CASE(TupleTest, testDebugAccess);
     }
 
     virtual ~TupleTest()
@@ -98,26 +98,26 @@ public:
 
 void TupleTest::testStandardTypesNullable()
 {
-    testStandardTypes(TUPLE_FORMAT_STANDARD,true);
+    testStandardTypes(TUPLE_FORMAT_STANDARD, true);
 }
 
 void TupleTest::testStandardTypesNotNull()
 {
-    testStandardTypes(TUPLE_FORMAT_STANDARD,false);
+    testStandardTypes(TUPLE_FORMAT_STANDARD, false);
 }
 
 void TupleTest::testStandardTypesNetworkNullable()
 {
-    testStandardTypes(TUPLE_FORMAT_NETWORK,true);
+    testStandardTypes(TUPLE_FORMAT_NETWORK, true);
 }
 
 void TupleTest::testStandardTypesNetworkNotNull()
 {
-    testStandardTypes(TUPLE_FORMAT_NETWORK,false);
+    testStandardTypes(TUPLE_FORMAT_NETWORK, false);
 }
 
 void TupleTest::testStandardTypes(
-    TupleFormat format,bool nullable)
+    TupleFormat format, bool nullable)
 {
     StandardTypeDescriptorFactory typeFactory;
     uint cbMin = 0;
@@ -137,7 +137,7 @@ void TupleTest::testStandardTypes(
                 cbFixed ? 0 : MAX_WIDTH));
     }
 
-    tupleAccessor.compute(tupleDesc,format);
+    tupleAccessor.compute(tupleDesc, format);
     BOOST_CHECK(tupleAccessor.getMinByteCount() >= cbMin);
     BOOST_CHECK(tupleAccessor.getMaxByteCount() > cbMin);
 
@@ -158,7 +158,7 @@ void TupleTest::testStandardTypes(
         writeMinData(*pDatum,i);
         ++pDatum;
     }
-    FENNEL_TRACE(TRACE_FINE,"testMarshal(MinData)");
+    FENNEL_TRACE(TRACE_FINE, "testMarshal(MinData)");
     uint cbMinData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbMinData >= tupleAccessor.getMinByteCount());
     BOOST_CHECK(cbMinData < tupleAccessor.getMaxByteCount());
@@ -168,7 +168,7 @@ void TupleTest::testStandardTypes(
         writeMaxData(*pDatum,i);
         ++pDatum;
     }
-    FENNEL_TRACE(TRACE_FINE,"testMarshal(MaxData)");
+    FENNEL_TRACE(TRACE_FINE, "testMarshal(MaxData)");
     uint cbMaxData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbMaxData > cbMinData);
     BOOST_CHECK(cbMaxData <= tupleAccessor.getMaxByteCount());
@@ -178,7 +178,7 @@ void TupleTest::testStandardTypes(
         writeSampleData(*pDatum,i);
         ++pDatum;
     }
-    FENNEL_TRACE(TRACE_FINE,"testMarshal(SampleData)");
+    FENNEL_TRACE(TRACE_FINE, "testMarshal(SampleData)");
     uint cbSampleData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbSampleData >= tupleAccessor.getMinByteCount());
     BOOST_CHECK(cbSampleData <= tupleAccessor.getMaxByteCount());
@@ -189,7 +189,7 @@ void TupleTest::testStandardTypes(
             pDatum->pData = NULL;
             ++pDatum;
         }
-        FENNEL_TRACE(TRACE_FINE,"testMarshal(NullData)");
+        FENNEL_TRACE(TRACE_FINE, "testMarshal(NullData)");
         uint cbNullData = testMarshal(tupleDataFixed);
         BOOST_CHECK(cbNullData >= tupleAccessor.getMinByteCount());
         BOOST_CHECK(cbNullData < tupleAccessor.getMaxByteCount());
@@ -198,31 +198,31 @@ void TupleTest::testStandardTypes(
 
 uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
 {
-    FENNEL_TRACE(TRACE_FINE,"reference tuple:");
+    FENNEL_TRACE(TRACE_FINE, "reference tuple:");
     traceTuple(tupleDataFixed);
     boost::scoped_array<FixedBuffer> pTupleBufVar(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 
     uint cbTuple = tupleAccessor.getByteCount(tupleDataFixed);
-    tupleAccessor.marshal(tupleDataFixed,pTupleBufVar.get());
-    BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getCurrentByteCount());
+    tupleAccessor.marshal(tupleDataFixed, pTupleBufVar.get());
+    BOOST_CHECK_EQUAL(cbTuple, tupleAccessor.getCurrentByteCount());
 
     TupleData tupleDataTogether(tupleDesc);
     tupleAccessor.unmarshal(tupleDataTogether);
-    FENNEL_TRACE(TRACE_FINE,"unmarshalled tuple (together):");
+    FENNEL_TRACE(TRACE_FINE, "unmarshalled tuple (together):");
     traceTuple(tupleDataTogether);
-    BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getByteCount(tupleDataTogether));
-    checkData(tupleDataFixed,tupleDataTogether);
+    BOOST_CHECK_EQUAL(cbTuple, tupleAccessor.getByteCount(tupleDataTogether));
+    checkData(tupleDataFixed, tupleDataTogether);
 
     TupleData tupleDataIndividual(tupleDesc);
     for (uint i = 0; i < tupleDataIndividual.size(); ++i) {
         tupleAccessor.getAttributeAccessor(i).unmarshalValue(
-            tupleAccessor,tupleDataIndividual[i]);
+            tupleAccessor, tupleDataIndividual[i]);
     }
-    FENNEL_TRACE(TRACE_FINE,"unmarshalled tuple (individual):");
+    FENNEL_TRACE(TRACE_FINE, "unmarshalled tuple (individual):");
     traceTuple(tupleDataIndividual);
-    BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getByteCount(tupleDataIndividual));
-    checkData(tupleDataFixed,tupleDataIndividual);
+    BOOST_CHECK_EQUAL(cbTuple, tupleAccessor.getByteCount(tupleDataIndividual));
+    checkData(tupleDataFixed, tupleDataIndividual);
 
     return tupleAccessor.getCurrentByteCount();
 }
@@ -241,7 +241,7 @@ void TupleTest::checkData(
         }
         checkAlignment(tupleDesc[i], datum1.pData);
         checkAlignment(tupleDesc[i], datum2.pData);
-        BOOST_CHECK_EQUAL(datum1.cbData,datum2.cbData);
+        BOOST_CHECK_EQUAL(datum1.cbData, datum2.cbData);
         BOOST_CHECK_EQUAL_COLLECTIONS(
             datum1.pData,
             datum1.pData + datum1.cbData,
@@ -318,10 +318,10 @@ void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
             std::numeric_limits<double>::min();
         break;
     case STANDARD_TYPE_BINARY:
-        memset(pData,0,datum.cbData);
+        memset(pData, 0, datum.cbData);
         break;
     case STANDARD_TYPE_CHAR:
-        memset(pData,'A',datum.cbData);
+        memset(pData, 'A', datum.cbData);
         break;
     case STANDARD_TYPE_UNICODE_CHAR:
         {
@@ -392,19 +392,19 @@ void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
         break;
     case STANDARD_TYPE_UNICODE_CHAR:
     case STANDARD_TYPE_BINARY:
-        memset(pData,0xFF,datum.cbData);
+        memset(pData, 0xFF, datum.cbData);
         break;
     case STANDARD_TYPE_CHAR:
-        memset(pData,'z',datum.cbData);
+        memset(pData, 'z', datum.cbData);
         break;
     case STANDARD_TYPE_VARCHAR:
         datum.cbData = MAX_WIDTH;
-        memset(pData,'z',datum.cbData);
+        memset(pData, 'z', datum.cbData);
         break;
     case STANDARD_TYPE_UNICODE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
         datum.cbData = MAX_WIDTH;
-        memset(pData,0xFF,datum.cbData);
+        memset(pData, 0xFF, datum.cbData);
         break;
     default:
         permAssert(false);

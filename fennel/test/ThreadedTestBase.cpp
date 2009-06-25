@@ -32,8 +32,8 @@ using namespace fennel;
 
 ThreadedTestBase::ThreadedTestBase()
 {
-    nSeconds = configMap.getIntParam("testDuration",10);
-    defaultThreadCount = configMap.getIntParam("defaultThreads",1);
+    nSeconds = configMap.getIntParam("testDuration", 10);
+    defaultThreadCount = configMap.getIntParam("defaultThreads", 1);
 }
 
 ThreadedTestBase::~ThreadedTestBase()

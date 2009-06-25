@@ -577,10 +577,9 @@ class TwoQVictimPolicy
      */
     bool isPageClean(PageT &page)
     {
-        return
-            (!page.isDirty() &&
-                page.getDirtyPageNode().getDirtyState() ==
-                    TwoQDirtyPage::PAGE_CLEAN);
+        return !page.isDirty()
+            && page.getDirtyPageNode().getDirtyState()
+            == TwoQDirtyPage::PAGE_CLEAN;
     }
 
     /**
@@ -596,8 +595,8 @@ class TwoQVictimPolicy
         assert(mutex.isLocked(LOCKMODE_X));
         TwoQVictim::PageState state = page.TwoQVictim::getState();
         assert(
-            state != TwoQVictim::PAGE_STATE_FRESHMAN &&
-            state != TwoQVictim::PAGE_STATE_POPULAR_PINNED);
+            state != TwoQVictim::PAGE_STATE_FRESHMAN
+            && state != TwoQVictim::PAGE_STATE_POPULAR_PINNED);
 
         if (pin) {
             // Remove the page from the popular-unpinned queues and add
@@ -606,8 +605,8 @@ class TwoQVictimPolicy
                 popularUnpinnedQueue.remove(page);
                 TwoQDirtyPage &dirtyPageNode =
                     page.TwoQVictim::getDirtyPageNode();
-                if (dirtyPageNode.getDirtyState() ==
-                    TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
+                if (dirtyPageNode.getDirtyState()
+                    == TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
                 {
                     dirtyPopularUnpinnedQueue.remove(dirtyPageNode);
                     dirtyPageNode.setDirtyState(
@@ -625,8 +624,8 @@ class TwoQVictimPolicy
                 popularUnpinnedQueue.moveToTail(page);
                 TwoQDirtyPage &dirtyPageNode =
                     page.TwoQVictim::getDirtyPageNode();
-                if (dirtyPageNode.getDirtyState() ==
-                    TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
+                if (dirtyPageNode.getDirtyState()
+                    == TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
                 {
                     dirtyPopularUnpinnedQueue.moveToTail(dirtyPageNode);
                 } else {
@@ -715,8 +714,8 @@ public:
 
         uint newHistoryQueueLen =
             nCachePagesInit * pageHistoryQueuePercentage / 100;
-        if ((currHistoryQueueLen > newHistoryQueueLen) ||
-            (historyQueueStart != 0))
+        if ((currHistoryQueueLen > newHistoryQueueLen)
+            || (historyQueueStart != 0))
         {
             // If the new queue is smaller than the currently used size,
             // copy the existing history queue into a temporary vector,
@@ -801,8 +800,8 @@ public:
     {
         assert(page.TwoQVictim::getState() == TwoQVictim::PAGE_STATE_FREE);
         assert(
-            page.TwoQVictim::getDirtyPageNode().getDirtyState() ==
-            TwoQDirtyPage::PAGE_CLEAN);
+            page.TwoQVictim::getDirtyPageNode().getDirtyState()
+            == TwoQDirtyPage::PAGE_CLEAN);
     }
 
     /**
@@ -878,8 +877,8 @@ public:
         if (state == TwoQVictim::PAGE_STATE_POPULAR_UNPINNED) {
             popularUnpinnedQueue.moveToHead(page);
             TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
-            if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
+            if (dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
             {
                 dirtyPopularUnpinnedQueue.moveToHead(dirtyPageNode);
             } else {
@@ -888,8 +887,8 @@ public:
         } else if (state == TwoQVictim::PAGE_STATE_FRESHMAN) {
             freshmenQueue.moveToHead(page);
             TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
-            if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN)
+            if (dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_FRESHMAN)
             {
                 dirtyFreshmenQueue.moveToHead(dirtyPageNode);
             } else {
@@ -926,15 +925,15 @@ public:
         ExclusiveGuard exclusiveGuard(mutex);
         TwoQVictim::PageState state = page.TwoQVictim::getState();
         assert(
-            state != TwoQVictim::PAGE_STATE_POPULAR_PINNED &&
-            state != TwoQVictim::PAGE_STATE_FREE);
+            state != TwoQVictim::PAGE_STATE_POPULAR_PINNED
+            && state != TwoQVictim::PAGE_STATE_FREE);
 
         if (state == TwoQVictim::PAGE_STATE_POPULAR_UNPINNED) {
             popularUnpinnedQueue.remove(page);
             TwoQDirtyPage &dirtyPageNode =
                 page.TwoQVictim::getDirtyPageNode();
-            if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
+            if (dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED)
             {
                 dirtyPopularUnpinnedQueue.remove(dirtyPageNode);
                 dirtyPageNode.setDirtyState(TwoQDirtyPage::PAGE_CLEAN);
@@ -968,8 +967,8 @@ public:
 
             freshmenQueue.remove(page);
             TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
-            if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN)
+            if (dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_FRESHMAN)
             {
                 dirtyFreshmenQueue.remove(dirtyPageNode);
                 dirtyPageNode.setDirtyState(TwoQDirtyPage::PAGE_CLEAN);
@@ -1003,8 +1002,8 @@ public:
         ExclusiveGuard exclusiveGuard(mutex);
         TwoQVictim::PageState state = page.TwoQVictim::getState();
         assert(
-            state != TwoQVictim::PAGE_STATE_POPULAR_UNPINNED &&
-            state != TwoQVictim::PAGE_STATE_FREE);
+            state != TwoQVictim::PAGE_STATE_POPULAR_UNPINNED
+            && state != TwoQVictim::PAGE_STATE_FREE);
 
         // If the page is poular and pinned, move it to the popular-unpinned
         // queues.
@@ -1012,8 +1011,8 @@ public:
             popularPinnedQueue.remove(page);
             popularUnpinnedQueue.insertAtTail(page);
             TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
-            if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_POPULAR_PINNED)
+            if (dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_POPULAR_PINNED)
             {
                 dirtyPopularUnpinnedQueue.insertAtTail(dirtyPageNode);
                 dirtyPageNode.setDirtyState(
@@ -1083,18 +1082,18 @@ public:
         TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
         if (state == TwoQVictim::PAGE_STATE_POPULAR_UNPINNED) {
             assert(
-                dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED);
+                dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_POPULAR_UNPINNED);
             dirtyPopularUnpinnedQueue.remove(dirtyPageNode);
         } else if (state == TwoQVictim::PAGE_STATE_FRESHMAN) {
             assert(
-                dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN);
+                dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_FRESHMAN);
             dirtyFreshmenQueue.remove(dirtyPageNode);
         } else if (state == TwoQVictim::PAGE_STATE_POPULAR_PINNED) {
             assert(
-                dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_POPULAR_PINNED);
+                dirtyPageNode.getDirtyState()
+                == TwoQDirtyPage::PAGE_DIRTY_POPULAR_PINNED);
         }
         dirtyPageNode.setDirtyState(TwoQDirtyPage::PAGE_CLEAN);
     }
@@ -1133,7 +1132,7 @@ public:
      * @return a pair of PageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range
      */
-    std::pair<PageIterator,PageIterator> getVictimRange()
+    std::pair<PageIterator, PageIterator> getVictimRange()
     {
         // If the freshmen queue has hit its size limit, victimize from
         // that queue first.  If all of its pages are pinned, then try
@@ -1161,7 +1160,7 @@ public:
      * @return a pair of DirtyPageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range
      */
-    std::pair<DirtyPageIterator,DirtyPageIterator> getDirtyVictimRange()
+    std::pair<DirtyPageIterator, DirtyPageIterator> getDirtyVictimRange()
     {
         // If the freshmen queue has hit its size limit, victimize from
         // that queue first.  If all of its pages are pinned, then try

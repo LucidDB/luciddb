@@ -47,13 +47,13 @@ class RandomAccessFileDeviceTest : virtual public TestBase
     SharedRandomAccessDevice pRandomAccessDevice;
     DeviceMode baseMode;
 
-    void openDevice(DeviceMode openMode,std::string devName)
+    void openDevice(DeviceMode openMode, std::string devName)
     {
         if (openMode.create) {
             FileSystem::remove(devName.c_str());
         }
         pRandomAccessDevice.reset(
-            new RandomAccessFileDevice(devName,openMode));
+            new RandomAccessFileDevice(devName, openMode));
     }
 
     void closeDevice()
@@ -66,7 +66,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         const char *devName = "test.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         closeDevice();
         if (openMode.temporary) {
             if (FileSystem::doesFileExist(devName)) {
@@ -74,7 +74,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             }
         } else {
             openMode.create = 0;
-            openDevice(openMode,devName);
+            openDevice(openMode, devName);
             closeDevice();
         }
     }
@@ -84,7 +84,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         const char *devName = "grow.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
         BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
@@ -93,7 +93,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             return;
         }
         openMode.create = 0;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
     }
@@ -103,7 +103,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         const char *devName = "shrink.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
         BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
@@ -112,11 +112,11 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             return;
         }
         openMode.create = 0;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(HALF_SIZE);
         closeDevice();
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         BOOST_CHECK_EQUAL(HALF_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
     }
@@ -183,7 +183,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
     public:
         explicit Binding(
             Listener &listenerInit,uint cbInit,PBuffer pBufferInit)
-            : listener(listenerInit),cb(cbInit),pBuffer(pBufferInit)
+            : listener(listenerInit), cb(cbInit), pBuffer(pBufferInit)
         {
         }
 
@@ -249,7 +249,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         const char *devName = "async.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
-        openDevice(openMode,devName);
+        openDevice(openMode, devName);
         FileSize cbFile = cbOffset;
         cbFile += n*cbSector;
         pRandomAccessDevice->setSizeInBytes(cbFile);
@@ -258,7 +258,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         if (!openMode.temporary) {
             closeDevice();
             openMode.create = 0;
-            openDevice(openMode,devName);
+            openDevice(openMode, devName);
             FileSize cbFileActual = pRandomAccessDevice->getSizeInBytes();
             BOOST_CHECK_EQUAL(cbFile, cbFileActual);
         }
@@ -272,12 +272,12 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         RandomAccessRequest writeRequest;
         writeRequest.pDevice = pRandomAccessDevice.get();
         writeRequest.cbOffset = cbOffset;
-        writeRequest.cbTransfer=n*cbSector;
+        writeRequest.cbTransfer = n * cbSector;
         writeRequest.type = RandomAccessRequest::WRITE;
         memcpy(pBuf, writeBuf, cb);
         for (int i = 0; i < n; i++) {
             Binding *pBinding = new Binding(
-                writeListener,cbSector,PBuffer(pBuf));
+                writeListener, cbSector, PBuffer(pBuf));
             writeRequest.bindingList.push_back(*pBinding);
         }
 
@@ -296,7 +296,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             pScheduler->unregisterDevice(pRandomAccessDevice);
             closeDevice();
             openMode.create = 0;
-            openDevice(openMode,devName);
+            openDevice(openMode, devName);
             pScheduler->registerDevice(pRandomAccessDevice);
         }
 
@@ -308,8 +308,8 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         readRequest.type = RandomAccessRequest::READ;
         for (int i = 0; i < n; i++) {
             Binding *pBinding = new Binding(
-                readListener,cbSector,
-                pBuf + i*cbSector);
+                readListener, cbSector,
+                pBuf + i * cbSector);
             readRequest.bindingList.push_back(*pBinding);
         }
 
@@ -331,10 +331,10 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         BOOST_CHECK_EQUAL(n + 1, readListener.nSuccess);
         for (int i = 0; i < n; i++) {
             std::string s2(reinterpret_cast<char *>(pBuf + i*cbSector),cb);
-            BOOST_CHECK_EQUAL(s,s2);
+            BOOST_CHECK_EQUAL(s, s2);
         }
-        std::string s3(reinterpret_cast<char *>(pBuf2),cb);
-        BOOST_CHECK_EQUAL(s,s3);
+        std::string s3(reinterpret_cast<char *>(pBuf2), cb);
+        BOOST_CHECK_EQUAL(s, s3);
 
         pScheduler->unregisterDevice(pRandomAccessDevice);
         closeDevice();
@@ -347,16 +347,17 @@ public:
     explicit RandomAccessFileDeviceTest()
     {
         schedParams.readConfig(configMap);
-        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentNoDirect);
-        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testTemporary);
-        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentDirect);
-        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testRetryAsyncIO);
+        FENNEL_UNIT_TEST_CASE(
+            RandomAccessFileDeviceTest, testPermanentNoDirect);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest, testTemporary);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest, testPermanentDirect);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest, testRetryAsyncIO);
 
         // NOTE jvs 11-Feb-2006:  This is optional since it creates
         // a 5G file.  On operating systems with sparse-file support, it
         // doesn't actually take up that much disk space.
         FENNEL_EXTRA_UNIT_TEST_CASE(
-            RandomAccessFileDeviceTest,testLargeFile);
+            RandomAccessFileDeviceTest, testLargeFile);
     }
 
     void testPermanentNoDirect()

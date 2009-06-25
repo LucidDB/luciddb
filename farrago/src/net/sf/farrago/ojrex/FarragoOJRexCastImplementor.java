@@ -535,11 +535,10 @@ public class FarragoOJRexCastImplementor
                     || (lhsType.getSqlTypeName() == SqlTypeName.TIME)))
             {
                 if ((rhsType != null)
-                    &&
                     // FIXME: JavaType(java.sql.Time) and
                     // JavaType(java.sql.Timestamp) say they support precision
                     // but do not.
-                    !rhsType.toString().startsWith("JavaType(")
+                    && !rhsType.toString().startsWith("JavaType(")
                     && rhsType.getSqlTypeName().allowsPrec()
                     && (lhsType.getPrecision() < rhsType.getPrecision()))
                 {

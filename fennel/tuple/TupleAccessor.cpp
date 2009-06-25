@@ -319,9 +319,9 @@ void TupleAccessor::compute(
 
     // now, make a pass over each storage class, calculating actual offsets;
     // note that initFixedAccessors advances cbMaxStorage as a side-effect
-    initFixedAccessors(tuple,aligned8);
-    initFixedAccessors(tuple,aligned4);
-    initFixedAccessors(tuple,aligned2);
+    initFixedAccessors(tuple, aligned8);
+    initFixedAccessors(tuple, aligned4);
+    initFixedAccessors(tuple, aligned2);
 
     if (pFirstVariableAccessor) {
         iFirstVarEndIndirectOffset = cbMaxStorage;
@@ -341,7 +341,7 @@ void TupleAccessor::compute(
         iLastVarEndIndirectOffset = MAXU;
     }
 
-    initFixedAccessors(tuple,unalignedFixed);
+    initFixedAccessors(tuple, unalignedFixed);
 
     if (nBitFields) {
         iBitFieldOffset = cbMaxStorage;
@@ -488,7 +488,7 @@ void TupleAccessor::resetCurrentTupleBuf()
 
 void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 {
-    uint n = std::min(tuple.size() - iFirstDatum,ppAttributeAccessors.size());
+    uint n = std::min(tuple.size() - iFirstDatum, ppAttributeAccessors.size());
 
     if ((format == TUPLE_FORMAT_NETWORK) || bAlignedVar) {
         // for TUPLE_FORMAT_NETWORK, unmarshal attributes individually
@@ -527,8 +527,9 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
                 *this,value);
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset ==
-                   referenceIndirectOffset(accessor.iEndIndirectOffset));
+            assert(
+                pNextVarEndOffset
+                == referenceIndirectOffset(accessor.iEndIndirectOffset));
             uint iEndOffset = *pNextVarEndOffset;
             pNextVarEndOffset++;
             value.cbData = iEndOffset - iNextVarOffset;
@@ -548,7 +549,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
 
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset *pNextVarEndOffset =
-        referenceIndirectOffset(pTupleBufDest,iFirstVarEndIndirectOffset);
+        referenceIndirectOffset(pTupleBufDest, iFirstVarEndIndirectOffset);
 
     for (uint i = 0; i < tuple.size(); i++) {
         uint iAttr;
@@ -585,8 +586,9 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
             assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset ==
-                referenceIndirectOffset(accessor.iEndIndirectOffset));
+            assert(
+                pNextVarEndOffset
+                == referenceIndirectOffset(accessor.iEndIndirectOffset));
             if (value.pData) {
                 iNextVarOffset += value.cbData;
             }

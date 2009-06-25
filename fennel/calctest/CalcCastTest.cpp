@@ -370,10 +370,12 @@ CalcCastTest::shouldWarn(
 {
     int idx = 0;
     // Yeah, so this is O(n^2). It's good enough for now, and probably forever.
-    while (warningCombos[idx][0] >= 0 &&
-           warningCombos[idx][1] >= 0) {
-        if (warningCombos[idx][0] == srcIdx &&
-            warningCombos[idx][1] == destIdx) {
+    while (warningCombos[idx][0] >= 0
+           && warningCombos[idx][1] >= 0)
+    {
+        if (warningCombos[idx][0] == srcIdx
+            && warningCombos[idx][1] == destIdx)
+        {
             return true;
         }
         idx++;

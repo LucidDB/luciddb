@@ -480,7 +480,7 @@ public:
      *
      * @return the converted C++ string
      */
-    static std::string toStdString(JniEnvRef pEnv,jstring jString);
+    static std::string toStdString(JniEnvRef pEnv, jstring jString);
 
     /**
      * Calls toString() on a Java object.
@@ -491,7 +491,7 @@ public:
      *
      * @return result of toString()
      */
-    static jstring toString(JniEnvRef pEnv,jobject jObject);
+    static jstring toString(JniEnvRef pEnv, jobject jObject);
 
     /**
      * Calls java.util.Collection.iterator().
@@ -502,7 +502,7 @@ public:
      *
      * @return the new Java iterator
      */
-    static jobject getIter(JniEnvRef pEnv,jobject jCollection);
+    static jobject getIter(JniEnvRef pEnv, jobject jCollection);
 
     /**
      * Calls java.util.Iterator.hasNext/next()
@@ -513,7 +513,7 @@ public:
      *
      * @return next object from iterator, or NULL if !hasNext()
      */
-    static jobject getNextFromIter(JniEnvRef pEnv,jobject jIter);
+    static jobject getNextFromIter(JniEnvRef pEnv, jobject jIter);
 
     /**
      * Looks up an enum value.

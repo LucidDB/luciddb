@@ -60,27 +60,27 @@ public:
         degreeOfParallelism =
             configMap.getIntParam(paramDegreeOfParallelism, 4);
 
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testScratchBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testDoubleBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testCopyExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testMergeExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testSegBufferExecStream);
         FENNEL_UNIT_TEST_CASE(
-            ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+            ExecStreamTestSuite, testCartesianJoinExecStreamOuter);
         FENNEL_UNIT_TEST_CASE(
-            ExecStreamTestSuite,testCartesianJoinExecStreamInner);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
+            ExecStreamTestSuite, testCartesianJoinExecStreamInner);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testCountAggExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testSumAggExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream1);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream2);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream3);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite, testGroupAggExecStream4);
         FENNEL_UNIT_TEST_CASE(
-            ExecStreamTestSuite,testReshapeExecStreamCastFilter);
+            ExecStreamTestSuite, testReshapeExecStreamCastFilter);
         FENNEL_UNIT_TEST_CASE(
-            ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
+            ExecStreamTestSuite, testReshapeExecStreamNoCastFilter);
         FENNEL_UNIT_TEST_CASE(
-            ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
+            ExecStreamTestSuite, testReshapeExecStreamDynamicParams);
         FENNEL_UNIT_TEST_CASE(
             ExecStreamTestSuite,
             testSingleValueAggExecStream);

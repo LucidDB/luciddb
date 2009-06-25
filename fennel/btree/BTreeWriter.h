@@ -156,7 +156,7 @@ class FENNEL_BTREE_EXPORT BTreeWriter
      */
     bool attemptInsertWithoutSplit(
         BTreePageLock &targetPageLock,
-        PConstBuffer pTupleBuffer,uint cbTuple,uint iNewTuple);
+        PConstBuffer pTupleBuffer, uint cbTuple, uint iNewTuple);
 
     /**
      * Inserts a tuple read from a log stream.
@@ -241,7 +241,7 @@ public:
      * @param distinctness how to handle duplicates
      */
     uint insertTupleFromBuffer(
-        PConstBuffer pTupleBuffer,Distinctness distinctness);
+        PConstBuffer pTupleBuffer, Distinctness distinctness);
 
     /**
      * Deletes the current tuple.  Can be called after one

@@ -523,8 +523,10 @@ void LhxPlan::init(
      * input. The input with the smaller side witll be the build side for the
      * join: joinSide for the build will map to the index of this input.
      */
-    if (enableSwing &&
-        (numInputs == 2) && (inputSize[0] < inputSize[1])) {
+    if (enableSwing
+        && (numInputs == 2)
+        && (inputSize[0] < inputSize[1]))
+    {
         joinSideToInputMap[0] = 1;
         joinSideToInputMap[1] = 0;
     }
@@ -609,11 +611,11 @@ void LhxPlan::mapSubPartToChild(
 uint LhxPlan::calculateChildIndex(uint hashKey, uint curInputIndex)
 {
     if (subPartToChildMap) {
-        return (subPartToChildMap[hashKey % LhxSubPartCount] +
-            curInputIndex * LhxChildPartCount);
+        return (subPartToChildMap[hashKey % LhxSubPartCount]
+            + curInputIndex * LhxChildPartCount);
     } else {
-        return (hashKey % LhxChildPartCount +
-            curInputIndex * LhxChildPartCount);
+        return (hashKey % LhxChildPartCount
+            + curInputIndex * LhxChildPartCount);
     }
 }
 
@@ -691,8 +693,9 @@ LhxPartitionState LhxPlan::generatePartitions(
                             hashTableTuple,
                             hashInfo.keyProj[curInputIndex],
                             hashInfo.isKeyColVarChar[curInputIndex]);
-                    if (joinFilter &&
-                        joinFilter->test(prevHashKey % filterSize)) {
+                    if (joinFilter
+                        && joinFilter->test(prevHashKey % filterSize))
+                    {
                         writeToPartition = true;
                     } else {
                         filteredRowCountList[childPartIndex]++;
@@ -844,8 +847,9 @@ LhxPartitionState LhxPlan::generatePartitions(
                                 inputTuple,
                                 hashInfo.keyProj[curInputIndex],
                                 hashInfo.isKeyColVarChar[curInputIndex]);
-                        if (joinFilter &&
-                            joinFilter->test(prevHashKey % filterSize)) {
+                        if (joinFilter
+                            && joinFilter->test(prevHashKey % filterSize))
+                        {
                             writeToPartition = true;
                         } else {
                             filteredRowCountList[childPartIndex]++;
@@ -857,9 +861,10 @@ LhxPartitionState LhxPlan::generatePartitions(
                      * Use join filter from build input of the same
                      * partitioning level.
                      */
-                    if (joinFilterList[getBuildChildPart(childPartIndex)] &&
-                        joinFilterList[getBuildChildPart(childPartIndex)]->
-                        test(hashKey % filterSize)) {
+                    if (joinFilterList[getBuildChildPart(childPartIndex)]
+                        && joinFilterList[getBuildChildPart(childPartIndex)]
+                            ->test(hashKey % filterSize))
+                    {
                         writeToPartition = true;
                     } else {
                         filteredRowCountList[childPartIndex]++;

@@ -37,13 +37,13 @@ GroupLock::~GroupLock()
     assert(!nHolders);
 }
 
-bool GroupLock::waitFor(uint iGroup,uint iTimeout)
+bool GroupLock::waitFor(uint iGroup, uint iTimeout)
 {
     boost::xtime atv;
-    convertTimeout(iTimeout,atv);
+    convertTimeout(iTimeout, atv);
     StrictMutexGuard mutexGuard(mutex);
     while (nHolders && iHeldGroup != iGroup) {
-        if (!condition.timed_wait(mutexGuard,atv)) {
+        if (!condition.timed_wait(mutexGuard, atv)) {
             return false;
         }
     }

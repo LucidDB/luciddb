@@ -449,8 +449,9 @@ bool LbmEntryTest::compareExpected(
 
     uint i;
     for (i = 0;
-        ridPos < expectedRids.size() && expectedRids[ridPos] < endRid &&
-            i < actualRids.size();
+        ridPos < expectedRids.size()
+             && expectedRids[ridPos] < endRid
+             && i < actualRids.size();
         i++, ridPos++)
     {
         if (expectedRids[ridPos] != actualRids[i]) {
@@ -460,8 +461,8 @@ bool LbmEntryTest::compareExpected(
         // containsRid() method; the first tests the positive case and the
         // second the negative
         if (!generatedEntry.containsRid(expectedRids[ridPos])) {
-            std::cout << "Positive containsRid check failed on rid = " <<
-                expectedRids[ridPos] << std::endl;
+            std::cout << "Positive containsRid check failed on rid = "
+                      << expectedRids[ridPos] << std::endl;
             return false;
         }
         // search for the rids in between the current and next; these should
@@ -472,8 +473,8 @@ bool LbmEntryTest::compareExpected(
                     nextRid < expectedRids[ridPos + 1]; nextRid++)
                 {
                     if (generatedEntry.containsRid(nextRid)) {
-                        std::cout << "Negative containsRid check failed" <<
-                           " on rid = " << nextRid << std::endl;
+                        std::cout << "Negative containsRid check failed"
+                                  << " on rid = " << nextRid << std::endl;
                         return false;
                     }
                 }
@@ -485,8 +486,8 @@ bool LbmEntryTest::compareExpected(
         << std::endl;
 #endif
     if (i < actualRids.size()) {
-        std::cout << "Mismatch in rid.  Actual = " << actualRids[i] <<
-            ", Expected = " << expectedRids[ridPos] << std::endl;
+        std::cout << "Mismatch in rid.  Actual = " << actualRids[i]
+                  << ", Expected = " << expectedRids[ridPos] << std::endl;
         return false;
     }
     return true;
@@ -834,7 +835,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) pow(2.0,16.0)*8);
+    rid = LcsRid(rid + (int64_t) pow(2.0, 16.0) * 8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;
@@ -850,7 +851,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) pow(2.0,24.0)*8);
+    rid = LcsRid(rid + (int64_t) pow(2.0, 24.0) * 8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;
@@ -866,7 +867,7 @@ void LbmEntryTest::testZeroBytes()
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
         entryTupleDesc);
     entryList.push_back(pListElement);
-    rid = LcsRid(rid + (int64_t) (pow(2.0,24.0)+1)*8);
+    rid = LcsRid(rid + (int64_t) (pow(2.0, 24.0) + 1) * 8);
     ridValues.push_back(rid);
     entryTuple[0].pData = (PConstBuffer) &rid;
     entryTuple[1].pData = NULL;

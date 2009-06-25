@@ -37,7 +37,7 @@ class BacktraceTest : virtual public TestBase, public TraceSource
     void testBacktraceOnAbort();
 public:
     explicit BacktraceTest()
-        : TraceSource(shared_from_this(),"BacktraceTest")
+        : TraceSource(shared_from_this(), "BacktraceTest")
     {
         FENNEL_UNIT_TEST_CASE(BacktraceTest, testDeliberateBacktrace);
         // FENNEL_UNIT_TEST_CASE(BacktraceTest, testBacktraceOnAbort);

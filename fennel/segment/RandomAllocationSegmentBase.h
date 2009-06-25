@@ -218,7 +218,7 @@ protected:
      * @return BlockNum corresponding to a linear PageId in this segment
      */
     inline BlockNum makePageNum(
-        ExtentNum extentNum,BlockNum iPageInExtent) const;
+        ExtentNum extentNum, BlockNum iPageInExtent) const;
 
     /**
      * Maps a linear PageId from this segment into the corresponding
@@ -235,8 +235,8 @@ protected:
      * @param [out] iPageInExtent 0-based index of page in extent
      */
     void splitPageId(
-        PageId pageId,uint &iSegAlloc,
-        ExtentNum &extentNum,BlockNum &iPageInExtent) const;
+        PageId pageId, uint &iSegAlloc,
+        ExtentNum &extentNum, BlockNum &iPageInExtent) const;
 
     /**
      * Tests whether the given PageId has valid contents
@@ -251,7 +251,7 @@ protected:
     /**
      * Common implementation for isPageIdValid and isPageIdAllocated.
      */
-    bool testPageId(PageId pageId,bool testAllocation,bool thisSegment);
+    bool testPageId(PageId pageId, bool testAllocation, bool thisSegment);
 
     /**
      * Retrieves the ownerId corresponding to a page entry.

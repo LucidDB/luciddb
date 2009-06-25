@@ -61,7 +61,7 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
         rc = EXECRC_BUF_UNDERFLOW;
     }
 
-    memcpy(pDst,pSrc,cbAvailableIn);
+    memcpy(pDst, pSrc, cbAvailableIn);
     pInAccessor->consumeData(pSrc + cbAvailableIn);
     pOutAccessor->produceData(pDst + cbAvailableIn);
 

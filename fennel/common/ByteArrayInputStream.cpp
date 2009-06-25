@@ -31,7 +31,7 @@ SharedByteArrayInputStream ByteArrayInputStream::newByteArrayInputStream(
     uint cbBuffer)
 {
     return SharedByteArrayInputStream(
-        new ByteArrayInputStream(pBuffer,cbBuffer),
+        new ByteArrayInputStream(pBuffer, cbBuffer),
         ClosableObjectDestructor());
 }
 
@@ -39,7 +39,7 @@ ByteArrayInputStream::ByteArrayInputStream(
     PConstBuffer pBuffer,
     uint cbBuffer)
 {
-    setBuffer(pBuffer,cbBuffer);
+    setBuffer(pBuffer, cbBuffer);
 }
 
 void ByteArrayInputStream::readNextBuffer()
@@ -61,7 +61,7 @@ void ByteArrayInputStream::resetArray(
     PConstBuffer pBuffer,
     uint cbBuffer)
 {
-    setBuffer(pBuffer,cbBuffer);
+    setBuffer(pBuffer, cbBuffer);
     cbOffset = 0;
 }
 

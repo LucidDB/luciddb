@@ -201,8 +201,8 @@ void AutoBacktrace::signal_handler(int signum)
     Backtrace bt;
     if (ptrace) {
         std::ostringstream oss;
-        oss <<
-            "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
+        oss
+            << "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         oss << bt;
         std::string msg = oss.str();
         if (pstream) {
@@ -210,8 +210,8 @@ void AutoBacktrace::signal_handler(int signum)
         }
         ptrace->notifyTrace("backtrace", TRACE_SEVERE, msg);
     } else if (pstream) {
-        *pstream <<
-            "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
+        *pstream
+            << "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         *pstream << bt;
     }
 

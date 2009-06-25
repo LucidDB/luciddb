@@ -155,7 +155,7 @@ public:
      * @param pDevice the device to be registered
      */
     virtual void registerDevice(
-        DeviceId deviceId,SharedRandomAccessDevice pDevice) = 0;
+        DeviceId deviceId, SharedRandomAccessDevice pDevice) = 0;
 
     /**
      * Unregisters the given device from the Cache, asserting

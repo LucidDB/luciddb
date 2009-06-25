@@ -116,7 +116,7 @@ public:
     virtual CachePage *lockPage(OpType opType,uint iPage) = 0;
     virtual void unlockPage(CachePage &page,LockMode lockMode) = 0;
     virtual void prefetchPage(uint iPage) = 0;
-    virtual void prefetchBatch(uint iPage,uint nPagesPerBatch) = 0;
+    virtual void prefetchBatch(uint iPage, uint nPagesPerBatch) = 0;
 
     /**
      * Carries out one operation on a page.  This involves locking the page,
@@ -132,7 +132,7 @@ public:
      * false if NoWait locking was requested and the page lock could
      * not be acquired
      */
-    bool testOp(OpType opType,uint iPage,bool bNice);
+    bool testOp(OpType opType, uint iPage, bool bNice);
 
     /**
      * Makes up an operation name based on an OpType.

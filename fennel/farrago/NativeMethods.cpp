@@ -74,7 +74,7 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
     jint version = JniUtil::init(vm);
     JniEnvAutoRef pEnv;
     try {
-        staticInitFem(pEnv,FemVisitor::visitTbl);
+        staticInitFem(pEnv, FemVisitor::visitTbl);
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }
@@ -97,7 +97,7 @@ Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd(
     JniEnvRef pEnv(pEnvInit);
     try {
         ProxyCmd cmd;
-        cmd.init(pEnv,jCmd);
+        cmd.init(pEnv, jCmd);
         CmdInterpreter cmdInterpreter;
         if (jExecHandle == 0) {
             cmdInterpreter.pExecHandle = NULL;
@@ -134,7 +134,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
         PConstBuffer pBuffer = bufAccessor.getConsumptionStart();
         assert(cbLimit >= cbActual);
         pEnv->SetByteArrayRegion(
-            byteArray,0,cbActual,(jbyte *)(pBuffer));
+            byteArray, 0, cbActual, (jbyte *)(pBuffer));
         bufAccessor.consumeData(pBuffer + cbActual);
         return cbActual;
     } catch (std::exception &ex) {
@@ -173,7 +173,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch(
         PConstBuffer pBuffer = bufAccessor->getConsumptionStart();
         assert(cbLimit >= cbActual);
         pEnv->SetByteArrayRegion(
-            byteArray,0,cbActual,(jbyte *)(pBuffer));
+            byteArray, 0, cbActual, (jbyte *)(pBuffer));
         bufAccessor->consumeData(pBuffer + cbActual);
         return cbActual;
     } catch (std::exception &ex) {
@@ -327,7 +327,7 @@ Java_net_sf_farrago_fennel_FennelStorage_getAccessorXmiForTupleDescriptor(
     // accumulate, making the JniProxies read-write would be a good idea.
 
     ProxyTupleDescriptor proxyTupleDesc;
-    proxyTupleDesc.init(pEnv,jTupleDesc);
+    proxyTupleDesc.init(pEnv, jTupleDesc);
 
     // TODO:  excn handling?
 

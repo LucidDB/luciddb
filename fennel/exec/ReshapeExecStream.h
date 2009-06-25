@@ -59,8 +59,8 @@ struct FENNEL_EXEC_EXPORT ReshapeParameter
     ReshapeParameter(
         DynamicParamId dynamicParamIdInit,
         uint compareOffsetInit,
-        bool outputParamInit) :
-        dynamicParamId(dynamicParamIdInit),
+        bool outputParamInit)
+        : dynamicParamId(dynamicParamIdInit),
         compareOffset(compareOffsetInit),
         outputParam(outputParamInit)
     {

@@ -98,8 +98,8 @@ void LbmGeneratorExecStream::open(bool restart)
                 if (opaqueToInt(parameterIds[i]) > 0) {
                     pClusters[i]->setRootPageId(
                         *reinterpret_cast<PageId const *>(
-                            pDynamicParamManager->getParam(parameterIds[i]).
-                                getDatum().pData));
+                            pDynamicParamManager->getParam(parameterIds[i])
+                                .getDatum().pData));
                 }
             }
         }
@@ -263,8 +263,8 @@ ExecStreamResult LbmGeneratorExecStream::generateSingleKeyBitmaps(
     // read from the current batch until either the end of the batch
     // is reached, or there is an overflow in a write to the output stream
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-        if (!revertToSingletons &&
-            pClusters[0]->clusterCols[0].batchIsCompressed())
+        if (!revertToSingletons
+            && pClusters[0]->clusterCols[0].batchIsCompressed())
         {
             if (!generateBitmaps()) {
                 return EXECRC_BUF_OVERFLOW;
@@ -306,13 +306,13 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
                     // reader has reached the end of its batch
                     if (!pScan->nextRange()) {
                         assert(
-                            iClu == 0 &&
-                                (nClusters == 1 || !pClusters[1]->nextRange()));
+                            iClu == 0
+                            && (nClusters == 1 || !pClusters[1]->nextRange()));
                         return EXECRC_EOS;
                     }
                     assert(
-                        currRid >= pScan->getRangeStartRid() &&
-                        currRid < pScan->getRangeEndRid());
+                        currRid >= pScan->getRangeStartRid()
+                        && currRid < pScan->getRangeEndRid());
                     syncColumns(pScan);
                 } else {
                     assert(currRid >= pScan->getRangeStartRid());

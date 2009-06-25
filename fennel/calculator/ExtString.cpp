@@ -85,7 +85,7 @@ strCmpA(
         result->toNull();
     } else {
         result->value(
-            SqlStrCmp<1,1>(
+            SqlStrCmp<1, 1>(
                 str1->pointer(), str1->stringLength(),
                 str2->pointer(), str2->stringLength()));
     }
@@ -124,7 +124,7 @@ strCpyA(
     } else {
         if (str->type() == STANDARD_TYPE_CHAR) {
             result->length(
-                SqlStrCpy_Fix<1,1>(
+                SqlStrCpy_Fix<1, 1>(
                     result->pointer(),
                     result->storage(),
                     str->pointer(),
@@ -166,7 +166,7 @@ strLenCharA(
         result->toNull();
     } else {
         result->value(
-            SqlStrLenChar<1,1>(
+            SqlStrLenChar<1, 1>(
                 str->pointer(),
                 str->stringLength()));
     }
@@ -198,13 +198,16 @@ strOverlayA4(
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     // overlay to a null results in null
-    if (result->isNull() || str->isNull() ||
-        overlay->isNull() || start->isNull()) {
+    if (result->isNull()
+        || str->isNull()
+        || overlay->isNull()
+        || start->isNull())
+    {
         result->toNull();
         result->length(0);
     } else {
         result->length(
-            SqlStrOverlay<1,1>(
+            SqlStrOverlay<1, 1>(
                 result->pointer(),
                 result->storage(),
                 str->pointer(),
@@ -230,13 +233,17 @@ strOverlayA5(
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     // overlay to a null results in null
-    if (result->isNull() || str->isNull() ||
-        overlay->isNull() || start->isNull() || len->isNull()) {
+    if (result->isNull()
+        || str->isNull()
+        || overlay->isNull()
+        || start->isNull()
+        || len->isNull())
+    {
         result->toNull();
         result->length(0);
     } else {
         result->length(
-            SqlStrOverlay<1,1>(
+            SqlStrOverlay<1, 1>(
                 result->pointer(),
                 result->storage(),
                 str->pointer(),
@@ -262,7 +269,7 @@ strPosA(
         result->toNull();
     } else {
         result->value(
-            SqlStrPos<1,1>(
+            SqlStrPos<1, 1>(
                 str->pointer(),
                 str->stringLength(),
                 find->pointer(),
@@ -287,7 +294,7 @@ strSubStringA3(
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrSubStr<1,1>(
+        int32_t newLen = SqlStrSubStr<1, 1>(
             const_cast<char const **>(&ptr),
             result->storage(),
             str->pointer(),
@@ -310,15 +317,18 @@ strSubStringA4(
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     // substring to a null results in null
-    if (result->isNull() || str->isNull() ||
-        start->isNull() || len->isNull()) {
+    if (result->isNull()
+        || str->isNull()
+        || start->isNull()
+        || len->isNull())
+    {
         result->toNull();
         result->length(0);
     } else {
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrSubStr<1,1>(
+        int32_t newLen = SqlStrSubStr<1, 1>(
             const_cast<char const **>(&ptr),
             result->storage(),
             str->pointer(),
@@ -349,7 +359,7 @@ strToLowerA(
             ? (result->storage() == str->storage())
             : true);
         result->length(
-            SqlStrAlterCase<1,1,AlterCaseLower>(
+            SqlStrAlterCase<1, 1, AlterCaseLower>(
                 result->pointer(),
                 result->storage(),
                 str->pointer(),
@@ -376,7 +386,7 @@ strToUpperA(
             : true);
         // fixed width case: length should be harmlessly reset to same value
         result->length(
-            SqlStrAlterCase<1,1,AlterCaseUpper>(
+            SqlStrAlterCase<1, 1, AlterCaseUpper>(
                 result->pointer(),
                 result->storage(),
                 str->pointer(),
@@ -398,8 +408,12 @@ strTrimA(
     assert(StandardTypeDescriptor::isTextArray(trimchar->type()));
 
     // trim to a null results in null
-    if (result->isNull() || str->isNull() || trimchar->isNull() ||
-        trimLeft->isNull() || trimRight->isNull()) {
+    if (result->isNull()
+        || str->isNull()
+        || trimchar->isNull()
+        || trimLeft->isNull()
+        || trimRight->isNull())
+    {
         result->toNull();
         result->length(0);
     } else {
@@ -417,7 +431,7 @@ strTrimA(
         // Use trim by reference function:
         // TODO: Not sure why cast from char* to char const * is
         // required below.
-        int32_t newLen = SqlStrTrim<1,1>(
+        int32_t newLen = SqlStrTrim<1, 1>(
             const_cast<char const **>(&ptr),
             str->pointer(),
             str->stringLength(),

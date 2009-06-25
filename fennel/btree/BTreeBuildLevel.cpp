@@ -128,14 +128,14 @@ void BTreeBuildLevel::indexLastChild()
         reinterpret_cast<PConstBuffer>(&(builder.getLevel(iLevel-1).pageId));
     PBuffer pEntry = nodeAccessor.allocateEntry(
         *pNode,pNode->nEntries,cbTuple);
-    nodeAccessor.tupleAccessor.marshal(nodeAccessor.tupleData,pEntry);
+    nodeAccessor.tupleAccessor.marshal(nodeAccessor.tupleData, pEntry);
     ++nEntriesProcessed;
 }
 
 void BTreeBuildLevel::unmarshalLastKey()
 {
     BTreeNode const &node = pageLock.getNodeForRead();
-    nodeAccessor.accessTuple(node,node.nEntries - 1);
+    nodeAccessor.accessTuple(node, node.nEntries - 1);
     nodeAccessor.unmarshalKey(builder.pNonLeafNodeAccessor->tupleData);
 }
 
@@ -174,7 +174,7 @@ BTreeNode *BTreeBuildLevel::allocateAndLinkNewNode()
 
 bool BTreeBuildLevel::isNodeFull(BTreeNode const &node,uint cbTuple)
 {
-    return nodeAccessor.calculateCapacity(node,cbReserved + cbTuple)
+    return nodeAccessor.calculateCapacity(node, cbReserved + cbTuple)
         != BTreeNodeAccessor::CAN_FIT;
 }
 
@@ -183,7 +183,7 @@ BTreeNode &BTreeBuildLevel::allocatePage()
     pageId = pageLock.allocatePage(builder.getPageOwnerId());
     BTreeNode &node = pageLock.getNodeForWrite();
     nodeAccessor.clearNode(
-        node,builder.getSegment()->getUsablePageSize());
+        node, builder.getSegment()->getUsablePageSize());
     node.height = iLevel;
     return node;
 }
@@ -191,7 +191,7 @@ BTreeNode &BTreeBuildLevel::allocatePage()
 FixedBuildLevel::FixedBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
 }
 
@@ -214,11 +214,11 @@ bool FixedBuildLevel::isNodeFull(BTreeNode const &node,uint)
 VariableBuildLevel::VariableBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
     assert(builder.pTempSegment);
     SegmentAccessor tempSegmentAccessor(
-        builder.pTempSegment,builder.getCacheAccessor());
+        builder.pTempSegment, builder.getCacheAccessor());
     pParentKeyStream = SegOutputStream::newSegOutputStream(tempSegmentAccessor);
 }
 
@@ -236,7 +236,7 @@ SharedSegInputStream VariableBuildLevel::getParentKeyStream()
     PageId tempPageId = pParentKeyStream->getFirstPageId();
     pParentKeyStream->close();
     SegmentAccessor tempSegmentAccessor(
-        builder.pTempSegment,builder.getCacheAccessor());
+        builder.pTempSegment, builder.getCacheAccessor());
     SharedSegInputStream pParentInputStream =
         SegInputStream::newSegInputStream(
             tempSegmentAccessor,
@@ -265,7 +265,7 @@ void VariableBuildLevel::indexLastKey(bool)
 DynamicBuildLevel::DynamicBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
 }
 

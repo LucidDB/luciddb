@@ -37,7 +37,7 @@ typedef boost::recursive_mutex::scoped_lock RecursiveMutexGuard;
 typedef boost::mutex::scoped_lock StrictMutexGuard;
 typedef boost::condition_variable LocalCondition;
 
-extern void FENNEL_SYNCH_EXPORT convertTimeout(uint iMillis,boost::xtime &);
+extern void FENNEL_SYNCH_EXPORT convertTimeout(uint iMillis, boost::xtime &);
 
 FENNEL_END_NAMESPACE
 

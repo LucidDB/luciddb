@@ -67,7 +67,7 @@ void LogicalRecoveryTxn::redoActions(
                 svptEnd.cbLogged = pTxnInputStream->getOffset();
                 svptEnd.cbActionPrev = actionHeader.cbActionPrev;
                 // redo rollback
-                undoActions(svptEnd,MAXU,oldSvpt.cbLogged);
+                undoActions(svptEnd, MAXU, oldSvpt.cbLogged);
                 // restore position
                 pTxnInputStream->seekForward(
                     offset - pTxnInputStream->getOffset());
@@ -127,8 +127,9 @@ void LogicalRecoveryTxn::undoActions(
                 seekDist = sizeof(actionHeader);
             } else {
                 recoverParticipant(actionHeader.pParticipant);
-                assert(pTxnInputStream->getOffset() ==
-                       actionOffset + cbActionExpected);
+                assert(
+                    pTxnInputStream->getOffset()
+                    == actionOffset + cbActionExpected);
                 seekDist = cbActionExpected;
             }
             break;
@@ -150,8 +151,9 @@ void LogicalRecoveryTxn::undoActions(
                 pParticipant->undoLogicalAction(
                     actionHeader.actionType,
                     *pTxnInputStream);
-                assert(pTxnInputStream->getOffset() ==
-                       actionOffset + cbActionExpected);
+                assert(
+                    pTxnInputStream->getOffset()
+                    == actionOffset + cbActionExpected);
                 seekDist = cbActionExpected;
             }
             break;

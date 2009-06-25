@@ -1014,8 +1014,8 @@ public class SqlToRelConverter
             joinType = JoinRelType.LEFT;
             break;
         default:
-            throw Util.newInternal("unexpected kind of subquery :"
-                + node);
+            throw Util.newInternal(
+                "unexpected kind of subquery :" + node);
         }
         final RexNode expression =
             bb.register(

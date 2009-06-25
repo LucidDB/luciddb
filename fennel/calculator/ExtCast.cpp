@@ -38,7 +38,7 @@ castExactToStrA(
         result->length(0);
     } else {
         result->length(
-            SqlStrCastFromExact<1,1>(
+            SqlStrCastFromExact<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->value(),
@@ -60,7 +60,7 @@ castExactToStrA(
         result->length(0);
     } else {
          result->length(
-             SqlStrCastFromExact<1,1>(
+             SqlStrCastFromExact<1, 1>(
                  result->pointer(),
                  result->storage(),
                  src->value(),
@@ -82,7 +82,7 @@ castApproxToStrA(
         result->length(0);
     } else {
         result->length(
-            SqlStrCastFromApprox<1,1>(
+            SqlStrCastFromApprox<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->value(),
@@ -103,7 +103,7 @@ castApproxToStrA(
         result->length(0);
     } else {
         result->length(
-            SqlStrCastFromApprox<1,1>(
+            SqlStrCastFromApprox<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->value(),
@@ -123,7 +123,7 @@ castStrToExactA(
         result->toNull();
     } else {
         result->value(
-            SqlStrCastToExact<1,1>(
+            SqlStrCastToExact<1, 1>(
                 src->pointer(),
                 src->stringLength()));
     }
@@ -143,7 +143,7 @@ castStrToExactA(
         result->toNull();
     } else {
         result->value(
-            SqlStrCastToExact<1,1>(
+            SqlStrCastToExact<1, 1>(
                 src->pointer(),
                 src->stringLength(),
                 precision->value(),
@@ -162,7 +162,7 @@ castStrToApproxA(
         result->toNull();
     } else {
         result->value(
-            SqlStrCastToApprox<1,1>(
+            SqlStrCastToApprox<1, 1>(
                 src->pointer(),
                 src->stringLength()));
     }
@@ -180,7 +180,7 @@ castBooleanToStrA(
         result->length(0);
     } else {
         result->length(
-            SqlStrCastFromBoolean<1,1>(
+            SqlStrCastFromBoolean<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->value(),
@@ -199,7 +199,7 @@ castStrToBooleanA(
         result->toNull();
     } else {
         result->value(
-            SqlStrCastToBoolean<1,1>(
+            SqlStrCastToBoolean<1, 1>(
                 src->pointer(),
                 src->stringLength()));
     }
@@ -222,7 +222,7 @@ castStrToVarCharA(
     } else {
         int rightTruncWarning = 0;
         result->length(
-            SqlStrCastToVarChar<1,1>(
+            SqlStrCastToVarChar<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->pointer(),
@@ -251,7 +251,7 @@ castStrToCharA(
     } else {
         int rightTruncWarning = 0;
         result->length(
-            SqlStrCastToChar<1,1>(
+            SqlStrCastToChar<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->pointer(),
@@ -282,7 +282,7 @@ castStrToVarBinaryA(
     } else {
         int rightTruncWarning = 0;
         result->length(
-            SqlStrCastToVarChar<1,1>(
+            SqlStrCastToVarChar<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->pointer(),
@@ -312,7 +312,7 @@ castStrToBinaryA(
     } else {
         int rightTruncWarning = 0;
         result->length(
-            SqlStrCastToChar<1,1>(
+            SqlStrCastToChar<1, 1>(
                 result->pointer(),
                 result->storage(),
                 src->pointer(),

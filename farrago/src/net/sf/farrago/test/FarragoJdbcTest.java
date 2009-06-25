@@ -3823,7 +3823,8 @@ public class FarragoJdbcTest
                 TINYINT,
                 "tinyint",
                 Byte.MIN_VALUE,
-                Byte.MAX_VALUE) {
+                Byte.MAX_VALUE)
+            {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -3851,7 +3852,8 @@ public class FarragoJdbcTest
                 SMALLINT,
                 "smallint",
                 Short.MIN_VALUE,
-                Short.MAX_VALUE) {
+                Short.MAX_VALUE)
+            {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -3879,7 +3881,8 @@ public class FarragoJdbcTest
                 INTEGER,
                 "integer",
                 java.lang.Integer.MIN_VALUE,
-                java.lang.Integer.MAX_VALUE) {
+                java.lang.Integer.MAX_VALUE)
+            {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -3907,7 +3910,8 @@ public class FarragoJdbcTest
                 BIGINT,
                 "bigint",
                 Long.MIN_VALUE,
-                Long.MAX_VALUE) {
+                Long.MAX_VALUE)
+            {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -3934,7 +3938,8 @@ public class FarragoJdbcTest
                 REAL,
                 "real",
                 -java.lang.Float.MAX_VALUE,
-                java.lang.Float.MAX_VALUE) {
+                java.lang.Float.MAX_VALUE)
+            {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {

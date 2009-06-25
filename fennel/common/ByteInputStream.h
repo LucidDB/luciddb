@@ -140,7 +140,7 @@ public:
      * @return pointer to cbActual bytes of available data, or NULL for
      * end-of-stream
      */
-    PConstBuffer getReadPointer(uint cbRequested,uint *pcbActual = NULL);
+    PConstBuffer getReadPointer(uint cbRequested, uint *pcbActual = NULL);
 
     /**
      * Advances stream position after a call to getReadPointer.
@@ -207,7 +207,7 @@ inline uint ByteInputStream::getBytesConsumed() const
 }
 
 inline PConstBuffer ByteInputStream::getReadPointer(
-    uint cbRequested,uint *pcbActual)
+    uint cbRequested, uint *pcbActual)
 {
     if (getBytesAvailable() < cbRequested) {
         assert(pNextByte == pEndByte);
@@ -227,7 +227,7 @@ inline PConstBuffer ByteInputStream::getReadPointer(
 
 inline void ByteInputStream::seekForward(uint cb)
 {
-    uint cbActual = readBytes(NULL,cb);
+    uint cbActual = readBytes(NULL, cb);
     assert(cbActual == cb);
 }
 
@@ -249,7 +249,7 @@ inline void ByteInputStream::setBuffer(
 
 inline void ByteInputStream::nullifyBuffer()
 {
-    setBuffer(NULL,0);
+    setBuffer(NULL, 0);
 }
 
 FENNEL_END_NAMESPACE

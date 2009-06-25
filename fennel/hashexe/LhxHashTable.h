@@ -1090,12 +1090,12 @@ inline PBuffer LhxHashNodeAccessor::getNextLocation()
 
 inline void LhxHashNodeAccessor::setNext(PBuffer nextNode)
 {
-    memcpy(nodePtr+nextNodeOffset, (PBuffer)&nextNode, getNextFieldSize());
+    memcpy(nodePtr + nextNodeOffset, (PBuffer)&nextNode, getNextFieldSize());
 }
 
 inline void LhxHashNodeAccessor::setNext(PBuffer inputNode, PBuffer nextNode)
 {
-    memcpy(inputNode+nextNodeOffset, (PBuffer)&nextNode, getNextFieldSize());
+    memcpy(inputNode + nextNodeOffset, (PBuffer)&nextNode, getNextFieldSize());
 }
 
 inline uint LhxHashNodeAccessor::getNextFieldSize()
@@ -1119,9 +1119,9 @@ inline uint LhxHashDataAccessor::getAvgStorageSize()
     // compute the average based on the min and max
     // TODO - use stats to compute a more realistic average
     return
-        ((dataAccessor.getMaxByteCount() +
-            dataAccessor.getMinByteCount()) / 2) +
-        getBufferOffset();
+        ((dataAccessor.getMaxByteCount()
+          + dataAccessor.getMinByteCount()) / 2)
+        + getBufferOffset();
 }
 
 inline uint LhxHashDataAccessor::getStorageSize(TupleData const &inputTuple)
@@ -1184,8 +1184,8 @@ inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
 inline uint LhxHashKeyAccessor::getAvgStorageSize()
 {
     return
-        ((keyAccessor.getMaxByteCount() + keyAccessor.getMinByteCount()) / 2) +
-        getBufferOffset();
+        ((keyAccessor.getMaxByteCount() + keyAccessor.getMinByteCount()) / 2)
+        + getBufferOffset();
 }
 
 inline uint LhxHashKeyAccessor::getStorageSize(TupleData const &inputTuple)

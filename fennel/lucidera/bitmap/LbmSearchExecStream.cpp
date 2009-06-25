@@ -55,8 +55,8 @@ void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
             ridKeySetup = false;
         } else {
             assert(
-                inputKeyDesc.size() == 1 &&
-                inputKeyDesc.size() == treeDescriptor.keyProjection.size());
+                inputKeyDesc.size() == 1
+                && inputKeyDesc.size() == treeDescriptor.keyProjection.size());
             ridKeySetup = true;
         }
 

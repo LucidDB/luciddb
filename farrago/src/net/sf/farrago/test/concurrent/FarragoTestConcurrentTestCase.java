@@ -163,8 +163,8 @@ public abstract class FarragoTestConcurrentTestCase
     {
         if (cmdGen.failed()) {
             System.err.println("Testcase: " + getName());
-            for (ConcurrentTestCommandGenerator.FailedThread f :
-                     cmdGen.getFailedThreads())
+            for (ConcurrentTestCommandGenerator.FailedThread f
+                : cmdGen.getFailedThreads())
             {
                 System.err.println(f.name + " failed " + f.location);
                 f.failure.printStackTrace(System.err);

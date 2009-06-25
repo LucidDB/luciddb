@@ -47,7 +47,7 @@ SharedLogicalTxnParticipant BTreeRecoveryFactory::loadParticipant(
     BTreeDescriptor descriptor;
     logStream.readValue(descriptor.rootPageId);
     descriptor.segmentAccessor = segmentAccessor;
-    descriptor.tupleDescriptor.readPersistent(logStream,typeFactory);
+    descriptor.tupleDescriptor.readPersistent(logStream, typeFactory);
     descriptor.keyProjection.readPersistent(logStream);
 
     SharedLogicalTxnParticipant pParticipant = writerMap[descriptor.rootPageId];
@@ -57,7 +57,7 @@ SharedLogicalTxnParticipant BTreeRecoveryFactory::loadParticipant(
 
     pParticipant = SharedBTreeWriter(
         new BTreeWriter(
-            descriptor,scratchAccessor));
+            descriptor, scratchAccessor));
 
     writerMap[descriptor.rootPageId] = pParticipant;
 

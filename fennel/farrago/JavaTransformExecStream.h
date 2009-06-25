@@ -34,8 +34,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct JavaTransformExecStreamParams :
-    virtual public ExecStreamParams
+struct JavaTransformExecStreamParams
+    : virtual public ExecStreamParams
 {
     /**
      * Mimic SingleOutputExecStreamParams, but may be uninitialized.

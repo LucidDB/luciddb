@@ -49,11 +49,11 @@ void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
     schedulingPolicy = schedulingPolicyInit;
 }
 
-bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
+bool SXMutex::waitFor(LockMode lockMode, uint iTimeout, TxnId txnId)
 {
     boost::xtime atv;
     if (iTimeout != ETERNITY) {
-        convertTimeout(iTimeout,atv);
+        convertTimeout(iTimeout, atv);
     }
     StrictMutexGuard mutexGuard(mutex);
     LockHolderId acquirerId(txnId);
@@ -84,7 +84,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
         if (iTimeout == ETERNITY) {
             condition.wait(mutexGuard);
         } else {
-            if (!condition.timed_wait(mutexGuard,atv)) {
+            if (!condition.timed_wait(mutexGuard, atv)) {
                 if (bExclusivePending) {
                     assert(nExclusivePending > 0);
                     --nExclusivePending;
@@ -106,7 +106,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
     return true;
 }
 
-void SXMutex::release(LockMode lockMode,TxnId txnId)
+void SXMutex::release(LockMode lockMode, TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
     if (lockMode == LOCKMODE_X) {

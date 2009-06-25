@@ -51,16 +51,16 @@ public:
 
     // C'tor for exactly one type
     explicit
-    RegDesc(StandardTypeDescriptorOrdinal typeArg) :
-        type(typeArg),
+    RegDesc(StandardTypeDescriptorOrdinal typeArg)
+        : type(typeArg),
         group(REGDESC_NONE)
     {
     }
 
     // C'tor for a group of types
     explicit
-    RegDesc(Groups groupArg) :
-        type(STANDARD_TYPE_END_NO_UNICODE),
+    RegDesc(Groups groupArg)
+        : type(STANDARD_TYPE_END_NO_UNICODE),
         group(groupArg)
     {
     }
@@ -88,8 +88,8 @@ public:
     InstructionDescription(
         string const &nameArg,
         vector<RegDesc> const &registerdescArg,
-        InstructionCreateFunction createFnArg) :
-        name(nameArg),
+        InstructionCreateFunction createFnArg)
+        : name(nameArg),
         registerdesc(registerdescArg),
         createFn(createFnArg)
     {

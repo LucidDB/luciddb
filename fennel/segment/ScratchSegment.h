@@ -75,7 +75,7 @@ public:
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual BlockNum getAllocatedSizeInPages();
     virtual BlockNum getNumPagesOccupiedHighWater();
@@ -98,7 +98,7 @@ public:
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void flushPage(CachePage &page,bool async);
     virtual void nicePage(CachePage &page);

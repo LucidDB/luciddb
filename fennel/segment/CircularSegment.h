@@ -57,7 +57,7 @@ class FENNEL_SEGMENT_EXPORT CircularSegment
 
     BlockNum nPages;
 
-    BlockNum checkpointThreshold1,checkpointThreshold2;
+    BlockNum checkpointThreshold1, checkpointThreshold2;
 
     explicit CircularSegment(
         SharedSegment delegateSegment,
@@ -73,11 +73,11 @@ public:
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId = ANON_PAGE_OWNER_ID);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual AllocationOrder getAllocationOrder() const;
     virtual PageId getPageSuccessor(PageId pageId);
-    virtual void setPageSuccessor(PageId pageId,PageId successorId);
+    virtual void setPageSuccessor(PageId pageId, PageId successorId);
 };
 
 FENNEL_END_NAMESPACE

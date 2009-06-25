@@ -39,8 +39,8 @@ struct FENNEL_EXEC_EXPORT Correlation
     DynamicParamId dynamicParamId;
     uint leftAttributeOrdinal;
 
-    Correlation(DynamicParamId id, uint offset) :
-        dynamicParamId(id),
+    Correlation(DynamicParamId id, uint offset)
+        : dynamicParamId(id),
         leftAttributeOrdinal(offset)
     {
         //empty

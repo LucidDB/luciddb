@@ -159,8 +159,8 @@ public class FarragoCalcSystemTest
         // test for it elsewhere.
         // ------------
         // iterating over all operators
-        for (SqlOperator op :
-             SqlStdOperatorTable.instance().getOperatorList())
+        for (SqlOperator op
+            : SqlStdOperatorTable.instance().getOperatorList())
         {
             if (exclude.contains(op)) {
                 continue;

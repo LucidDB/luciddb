@@ -36,16 +36,16 @@ class SegPageIterTest : virtual public SegStorageTestBase
 public:
     explicit SegPageIterTest()
     {
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testUnboundedIter);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testBoundedIter);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testWithLock);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testHighPrefetchRejects);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testLowPrefetchRejects);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testUnboundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testBoundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testWithLock);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testHighPrefetchRejects);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testLowPrefetchRejects);
     }
 
     void testUnboundedIter()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,0);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 0);
     }
 
     void testBoundedIter()
@@ -59,24 +59,25 @@ public:
 
     void testWithLock()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,true,0);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, true, 0);
     }
 
     void testHighPrefetchRejects()
     {
         // High pre-fetch reject rate.  This will force frequent downward
         // throttles.
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,3);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 3);
     }
 
     void testLowPrefetchRejects()
     {
         // Low pre-fetch reject rate.  This will allow the rate to throttle
         // back up once it's throttled down.
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,123);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 123);
     }
 
-    void testIter(PageId beginPageId,PageId endPageId,bool bLock,int rejectRate)
+    void testIter(
+        PageId beginPageId, PageId endPageId, bool bLock, int rejectRate)
     {
         openStorage(DeviceMode::createNew);
 
@@ -84,10 +85,10 @@ public:
         closeStorage();
         openStorage(DeviceMode::load);
 
-        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SegmentAccessor segmentAccessor(pLinearSegment, pCache);
         SegPageLock pageLock(segmentAccessor);
         SegPageIter iter;
-        iter.mapRange(segmentAccessor,beginPageId,endPageId);
+        iter.mapRange(segmentAccessor, beginPageId, endPageId);
         PageId pageId = beginPageId;
         for (uint i = 0; ; i++) {
             BOOST_CHECK_EQUAL(pageId,*iter);

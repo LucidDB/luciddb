@@ -95,7 +95,7 @@ public:
     virtual SharedCache newCache();
 
     SharedRandomAccessDevice openDevice(
-        std::string devName,DeviceMode openMode,uint nDevicePages,
+        std::string devName, DeviceMode openMode, uint nDevicePages,
         DeviceId deviceId);
 
     virtual void openStorage(DeviceMode openMode);
@@ -104,7 +104,7 @@ public:
 
     virtual void testCaseTearDown();
 
-    void closeDevice(DeviceId deviceId,SharedRandomAccessDevice &pDevice);
+    void closeDevice(DeviceId deviceId, SharedRandomAccessDevice &pDevice);
 };
 
 FENNEL_END_NAMESPACE

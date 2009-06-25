@@ -42,7 +42,7 @@ class LogicalTxnParticipantFactory;
 class FENNEL_TXN_EXPORT LogicalRecoveryLog
     : public boost::noncopyable
 {
-    typedef std::hash_map<TxnId,LogicalTxnEventMemento> TxnMap;
+    typedef std::hash_map<TxnId, LogicalTxnEventMemento> TxnMap;
     typedef TxnMap::iterator TxnMapIter;
 
     TxnMap checkpointTxnMap;

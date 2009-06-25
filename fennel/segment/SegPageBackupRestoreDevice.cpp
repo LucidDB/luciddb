@@ -120,12 +120,12 @@ SegPageBackupRestoreDevice::SegPageBackupRestoreDevice(
     uint nReservedPagesInit,
     SegmentAccessor &scratchAccessorInit,
     DeviceAccessScheduler &schedulerInit,
-    SharedRandomAccessDevice pDataDeviceInit) :
-    backupFilePathname(backupFilePathnameInit),
-    nReservedPages(nReservedPagesInit),
-    scratchAccessor(scratchAccessorInit),
-    scheduler(schedulerInit),
-    pDataDevice(pDataDeviceInit)
+    SharedRandomAccessDevice pDataDeviceInit)
+    : backupFilePathname(backupFilePathnameInit),
+      nReservedPages(nReservedPagesInit),
+      scratchAccessor(scratchAccessorInit),
+      scheduler(schedulerInit),
+      pDataDevice(pDataDeviceInit)
 {
     mode = (char *) modeInit;
     setCompressionProgramPathname(compressionProgramInit);

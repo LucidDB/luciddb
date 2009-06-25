@@ -41,7 +41,7 @@ FENNEL_BEGIN_NAMESPACE
 class FENNEL_EXEC_EXPORT ExecStreamGraphEmbryo
     : public boost::noncopyable
 {
-    typedef std::map<std::string,ExecStreamEmbryo> StreamMap;
+    typedef std::map<std::string, ExecStreamEmbryo> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
     typedef StreamMap::iterator StreamMapIter;
 

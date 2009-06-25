@@ -38,8 +38,8 @@ struct FENNEL_EXEC_EXPORT NestedLoopJoinKey
     DynamicParamId dynamicParamId;
     uint leftAttributeOrdinal;
 
-    NestedLoopJoinKey(DynamicParamId id, uint offset) :
-        dynamicParamId(id),
+    NestedLoopJoinKey(DynamicParamId id, uint offset)
+        : dynamicParamId(id),
         leftAttributeOrdinal(offset)
     {
     }

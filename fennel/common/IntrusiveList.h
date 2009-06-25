@@ -49,7 +49,7 @@ FENNEL_BEGIN_NAMESPACE
  * IntrusiveList is not a true STL container (likewise, IntrusiveListIter is
  * not a true STL iterator).
  */
-template <class T,class DerivedListNode = IntrusiveListNode>
+template <class T, class DerivedListNode = IntrusiveListNode>
 class IntrusiveList : public RawIntrusiveList
 {
     typedef RawIntrusiveList super;
@@ -110,7 +110,7 @@ public:
 /**
  * IntrusiveListIter is the companion iterator for InstrusiveList.
  */
-template <class T,class DerivedListNode = IntrusiveListNode>
+template <class T, class DerivedListNode = IntrusiveListNode>
 class IntrusiveListIter : public RawIntrusiveListIter
 {
     typedef RawIntrusiveListIter super;
@@ -129,7 +129,7 @@ public:
      * @param list the list to access
      */
     explicit IntrusiveListIter(
-        IntrusiveList<T,DerivedListNode> const &list)
+        IntrusiveList<T, DerivedListNode> const &list)
         : super(list)
     {
     }
@@ -167,7 +167,7 @@ public:
      * @param list the list to access
      */
     void repositionToFront(
-        IntrusiveList<T,DerivedListNode> const &list)
+        IntrusiveList<T, DerivedListNode> const &list)
     {
         super::repositionToFront(list);
     }
@@ -177,7 +177,7 @@ public:
  * IntrusiveListMutator is the companion mutator for InstrusiveList.  It allows
  * the list to be modified during the course of iteration.
  */
-template <class T,class DerivedListNode = IntrusiveListNode>
+template <class T, class DerivedListNode = IntrusiveListNode>
 class IntrusiveListMutator
     : public RawIntrusiveListMutator
 {
@@ -197,7 +197,7 @@ public:
      * @param list the list to access
      */
     explicit IntrusiveListMutator(
-        IntrusiveList<T,DerivedListNode> &list)
+        IntrusiveList<T, DerivedListNode> &list)
         : super(list)
     {
     }
@@ -247,7 +247,7 @@ public:
      * @param list the list to access
      */
     void repositionToFront(
-        IntrusiveList<T,DerivedListNode> &list)
+        IntrusiveList<T, DerivedListNode> &list)
     {
         super::repositionToFront(list);
     }

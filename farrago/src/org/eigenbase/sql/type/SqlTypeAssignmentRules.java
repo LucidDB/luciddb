@@ -333,8 +333,8 @@ public class SqlTypeAssignmentRules
         if (null == rule) {
             // if you hit this assert, see the constructor of this class on how
             // to add new rule
-            throw Util.newInternal("No assign rules for " + to
-                + " defined");
+            throw Util.newInternal(
+                "No assign rules for " + to + " defined");
         }
 
         return rule.contains(from);

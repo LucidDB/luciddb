@@ -88,9 +88,10 @@ SqlLikePrep(
             char escapeChar;
             if (escapeLenBytes == 1) {
                 escapeChar = *escape;
-                if (special.find(escapeChar) != std::string::npos &&
-                    escapeChar != '_' &&
-                    escapeChar != '%') {
+                if (special.find(escapeChar) != std::string::npos
+                    && escapeChar != '_'
+                    && escapeChar != '%')
+                {
                     // escape char is a special char to regex (not
                     // sql, just regex) and must be escaped if it
                     // makes it through to the pattern. (e.g.: escape
@@ -119,13 +120,14 @@ SqlLikePrep(
             //         _ -> .
             //         % -> .*
             size_t pos = 0;
-            while ((pos = expPat.find_first_of(special, pos)) !=
-                   std::string::npos) {
+            while ((pos = expPat.find_first_of(special, pos))
+                   != std::string::npos)
+            {
                 if (expPat[pos] == escapeChar) {
-                    if (pos + 1 >= expPat.size() ||
-                        (expPat[pos + 1] != '_'
-                         && expPat[pos + 1] != '%'
-                         && expPat[pos + 1] != escapeChar))
+                    if (pos + 1 >= expPat.size()
+                        || (expPat[pos + 1] != '_'
+                            && expPat[pos + 1] != '%'
+                            && expPat[pos + 1] != escapeChar))
                     {
                         // SQL99 Part 2 Section 8.5 General Rule
                         // 3.d.ii, I think.
@@ -194,8 +196,9 @@ SqlSimilarPrepEscapeProcessing(
     std::string const & expPat,
     std::string& sqlSpecial)
 {
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
-        CodeUnitBytes == 1) {
+    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint
+        && CodeUnitBytes == 1)
+    {
         // ASCII
 
         if (escapeLenBytes == 1) {
@@ -214,10 +217,11 @@ SqlSimilarPrepEscapeProcessing(
                 // present in pattern unless it part of a
                 // correctly formed <escape character>
                 size_t pos = 0;
-                while ((pos = expPat.find(escapeChar, pos)) !=
-                       std::string::npos) {
-                    if (pos + 1 >= expPat.size() ||
-                        !strchr(
+                while ((pos = expPat.find(escapeChar, pos))
+                       != std::string::npos)
+                {
+                    if (pos + 1 >= expPat.size()
+                        || !strchr(
                             SqlSimilarPrepGeneralRule3b,
                             expPat[pos + 1]))
                     {
@@ -228,9 +232,10 @@ SqlSimilarPrepEscapeProcessing(
                     pos += 2; // skip by <escape><special char>
                 }
             }
-            if (escapeChar == ':' &&
-                ((expPat.find("[:") != std::string::npos ||
-                  expPat.find(":]") != std::string::npos))) {
+            if (escapeChar == ':'
+                && ((expPat.find("[:") != std::string::npos
+                     || expPat.find(":]") != std::string::npos)))
+            {
                 // SQL2003 Part 2 Section 8.6 General Rule 3.c
                 // Data Exception -- Escape Character Conflict
                 throw "2200B";
@@ -261,8 +266,9 @@ SqlSimilarPrepRewriteCharEnumeration(
     char const * const SqlSimilarPrepSyntaxRule6,
     char escapeChar)
 {
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
-        CodeUnitBytes == 1) {
+    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint
+        && CodeUnitBytes == 1)
+    {
         // ASCII
 
         // If a <character enumeration> contains a <regular character
@@ -291,7 +297,8 @@ SqlSimilarPrepRewriteCharEnumeration(
 
             size_t pos2 = pos;
             while ((pos2 = expPat.find_first_of(syntaxRule6ForCharEnum, pos2))
-                   != std::string::npos) {
+                   != std::string::npos)
+            {
                 if (expPat[pos2] == escapeChar) {
                     // skip over next char, assume that it is special
                     pos2 += 2;
@@ -380,8 +387,9 @@ SqlSimilarPrepReWrite(
     std::string& expPat,
     std::string& sqlSpecial)
 {
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
-        CodeUnitBytes == 1) {
+    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint
+        && CodeUnitBytes == 1)
+    {
         // ASCII
 
         // Define special characters for SQL2003 Part 2 Section 8.6 Syntax Rule
@@ -402,8 +410,8 @@ SqlSimilarPrepReWrite(
 
         size_t pos = 0;
         bool characterEnumeration = false; // e.g. [A-Z]
-        while ((pos = expPat.find_first_of(sqlSpecial, pos)) !=
-               std::string::npos)
+        while ((pos = expPat.find_first_of(sqlSpecial, pos))
+            != std::string::npos)
         {
             if (expPat[pos] == escapeChar) {
                 if (pos + 1 >= expPat.size()) {
@@ -542,8 +550,9 @@ SqlSimilarPrep(
     int escapeLenBytes,
     std::string& expPat)
 {
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
-        CodeUnitBytes == 1) {
+    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint
+        && CodeUnitBytes == 1)
+    {
         // ASCII
 
         if (patternLenBytes == 0) {
@@ -574,8 +583,9 @@ SqlSimilarPrep(
             expPat,
             sqlSpecial);
 
-    } else if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
-               CodeUnitBytes == 2) {
+    } else if (CodeUnitBytes == MaxCodeUnitsPerCodePoint
+               && CodeUnitBytes == 2)
+    {
         // TODO: Add UCS2 here
         // Convert pattern to ICU regex pattern.
         //

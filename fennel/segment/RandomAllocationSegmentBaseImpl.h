@@ -84,13 +84,13 @@ struct FENNEL_SEGMENT_EXPORT SegmentAllocationNode
     ExtentEntry &getExtentEntry(uint i)
     {
         assert(i < nExtents);
-        return reinterpret_cast<ExtentEntry *>(this+1)[i];
+        return reinterpret_cast<ExtentEntry *>(this + 1)[i];
     }
 
     ExtentEntry const &getExtentEntry(uint i) const
     {
         assert(i < nExtents);
-        return reinterpret_cast<ExtentEntry const *>(this+1)[i];
+        return reinterpret_cast<ExtentEntry const *>(this + 1)[i];
     }
 };
 
@@ -108,7 +108,7 @@ inline PageId RandomAllocationSegmentBase::getSegAllocPageId(
 }
 
 inline BlockNum RandomAllocationSegmentBase::makePageNum(
-    ExtentNum extentNum,BlockNum iPageInExtent) const
+    ExtentNum extentNum, BlockNum iPageInExtent) const
 {
     // weird calculation to take into account interspersal of SegAllocNodes
     uint nSegPages = extentNum / nExtentsPerSegAlloc + 1;
@@ -118,7 +118,7 @@ inline BlockNum RandomAllocationSegmentBase::makePageNum(
 inline PageId RandomAllocationSegmentBase::getExtentAllocPageId(
     ExtentNum extentNum) const
 {
-    return getLinearPageId(makePageNum(extentNum,0));
+    return getLinearPageId(makePageNum(extentNum, 0));
 }
 
 template <class ExtentAllocationNodeT,
@@ -213,7 +213,7 @@ PageId RandomAllocationSegmentBase::allocateFromLockedExtentTemplate(
                 permAssert(false);
             }
             pageEntry.ownerId = ownerId;
-            PageId pageId = getLinearPageId(makePageNum(extentNum,i));
+            PageId pageId = getLinearPageId(makePageNum(extentNum, i));
             return pageId;
         }
     }

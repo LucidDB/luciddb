@@ -120,7 +120,7 @@ inline bool FtrsTableWriter::searchForIndexKey(
         keyData[i] =
             pClusteredIndexWriter->tupleData[indexWriter.inputKeyProj[i]];
     }
-    return indexWriter.pWriter->searchForKey(keyData,DUP_SEEK_ANY);
+    return indexWriter.pWriter->searchForKey(keyData, DUP_SEEK_ANY);
 }
 
 inline void FtrsTableWriter::insertIntoIndex(
@@ -192,14 +192,14 @@ inline void FtrsTableWriter::modifyAllIndexes(LogicalActionType actionType)
     IndexWriterVector::iterator first = indexWriters.begin();
     IndexWriterVector::iterator current = first;
     try {
-        modifySomeIndexes(actionType,current,indexWriters.end());
+        modifySomeIndexes(actionType, current, indexWriters.end());
     } catch (...) {
         // In case of exception, carefully roll back only those indexes which
         // were already modified.
         try {
             LogicalActionType compensatingActionType =
                 (actionType == ACTION_INSERT) ? ACTION_DELETE : ACTION_INSERT;
-            modifySomeIndexes(compensatingActionType,first,current);
+            modifySomeIndexes(compensatingActionType, first, current);
         } catch (...) {
             // If this rollback fails, don't allow exception to hide original
             // exception.  But TODO:  trace.
@@ -317,7 +317,7 @@ RecordNum FtrsTableWriter::execute(
         LogicalTxn *pTxn = getLogicalTxn();
         ByteOutputStream &logStream =
             pTxn->beginLogicalAction(*this,actionType);
-        logStream.writeBytes(tupleAccessor.getCurrentTupleBuf(),cb);
+        logStream.writeBytes(tupleAccessor.getCurrentTupleBuf(), cb);
         pTxn->endLogicalAction();
         bufAccessor.consumeTuple();
         ++nTuples;
@@ -366,13 +366,13 @@ void FtrsTableWriter::undoLogicalAction(
 {
     switch (actionType) {
     case ACTION_INSERT:
-        redoLogicalAction(ACTION_DELETE,logStream);
+        redoLogicalAction(ACTION_DELETE, logStream);
         break;
     case ACTION_DELETE:
-        redoLogicalAction(ACTION_INSERT,logStream);
+        redoLogicalAction(ACTION_INSERT, logStream);
         break;
     case ACTION_UPDATE:
-        redoLogicalAction(ACTION_REVERSE_UPDATE,logStream);
+        redoLogicalAction(ACTION_REVERSE_UPDATE, logStream);
         break;
     default:
         permAssert(false);

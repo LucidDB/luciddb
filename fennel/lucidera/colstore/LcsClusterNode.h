@@ -131,8 +131,9 @@ public:
  */
 inline uint getClusterSubHeaderSize(uint nColumns)
 {
-    return sizeof(LcsClusterNode) + (3 * sizeof(uint16_t *) * nColumns) +
-        sizeof(uint) * nColumns;
+    return sizeof(LcsClusterNode)
+        + (3 * sizeof(uint16_t *) * nColumns)
+        + sizeof(uint) * nColumns;
 }
 
 typedef LcsClusterNode *PLcsClusterNode;

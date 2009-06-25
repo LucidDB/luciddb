@@ -134,8 +134,9 @@ void CalcAssembler::setTupleDatum(
         // Check for underflow where the value becomes 0
         // NOTE: Underflows that causes precision loss but does not become 0
         //       are ignored for now.
-        if ((value != 0) &&
-            (*(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData)))
+        if ((value != 0)
+            && (*(reinterpret_cast<float *>(
+                const_cast<PBuffer>(tupleDatum.pData)))
              == 0))
         {
             throw InvalidValueException<double>(
@@ -495,9 +496,9 @@ void CalcAssembler::allocateTuples()
         assert(mRegisterTupleData[reg] == NULL);
         assert(mBuffers[reg] == NULL);
 
-        if (reg == RegisterReference::ELiteral ||
-            reg == RegisterReference::EStatus ||
-            reg == RegisterReference::ELocal)
+        if (reg == RegisterReference::ELiteral
+            || reg == RegisterReference::EStatus
+            || reg == RegisterReference::ELocal)
         {
             /* Allocate tuple for literal/status/local registers */
             mRegisterTupleData[reg] = createTupleData(

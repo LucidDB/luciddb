@@ -45,10 +45,10 @@ void TimerThread::run()
                 break;
             }
             boost::xtime atv;
-            convertTimeout(millis,atv);
+            convertTimeout(millis, atv);
             StrictMutexGuard mutexGuard(mutex);
             while (!bStop) {
-                if (!condition.timed_wait(mutexGuard,atv)) {
+                if (!condition.timed_wait(mutexGuard, atv)) {
                     break;
                 }
             }

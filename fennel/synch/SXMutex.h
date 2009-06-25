@@ -79,7 +79,7 @@ public:
     ~SXMutex();
 
     bool waitFor(
-        LockMode lockMode,uint iTimeout = ETERNITY,
+        LockMode lockMode, uint iTimeout = ETERNITY,
         TxnId txnId = IMPLICIT_TXN_ID);
     void release(LockMode lockMode, TxnId txnId = IMPLICIT_TXN_ID);
     bool tryUpgrade(TxnId txnId = IMPLICIT_TXN_ID);
@@ -89,7 +89,7 @@ public:
 
 private:
     SchedulingPolicy schedulingPolicy;
-    uint nShared,nExclusive,nExclusivePending;
+    uint nShared, nExclusive, nExclusivePending;
     LockHolderId exclusiveHolderId;
 };
 

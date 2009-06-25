@@ -236,8 +236,9 @@ public:
     static inline bool
     isApprox(StandardTypeDescriptorOrdinal st)
     {
-        if (st == STANDARD_TYPE_REAL ||
-            st == STANDARD_TYPE_DOUBLE) {
+        if (st == STANDARD_TYPE_REAL
+            || st == STANDARD_TYPE_DOUBLE)
+        {
             return true;
         }
         return false;
@@ -246,8 +247,9 @@ public:
     static inline bool
     isArray(StandardTypeDescriptorOrdinal st)
     {
-        if (st >= STANDARD_TYPE_CHAR &&
-            st <= STANDARD_TYPE_UNICODE_VARCHAR) {
+        if (st >= STANDARD_TYPE_CHAR
+            && st <= STANDARD_TYPE_UNICODE_VARCHAR)
+        {
             return true;
         }
         return false;
@@ -256,9 +258,10 @@ public:
     static inline bool
     isVariableLenArray(StandardTypeDescriptorOrdinal st)
     {
-        if (st == STANDARD_TYPE_VARCHAR ||
-            st == STANDARD_TYPE_VARBINARY ||
-            st == STANDARD_TYPE_UNICODE_VARCHAR) {
+        if (st == STANDARD_TYPE_VARCHAR
+            || st == STANDARD_TYPE_VARBINARY
+            || st == STANDARD_TYPE_UNICODE_VARCHAR)
+        {
             return true;
         }
         return false;
@@ -267,9 +270,10 @@ public:
     static inline bool
     isFixedLenArray(StandardTypeDescriptorOrdinal st)
     {
-        if (st == STANDARD_TYPE_CHAR ||
-            st == STANDARD_TYPE_BINARY ||
-            st == STANDARD_TYPE_UNICODE_CHAR) {
+        if (st == STANDARD_TYPE_CHAR
+            || st == STANDARD_TYPE_BINARY
+            || st == STANDARD_TYPE_UNICODE_CHAR)
+        {
             return true;
         }
         return false;
@@ -278,10 +282,11 @@ public:
     static inline bool
     isTextArray(StandardTypeDescriptorOrdinal st)
     {
-        if (st == STANDARD_TYPE_CHAR ||
-            st == STANDARD_TYPE_VARCHAR ||
-            st == STANDARD_TYPE_UNICODE_CHAR ||
-            st == STANDARD_TYPE_UNICODE_VARCHAR) {
+        if (st == STANDARD_TYPE_CHAR
+            || st == STANDARD_TYPE_VARCHAR
+            || st == STANDARD_TYPE_UNICODE_CHAR
+            || st == STANDARD_TYPE_UNICODE_VARCHAR)
+        {
             return true;
         }
         return false;
@@ -290,8 +295,9 @@ public:
     static inline bool
     isBinaryArray(StandardTypeDescriptorOrdinal st)
     {
-        if (st == STANDARD_TYPE_VARBINARY ||
-            st == STANDARD_TYPE_BINARY) {
+        if (st == STANDARD_TYPE_VARBINARY
+            || st == STANDARD_TYPE_BINARY)
+        {
             return true;
         }
         return false;

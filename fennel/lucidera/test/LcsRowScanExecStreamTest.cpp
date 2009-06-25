@@ -880,7 +880,7 @@ void LcsRowScanExecStreamTest::testFilterCols(
     uint offset2 = 0;
 
     setSearchKey(
-        '(', '+', 1500+2*nCols, 0, inputBuf2, offset2, inputTupleAccessor,
+        '(', '+', 1500 + 2 * nCols, 0, inputBuf2, offset2, inputTupleAccessor,
         inputTupleData1);
 
     valuesParams.pTupleBuffer = inputBuffer;
@@ -953,10 +953,10 @@ void LcsRowScanExecStreamTest::testFilterCols(
     for (uint i = 0; i < proj.size(); i++) {
         SharedInt64ColumnGenerator col =
             SharedInt64ColumnGenerator(
-                compressed ?
-                    (Int64ColumnGenerator*) new MixedDupColumnGenerator(
-                        NDUPS, proj[i] + 2000,500) :
-                    new SeqColumnGenerator(proj[i] + offset, skipRows));
+                compressed
+                ? (Int64ColumnGenerator*) new MixedDupColumnGenerator(
+                        NDUPS, proj[i] + 2000, 500)
+                : new SeqColumnGenerator(proj[i] + offset, skipRows));
         columnGenerators.push_back(col);
     }
 

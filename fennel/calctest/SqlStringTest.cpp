@@ -172,7 +172,7 @@ class SqlStringTest : virtual public TestBase, public TraceSource
 
 public:
     explicit SqlStringTest()
-        : TraceSource(shared_from_this(),"SqlStringTest")
+        : TraceSource(shared_from_this(), "SqlStringTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringBuffer_Ascii);
@@ -507,9 +507,9 @@ SqlStringTest::testSqlStringCat_Fix()
                                         BOOST_CHECK_EQUAL(
                                             strcmp(str, "22001"), 0);
                                         BOOST_CHECK(
-                                            (src1_storage +
-                                             src2_storage +
-                                             src3_storage)
+                                            (src1_storage
+                                             + src2_storage
+                                             + src3_storage)
                                             > dst_storage);
                                         BOOST_CHECK(dst.verify());
                                         BOOST_CHECK(src1.verify());
@@ -526,9 +526,9 @@ SqlStringTest::testSqlStringCat_Fix()
                                         BOOST_CHECK(src3.verify());
                                         BOOST_CHECK_EQUAL(
                                             newlen,
-                                            (src1_storage +
-                                             src2_storage +
-                                             src3_storage));
+                                            (src1_storage
+                                             + src2_storage
+                                             + src3_storage));
 
                                         string result(dst.mStr, newlen);
                                         string expect(src1.mStr, src1_storage);
@@ -713,10 +713,11 @@ SqlStringTest::testSqlStringCpy_Fix()
 
                         string result(dst.mStr, dst_storage);
 #if 0
-                        BOOST_MESSAGE(" dst_storage=" << dst_storage <<
-                                      " dst_len=" << dst_len <<
-                                      " src_storage=" << src_storage <<
-                                      " src_len=" << src_len);
+                        BOOST_MESSAGE(
+                            " dst_storage=" << dst_storage
+                            << " dst_len=" << dst_len
+                            << " src_storage=" << src_storage
+                            << " src_len=" << src_len);
                         BOOST_MESSAGE("src =|" << src.mLeftP << "|");
                         BOOST_MESSAGE("expect |" << expect << "|");
                         BOOST_MESSAGE("result |" << result << "|");
@@ -732,7 +733,7 @@ SqlStringTest::testSqlStringCpy_Fix()
 
                     caught = false;
                     try {
-                        SqlStrCpy_Fix<2,1>(
+                        SqlStrCpy_Fix<2, 1>(
                             dstU2.mStr,
                             dstU2.mStorage,
                             srcU2.mStr,
@@ -756,15 +757,16 @@ SqlStringTest::testSqlStringCpy_Fix()
                             's');
                         appendCharsToUCS2LikeString(
                             expect,
-                            (dstU2.mStorage -
-                             srcU2.mSize) >> 1,
+                            (dstU2.mStorage
+                             - srcU2.mSize) >> 1,
                             ' ');
                         string result(dstU2.mStr, dstU2.mStorage);
 #if 0
-                        BOOST_MESSAGE(" dstU2.mStorage=" << dstU2.mStorage <<
-                                      " dstU2.mSize=" << dstU2.mSize <<
-                                      " srcU2.mStorage=" << srcU2.mStorage <<
-                                      " srcU2.mSize=" << srcU2.mSize);
+                        BOOST_MESSAGE(
+                            " dstU2.mStorage=" << dstU2.mStorage
+                            << " dstU2.mSize=" << dstU2.mSize
+                            << " srcU2.mStorage=" << srcU2.mStorage
+                            << " srcU2.mSize=" << srcU2.mSize);
                         BOOST_MESSAGE("srcU2 =|" << srcU2.mLeftP << "|");
                         BOOST_MESSAGE("expectU2 |" << expect << "|");
                         BOOST_MESSAGE("resultU2 |" << result << "|");
@@ -909,16 +911,17 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(expected, expected2);
 
 #if 0
-    BOOST_MESSAGE("src1=|" << s1 << "|" <<
-                  " src2=|" << s2 << "|" <<
-                  " src1F=|" << s1F << "|" <<
-                  " src2F=|" << s2F << "|" <<
-                  " expect=" << expected <<
-                  " expect2=" << expected2);
+    BOOST_MESSAGE(
+        "src1=|" << s1 << "|"
+        << " src2=|" << s2 << "|"
+        << " src1F=|" << s1F << "|"
+        << " src2F=|" << s2F << "|"
+        << " expect=" << expected
+        << " expect2=" << expected2);
 #endif
 
     // Test in a more CHAR / padded way
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_storage,
         src2.mStr, src2_storage);
     BOOST_CHECK(src1.verify());
@@ -926,7 +929,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(result, expected);
 
     // Test in a more CHAR / padded way, flip arguments
-    resultflip = SqlStrCmp<1,1>(
+    resultflip = SqlStrCmp<1, 1>(
         src2.mStr, src2_storage,
         src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
@@ -934,7 +937,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(resultflip * -1, result);
 
     // Test in a more VARCHAR / non-padded way
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_len,
         src2.mStr, src2_len);
     BOOST_CHECK(src1.verify());
@@ -942,7 +945,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(result, expected);
 
     // Test in a more VARCHAR / non-padded way, flip arguments
-    resultflip = SqlStrCmp<1,1>(
+    resultflip = SqlStrCmp<1, 1>(
         src2.mStr, src2_len,
         src1.mStr, src1_len);
     BOOST_CHECK(src1.verify());
@@ -950,7 +953,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(resultflip * -1, result);
 
     // Test in a mixed CHAR/VARCHAR mode
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_len,
         src2.mStr, src2_storage);
     BOOST_CHECK(src1.verify());
@@ -958,7 +961,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(result, expected);
 
     // Test in a mixed CHAR/VARCHAR mode, flip
-    resultflip = SqlStrCmp<1,1>(
+    resultflip = SqlStrCmp<1, 1>(
         src2.mStr, src2_storage,
         src1.mStr, src1_len);
     BOOST_CHECK(src1.verify());
@@ -966,7 +969,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(resultflip * -1, result);
 
     // Test in a mixed CHAR/VARCHAR mode, flip types
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_storage,
         src2.mStr, src2_len);
     BOOST_CHECK(src1.verify());
@@ -974,7 +977,7 @@ SqlStringTest::testSqlStringCmp_Helper(
     BOOST_CHECK_EQUAL(result, expected);
 
     // Test in a mixed CHAR/VARCHAR mode, flip types and flip args
-    resultflip = SqlStrCmp<1,1>(
+    resultflip = SqlStrCmp<1, 1>(
         src2.mStr, src2_len,
         src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
@@ -983,37 +986,37 @@ SqlStringTest::testSqlStringCmp_Helper(
 
 
     // force check of equal strings
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_storage,
         src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
 
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_len,
         src1.mStr, src1_len);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
 
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_storage,
         src1.mStr, src1_len);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
 
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src1.mStr, src1_len,
         src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
 
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src2.mStr, src2_storage,
         src2.mStr, src2_storage);
     BOOST_CHECK(src2.verify());
     BOOST_CHECK_EQUAL(result, 0);
 
-    result = SqlStrCmp<1,1>(
+    result = SqlStrCmp<1, 1>(
         src2.mStr, src2_len,
         src2.mStr, src2_len);
     BOOST_CHECK(src2.verify());
@@ -1109,8 +1112,9 @@ SqlStringTest::testSqlStringCmp_Bin_Helper(
     string s1(src1.mStr, src1_len);
     string s2(src2.mStr, src2_len);
 #if 0
-    BOOST_MESSAGE("src1=|" << s1 << "| " << src1_len << " " << src1_storage <<
-                  " src2=|" << s2 << "| " << src2_len << " " << src2_storage);
+    BOOST_MESSAGE(
+        "src1=|" << s1 << "| " << src1_len << " " << src1_storage
+        << " src2=|" << s2 << "| " << src2_len << " " << src2_storage);
 #endif
 
     int expected = testSqlStringNormalizeLexicalCmp(s1.compare(s2));
@@ -1198,8 +1202,9 @@ SqlStringTest::testSqlStringCmp_Bin()
                 do {
                     testSqlStringCmp_Bin_Helper2(lower, upper);
                     src2.randomize(lower, lower, upper);
-                } while (src1_len > 0 && count-- > 0 &&
-                         !memcmp(src1.mStr, src2.mStr, src1_len));
+                } while (src1_len > 0
+                    && count-- > 0
+                    && !memcmp(src1.mStr, src2.mStr, src1_len));
                 if (count < 1) {
                     // bad luck, just give up on this iteration
                     BOOST_MESSAGE("giving up on impossible random string gen");
@@ -1283,7 +1288,7 @@ SqlStringTest::testSqlStringLenChar()
             SqlStringBufferUCS2 srcU2(src);
 
             // VARCHAR-ish test
-            newlen = SqlStrLenChar<2,1>(
+            newlen = SqlStrLenChar<2, 1>(
                 srcU2.mStr,
                 srcU2.mSize);
             // the number characters is unchanged from Ascii src / src_len
@@ -1291,7 +1296,7 @@ SqlStringTest::testSqlStringLenChar()
             BOOST_CHECK(src.verify());
 
             // CHAR-ish test
-            newlen = SqlStrLenChar<2,1>(
+            newlen = SqlStrLenChar<2, 1>(
                 srcU2.mStr,
                 srcU2.mStorage);
             // the number characters is unchanged from Ascii src / src_storage
@@ -1369,12 +1374,12 @@ SqlStringTest::testSqlStringOverlay()
                         }
 #if 0
                         BOOST_MESSAGE(
-                            " dst_storage=" << dst_storage <<
-                            " src_storage=" << src_storage <<
-                            " over_storage=" << over_storage <<
-                            " pos=" << position <<
-                            " length=" << length <<
-                            " spec=" << lenSpecified);
+                            " dst_storage=" << dst_storage
+                            << " src_storage=" << src_storage
+                            << " over_storage=" << over_storage
+                            << " pos=" << position
+                            << " length=" << length
+                            << " spec=" << lenSpecified);
 #endif
                         SqlStringBuffer dst(
                             dst_storage, dst_storage,
@@ -1418,7 +1423,7 @@ SqlStringTest::testSqlStringOverlay()
 
                         caught = false;
                         try {
-                            newlen = SqlStrOverlay<1,1>(
+                            newlen = SqlStrOverlay<1, 1>(
                                 dst.mStr,
                                 dst_storage,
                                 src.mStr,
@@ -1490,7 +1495,7 @@ SqlStringTest::testSqlStringPos()
                         'X', ' ');
                     memcpy(find.mStr, validsubstr.c_str(), find_len);
 
-                    foundpos  = SqlStrPos<1,1>(
+                    foundpos  = SqlStrPos<1, 1>(
                         src.mStr,
                         src_storage,
                         find.mStr,
@@ -1512,7 +1517,7 @@ SqlStringTest::testSqlStringPos()
                         // 'X' not between 'a' and 'z'
                         *(find.mStr + alter_char) = 'X';
 
-                        foundpos  = SqlStrPos<1,1>(
+                        foundpos  = SqlStrPos<1, 1>(
                             src.mStr,
                             src_storage,
                             find.mStr,
@@ -1558,12 +1563,13 @@ SqlStringTest::testSqlStringSubStr()
                             's', ' ');
                         src.randomize();
 #if 0
-                        BOOST_MESSAGE("src =|" << src.mLeftP <<
-                                      "| dst_storage=" << dst_storage <<
-                                      " src_storage=" << src_storage <<
-                                      " src_len=" << src_len <<
-                                      " sub_start=" << sub_start <<
-                                      " sub_len=" << sub_len);
+                        BOOST_MESSAGE(
+                            "src =|" << src.mLeftP
+                            << "| dst_storage=" << dst_storage
+                            << " src_storage=" << src_storage
+                            << " src_len=" << src_len
+                            << " sub_start=" << sub_start
+                            << " sub_len=" << sub_len);
 #endif
                         int exsubstart = sub_start;
                         int exlen = sub_len;
@@ -1597,7 +1603,7 @@ SqlStringTest::testSqlStringSubStr()
 
                         caught = false;
                         try {
-                            newlen = SqlStrSubStr<1,1>(
+                            newlen = SqlStrSubStr<1, 1>(
                                 &resultP, dst_storage,
                                 src.mStr, src_storage,
                                 sub_start, sub_len, true);
@@ -1627,11 +1633,12 @@ SqlStringTest::testSqlStringSubStr()
 
                         // length unspecified mode
                         // test when length is at or past the storage
-                        if (sub_start > 0 && sub_len > 0 &&
-                            sub_start + sub_len - 1 > src_storage) {
+                        if (sub_start > 0 && sub_len > 0
+                            && sub_start + sub_len - 1 > src_storage)
+                        {
                             caught = false;
                             try {
-                                newlen = SqlStrSubStr<1,1>(
+                                newlen = SqlStrSubStr<1, 1>(
                                     &resultP, dst_storage,
                                     src.mStr, src_storage,
                                     sub_start, 0, false);
@@ -1684,14 +1691,14 @@ SqlStringTest::testSqlStringAlterCase_Ascii(
     try {
         switch (action) {
         case AlterCaseUpper:
-            newlen = SqlStrAlterCase<1,1,AlterCaseUpper>(
+            newlen = SqlStrAlterCase<1, 1, AlterCaseUpper>(
                 dest.mStr,
                 dest.mStorage,
                 src.mStr,
                 src.mSize);
             break;
         case AlterCaseLower:
-            newlen = SqlStrAlterCase<1,1,AlterCaseLower>(
+            newlen = SqlStrAlterCase<1, 1, AlterCaseLower>(
                 dest.mStr,
                 dest.mStorage,
                 src.mStr,
@@ -1717,10 +1724,11 @@ SqlStringTest::testSqlStringAlterCase_Ascii(
 
         string result(dest.mStr, newlen);
 #if 0
-        BOOST_MESSAGE(" action=" << action <<
-                      " newlen="<< newlen <<
-                      " result=|" << result << "|" <<
-                      " expect=|" << expect << "|");
+        BOOST_MESSAGE(
+            " action=" << action
+            << " newlen="<< newlen
+            << " result=|" << result << "|"
+            << " expect=|" << expect << "|");
 #endif
         BOOST_CHECK(!expect.compare(result));
     }
@@ -1751,7 +1759,7 @@ SqlStringTest::testSqlStringAlterCase_UCS2(
     try {
         switch (action) {
         case AlterCaseUpper:
-            newlen = SqlStrAlterCase<2,1,AlterCaseUpper>(
+            newlen = SqlStrAlterCase<2, 1, AlterCaseUpper>(
                 destU2.mStr,
                 destU2.mStorage,
                 srcU2.mStr,
@@ -1759,7 +1767,7 @@ SqlStringTest::testSqlStringAlterCase_UCS2(
                 ULOC_US);
             break;
         case AlterCaseLower:
-            newlen = SqlStrAlterCase<2,1,AlterCaseLower>(
+            newlen = SqlStrAlterCase<2, 1, AlterCaseLower>(
                 destU2.mStr,
                 destU2.mStorage,
                 srcU2.mStr,
@@ -2010,7 +2018,7 @@ SqlStringTest::testSqlStringTrim_Helper(
     caught = false;
     try {
         newsize =
-            SqlStrTrim<1,1>(
+            SqlStrTrim<1, 1>(
                 dst.mStr,
                 dst_storage,
                 src.mStr,
@@ -2043,13 +2051,13 @@ SqlStringTest::testSqlStringTrim_Helper(
     caught = false;
     try {
         newsize =
-            SqlStrTrim<2,1>(
+            SqlStrTrim<2, 1>(
                 dstU2.mStr,
                 dstU2.mStorage,
                 srcU2.mStr,
-                (srcU2.mSize +
-                 srcU2.mLeftPad +
-                 srcU2.mRightPad),
+                (srcU2.mSize
+                 + srcU2.mLeftPad
+                 + srcU2.mRightPad),
                 lefttrim,
                 righttrim);
     } catch (const char *str) {
@@ -2076,7 +2084,7 @@ SqlStringTest::testSqlStringTrim_Helper(
 
     // ASCII by reference
     char const * start;
-    newsize = SqlStrTrim<1,1>(
+    newsize = SqlStrTrim<1, 1>(
         &start,
         src.mStr,
         src_len + leftpad + rightpad,
@@ -2094,12 +2102,12 @@ SqlStringTest::testSqlStringTrim_Helper(
     BOOST_CHECK(!expect.compare(resultByReference));
 
     // UCS2 by reference
-    newsize = SqlStrTrim<2,1>(
+    newsize = SqlStrTrim<2, 1>(
         &start,
         srcU2.mStr,
-        (srcU2.mSize +
-         srcU2.mLeftPad +
-         srcU2.mRightPad),
+        (srcU2.mSize
+         + srcU2.mLeftPad
+         + srcU2.mRightPad),
         lefttrim,
         righttrim);
 
@@ -2179,7 +2187,7 @@ SqlStringTest::testSqlStringCastToExact_Helper(
 #endif
 
     try {
-        newvalue = SqlStrCastToExact<1,1>(
+        newvalue = SqlStrCastToExact<1, 1>(
             src.mStr,
             src_len);
     } catch (const char *str) {
@@ -2427,7 +2435,7 @@ SqlStringTest::testSqlStringCastToDecimal_Helper(
 #endif
 
     try {
-        newvalue = SqlStrCastToExact<1,1>(
+        newvalue = SqlStrCastToExact<1, 1>(
             src.mStr,
             src_len,
             precision,
@@ -2847,7 +2855,7 @@ SqlStringTest::testSqlStringCastToApprox_Helper(
 #endif
 
     try {
-        newvalue = SqlStrCastToApprox<1,1>(
+        newvalue = SqlStrCastToApprox<1, 1>(
             src.mStr,
             src_len);
     } catch (const char *str) {
@@ -2920,8 +2928,8 @@ SqlStringTest::testSqlStringCastToApprox()
                     BOOST_MESSAGE("afterdec = " << afterdec);
 #endif
 
-                    buildlen = leadingplus + leadingminus + beforedec +
-                        afterdec;
+                    buildlen =
+                        leadingplus + leadingminus + beforedec + afterdec;
                     BOOST_REQUIRE(buildlen == src_len);
 
                     string s;
@@ -2948,7 +2956,8 @@ SqlStringTest::testSqlStringCastToApprox()
 
                     for (small_idx = 1E+10;
                          small_idx > 1E-10;
-                         small_idx *= 0.01) {
+                         small_idx *= 0.01)
+                    {
                         dec_value = orig_value * small_idx;
                         // TODO: This masks the + in string s above.
                         sprintf(decimal_buf, "%.8lf", orig_value * small_idx);
@@ -3128,7 +3137,8 @@ SqlStringTest::testSqlStringCastFromExact()
                         value = 0;
                         for (power_idx = 0;
                              power_idx < src_len - negative; // space for '-'
-                             power_idx++) {
+                             power_idx++)
+                        {
                             if (!value) {
                                 // no leading zeros
                                 newones = rand() % 9 + 1;
@@ -3150,8 +3160,8 @@ SqlStringTest::testSqlStringCastFromExact()
                         string expect_fix(expect); // right padded (CHAR)
                         if (expect_fix.length() < dst_storage) {
                             expect_fix.append(
-                                dst_storage -
-                                expect_fix.length(),
+                                dst_storage
+                                - expect_fix.length(),
                                 ' ');
                         }
 
@@ -3162,7 +3172,7 @@ SqlStringTest::testSqlStringCastFromExact()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromExact<1,1>(
+                            newlen = SqlStrCastFromExact<1, 1>(
                                 dst.mStr,
                                 dst_storage,
                                 value,
@@ -3187,7 +3197,7 @@ SqlStringTest::testSqlStringCastFromExact()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromExact<1,1>(
+                            newlen = SqlStrCastFromExact<1, 1>(
                                 dst_fix.mStr,
                                 dst_storage,
                                 value,
@@ -3234,7 +3244,8 @@ SqlStringTest::testSqlStringCastFromDecimal()
                         value = 0;
                         for (power_idx = 0;
                              power_idx < src_len - negative; // space for '-'
-                             power_idx++) {
+                             power_idx++)
+                        {
                             if (!value) {
                                 // no leading zeros
                                 newones = rand() % 9 + 1;
@@ -3296,8 +3307,8 @@ SqlStringTest::testSqlStringCastFromDecimal()
                         string expect_fix(expect); // right padded (CHAR)
                         if (expect_fix.length() < dst_storage) {
                             expect_fix.append(
-                                dst_storage -
-                                expect_fix.length(),
+                                dst_storage
+                                - expect_fix.length(),
                                 ' ');
                         }
 
@@ -3308,7 +3319,7 @@ SqlStringTest::testSqlStringCastFromDecimal()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromExact<1,1>(
+                            newlen = SqlStrCastFromExact<1, 1>(
                                 dst.mStr,
                                 dst_storage,
                                 value,
@@ -3335,7 +3346,7 @@ SqlStringTest::testSqlStringCastFromDecimal()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromExact<1,1>(
+                            newlen = SqlStrCastFromExact<1, 1>(
                                 dst_fix.mStr,
                                 dst_storage,
                                 value,
@@ -3385,7 +3396,8 @@ SqlStringTest::testSqlStringCastFromApprox()
                         for (power_idx = 0;
                              // space for (optional) '-' '.', 'E+xx'
                              power_idx < src_len - (negative + 5);
-                             power_idx++) {
+                             power_idx++)
+                        {
                             if (!value) {
                                 // no leading zeros
                                 newones = rand() % 9 + 1;
@@ -3430,8 +3442,8 @@ SqlStringTest::testSqlStringCastFromApprox()
                                 sscanf(expected_buf + epos + 1, "%d", &exp);
 
                                 // Round up if needed
-                                if ((expected_buf[epos - 1] >= '5') &&
-                                    (expected_buf[epos - 1] <= '9'))
+                                if ((expected_buf[epos - 1] >= '5')
+                                    && (expected_buf[epos - 1] <= '9'))
                                 {
                                     expected_buf[epos - 1] = '0';
                                     for (int i = epos - 2; i >= neg; i--) {
@@ -3489,16 +3501,17 @@ SqlStringTest::testSqlStringCastFromApprox()
                         string expect_fix(expect); // right padded (CHAR)
                         if (expect_fix.length() < dst_storage) {
                             expect_fix.append(
-                                dst_storage -
-                                expect_fix.length(),
+                                dst_storage
+                                - expect_fix.length(),
                                 ' ');
                         }
 
 #if 0
                         BOOST_MESSAGE("value = " << value);
-                        BOOST_MESSAGE("storage = " << dst_storage <<
-                                      " len = " << dst_len <<
-                                      " src_len = " << src_len);
+                        BOOST_MESSAGE(
+                            "storage = " << dst_storage
+                            << " len = " << dst_len
+                            << " src_len = " << src_len);
                         BOOST_MESSAGE("expect = |" << expect << "|");
                         BOOST_MESSAGE("expect_fix = |" << expect_fix << "|");
 #endif
@@ -3510,7 +3523,7 @@ SqlStringTest::testSqlStringCastFromApprox()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromApprox<1,1>(
+                            newlen = SqlStrCastFromApprox<1, 1>(
                                 dst.mStr,
                                 dst_storage,
                                 value,
@@ -3529,9 +3542,10 @@ SqlStringTest::testSqlStringCastFromApprox()
                             BOOST_CHECK(expect.length() <= dst_storage);
                             BOOST_CHECK(!expect.compare(result));
                             if (expect.compare(result)) {
-                                BOOST_MESSAGE("Got " << result <<
-                                    ", expected " << expect <<
-                                    ", value " << value);
+                                BOOST_MESSAGE(
+                                    "Got " << result
+                                    << ", expected " << expect
+                                    << ", value " << value);
                             }
                         }
 
@@ -3542,7 +3556,7 @@ SqlStringTest::testSqlStringCastFromApprox()
 
                         caught = false;
                         try {
-                            newlen = SqlStrCastFromApprox<1,1>(
+                            newlen = SqlStrCastFromApprox<1, 1>(
                                 dst_fix.mStr,
                                 dst_storage,
                                 value,
@@ -3591,7 +3605,7 @@ SqlStringTest::testSqlStringCastToVarChar()
 
                     int rightTruncWarning = 0;
                     try {
-                        SqlStrCastToVarChar<1,1>(
+                        SqlStrCastToVarChar<1, 1>(
                             dst.mStr,
                             dst_storage,
                             src.mStr,
@@ -3615,10 +3629,11 @@ SqlStringTest::testSqlStringCastToVarChar()
                     string result(dst.mStr, dst_storage);
 
 #if 0
-                    BOOST_MESSAGE(" dst_storage=" << dst_storage <<
-                                  " dst_len=" << dst_len <<
-                                  " src_storage=" << src_storage <<
-                                  " src_len=" << src_len);
+                    BOOST_MESSAGE(
+                        " dst_storage=" << dst_storage
+                        << " dst_len=" << dst_len
+                        << " src_storage=" << src_storage
+                        << " src_len=" << src_len);
                     BOOST_MESSAGE("src =|" << src.mLeftP << "|");
                     BOOST_MESSAGE("expect |" << expect << "|");
                     BOOST_MESSAGE("result |" << result << "|");
@@ -3668,7 +3683,7 @@ SqlStringTest::testSqlStringCastToChar()
                     int rightTruncWarning = 0;
 
                     try {
-                        new_len = SqlStrCastToChar<1,1>(
+                        new_len = SqlStrCastToChar<1, 1>(
                             dst.mStr,
                             dst_storage,
                             src.mStr,
@@ -3693,10 +3708,11 @@ SqlStringTest::testSqlStringCastToChar()
                     string result(dst.mStr, dst_storage);
 
 #if 0
-                    BOOST_MESSAGE(" dst_storage=" << dst_storage <<
-                                  " dst_len=" << dst_len <<
-                                  " src_storage=" << src_storage <<
-                                  " src_len=" << src_len);
+                    BOOST_MESSAGE(
+                        " dst_storage=" << dst_storage
+                        << " dst_len=" << dst_len
+                        << " src_storage=" << src_storage
+                        << " src_len=" << src_len);
                     BOOST_MESSAGE("src =|" << src.mLeftP << "|");
                     BOOST_MESSAGE("expect |" << expect << "|");
                     BOOST_MESSAGE("result |" << result << "|");

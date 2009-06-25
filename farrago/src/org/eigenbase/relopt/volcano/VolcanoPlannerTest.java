@@ -179,7 +179,8 @@ public class VolcanoPlannerTest
                 RelNode.class,
                 PHYS_CALLING_CONVENTION,
                 CallingConvention.ITERATOR,
-                "PhysToIteratorRule") {
+                "PhysToIteratorRule")
+            {
                 public RelNode convert(RelNode rel)
                 {
                     return new PhysToIteratorConverter(

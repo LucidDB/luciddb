@@ -44,8 +44,8 @@ void UnalignedAttributeAccessor::compute(
     StoredTypeDescriptor::Ordinal typeOrdinal =
         attrDescriptor.pTypeDescriptor->getOrdinal();
     isCompressedInt64 =
-        (typeOrdinal == STANDARD_TYPE_INT_64) ||
-        (typeOrdinal == STANDARD_TYPE_UINT_64);
+        (typeOrdinal == STANDARD_TYPE_INT_64)
+        || (typeOrdinal == STANDARD_TYPE_UINT_64);
     omitLengthIndicator =
         !attrDescriptor.isNullable
         && !isCompressedInt64
