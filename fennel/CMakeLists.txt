@@ -6,6 +6,13 @@ project(fennel)
 include(CTest)
 include(FindJNI)
 
+# TODO jvs 25-Jun-2009:  get rid of this (FNL-84)
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+   set(TEST_LIBRARY_LINKAGE "STATIC")
+else()
+   set(TEST_LIBRARY_LINKAGE "SHARED")
+endif()
+
 set(GENERIC_DEFINES "-DHAVE_CONFIG_H -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1 -DBOOST_NO_HASH=1")
 
 if ("${OPT_FLAG}" STREQUAL "--with-optimization")
