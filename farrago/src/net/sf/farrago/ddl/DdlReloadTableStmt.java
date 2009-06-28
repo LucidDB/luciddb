@@ -161,8 +161,10 @@ public abstract class DdlReloadTableStmt
         session.getSessionVariables().set(
             FarragoDefaultSessionPersonality.CACHE_STATEMENTS,
             Boolean.toString(false));
-        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
+        FarragoSessionStmtContext stmtContext =
+            session.newStmtContext(null, rootStmtContext);
         boolean success = false;
+
         stmtContext.prepare(reloadSql, true);
 
         // NOTE jvs 11-Dec-2008:  As a side-effect, this may also

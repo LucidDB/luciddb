@@ -80,6 +80,15 @@ public interface FarragoSessionDdlStmt
      * with respect to locking
      */
     public boolean runsAsDml();
+
+    /**
+     * Sets the root statement context to be used for invoking
+     * reentrant SQL.
+     *
+     * @param rootStmtContext the root statement context in which
+     * this DDL statement is being invoked
+     */
+    public void setRootStmtContext(FarragoSessionStmtContext rootStmtContext);
 }
 
 // End FarragoSessionDdlStmt.java

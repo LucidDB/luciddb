@@ -47,6 +47,8 @@ public abstract class DdlStmt
      */
     private final boolean runsAsDml;
 
+    protected FarragoSessionStmtContext rootStmtContext;
+
     //~ Constructors -----------------------------------------------------------
 
     protected DdlStmt(CwmModelElement modelElement)
@@ -116,6 +118,12 @@ public abstract class DdlStmt
      * @param visitor DdlVisitor to invoke
      */
     public abstract void visit(DdlVisitor visitor);
+
+    // implement FarragoSessionDdlStmt
+    public void setRootStmtContext(FarragoSessionStmtContext rootStmtContext)
+    {
+        this.rootStmtContext = rootStmtContext;
+    }
 }
 
 // End DdlStmt.java

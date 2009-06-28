@@ -43,6 +43,7 @@ import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
@@ -491,6 +492,22 @@ public class FarragoJdbcTest
         }
     }
 
+    public void testRebuildCancel()
+        throws Exception
+    {
+        String sql = "create schema rebuild_cancel";
+        stmt.execute(sql);
+        sql = "create table rebuild_cancel.t(i int primary key, j int)";
+        stmt.execute(sql);
+        sql = "insert into rebuild_cancel.t values (1, 2)";
+        stmt.executeUpdate(sql);
+        sql = "alter table rebuild_cancel.t rebuild";
+        // instrument statement to sleep for 5 seconds to give
+        // us a chance to request cancel
+        FarragoProperties.instance().testTableReloadSleep.set(5000);
+        executeAndCancel(sql, 1000);
+    }
+
     protected void queryCancel(boolean synchronous, String executorType)
         throws Exception
     {
@@ -596,9 +613,14 @@ public class FarragoJdbcTest
     private void executeAndCancel(String sql, int waitMillis)
         throws SQLException
     {
-        resultSet = stmt.executeQuery(sql);
+        boolean executed = false;
         if (waitMillis == 0) {
-            // cancel immediately
+            // execute and cancel immediately
+            boolean hasResultSet = stmt.execute(sql);
+            executed = true;
+            if (hasResultSet) {
+                resultSet = stmt.getResultSet();
+            }
             stmt.cancel();
         } else {
             // Schedule timer to cancel after waitMillis
@@ -626,8 +648,16 @@ public class FarragoJdbcTest
             timer.schedule(task, waitMillis);
         }
         try {
-            while (resultSet.next()) {
-                // don't need to actually process rows
+            if (!executed) {
+                boolean hasResultSet = stmt.execute(sql);
+                if (hasResultSet) {
+                    resultSet = stmt.getResultSet();
+                }
+            }
+            if (resultSet != null) {
+                while (resultSet.next()) {
+                    // don't need to actually process rows
+                }
             }
         } catch (SQLException ex) {
             // expected

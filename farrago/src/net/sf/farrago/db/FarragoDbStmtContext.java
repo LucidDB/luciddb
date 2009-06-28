@@ -123,6 +123,7 @@ public class FarragoDbStmtContext
         synchronized (session) {
             warningQueue.clearWarnings();
             unprepare();
+            propagateCancelInPrepare();
             allocations = new FarragoCompoundAllocation();
             this.sql = sql;
             this.isExecDirect = isExecDirect;
@@ -149,6 +150,18 @@ public class FarragoDbStmtContext
         }
     }
 
+    private void propagateCancelInPrepare()
+    {
+        if (rootStmtContext != null) {
+            // propagate any pending cancel request; this is necessary
+            // in the case where a new reentrant stmt gets prepared
+            // after cancel is requested and pending on the root stmt
+            if (rootStmtContext.getCancelFlag().isCancelRequested()) {
+                cancelFlag.requestCancel();
+            }
+        }
+    }
+
     // implement FarragoSessionStmtContext
     public void prepare(
         RelNode plan,
@@ -159,6 +172,7 @@ public class FarragoDbStmtContext
         synchronized (session) {
             warningQueue.clearWarnings();
             unprepare();
+            propagateCancelInPrepare();
             allocations = new FarragoCompoundAllocation();
             this.sql = ""; // not available
 

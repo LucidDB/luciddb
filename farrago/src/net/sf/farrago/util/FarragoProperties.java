@@ -138,7 +138,7 @@ public class FarragoProperties
 
     /**
      * The boolean property "net.sf.farrago.ddl.DdlReloadTableStmt.crash" causes
-     * ALTER TABLE to fail in a mode which simultates a database crash.
+     * ALTER TABLE to fail in a mode which simulates a database crash.
      */
     public final BooleanProperty testTableReloadCrash =
         new BooleanProperty(

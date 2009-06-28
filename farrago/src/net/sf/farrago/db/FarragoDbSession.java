@@ -1229,6 +1229,7 @@ public class FarragoDbSession
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
+        ddlStmt.setRootStmtContext(stmtContext);
 
         // DDL statements are disallowed if a session label is set.  The
         // exceptions are the SET statements that only impact the current
