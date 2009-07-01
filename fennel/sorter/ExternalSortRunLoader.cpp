@@ -146,6 +146,10 @@ bool ExternalSortRunLoader::allocateDataBuffer()
 
 bool ExternalSortRunLoader::allocateIndexBuffer()
 {
+    if (indexBuffers.size() > sortInfo.nIndexMemPages) {
+        pIndexBuffer = NULL;
+        return false;
+    }
     pIndexBuffer = allocateBuffer();
     if (pIndexBuffer) {
         indexBuffers.push_back(pIndexBuffer);

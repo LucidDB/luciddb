@@ -58,6 +58,7 @@ CacheImpl<PageT, VictimPolicyT>
     timerThread(*this)
 {
     cbPage = params.cbPage;
+    processorCacheBytes = params.processorCacheBytes;
     pDeviceAccessScheduler = NULL;
     inFlushMode = false;
 
@@ -849,6 +850,13 @@ SharedRandomAccessDevice &CacheImpl<PageT, VictimPolicyT>
 ::getDevice(DeviceId deviceId)
 {
     return deviceTable[opaqueToInt(deviceId)];
+}
+
+template <class PageT, class VictimPolicyT>
+uint CacheImpl<PageT, VictimPolicyT>
+::getProcessorCacheBytes()
+{
+    return processorCacheBytes;
 }
 
 // ----------------------------------------------------------------------

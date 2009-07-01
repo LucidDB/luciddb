@@ -72,6 +72,12 @@ struct LhxHashInfo
      */
     uint numCachePages;
 
+    /**
+     * Upper bound on number of cache pages to allocate to slots,
+     * which are sensitive to processor cache consciousness.
+     */
+    uint numCachePagesForSlots;
+
     // REVIEW jvs 25-Aug-2006:  Instead of ten vectors of types, it's
     // cleaner to create one struct (say LhxHashInputInfo) containing
     // all the types as fields, and then just create one

@@ -44,6 +44,7 @@ public:
     static ParamName paramPageHistoryQueuePercentage;
     static ParamName paramPrefetchPagesMax;
     static ParamName paramPrefetchThrottleRate;
+    static ParamName paramProcessorCacheBytes;
 
     static uint defaultMemPagesMax;
     static uint defaultMemPagesInit;
@@ -53,6 +54,7 @@ public:
     static uint defaultPageHistoryQueuePercentage;
     static uint defaultPrefetchPagesMax;
     static uint defaultPrefetchThrottleRate;
+    static uint defaultProcessorCacheBytes;
 
     /**
      * Parameters for instantiating DeviceAccessScheduler.
@@ -104,6 +106,14 @@ public:
      * because of rejected requests.
      */
     uint prefetchThrottleRate;
+
+    /**
+     * Number of bytes assumed for the last-level CPU cache (typically L2, but
+     * sometimes L3) for the hardware in use.  Depending on how this
+     * parameter is set, this may only be a default or estimate based on
+     * calibration.
+     */
+    uint processorCacheBytes;
 
     /**
      * Define a default set of cache parameters.

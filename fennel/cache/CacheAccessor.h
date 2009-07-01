@@ -235,6 +235,12 @@ public:
     virtual void getPrefetchParams(
         uint &prefetchPagesMax,
         uint &prefetchThrottleRate) = 0;
+
+    /**
+     * @return the limit on the number of bytes of processor cache (e.g. L2)
+     * which should be used by this accessor for optimal coherence
+     */
+    virtual uint getProcessorCacheBytes() = 0;
 };
 
 FENNEL_END_NAMESPACE

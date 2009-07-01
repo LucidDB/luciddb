@@ -264,7 +264,7 @@ void LhxHashTable::init(
     RecordNum cndKeys = hashInfo.cndKeys[buildInputIndex];
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
 
-    calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);
+    calculateNumSlots(hashInfo, cndKeys, usablePageSize, maxBlockCount);
 
     /*
      * special hash table properties.
@@ -514,6 +514,7 @@ void LhxHashTable::releaseResources(bool reuse)
 }
 
 void LhxHashTable::calculateNumSlots(
+    LhxHashInfo const &hashInfo,
     RecordNum cndKeys,
     uint usablePageSize,
     BlockNum numBlocks)
@@ -529,10 +530,11 @@ void LhxHashTable::calculateNumSlots(
      * slots.
      */
     uint slotsLow = numBlocks * usablePageSize / sizeof(PBuffer) / 100;
-    uint slotsHigh = numBlocks * usablePageSize / sizeof(PBuffer) / 10;
+    uint slotsHigh = min(
+        numBlocks * usablePageSize / sizeof(PBuffer) / 10,
+        hashInfo.numCachePagesForSlots * usablePageSize / sizeof(PBuffer));
 
-    numSlots =
-        max(slotsNeeded(cndKeys), slotsLow);
+    numSlots = max(slotsNeeded(cndKeys), slotsLow);
 
     numSlots = min(numSlots, slotsHigh);
 }

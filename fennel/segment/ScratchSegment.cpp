@@ -221,6 +221,11 @@ void ScratchSegment::getPrefetchParams(
 {
 }
 
+uint ScratchSegment::getProcessorCacheBytes()
+{
+    return getCache()->getProcessorCacheBytes();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ScratchSegment.cpp

@@ -79,6 +79,12 @@ struct ExternalSortInfo
     uint nSortMemPages;
 
     /**
+     * Maximum number of memory pages to use for indexing keys to
+     * keep things cache-conscious.
+     */
+    uint nIndexMemPages;
+
+    /**
      * Maximum number of memory pages which can be filled per run.
      */
     uint nSortMemPagesPerRun;

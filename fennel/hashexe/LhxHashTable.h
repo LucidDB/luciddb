@@ -837,12 +837,13 @@ public:
      * Compute the number of slots required by this hash table to store
      * "cndKeys" distinct key values.
      *
+     * @param [in] hashInfo
      * @param [in] cndKeys
      * @param [in] usablePageSize indicate the usable page size.
-     * @param [in] numBlocks maximum number of blocks budgeted for this
      * hash table
      */
     void calculateNumSlots(
+        LhxHashInfo const &hashInfo,
         RecordNum cndKeys,
         uint usablePageSize,
         BlockNum numBlocks);

@@ -113,6 +113,11 @@ void DelegatingCacheAccessor::getPrefetchParams(
     pDelegate->getPrefetchParams(prefetchPagesMax, prefetchThrottleRate);
 }
 
+uint DelegatingCacheAccessor::getProcessorCacheBytes()
+{
+    return pDelegate->getProcessorCacheBytes();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DelegatingCacheAccessor.cpp

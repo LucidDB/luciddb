@@ -80,7 +80,8 @@ void LhxPartitionWriter::open(
     uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
-    hashTable.calculateNumSlots(cndKeys, usablePageSize, numWriterCachePages);
+    hashTable.calculateNumSlots(
+        hashInfo, cndKeys, usablePageSize, numWriterCachePages);
 
     partialAggTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);
 }

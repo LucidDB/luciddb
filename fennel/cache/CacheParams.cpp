@@ -38,6 +38,7 @@ ParamName CacheParams::paramPageHistoryQueuePercentage =
 ParamName CacheParams::paramPrefetchPagesMax =
     "prefetchPagesMax";
 ParamName CacheParams::paramPrefetchThrottleRate = "prefetchThrottleRate";
+ParamName CacheParams::paramProcessorCacheBytes = "processorCacheBytes";
 
 uint CacheParams::defaultMemPagesMax = 1024;
 uint CacheParams::defaultMemPagesInit = MAXU;
@@ -47,6 +48,8 @@ uint CacheParams::defaultFreshmenQueuePercentage = 25;
 uint CacheParams::defaultPageHistoryQueuePercentage = 100;
 uint CacheParams::defaultPrefetchPagesMax = 12;
 uint CacheParams::defaultPrefetchThrottleRate = 10;
+// assume 2MB is typical
+uint CacheParams::defaultProcessorCacheBytes = 2097152;
 
 CacheParams::CacheParams()
 {
@@ -58,6 +61,7 @@ CacheParams::CacheParams()
     pageHistoryQueuePercentage = defaultPageHistoryQueuePercentage;
     prefetchPagesMax = defaultPrefetchPagesMax;
     prefetchThrottleRate = defaultPrefetchThrottleRate;
+    processorCacheBytes = defaultProcessorCacheBytes;
 }
 
 void CacheParams::readConfig(ConfigMap const &configMap)
@@ -84,6 +88,11 @@ void CacheParams::readConfig(ConfigMap const &configMap)
         paramPrefetchPagesMax, prefetchPagesMax);
     prefetchThrottleRate = configMap.getIntParam(
         paramPrefetchThrottleRate, prefetchThrottleRate);
+    int iProcessorCacheBytes = configMap.getIntParam(
+        paramProcessorCacheBytes, processorCacheBytes);
+    if (iProcessorCacheBytes != -1) {
+        processorCacheBytes = iProcessorCacheBytes;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

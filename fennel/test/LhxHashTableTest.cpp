@@ -187,6 +187,7 @@ void LhxHashTableTest::testInsert(
     LhxHashTable hashTable;
 
     hashInfo.numCachePages = maxBlockCount;
+    hashInfo.numCachePagesForSlots = maxBlockCount;
 
     TupleAttributeDescriptor attrDesc_int32 =
         TupleAttributeDescriptor(
@@ -255,7 +256,7 @@ void LhxHashTableTest::testInsert(
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
     hashTable.calculateNumSlots(
-        cndKeys, usablePageSize, hashInfo.numCachePages);
+        hashInfo, cndKeys, usablePageSize, hashInfo.numCachePages);
 
     bool status = hashTable.allocateResources();
 

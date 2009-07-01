@@ -125,6 +125,20 @@ protected:
      */
     virtual void closeImpl();
 
+    /**
+     * Determines the number of scratch pages which should be used by this
+     * ExecStream for cache-conscious data structures, based on
+     * processor cache limits.
+     *
+     * @param allocatedQuantity count of pages already allocated by the
+     * resource governor, which serves as an upper bound on the rationing
+     *
+     * @return number of scratch pages to use
+     */
+    uint getCacheConsciousPageRation(
+        CacheAccessor &cacheAccessor,
+        ExecStreamResourceQuantity const &allocatedQuantity);
+
 public:
     /**
      * @return true if the stream can be closed early

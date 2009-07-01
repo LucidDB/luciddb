@@ -309,6 +309,11 @@ class CacheImpl : public Cache, private TimerThreadClient
     uint prefetchThrottleRate;
 
     /**
+     * @see CacheParams
+     */
+    uint processorCacheBytes;
+
+    /**
      * Flush state used inside of checkpointPages.
      */
     enum FlushPhase {
@@ -616,7 +621,7 @@ public:
     {
         return *pDeviceAccessScheduler;
     }
-
+    virtual uint getProcessorCacheBytes();
 };
 
 FENNEL_END_NAMESPACE

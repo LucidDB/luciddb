@@ -72,7 +72,7 @@ public:
     virtual void getPrefetchParams(
         uint &prefetchPagesMax,
         uint &prefetchThrottleRate);
-
+    virtual uint getProcessorCacheBytes();
 };
 
 FENNEL_END_NAMESPACE

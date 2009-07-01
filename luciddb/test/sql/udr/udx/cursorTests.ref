@@ -73,6 +73,7 @@
 | pageHistoryQueuePercentage      | 4        | INTEGER      |
 | prefetchPagesMax                | 4        | INTEGER      |
 | prefetchThrottleRate            | 4        | INTEGER      |
+| processorCacheBytes             | 4        | INTEGER      |
 | resourceDir                     | 12       | VARCHAR      |
 | tempIncrementSize               | 4        | INTEGER      |
 | tempInitSize                    | 4        | INTEGER      |

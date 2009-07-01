@@ -39,6 +39,7 @@ ExternalSortInfo::ExternalSortInfo(ExecStream &streamInit)
     : stream(streamInit)
 {
     nSortMemPages = 0;
+    nIndexMemPages = 0;
     nSortMemPagesPerRun = 0;
     cbPage = 0;
 }
@@ -104,6 +105,7 @@ void ExternalSortExecStreamImpl::prepare(
     sortInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
     sortInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
     sortInfo.nSortMemPages = 0;
+    sortInfo.nIndexMemPages = 0;
 }
 
 void ExternalSortExecStreamImpl::getResourceRequirements(
@@ -147,9 +149,12 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
 void ExternalSortExecStreamImpl::setResourceAllocation(
     ExecStreamResourceQuantity &quantity)
 {
-    // REVIEW
     ConduitExecStream::setResourceAllocation(quantity);
     sortInfo.nSortMemPages = quantity.nCachePages;
+    sortInfo.nIndexMemPages = getCacheConsciousPageRation(
+        *(sortInfo.memSegmentAccessor.pCacheAccessor),
+        quantity);
+
     nParallel = quantity.nThreads + 1;
 
     // NOTE jvs 10-Nov-2004:  parallel sort is currently disabled

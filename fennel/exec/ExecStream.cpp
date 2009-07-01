@@ -120,6 +120,28 @@ void ExecStream::setResourceAllocation(
     }
 }
 
+uint ExecStream::getCacheConsciousPageRation(
+    CacheAccessor &cacheAccessor,
+    ExecStreamResourceQuantity const &allocatedQuantity)
+{
+    // TODO jvs 30-Jun-2009:  Make the cache-consciousness below
+    // aware of other activities going on in parallel.
+
+    // NOTE jvs 30-Jun-2009: Here we cap the number of pages to be used for
+    // in-memory algorithms such as quicksort and hashing to the size of the
+    // processor cache (for better locality of reference).  Additional buffer
+    // pool pages assigned to us won't be wasted, as they will reduce (or
+    // possibly eliminate) disk I/O from external sort/partitioning.
+    uint processorCacheBytes = cacheAccessor.getProcessorCacheBytes();
+    uint processorCachePages =
+        processorCacheBytes / cacheAccessor.getCache()->getPageSize();
+    uint nPages = allocatedQuantity.nCachePages;
+    if (nPages > processorCachePages) {
+        nPages = processorCachePages;
+    }
+    return nPages;
+}
+
 void ExecStream::open(bool restart)
 {
     if (restart) {

@@ -369,6 +369,7 @@ public abstract class FarragoTestCase
             savedFennelConfig.remove("pageHistoryQueuePercentage");
             savedFennelConfig.remove("prefetchPagesMax");
             savedFennelConfig.remove("prefetchThrottleRate");
+            savedFennelConfig.remove("processorCacheBytes");
         } finally {
             reposTxn.commit();
         }

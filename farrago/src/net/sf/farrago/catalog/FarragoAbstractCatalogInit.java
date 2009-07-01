@@ -198,6 +198,9 @@ public abstract class FarragoAbstractCatalogInit
                 fennelConfig.setDeviceSchedulerType(
                     DeviceSchedulerTypeEnum.DEFAULT);
             }
+            if (fennelConfig.getProcessorCacheBytes() == null) {
+                fennelConfig.setProcessorCacheBytes(-1);
+            }
         }
     }
 

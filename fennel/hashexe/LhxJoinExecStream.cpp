@@ -155,6 +155,10 @@ void LhxJoinExecStream::setResourceAllocation(
 {
     ConfluenceExecStream::setResourceAllocation(quantity);
     hashInfo.numCachePages = quantity.nCachePages - numMiscCacheBlocks;
+    hashInfo.numCachePagesForSlots =
+        getCacheConsciousPageRation(
+            *(hashInfo.memSegmentAccessor.pCacheAccessor),
+            quantity);
 }
 
 void LhxJoinExecStream::open(bool restart)

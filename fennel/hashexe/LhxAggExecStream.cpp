@@ -97,8 +97,11 @@ void LhxAggExecStream::setResourceAllocation(
 {
     ConduitExecStream::setResourceAllocation(quantity);
     hashInfo.numCachePages = quantity.nCachePages - numMiscCacheBlocks;
+    hashInfo.numCachePagesForSlots =
+        getCacheConsciousPageRation(
+            *(hashInfo.memSegmentAccessor.pCacheAccessor),
+            quantity);
 }
-
 
 void LhxAggExecStream::open(bool restart)
 {
