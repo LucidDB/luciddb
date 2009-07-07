@@ -13,7 +13,15 @@ create partition qp2 on (fakeremote_server);
 
 create schema m;
 
-create table m.t1(i int, j int);
+create table m.t1(i int, j int)
+options (partitioning 'HASH');
+
+create table m.t2(i int, j int)
+options (partitioning 'NONE');
+
+create label l1;
+
+drop label l1;
 
 !set outputformat csv
 

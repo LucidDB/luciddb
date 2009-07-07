@@ -9,11 +9,8 @@
 > );
 > 
 > create server remote_node2
-> foreign data wrapper sys_firewater_remote_wrapper
-> options(
-> user_name 'sa',
-> url 'jdbc:firewater_storage:remote:rmi://localhost:5434'
-> );
+> foreign data wrapper sys_firewater_fakeremote_wrapper
+> options (user_name 'sa');
 > 
 > create partition rp1 on (remote_node1);
 > 
@@ -21,7 +18,15 @@
 > 
 > create schema m;
 > 
-> create table m.t1(i int, j int);
+> create table m.t1(i int, j int)
+> options (partitioning 'HASH');
+> 
+> create table m.t2(i int, j int)
+> options (partitioning 'NONE');
+> 
+> create label l1;
+> 
+> drop label l1;
 > 
 > !set outputformat csv
 > 

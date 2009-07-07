@@ -49,6 +49,10 @@
 <text>Cannot CASCADE to replica of {0}</text>
 </exception>
 
+<exception id="310060" name="InvalidPartitioning">
+<text>Partitioning type ''{0}'' unknown</text>
+</exception>
+
 </resourceBundle>
 
 <!-- End FirewaterResource.xml -->

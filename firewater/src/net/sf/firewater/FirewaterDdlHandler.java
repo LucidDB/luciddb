@@ -50,15 +50,19 @@ import net.sf.firewater.jdbc.*;
  */
 public class FirewaterDdlHandler extends DdlHandler
 {
-    private static List<String> schemaSql = new ArrayList<String>();
+    private static List<Pair<Boolean,String>> schemaSql
+        = new ArrayList<Pair<Boolean,String>>();
 
-    private static List<String> tableSql = new ArrayList<String>();
+    private static List<Pair<Boolean,String>> tableSql =
+        new ArrayList<Pair<Boolean,String>>();
 
-    private static List<String> indexSql = new ArrayList<String>();
+    private static List<Pair<Boolean,String>> indexSql =
+        new ArrayList<Pair<Boolean,String>>();
 
-    private static List<String> labelSql = new ArrayList<String>();
+    private static List<Pair<Boolean,String>> labelSql =
+        new ArrayList<Pair<Boolean,String>>();
 
-    private static List<Pair<String,String>> catalogSql
+    private static List<Pair<String,String>> serverSpecificSql
         = new ArrayList<Pair<String,String>>();
 
     private DdlRelationalHandler relationalHandler;
@@ -79,36 +83,72 @@ public class FirewaterDdlHandler extends DdlHandler
         // containers.  A real topological sort will be necessary for arbitrary
         // dependencies such as for UDR's.  Also, need the reverse order for
         // compound CREATE (e.g. schema with objects, or table with indexes).
-        executeRemoteSql(repos, indexSql, eot);
-        executeRemoteSql(repos, tableSql, eot);
-        executeRemoteSql(repos, schemaSql, eot);
-        executeRemoteSql(repos, labelSql, eot);
-        executeCatalogSql(repos, catalogSql, eot);
+        executeRemoteSql(repos, indexSql, eot, false, false);
+        executeRemoteSql(repos, tableSql, eot, false, false);
+        executeRemoteSql(repos, schemaSql, eot, true, false);
+        executeRemoteSql(repos, labelSql, eot, true, true);
+        executeServerSpecificSql(repos, serverSpecificSql, eot);
     }
 
     private static void executeRemoteSql(
         FarragoRepos repos,
-        List<String> sqlList,
-        FarragoSessionTxnEnd eot)
+        List<Pair<Boolean,String>> sqlList,
+        FarragoSessionTxnEnd eot,
+        boolean allServers,
+        boolean skipLocal)
     {
         // TODO jvs 17-May-2009:  repos txn for partition iteration
         if (eot == FarragoSessionTxnEnd.COMMIT) {
-            for (String sql : sqlList) {
-                for (FwmPartition partition
-                         : repos.allOfClass(FwmPartition.class))
-                {
-                    executeRemoteSql(
-                        repos,
-                        sql,
-                        partition,
-                        getNodeForPartition(partition));
+            for (Pair<Boolean,String> pair : sqlList) {
+                boolean isPartitioned = pair.left;
+                String sql = pair.right;
+                if (isPartitioned) {
+                    Collection<FwmPartition> partitions =
+                        repos.allOfClass(FwmPartition.class);
+                    for (FwmPartition partition : partitions) {
+                        executeRemoteSql(
+                            repos,
+                            sql,
+                            partition.getName(),
+                            getNodeForPartition(partition));
+                    }
+                }
+                if (allServers || !isPartitioned) {
+                    boolean executedLocal = skipLocal;
+                    Collection<FemDataServer> servers =
+                        repos.allOfType(FemDataServer.class);
+                    for (FemDataServer server : servers) {
+                        String wrapperName = server.getWrapper().getName();
+                        if (wrapperName.equals(
+                                "SYS_FIREWATER_REMOTE_WRAPPER"))
+                        {
+                            executeRemoteSql(
+                                repos,
+                                sql,
+                                null,
+                                server);
+                        } else if (!executedLocal) {
+                            if (wrapperName.equals(
+                                    "SYS_FIREWATER_EMBEDDED_WRAPPER")
+                                || wrapperName.equals(
+                                    "SYS_FIREWATER_FAKEREMOTE_WRAPPER"))
+                            {
+                                executeRemoteSql(
+                                    repos,
+                                    sql,
+                                    "LOCAL_REPLICAS",
+                                    server);
+                                executedLocal = true;
+                            }
+                        }
+                    }
                 }
             }
         }
         sqlList.clear();
     }
 
-    private static void executeCatalogSql(
+    private static void executeServerSpecificSql(
         FarragoRepos repos,
         List<Pair<String,String>> sqlList,
         FarragoSessionTxnEnd eot)
@@ -133,7 +173,7 @@ public class FirewaterDdlHandler extends DdlHandler
     private static void executeRemoteSql(
         FarragoRepos repos,
         String sql,
-        FwmPartition partition,
+        String partitionName,
         FemDataServer node)
     {
         Properties nodeProps =
@@ -155,11 +195,8 @@ public class FirewaterDdlHandler extends DdlHandler
         try {
             conn = driver.connect(url, props);
             Statement stmt = conn.createStatement();
-            if (partition != null) {
-                // REVIEW jvs 17-May-2009:  naming scheme for catalogs
-                // which represent partitions
-                String catalogName = partition.getName();
-                stmt.execute("set catalog '\"" + catalogName + "\"'");
+            if (partitionName != null) {
+                stmt.execute("set catalog '\"" + partitionName + "\"'");
             }
             stmt.execute(sql);
         } catch (SQLException ex) {
@@ -172,8 +209,8 @@ public class FirewaterDdlHandler extends DdlHandler
 
     private void distributeStmt(
         GeneratedDdlStmt ddlStmt,
-        boolean execLocal,
-        List<String> sqlList)
+        List<Pair<Boolean,String>> sqlList,
+        boolean isPartitioned)
     {
         StringBuffer sb = new StringBuffer();
         for (String frag : ddlStmt.getStatementList()) {
@@ -181,9 +218,7 @@ public class FirewaterDdlHandler extends DdlHandler
         }
         String sql = sb.toString();
         assert(!sql.equals(""));
-        if (execLocal) {
-            sqlList.add(sql);
-        }
+        sqlList.add(new Pair<Boolean,String>(isPartitioned, sql));
         setLastSql(sql);
     }
 
@@ -195,21 +230,21 @@ public class FirewaterDdlHandler extends DdlHandler
 
     private void distributeCreation(
         CwmModelElement element,
-        boolean execLocal,
-        List<String> sqlList)
+        List<Pair<Boolean,String>> sqlList,
+        boolean isPartitioned)
     {
         DdlGenerator ddlGen = new FarragoDdlGenerator(
             repos.getModelView());
         ddlGen.setSchemaQualified(true);
         GeneratedDdlStmt stmt = new GeneratedDdlStmt(false);
         ddlGen.generateCreate(element, stmt);
-        distributeStmt(stmt, execLocal, sqlList);
+        distributeStmt(stmt, sqlList, isPartitioned);
     }
 
     private void distributeDrop(
         CwmModelElement element,
-        boolean execLocal,
-        List<String> sqlList)
+        List<Pair<Boolean,String>> sqlList,
+        boolean isPartitioned)
     {
         DdlGenerator ddlGen = new FarragoDdlGenerator(
             repos.getModelView());
@@ -227,7 +262,7 @@ public class FirewaterDdlHandler extends DdlHandler
         }
         GeneratedDdlStmt stmt = new GeneratedDdlStmt(false);
         ddlGen.generateDrop(element, stmt);
-        distributeStmt(stmt, execLocal, sqlList);
+        distributeStmt(stmt, sqlList, isPartitioned);
     }
 
     // implement FarragoSessionDdlHandler
@@ -276,7 +311,7 @@ public class FirewaterDdlHandler extends DdlHandler
             + SqlUtil.eigenbaseDialect.quoteIdentifier(
                 partition.getName());
         setLastSql(sql);
-        catalogSql.add(
+        serverSpecificSql.add(
             new Pair<String,String>(
                 getNodeForPartition(partition).refMofId(),
                 sql));
@@ -291,7 +326,7 @@ public class FirewaterDdlHandler extends DdlHandler
                 partition.getName())
             + " cascade";
         setLastSql(sql);
-        catalogSql.add(
+        serverSpecificSql.add(
             new Pair<String,String>(
                 getNodeForPartition(partition).refMofId(),
                 sql));
@@ -308,25 +343,38 @@ public class FirewaterDdlHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalSchema schema)
     {
-        distributeCreation(schema, true, schemaSql);
+        distributeCreation(schema, schemaSql, true);
     }
 
     // implement FarragoSessionDdlHandler
     public void executeDrop(FemLocalSchema schema)
     {
-        distributeDrop(schema, true, schemaSql);
+        distributeDrop(schema, schemaSql, true);
+    }
+
+    private boolean decidePartitioning(FemLocalTable table)
+    {
+        Properties tableProps =
+            FarragoCatalogUtil.getStorageOptionsAsProperties(repos, table);
+        String partitioningString =
+            tableProps.getProperty(FirewaterDataServer.PROP_PARTITIONING);
+        if (FirewaterPartitioning.NONE.toString().equals(partitioningString)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalTable table)
     {
-        distributeCreation(table, true, tableSql);
+        distributeCreation(table, tableSql, decidePartitioning(table));
     }
 
     // implement FarragoSessionDdlHandler
     public void executeDrop(FemLocalTable table)
     {
-        distributeDrop(table, true, tableSql);
+        distributeDrop(table, tableSql, decidePartitioning(table));
     }
 
     private boolean isSystemIndex(FemLocalIndex index)
@@ -342,7 +390,11 @@ public class FirewaterDdlHandler extends DdlHandler
         if (isSystemIndex(index)) {
             return;
         }
-        distributeCreation(index, true, indexSql);
+        distributeCreation(
+            index,
+            indexSql,
+            decidePartitioning(
+                (FemLocalTable) index.getSpannedClass()));
     }
 
     // implement FarragoSessionDdlHandler
@@ -353,21 +405,24 @@ public class FirewaterDdlHandler extends DdlHandler
         if (isSystemIndex(index)) {
             return;
         }
-        distributeDrop(index, true, indexSql);
+        distributeDrop(
+            index,
+            indexSql,
+            decidePartitioning(
+                (FemLocalTable) index.getSpannedClass()));
     }
 
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLabel label)
     {
-        distributeCreation(label, false, labelSql);
+        distributeCreation(label, labelSql, false);
+        relationalHandler.executeCreation(label);
     }
 
     // implement FarragoSessionDdlHandler
     public void executeDrop(FemLabel label)
     {
-        // TODO jvs 28-May-2009:  only once per server, not
-        // once per partition!
-        distributeDrop(label, false, labelSql);
+        distributeDrop(label, labelSql, false);
     }
 }
 

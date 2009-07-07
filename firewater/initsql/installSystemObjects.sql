@@ -44,3 +44,5 @@ options(
 create or replace server sys_firewater_embedded_server
 foreign data wrapper sys_firewater_embedded_wrapper
 options (user_name 'sa');
+
+create catalog local_replicas;

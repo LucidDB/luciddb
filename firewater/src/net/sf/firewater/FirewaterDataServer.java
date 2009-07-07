@@ -52,6 +52,10 @@ public class FirewaterDataServer
     extends MedJdbcDataServer
     implements FarragoMedLocalDataServer
 {
+    public static final String PROP_PARTITIONING = "PARTITIONING";
+    public static final String DEFAULT_PARTITIONING =
+        FirewaterPartitioning.HASH.toString();
+
     protected FirewaterDataServer(
         String serverMofId,
         Properties props)
@@ -85,13 +89,27 @@ public class FirewaterDataServer
                 null,
                 SqlParserPos.ZERO);
         SqlDialect dialect = new SqlDialect(getDatabaseMetaData());
+        String partitioningString =
+            tableProps.getProperty(PROP_PARTITIONING, DEFAULT_PARTITIONING);
+        FirewaterPartitioning partitioning = null;
+        for (FirewaterPartitioning p : FirewaterPartitioning.values()) {
+            if (p.toString().equals(partitioningString)) {
+                partitioning = p;
+                break;
+            }
+        }
+        if (partitioning == null) {
+            throw FirewaterSessionFactory.res.InvalidPartitioning.ex(
+                partitioningString);
+        }
         return new FirewaterColumnSet(
             directory,
             localName,
             localName,
             select,
             dialect,
-            rowType);
+            rowType,
+            partitioning);
     }
 
     // implement FarragoMedLocalDataServer
