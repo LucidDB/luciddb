@@ -71,6 +71,16 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
+        FirewaterPartitioning partitioning =
+            FirewaterDataServer.getPartitioning(
+                getPreparingStmt().getRepos(),
+                (FemLocalTable) getCwmColumnSet());
+
+        if (!partitioning.equals(FirewaterPartitioning.HASH)) {
+            return new FirewaterReplicatedTableRel(
+                cluster, this, connection);
+        }
+        
         Collection c = FirewaterSessionFactory.getFwmPackage(
             getPreparingStmt().getRepos()).
             getDistributed().getFwmPartition().refAllOfClass();

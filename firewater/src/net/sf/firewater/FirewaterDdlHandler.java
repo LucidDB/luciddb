@@ -354,15 +354,9 @@ public class FirewaterDdlHandler extends DdlHandler
 
     private boolean decidePartitioning(FemLocalTable table)
     {
-        Properties tableProps =
-            FarragoCatalogUtil.getStorageOptionsAsProperties(repos, table);
-        String partitioningString =
-            tableProps.getProperty(FirewaterDataServer.PROP_PARTITIONING);
-        if (FirewaterPartitioning.NONE.toString().equals(partitioningString)) {
-            return false;
-        } else {
-            return true;
-        }
+        FirewaterPartitioning partitioning =
+            FirewaterDataServer.getPartitioning(repos, table);
+        return partitioning.equals(FirewaterPartitioning.HASH);
     }
 
     // implement FarragoSessionDdlHandler

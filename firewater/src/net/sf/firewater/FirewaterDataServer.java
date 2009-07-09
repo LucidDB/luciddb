@@ -27,6 +27,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.jdbc.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.util.*;
@@ -218,6 +219,22 @@ public class FirewaterDataServer
         // Hep program?
         planner.addRule(
             ReduceAggregatesRule.instance);
+    }
+
+    public static FirewaterPartitioning getPartitioning(
+        FarragoRepos repos, FemLocalTable table)
+    {
+        Properties tableProps =
+            FarragoCatalogUtil.getStorageOptionsAsProperties(repos, table);
+        String partitioningString =
+            tableProps.getProperty(PROP_PARTITIONING);
+        if (partitioningString == null) {
+            // default
+            return FirewaterPartitioning.HASH;
+        }
+        // assume we've already validated this on creation, so
+        // don't bother catching illegal values
+        return Enum.valueOf(FirewaterPartitioning.class, partitioningString);
     }
 }
 
