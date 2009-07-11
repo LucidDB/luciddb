@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.9.1
+LucidDB Binary Release 0.8.1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -56,71 +56,11 @@ Public License; see file COPYING for details.  License terms for
 third-party libraries contained in this distribution are provided as
 text files in the lib directory.
 
-To obtain the source code from which this distribution was built,
-please visit http://www.eigenbase.org/download.html.
-
 ----------------------------------------------------------------------
 CHANGE HISTORY
 
-Changes since 0.9.0 include
-
-- miscellaneous compiler compatibility fixes
-- fix buffer pool requirement calculation for nested loop joins
-- optimize no-op replace column updates to avoid touching pages
-- fix hang in kill/shutdown (FRG-294)
-- additional bitmap index fixes
-- optimize column store scans so filtered columns are scanned first
-- fix crash in cleanup of dynamic parameter for unopened stream
-- use UTF-8 for XMI catalog export
-- fix catalog write performance on OpenSUSE (FRG-376)
-
-Changes since 0.8.0 include
-
-- add new feature ALTER TABLE ADD COLUMN
-- add new feature for support of the UDPATE statement
-- add new feature for UNICODE support
-- add new feature for CURRENT_SCHEMA/CATALOG (FRG-370)
-- add support for UDX's returning dynamic types based on
-  column list parameters
-- add feature !set showtime to sqlline
-- add Star Schema Benchmark (SSB)
-- overhaul build to use cmake instead of autotools
-- overhaul Windows build to use MSVC instead of mingw
-- change catalog persistence to use Hibernate
-- fix for end-of-full-page loader bug
-- allow restore_database to bypass restore of catalog data
-- optimize common relational subexpressions
-- optimize full-column update in MERGE/UPDATE
-- change EXPLAIN PLAN to output MAX($1) instead of MAX(1)
-- fix typo in asc_or_desc column name in JDBC index view
-- fix buffer-flushing RID overlap bug in bitmap index generator
-- optimize filters on null-generating OUTER JOIN inputs
-- fix to allow ordering on expressions from the projection when 
-  the column expression is aliased
-- fix validation for union of BOOLEAN and VARCHAR columns
-- optimize to detect removable outer joins before semijoins
-- optimize away some self-joins
-- improve error message when attempting to drop an in-use warehouse
-  label
-- fix row count reset bug with CREATE OR REPLACE
-- change penultimate_values UDX to return null for singular value
-- fix index searches with prefetch and prepared statements (LDB-193)
-- optimize away redundant casts
-- fix backup for extent allocation nodes with 0 allocated pages
-- fix bitmap index merge for oversize index keys
-- fix validation of cacheReservePercentage parameter (FRG-366)
-- fix PIVOT_COLUMNS_TO_ROWS UDX so it throws an exception if the
-  input does not contain a single row
-- fix bug with complaints from redundant database shutdown (LDB-190)
-- fix I/O notification race condition in backup/restore (FNL-82)
-- prevent duplicate target column names in INSERT/UPDATE;
-  prevent cast from datetime to BIGINT; fix error message for
-  illegal conversion in UPDATE (FRG-156, FRG-255, FRG-273)
-- fix hang in DBA_SESSIONS view when DML is in progress (FRG-294)
-- make abort work in most common cases (FRG-159, FNL-47, FNL-48,
-  LDB-122, FRG-349)
-- fix NPE when input to split_rows has null value
-- prevent usage of non-boolean expression in ON clause (FRG-71)
+0.8.1 is a development snapshot; changes since 0.8.0 have not
+yet been finalized.
 
 Changes since 0.7.4 include
 
@@ -370,3 +310,13 @@ Changes since 0.6.0 include
   dates
 - fix lingering table lock after executing DDL from within a UDR (FRG-141)
 - fix hang on abrupt shutdown during DML (LDB-150)
+
+----------------------------------------------------------------------
+LICENSE
+
+Copyright (C) 1999-2008 The Eigenbase Project and others
+
+This distribution of Eigenbase is licensed under the GNU General Public
+License; see file COPYING for details.  To obtain the source code
+from which this distribution was built, please visit
+http://www.eigenbase.org/download.html.
