@@ -1217,7 +1217,8 @@ public abstract class SqlTypeStrategies
                 assert (isStruct && (fieldCount == 1));
 
                 RelDataTypeField fieldType = recordType.getFieldList().get(0);
-                assert fieldType != null : "expected a record type with one field: "
+                assert fieldType != null
+                    : "expected a record type with one field: "
                     + recordType;
                 final RelDataType firstColType = fieldType.getType();
                 return opBinding.getTypeFactory().createTypeWithNullability(

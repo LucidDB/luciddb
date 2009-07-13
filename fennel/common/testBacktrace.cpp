@@ -93,7 +93,8 @@ int main(int argc, char **argv)
             std::cerr << "not reached\n";
             break;
         case 'e':
-            std::cerr << "throw new std::runtime_error(\"testing AutoBacktrace\")\n";
+            std::cerr
+                << "throw new std::runtime_error(\"testing AutoBacktrace\")\n";
             throw new std::runtime_error("testing AutoBacktrace");
             std::cerr << "not reached\n";
             break;

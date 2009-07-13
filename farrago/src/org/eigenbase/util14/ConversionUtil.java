@@ -75,7 +75,8 @@ public class ConversionUtil
         byte [] value,
         int radix)
     {
-        assert (2 == radix) || (16 == radix) : "Make sure that the algorithm below works for your radix";
+        assert (2 == radix) || (16 == radix)
+            : "Make sure that the algorithm below works for your radix";
         if (0 == value.length) {
             return "";
         }
@@ -99,8 +100,10 @@ public class ConversionUtil
         String value,
         int radix)
     {
-        assert (16 == radix) : "Specified string to byte array conversion not supported yet";
-        assert ((value.length() % 2) == 0) : "Hex binary string must contain even number of characters";
+        assert 16 == radix
+            : "Specified string to byte array conversion not supported yet";
+        assert (value.length() % 2) == 0
+            : "Hex binary string must contain even number of characters";
 
         byte [] ret = new byte[value.length() / 2];
         for (int i = 0; i < ret.length; i++) {
@@ -112,7 +115,8 @@ public class ConversionUtil
                 Character.digit(
                     value.charAt((i * 2) + 1),
                     radix);
-            assert ((digit1 != -1) && (digit2 != -1)) : "String could not be converted to byte array";
+            assert (digit1 != -1) && (digit2 != -1)
+                : "String could not be converted to byte array";
             ret[i] = (byte) ((digit1 * radix) + digit2);
         }
         return ret;

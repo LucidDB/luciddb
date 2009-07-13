@@ -133,11 +133,13 @@ public class SqlJoinOperator
         final SqlLiteral isNatural =
             (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
         assert (isNatural.getTypeName() == SqlTypeName.BOOLEAN);
-        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
+        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null
+            : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
         assert (operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral)
             && (SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND])
                 instanceof ConditionType);
-        assert operands[SqlJoin.TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
+        assert operands[SqlJoin.TYPE_OPERAND] != null
+            : "precondition: operands[TYPE_OPERAND] != null";
         assert (operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral)
             && (SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND])
                 instanceof JoinType);

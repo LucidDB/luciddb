@@ -205,7 +205,8 @@ public class FarragoTypeFactoryImpl
         } else if (classifier instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) classifier;
-            assert (collectionType instanceof FemSqlmultisetType) : "todo array type creation not yet implemented";
+            assert collectionType instanceof FemSqlmultisetType
+                : "todo array type creation not yet implemented";
             FemSqltypeAttribute femComponentType =
                 (FemSqltypeAttribute) collectionType.getFeature().get(0);
             RelDataType componentType = createCwmElementType(femComponentType);

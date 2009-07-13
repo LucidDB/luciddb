@@ -83,7 +83,8 @@ public class SqlPostfixOperator
             }
             if (SqlTypeUtil.inCharFamily(operandType)) {
                 SqlCollation collation = operandType.getCollation();
-                assert null != collation : "An implicit or explicit collation should have been set";
+                assert null != collation
+                    : "An implicit or explicit collation should have been set";
                 type =
                     validator.getTypeFactory()
                     .createTypeWithCharsetAndCollation(

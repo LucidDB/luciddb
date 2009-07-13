@@ -287,7 +287,9 @@ public class MedJdbcDataServer
                     props.getProperty(
                         PROP_VALIDATION_TIMING,
                         DEFAULT_VALIDATION_TIMING);
-                for (String validationTiming : validationTimingProp.split(",")) {
+                for (String validationTiming
+                    : validationTimingProp.split(","))
+                {
                     validationTiming = validationTiming.trim().toUpperCase();
                     if (validationTiming.equals(
                             PROP_VALIDATION_TIMING_ON_BORROW))

@@ -122,7 +122,9 @@ public class OJClassMap
         if (fieldNames == null) {
             fieldNames = new String[classes.length];
         }
-        assert classes.length == fieldNames.length : "OJSyntheticClass.create: mismatch between classes and field names";
+        assert classes.length == fieldNames.length
+            : "OJSyntheticClass.create: "
+            + "mismatch between classes and field names";
         for (int i = 0; i < fieldNames.length; i++) {
             if (fieldNames[i] == null) {
                 fieldNames[i] = OJSyntheticClass.makeField(i);
@@ -141,7 +143,8 @@ public class OJClassMap
             sb.append(classes[i].toString().replace('$', '.'));
 
             if (isJoin) {
-                assert !OJSyntheticClass.isJoinClass(classes[i]) : "join classes cannot contain join classes";
+                assert !OJSyntheticClass.isJoinClass(classes[i])
+                    : "join classes cannot contain join classes";
             }
         }
         sb.append("}");

@@ -83,7 +83,8 @@ public abstract class CalcRelSplitter
         for (int i = 0; i < relTypes.length; i++) {
             assert relTypes[i] != null;
             for (int j = 0; j < i; j++) {
-                assert relTypes[i] != relTypes[j] : "Rel types must be distinct";
+                assert relTypes[i] != relTypes[j]
+                    : "Rel types must be distinct";
             }
         }
         this.program = calc.getProgram();
@@ -275,7 +276,8 @@ levelLoop:
                             levelTypeOrdinals[level] = relTypeOrdinal;
                             assert (level == 0)
                                 || (levelTypeOrdinals[level - 1]
-                                    != levelTypeOrdinals[level]) : "successive levels of same type";
+                                    != levelTypeOrdinals[level])
+                                : "successive levels of same type";
 
                             // Figure out which of the other reltypes are
                             // still possible for this level.
@@ -530,7 +532,8 @@ levelLoop:
 
             for (int i = 0; i < exprs.length; i++) {
                 RexNode expr = exprs[i];
-                assert (exprLevels[i] >= -1) && (exprLevels[i] < levelCount) : "expression's level is out of range";
+                assert (exprLevels[i] >= -1) && (exprLevels[i] < levelCount)
+                    : "expression's level is out of range";
                 if (exprLevels[i] == level) {
                     traceWriter.println("\t" + i + ": " + expr);
                 }

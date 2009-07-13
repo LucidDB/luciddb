@@ -419,7 +419,8 @@ public abstract class AbstractRelNode
                     RelNode [] inputs = rel.getInputs();
                     RexNode [] childExps = rel.getChildExps();
                     assert terms.length
-                        == (inputs.length + childExps.length + values.length) : "terms.length="
+                        == (inputs.length + childExps.length + values.length)
+                        : "terms.length="
                         + terms.length
                         + " inputs.length=" + inputs.length
                         + " childExps.length=" + childExps.length

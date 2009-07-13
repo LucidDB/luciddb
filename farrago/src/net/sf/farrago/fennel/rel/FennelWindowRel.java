@@ -153,7 +153,8 @@ public class FennelWindowRel
         assert outputProgram != null : "precondition: outputExprs != null";
         assert inputProgram != null : "precondition: inputProgram != null";
         assert inputProgram.projectsIdentity(true);
-        assert inputProgram.getCondition() == null : "precondition: inputProgram.getCondition() == null";
+        assert inputProgram.getCondition() == null
+            : "precondition: inputProgram.getCondition() == null";
         assert windows != null : "precondition: windows != null";
         assert windows.length > 0 : "precondition : windows.length > 0";
 
@@ -485,7 +486,8 @@ public class FennelWindowRel
         RexProgram bottomProgram,
         List<RexWinAggCall> overList)
     {
-        assert bottomProgram.getCondition() == null : "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.getCondition() == null
+            : "pre: bottomPogram.getCondition() == null";
         assert bottomProgram.isValid(true);
 
         final RexProgramBuilder topProgramBuilder =
@@ -507,7 +509,8 @@ public class FennelWindowRel
                 bottomProgram,
                 rexBuilder);
 
-        assert mergedProgram.getProjectList().size() == overList.size() : "post: return.getProjectList().size() == overList.size()";
+        assert mergedProgram.getProjectList().size() == overList.size()
+            : "post: return.getProjectList().size() == overList.size()";
         return mergedProgram;
     }
 

@@ -1023,7 +1023,8 @@ public class Util
      * <pre><code>void foo(int x) {
      *     if (x &lt; 0) {
      *         // If this code is executed, an error will be thrown.
-     *         Util.deprecated("no longer need to handle negative numbers", true);
+     *         Util.deprecated(
+     *             "no longer need to handle negative numbers", true);
      *         bar(x);
      *     } else {
      *         baz(x);

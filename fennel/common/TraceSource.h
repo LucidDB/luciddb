@@ -181,7 +181,8 @@ inline char *get_tid(char *tidstr, int cb)
     char tidstr[32]; \
     FENNEL_TRACE(\
         level, \
-        "[thread " << fennel::get_tid(tidstr, sizeof(tidstr)) << "] " << expr); \
+        "[thread " << fennel::get_tid(tidstr, sizeof(tidstr)) << "] " \
+        << expr); \
 }
 
 FENNEL_END_NAMESPACE

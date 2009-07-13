@@ -744,7 +744,8 @@ public class ConcurrentTestCommandScript
     private class CommandParser {
         final Pattern splitWords = Pattern.compile("\\s+");
         final Pattern splitBinding = Pattern.compile("=");
-        final Pattern matchesVarDefn = Pattern.compile("([A-Za-z]\\w*) *=(.*)$");
+        final Pattern matchesVarDefn =
+            Pattern.compile("([A-Za-z]\\w*) *=(.*)$");
         // \1 is VAR, \2 is VAL
 
         // parser state
@@ -903,13 +904,15 @@ public class ConcurrentTestCommandScript
                             trace("no lockstep");
 
                         } else if (DISABLED.equals(command)) {
-                            assert (disabled == null) : DISABLED + " and " + ENABLED
+                            assert disabled == null
+                                : DISABLED + " and " + ENABLED
                                 + " may only appear once";
                             disabled = Boolean.TRUE;
                             trace("disabled");
 
                         } else if (ENABLED.equals(command)) {
-                            assert (disabled == null) : DISABLED + " and " + ENABLED
+                            assert disabled == null
+                                : DISABLED + " and " + ENABLED
                                 + " may only appear once";
                             disabled = Boolean.FALSE;
                             trace("enabled");
@@ -942,7 +945,8 @@ public class ConcurrentTestCommandScript
                             String arg = line.substring(REPEAT_LEN).trim();
                             repeatCount = Integer.parseInt(vars.expand(arg));
                             trace("start @repeat block", repeatCount);
-                            assert (repeatCount > 0) : "Repeat count must be > 0";
+                            assert repeatCount > 0
+                                : "Repeat count must be > 0";
                             in.mark(REPEAT_READ_AHEAD_LIMIT);
 
                         } else if (END.equals(command)) {
@@ -962,7 +966,8 @@ public class ConcurrentTestCommandScript
                                         throw new IllegalStateException(
                                             "Unable to reset reader -- repeat "
                                             + "contents must be less than "
-                                            + REPEAT_READ_AHEAD_LIMIT + " bytes");
+                                            + REPEAT_READ_AHEAD_LIMIT
+                                            + " bytes");
                                     }
 
                                     trace("end @repeat block");
@@ -1010,7 +1015,8 @@ public class ConcurrentTestCommandScript
                             trace("@rowlimit ", sql);
                             boolean isSelect = isSelect(sql);
                             if (!isSelect) {
-                                throw new IllegalStateException("Only select can be used with rowlimit");
+                                throw new IllegalStateException(
+                                    "Only select can be used with rowlimit");
                             }
                             for (int i = threadId; i < nextThreadId; i++) {
                                 addCommand(
@@ -1079,7 +1085,8 @@ public class ConcurrentTestCommandScript
                             long millis = 0L;
                             if (millisStr.length() > 0) {
                                 millis = Long.parseLong(millisStr);
-                                assert (millis >= 0L) : "Fetch timeout must be >= 0";
+                                assert millis >= 0L
+                                    : "Fetch timeout must be >= 0";
                             }
 
                             for (int i = threadId; i < nextThreadId; i++) {
@@ -1102,7 +1109,8 @@ public class ConcurrentTestCommandScript
                                 vars.expand(line.substring(SLEEP_LEN).trim());
                             trace("@sleep", arg);
                             long millis = Long.parseLong(arg);
-                            assert (millis >= 0L) : "Sleep timeout must be >= 0";
+                            assert millis >= 0L
+                                : "Sleep timeout must be >= 0";
 
                             for (int i = threadId; i < nextThreadId; i++) {
                                 addSleepCommand(i, order, millis);
@@ -1398,12 +1406,14 @@ public class ConcurrentTestCommandScript
                 if (status != 0) {
                     storeMessage(
                         threadId,
-                        "command " + command + ": exited with status " + status);
+                        "command " + command + ": exited with status "
+                        + status);
                 }
             } catch (Exception e) {
                 storeMessage(
                     threadId,
-                    "command " + command + ": failed with exception " + e.getMessage());
+                    "command " + command + ": failed with exception "
+                    + e.getMessage());
             }
         }
     }
@@ -1953,7 +1963,9 @@ public class ConcurrentTestCommandScript
 
         static void usage()
         {
-            System.err.println("Usage: mtsql [-vg] -u SERVER -d DRIVER [-n USER][-p PASSWORD] SCRIPT [SCRIPT]...");
+            System.err.println(
+                "Usage: mtsql [-vg] -u SERVER -d DRIVER "
+                + "[-n USER][-p PASSWORD] SCRIPT [SCRIPT]...");
         }
 
         boolean parseCommand(String[] args)

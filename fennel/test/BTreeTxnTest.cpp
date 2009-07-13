@@ -126,7 +126,8 @@ BTreeTxnTest::BTreeTxnTest()
     nDeletesPerTxn = configMap.getIntParam("deletesPerTxn", 5);
     nKeysPerScan = configMap.getIntParam("keysPerScan", 5);
     iKeyMax = configMap.getIntParam("maxKey", 1000000);
-    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval", 20);
+    nSecondsBetweenCheckpoints = configMap.getIntParam(
+        "checkpointInterval", 20);
     testRollback = configMap.getIntParam(
         "testRollback", 1);
 

@@ -72,20 +72,26 @@ public class RelOptXmlPlanWriter
      * Generates generic XML (sometimes called 'element-oriented XML'). Like
      * this:
      *
-     * <pre>
-     * &lt;RelNode id="1" type="Join"&gt;
-     *   &lt;Property name="condition"&gt;EMP.DEPTNO = DEPT.DEPTNO&lt;/Property&gt;
-     *   &lt;Inputs&gt;
-     *     &lt;RelNode id="2" type="Project"&gt;
-     *       &lt;Property name="expr1"&gt;x + y&lt;/Property&gt;
-     *       &lt;Property name="expr2"&gt;45&lt;/Property&gt;
-     *     &lt;/RelNode&gt;
-     *     &lt;RelNode id="3" type="TableAccess"&gt;
-     *       &lt;Property name="table"&gt;SALES.EMP&lt;/Property&gt;
-     *     &lt;/RelNode&gt;
-     *   &lt;/Inputs&gt;
-     * &lt;/RelNode&gt;
-     * </pre>
+     * <blockquote>
+     * <code>
+     * &lt;RelNode id="1" type="Join"&gt;<br/>
+     * &nbsp;&nbsp;&lt;Property name="condition"&gt;EMP.DEPTNO =
+     * DEPT.DEPTNO&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&lt;Inputs&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;RelNode id="2" type="Project"&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property name="expr1"&gt;x +
+     * y&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property
+     * name="expr2"&gt;45&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;/RelNode&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;RelNode id="3" type="TableAccess"&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property
+     * name="table"&gt;SALES.EMP&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;/RelNode&gt;<br/>
+     * &nbsp;&nbsp;&lt;/Inputs&gt;<br/>
+     * &lt;/RelNode&gt;<br/>
+     * </code>
+     * </blockquote>
      *
      * @param rel
      * @param terms

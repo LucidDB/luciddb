@@ -959,7 +959,8 @@ public class SqlAdvisorTest
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=^";
         expected =
-            "SELECT * FROM sales.emp a JOIN sales.dept b ON a.deptno= _suggest_";
+            "SELECT * FROM sales.emp a JOIN sales.dept b "
+            + "ON a.deptno= _suggest_";
         assertSimplify(sql, expected);
 
         // where
@@ -976,21 +977,28 @@ public class SqlAdvisorTest
 
         // subquery in from
         sql =
-            "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+            "select t.^ from (select 1 as x, 2 as y from sales.emp) as t "
+            + "where t.dummy=1";
         expected =
-            "SELECT t. _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) as t";
+            "SELECT t. _suggest_ "
+            + "FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) as t";
         assertSimplify(sql, expected);
 
         sql =
-            "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
+            "select t. from (select 1 as x, 2 as y from "
+            + "(select x from sales.emp)) as t where ^";
         expected =
-            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM ( SELECT 0 AS x FROM sales.emp ) ) as t WHERE _suggest_";
+            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM "
+            + "( SELECT 0 AS x FROM sales.emp ) ) as t WHERE _suggest_";
         assertSimplify(sql, expected);
 
         sql =
-            "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
+            "select ^from (select 1 as x, 2 as y from sales.emp), "
+            + "(select 2 as y from (select m from n where)) as t "
+            + "where t.dummy=1";
         expected =
-            "SELECT _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) , ( SELECT 0 AS y FROM ( SELECT 0 AS m FROM n ) ) as t";
+            "SELECT _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) "
+            + ", ( SELECT 0 AS y FROM ( SELECT 0 AS m FROM n ) ) as t";
         assertSimplify(sql, expected);
 
         // Note: completes the missing close paren; wipes out select clause of
@@ -1010,9 +1018,12 @@ public class SqlAdvisorTest
         // 3. removes GROUP BY clause of subquery in FROM clause;
         // 4. removes SELECT clause of outer query.
         sql =
-            "select x + y + 32 from (select 1 as x, 2 as y from sales group by invalid stuff) as t where x in (select deptno from emp where foo + t.^ < 10)";
+            "select x + y + 32 from "
+            + "(select 1 as x, 2 as y from sales group by invalid stuff) as t "
+            + "where x in (select deptno from emp where foo + t.^ < 10)";
         expected =
-            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM sales ) as t WHERE x in ( SELECT * FROM emp WHERE foo + t. _suggest_ < 10 )";
+            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM sales ) as t "
+            + "WHERE x in ( SELECT * FROM emp WHERE foo + t. _suggest_ < 10 )";
         assertSimplify(sql, expected);
 
         // if hint is in FROM, can remove other members of FROM clause
@@ -1026,9 +1037,11 @@ public class SqlAdvisorTest
         assertSimplify(sql, expected);
 
         sql =
-            "select count(1) from sales.emp a where substring(a.^ FROM 3 for 6) = '1234'";
+            "select count(1) from sales.emp a "
+            + "where substring(a.^ FROM 3 for 6) = '1234'";
         expected =
-            "SELECT * FROM sales.emp a WHERE substring ( a. _suggest_ FROM 3 for 6 ) = '1234'";
+            "SELECT * FROM sales.emp a "
+            + "WHERE substring ( a. _suggest_ FROM 3 for 6 ) = '1234'";
         assertSimplify(sql, expected);
 
         // missing ')' following subquery
@@ -1043,7 +1056,8 @@ public class SqlAdvisorTest
         // keyword embedded in single and double quoted string should be
         // ignored
         sql =
-            "select 'a cat from a king' as foobar, 1 / 2 \"where\" from t group by t.^ order by 123";
+            "select 'a cat from a king' as foobar, 1 / 2 \"where\" from t "
+            + "group by t.^ order by 123";
         expected = "SELECT * FROM t GROUP BY t. _suggest_";
         assertSimplify(sql, expected);
 

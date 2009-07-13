@@ -77,7 +77,8 @@ bool FileSystem::setFileAttributes(char const *filename,bool readOnly)
 void FileSystem::getDiskFreeSpace(char const *path, FileSize &availableSpace)
 {
 #ifdef __MSVC__
-    throw FennelExcn(FennelResource::instance().unsupportedOperation("statvfs"));
+    throw FennelExcn(
+        FennelResource::instance().unsupportedOperation("statvfs"));
 #else
     struct statvfs buf;
     int rc = statvfs(path, &buf);

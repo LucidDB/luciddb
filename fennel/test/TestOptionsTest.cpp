@@ -64,7 +64,9 @@ void TestOptionsTest::test2()
     int m = configMap.getIntParam("m", 200);
     int n = configMap.getIntParam("n", 201);
     string s = configMap.getStringParam("s", "fennel");
-    FENNEL_TRACE(TRACE_INFO, "test2(): m = " << m << "; n = " << n << "; s = " << s);
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "test2(): m = " << m << "; n = " << n << "; s = " << s);
 }
 
 void TestOptionsTest::extra()
@@ -72,7 +74,9 @@ void TestOptionsTest::extra()
     int m = configMap.getIntParam("m", 300);
     int n = configMap.getIntParam("n", 301);
     string s = configMap.getStringParam("s", "fennel");
-    FENNEL_TRACE(TRACE_INFO, "extra(): m = " << m << "; n = " << n << "; s = " << s);
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "extra(): m = " << m << "; n = " << n << "; s = " << s);
 }
 
 FENNEL_UNIT_TEST_SUITE(TestOptionsTest)

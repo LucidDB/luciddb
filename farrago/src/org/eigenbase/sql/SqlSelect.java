@@ -148,7 +148,8 @@ public class SqlSelect
 
     public void addWhere(SqlNode condition)
     {
-        assert (operands[SELECT_OPERAND] == null) : "cannot add a filter if there is already a select list";
+        assert operands[SELECT_OPERAND] == null
+            : "cannot add a filter if there is already a select list";
         operands[WHERE_OPERAND] =
             SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }

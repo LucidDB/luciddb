@@ -322,7 +322,8 @@ void PagingTestBase::testCacheResize()
 PagingTestBase::PagingTestBase()
 {
     nRandomOps = configMap.getIntParam("randomOps", 5000);
-    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval", 20);
+    nSecondsBetweenCheckpoints =
+        configMap.getIntParam("checkpointInterval", 20);
     bTestResize = configMap.getIntParam("resizeCache", 1);
     checkpointMutex.setSchedulingPolicy(SXMutex::SCHEDULE_FAVOR_EXCLUSIVE);
 

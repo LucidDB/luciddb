@@ -85,7 +85,8 @@ public class LucidDbSessionPersonality
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
     public static final String LAST_ROWS_REJECTED = "lastRowsRejected";
     public static final String LAST_ROWS_REJECTED_DEFAULT = null;
-    public static final String REDUCE_NON_CORRELATED_SUBQUERIES_LUCIDDB_DFLT = "true";
+    public static final String REDUCE_NON_CORRELATED_SUBQUERIES_LUCIDDB_DFLT =
+        "true";
 
     //~ Instance fields --------------------------------------------------------
 
