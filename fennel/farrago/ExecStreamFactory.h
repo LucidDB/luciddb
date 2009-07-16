@@ -132,31 +132,7 @@ protected:
     virtual void visit(ProxyLhxJoinStreamDef &streamDef);
     virtual void visit(ProxyLhxAggStreamDef &streamDef);
 
-    // helpers for above visitors
-
-    void readBTreeReadStreamParams(
-        BTreeReadExecStreamParams &,
-        ProxyIndexScanDef &);
-
-    void readIndexWriterParams(
-        FtrsTableIndexWriterParams &,
-        ProxyIndexWriterDef &);
-
-    void readTableWriterStreamParams(
-        FtrsTableWriterExecStreamParams &,
-        ProxyTableWriterDef &);
-
-    void readBarrierDynamicParams(
-        BarrierExecStreamParams &,
-        ProxyBarrierStreamDef &);
-
-    void readColumnList(
-        ProxyFlatFileTupleStreamDef &streamDef,
-        std::vector<std::string> &names);
-
     void implementSortWithBTree(ProxySortingStreamDef &streamDef);
-
-    char readCharParam(const std::string &val);
 
 public:
     explicit ExecStreamFactory(
@@ -180,6 +156,8 @@ public:
         ProxyExecutionStreamDef &);
 
     // helpers for subfactories
+
+    char readCharParam(const std::string &val);
 
     /** makes a TupleDescriptor from its proxy definition */
     void readTupleDescriptor(
@@ -226,6 +204,26 @@ public:
     void readAggStreamParams(
         SortedAggExecStreamParams &,
         ProxyAggStreamDef &);
+
+    void readBTreeReadStreamParams(
+        BTreeReadExecStreamParams &,
+        ProxyIndexScanDef &);
+
+    void readIndexWriterParams(
+        FtrsTableIndexWriterParams &,
+        ProxyIndexWriterDef &);
+
+    void readTableWriterStreamParams(
+        FtrsTableWriterExecStreamParams &,
+        ProxyTableWriterDef &);
+
+    void readBarrierDynamicParams(
+        BarrierExecStreamParams &,
+        ProxyBarrierStreamDef &);
+
+    void readColumnList(
+        ProxyFlatFileTupleStreamDef &streamDef,
+        std::vector<std::string> &names);
 
     DynamicParamId readDynamicParamId(const int val);
 };

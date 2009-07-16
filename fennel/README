@@ -85,3 +85,5 @@ test:  unit tests
 farrago:  JNI integration for the companion Farrago project
 
 lucidera:  column store and bitmap indexes contributed by LucidEra, Inc.
+
+seb:  experimental Storage Engine Bridge, currently for ScaleDB only
