@@ -1,11 +1,9 @@
 # $Id$
 
-# FIXME jvs 10-Jul-2009:  get rid of hard-coded paths
-
 include_directories(
 ${DEFAULT_INCLUDE}
 ${JAVA_INCLUDE}
-/home/jvs/scaledb/interface
+${CMAKE_CURRENT_SOURCE_DIR}/interface
 )
 
 link_directories(${DEFAULT_LIB})
@@ -34,5 +32,5 @@ target_link_libraries(
   fennel_cache
   fennel_device
   fennel_common
-  /home/jvs/scaledb/libscaledb.so
+  ${CMAKE_CURRENT_SOURCE_DIR}/interface/libscaledb.so
 )

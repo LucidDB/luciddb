@@ -340,7 +340,7 @@ add_subdirectory(lucidera)
 
 # NOTE jvs 15-Jul-2009:  storage engine bridge is experimental for now;
 # only build it if ScaleDB interfaces have been added
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seb/interfaces")
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seb/interface")
 add_subdirectory(seb)
 endif()
 
