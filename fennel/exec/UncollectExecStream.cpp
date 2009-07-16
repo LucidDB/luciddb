@@ -75,7 +75,8 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
     pInAccessor->unmarshalTuple(inputTupleData);
 
 #if 0
-    std::cout<<"input tuple descriptor" << pInAccessor->getTupleDesc()<<std::endl;
+    std::cout << "input tuple descriptor" << pInAccessor->getTupleDesc()
+              << std::endl;
     std::cout << "input tuple = ";
     TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
     TuplePrinter tuplePrinter;

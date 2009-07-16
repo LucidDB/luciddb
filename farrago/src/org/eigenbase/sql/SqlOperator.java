@@ -641,7 +641,8 @@ public abstract class SqlOperator
      */
     public String getAllowedSignatures(String opNameToUse)
     {
-        assert (operandTypeChecker != null) : "If you see this, assign operandTypeChecker a value "
+        assert operandTypeChecker != null
+            : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
         return operandTypeChecker.getAllowedSignatures(this, opNameToUse)
             .trim();

@@ -1022,9 +1022,10 @@ public class SqlValidatorTest
             "CURRENT_DATE()",
             "No match found for function signature CURRENT_DATE..");
         checkExpType("CURRENT_DATE", "DATE NOT NULL"); //  with TZ?
+        // I guess -s1 is an expression?
         checkWholeExpFails(
             "CURRENT_DATE(-1)",
-            "No match found for function signature CURRENT_DATE..NUMERIC.."); // i guess -s1 is an expression?
+            "No match found for function signature CURRENT_DATE..NUMERIC..");
         checkWholeExpFails("CURRENT_DATE('foo')", ANY);
 
         // current_time
@@ -1060,8 +1061,10 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "CURRENT_TIMESTAMP()",
             "No match found for function signature CURRENT_TIMESTAMP..");
-        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
-        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL"); //  with TZ ?
+        // should type be 'TIMESTAMP with TZ'?
+        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL");
+        // should type be 'TIMESTAMP with TZ'?
+        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL");
         checkWholeExpFails(
             "CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");

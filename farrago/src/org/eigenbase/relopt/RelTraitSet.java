@@ -103,7 +103,8 @@ public class RelTraitSet
     {
         RelTrait oldTrait = traits[index];
 
-        assert (oldTrait.getTraitDef() == trait.getTraitDef()) : "RelTrait has different RelTraitDef than replacement";
+        assert oldTrait.getTraitDef() == trait.getTraitDef()
+            : "RelTrait has different RelTraitDef than replacement";
 
         traits[index] = canonize(trait);
 

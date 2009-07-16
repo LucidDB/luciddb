@@ -603,7 +603,8 @@ public abstract class JmiObjUtil
         RefClass refClass,
         boolean nullIfNotFound)
     {
-        assert classLoader != null : "require classLoader: use ClassLoader.getSystemClassLoader()";
+        assert classLoader != null
+            : "require classLoader: use ClassLoader.getSystemClassLoader()";
 
         // Look up the Java interface generated for the class being queried.
         String className = TagUtil.getInterfaceFullName(refClass);

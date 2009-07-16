@@ -201,9 +201,12 @@ public class SqlTypeFactoryImpl
     private void assertBasic(SqlTypeName typeName)
     {
         assert (typeName != null);
-        assert (typeName != SqlTypeName.MULTISET) : "use createMultisetType() instead";
-        assert (typeName != SqlTypeName.INTERVAL_DAY_TIME) : "use createSqlIntervalType() instead";
-        assert (typeName != SqlTypeName.INTERVAL_YEAR_MONTH) : "use createSqlIntervalType() instead";
+        assert typeName != SqlTypeName.MULTISET
+            : "use createMultisetType() instead";
+        assert typeName != SqlTypeName.INTERVAL_DAY_TIME
+            : "use createSqlIntervalType() instead";
+        assert typeName != SqlTypeName.INTERVAL_YEAR_MONTH
+            : "use createSqlIntervalType() instead";
     }
 
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)

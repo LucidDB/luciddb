@@ -74,7 +74,8 @@ public abstract class RemoveEmptyRule
                         newChildRels.add(childRel);
                     }
                 }
-                assert newChildRels.size() < childRels.size() : "planner promised us at least one EmptyRel child";
+                assert newChildRels.size() < childRels.size()
+                    : "planner promised us at least one EmptyRel child";
                 RelNode newRel;
                 switch (newChildRels.size()) {
                 case 0:

@@ -482,8 +482,8 @@ public class RexToCalcTranslator
         // Step 1: implement all the filtering logic
         if (conditionRef != null) {
             CalcReg filterResult = implementNode(conditionRef);
-            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() : "Condition must be boolean: "
-                + conditionRef;
+            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType()
+                : "Condition must be boolean: " + conditionRef;
 
             // Step 2: report the status of the filtering
             CalcReg statusReg =
@@ -699,8 +699,8 @@ public class RexToCalcTranslator
         // Step 1: implement all the filtering logic
         if (conditionExp != null) {
             CalcReg filterResult = implementNode(conditionExp);
-            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() : "Condition must be boolean: "
-                + conditionExp;
+            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType()
+                : "Condition must be boolean: " + conditionExp;
 
             //step 2: report the status of the filtering
             CalcReg statusReg =
@@ -726,7 +726,8 @@ public class RexToCalcTranslator
         // row matched. Now calculate all the outputs
         // The projectExprs are the overs for a given partition.
         for (RexLocalRef node : projectExprs) {
-            assert (getResult(node, false) == null) : "Common subexpressions should pushed into outer projection.";
+            assert getResult(node, false) == null
+                : "Common subexpressions should pushed into outer projection.";
             implementNode(node);
         }
 

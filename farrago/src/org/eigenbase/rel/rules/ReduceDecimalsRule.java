@@ -371,7 +371,8 @@ public class ReduceDecimalsRule
          */
         protected RexNode makeApproxScaleFactor(int scale)
         {
-            assert ((-100 < scale) && (scale < 100)) : "could not make approximate scale factor";
+            assert ((-100 < scale) && (scale < 100))
+                : "could not make approximate scale factor";
             if (scale >= 0) {
                 return makeApproxLiteral(BigDecimal.TEN.pow(scale));
             } else {

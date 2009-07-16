@@ -62,7 +62,8 @@ public class MockRelOptPlanner
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
-        assert (this.rule == null) : "MockRelOptPlanner only supports a single rule";
+        assert this.rule == null
+            : "MockRelOptPlanner only supports a single rule";
         this.rule = rule;
 
         return false;

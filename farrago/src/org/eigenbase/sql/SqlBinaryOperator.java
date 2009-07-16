@@ -120,7 +120,8 @@ public class SqlBinaryOperator
         {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
-            assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
+            assert (null != cs1) && (null != cs2)
+                : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
                 throw validator.newValidationError(
                     call,
@@ -132,7 +133,8 @@ public class SqlBinaryOperator
 
             SqlCollation col1 = operandType1.getCollation();
             SqlCollation col2 = operandType2.getCollation();
-            assert ((null != col1) && (null != col2)) : "An implicit or explicit collation should have been set";
+            assert (null != col1) && (null != col2)
+                : "An implicit or explicit collation should have been set";
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =
@@ -168,7 +170,8 @@ public class SqlBinaryOperator
         {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
-            assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
+            assert (null != cs1) && (null != cs2)
+                : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
                 throw validator.newValidationError(
                     call,
@@ -180,7 +183,8 @@ public class SqlBinaryOperator
 
             SqlCollation col1 = operandType1.getCollation();
             SqlCollation col2 = operandType2.getCollation();
-            assert ((null != col1) && (null != col2)) : "An implicit or explicit collation should have been set";
+            assert (null != col1) && (null != col2)
+                : "An implicit or explicit collation should have been set";
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =

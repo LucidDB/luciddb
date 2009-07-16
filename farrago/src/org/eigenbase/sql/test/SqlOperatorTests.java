@@ -798,11 +798,13 @@ public abstract class SqlOperatorTests
                 checkCastToString(
                     maxNumericStrings[i],
                     type,
-                    isFloat ? "3.402824E38" : "1.797693134862316E308"); // Treated as DOUBLE
+                    // Treated as DOUBLE
+                    isFloat ? "3.402824E38" : "1.797693134862316E308");
                 checkCastToString(
                     minNumericStrings[i],
                     null,
-                    isFloat ? null : "4.940656458412465E-324"); // Treated as FLOAT or DOUBLE
+                    // Treated as FLOAT or DOUBLE
+                    isFloat ? null : "4.940656458412465E-324");
                 checkCastToString(
                     minNumericStrings[i],
                     type,
@@ -812,7 +814,8 @@ public abstract class SqlOperatorTests
                 checkCastToString(
                     maxNumericStrings[i],
                     type,
-                    isFloat ? "3.402823E38" : "1.797693134862316E308"); // Treated as DOUBLE
+                    // Treated as DOUBLE
+                    isFloat ? "3.402823E38" : "1.797693134862316E308");
                 checkCastToString(
                     minNumericStrings[i],
                     null,
@@ -3640,7 +3643,8 @@ public abstract class SqlOperatorTests
             // SQL:2003 6.29.9: trim string must have length=1. Failure occurs
             // at runtime.
             //
-            // TODO: Change message to "Invalid argument\(s\) for 'TRIM' function",
+            // TODO: Change message to "Invalid argument\(s\) for
+            // 'TRIM' function".
             // The message should come from a resource file, and should still
             // have the SQL error code 22027.
             getTester().checkFails(

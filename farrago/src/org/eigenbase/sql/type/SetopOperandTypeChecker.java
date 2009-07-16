@@ -49,7 +49,8 @@ public class SetopOperandTypeChecker
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        assert (callBinding.getOperandCount() == 2) : "setops are binary (for now)";
+        assert callBinding.getOperandCount() == 2
+            : "setops are binary (for now)";
         RelDataType [] argTypes =
             new RelDataType[callBinding.getOperandCount()];
         int colCount = -1;

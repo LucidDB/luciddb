@@ -108,9 +108,11 @@ public abstract class AbstractRelOptPlanner
 
         final String description = rule.toString();
         assert description != null;
-        assert description.indexOf("$") < 0 : "Rule's description should not contain '$': "
+        assert description.indexOf("$") < 0
+            : "Rule's description should not contain '$': "
             + description;
-        assert !IntegerPattern.matcher(description).matches() : "Rule's description should not be an integer: "
+        assert !IntegerPattern.matcher(description).matches()
+            : "Rule's description should not be an integer: "
             + rule.getClass().getName() + ", " + description;
 
         RelOptRule existingRule = mapDescToRule.put(description, rule);

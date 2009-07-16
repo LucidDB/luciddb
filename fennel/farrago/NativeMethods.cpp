@@ -191,7 +191,8 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams(
     try {
         // TODO lift these to JniUtil:
         jclass classList = pEnv->FindClass("java/util/List");
-        jmethodID methListAdd = pEnv->GetMethodID(classList, "add", "(Ljava/lang/Object;)Z");
+        jmethodID methListAdd =
+            pEnv->GetMethodID(classList, "add", "(Ljava/lang/Object;)Z");
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         SharedExecStreamGraph pgraph = streamGraphHandle.pExecStreamGraph;

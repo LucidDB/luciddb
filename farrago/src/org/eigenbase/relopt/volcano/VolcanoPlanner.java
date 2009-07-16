@@ -351,7 +351,8 @@ public class VolcanoPlanner
 
     public RelNode changeTraits(final RelNode rel, RelTraitSet toTraits)
     {
-        assert !rel.getTraits().equals(toTraits) : "pre: !rel.getTraits().equals(toTraits)";
+        assert !rel.getTraits().equals(toTraits)
+            : "pre: !rel.getTraits().equals(toTraits)";
 
         RelNode rel2 = ensureRegistered(rel, null);
         if (rel2.getTraits().equals(toTraits)) {
@@ -1207,7 +1208,8 @@ SUBSET_LOOP:
         RelNode rel,
         RelSet set)
     {
-        assert (rel instanceof RelSubset) || !isRegistered(rel) : "pre: rel instanceof RelSubset || !isRegistered(rel)"
+        assert (rel instanceof RelSubset) || !isRegistered(rel)
+            : "pre: rel instanceof RelSubset || !isRegistered(rel)"
             + " : {rel=" + rel + "}";
         if (rel instanceof RelSubset) {
             return registerSubset(set, (RelSubset) rel);

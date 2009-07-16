@@ -125,7 +125,8 @@ public class FarragoRelMetadataProvider
         Timestamp labelTimestamp)
     {
         String [] qualifiedName = table.getQualifiedName();
-        assert (qualifiedName.length == 3) : "qualified name did not have three parts";
+        assert qualifiedName.length == 3
+            : "qualified name did not have three parts";
         String catalogName = qualifiedName[0];
         String schemaName = qualifiedName[1];
         String tableName = qualifiedName[2];

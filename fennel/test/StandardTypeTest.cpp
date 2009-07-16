@@ -203,7 +203,8 @@ void StandardTypeTest::testStandardTypeIsExact()
 
     for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
         v = StandardTypeDescriptorOrdinal(i);
-        BOOST_MESSAGE("isExact " << i << " " << StandardTypeDescriptor::isExact(v));
+        BOOST_MESSAGE(
+            "isExact " << i << " " << StandardTypeDescriptor::isExact(v));
         if (v == STANDARD_TYPE_BOOL
             || v == STANDARD_TYPE_REAL
             || v == STANDARD_TYPE_DOUBLE

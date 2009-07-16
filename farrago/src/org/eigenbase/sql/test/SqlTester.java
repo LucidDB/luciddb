@@ -182,7 +182,8 @@ public interface SqlTester
      * Tests that a SQL expression has a given type. For example,
      *
      * <blockquote>
-     * <pre>checkType("SUBSTR('hello' FROM 1 FOR 3)", "VARCHAR(3) NOT NULL");</pre>
+     * <code>checkType("SUBSTR('hello' FROM 1 FOR 3)",
+     * "VARCHAR(3) NOT NULL");</code>
      * </blockquote>
      *
      * This method checks length/precision, scale, and whether the type allows

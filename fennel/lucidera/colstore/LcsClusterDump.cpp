@@ -204,7 +204,8 @@ void LcsClusterDump::dump(
                 fprintVal(j, pBlock + pO[j] - deltaVal, col);
             }
         }
-        callTrace("#############################################################");
+        callTrace(
+            "#############################################################");
     }
 
     // print values, dereferencing them through the header values

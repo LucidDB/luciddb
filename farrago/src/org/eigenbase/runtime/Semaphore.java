@@ -108,7 +108,8 @@ public class Semaphore
             try {
                 // Note that wait(0) means no timeout (wait forever), whereas
                 // tryAcquire(0) means don't wait
-                assert (endTime - currentTime) > 0 : "wait(0) means no timeout!";
+                assert (endTime - currentTime) > 0
+                    : "wait(0) means no timeout!";
                 wait(endTime - currentTime);
             } catch (InterruptedException e) {
             }

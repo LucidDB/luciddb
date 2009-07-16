@@ -327,8 +327,8 @@ public abstract class DdlGenerator
                     continue;
                 }
                 final String ddl = stmt.toString();
-                assert (ddl != null) && !ddl.equals("") : "Do not know how to generate DDL for "
-                    + elem.getClass();
+                assert (ddl != null) && !ddl.equals("")
+                    : "Do not know how to generate DDL for " + elem.getClass();
                 outBuf.append(ddl);
                 outBuf.append(SEP);
             } catch (RuntimeException e) {

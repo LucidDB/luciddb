@@ -1669,8 +1669,8 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             Operand [] regs)
         {
-            assert regs.length == regCount : "Wrong number of params for instruction "
-                + name;
+            assert regs.length == regCount
+                : "Wrong number of params for instruction " + name;
             builder.assertOperandsNotNull(regs);
             builder.addInstruction(this, regs);
         }
@@ -1880,8 +1880,8 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             CalcReg ... regs)
         {
-            assert this.regCount == regs.length : "Wrong number of params for instruction "
-                + name
+            assert this.regCount == regs.length
+                : "Wrong number of params for instruction " + name
                 + "; expected=" + this.regCount + " but was=" + regs.length;
             add(builder, regs, name);
         }

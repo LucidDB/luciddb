@@ -116,7 +116,8 @@ public class SqlLiteralChainOperator
         // which has a size (precision), but not a scale.
         RelDataType ret = opBinding.getOperandType(0);
         SqlTypeName typeName = ret.getSqlTypeName();
-        assert (typeName.allowsPrecNoScale()) : "LiteralChain has impossible operand type "
+        assert typeName.allowsPrecNoScale()
+            : "LiteralChain has impossible operand type "
             + typeName;
         int size = 0;
         RelDataType [] types = opBinding.collectOperandTypes();

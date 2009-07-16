@@ -102,7 +102,8 @@ abstract public class FennelTupleResultSet
         accessor = new FennelTupleAccessor(tupleAlignment);
         accessor.compute(desc, FennelTupleAccessor.TUPLE_FORMAT_NETWORK);
         data = new FennelTupleData(desc);
-        assert (data.getDatumCount() == accessor.size()) : "ResultSet metadata mismatch";
+        assert data.getDatumCount() == accessor.size()
+            : "ResultSet metadata mismatch";
         tupleComputed = true;
         return true;
     }

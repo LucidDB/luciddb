@@ -373,8 +373,10 @@ public class FarragoStatsUtil
 
         // note: the first bar should be at least 1
         if (barCount > 0) {
-            assert (valueCounts.get(0) >= 1) : "first histogram bar must be at least 1";
-            assert (remaining == 0) : "generated histogram bars had remaining distinct values";
+            assert valueCounts.get(0) >= 1
+                : "first histogram bar must be at least 1";
+            assert remaining == 0
+                : "generated histogram bars had remaining distinct values";
         }
 
         return valueCounts;

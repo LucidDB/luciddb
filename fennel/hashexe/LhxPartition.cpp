@@ -1100,9 +1100,12 @@ string LhxPlan::toString()
 
     for (uint i = 0; i < partitions.size(); i ++) {
         planTrace << "[Partition(" << i << ")]\n"
-                  << "[       inputIndex     = " << partitions[i]->inputIndex << "]\n"
-                  << "[       join side      = " << getJoinSide(partitions[i]->inputIndex) << "]\n"
-                  << "[       filteredRows   = " << filteredRowCount[i] << "]\n"
+                  << "[       inputIndex     = " << partitions[i]->inputIndex
+                  << "]\n"
+                  << "[       join side      = "
+                  << getJoinSide(partitions[i]->inputIndex) << "]\n"
+                  << "[       filteredRows   = " << filteredRowCount[i]
+                  << "]\n"
                   << "[       inputSize      = " << inputSize[i] << "]\n";
         planTrace << "[       childPartSize  = ";
         if (childPartSize.size() > i) {

@@ -70,8 +70,8 @@ public class BitString
         String bits,
         int bitCount)
     {
-        assert bits.replaceAll("1", "").replaceAll("0", "").length() == 0 : "bit string '"
-            + bits + "' contains digits other than {0, 1}";
+        assert bits.replaceAll("1", "").replaceAll("0", "").length() == 0
+            : "bit string '" + bits + "' contains digits other than {0, 1}";
         this.bits = bits;
         this.bitCount = bitCount;
     }
