@@ -14,7 +14,7 @@ http://www.luciddb.org
 ----------------------------------------------------------------------
 BUILD
 
-See farrago/doc/developerJumpStart.html, which includes instructions
+See http://pub.eigenbase.org/wiki/FarragoBuild, which includes instructions
 for how to build the two sub-project frameworks (Farrago and Fennel)
 together.
 
