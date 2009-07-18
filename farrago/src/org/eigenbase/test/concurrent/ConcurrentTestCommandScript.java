@@ -681,7 +681,8 @@ public class ConcurrentTestCommandScript
             if (isDefined(sym)) {
                 throw new Excn("second declaration of variable " + sym);
             }
-            map.put(sym, val);
+            // convert a null val to a null string
+            map.put(sym, (val == null ? "" : val));
         }
 
         // returns null is SYM is not defined
