@@ -27,11 +27,15 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+using std::string;
+using std::ostream;
+using std::endl;
+
 ExecStreamGovernor::ExecStreamGovernor(
     ExecStreamResourceKnobs const &knobSettingsInit,
     ExecStreamResourceQuantity const &resourcesAvailableInit,
     SharedTraceTarget pTraceTargetInit,
-    std::string nameInit)
+    string nameInit)
     : TraceSource(pTraceTargetInit, nameInit)
 {
     knobSettings.cacheReservePercentage =
@@ -45,15 +49,26 @@ ExecStreamGovernor::ExecStreamGovernor(
     resourcesAssigned.nCachePages = 0;
 }
 
+inline ostream& operator<< (ostream& os, const ExecStreamGovernor& gov)
+{
+    gov.print(os);
+    return os;
+}
+
 ExecStreamGovernor::~ExecStreamGovernor()
 {
-    assert(resourceMap.empty());
+    if (!resourceMap.empty()) {
+        FENNEL_TRACE(
+            TRACE_SEVERE,
+            "ExecStreamGovernor deleted still holding resources; " << *this);
+        assert(false);
+    }
 }
 
 void ExecStreamGovernor::traceCachePageRequest(
     uint assigned,
     ExecStreamResourceRequirements const &reqt,
-    std::string const &name)
+    string const &name)
 {
     switch (reqt.optType) {
     case EXEC_RESOURCE_ACCURATE:
@@ -94,6 +109,54 @@ void ExecStreamGovernor::writeStats(StatsTarget &target)
     target.writeCounter(
         "CachePagesReserved",
         resourcesAssigned.nCachePages);
+}
+
+inline ostream& operator<< (ostream& os, const ExecStreamResourceKnobs& k)
+{
+    os << " expectedConcurrentStatements=" << k.expectedConcurrentStatements;
+    os << " cacheReservePercentage=" << k.cacheReservePercentage;
+    return os;
+}
+
+inline ostream& operator<< (ostream& os, const ExecStreamResourceQuantity& q)
+{
+    os << " nThreads=" << q.nThreads;
+    os << " nCachePages=" << q.nCachePages;
+    return os;
+}
+
+inline ostream& operator<< (ostream& os, const ExecStreamResourceType t)
+{
+    switch (t) {
+    case EXEC_RESOURCE_THREADS:
+        return os << "threads";
+    case EXEC_RESOURCE_CACHE_PAGES:
+        return os << "cache pages";
+    default:
+        return os << "??";
+    }
+}
+
+inline ostream& operator<< (
+    ostream& os, const ExecStreamResourceRequirements& req)
+{
+    os << req.optType << " min=" << req.minReqt << " opt=" << req.optReqt;
+    return os;
+}
+
+void ExecStreamGovernor::print(ostream& os) const
+{
+    os << "knobs: " << knobSettings << endl;
+    os << "resources available: " << resourcesAvailable << endl;
+    os << "resources assigned:  " << resourcesAssigned << endl;
+    os << "resource map: {" << endl;
+    for (ExecStreamGraphResourceMap::const_iterator
+             p = resourceMap.begin(); p != resourceMap.end(); ++p)
+    {
+        os << "  stream graph " << p->first
+           << " => (" << *(p->second) << ")" << endl;
+    }
+    os << "}" << endl;
 }
 
 FENNEL_END_CPPFILE("$Id$");
