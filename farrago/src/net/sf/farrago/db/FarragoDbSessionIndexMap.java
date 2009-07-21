@@ -87,12 +87,10 @@ class FarragoDbSessionIndexMap
         this.repos = repos;
         tempIndexRootMap = new HashMap<String, Long>();
         owner.addAllocation(this);
-
         privateDataWrapperCache =
-            new FarragoDataWrapperCache(
+            dbSession.newFarragoDataWrapperCache(
                 this,
                 dbSession.getDatabase().getDataWrapperCache(),
-                dbSession.getDatabase().getPluginClassLoader(),
                 repos,
                 dbSession.getDatabase().getFennelDbHandle(),
                 null);

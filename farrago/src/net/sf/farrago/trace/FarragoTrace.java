@@ -283,6 +283,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.namespace.FarragoMedJdbc" traces the built-in
+     * plugin FarragoMedJdbc.jar, which supports SQL/MED access via jdbc.
+     */
+    public static Logger getFarragoMedJdbcTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.namespace.FarragoMedJdbc");
+    }
+
+    /**
      * Gets the logger to be used for tracing a particular class.
      *
      * @param clazz the class to trace

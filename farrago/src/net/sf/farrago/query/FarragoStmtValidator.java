@@ -137,10 +137,9 @@ public class FarragoStmtValidator
                 (FarragoTypeFactory) session.getPersonality().newTypeFactory(
                     repos);
             dataWrapperCache =
-                new FarragoDataWrapperCache(
+                session.newFarragoDataWrapperCache(
                     this,
                     sharedDataWrapperCache,
-                    session.getPluginClassLoader(),
                     repos,
                     fennelDbHandle,
                     new FarragoSessionDataSource(session));

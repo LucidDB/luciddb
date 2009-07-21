@@ -23,13 +23,14 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
-
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.trace.FarragoTrace;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -48,9 +49,12 @@ import org.eigenbase.sql.type.*;
 public class MedJdbcNameDirectory
     extends MedAbstractNameDirectory
 {
+    final protected static Logger tracer =
+        FarragoTrace.getFarragoMedJdbcTracer();
+
     //~ Instance fields --------------------------------------------------------
 
-    final MedJdbcDataServer server;
+    final protected MedJdbcDataServer server;
 
     String schemaName;
 
@@ -105,6 +109,7 @@ public class MedJdbcNameDirectory
         return lookupColumnSetAndImposeType(
             typeFactory,
             foreignName,
+            null,
             localName,
             null,
             false);
@@ -128,6 +133,7 @@ public class MedJdbcNameDirectory
     FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String foreignName,
+        Properties foreignTableProps,   // may add nuance to foreignName
         String [] localName,
         RelDataType rowType,
         boolean tableAlreadyMapped)
@@ -226,21 +232,11 @@ public class MedJdbcNameDirectory
 
         SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
         SqlSelect select =
-            SqlStdOperatorTable.selectOperator.createCall(
-                null,
-                new SqlNodeList(
-                    Collections.singletonList(
-                        new SqlIdentifier("*", SqlParserPos.ZERO)),
-                    SqlParserPos.ZERO),
-                new SqlIdentifier(foreignQualifiedName, SqlParserPos.ZERO),
-                null,
-                null,
-                null,
-                null,
-                null,
-                SqlParserPos.ZERO);
+            newSelectStarQuery(foreignQualifiedName, foreignTableProps);
 
         if (server.skipTypeCheck && (rowType != null)) {
+            // tolerant mode:
+            // skip type check when row type already defined in catalog
             origRowType = rowType;
             mdRowType = rowType;
             return new MedJdbcColumnSet(
@@ -254,8 +250,12 @@ public class MedJdbcNameDirectory
                 mdRowType);
         }
 
+        // fetch row type from foreign server
         String sql = select.toSqlString(dialect);
         sql = normalizeQueryString(sql);
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine("get foreign table metadata using " + sql);
+        }
 
         PreparedStatement ps = null;
         try {
@@ -319,22 +319,11 @@ public class MedJdbcNameDirectory
 
                     // push down projections, if any
                     if (projList.size() > 0) {
-                        select =
-                            SqlStdOperatorTable.selectOperator.createCall(
-                                null,
-                                new SqlNodeList(
-                                    Collections.unmodifiableList(
-                                        projList),
-                                    SqlParserPos.ZERO),
-                                new SqlIdentifier(
-                                    foreignQualifiedName,
-                                    SqlParserPos.ZERO),
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                SqlParserPos.ZERO);
+                        select = createSelectNode(
+                            new SqlNodeList(
+                                Collections.unmodifiableList(projList),
+                                SqlParserPos.ZERO),
+                            foreignQualifiedName);
                     }
                 } else {
                     // Server is strict: make sure the inferred
@@ -364,6 +353,37 @@ public class MedJdbcNameDirectory
             origRowType,
             mdRowType);
     }
+
+    protected SqlSelect
+        newSelectStarQuery(String[] qualifiedName, Properties tableProps)
+        throws SQLException
+    {
+        return createSelectNode(
+            new SqlNodeList(
+                Collections.singletonList(
+                    new SqlIdentifier("*", SqlParserPos.ZERO)),
+                SqlParserPos.ZERO),
+            qualifiedName);
+    }
+
+    protected SqlSelect
+        createSelectNode(SqlNodeList selectList, String[] foreignQualifiedName)
+        throws SQLException
+    {
+        SqlSelect select =
+            SqlStdOperatorTable.selectOperator.createCall(
+                null,
+                selectList,
+                new SqlIdentifier(foreignQualifiedName, SqlParserPos.ZERO),
+                null,
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
+        return select;
+    }
+
 
     String normalizeQueryString(String sql)
     {

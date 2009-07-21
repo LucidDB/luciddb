@@ -59,7 +59,7 @@ public class FarragoMdrTestContext
 {
     //~ Instance fields --------------------------------------------------------
 
-    private FarragoSession session;
+    private FarragoDbSession session;
     private FarragoDatabase db;
     private FarragoObjectCache objCache;
     private FarragoDataWrapperCache wrapperCache;
@@ -75,8 +75,8 @@ public class FarragoMdrTestContext
     public void init(String foreignServerName)
         throws Exception
     {
-        session = FarragoUdrRuntime.getSession();
-        db = ((FarragoDbSession) session).getDatabase();
+        session = (FarragoDbSession) FarragoUdrRuntime.getSession();
+        db = session.getDatabase();
         if (foreignServerName == null) {
             mdrRepos = db.getSystemRepos().getMdrRepos();
             modelGraph = db.getSystemRepos().getModelGraph();
@@ -85,10 +85,9 @@ public class FarragoMdrTestContext
         }
         objCache = db.getDataWrapperCache();
         wrapperCache =
-            new FarragoDataWrapperCache(
+            session.newFarragoDataWrapperCache(
                 this,
                 objCache,
-                db.getPluginClassLoader(),
                 session.getRepos(),
                 db.getFennelDbHandle(),
                 null);

@@ -264,8 +264,7 @@ public class MedJdbcForeignDataWrapper
         }
         Properties chainedProps = new Properties(getProperties());
         chainedProps.putAll(props);
-        MedJdbcDataServer server =
-            new MedJdbcDataServer(serverMofId, chainedProps);
+        MedJdbcDataServer server = newServerImpl(serverMofId, chainedProps);
         boolean success = false;
         try {
             server.initialize();
@@ -277,6 +276,15 @@ public class MedJdbcForeignDataWrapper
             }
         }
     }
+
+    protected MedJdbcDataServer newServerImpl(
+        String serverMofId, Properties chainedProps)
+    {
+        MedJdbcDataServer server =
+            new MedJdbcDataServer(serverMofId, chainedProps);
+        return server;
+    }
+
 }
 
 // End MedJdbcForeignDataWrapper.java

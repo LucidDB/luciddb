@@ -188,7 +188,7 @@ public class MedJdbcDataServer
     // Prepare-time connection and metadata
     private Connection connection;
     protected boolean supportsMetaData;
-    private DatabaseMetaData databaseMetaData;
+    public  DatabaseMetaData databaseMetaData;
 
     /*
      * When set to true, MedJdbcDataServer behaves as it did prior to the
@@ -200,12 +200,13 @@ public class MedJdbcDataServer
      * If {@link #disableConnectionPool} is true, used to determine when to
      * re-validate the connection.
      */
-    private boolean validateConnection = false;
+    protected boolean validateConnection = false;
 
     protected String catalogName;
     protected String schemaName;
     protected String [] tableTypes;
     protected String loginTimeout;
+
     protected String validationQuery;
     private boolean validateOnBorrow;
     private boolean validateOnReturn;
@@ -853,14 +854,21 @@ public class MedJdbcDataServer
             requireProperty(tableProps, PROP_TABLE_NAME);
             tableName = tableProps.getProperty(PROP_TABLE_NAME);
         }
-        MedJdbcNameDirectory directory =
-            new MedJdbcNameDirectory(this, tableSchemaName);
+        MedJdbcNameDirectory directory = newNameDirectory(tableSchemaName);
         return directory.lookupColumnSetAndImposeType(
             typeFactory,
             tableName,
+            tableProps,
             localName,
             rowType,
             true);
+    }
+
+    protected MedJdbcNameDirectory newNameDirectory(String tableSchemaName)
+    {
+        MedJdbcNameDirectory directory =
+            new MedJdbcNameDirectory(this, tableSchemaName);
+        return directory;
     }
 
     // implement FarragoMedDataServer
