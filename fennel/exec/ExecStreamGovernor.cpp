@@ -61,7 +61,9 @@ ExecStreamGovernor::~ExecStreamGovernor()
         FENNEL_TRACE(
             TRACE_SEVERE,
             "ExecStreamGovernor deleted still holding resources; " << *this);
-        assert(false);
+        // REVIEW mb 7/09: this resource leak is not an irrecoverable condition,
+        // so do not abort,
+        // assert(false);
     }
 }
 
