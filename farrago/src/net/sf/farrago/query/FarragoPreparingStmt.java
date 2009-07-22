@@ -1578,6 +1578,13 @@ public class FarragoPreparingStmt
         return new Variable(connectionVariable);
     }
 
+    public TypeName getResultSetTupleIterTypeName()
+    {
+        return TypeName.forOJClass(
+            OJClass.forClass(
+                org.eigenbase.runtime.ResultSetTupleIter.class));
+    }
+
     // override OJPreparingStmt
     protected String getCompilerClassName()
     {
@@ -1594,11 +1601,7 @@ public class FarragoPreparingStmt
     protected boolean shouldAlwaysWriteJavaFile()
     {
         Level dynamicLevel = dynamicTracer.getLevel();
-        if ((dynamicLevel == null) || !dynamicTracer.isLoggable(Level.FINE)) {
-            return false;
-        } else {
-            return true;
-        }
+        return (dynamicLevel != null && dynamicTracer.isLoggable(Level.FINE));
     }
 
     protected File getPackageDir()

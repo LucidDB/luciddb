@@ -22,11 +22,13 @@
 package net.sf.farrago.runtime;
 
 import java.nio.*;
+import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.runtime.*;
 
+import net.sf.farrago.trace.FarragoTrace;
 
 /**
  * FarragoTransformImpl provides a base class for generated implementations of
@@ -38,6 +40,10 @@ import org.eigenbase.runtime.*;
 public abstract class FarragoTransformImpl
     implements FarragoTransform
 {
+    //~ Class fields --------------------------------------------------------
+    protected static final Logger tracer =
+        FarragoTrace.getFarragoTransformTracer();
+
     //~ Instance fields --------------------------------------------------------
 
     private TupleIter tupleIter;
@@ -53,6 +59,10 @@ public abstract class FarragoTransformImpl
      * may pass <code>null</code> for <code>tupleWriter</code> or <code>
      * tupleIter</code> iff it has a different way to read or write its data and
      * iff it overrides {@link #execute} and {@link #restart} as appropriate.
+     *
+     * <code>tupleWriter</code> or <code>tupleIter</code> iff it has a different
+     * way to read or write its data and iff it overrides {@link #execute} and
+     * {@link #restart} as appropriate.
      *
      * @param tupleWriter FennelTupleWriter that can marshal this transform's
      * output tuple format.
@@ -73,9 +83,13 @@ public abstract class FarragoTransformImpl
         return tupleIter;
     }
 
-    public void setInputFetchTimeout(long msec)
+    /**
+     * exposes {@link org.eigenbase.runtime.TupleIter#setTimeout}, to avoid blocking
+     * JavaTransformExecStream
+     */
+    public void setInputFetchTimeout(long timeout)
     {
-        tupleIter.setTimeout(msec, true);
+        tupleIter.setTimeout(timeout, true);
     }
 
     /**
@@ -100,8 +114,10 @@ public abstract class FarragoTransformImpl
             Object o = tupleIter.fetchNext();
 
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                tracer.finer("end of data");
                 return 0;
             } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                tracer.finer("underflow");
                 return -1;
             }
 
@@ -137,6 +153,7 @@ public abstract class FarragoTransformImpl
             }
 
             Object o = tupleIter.fetchNext();
+            tracer.log(Level.FINEST, "wrote row {0}", o);
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 // Will return 0 on next call to this method -- we've already
                 // marshaled at least one tuple that we need to return.
@@ -151,6 +168,7 @@ public abstract class FarragoTransformImpl
             next = o;
         }
 
+        tracer.log(Level.FINER, "wrote {0} rows", tupleCount);
         outputBuffer.flip();
         return outputBuffer.limit();
     }

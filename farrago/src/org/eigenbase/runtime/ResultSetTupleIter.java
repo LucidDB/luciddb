@@ -35,8 +35,9 @@ public class ResultSetTupleIter
     //~ Instance fields --------------------------------------------------------
 
     protected ResultSet resultSet;
-    private Object row;
-    private boolean endOfStream;
+    protected boolean endOfStream;
+    protected boolean underflow;
+    protected Object row;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -46,25 +47,41 @@ public class ResultSetTupleIter
         // this constructor, since subclasses aren't initialized yet.  Now
         // it follows the same pattern as CalcTupleIter.
         this.resultSet = resultSet;
-        endOfStream = false;
+        underflow = endOfStream = false;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public Object fetchNext()
     {
-        // If restart() is called, row may be non-null upon entry to this
-        // method.
-        if (row == null) {
-            moveToNext();
-            if (endOfStream) {
-                return NoDataReason.END_OF_DATA;
-            }
+        underflow = false;              // trying again
+        // here row may not be null, after restart()
+        if (row == null && !endOfStream) {
+            row = getNextRow();
         }
-
+        if (endOfStream) {
+            return NoDataReason.END_OF_DATA;
+        } else if (underflow) {
+            return NoDataReason.UNDERFLOW;
+        }
         Object result = row;
         row = null;
         return result;
+    }
+
+    protected Object getNextRow() throws TimeoutException
+    {
+        try {
+            if (resultSet.next()) {
+                return makeRow();
+            } else {
+                // remember EOS, some ResultSet impls dislike an extra next()
+                endOfStream = true;
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void restart()
@@ -98,24 +115,6 @@ public class ResultSetTupleIter
         return new Row(resultSet);
     }
 
-    private void moveToNext()
-    {
-        try {
-            if (endOfStream) {
-                return;
-            }
-            if (resultSet.next()) {
-                row = makeRow();
-            } else {
-                // record endOfStream since some ResultSet implementations don't
-                // like extra calls to next() after it returns false
-                endOfStream = true;
-                row = null;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
 
 // End ResultSetTupleIter.java

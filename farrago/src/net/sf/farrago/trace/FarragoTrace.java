@@ -149,6 +149,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.runtime.FarragoTransform" traces instances of
+     * {@link FarragoTransform}.
+     */
+    public static Logger getFarragoTransformTracer()
+    {
+        return getClassTracer(FarragoTransform.class);
+    }
+
+    /**
      * The tracer "net.sf.farrago.test.FarragoTestCase" controls tracing during
      * regression tests.
      *

@@ -114,9 +114,9 @@ class ResultSetToFarragoIteratorConverter
                 TypeName.forOJClass(OJUtil.clazzResultSet),
                 varResultSet);
 
-        RelDataType rowType = getRowType();
-        FarragoTypeFactory factory =
-            farragoImplementor.getPreparingStmt().getFarragoTypeFactory();
+        final FarragoPreparingStmt stmt = farragoImplementor.getPreparingStmt();
+        final FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
+        final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         JavaRexBuilder javaRexBuilder =
@@ -169,8 +169,6 @@ class ResultSetToFarragoIteratorConverter
             if ((type.getSqlTypeName() == SqlTypeName.DECIMAL)
                 && (type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION))
             {
-                FarragoPreparingStmt stmt =
-                    FarragoRelUtil.getPreparingStmt(this);
                 narrow =
                     stmt.getSession().getSessionVariables().getBoolean(
                         FarragoDefaultSessionPersonality.SQUEEZE_JDBC_NUMERIC);
@@ -251,8 +249,7 @@ class ResultSetToFarragoIteratorConverter
                 methodBody));
 
         return new AllocationExpression(
-            TypeName.forOJClass(
-                OJClass.forClass(ResultSetTupleIter.class)),
+            stmt.getResultSetTupleIterTypeName(),
             new ExpressionList(
                 new CastExpression(
                     TypeName.forOJClass(OJUtil.clazzResultSet),
