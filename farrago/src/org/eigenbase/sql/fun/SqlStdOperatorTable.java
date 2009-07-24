@@ -1172,6 +1172,19 @@ public class SqlStdOperatorTable
         new SqlCurrentDateFunction();
 
     /**
+     * Use of the <code>IN_FENNEL<code> forces argument to be evaluated in
+     * Fennel. Otherwise acts as identity function.
+     */
+    public static final SqlFunction inFennelFunc =
+        new SqlMonotonicUnaryFunction(
+            "IN_FENNEL",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiFirstArgType,
+            null,
+            SqlTypeStrategies.otcAny,
+            SqlFunctionCategory.System);
+
+    /**
      * The SQL <code>CAST</code> operator.
      *
      * <p>The SQL syntax is

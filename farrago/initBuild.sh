@@ -26,6 +26,7 @@
 usage() {
     echo "Usage:  initBuild.sh"
     echo "           --with[out]-fennel (required)"
+    echo "           [--verbose]"
     echo "           [--with[out]-optimization] (default without)"
     echo "           [--with[out]-debug] (default with)"
     echo "           [--without-fennel[-thirdparty]-build] (default w/both)"
@@ -47,6 +48,7 @@ fennel_disabled=missing
 fennel_skip_build=false
 skip_tests=true
 with_nightly_tests=false
+verbose=false
 repos_type="switchToDefaultReposStorage"
 
 # extended globbing for case statement
@@ -54,6 +56,7 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
+        --verbose) verbose=true;;
         --with-fennel) fennel_disabled=false;;
         --without-fennel) fennel_disabled=true;;
         --with?(out)-optimization) OPT_FLAG="$1";;
@@ -116,6 +119,9 @@ if $with_nightly_tests ; then
     run_ant="ant -keep-going"
 else
     run_ant="ant"
+fi
+if $verbose; then
+    run_ant="${run_ant} -v"
 fi
 
 # Blow away obsolete Farrago build properties file

@@ -4,6 +4,11 @@
 set schema 'sales';
 !set outputformat csv
 
+-- force usage of Fennel calculator for single expression
+explain plan for
+select lower(name), IN_FENNEL(empid + 1)
+from sales.emps;
+
 -- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
