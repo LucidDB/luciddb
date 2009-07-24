@@ -192,12 +192,10 @@ public class FennelCalcRel
             new RelFieldCollation[retList.size()]);
     }
 
-    // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
+    // for toStreamDef():
+    protected void fillStreamDef(
+       FemCalcTupleStreamDef calcStream, FennelRelImplementor implementor)
     {
-        FemCalcTupleStreamDef calcStream =
-            implementor.getRepos().newFemCalcTupleStreamDef();
-
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             calcStream);
@@ -221,6 +219,14 @@ public class FennelCalcRel
             dynamicParamUse.setDynamicParamId(dynamicParamId);
             calcStream.getDynamicParamUse().add(dynamicParamUse);
         }
+    }
+
+    // implement FennelRel
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
+    {
+        FemCalcTupleStreamDef calcStream =
+            implementor.getRepos().newFemCalcTupleStreamDef();
+        fillStreamDef(calcStream, implementor);
         return calcStream;
     }
 }

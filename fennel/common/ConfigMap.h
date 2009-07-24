@@ -115,6 +115,20 @@ public:
         std::string paramName,
         long defaultVal = 0) const;
 
+
+    /**
+     * Gets the value of a double-typed parameter.
+     *
+     * @param paramName name of the parameter
+     *
+     * @param defaultVal the default value to return if the parameter is not set
+     *
+     * @return the parameter value
+     */
+    double getDoubleParam(
+        std::string paramName,
+        double defaultVal = 0) const;
+
     /**
      * Gets the value of an boolean-typed parameter.
      *

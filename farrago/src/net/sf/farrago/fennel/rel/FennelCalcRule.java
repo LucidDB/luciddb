@@ -55,13 +55,21 @@ public class FennelCalcRule
     /**
      * Creates a new FennelCalcRule object.
      */
-    private FennelCalcRule()
+    protected FennelCalcRule()
+    {
+        this("FennelCalcRule");
+    }
+
+    /**
+     * Creates a new FennelCalcRule object.
+     */
+    protected FennelCalcRule(String description)
     {
         super(
             CalcRel.class,
             CallingConvention.NONE,
             FennelRel.FENNEL_EXEC_CONVENTION,
-            "FennelCalcRule");
+            description);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -98,13 +106,17 @@ public class FennelCalcRule
             return null;
         }
 
-        FennelCalcRel fennelCalcRel =
-            new FennelCalcRel(
-                calc.getCluster(),
-                fennelInput,
-                calc.getRowType(),
-                calc.getProgram());
-        return fennelCalcRel;
+        return newFennelCalcRel(calc, fennelInput);
+    }
+
+    /** FennelRel factory method */
+    protected FennelCalcRel newFennelCalcRel(CalcRel calc, RelNode fennelInput)
+    {
+        return new FennelCalcRel(
+            calc.getCluster(),
+            fennelInput,
+            calc.getRowType(),
+            calc.getProgram());
     }
 }
 
