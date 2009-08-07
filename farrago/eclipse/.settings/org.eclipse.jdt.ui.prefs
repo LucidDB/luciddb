@@ -1,0 +1,8 @@
+#Fri Jul 31 11:47:01 GMT-08:00 2009
+eclipse.preferences.version=1
+formatter_profile=_Eigenbase
+formatter_settings_version=11
+org.eclipse.jdt.ui.ignorelowercasenames=true
+org.eclipse.jdt.ui.importorder=java;javax;org;com;
+org.eclipse.jdt.ui.ondemandthreshold=0
+org.eclipse.jdt.ui.staticondemandthreshold=99
