@@ -8,7 +8,7 @@ http://farrago.sourceforge.net
 ----------------------------------------------------------------------
 BUILD
 
-See doc/developerJumpStart.html
+http://pub.eigenbase.org/wiki/FarragoBuild
 
 If instead of building you would like to obtain pre-packaged binaries,
 download the full Eigenbase binary release for your platform.
