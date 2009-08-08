@@ -32,6 +32,7 @@ import javax.jmi.reflect.*;
 
 import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
+import javax.sql.DataSource;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
@@ -47,6 +48,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.relopt.*;
@@ -484,6 +486,7 @@ public class FarragoDbSession
             getDatabase().getDdlLockManager());
     }
 
+
     // implement FarragoSession
     public synchronized FarragoSessionPrivilegeChecker newPrivilegeChecker()
     {
@@ -871,6 +874,24 @@ public class FarragoDbSession
         FarragoSessionIndexMap sessionIndexMap)
     {
         this.sessionIndexMap = sessionIndexMap;
+    }
+
+
+    // implement FarragoSession
+    public FarragoDataWrapperCache newFarragoDataWrapperCache(
+        FarragoAllocationOwner owner,
+        FarragoObjectCache sharedCache,
+        FarragoRepos repos,
+        FennelDbHandle fennelDbHandle,
+        DataSource loopbackDataSource)
+    {
+        return new FarragoDataWrapperCache(
+            owner,
+            sharedCache,
+            getPluginClassLoader(),
+            repos,
+            fennelDbHandle,
+            loopbackDataSource);
     }
 
     Map<String, FarragoObjectCache.Entry> getTxnCodeCache()

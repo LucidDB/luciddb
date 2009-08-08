@@ -132,44 +132,43 @@ public class FarragoRuntimeContext
      */
     public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
-        this.session = params.session;
-        this.repos = params.repos;
-        this.codeCache = params.codeCache;
-        this.txnCodeCache = params.txnCodeCache;
-        this.fennelTxnContext = params.fennelTxnContext;
-        this.indexMap = params.indexMap;
-        this.dynamicParamValues = params.dynamicParamValues;
-        this.sessionVariables = params.sessionVariables;
-        this.streamFactoryProvider = params.streamFactoryProvider;
-        this.isDml = params.isDml;
-        this.resultSetTypeMap = params.resultSetTypeMap;
-        this.stmtId = params.stmtId;
-        this.currentTime = params.currentTime;
+        session = params.session;
+        repos = params.repos;
+        codeCache = params.codeCache;
+        txnCodeCache = params.txnCodeCache;
+        fennelTxnContext = params.fennelTxnContext;
+        indexMap = params.indexMap;
+        dynamicParamValues = params.dynamicParamValues;
+        sessionVariables = params.sessionVariables;
+        streamFactoryProvider = params.streamFactoryProvider;
+        isDml = params.isDml;
+        resultSetTypeMap = params.resultSetTypeMap;
+        stmtId = params.stmtId;
+        currentTime = params.currentTime;
 
         if (params.warningQueue == null) {
             params.warningQueue = new FarragoWarningQueue();
         }
-        this.warningQueue = params.warningQueue;
-
+        warningQueue = params.warningQueue;
         cursorMonitor = new Object();
+        streamOwner = new StreamOwner();
 
         FarragoPluginClassLoader classLoader;
+        FarragoSessionDataSource dataSource;
         if (session != null) {
             classLoader = session.getPluginClassLoader();
+            dataSource = new FarragoSessionDataSource(session);
         } else {
             statementClassLoader = classLoader = params.pluginClassLoader;
+            dataSource = null;
         }
-
-        dataWrapperCache =
-            new FarragoDataWrapperCache(
-                this,
-                params.sharedDataWrapperCache,
-                classLoader,
-                params.repos,
-                params.fennelTxnContext.getFennelDbHandle(),
-                (session != null) ? new FarragoSessionDataSource(session)
-                : null);
-        streamOwner = new StreamOwner();
+        dataWrapperCache = newDataWrapperCache(
+            this,
+            params.sharedDataWrapperCache,
+            classLoader,
+            params.repos,
+            params.fennelTxnContext.getFennelDbHandle(),
+            dataSource);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -1102,7 +1101,6 @@ public class FarragoRuntimeContext
                     true,
                     statementClassLoader);
             }
-
             return statementClassLoader.loadClass(statementClassName);
         } catch (ClassNotFoundException e) {
             tracer.log(
@@ -1295,6 +1293,19 @@ public class FarragoRuntimeContext
             msg,
             byteBuffer,
             index);
+    }
+
+    protected FarragoDataWrapperCache newDataWrapperCache(
+        FarragoAllocationOwner owner,
+        FarragoObjectCache sharedCache,
+        FarragoPluginClassLoader classLoader,
+        FarragoRepos repos,
+        FennelDbHandle fennelDbHandle,
+        FarragoSessionDataSource loopbackDataSource)
+    {
+        return new FarragoDataWrapperCache(
+            owner, sharedCache, classLoader, repos,
+            fennelDbHandle, loopbackDataSource);
     }
 
     /**

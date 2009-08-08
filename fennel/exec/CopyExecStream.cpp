@@ -42,39 +42,34 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
     uint cbAvailableIn = pInAccessor->getConsumptionAvailable();
     uint cbAvailableOut = pOutAccessor->getProductionAvailable();
 
-    PConstBuffer pSrc = pInAccessor->getConsumptionStart();
-    PBuffer pDst = pOutAccessor->getProductionStart();
 
     if (cbAvailableOut < cbAvailableIn) {
-        // In a non-DFS scheduler, the first call to this XO may be made before
-        // the first call to its consumer. If so, the consumer may not have
-        // allocated its buffer; punt until it has.
-        if (cbAvailableOut == 0 && pOutAccessor->getState() == EXECBUF_EMPTY) {
-            return EXECRC_BUF_OVERFLOW;
-        }
-        // oops, impedance mismatch:  have to figure out how many
-        // complete tuples we can safely copy without overflow
+        // With a DFS scheduler, the consumer must have room.
+        // With a non-DFS scheduler, there may be no consumer buffer yet, or a
+        // buffer too full to accept all (or any) of the input. Always copy
+        // entire rows.
         cbAvailableIn =
             pInAccessor->getConsumptionAvailableBounded(cbAvailableOut);
-        permAssert(cbAvailableIn > 0);
     } else {
         rc = EXECRC_BUF_UNDERFLOW;
     }
 
-    memcpy(pDst, pSrc, cbAvailableIn);
-    pInAccessor->consumeData(pSrc + cbAvailableIn);
-    pOutAccessor->produceData(pDst + cbAvailableIn);
-
-    // we can't use whatever's left in output buffer, so tell consumer
-    // to give us a fresh one next time
-    pOutAccessor->requestConsumption();
+    if (cbAvailableIn > 0) {
+        PConstBuffer pSrc = pInAccessor->getConsumptionStart();
+        PBuffer pDst = pOutAccessor->getProductionStart();
+        memcpy(pDst, pSrc, cbAvailableIn);
+        pInAccessor->consumeData(pSrc + cbAvailableIn);
+        pOutAccessor->produceData(pDst + cbAvailableIn);
+        // we can't use whatever's left in output buffer, so tell consumer
+        // to give us a fresh one next time
+        pOutAccessor->requestConsumption();
+    }
 
     if ((rc == EXECRC_BUF_UNDERFLOW)
         && (pInAccessor->getState() != EXECBUF_EOS))
     {
         pInAccessor->requestProduction();
     }
-
     return EXECRC_BUF_OVERFLOW;
 }
 
@@ -82,6 +77,10 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
 // once it exists
 uint ExecStreamBufAccessor::getConsumptionAvailableBounded(uint cbLimit)
 {
+    if (cbLimit == 0) {
+        return 0;
+    }
+
     uint cbAvailable = getConsumptionAvailable();
     if (cbAvailable <= cbLimit) {
         return cbAvailable;

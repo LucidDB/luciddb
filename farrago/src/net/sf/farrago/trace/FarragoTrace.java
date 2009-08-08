@@ -149,6 +149,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.runtime.FarragoTransform" traces instances of
+     * {@link FarragoTransform}.
+     */
+    public static Logger getFarragoTransformTracer()
+    {
+        return getClassTracer(FarragoTransform.class);
+    }
+
+    /**
      * The tracer "net.sf.farrago.test.FarragoTestCase" controls tracing during
      * regression tests.
      *
@@ -280,6 +289,15 @@ public abstract class FarragoTrace
     public static Logger getSyslibTracer()
     {
         return Logger.getLogger("net.sf.farrago.syslib");
+    }
+
+    /**
+     * The tracer "net.sf.farrago.namespace.FarragoMedJdbc" traces the built-in
+     * plugin FarragoMedJdbc.jar, which supports SQL/MED access via jdbc.
+     */
+    public static Logger getFarragoMedJdbcTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.namespace.FarragoMedJdbc");
     }
 
     /**

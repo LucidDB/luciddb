@@ -171,6 +171,19 @@ long ConfigMap::getLongParam(
     }
 }
 
+double ConfigMap::getDoubleParam(
+    std::string paramName,
+    double defaultVal) const
+{
+    StringMapConstIter pPair = paramVals.find(paramName);
+    if (pPair == paramVals.end()) {
+        return defaultVal;
+    } else {
+        return strtod(pPair->second.c_str(), NULL);
+    }
+}
+
+
 bool ConfigMap::isParamSet(std::string paramName) const
 {
     return paramVals.find(paramName) != paramVals.end();

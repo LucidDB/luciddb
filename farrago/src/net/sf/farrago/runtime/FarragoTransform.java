@@ -71,7 +71,7 @@ public interface FarragoTransform
      * Sets a timeout for fetching an input row. 0 means poll, infinity (ie
      * Long.MAX_VALUE) means block. The default is to block;
      */
-    void setInputFetchTimeout(long millisecs);
+    void setInputFetchTimeout(long timeout);
 
     /**
      * Restarts this transform's underlying TupleIter(s).
@@ -83,8 +83,8 @@ public interface FarragoTransform
     /**
      * InputBinding binds a JavaTransformExecStream input's streamId to the
      * ordinal assigned to that input by the stream graph. The InputBinding
-     * objects are created by {@link
-     * net.sf.farrago.query.FarragoTransformDef#init}.
+     * objects are created by
+     * {@link net.sf.farrago.query.FarragoTransformDef#init}.
      */
     public static class InputBinding
     {

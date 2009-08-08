@@ -398,7 +398,7 @@ public class FarragoDbStmtContext
 
     private void cancel(boolean wait)
     {
-        tracer.info("cancel");
+        tracer.fine("cancel");
 
         // First, see if there are any child contexts that need to be
         // canceled

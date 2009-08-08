@@ -1867,6 +1867,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     </exec>
   </target>
 
+  <!-- Eclipse installation -->
+  <property name="eclipse.dir" location="${thirdparty.dir}/eclipse" />
+
   <target name="createEclipseProject">
     <pathconvert property="eclipse.libpath" refid="farrago.build.3p.classpath"
       pathsep="&quot;/&gt;&lt;classpathentry kind=&quot;lib&quot; path=&quot;"/>
@@ -1877,6 +1880,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
         tofile="${farrago.dir}/.classpath">
       <filterset>
         <filter token="LIBPATH" value="${eclipse.libpath}"/>
+        <filter token="ECLIPSEDIR" value="${eclipse.dir}"/>
       </filterset>
     </copy>
     <copy todir="${farrago.dir}/.settings" overwrite="true">

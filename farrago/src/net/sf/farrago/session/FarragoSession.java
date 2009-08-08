@@ -23,6 +23,7 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+import javax.sql.DataSource;
 
 import java.util.*;
 import java.util.regex.*;
@@ -31,6 +32,8 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.plugin.*;
+import net.sf.farrago.fennel.FennelDbHandle;
+import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
@@ -106,6 +109,25 @@ public interface FarragoSession
      * @return {@link FarragoSessionPrivilegeMap} for this session
      */
     public FarragoSessionPrivilegeMap getPrivilegeMap();
+
+    /**
+     * Create and returns a new empty cache.
+     *
+     * @return the new cache.
+     * @param owner FarragoAllocationOwner for this cache, to make sure
+     *   everything gets discarded eventually
+     * @param sharedCache underlying shared cache
+     * @param repos FarragoRepos for wrapper initialization
+     * @param fennelDbHandle FennelDbHandle for wrapper initialization
+     * @param loopbackDataSource a DataSource for establishing a loopback
+     *   connection into Farrago, or null if none is available
+     */
+    public FarragoDataWrapperCache newFarragoDataWrapperCache(
+        FarragoAllocationOwner owner,
+        FarragoObjectCache sharedCache,
+        FarragoRepos repos,
+        FennelDbHandle fennelDbHandle,
+        DataSource loopbackDataSource);
 
     /**
      * @return JDBC URL used to establish this session

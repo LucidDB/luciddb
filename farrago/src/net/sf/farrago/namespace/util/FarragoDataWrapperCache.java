@@ -237,6 +237,36 @@ public class FarragoDataWrapperCache
             props);
     }
 
+    private String[] getQualifiedName(FemBaseColumnSet baseColumnSet)
+    {
+        return new String[] {
+            baseColumnSet.getNamespace().getNamespace().getName(),
+            baseColumnSet.getNamespace().getName(),
+            baseColumnSet.getName()
+        };
+    }
+
+    private Map<String, Properties>
+        getColumnPropertiesMap(FemBaseColumnSet baseColumnSet)
+    {
+        Map<String, Properties> columnPropMap =
+            new HashMap<String, Properties>();
+        for (
+            FemStoredColumn column
+                : Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class))
+            {
+                columnPropMap.put(
+                    column.getName(),
+                    getStorageOptionsAsProperties(column));
+            }
+        return columnPropMap;
+    }
+
+    protected Properties getColumnSetProperties(FemBaseColumnSet baseColumnSet)
+    {
+        return getStorageOptionsAsProperties(baseColumnSet);
+    }
+
     /**
      * Loads a FarragoMedColumnSet from its catalog definition.
      *
@@ -249,32 +279,14 @@ public class FarragoDataWrapperCache
         FemBaseColumnSet baseColumnSet,
         FarragoTypeFactory typeFactory)
     {
-        FemDataServer femServer = baseColumnSet.getServer();
-
-        String [] qualifiedName =
-            new String[] {
-                baseColumnSet.getNamespace().getNamespace().getName(),
-                baseColumnSet.getNamespace().getName(),
-                baseColumnSet.getName()
-            };
-
-        Properties props = getStorageOptionsAsProperties(baseColumnSet);
-
-        Map<String, Properties> columnPropMap =
-            new HashMap<String, Properties>();
-
+        String [] qualifiedName = getQualifiedName(baseColumnSet);
+        Properties props = getColumnSetProperties(baseColumnSet);
         RelDataType rowType =
             typeFactory.createStructTypeFromClassifier(baseColumnSet);
+        Map<String, Properties> columnPropMap =
+            getColumnPropertiesMap(baseColumnSet);
 
-        for (
-            FemStoredColumn column
-            : Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class))
-        {
-            columnPropMap.put(
-                column.getName(),
-                getStorageOptionsAsProperties(column));
-        }
-
+        FemDataServer femServer = baseColumnSet.getServer();
         FarragoMedDataServer medServer = loadServerFromCatalog(femServer);
 
         FarragoMedColumnSet loadedColumnSet;

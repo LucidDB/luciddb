@@ -503,6 +503,10 @@ public class CalcRexImplementorTableImpl
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeGreaterOrEqualThan));
 
+        register(
+            SqlStdOperatorTable.inFennelFunc,
+            new IdentityImplementor());
+
         registerInstr(
             SqlStdOperatorTable.isNullOperator,
             CalcProgramBuilder.boolNativeIsNull);
@@ -2489,8 +2493,8 @@ public class CalcRexImplementorTableImpl
                     oneReg);
                 translator.builder.addLabel(next);
             } else {
-                // Use ref instead of move. Streaming agg marshalls and
-                // unmarshalls
+                // Use ref instead of move.
+                // Streaming agg marshalls and unmarshalls
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,
                     accumulatorRegister,
@@ -2642,7 +2646,8 @@ public class CalcRexImplementorTableImpl
                 zeroReg);
         }
 
-        @Override public void implementInitAdd(
+        @Override
+        public void implementInitAdd(
             RexCall call,
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
@@ -2707,9 +2712,8 @@ public class CalcRexImplementorTableImpl
                     translator.builder,
                     new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
-
-                // Use ref instead of move. Streaming agg marshalls and
-                // unmarshalls
+                // Use ref instead of move.
+                // Streaming agg marshalls and unmarshalls
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,
                     accumulatorRegister,
@@ -2813,7 +2817,8 @@ public class CalcRexImplementorTableImpl
                 zeroReg);
         }
 
-        @Override public void implementInitAdd(
+        @Override
+        public void implementInitAdd(
             RexCall call,
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
@@ -2859,8 +2864,8 @@ public class CalcRexImplementorTableImpl
                     input);
                 translator.builder.addLabel(next);
             } else {
-                // Use ref instead of move. Streaming agg marshalls and
-                // unmarshalls
+                // Use ref instead of move.
+                // Streaming agg marshalls and unmarshalls
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,
                     accumulatorRegister,
@@ -2996,7 +3001,8 @@ public class CalcRexImplementorTableImpl
             implementInitAdd(call, accumulatorRegister, translator);
         }
 
-        @Override public void implementInitAdd(
+        @Override
+        public void implementInitAdd(
             RexCall call,
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)

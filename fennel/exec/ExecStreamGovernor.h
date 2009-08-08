@@ -153,6 +153,12 @@ public:
     virtual ~ExecStreamGovernor();
 
     /**
+     * Prints the state of a resoource governor object, for tracing.
+     * Not thread-safe.
+     */
+    void print(std::ostream&) const;
+
+    /**
      * Informs the resource governor of a new knob setting.  Called by
      * ALTER SYSTEM SET commands that dynamically modify parameters
      * controlling resource allocation.
