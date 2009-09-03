@@ -48,25 +48,85 @@
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/ASPENTARGET-P4SUFFIX/currentbuildstatus.txt"/ -->
-
-			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="fennel_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_regressionsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/cpp/aspen/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="aspen_cpp_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testlog" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/initsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="testcases"/>
-                        <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"/>
-
+			<artifactspublisher
+				dir="&open_integration.build.home;/fennel/trace"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="fennel_trace"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/farrago/trace"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="farrago_trace"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/farrago/unitsql"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="farrago_unitsql"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/farrago/initsql"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="farrago_initsql"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/farrago/regressionsql"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="farrago_regressionsql"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/farrago/testlog"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="farrago_testlog"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/cpp/aspen/trace"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="aspen_cpp_trace"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/testlog"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="testlog"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/initsql"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="initsql"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/unitsql"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="unitsql"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/trace"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="trace"
+			/>
+			<artifactspublisher
+				dir="&open_integration.build.home;/aspen/testcases"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+				subdirectory="testcases"
+			/>
+			<artifactspublisher
+				file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+			/>
+			<artifactspublisher
+				file="&open_integration.build.home;/aspen/javadoc-warnings.log"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+			/>
+			<artifactspublisher
+				file="&open_default.build.home;/antBuilderOutput.log"
+				dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+			/>
 			<onsuccess>
-				<!-- Just want dist/*.bin, but artifactspublisher doesn't take wildcards. -->
-                        	<artifactspublisher dir="&open_integration.build.home;/aspen/dist" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="dist"/>
+				<!-- Just want dist/*.bin; artifactspublisher doesn't take wildcards. -->
+				<artifactspublisher
+					dir="&open_integration.build.home;/aspen/dist"
+					dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"
+					subdirectory="dist"
+				/>
 
 				<!-- Make an easy-to-find symbolic link to the last-good-build installer. Places in per-build artifacts dir. -->
 				<!-- artifactspublisher drops permissions. Make timestamped version executable (555).  -->
