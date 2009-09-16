@@ -172,6 +172,18 @@ public:
         PConstBuffer pDataWithLen) const;
 
     /**
+     * References without copying a value from a buffer containing data encoded
+     * via storeValue.  The reference is not aligned, and for some datatypes
+     * such as integers, may be to a raw (compressed) representation.
+     *
+     * @param [in] datum datum to receive reference value
+     * @param [in] pDataWithLen data buffer to reference
+     */
+    void referenceValue(
+        TupleDatum &datum,
+        PConstBuffer pDataWithLen) const;
+
+    /**
      * Gets the length information corresponding to the data stored in a buffer.
      *
      * @param [in] pDataWithLen the data buffer to get the length from

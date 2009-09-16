@@ -628,4 +628,48 @@ insert into t values('aaaaaaaaaaaaaaaaaaaa');
 insert into t values('bbbbbbbbbbbbbbbbbbbb');
 select * from t order by a;
 
+-- LDB-198:  indexing on trailing blanks
+
+create table trailing_blanks(v varchar(5));
+insert into trailing_blanks values
+('a'),
+('a'),
+('b '),
+('b '),
+('b'),
+('b'),
+('a '),
+('a '),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('a'),
+('a'),
+('b '),
+('b '),
+('b'),
+('b'),
+('a '),
+('a ');
+
+create index trailing_blanks_idx on trailing_blanks(v);
+
 -- End lcs.sql
