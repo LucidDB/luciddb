@@ -92,7 +92,6 @@ ExecStreamResult ExternalSortOutput::fetch(
 
  done:
     if (pNextTuple == pOutBuf) {
-        bufAccessor.markEOS();
         return EXECRC_EOS;
     } else {
         bufAccessor.produceData(pNextTuple);

@@ -27,6 +27,7 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/segment/SegPageLock.h"
 #include "fennel/sorter/ExternalSortSubStream.h"
 
@@ -130,6 +131,10 @@ class FENNEL_SORTER_EXPORT ExternalSortRunLoader
     uint nTuplesFetched;
 
     /**
+     * partitionKeyData is saved.
+     */
+    bool partitionKeyInitialized;
+    /**
      * Array used to return fetch results.  This gets bound to
      * successive index buffer contents during fetch.
      */
@@ -142,6 +147,7 @@ class FENNEL_SORTER_EXPORT ExternalSortRunLoader
     TupleProjectionAccessor keyAccessor2;
     TupleData keyData;
     TupleData keyData2;
+    TupleDataWithBuffer partitionKeyData;
 
 // ----------------------------------------------------------------------
 // private methods

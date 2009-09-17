@@ -94,6 +94,14 @@ struct ExternalSortInfo
      */
     uint cbPage;
 
+    /**
+     * The number of leading key columns which are already sorted or
+     * partitioned. The XO will sort rows by trailing key columns for each
+     * "partition" of rows. If 0, sort the entire input by sortKey.
+     */
+    uint partitionKeyCount;
+
+
     explicit ExternalSortInfo(ExecStream &);
 
     /**

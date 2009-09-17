@@ -361,7 +361,7 @@ void ExecStreamUnitTestBase::verifyOutput(
                     std::cout << "(Row, Col) = (" << nRows << ", " << col <<")"
                               << std::endl;
                     BOOST_CHECK_EQUAL(expectedValue, actualValue);
-                    return;
+                    // return;
                 }
             }
             bufAccessor.consumeTuple();

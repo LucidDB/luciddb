@@ -41,6 +41,7 @@ class ExternalSortExecStreamTest : public ExecStreamUnitTestBase
         uint nRows,
         SharedMockProducerExecStreamGenerator pGenerator,
         MockProducerExecStreamGenerator &verifier,
+        bool partitionedSort = false,
         bool storeFinalRun = false,
         bool stopEarly = false,
         bool desc = false);
@@ -55,9 +56,13 @@ public:
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomInMem);
         FENNEL_UNIT_TEST_CASE(
+                    ExternalSortExecStreamTest, testRandomInMemPartitioned);
+        FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomDescInMem);
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomExternal);
+        FENNEL_UNIT_TEST_CASE(
+                    ExternalSortExecStreamTest, testRandomExternalPartitioned);
         FENNEL_UNIT_TEST_CASE(
             ExternalSortExecStreamTest, testRandomExternalStoreFinal);
         FENNEL_UNIT_TEST_CASE(
@@ -67,8 +72,10 @@ public:
     void testPresortedInMem();
     void testPresortedExternal();
     void testRandomInMem();
+    void testRandomInMemPartitioned();
     void testRandomDescInMem();
     void testRandomExternal();
+    void testRandomExternalPartitioned();
     void testRandomExternalStoreFinal();
     void testRandomExternalFault();
 
@@ -100,6 +107,14 @@ void ExternalSortExecStreamTest::testRandomInMem()
     testImpl(100, pGenerator, verifier);
 }
 
+void ExternalSortExecStreamTest::testRandomInMemPartitioned()
+{
+    SharedMockProducerExecStreamGenerator pGenerator(
+        new PermutationGenerator(100, 10));
+    RampPartitionedExecStreamGenerator verifier(10);
+    testImpl(100, pGenerator, verifier, true);
+}
+
 void ExternalSortExecStreamTest::testRandomDescInMem()
 {
     SharedMockProducerExecStreamGenerator pGenerator(
@@ -109,7 +124,7 @@ void ExternalSortExecStreamTest::testRandomDescInMem()
         boost::shared_ptr< ColumnGenerator<int64_t> >(
             new SeqColumnGenerator(99, -1)));
     CompositeExecStreamGenerator verifier(colGens);
-    testImpl(100, pGenerator, verifier, false, false, true);
+    testImpl(100, pGenerator, verifier, false, false, false, true);
 }
 
 void ExternalSortExecStreamTest::testRandomExternal()
@@ -120,12 +135,20 @@ void ExternalSortExecStreamTest::testRandomExternal()
     testImpl(10000, pGenerator, verifier);
 }
 
+void ExternalSortExecStreamTest::testRandomExternalPartitioned()
+{
+    SharedMockProducerExecStreamGenerator pGenerator(
+        new PermutationGenerator(10000, 2000));
+    RampPartitionedExecStreamGenerator verifier(2000);
+    testImpl(10000, pGenerator, verifier, true);
+}
+
 void ExternalSortExecStreamTest::testRandomExternalStoreFinal()
 {
     SharedMockProducerExecStreamGenerator pGenerator(
         new PermutationGenerator(10000));
     RampExecStreamGenerator verifier;
-    testImpl(10000, pGenerator, verifier, true);
+    testImpl(10000, pGenerator, verifier, false, true);
 }
 
 void ExternalSortExecStreamTest::testRandomExternalFault()
@@ -134,7 +157,7 @@ void ExternalSortExecStreamTest::testRandomExternalFault()
         new PermutationGenerator(10000));
     RampExecStreamGenerator verifier;
     // only read half the result set, and then abort
-    testImpl(10000, pGenerator, verifier, true, true);
+    testImpl(10000, pGenerator, verifier, false, true, true);
 }
 
 void ExternalSortExecStreamTest::testPresortedInMem()
@@ -155,6 +178,7 @@ void ExternalSortExecStreamTest::testImpl(
     uint nRows,
     SharedMockProducerExecStreamGenerator pGenerator,
     MockProducerExecStreamGenerator &verifier,
+    bool partitionedSort,
     bool storeFinalRun,
     bool stopEarly,
     bool desc)
@@ -165,6 +189,9 @@ void ExternalSortExecStreamTest::testImpl(
 
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc.push_back(attrDesc);
+    if (partitionedSort) {
+        mockParams.outputTupleDesc.push_back(attrDesc);
+    }
     mockParams.nRows = nRows;
     mockParams.pGenerator = pGenerator;
 
@@ -174,17 +201,27 @@ void ExternalSortExecStreamTest::testImpl(
 
     ExternalSortExecStreamParams sortParams;
     sortParams.outputTupleDesc.push_back(attrDesc);
+    if (partitionedSort) {
+            sortParams.outputTupleDesc.push_back(attrDesc);
+    }
     sortParams.distinctness = DUP_ALLOW;
     sortParams.estimatedNumRows = nRows;
     sortParams.earlyClose = false;
+    sortParams.partitionKeyCount = partitionedSort ? 1 : 0;
     sortParams.pTempSegment = pRandomSegment;
     sortParams.pCacheAccessor = pCache;
     // 10 total cache pages, 5% in reserve ==> 9 scratch pages per stream graph
     sortParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 9);
     sortParams.keyProj.push_back(0);
+    if (partitionedSort) {
+        sortParams.keyProj.push_back(1);
+    }
     sortParams.storeFinalRun = storeFinalRun;
     sortParams.descendingKeyColumns.push_back(desc);
+    if (partitionedSort) {
+        sortParams.descendingKeyColumns.push_back(desc);
+    }
 
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(

@@ -49,6 +49,11 @@ enum ExternalSortRC
      * output area (e.g. generated run) became full.
      */
     EXTSORT_OVERFLOW,
+
+    /**
+     * Operation produced data to continue to the next step in sort operation.
+     */
+    EXTSORT_YIELD,
 };
 
 /**

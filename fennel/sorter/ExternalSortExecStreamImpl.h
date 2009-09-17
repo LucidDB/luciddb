@@ -150,7 +150,7 @@ class FENNEL_SORTER_EXPORT ExternalSortExecStreamImpl
      * Performs enough sorting to be able to start returning results
      * (non-parallel version).
      */
-    void computeFirstResult();
+    ExecStreamResult computeFirstResult();
 
     /**
      * Performs enough sorting to be able to start returning results
@@ -212,6 +212,11 @@ class FENNEL_SORTER_EXPORT ExternalSortExecStreamImpl
      * Releases resources associated with this stream.
      */
     void releaseResources();
+
+    /**
+     * Reallocates resources for partition sorts.
+     */
+    void reallocateResources();
 
     // implement ExecStream
     virtual void closeImpl();

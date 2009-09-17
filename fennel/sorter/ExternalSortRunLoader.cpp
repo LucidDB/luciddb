@@ -50,6 +50,9 @@ ExternalSortRunLoader::ExternalSortRunLoader(ExternalSortInfo &sortInfoIn)
     keyAccessor.bind(tupleAccessor, sortInfo.keyProj);
     keyAccessor2.bind(tupleAccessor2, sortInfo.keyProj);
 
+    partitionKeyData.computeAndAllocate(sortInfo.keyDesc);
+    partitionKeyInitialized = false;
+
     // TODO:  utility methods for calculations below, and assert block
     // size is power of 2
     uint nKeysPerPage = sortInfo.cbPage / sizeof(PBuffer);
@@ -185,6 +188,7 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
         assert(cbAvailable);
         PConstBuffer pSrc = bufAccessor.getConsumptionStart();
         bool overflow = false;
+        bool yield = false;
         uint cbCopy = 0;
         while (cbCopy < cbAvailable) {
             PConstBuffer pSrcTuple = pSrc + cbCopy;
@@ -198,6 +202,18 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
                     overflow = true;
                     break;
                 }
+            }
+
+            // Need to save current Partition key
+            if (sortInfo.partitionKeyCount > 0
+                    && !partitionKeyInitialized)
+            {
+                tupleAccessor.setCurrentTupleBuf(pSrcTuple);
+                keyAccessor.unmarshal(keyData);
+                for (int i = 0; i < sortInfo.partitionKeyCount; i++) {
+                    partitionKeyData[i].memCopyFrom(keyData[i]);
+                }
+                partitionKeyInitialized = true;
             }
 
             // now make sure we have enough room for the data
@@ -214,6 +230,22 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
                 break;
             }
 
+            // If partition sort, check for change in leading key column.
+            if (sortInfo.partitionKeyCount > 0) {
+                tupleAccessor.setCurrentTupleBuf(pSrcTuple);
+                keyAccessor.unmarshal(keyData);
+                if (sortInfo.keyDesc.compareTuplesKey
+                        (keyData, partitionKeyData,
+                         sortInfo.partitionKeyCount) != 0)
+                {
+                    // 'end of partition'. sort this partition and produce
+                    // result for this partition.
+                    yield = true;
+                    partitionKeyInitialized = false;
+                    break;
+                }
+            }
+
             *((PBuffer *) pIndexBuffer) = pDataBuffer + cbCopy;
             pIndexBuffer += sizeof(PBuffer);
             nTuplesLoaded++;
@@ -224,6 +256,11 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
             pDataBuffer += cbCopy;
             bufAccessor.consumeData(pSrc + cbCopy);
         }
+
+        if (yield) {
+            return EXTSORT_YIELD;
+        }
+
         if (overflow) {
             return EXTSORT_OVERFLOW;
         }

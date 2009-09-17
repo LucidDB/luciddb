@@ -69,25 +69,69 @@ public:
     }
 };
 
+class RampPartitionedExecStreamGenerator
+          : public MockProducerExecStreamGenerator
+{
+protected:
+    int partitionSize;
+public:
+
+    RampPartitionedExecStreamGenerator(uint partSize) {
+        partitionSize = partSize;
+    }
+
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        if (iCol == 0) {
+            return iRow / partitionSize;
+        }
+        return iRow;
+    }
+};
 /**
  * @author John V. Sichi
  */
 class PermutationGenerator : public MockProducerExecStreamGenerator
 {
     std::vector<int64_t> values;
+    uint partitionSize;
 
 public:
-    explicit PermutationGenerator(uint nRows)
+    PermutationGenerator(uint nRows)
     {
         values.resize(nRows);
         std::iota(values.begin(), values.end(), 0);
         std::random_shuffle(values.begin(), values.end());
+        partitionSize = 0;
+    }
+
+    PermutationGenerator(uint nRows, uint partSize)
+    {
+        partitionSize = partSize;
+        values.resize(nRows);
+        std::iota(values.begin(), values.end(), 0);
+        int i;
+        assert(nRows % partitionSize == 0);
+        for (i = 0; i < nRows / partitionSize; i++) {
+            int start = i * partitionSize;
+            int end = start + partitionSize - 1;
+            std::random_shuffle(values.begin() + start,
+                    values.begin() + end);
+        }
     }
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        // iCol ignored
-        return values[iRow];
+        if (!partitionSize) {
+            // iCol ignored
+            return values[iRow];
+        } else {
+            if (iCol == 0) {
+                return iRow / partitionSize;
+            } else {
+                return values[iRow];
+            }
+        }
     }
 };
 
