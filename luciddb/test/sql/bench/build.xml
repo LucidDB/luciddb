@@ -45,7 +45,7 @@
   <property name="bh.log.basedir" value="${bench.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.url" value="http://file01.lucidera.com/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${bench.dir}/csv" />
   <property name="csv.copy.dir" value="${bench.dir}/csv-copy" />
 
@@ -130,28 +130,18 @@
   </target>
 
   <target name="copy-csv">
-    <condition property="raksha.available">
-      <http url="${csvsource.url}" />
-    </condition>
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
     <if>
       <isset property="raksha.available"/>
       <then>
-        <!-- copy raksha -> csv.dir -->
-        <available file="${csv.dir}" type="dir"
-          property="csv.available"/>
-        <if>
-          <not>
-            <isset property="csv.available" />
-          </not>
-          <then>
-            <mkdir dir="${csv.dir}" />
-          </then>
-        </if>
-        <echo message="Downloading from Raksha..."/>
-        <exec dir="${csv.dir}" executable="wget">
-          <arg line="-r --reject .html -q -np -nH --cut-dirs=4 ${csvsource.url}/" />
-        </exec>
-        <echo message="...download complete"/>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}"
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}" includes="*.csv"/>
+        </sync>
       </then>
     </if>
     <available file="${csv.dir}" type="dir"
@@ -166,12 +156,6 @@
           failonerror="true">
           <fileset dir="${csv.dir}"/>
         </sync>
-        <!-- copy bcp -->
-        <copy todir="${csv.copy.dir}" overwrite="true">
-           <fileset dir="${bench.dir}">
-            <include name="**/*.bcp"/>
-          </fileset>
-        </copy>
       </then>
       <else>
         <echo message="!! NO CSV FILES !!"/>

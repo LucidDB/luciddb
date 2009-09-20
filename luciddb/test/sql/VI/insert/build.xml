@@ -45,7 +45,7 @@
   <property name="bh.log.basedir" value="${vi_insert.dir}/testlog" />
 
   <!-- directory where the csv files are copied -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${vi_insert.dir}/csv" />
   <property name="csv.copy.dir" value="${vi_insert.dir}/csv-copy" />
 

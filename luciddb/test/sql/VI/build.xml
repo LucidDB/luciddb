@@ -29,6 +29,10 @@
   <property environment="env" />
   <property file="run.properties" />
 
+  <!-- Needed for ant contrib task such as <if> -->
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- Just simple gen properties, not really generating any SQLs -->
   <target name="gen-all-sql">
     <!-- generate run.properties -->
     <available file="run.properties" type="file"

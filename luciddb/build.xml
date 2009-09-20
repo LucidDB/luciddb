@@ -926,7 +926,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
             sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -937,7 +937,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
             sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
@@ -946,7 +946,7 @@ ${farrago.test.jvmargs}
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.txnsql}"
+    <luciddb.runSqlTests filelist="${filelist.txnsql}"
             sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -955,7 +955,7 @@ ${farrago.test.jvmargs}
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.txnsql}"
+    <luciddb.runSqlTests filelist="${filelist.txnsql}"
             sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
@@ -966,7 +966,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
       sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -977,7 +977,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
       sqltest.classpath="${emma.test.classpath}"/>
   </target>
 

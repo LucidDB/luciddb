@@ -506,6 +506,7 @@ ${farrago.test.jvmargs}
         fork="true"
         classpathref="@{classpathref}">
         <jvmarg line="-Xmx256m"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
