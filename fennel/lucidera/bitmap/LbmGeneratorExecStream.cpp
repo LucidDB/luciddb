@@ -394,7 +394,9 @@ bool LbmGeneratorExecStream::generateBitmaps()
         keyReductionMap.resize(nDistinctVals);
         std::iota(keyReductionMap.begin(), keyReductionMap.end(), 0);
 
-        // Then make any adjustments needed.
+        // Then make any adjustments needed.  Note that the scope of
+        // this mapping relies on the fact that we call flushTable
+        // at the end of each batch.
         remapTrailingBlanks();
 
         batchRead = true;
