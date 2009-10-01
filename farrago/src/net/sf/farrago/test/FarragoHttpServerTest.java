@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2006-2009 SQLstream, Inc.
-// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2009-2009 The Eigenbase Project
+// Copyright (C) 2009-2009 SQLstream, Inc.
+// Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,25 +25,28 @@ import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.server.*;
 
-
 /**
  * FarragoServerTest tests Farrago client/server connections via VJDBC's
- * RMI implementation.
+ * HTTP implementation.
  *
- * @author John V. Sichi
+ *<p>
+ *
+ * TODO jvs 30-Sept-2009:  validate and re-enable tests with JRockit since
+ * HTTP should be OK there (no RMI distributed gc to cause bumps).
+ *
+ * @author John Sichi
  * @version $Id$
  */
-public class FarragoVjdbcServerTest
-    extends FarragoServerTest
+public class FarragoHttpServerTest extends FarragoVjdbcServerTest
 {
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Initializes a new FarragoVjdbcServerTest.
+     * Initializes a new FarragoHttpServerTest.
      *
      * @param testCaseName JUnit test case name
      */
-    public FarragoVjdbcServerTest(String testCaseName)
+    public FarragoHttpServerTest(String testCaseName)
         throws Exception
     {
         super(testCaseName);
@@ -54,26 +57,14 @@ public class FarragoVjdbcServerTest
     protected FarragoAbstractServer newServer()
     {
         FarragoVjdbcServer server = new FarragoVjdbcServer();
-        server.setDefaultProtocol(FarragoVjdbcServer.ListeningProtocol.RMI);
+        // default protocol is HTTP
         return server;
     }
 
     protected FarragoAbstractJdbcDriver newClientDriver()
     {
-        return new FarragoVjdbcClientDriver();
-    }
-
-    public void testExceptionContents()
-        throws Throwable
-    {
-        // JDF 02/06/08 This override is due to a limititation imposed by Vjdbc.
-        // FarragoSqlException inherits SQLException.  Vjdbc will only pass
-        // generic SQLExceptions.  If it is an exception that extends
-        // SQLException a new SQLException is allocated and populated from the
-        // original exception. See vjdbc.util.SqlExceptionHelper.wrap().
-        // Bascially this is a bad method name since either it returns the
-        // original exception or creates a whole new one and discards the old.
+        return new FarragoVjdbcHttpClientDriver();
     }
 }
 
-// End FarragoVjdbcServerTest.java
+// End FarragoHttpServerTest.java

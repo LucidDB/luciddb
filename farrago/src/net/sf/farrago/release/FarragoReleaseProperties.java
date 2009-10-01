@@ -123,13 +123,13 @@ public class FarragoReleaseProperties
         new IntegerProperty(this, "jdbc.url.port.default", 5433);
 
     /**
-     * Default port to use for JDBC connections over HTTP. Note that this is the
-     * release-level default; the actual port to use for a server can be
-     * overridden at each site through app server settings, and for a client by
-     * explicitly including the port in the connection URL.
+     * Default port to use for JDBC connections over HTTP. Note that this is
+     * the release-level default; the actual port to use for a server can be
+     * overridden at each site through app server or catalog settings, and for
+     * a client by explicitly including the port in the connection URL.
      */
     public final IntegerProperty jdbcUrlHttpPortDefault =
-        new IntegerProperty(this, "jdbc.url.http.port.default", 8080);
+        new IntegerProperty(this, "jdbc.url.http.port.default", 8033);
 
     //~ Methods ----------------------------------------------------------------
 

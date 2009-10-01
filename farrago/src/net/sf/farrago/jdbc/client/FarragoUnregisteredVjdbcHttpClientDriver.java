@@ -50,10 +50,10 @@ public class FarragoUnregisteredVjdbcHttpClientDriver
      */
     public String getUrlPrefix()
     {
-        // this should be refactored, along with it's sibling in the RMI driver,
-        // the only reason this doesn't break it's caller in connect() is that
+        // this should be refactored, along with its sibling in the RMI driver,
+        // the only reason this doesn't break its caller in connect() is that
         // "farrago" and "luciddb" both happen to be 7 letter words
-        return getBaseUrl() + "servlet:http://";
+        return getBaseUrl() + "http://";
     }
 
     public Connection connect(String url, Properties info)
@@ -91,7 +91,7 @@ public class FarragoUnregisteredVjdbcHttpClientDriver
         }
         urlHttp =
             "jdbc:vjdbc:servlet:http://" + urlHttp
-            + "/vjdbc_servlet/vjdbc,FarragoDBMS";
+            + "/vjdbc,FarragoDBMS";
 
         // NOTE:  can't call DriverManager.connect here, because that
         // would deadlock in the case where client and server are

@@ -708,6 +708,8 @@ ${farrago.test.jvmargs}
       </fileset>
       <fileset dir="${farrago.classes.dir}">
         <include
+          name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
+        <include
           name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
         <include
           name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
@@ -1235,11 +1237,11 @@ ${farrago.test.jvmargs}
     </if>
 
     <replace file="${release.bin.dir}/${sqllineClient}">
-        <replacefilter token="jdbc:farrago:rmi://localhost"
-        value="jdbc:luciddb:rmi://localhost"/>
+        <replacefilter token="jdbc:farrago:http://localhost"
+        value="jdbc:luciddb:http://localhost"/>
         <replacefilter
-        token="net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver"
-        value="com.lucidera.jdbc.LucidDbRmiDriver"/>
+        token="net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver"
+        value="org.luciddb.jdbc.LucidDbClientDriver"/>
         <replacefilter token="guest" value="sa"/>
     </replace>
     <chmod file="${release.bin.dir}/${sqllineClient}" perm="u+x" />
