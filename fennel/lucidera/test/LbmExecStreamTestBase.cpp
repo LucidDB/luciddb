@@ -134,6 +134,7 @@ void LbmExecStreamTestBase::initSorterExecStream(
         params.keyProj.push_back(i);
     }
     params.storeFinalRun = false;
+    params.partitionKeyCount = 0;
     params.estimatedNumRows = MAXU;
     params.earlyClose = false;
 

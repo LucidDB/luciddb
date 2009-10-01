@@ -484,6 +484,7 @@ void LbmLoadBitmapTest::testLoad(
         sortParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
         sortParams.storeFinalRun = false;
+        sortParams.partitionKeyCount = 0;
         sortParams.estimatedNumRows = MAXU;
         sortParams.earlyClose = false;
 

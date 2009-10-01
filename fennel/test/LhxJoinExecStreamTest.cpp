@@ -543,6 +543,7 @@ void LhxJoinExecStreamTest::testImpl(
             pSegmentFactory->newScratchSegment(pCache, 10);
         sortParams.keyProj.push_back(0);
         sortParams.storeFinalRun = false;
+        sortParams.partitionKeyCount = 0;
         sortParams.estimatedNumRows = MAXU;
         sortParams.earlyClose = false;
         ExecStreamEmbryo sortStreamEmbryo;
