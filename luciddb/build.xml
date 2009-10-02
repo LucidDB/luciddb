@@ -123,6 +123,11 @@ ${farrago.test.jvmargs}
   <property name="testsrc.dir" location="${luciddb.test.dir}/sql"/>
 
   <property name="project.testlog.dir" location="${testlog.dir}" />
+
+  <!-- Default build mode is "dev", in this mode load some specific sqls needed for running -->
+  <!-- the automated test targets  -->
+  <property name="build.mode" value="developer"/>
+
   <import file="${open.dir}/farrago/buildMacros.xml" />
   <import file="${luciddb.dir}/buildMacros.xml" />
 
@@ -227,11 +232,6 @@ ${farrago.test.jvmargs}
   <property name="fennel.cachePagesMax" value="5000"/>
   <property name="fennel.cachePagesInit" value="5000"/>
   <property name="fennel.groupCommitInterval" value="0"/>
-
-  <!-- Default build mode is "dev", in this mode load some specific sqls needed for running -->
-  <!-- the automated test targets  -->
-  <property name="build.mode" value="developer"/>
-
 
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
