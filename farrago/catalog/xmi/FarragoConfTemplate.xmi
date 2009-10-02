@@ -16,6 +16,7 @@
       checkpointInterval='@checkpointInterval@'
       serverRmiRegistryPort='-1'
       serverSingleListenerPort='-1'
+      serverHttpPort='-1'
       calcVirtualMachine='@calcVirtualMachine@'
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
       >

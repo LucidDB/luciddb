@@ -39,6 +39,7 @@
 | mofClassName              | 12       | VARCHAR      |
 | mofId                     | 12       | VARCHAR      |
 | name                      | 12       | VARCHAR      |
+| serverHttpPort            | 4        | INTEGER      |
 | serverRmiRegistryPort     | 4        | INTEGER      |
 | serverSingleListenerPort  | 4        | INTEGER      |
 | userCatalogEnabled        | 16       | BOOLEAN      |

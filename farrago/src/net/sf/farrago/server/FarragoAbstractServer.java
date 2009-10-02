@@ -116,11 +116,8 @@ public abstract class FarragoAbstractServer
         FemFarragoConfig config)
     {
         rmiRegistryPort = config.getServerRmiRegistryPort();
-
         singleListenerPort = config.getServerSingleListenerPort();
-
-        // TODO jvs 29-Sept-2009:  read system parameter from catalog
-        httpPort = -1;
+        httpPort = config.getServerHttpPort();
 
         Long longObjValue = config.getConnectionTimeoutMillis();
         connectionTimeoutMillis =
@@ -130,24 +127,24 @@ public abstract class FarragoAbstractServer
 
 
         if (defaultProtocol == ListeningProtocol.HTTP) {
-            if (rmiRegistryPort == -1) {
+            if (rmiRegistryPort <= 0) {
                 // use HTTP unless RMI port is set explicitly
                 protocol = ListeningProtocol.HTTP;
             } else {
                 protocol = ListeningProtocol.RMI;
             }
         } else {
-            if (httpPort == -1) {
+            if (httpPort <= 0) {
                 // use RMI unless HTTP port is set explicitly
                 protocol = ListeningProtocol.RMI;
             } else {
                 protocol = ListeningProtocol.HTTP;
             }
         }
-        if (rmiRegistryPort == -1) {
+        if (rmiRegistryPort <= 0) {
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
         }
-        if (httpPort == -1) {
+        if (httpPort <= 0) {
             httpPort = releaseProps.jdbcUrlHttpPortDefault.get();
         }
     }

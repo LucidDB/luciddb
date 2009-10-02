@@ -133,7 +133,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Jun 30 18:43:51 PDT 2009'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Oct 01 15:20:58 PDT 2009'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -5277,15 +5277,30 @@
                       name = 'connectionTimeoutMillis' visibility = 'public' isSpecification = 'false'
                       ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = '127-0-0-1--69d99809:11580e4054b:-8000:0000000000000E29'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-2eac1598:124122890da:-8000:0000000000000F56'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = '127-0-0-1--69d99809:11580e4054b:-8000:0000000000000E28'
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-2eac1598:124122890da:-8000:0000000000000F55'
                               lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd6'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1-2eac1598:124122890da:-8000:0000000000000F57'
+                      name = 'serverHttpPort' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-2eac1598:124122890da:-8000:0000000000000F69'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-2eac1598:124122890da:-8000:0000000000000F68'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
                   </UML:Classifier.feature>
@@ -12722,7 +12737,7 @@
       name="FarragoFennelConfig"
 >
   <group name="Fig0"
-       description="org.argouml.uml.diagram.static_structure.ui.FigClass[144, 200, 204, 161]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[144, 200, 204, 174]pathVisible=false;operationsVisible=false;attributesVisible=true"
        href="Ilsmmsmmsmm4fe91emf85207efd8mm7e31"
        fill="1"
        fillcolor="white"
@@ -12736,7 +12751,7 @@
       x="144"
       y="200"
       width="204"
-      height="161"
+      height="174"
       fill="1"
       fillcolor="white"
       stroke="0"
@@ -12811,7 +12826,7 @@
       </path>
     </group>
     <group name="Fig0.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[145, 223, 203, 138]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[145, 223, 203, 151]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -12824,7 +12839,7 @@
         x="145"
         y="223"
         width="203"
-        height="138"
+        height="151"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -12851,7 +12866,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >name : String</text>
+      >name : String { frozen }</text>
       <text name="Fig0.4.3"
         x="145"
         y="237"
@@ -12942,12 +12957,22 @@
         font="Dialog"
         textsize="10"
       >connectionTimeoutMillis [0..1] : Long</text>
+      <text name="Fig0.4.12"
+        x="145"
+        y="354"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >serverHttpPort : Integer</text>
     </group>
     <rectangle name="Fig0.5"
       x="144"
       y="200"
       width="204"
-      height="161"
+      height="174"
       fill="0"
       fillcolor="white"
       stroke="1"
@@ -13008,7 +13033,7 @@
       textsize="10"
     >FennelConfig</text>
     <group name="Fig1.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 433, 248, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 446, 248, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -13020,7 +13045,7 @@
       
       <rectangle name="Fig1.3.0"
         x="681"
-        y="433"
+        y="446"
         width="248"
         height="20"
         fill="1"
@@ -13038,9 +13063,9 @@
         visibility="0"
       >
         <moveto x="681"
-                y="433" />
+                y="446" />
         <lineto x="929"
-                y="433" />
+                y="446" />
       </path>
     </group>
     <group name="Fig1.4"
@@ -13084,7 +13109,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >databaseInitSize : Integer { frozen }</text>
+      >databaseInitSize : Integer</text>
       <text name="Fig1.4.3"
         x="681"
         y="149"
@@ -13204,7 +13229,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >cachePageSize : Integer { frozen }</text>
+      >cachePageSize : Integer</text>
       <text name="Fig1.4.15"
         x="681"
         y="305"
@@ -16170,7 +16195,7 @@
     <rectangle name="Fig15.0"
       x="592"
       y="376"
-      width="178"
+      width="196"
       height="57"
       fill="1"
       fillcolor="white"
@@ -16178,7 +16203,7 @@
       strokecolor="black"
     />
     <group name="Fig15.1"
-         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[592, 376, 178, 2]"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[592, 376, 196, 2]"
          href="Ilsmmsmmsmm4fe91emf85207efd8mm7f66"
          fill="1"
          fillcolor="white"
@@ -16191,7 +16216,7 @@
       <rectangle name="Fig15.1.0"
         x="592"
         y="376"
-        width="178"
+        width="196"
         height="2"
         fill="1"
         fillcolor="white"
@@ -16210,7 +16235,7 @@
       textsize="10"
     >CmdPrepareExecutionStreamGraph</text>
     <group name="Fig15.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[593, 424, 177, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[593, 424, 195, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -16223,7 +16248,7 @@
       <rectangle name="Fig15.3.0"
         x="593"
         y="424"
-        width="177"
+        width="195"
         height="20"
         fill="1"
         fillcolor="white"
@@ -16241,7 +16266,7 @@
       >
         <moveto x="593"
                 y="424" />
-        <lineto x="770"
+        <lineto x="788"
                 y="424" />
       </path>
     </group>
@@ -16258,7 +16283,7 @@
       <rectangle name="Fig15.4.0"
         x="593"
         y="399"
-        width="194"
+        width="195"
         height="34"
         fill="1"
         fillcolor="white"
@@ -16274,7 +16299,7 @@
       >
         <moveto x="593"
                 y="399" />
-        <lineto x="770"
+        <lineto x="788"
                 y="399" />
       </path>
       <text name="Fig15.4.2"
@@ -16301,7 +16326,7 @@
     <rectangle name="Fig15.5"
       x="592"
       y="376"
-      width="178"
+      width="196"
       height="57"
       fill="0"
       fillcolor="white"
