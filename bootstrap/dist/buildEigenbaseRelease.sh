@@ -104,7 +104,7 @@ if [ ! -e luciddb ]; then
 fi
 
 # Create farrago/customBuild.properties to set GPL release flag
-echo 'release.gpl=true' > farrago/customBuild.properties
+echo 'build.mode=release' > farrago/customBuild.properties
 
 # Append setting to pick up custom LucidDB release properties
 echo 'release.properties.source=${luciddb.dir}/src/FarragoRelease.properties' \
