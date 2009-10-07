@@ -138,8 +138,10 @@ public class FarragoVjdbcServer
     protected void stopNetwork()
     {
         if (protocol.equals(ListeningProtocol.HTTP)) {
-            jettyEmbedding.stopServlet();
-            jettyEmbedding = null;
+            if (jettyEmbedding != null) {
+                jettyEmbedding.stopServlet();
+                jettyEmbedding = null;
+            }
         } else {
             super.stopNetwork();
         }
