@@ -167,6 +167,7 @@ if $dist_fennel; then
     cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
     cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 fi
+cp jetty/lib/*.jar $LIB_DIR
 
 if $remove_debug; then
     rm -f $LIB_DIR/fennel/*debug*
