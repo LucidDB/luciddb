@@ -1,4 +1,4 @@
-Eigenbase Binary Release 0.9.1
+Eigenbase Binary Release 0.9.2
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -29,8 +29,8 @@ A standalone Farrago JDBC client jar is not yet available, so to
 connect to the server from another JDBC client program, the program
 will need to load lib/farrago.jar and lib/vjdbc.jar.  For JDBC
 driver class name, use
-net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver.  For JDBC URL, use
-jdbc:farrago:rmi://localhost (or actual server name for a remote
+net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver.  For JDBC URL, use
+jdbc:farrago:http://localhost (or actual server name for a remote
 connection).
 
 ------------------------------------------------------------

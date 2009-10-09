@@ -168,6 +168,7 @@ if $dist_fennel; then
     cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 fi
 cp jetty/lib/*.jar $LIB_DIR
+cp jetty/LICENSE-APACHE-2.0.txt $LIB_DIR/jetty.license.txt
 
 if $remove_debug; then
     rm -f $LIB_DIR/fennel/*debug*
