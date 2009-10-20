@@ -23,7 +23,9 @@
 package net.sf.farrago.util;
 
 import java.io.*;
+import java.security.*;
 
+import org.eigenbase.util.*;
 
 /**
  * Miscellaneous static utilities that don't fit into other categories.
@@ -129,6 +131,26 @@ public abstract class FarragoUtil
             result = sb.toString();
         }
         return result;
+    }
+
+    /**
+     * Performs one-way encryption on a password, producing the form stored in
+     * the catalog.
+     *
+     * @param plaintext the password as supplied by the user
+     *
+     * @return cyphertext
+     */
+    public static String encryptPassword(String plaintext)
+    {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(plaintext.getBytes("UTF-16LE"));
+            byte [] hash = digest.digest();
+            return RhBase64.encodeBytes(hash);
+        } catch (Throwable ex) {
+            throw Util.newInternal(ex);
+        }
     }
 }
 

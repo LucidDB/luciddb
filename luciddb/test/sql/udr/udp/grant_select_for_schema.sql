@@ -1,6 +1,6 @@
 -- Test the grant_select_for_schema UDP
 create schema MASSGRANTTEST;
-create user MONDRIAN_USER authorization NOPE default schema MASSGRANTTEST;
+create user MONDRIAN_USER authorization 'NOPE' default schema MASSGRANTTEST;
 set schema 'MASSGRANTTEST';
 create table T1(col1 integer, col2 integer);
 create table T2(col3 varchar(255), col4 integer);

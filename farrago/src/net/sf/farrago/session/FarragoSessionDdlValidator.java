@@ -340,6 +340,14 @@ public interface FarragoSessionDdlValidator
      * @return the timestamp for this DDL transaction
      */
     public String obtainTimestamp();
+
+    /**
+     * Tests if DDL statement is CREATE OR REPLACE.
+     *
+     * @return true if statement is CREATE OR REPLACE
+     */
+    // implement FarragoSessionDdlValidator
+    public boolean isReplace();
 }
 
 // End FarragoSessionDdlValidator.java

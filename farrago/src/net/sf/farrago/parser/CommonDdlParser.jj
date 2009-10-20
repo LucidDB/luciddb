@@ -746,7 +746,7 @@ FemUser UserDefinition() :
 {
     FemUser user;
     SqlIdentifier userName;
-    SqlNode expr;
+    SqlNode plaintextLiteral;
     CwmNamespace defaultNamespace;
 }
 {
@@ -759,12 +759,21 @@ FemUser UserDefinition() :
         // set the repos name attribute
         user.setName(userName.getSimple());
     }
-    <AUTHORIZATION> expr = Expression(ExprContext.ACCEPT_NONQUERY)
-    {
-        // TODO: Finalize the syntax for JAAS integration
-        // user.setAuthenticationMethod =
-        // TODO: validate and save the authentication method
-    }
+    [
+        <AUTHORIZATION> plaintextLiteral = StringLiteral(false)
+        {
+            // ignore; this clause is deprecated
+        }
+        | <IDENTIFIED> <BY> plaintextLiteral = StringLiteral(false)
+        {
+            String plaintext = SqlLiteral.stringValue(plaintextLiteral);
+            if (!plaintext.equals("")) {
+                String cyphertext =
+                    net.sf.farrago.util.FarragoUtil.encryptPassword(plaintext);
+                user.setEncryptedPassword(cyphertext);
+            }
+        }
+    ]
     [<DEFAULT_KW>
         (
             defaultNamespace = CatalogReference()
@@ -3097,6 +3106,7 @@ TOKEN :
     | < COLUMNS: "COLUMNS" >
     | < COMPUTE: "COMPUTE" >
     | < ESTIMATE: "ESTIMATE" >
+    | < IDENTIFIED: "IDENTIFIED" >
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
     | < PERCENT: "PERCENT" >
@@ -3132,6 +3142,7 @@ String DdlNonReservedKeyWord() :
         | <COLUMNS>
         | <COMPUTE>
         | <ESTIMATE>
+        | <IDENTIFIED>
         | <INDEX>
         | <JAR>
         | <PERCENT>

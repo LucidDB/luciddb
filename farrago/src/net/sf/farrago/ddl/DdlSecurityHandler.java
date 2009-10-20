@@ -23,6 +23,7 @@ package net.sf.farrago.ddl;
 
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.catalog.*;
 
 
 /**
@@ -47,38 +48,19 @@ public class DdlSecurityHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemUser femUser)
     {
-        try {
-            // Ensure that the user does not exist. We assume that the
-            // repository service can enforce unique name constraint, so we
-            // don't have to check that the name already exist.
-            // TODO: repos should enforce unique constraints.
-
-            // Note that no grant is created to record the user's membership in
-            // PUBLIC; this is implicit during privilege check.
-        } catch (Throwable ex) {
-            throw res.ValidatorDefinitionInvalid.ex(
-                repos.getLocalizedObjectName(femUser),
-                ex);
-        }
+        validator.validateUniqueNames(
+            repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
+            repos.allOfType(FemAuthId.class),
+            false);
     }
 
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemRole femRole)
     {
-        try {
-            // WITH ADMIN grantor clause has already been dealt with during
-            // parsing.  Nothing to do yet!
-        } catch (Throwable ex) {
-            throw res.ValidatorDefinitionInvalid.ex(
-                repos.getLocalizedObjectName(femRole),
-                ex);
-        }
-    }
-
-    // implement FarragoSessionDdlHandler
-    public void validateModification(FemUser femUser)
-    {
-        // TODO: Implement the handler for Alter User...
+        validator.validateUniqueNames(
+            repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
+            repos.allOfType(FemAuthId.class),
+            false);
     }
 
     // implement FarragoSessionDdlHandler

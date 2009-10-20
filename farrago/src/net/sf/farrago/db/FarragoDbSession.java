@@ -287,8 +287,8 @@ public class FarragoDbSession
                     throw FarragoResource.instance().SessionLoginFailed.ex(
                         repos.getLocalizedObjectName(sessionUser));
                 } else if (
-                    database.isAuthenticationEnabled()
-                    && (database.isAuthenticateLocalConnections()
+                    database.isJaasAuthenticationEnabled()
+                    && (database.shouldAuthenticateLocalConnections()
                         || !remoteProtocol.equals("none")))
                 {
                     // authenticate; use same SessionLoginFailed if fails
@@ -302,7 +302,7 @@ public class FarragoDbSession
                             "Farrago",
                             null,
                             cbh,
-                            database.getAuthenticationConfig());
+                            database.getJaasConfig());
                         lc.login();
                     } catch (LoginException ex) {
                         throw FarragoResource.instance().SessionLoginFailed.ex(
@@ -314,6 +314,22 @@ public class FarragoDbSession
                     } catch (LoginException ex) {
                         throw FarragoResource.instance().SessionLogoutFailed.ex(
                             repos.getLocalizedObjectName(sessionUser));
+                    }
+                }
+                // Regardless of whether JAAS is configured, if the user
+                // has a password set in the catalog, enforce it.
+                if (femUser.getEncryptedPassword() != null) {
+                    String plaintext = info.getProperty("password");
+                    String cyphertext;
+                    if (plaintext != null) {
+                        cyphertext = FarragoUtil.encryptPassword(plaintext);
+                    } else {
+                        cyphertext = null;
+                    }
+                    if (!femUser.getEncryptedPassword().equals(cyphertext)) {
+                        throw FarragoResource
+                            .instance().SessionLoginFailed.ex(
+                                repos.getLocalizedObjectName(sessionUser));
                     }
                 }
             }

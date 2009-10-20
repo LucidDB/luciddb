@@ -31,7 +31,7 @@ import javax.security.auth.spi.*;
 
 
 /**
- * Mock login module for testing farrago authentication.
+ * Mock login module for testing Farrago authentication.
  *
  * @author Oscar Gothberg
  * @version $Id$
@@ -108,7 +108,7 @@ public class FarragoMockLoginModule
     }
 
     /**
-     * Initialize this LoginModule
+     * Initializes this LoginModule.
      */
     public void initialize(
         Subject subject,
@@ -129,7 +129,7 @@ public class FarragoMockLoginModule
     }
 
     /**
-     * Try to log in a user.
+     * Attempts to log in a user.
      */
     public boolean login()
         throws LoginException
@@ -177,9 +177,8 @@ public class FarragoMockLoginModule
     }
 
     /**
-     * Log out currently logged in subject
+     * Logs out currently logged in subject.
      */
-
     public boolean logout()
         throws LoginException
     {

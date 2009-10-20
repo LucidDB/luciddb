@@ -483,11 +483,7 @@ public class DdlValidator
         super.closeAllocation();
     }
 
-    /**
-     * Tests if DDL statement is CREATE OR REPLACE.
-     *
-     * @return true if statement is CREATE OR REPLACE
-     */
+    // implement FarragoSessionDdlValidator
     public boolean isReplace()
     {
         if (ddlStmt instanceof DdlCreateStmt) {
@@ -1745,6 +1741,42 @@ public class DdlValidator
             depClient.remove(oldElement, dep);
             depClient.add(newElement, dep);
         }
+
+        Collection<FemGrant> grants;
+
+        // FIXME jvs 20-Oct-2009:  We should be doing this to preserve
+        // existing grants, but this causes unitsql/ddl/labels.sql to
+        // fail by preventing the old label from being deleted by
+        // CREATE OR REPLACE.  Need to debug it.
+        if (false) {
+            PrivilegeIsGrantedOnElement pigoe =
+                getRepos().getSecurityPackage()
+                .getPrivilegeIsGrantedOnElement();
+            grants = new ArrayList<FemGrant>(
+                pigoe.getPrivilege(oldElement));
+            for (FemGrant grant : grants) {
+                grant.setElement(newElement);
+            }
+        }
+
+        if (oldElement instanceof FemAuthId) {
+            FemAuthId oldAuthId = (FemAuthId) oldElement;
+            FemAuthId newAuthId = (FemAuthId) newElement;
+            grants = new ArrayList<FemGrant>(
+                oldAuthId.getGrantorPrivilege());
+            for (FemGrant grant : grants) {
+                grant.setGrantor(newAuthId);
+            }
+            grants = new ArrayList<FemGrant>(
+                oldAuthId.getGranteePrivilege());
+            for (FemGrant grant : grants) {
+                grant.setGrantee(newAuthId);
+            }
+            if (oldElement instanceof FemUser) {
+                ((FemUser) newElement).setDefaultNamespace(
+                    ((FemUser) oldElement).getDefaultNamespace());
+            }
+        }
     }
 
     /**
@@ -1760,24 +1792,30 @@ public class DdlValidator
         String name = target.getName();
         RefClass type = target.refClass();
 
+        Collection<?> c = null;
         CwmNamespace ns = target.getNamespace();
         if (ns != null) {
-            Collection<?> c = ns.getOwnedElement();
-            if (c != null) {
-                for (Object o : c) {
-                    CwmModelElement element = (CwmModelElement) o;
-                    if (element.equals(target)) {
-                        continue;
-                    }
-                    if (!element.getName().equals(name)) {
-                        continue;
-                    }
-                    if (element.refIsInstanceOf(
-                            type.refMetaObject(),
-                            true))
-                    {
-                        return element;
-                    }
+            c = ns.getOwnedElement();
+        } else {
+            if (target instanceof FemAuthId) {
+                c = getRepos().allOfType(FemAuthId.class);
+                type = getRepos().getSecurityPackage().getFemAuthId();
+            }
+        }
+        if (c != null) {
+            for (Object o : c) {
+                CwmModelElement element = (CwmModelElement) o;
+                if (element.equals(target)) {
+                    continue;
+                }
+                if (!element.getName().equals(name)) {
+                    continue;
+                }
+                if (element.refIsInstanceOf(
+                        type.refMetaObject(),
+                        true))
+                {
+                    return element;
                 }
             }
         }
