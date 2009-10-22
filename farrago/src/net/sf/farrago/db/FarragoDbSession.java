@@ -322,7 +322,10 @@ public class FarragoDbSession
                     String plaintext = info.getProperty("password");
                     String cyphertext;
                     if (plaintext != null) {
-                        cyphertext = FarragoUtil.encryptPassword(plaintext);
+                        cyphertext =
+                            FarragoUtil.encryptPassword(
+                                plaintext,
+                                femUser.getPasswordEncryptionAlgorithm());
                     } else {
                         cyphertext = null;
                     }

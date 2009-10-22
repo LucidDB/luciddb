@@ -91,7 +91,7 @@ order by granted_element;
 
 -- verify password encryption; we use a platform-independent algorithm
 -- so it should always come out the same
-select "encryptedPassword" 
+select "encryptedPassword", "passwordEncryptionAlgorithm"
 from sys_fem."Security"."User"
 where "name" = 'SECMAN_3';
 

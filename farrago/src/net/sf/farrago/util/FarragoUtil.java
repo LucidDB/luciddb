@@ -139,12 +139,15 @@ public abstract class FarragoUtil
      *
      * @param plaintext the password as supplied by the user
      *
+     * @param algorithmName algorith name to use, as known
+     * by java.security (e.g. SHA-256)
+     *
      * @return cyphertext
      */
-    public static String encryptPassword(String plaintext)
+    public static String encryptPassword(String plaintext, String algorithmName)
     {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(algorithmName);
             digest.update(plaintext.getBytes("UTF-16LE"));
             byte [] hash = digest.digest();
             return RhBase64.encodeBytes(hash);

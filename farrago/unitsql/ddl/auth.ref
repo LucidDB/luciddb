@@ -110,14 +110,14 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 > 
 > -- verify password encryption; we use a platform-independent algorithm
 > -- so it should always come out the same
-> select "encryptedPassword" 
+> select "encryptedPassword", "passwordEncryptionAlgorithm"
 > from sys_fem."Security"."User"
 > where "name" = 'SECMAN_3';
-+-----------------------------------------------+
-|               encryptedPassword               |
-+-----------------------------------------------+
-| 8D5IVPZslzRYhb+JQ7SfJBfWpgdy+PyRDN/9ownV5bs=  |
-+-----------------------------------------------+
++-----------------------------------------------+------------------------------+
+|               encryptedPassword               | passwordEncryptionAlgorithm  |
++-----------------------------------------------+------------------------------+
+| 8D5IVPZslzRYhb+JQ7SfJBfWpgdy+PyRDN/9ownV5bs=  | SHA-256                      |
++-----------------------------------------------+------------------------------+
 > 
 > -------------------------------------------------------------------------
 > -- Test 2: user, roles at two different levels hierarchies

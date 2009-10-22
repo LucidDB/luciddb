@@ -768,9 +768,12 @@ FemUser UserDefinition() :
         {
             String plaintext = SqlLiteral.stringValue(plaintextLiteral);
             if (!plaintext.equals("")) {
+                String algorithmName = "SHA-256";
                 String cyphertext =
-                    net.sf.farrago.util.FarragoUtil.encryptPassword(plaintext);
+                    net.sf.farrago.util.FarragoUtil.encryptPassword(
+                        plaintext, algorithmName);
                 user.setEncryptedPassword(cyphertext);
+                user.setPasswordEncryptionAlgorithm(algorithmName);
             }
         }
     ]
