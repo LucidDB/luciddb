@@ -778,7 +778,11 @@ public:
     // FIXME jvs 21-Mar-2006:  these still don't work on Win32
 #ifndef __MSVC__
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testInvalidPrograms);
+    // FIXME jvs 21-Oct-2009:  this is broken for optimized builds
+    // with some g++ versions, e.g. 4.2.3
+#ifndef NDEBUG
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testStandardTypes);
+#endif
 #endif
     }
 
