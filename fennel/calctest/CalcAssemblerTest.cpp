@@ -779,7 +779,7 @@ public:
 #ifndef __MSVC__
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testInvalidPrograms);
     // FIXME jvs 21-Oct-2009:  this is broken for optimized builds
-    // with some g++ versions, e.g. 4.2.3
+    // with some g++ versions, e.g. 4.2.3. Bug FNL-86 logged.
 #ifndef NDEBUG
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testStandardTypes);
 #endif
