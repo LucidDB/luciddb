@@ -452,7 +452,7 @@ public abstract class AbstractRelNode
                         if (j > 0) {
                             write(",");
                         }
-                        write(terms[j++] + "=" + value.toString());
+                        write(terms[j++] + "=" + value);
                     }
                     write(")");
                 }

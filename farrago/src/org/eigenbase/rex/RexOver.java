@@ -95,7 +95,7 @@ public class RexOver
 
     protected String computeDigest(boolean withType)
     {
-        return super.computeDigest(withType) + " OVER " + window;
+        return super.computeDigest(withType) + " OVER (" + window + ")";
     }
 
     public RexOver clone()

@@ -101,7 +101,6 @@ public class RexWindow
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        pw.print("(");
         int clauseCount = 0;
         if (partitionKeys.length > 0) {
             if (clauseCount++ > 0) {
@@ -109,6 +108,9 @@ public class RexWindow
             }
             pw.print("PARTITION BY ");
             for (int i = 0; i < partitionKeys.length; i++) {
+                if (i > 0) {
+                    pw.print(", ");
+                }
                 RexNode partitionKey = partitionKeys[i];
                 pw.print(partitionKey.toString());
             }
@@ -119,6 +121,9 @@ public class RexWindow
             }
             pw.print("ORDER BY ");
             for (int i = 0; i < orderKeys.length; i++) {
+                if (i > 0) {
+                    pw.print(", ");
+                }
                 RexNode orderKey = orderKeys[i];
                 pw.print(orderKey.toString());
             }
@@ -148,7 +153,6 @@ public class RexWindow
             pw.print(" AND ");
             pw.print(upperBound.toString());
         }
-        pw.print(")");
         return sw.toString();
     }
 
@@ -165,6 +169,14 @@ public class RexWindow
     public boolean isRows()
     {
         return physical;
+    }
+
+    public SqlWindowOperator.OffsetRange getOffsetAndRange()
+    {
+        return SqlWindowOperator.getOffsetAndRange(
+            getLowerBound(),
+            getUpperBound(),
+            isRows());
     }
 }
 

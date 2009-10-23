@@ -93,9 +93,9 @@ public class RelOptXmlPlanWriter
      * </code>
      * </blockquote>
      *
-     * @param rel
-     * @param terms
-     * @param values
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
      */
     private void explainGeneric(
         RelNode rel,
@@ -127,11 +127,13 @@ public class RelOptXmlPlanWriter
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
-            xmlOutput.beginBeginTag("Property");
-            xmlOutput.attribute("name", terms[inputs.length + j++]);
-            xmlOutput.endBeginTag("Property");
-            xmlOutput.cdata(value.toString());
-            xmlOutput.endTag("Property");
+            if (value != null) {
+                xmlOutput.beginBeginTag("Property");
+                xmlOutput.attribute("name", terms[inputs.length + j++]);
+                xmlOutput.endBeginTag("Property");
+                xmlOutput.cdata(value.toString());
+                xmlOutput.endTag("Property");
+            }
         }
         xmlOutput.beginTag("Inputs", null);
         level++;
@@ -155,9 +157,9 @@ public class RelOptXmlPlanWriter
      * &lt;/Join&gt;
      * </pre>
      *
-     * @param rel
-     * @param terms
-     * @param values
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
      */
     private void explainSpecific(
         RelNode rel,
@@ -184,9 +186,11 @@ public class RelOptXmlPlanWriter
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
-            xmlOutput.attribute(
-                terms[inputs.length + j++],
-                value.toString());
+            if (value != null) {
+                xmlOutput.attribute(
+                    terms[inputs.length + j++],
+                    value.toString());
+            }
         }
         xmlOutput.endBeginTag(tagName);
         level++;

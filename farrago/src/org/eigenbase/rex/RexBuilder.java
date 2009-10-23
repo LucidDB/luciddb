@@ -302,7 +302,7 @@ public class RexBuilder
         assert partitionKeys != null;
         assert orderKeys != null;
         final RexWindow window =
-            new RexWindow(
+            makeWindow(
                 partitionKeys,
                 orderKeys,
                 lowerBound,
@@ -344,6 +344,31 @@ public class RexBuilder
                     constantNull);
         }
         return result;
+    }
+
+    /**
+     * Creates a window specification.
+     *
+     * @param partitionKeys Partition keys
+     * @param orderKeys Order keys
+     * @param lowerBound Lower bound
+     * @param upperBound Upper bound
+     * @param physical Whether physical. True if row-based, false if range-based
+     * @return window specification
+     */
+    public RexWindow makeWindow(
+        RexNode[] partitionKeys,
+        RexNode[] orderKeys,
+        SqlNode lowerBound,
+        SqlNode upperBound,
+        boolean physical)
+    {
+        return new RexWindow(
+            partitionKeys,
+            orderKeys,
+            lowerBound,
+            upperBound,
+            physical);
     }
 
     /**

@@ -70,6 +70,9 @@ public class RelOptPlanWriter
     /**
      * Prints the plan of a given relational expression to this writer.
      *
+     * <p>The terms and values array must be specified. Individual values may
+     * be null.</p>
+     *
      * @param rel Relational expression
      * @param terms Names of the attributes of the plan
      * @param values Values of the attributes of the plan
@@ -126,7 +129,7 @@ public class RelOptPlanWriter
                 print(
                     ((j == 0) ? "(" : ", ")
                     + terms[inputs.length + j++] + "=["
-                    + value.toString() + "]");
+                    + value + "]");
             }
             if (j > 0) {
                 print(")");
