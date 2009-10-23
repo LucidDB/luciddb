@@ -183,6 +183,7 @@ jdbc.driver.version.major=$MAJOR
 jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
+jdbc.url.http.port.default=8033
 EOF
 cat > $OPEN_DIR/luciddb/src/FarragoRelease.properties <<EOF
 package.name=luciddb
@@ -195,6 +196,7 @@ jdbc.driver.version.major=$MAJOR
 jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:luciddb:
 jdbc.url.port.default=5434
+jdbc.url.http.port.default=8034
 EOF
 
 cd $OPEN_DIR/farrago
