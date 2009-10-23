@@ -44,9 +44,9 @@ Please report issues at Eigenbase JIRA:
 http://issues.eigenbase.org
 
 Note that in version 0.9.2, the default client/server JDBC protocol
-was changed from RMI to HTTP.  This may affect any installation
-procedures developed against older versions.  For more information,
-please see this wiki page:
+was changed from RMI to HTTP.  This change affects upgraded servers,
+as well as any installation procedures developed against older
+versions.  For more information, please see this wiki page:
 
 http://pub.eigenbase.org/wiki/FarragoHttpClient
 
@@ -77,6 +77,7 @@ Changes since 0.9.1 include
 - simplify build instructions a little bit
 - beginning of cleanups on test harness
 - include JTDS driver in classpath, and eliminate FarragoMedJdbc3p.jar
+- fix deletion index rid-checking bug in ALTER TABLE REBUILD
 - fix bitmap index creation bug for trailing spaces (LDB-198)
 - fix catalog access problems via upgrade to Hibernate 3.3.2 (ENK-8)
 - fix cancel for ANALYZE TABLE (FRG-379)
