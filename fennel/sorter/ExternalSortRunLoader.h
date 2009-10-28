@@ -53,6 +53,8 @@ class ExternalSortInfo;
 class FENNEL_SORTER_EXPORT ExternalSortRunLoader
     : public ExternalSortSubStream
 {
+
+protected:
     /**
      * Global information.
      */
@@ -150,7 +152,7 @@ class FENNEL_SORTER_EXPORT ExternalSortRunLoader
     TupleDataWithBuffer partitionKeyData;
 
 // ----------------------------------------------------------------------
-// private methods
+// protected methods
 // ----------------------------------------------------------------------
 
     /**
@@ -220,9 +222,26 @@ public:
     ExternalSortRC loadRun(ExecStreamBufAccessor &bufAccessor);
 
     /**
+     * checks for "end of partition".
+     * @return true, if "end of partition" detected.
+     */
+    virtual bool checkEndOfPartition(
+       ExecStreamBufAccessor &bufAccessor
+       , PConstBuffer pSrcTuple);
+
+    /**
+     * check if the tuple pSrcTuple needs to be skipped from sort operation.
+     * @return true, if the tuple is to be skipped. Base class always returns
+     *               false.
+     */
+    virtual bool skipRow(
+       ExecStreamBufAccessor &bufAccessor
+       , PConstBuffer pSrcTuple);
+
+    /**
      * Sorts loaded run.
      */
-    void sort();
+    virtual void sort();
 
     /**
      * @return number of tuples loaded so far in current run

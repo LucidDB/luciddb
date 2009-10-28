@@ -193,10 +193,8 @@ void ExternalSortExecStreamImpl::open(bool restart)
     // need at least two non-I/O pages per run: one for keys and one for data
     assert(sortInfo.nSortMemPagesPerRun > 1);
 
-    runLoaders.reset(new SharedExternalSortRunLoader[nParallel]);
-    for (uint i = 0; i < nParallel; ++i) {
-        runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
-    }
+    // Initialize RunLoaders.
+    initRunLoaders(false);
 
     pOutputWriter.reset(new ExternalSortOutput(sortInfo));
 
@@ -210,6 +208,14 @@ void ExternalSortExecStreamImpl::open(bool restart)
     resultsReady = false;
 }
 
+void ExternalSortExecStreamImpl::initRunLoaders(bool restart)
+{
+    runLoaders.reset(new SharedExternalSortRunLoader[nParallel]);
+    for (uint i = 0; i < nParallel; ++i) {
+        runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
+    }
+}
+
 ExecStreamResult ExternalSortExecStreamImpl::execute(
     ExecStreamQuantum const &quantum)
 {
@@ -217,6 +223,9 @@ ExecStreamResult ExternalSortExecStreamImpl::execute(
         if (!resultsReady) {
             if (pInAccessor->getState() != EXECBUF_EOS) {
                 ExecStreamResult rc = precheckConduitBuffers();
+                if (rc == EXECRC_BUF_UNDERFLOW) {
+                    rc = handleUnderflow();
+                }
                 if (rc != EXECRC_YIELD) {
                     return rc;
                 }
@@ -267,12 +276,15 @@ ExecStreamResult ExternalSortExecStreamImpl::execute(
     }
 }
 
+ExecStreamResult ExternalSortExecStreamImpl::handleUnderflow()
+{
+    // do nothing just return underflow
+    return EXECRC_BUF_UNDERFLOW;
+}
+
 void ExternalSortExecStreamImpl::reallocateResources()
 {
-    runLoaders.reset(new SharedExternalSortRunLoader[nParallel]);
-    for (uint i = 0; i < nParallel; ++i) {
-        runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
-    }
+    initRunLoaders(true);
 
     for (uint i = 0; i < nParallel; ++i) {
         runLoaders[i]->startRun();
@@ -315,9 +327,11 @@ ExecStreamResult ExternalSortExecStreamImpl::computeFirstResult()
         }
         ExternalSortRC rc = runLoader.loadRun(*pInAccessor);
         if (rc == EXTSORT_YIELD) {
-            sortRun(runLoader);
-            if (storedRuns.size() || storeFinalRun) {
-                storeRun(runLoader);
+            if (runLoader.getLoadedTupleCount() > 0) {
+                sortRun(runLoader);
+                if (storedRuns.size() || storeFinalRun) {
+                    storeRun(runLoader);
+                }
             }
             // saw 'end of partition'. ready to merge all stored sortRuns.
             return EXECRC_YIELD;
@@ -516,6 +530,6 @@ void ExternalSortExecStreamImpl::unreserveRunLoader(
     runLoaderAvailable.notify_all();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/sorter/ExternalSortExecStreamImpl.cpp#4 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End ExternalSortExecStreamImpl.cpp

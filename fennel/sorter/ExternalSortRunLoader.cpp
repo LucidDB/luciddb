@@ -189,12 +189,28 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
         PConstBuffer pSrc = bufAccessor.getConsumptionStart();
         bool overflow = false;
         bool yield = false;
+        bool skippedRow = false;
         uint cbCopy = 0;
+        uint cbTuple = 0;
         while (cbCopy < cbAvailable) {
             PConstBuffer pSrcTuple = pSrc + cbCopy;
-            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
+            cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
             assert(cbTuple);
             assert(cbTuple <= tupleAccessor.getMaxByteCount());
+
+            // partition sort
+            if (sortInfo.partitionKeyCount > 0) {
+                if (skipRow(bufAccessor, pSrcTuple)) {
+                    // current row is to be skipped from sort operation.
+                    skippedRow = true;
+                    break;
+                }
+
+                if (checkEndOfPartition(bufAccessor, pSrcTuple)) {
+                    yield = true;
+                    break;
+                }
+            }
 
             // first make sure we have room for the key pointer
             if (pIndexBuffer >= pIndexBufferEnd) {
@@ -202,18 +218,6 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
                     overflow = true;
                     break;
                 }
-            }
-
-            // Need to save current Partition key
-            if (sortInfo.partitionKeyCount > 0
-                    && !partitionKeyInitialized)
-            {
-                tupleAccessor.setCurrentTupleBuf(pSrcTuple);
-                keyAccessor.unmarshal(keyData);
-                for (int i = 0; i < sortInfo.partitionKeyCount; i++) {
-                    partitionKeyData[i].memCopyFrom(keyData[i]);
-                }
-                partitionKeyInitialized = true;
             }
 
             // now make sure we have enough room for the data
@@ -230,30 +234,18 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
                 break;
             }
 
-            // If partition sort, check for change in leading key column.
-            if (sortInfo.partitionKeyCount > 0) {
-                tupleAccessor.setCurrentTupleBuf(pSrcTuple);
-                keyAccessor.unmarshal(keyData);
-                if (sortInfo.keyDesc.compareTuplesKey
-                        (keyData, partitionKeyData,
-                         sortInfo.partitionKeyCount) != 0)
-                {
-                    // 'end of partition'. sort this partition and produce
-                    // result for this partition.
-                    yield = true;
-                    partitionKeyInitialized = false;
-                    break;
-                }
-            }
-
             *((PBuffer *) pIndexBuffer) = pDataBuffer + cbCopy;
             pIndexBuffer += sizeof(PBuffer);
             nTuplesLoaded++;
             cbCopy += cbTuple;
         }
-        if (cbCopy) {
+        if (skippedRow || cbCopy) {
             memcpy(pDataBuffer, pSrc, cbCopy);
             pDataBuffer += cbCopy;
+            if (skippedRow) {
+                // consume skipped row from the input as well.
+                cbCopy += cbTuple;
+            }
             bufAccessor.consumeData(pSrc + cbCopy);
         }
 
@@ -266,8 +258,41 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
         }
     }
 
-    assert(nTuplesLoaded);
     return EXTSORT_SUCCESS;
+}
+
+bool ExternalSortRunLoader::skipRow(
+    ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple)
+{
+    // always return false.
+    return false;
+}
+
+bool ExternalSortRunLoader::checkEndOfPartition(
+    ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple)
+{
+    if (!partitionKeyInitialized) {
+        // Need to save current Partition key
+        tupleAccessor.setCurrentTupleBuf(pSrcTuple);
+        keyAccessor.unmarshal(keyData);
+        for (int i = 0; i < sortInfo.partitionKeyCount; i++) {
+            partitionKeyData[i].memCopyFrom(keyData[i]);
+        }
+        partitionKeyInitialized = true;
+    } else {
+        // check for change in partition column(s).
+        tupleAccessor.setCurrentTupleBuf(pSrcTuple);
+        keyAccessor.unmarshal(keyData);
+        if (sortInfo.keyDesc.compareTuplesKey
+                (keyData, partitionKeyData,
+                 sortInfo.partitionKeyCount) != 0)
+        {
+            // 'end of partition'. sort this partition and produce
+            // result for this partition.
+            return true;
+        }
+    }
+    return false;
 }
 
 void ExternalSortRunLoader::sort()
