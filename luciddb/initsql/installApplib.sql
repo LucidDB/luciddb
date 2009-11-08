@@ -1010,3 +1010,12 @@ create or replace procedure applib.replicate_mondrian(
 language java
 modifies sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ReplicateMondrianUdp.execute';
+
+-- UDP for conditionally executing a SQL statement based on input set 
+create or replace procedure exec_sql_if_no_rows( 
+in evalSQL varchar(4096), 
+in execSQL varchar(4096)) 
+language java 
+parameter style java 
+reads sql data 
+external name  'applib.applibJar:com.lucidera.luciddb.applib.util.ExecSqlIfNoRows.execute'; 
