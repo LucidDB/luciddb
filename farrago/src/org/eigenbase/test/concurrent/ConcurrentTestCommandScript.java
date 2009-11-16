@@ -92,6 +92,7 @@ public class ConcurrentTestCommandScript
     private static final String ECHO = "@echo";
     private static final String INCLUDE = "@include";
     private static final String SHELL = "@shell";
+    private static final String PLUGIN = "@plugin";
 
     private static final String SQL = "";
     private static final String EOF = null;
@@ -106,6 +107,7 @@ public class ConcurrentTestCommandScript
                 new StateDatum(NOLOCKSTEP, PRE_SETUP_STATE),
                 new StateDatum(ENABLED, PRE_SETUP_STATE),
                 new StateDatum(DISABLED, PRE_SETUP_STATE),
+                new StateDatum(PLUGIN, PRE_SETUP_STATE),
                 new StateDatum(SETUP, SETUP_STATE),
                 new StateDatum(CLEANUP, CLEANUP_STATE),
                 new StateDatum(THREAD, THREAD_STATE)
@@ -171,9 +173,9 @@ public class ConcurrentTestCommandScript
                 new StateDatum(CLOSE, REPEAT_STATE),
                 new StateDatum(SLEEP, REPEAT_STATE),
                 new StateDatum(SQL, REPEAT_STATE),
-                new StateDatum(ECHO, THREAD_STATE),
-                new StateDatum(ERR, THREAD_STATE),
-                new StateDatum(SHELL, THREAD_STATE),
+                new StateDatum(ECHO, REPEAT_STATE),
+                new StateDatum(ERR, REPEAT_STATE),
+                new StateDatum(SHELL, REPEAT_STATE),
                 new StateDatum(END, THREAD_STATE)
             }),
 
@@ -196,6 +198,7 @@ public class ConcurrentTestCommandScript
     private static final int ERR_LEN = ERR.length();
     private static final int ECHO_LEN = ECHO.length();
     private static final int SHELL_LEN = SHELL.length();
+    private static final int PLUGIN_LEN = PLUGIN.length();
     private static final int INCLUDE_LEN = INCLUDE.length();
     private static final int VAR_LEN = VAR.length();
 
@@ -231,6 +234,8 @@ public class ConcurrentTestCommandScript
     private File scriptDirectory;
     private long executionStartTime = 0;
 
+    private final Map<String, ConcurrentTestPlugin> plugins =
+        new HashMap<String, ConcurrentTestPlugin>();
     private List<String> setupCommands = new ArrayList<String>();
     private List<String> cleanupCommands = new ArrayList<String>();
 
@@ -1046,6 +1051,26 @@ public class ConcurrentTestCommandScript
                             }
                             order++;
 
+                        } else if (PLUGIN.equals(command)) {
+                            String cmd = line.substring(PLUGIN_LEN).trim();
+                            String pluginName = readLine(cmd, in).trim();
+                            trace("@plugin", pluginName);
+                            plugin(pluginName);
+
+                        } else if (plugins.containsKey(command)) {
+                            String cmd = line.substring(command.length())
+                                .trim();
+                            cmd = readLine(cmd, in);
+                            trace("@" + command, cmd);
+                            for (int i = threadId; i < nextThreadId; i++) {
+                                addCommand(
+                                    i,
+                                    order,
+                                    new PluginCommand(
+                                        command, cmd));
+                            }
+                            order++;
+
                         } else if (SHELL.equals(command)) {
                             String cmd = line.substring(SHELL_LEN).trim();
                             cmd = readLine(cmd, in);
@@ -1169,6 +1194,40 @@ public class ConcurrentTestCommandScript
             }
         }
 
+        private void plugin(String pluginName) throws IOException
+        {
+            try {
+                Class<?> pluginClass = Class.forName(pluginName);
+                ConcurrentTestPlugin plugin =
+                    (ConcurrentTestPlugin) pluginClass.newInstance();
+                addExtraCommands(plugin.getSupportedCommands(), THREAD_STATE);
+                addExtraCommands(plugin.getSupportedCommands(), REPEAT_STATE);
+                for (String commandName : plugin.getSupportedCommands()) {
+                    plugins.put(commandName, plugin);
+                }
+            } catch (Exception e) {
+                throw new IOException(e.toString());
+            }
+        }
+
+        private void addExtraCommands(Iterable<String> commands, String state)
+        {
+            assert (state != null);
+
+            for (int i = 0, n = STATE_TABLE.length; i < n; i++) {
+                if (state.equals(STATE_TABLE[i].state)) {
+                    StateDatum[] stateData = STATE_TABLE[i].stateData;
+                    ArrayList<StateDatum> stateDataList =
+                        new ArrayList<StateDatum>(Arrays.asList(stateData));
+                    for (String cmd : commands) {
+                        stateDataList.add(new StateDatum(cmd, state));
+                    }
+                    STATE_TABLE[i] =
+                        new StateAction(
+                            state, stateDataList.toArray(stateData));
+                }
+            }
+        }
 
         /**
          * Manages state transitions.
@@ -1350,10 +1409,47 @@ public class ConcurrentTestCommandScript
         }
     }
 
+    private class PluginCommand extends AbstractCommand
+    {
+
+        private final ConcurrentTestPluginCommand pluginCommand;
+
+        private PluginCommand(
+            String command,
+            String params) throws IOException
+        {
+            ConcurrentTestPlugin plugin = plugins.get(command);
+            pluginCommand = plugin.getCommandFor(command, params);
+        }
+
+        protected void doExecute(final ConcurrentTestCommandExecutor exec)
+            throws Exception
+        {
+            ConcurrentTestPluginCommand.TestContext context =
+                new ConcurrentTestPluginCommand.TestContext() {
+                public void storeMessage(String message)
+                {
+                    ConcurrentTestCommandScript.this.storeMessage(
+                        exec.getThreadId(), message);
+                }
+
+                public Connection getConnection()
+                {
+                    return exec.getConnection();
+                }
+
+                public Statement getCurrentStatement()
+                {
+                    return exec.getStatement();
+                }
+            };
+            pluginCommand.execute(context);
+        }
+    }
+
     // Matches shell wilcards and other special characters: when a command
     // contains some of these, it needs a shell to run it.
     private final Pattern shellWildcardPattern = Pattern.compile("[*?$]");
-
 
     // REVIEW mb 2/24/09 (Mardi Gras) Should this have a timeout?
     private class ShellCommand extends AbstractCommand

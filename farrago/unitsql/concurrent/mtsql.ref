@@ -162,6 +162,18 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: At line 1, column 9: Co
 
 -- thread printer
 > select * from foo.crossview;
+DEPTNO: INTEGER
+NAME: VARCHAR
+EMPNO: INTEGER
+NAME0: VARCHAR
+DEPTNO0: INTEGER
+GENDER: CHAR
+CITY: VARCHAR
+EMPID: INTEGER
+AGE: INTEGER
+PUBLIC_KEY: VARBINARY
+SLACKER: BOOLEAN
+MANAGER: BOOLEAN
 echo mtsql.*
 mtsql.included mtsql.included2 mtsql.mtsql mtsql.ref
 printing all

@@ -1,5 +1,7 @@
 -- Unit test for mtsql itself. Tests all mtsql script features.
 
+@plugin org.eigenbase.test.concurrent.SamplePlugin
+
 @setup
   @include mtsql.included
 
@@ -56,6 +58,7 @@
 @thread printer
   @sync
   @prepare select * from foo.crossview;
+  @describeResultSet
   @shell echo mtsql.*
   @sync
 
