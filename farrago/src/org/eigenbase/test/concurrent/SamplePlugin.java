@@ -17,7 +17,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.test.concurrent;
 
@@ -36,7 +36,7 @@ import java.util.Arrays;
  * @author jhahn
   * @version $Id$
  */
-public class SamplePlugin implements ConcurrentTestPlugin
+public class SamplePlugin extends ConcurrentTestPlugin
 {
 
     private final static String DESCRIBE_RESULT_SET_CMD = "@describeResultSet";
@@ -49,7 +49,7 @@ public class SamplePlugin implements ConcurrentTestPlugin
         return null;
     }
 
-    public Iterable<String> getSupportedCommands()
+    public Iterable<String> getSupportedThreadCommands()
     {
         return Arrays.asList(new String[] { DESCRIBE_RESULT_SET_CMD });
     }

@@ -234,7 +234,11 @@ public class ConcurrentTestCommandScript
     private File scriptDirectory;
     private long executionStartTime = 0;
 
-    private final Map<String, ConcurrentTestPlugin> plugins =
+    private final List<ConcurrentTestPlugin> plugins =
+        new ArrayList<ConcurrentTestPlugin>();
+    private final Map<String, ConcurrentTestPlugin> pluginForCommand =
+        new HashMap<String, ConcurrentTestPlugin>();
+    private final Map<String, ConcurrentTestPlugin> preSetupPluginForCommand =
         new HashMap<String, ConcurrentTestPlugin>();
     private List<String> setupCommands = new ArrayList<String>();
     private List<String> cleanupCommands = new ArrayList<String>();
@@ -333,6 +337,12 @@ public class ConcurrentTestCommandScript
 
     public boolean isDisabled()
     {
+        for (ConcurrentTestPlugin plugin : plugins) {
+            if (plugin.isTestDisabled()) {
+                return true;
+            }
+        }
+
         if (disabled == null) {
             return false;
         }
@@ -1057,7 +1067,7 @@ public class ConcurrentTestCommandScript
                             trace("@plugin", pluginName);
                             plugin(pluginName);
 
-                        } else if (plugins.containsKey(command)) {
+                        } else if (pluginForCommand.containsKey(command)) {
                             String cmd = line.substring(command.length())
                                 .trim();
                             cmd = readLine(cmd, in);
@@ -1070,6 +1080,17 @@ public class ConcurrentTestCommandScript
                                         command, cmd));
                             }
                             order++;
+
+                        } else if (preSetupPluginForCommand.containsKey(
+                            command))
+                        {
+                            String cmd = line.substring(command.length())
+                                .trim();
+                            cmd = readLine(cmd, in);
+                            trace("@" + command, cmd);
+                            ConcurrentTestPlugin plugin =
+                                preSetupPluginForCommand.get(command);
+                            plugin.preSetupFor(command, cmd);
 
                         } else if (SHELL.equals(command)) {
                             String cmd = line.substring(SHELL_LEN).trim();
@@ -1200,10 +1221,19 @@ public class ConcurrentTestCommandScript
                 Class<?> pluginClass = Class.forName(pluginName);
                 ConcurrentTestPlugin plugin =
                     (ConcurrentTestPlugin) pluginClass.newInstance();
-                addExtraCommands(plugin.getSupportedCommands(), THREAD_STATE);
-                addExtraCommands(plugin.getSupportedCommands(), REPEAT_STATE);
-                for (String commandName : plugin.getSupportedCommands()) {
-                    plugins.put(commandName, plugin);
+                plugins.add(plugin);
+                addExtraCommands(
+                    plugin.getSupportedThreadCommands(), THREAD_STATE);
+                addExtraCommands(
+                    plugin.getSupportedThreadCommands(), REPEAT_STATE);
+                for (String commandName : plugin.getSupportedThreadCommands()) {
+                    pluginForCommand.put(commandName, plugin);
+                }
+                addExtraCommands(
+                    plugin.getSupportedPreSetupCommands(), PRE_SETUP_STATE);
+                for (String commandName : plugin.getSupportedPreSetupCommands())
+                {
+                    preSetupPluginForCommand.put(commandName, plugin);
                 }
             } catch (Exception e) {
                 throw new IOException(e.toString());
@@ -1418,7 +1448,7 @@ public class ConcurrentTestCommandScript
             String command,
             String params) throws IOException
         {
-            ConcurrentTestPlugin plugin = plugins.get(command);
+            ConcurrentTestPlugin plugin = pluginForCommand.get(command);
             pluginCommand = plugin.getCommandFor(command, params);
         }
 
