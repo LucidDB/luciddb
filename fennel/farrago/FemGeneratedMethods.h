@@ -192,6 +192,7 @@ jmethodID ProxySortingStreamDef::meth_getDescendingProj = 0;
 jmethodID ProxySortingStreamDef::meth_getDistinctness = 0;
 jmethodID ProxySortingStreamDef::meth_isEarlyClose = 0;
 jmethodID ProxySortingStreamDef::meth_getEstimatedNumRows = 0;
+jmethodID ProxySortingStreamDef::meth_getPartitionKeyCount = 0;
 jmethodID ProxySplicerIndexAccessorDef::meth_getSplicer = 0;
 jmethodID ProxyTableUpdaterDef::meth_getUpdateProj = 0;
 jmethodID ProxyTableWriterDef::meth_getIndexWriter = 0;
@@ -680,6 +681,7 @@ ProxySortingStreamDef::meth_getDescendingProj = pEnv->GetMethodID(jClass,"getDes
 ProxySortingStreamDef::meth_getDistinctness = pEnv->GetMethodID(jClass,"getDistinctness","()Lnet/sf/farrago/fem/fennel/Distinctness;");
 ProxySortingStreamDef::meth_isEarlyClose = pEnv->GetMethodID(jClass,"isEarlyClose","()Z");
 ProxySortingStreamDef::meth_getEstimatedNumRows = pEnv->GetMethodID(jClass,"getEstimatedNumRows","()J");
+ProxySortingStreamDef::meth_getPartitionKeyCount = pEnv->GetMethodID(jClass,"getPartitionKeyCount","()I");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSplicerIndexAccessorDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySplicerIndexAccessorDef>));
@@ -1999,6 +2001,11 @@ return pEnv->CallBooleanMethod(jObject,meth_isEarlyClose);
 int64_t ProxySortingStreamDef::getEstimatedNumRows()
 {
 return pEnv->CallLongMethod(jObject,meth_getEstimatedNumRows);
+}
+
+int32_t ProxySortingStreamDef::getPartitionKeyCount()
+{
+return pEnv->CallIntMethod(jObject,meth_getPartitionKeyCount);
 }
 
 SharedProxyLbmSplicerStreamDef ProxySplicerIndexAccessorDef::getSplicer()

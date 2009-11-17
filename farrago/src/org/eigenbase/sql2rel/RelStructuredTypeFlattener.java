@@ -246,7 +246,7 @@ public class RelStructuredTypeFlattener
      *
      * @return Post-flattening ordinal
      */
-    private int getNewForOldInput(int oldOrdinal)
+    protected int getNewForOldInput(int oldOrdinal)
     {
         assert (currentRel != null);
         int newOrdinal = 0;

@@ -32,7 +32,7 @@ import org.eigenbase.rex.*;
  * Relational expression which imposes a particular sort order on its input
  * without otherwise changing its content.
  */
-public final class SortRel
+public class SortRel
     extends SingleRel
 {
     //~ Instance fields --------------------------------------------------------

@@ -523,6 +523,7 @@ void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
     params.storeFinalRun = false;
     params.estimatedNumRows = streamDef.getEstimatedNumRows();
     params.earlyClose = streamDef.isEarlyClose();
+    params.partitionKeyCount = streamDef.getPartitionKeyCount();
     CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());

@@ -632,9 +632,9 @@ public class SqlToRelConverter
         return -1;
     }
 
-    private void convertOrder(
+    protected void convertOrder(
         SqlSelect select,
-        final Blackboard bb,
+        Blackboard bb,
         List<RelFieldCollation> collationList,
         List<SqlNode> orderExprList)
     {
@@ -2478,7 +2478,7 @@ public class SqlToRelConverter
         }
     }
 
-    private RelFieldCollation convertOrderItem(
+    protected RelFieldCollation convertOrderItem(
         SqlSelect select,
         SqlNode orderItem,
         List<SqlNode> extraExprs,

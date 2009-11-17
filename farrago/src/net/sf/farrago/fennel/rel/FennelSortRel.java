@@ -49,17 +49,24 @@ public class FennelSortRel
 {
     //~ Instance fields --------------------------------------------------------
 
-    private final RelFieldCollation [] collations;
+    protected final RelFieldCollation [] collations;
 
     /**
      * Whether to discard tuples with duplicate keys.
      */
-    private final boolean discardDuplicates;
+    protected final boolean discardDuplicates;
+
+    /**
+     * number of expressions in sortKeyProjection to be used for partitioned
+     * sort. if 0, then partitioned sort is disabled.
+     */
+    protected int partitionKeyCount = 0;  // for now, always set to 0.
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelSortRel object.
+     * Creates a new FennelSortRel object assuming all fields are to be sorted
+     * ascending.
      *
      * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be sorted
@@ -235,6 +242,7 @@ public class FennelSortRel
             sortingStream.setEstimatedNumRows(numInputRows.longValue());
         }
         sortingStream.setEarlyClose(false);
+        sortingStream.setPartitionKeyCount(partitionKeyCount);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             sortingStream);

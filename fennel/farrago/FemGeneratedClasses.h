@@ -1259,6 +1259,8 @@ bool isEarlyClose();
 static jmethodID meth_isEarlyClose;
 int64_t getEstimatedNumRows();
 static jmethodID meth_getEstimatedNumRows;
+int32_t getPartitionKeyCount();
+static jmethodID meth_getPartitionKeyCount;
 };
 
 class FENNEL_FARRAGO_EXPORT ProxySplicerIndexAccessorDef

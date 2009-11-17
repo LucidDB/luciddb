@@ -137,4 +137,3 @@ JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_cancelExecution
 }
 #endif
 #endif
-// End NativeMethods.h
