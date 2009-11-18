@@ -45,10 +45,21 @@ FENNEL_BEGIN_NAMESPACE
  */
 class FENNEL_FARRAGO_EXPORT JniProxy
 {
+    inline void checkNull(jobject o)
+    {
+        if (!o) {
+            throw FennelExcn("java null");
+        }
+    }
+
+
 protected:
-    // helper for methods which return strings
+    // Helpers that convert java String, Integer, etc from and to C++.
+    // All java to C++ helpers throw a FennelExcn if the arg. is null.
+
     std::string constructString(jobject jStringObj)
     {
+        checkNull(jStringObj);
         jstring jString = reinterpret_cast<jstring>(jStringObj);
         return JniUtil::toStdString(pEnv, jString);
     }
@@ -61,6 +72,7 @@ protected:
 
     int32_t int32Value(jobject jIntegerObj)
     {
+        checkNull(jIntegerObj);
         return pEnv->CallIntMethod(jIntegerObj, JniUtil::methIntValue);
     }
 
@@ -74,6 +86,7 @@ protected:
 
     int64_t int64Value(jobject jLongObj)
     {
+        checkNull(jLongObj);
         return pEnv->CallLongMethod(jLongObj, JniUtil::methLongValue);
     }
 
@@ -87,6 +100,7 @@ protected:
 
     int16_t int16Value(jobject jShortObj)
     {
+        checkNull(jShortObj);
         return pEnv->CallShortMethod(jShortObj, JniUtil::methShortValue);
     }
 
@@ -100,6 +114,7 @@ protected:
 
     double doubleValue(jobject jDoubleObj)
     {
+        checkNull(jDoubleObj);
         return pEnv->CallDoubleMethod(jDoubleObj, JniUtil::methDoubleValue);
     }
 
@@ -113,6 +128,7 @@ protected:
 
     float floatValue(jobject jFloatObj)
     {
+        checkNull(jFloatObj);
         return pEnv->CallFloatMethod(jFloatObj, JniUtil::methFloatValue);
     }
 
@@ -126,6 +142,7 @@ protected:
 
     bool boolValue(jobject jBooleanObj)
     {
+        checkNull(jBooleanObj);
         return pEnv->CallBooleanMethod(jBooleanObj, JniUtil::methBooleanValue);
     }
 

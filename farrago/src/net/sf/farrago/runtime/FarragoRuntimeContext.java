@@ -782,6 +782,9 @@ public class FarragoRuntimeContext
         String globalStreamName,
         boolean isInput)
     {
+        if (globalStreamName == null) {
+            throw new RuntimeException("stream name is null");
+        }
         return streamGraph.findStream(repos, globalStreamName, isInput);
     }
 
