@@ -56,6 +56,12 @@ public abstract class CalcTupleIter
     }
 
     // implement TupleIter
+    public boolean addListener(MoreDataListener c)
+    {
+        return inputIterator.addListener(c);
+    }
+
+    // implement TupleIter
     public void restart()
     {
         inputIterator.restart();

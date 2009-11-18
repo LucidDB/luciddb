@@ -74,6 +74,11 @@ public class CompoundTupleIter
         }
     }
 
+    public boolean addListener(MoreDataListener c)
+    {
+        return iterator.addListener(c);
+    }
+
     public boolean setTimeout(long timeout, boolean asUnderflow)
     {
         // try to set a timeout on all underlings, but return false if any

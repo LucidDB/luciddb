@@ -38,6 +38,11 @@ public abstract class AbstractTupleIter
         return false; // by default, don't provide a timeout
     }
 
+    public boolean addListener(MoreDataListener c)
+    {
+        return false;
+    }
+
     public void restart()
     {
     }

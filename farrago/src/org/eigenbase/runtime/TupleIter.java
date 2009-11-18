@@ -23,7 +23,6 @@ package org.eigenbase.runtime;
 
 import org.eigenbase.util.*;
 
-
 /**
  * TupleIter provides an Iterator-like interface for reading tuple data.
  *
@@ -51,6 +50,11 @@ public interface TupleIter
             }
 
             public boolean setTimeout(long timeout, boolean asUnderflow)
+            {
+                return false;
+            }
+
+            public boolean addListener(MoreDataListener c)
             {
                 return false;
             }
@@ -129,13 +133,19 @@ public interface TupleIter
     public boolean setTimeout(long timeout, boolean asUnderflow);
 
     /**
+     * Registers a request to be notified when data next available.
+     * Useful after UNDERFLOW for a push-mode reader.
+     * @return true if the request was accepted,
+     *   false if notice is not avaiable.
+     */
+    public boolean addListener(MoreDataListener c);
+
+    /**
      * Restarts this iterator, so that a subsequent call to {@link
      * TupleIter#fetchNext()} returns the first element in the collection being
      * iterated.
      */
     public void restart();
-
-    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * One way to indicate that {@link TupleIter#fetchNext} timed-out. The other
@@ -147,6 +157,16 @@ public interface TupleIter
         extends RuntimeException
     {
     }
+
+    /**
+     * A callback, called when data is available after UNDERFLOW.
+     * @see {@link TupleIter#addListener}.
+     */
+    public interface MoreDataListener
+    {
+        public void onMoreData();
+    }
+
 }
 
 // End TupleIter.java
