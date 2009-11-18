@@ -56,7 +56,8 @@ public interface FarragoTransform
         InputBinding [] inputBindings);
 
     /**
-     * Does a quantum of work. Called by Fennel's JavaTransformExecStream.
+     * Does a quantum of work. Called by the Fennel peer, a
+     * JavaTransformExecStream.
      *
      * @param outputBuffer output ByteBuffer into which tuples are marshaled
      * @param quantum the maximum number of tuples that should be processed
@@ -68,10 +69,23 @@ public interface FarragoTransform
     int execute(ByteBuffer outputBuffer, long quantum);
 
     /**
-     * Sets a timeout for fetching an input row. 0 means poll, infinity (ie
-     * Long.MAX_VALUE) means block. The default is to block;
+     * Sets a timeout for fetching an input row.
+     * @param timeout  0 means poll, infinity (ie Long.MAX_VALUE) means block.
+     * The default is to block;
      */
     void setInputFetchTimeout(long timeout);
+
+    /**
+     * Requests a signal when data appears after an underflow.
+     *
+     * The FarragoTransform will call ExecStreamScheduler::makeRunnable() on its
+     * fennel peer.
+     *
+     * If the peer returns EXECRC_YIELD on input underflow, it needs a wake-up
+     * signal when more input appears, so it calls this (once, when it opens).
+     */
+    void pleaseSignalOnMoreData();
+
 
     /**
      * Restarts this transform's underlying TupleIter(s).

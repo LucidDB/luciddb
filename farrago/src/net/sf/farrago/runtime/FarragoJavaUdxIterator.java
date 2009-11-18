@@ -152,13 +152,37 @@ public abstract class FarragoJavaUdxIterator
     // implement TupleIter
     public boolean addListener(MoreDataListener c)
     {
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.log(
+                Level.FINE, "FarragoJavaUdxIterator {0} added listener {1}",
+                new Object[] {this, c});
+        }
         moreDataListeners.add(c);
         return true;
     }
 
     private void onUnderflow()
     {
+        tracer.fine("underflow");
         didUnderflow = true;
+    }
+
+    private void onData()
+    {
+        if (didUnderflow) {
+            tracer.fine("more data after underflow");
+            didUnderflow = false;
+            for (MoreDataListener c : moreDataListeners) {
+                c.onMoreData();
+            }
+        }
+    }
+
+    // override QueueIterator
+    public void done(Throwable e)
+    {
+        super.done(e);
+        onData();
     }
 
     // override QueueIterator
@@ -177,17 +201,6 @@ public abstract class FarragoJavaUdxIterator
         }
         return false;
     }
-
-    private void onData()
-    {
-        if (didUnderflow) {
-            didUnderflow = false;
-            for (MoreDataListener c: moreDataListeners) {
-                c.onMoreData();
-            }
-        }
-    }
-
 
     // implement TupleIter
     public Object fetchNext()
@@ -287,6 +300,7 @@ public abstract class FarragoJavaUdxIterator
     // implement TupleIter
     public void closeAllocation()
     {
+        tracer.fine("close");
         stopWithLatch();
     }
 

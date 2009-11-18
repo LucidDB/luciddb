@@ -59,6 +59,7 @@ jclass JniUtil::classUUID;
 jmethodID JniUtil::methFarragoTransformInit = 0;
 jmethodID JniUtil::methFarragoTransformExecute = 0;
 jmethodID JniUtil::methFarragoTransformSetInputFetchTimeout = 0;
+jmethodID JniUtil::methFarragoTransformPleaseSignalOnMoreData = 0;
 jmethodID JniUtil::methFarragoTransformRestart = 0;
 jclass JniUtil::classFarragoTransformInputBinding = 0;
 jmethodID JniUtil::methFarragoTransformInputBindingCons = 0;
@@ -313,6 +314,8 @@ jint JniUtil::init(JavaVM *pVmInit)
         classFarragoTransform, "restart", "()V");
     methFarragoTransformSetInputFetchTimeout = pEnv->GetMethodID(
         classFarragoTransform, "setInputFetchTimeout", "(J)V");
+    methFarragoTransformPleaseSignalOnMoreData = pEnv->GetMethodID(
+        classFarragoTransform, "pleaseSignalOnMoreData", "()V");
     methFarragoTransformInputBindingCons =
         pEnv->GetMethodID(
             classFarragoTransformInputBinding, "<init>",

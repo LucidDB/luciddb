@@ -24,6 +24,7 @@ package net.sf.farrago.runtime;
 import java.nio.*;
 import java.util.logging.*;
 
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.runtime.*;
@@ -45,7 +46,8 @@ public abstract class FarragoTransformImpl
         FarragoTrace.getFarragoTransformTracer();
 
     //~ Instance fields --------------------------------------------------------
-
+    private FarragoRuntimeContext connection;
+    private FennelStreamHandle peerStream;
     private TupleIter tupleIter;
     private FennelTupleWriter tupleWriter;
     private Object next;
@@ -53,29 +55,40 @@ public abstract class FarragoTransformImpl
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Initialze this FarragoTransformImpl. Generated FarragoTransform
-     * implementations should pass their generated FennelTupleWriter and
-     * TupleIter implementations here. A subclass (not an anonymous subclass)
-     * may pass <code>null</code> for <code>tupleWriter</code> or <code>
-     * tupleIter</code> iff it has a different way to read or write its data and
-     * iff it overrides {@link #execute} and {@link #restart} as appropriate.
+     * Initialze this FarragoTransformImpl.
      *
-     * <code>tupleWriter</code> or <code>tupleIter</code> iff it has a different
-     * way to read or write its data and iff it overrides {@link #execute} and
-     * {@link #restart} as appropriate.
+     * Generated FarragoTransform implementations should pass their generated
+     * FennelTupleWriter and TupleIter implementations here.
      *
-     * @param tupleWriter FennelTupleWriter that can marshal this transform's
+     * A subclass (not an anonymous subclass) may pass <code>null</code>
+     * for <code>tupleWriter</code> or <code> tupleIter</code>
+     * iff it has a different way to read or write its data and iff it overrides
+     *  {@link #execute} and {@link #restart} as appropriate.
+     *
+     * @param connection  the runtime context
+     * @param peerStreamName null if no fennel peer
+     * @param tupleWriter FennelTupleWriter that marshals this transform's
      * output tuple format.
      * @param tupleIter TupleIter that performs this transform's work
      */
-    protected void init(FennelTupleWriter tupleWriter, TupleIter tupleIter)
+    protected void init(
+        FarragoRuntimeContext connection,
+        String peerStreamName,
+        FennelTupleWriter tupleWriter,
+        TupleIter tupleIter)
     {
+        this.connection = connection;
+        this.peerStream = connection.getStreamHandle(peerStreamName, false);
         this.tupleWriter = tupleWriter;
         this.tupleIter = tupleIter;
         this.next = null;
+        if (tupleIter instanceof FarragoJavaUdxIterator) {
+            ((FarragoJavaUdxIterator) tupleIter).setThreadName(peerStreamName);
+        }
     }
 
     /**
+     * @return the TupleIter
      * for named subclasses, not for generated transforms
      */
     protected TupleIter getTupleIter()
@@ -90,6 +103,22 @@ public abstract class FarragoTransformImpl
     public void setInputFetchTimeout(long timeout)
     {
         tupleIter.setTimeout(timeout, true);
+    }
+
+    public void pleaseSignalOnMoreData()
+    {
+        tracer.fine("pleaseSignalOnMoreData");
+        tupleIter.addListener(
+            new TupleIter.MoreDataListener() {
+                // called when more data after underflow
+                public void onMoreData()
+                {
+                    tracer.fine(
+                        "more data after underflow; signal fennel peer");
+                    FennelStreamGraph graph = connection.getStreamGraph();
+                    graph.setStreamRunnable(peerStream, true);
+                }
+            });
     }
 
     /**
@@ -114,13 +143,12 @@ public abstract class FarragoTransformImpl
             Object o = tupleIter.fetchNext();
 
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
-                tracer.finer("end of data");
+                tracer.fine("end of data");
                 return 0;
             } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
-                tracer.finer("underflow");
+                tracer.fine("underflow");
                 return -1;
             }
-
             next = o;
         }
 

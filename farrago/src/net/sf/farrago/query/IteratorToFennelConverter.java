@@ -360,6 +360,7 @@ public class IteratorToFennelConverter
 
         //     public void init(
         //         final FarragoRuntimeContext connection_p,
+        //         String peerStreamName,
         //         FarragoTransformInputBinding[] bindings)
         //     {
         //         final FarragoRuntimeContext connection = connection_p;
@@ -385,8 +386,8 @@ public class IteratorToFennelConverter
 
         StatementList initBody = new StatementList();
 
-        // Variable to hold parameter because janino cannot see it (bug in
-        // janino-2.5.15).
+        // Variable to hold parameter because janino cannot see it
+        //  (bug in janino-2.5.15).
         initBody.add(
             new VariableDeclaration(
                 new ModifierList(ModifierList.FINAL),
@@ -395,6 +396,8 @@ public class IteratorToFennelConverter
                 new Variable(CONNECTION_PARAM_NAME)));
 
         //         super.init(
+        //             connection,
+        //             streamName,
         //             new FennelTupleWriter() { ... },
         //             new TupleIter(...) { ... });
         // (The TupleIter will be based on one or more calls to
@@ -407,6 +410,8 @@ public class IteratorToFennelConverter
                     SelfAccess.makeSuper(),
                     "init",
                     superInitParamsList)));
+        superInitParamsList.add(new Variable(CONNECTION_PARAM_NAME));
+        superInitParamsList.add(new Variable(STREAM_NAME_VAR_NAME));
         superInitParamsList.add(tupleWriterExpression);
         superInitParamsList.add(childExp);
 

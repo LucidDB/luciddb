@@ -99,9 +99,10 @@ public interface FarragoSessionRuntimeContext
     /**
      * Retrieves the FennelStreamHandle corresponding to a stream
      *
-     * @param globalStreamName name of the stream that you are searching for
+     * @param globalStreamName name of the stream
      * @param isInput
-     *
+     *   true: find the adapter intepolated after the stream;
+     *   false: find the stream itself.
      * @return FennelStreamHandle corresponding to the stream specified by the
      * name parameter
      */

@@ -64,6 +64,8 @@ public class FennelPipeTupleIter
      */
     private final ArrayQueue<ByteBuffer> moreBuffers;
 
+    private ByteBuffer dummyBuffer;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -78,13 +80,13 @@ public class FennelPipeTupleIter
         // start with an empty buffer queue
         moreBuffers = new ArrayQueue<ByteBuffer>(2);
 
-        // Create an empty byteBuffer which will cause us to fetch new rows the
-        // first time our consumer tries to fetch. TODO: Add a new state 'have
-        // not yet checked whether we have more data'.
-        bufferAsArray = new byte[0];
-        byteBuffer = ByteBuffer.wrap(bufferAsArray);
-        byteBuffer.clear();
-        byteBuffer.limit(0);
+        // An empty buffer which will cause us to fetch new rows the first time
+        // our consumer tries to fetch. TODO: Add a new state 'have not yet
+        // checked whether we have more data'.
+        dummyBuffer = getByteBuffer(0);
+        dummyBuffer.limit(0);
+        byteBuffer = dummyBuffer;
+        bufferAsArray = byteBuffer.array();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -140,7 +142,8 @@ public class FennelPipeTupleIter
     // implement TupleIter
     public void closeAllocation()
     {
-        // REVIEW: SWZ: 2/23/2006: Deallocate byteBuffer here?
+        tracer.fine("close");
+        enqueue(dummyBuffer);           // send EOQ in case reader is blocked
     }
 
     protected int populateBuffer()

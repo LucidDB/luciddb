@@ -76,6 +76,7 @@ public abstract class ThreadIterator
     //~ Instance fields --------------------------------------------------------
 
     private Thread thread;
+    private String threadName;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -89,6 +90,14 @@ public abstract class ThreadIterator
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public void setThreadName(String s)
+    {
+        threadName = s;
+        if (thread != null) {
+            thread.setName(threadName);
+        }
+    }
 
     // implement Iterable
     public Iterator iterator()
@@ -121,6 +130,9 @@ public abstract class ThreadIterator
     {
         assert (thread == null);
         thread = new Thread(this);
+        if (threadName != null) {
+            thread.setName(threadName);
+        }
 
         // Make the thread a daemon so that we don't have to worry
         // about cleaning it up.  This is important since we can't

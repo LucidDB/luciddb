@@ -330,9 +330,14 @@ public:
     static jmethodID methFarragoTransformExecute;
 
     /**
-     * Java method FarragoTransform.setInputFetchTimeout
+     * Java method FarragoTransform.setInputFetchTimeout.
      */
     static jmethodID methFarragoTransformSetInputFetchTimeout;
+
+    /**
+     * Java method FarragoTransform.pleaseSignalOnMoreData.
+     */
+    static jmethodID methFarragoTransformPleaseSignalOnMoreData;
 
     /**
      * Java method FarragoTransform.restart.
