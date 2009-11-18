@@ -185,6 +185,19 @@ public class FennelStorage
         throws SQLException;
 
     /**
+     * Sets a stream to the runnable state.
+     * Calls fennel::ExecStream::setRunnable on the stream. a suspend/resume
+     * control. A stream may return EXECRC_YIELD in order to wait on an external
+     * event; this method lets the farrago runtime signal the wake-up event.
+     *
+     * @param hStream handle to the stream
+     * @param state true to resume, false to suspend.
+     */
+    static native void tupleStreamSetRunnable(long hStream, boolean state)
+        throws SQLException;
+
+
+    /**
      * Closes a stream graph.
      *
      * @param hStreamGraph handle to stream graph

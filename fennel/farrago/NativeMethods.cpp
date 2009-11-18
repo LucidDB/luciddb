@@ -229,6 +229,21 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamRestart(
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_tupleStreamSetRunnable(
+    JNIEnv *pEnvInit, jclass, jlong hStream, jboolean state)
+{
+    JniEnvRef pEnv(pEnvInit);
+    try {
+        ExecStream &stream = CmdInterpreter::getExecStreamFromLong(hStream);
+        ExecStreamScheduler *scheduler = stream.getGraph().getScheduler();
+        assert(scheduler);
+        scheduler->setRunnable(stream, state);
+    } catch (std::exception &ex) {
+        pEnv.handleExcn(ex);
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
     JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jlong hTxn,
     jobject hJavaStreamMap, jobject hJavaErrorTarget)

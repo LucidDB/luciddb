@@ -70,6 +70,8 @@ public class FennelStreamGraph
      * @param metadataFactory factory for creating Fem instances
      * @param streamName name of stream to find
      * @param isInput
+     *   true: find the adapter intepolated after the stream;
+     *   false: find the stream itself.
      *
      * @return handle to stream
      */
@@ -311,6 +313,7 @@ public class FennelStreamGraph
      */
     public void restart(FennelStreamHandle streamHandle)
     {
+        traceStreamHandle("restart", streamHandle);
         try {
             FennelStorage.tupleStreamRestart(
                 streamHandle.getLongHandle());
@@ -318,6 +321,27 @@ public class FennelStreamGraph
             throw fennelDbHandle.handleNativeException(ex);
         }
     }
+
+    /**
+     * Sets the runnable state of a particular stream in this graph.
+     *
+     * @param streamHandle handle to the stream.
+     * @param state the new state
+     */
+    public void setStreamRunnable(
+        FennelStreamHandle streamHandle,
+        boolean state)
+    {
+        traceStreamHandle(
+            (state ? "set runnable" : "set not runnable"), streamHandle);
+        try {
+            FennelStorage.tupleStreamSetRunnable(
+                streamHandle.getLongHandle(), state);
+        } catch (SQLException ex) {
+            throw fennelDbHandle.handleNativeException(ex);
+        }
+    }
+
 }
 
 // End FennelStreamGraph.java
