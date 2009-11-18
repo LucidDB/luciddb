@@ -251,13 +251,38 @@ public class FarragoJavaUdxRel
     // implement JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
+        final FarragoRelImplementor farragoImplementor =
+            (FarragoRelImplementor) implementor;
         final RelDataType outputRowType = getRowType();
         OJClass outputRowClass =
             OJUtil.typeToOJClass(
                 outputRowType,
                 implementor.getTypeFactory());
-
         StatementList executeMethodBody = new StatementList();
+        MemberDeclarationList memberList = new MemberDeclarationList();
+
+        // Hack to workaround the fact that janino 2.5.15 cannot see the
+        // "connection" variable from an inner class nested two deep:
+        //   final FarragoRuntimeContext connection =
+        //       (FarragoRuntimeContext) runtimeContext;
+        if (true)
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.FINAL),
+                TypeName.forOJClass(
+                    OJClass.forClass(FarragoRuntimeContext.class)),
+                OJPreparingStmt.connectionVariable,
+                new CastExpression(
+                    TypeName.forOJClass(
+                        OJClass.forClass(FarragoRuntimeContext.class)),
+                    new Variable("runtimeContext"))));
+
+        // Kludge to accomodate a push-mode scheduler.
+        // TODO mberkowitz 5/09 Same implementation should work with all
+        // schedulers.
+        FarragoSessionPersonality personality =
+            farragoImplementor.getPreparingStmt().getSession().getPersonality();
+        final boolean restartable = personality.isJavaUdxRestartable();
 
         // Translate relational inputs to ResultSet expressions.
         final Expression [] childExprs = new Expression[inputs.length];
@@ -266,19 +291,21 @@ public class FarragoJavaUdxRel
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
 
             Variable varChild = implementor.newVariable();
-            executeMethodBody.add(
-                new VariableDeclaration(
+            memberList.add(
+                new FieldDeclaration(
                     new ModifierList(ModifierList.FINAL),
                     TypeName.forOJClass(OJClass.forClass(TupleIter.class)),
                     varChild.toString(),
                     childExprs[i]));
             childExprs[i] = varChild;
-            executeMethodBody.add(
-                new ExpressionStatement(
-                    new MethodCall(
-                        "addRestartableInput",
-                        new ExpressionList(
-                            varChild))));
+            if (restartable) {
+                executeMethodBody.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            "addRestartableInput",
+                            new ExpressionList(
+                                varChild))));
+            }
 
             OJClass rowClass =
                 OJUtil.typeToOJClass(
@@ -300,6 +327,15 @@ public class FarragoJavaUdxRel
                 new AllocationExpression(
                     OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
                     resultSetParams);
+
+            Variable varChild2 = implementor.newVariable();
+            memberList.add(
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.FINAL),
+                    OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
+                    varChild2.toString(),
+                    childExprs[i]));
+            childExprs[i] = varChild2;
         }
 
         // Rebind RexInputRefs accordingly.
@@ -317,13 +353,9 @@ public class FarragoJavaUdxRel
 
         RexNode rewrittenCall = getCall().accept(shuttle);
 
-        MemberDeclarationList memberList = new MemberDeclarationList();
-
         // Set up server MOFID context while generating method call
         // so that it will be available to the UDX at runtime in case
         // it needs to call back to the foreign data server.
-        FarragoRelImplementor farragoImplementor =
-            (FarragoRelImplementor) implementor;
         farragoImplementor.setServerMofId(serverMofId);
         implementor.translateViaStatements(
             this,
@@ -332,13 +364,6 @@ public class FarragoJavaUdxRel
             memberList);
         farragoImplementor.setServerMofId(null);
 
-
-        // Kludge to accomodate a push-mode scheduler.
-        // TODO mberkowitz 5/09 Same implementation should work with all
-        // schedulers.
-        FarragoSessionPersonality personality =
-            farragoImplementor.getPreparingStmt().getSession().getPersonality();
-        boolean restartable = personality.isJavaUdxRestartable();
 
         if (!restartable) {
             // Call QueueIterator's done method to indicate end-of-stream:
