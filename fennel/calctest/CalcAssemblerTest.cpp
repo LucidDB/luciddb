@@ -922,6 +922,17 @@ void CalcAssemblerTestCase::writeMaxData(TupleDatum &datum, uint typeOrdinal)
     }
 }
 
+template<typename T>
+T minSafeValue() {
+    return std::numeric_limits<T>::min();
+}
+
+template<>
+double minSafeValue() {
+    // strtod has problems if we don't fudge a bit
+    return std::numeric_limits<double>::min()*1.01;
+}
+
 // Copied from TupleTest::writeMinData
 void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
 {
@@ -968,7 +979,7 @@ void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
         break;
     case STANDARD_TYPE_DOUBLE:
         *(reinterpret_cast<double *>(pData)) =
-            std::numeric_limits<double>::min();
+            minSafeValue<double>();
         break;
     case STANDARD_TYPE_BINARY:
         memset(pData, 0, datum.cbData);
@@ -1053,9 +1064,11 @@ void CalcAssemblerTest::testIntegralNativeInstructions(
     TProgramCounter pc = 0;
     T* pNULL = NULL;
     T  zero  = 0;
-    T  min = std::numeric_limits<T>::min();
-    T  max = std::numeric_limits<T>::max();
-    T  mid = 10;
+    // Make these volatile so compiler doesn't inconstantly
+    // constant fold out shifts.
+    volatile T  min = minSafeValue<T>();
+    volatile T  max = std::numeric_limits<T>::max();
+    volatile T  mid = 10;
 
     const char* divbyzero = "22012";
 
@@ -1334,7 +1347,7 @@ void CalcAssemblerTest::testNativeInstructions(
     TProgramCounter pc = 0;
     T* pNULL = NULL;
     T  zero  = 0;
-    T  min = std::numeric_limits<T>::min();
+    T  min = minSafeValue<T>();
     T  max = std::numeric_limits<T>::max();
     T  mid = 10;
 
@@ -2069,7 +2082,7 @@ void CalcAssemblerTest::testStandardTypes()
 
     min[STANDARD_TYPE_REAL] = "1.17549e-38";
     max[STANDARD_TYPE_REAL] = "3.40282e+38";
-    min[STANDARD_TYPE_DOUBLE] = "2.22507e-308";
+    min[STANDARD_TYPE_DOUBLE] = "2.24732e-308";
     max[STANDARD_TYPE_DOUBLE] = "1.79769e+308";
 
     // TODO: What to do for underflow of floats/doubles?
@@ -2110,7 +2123,7 @@ void CalcAssemblerTest::testStandardTypes()
         }
 
         if (!StandardTypeDescriptor::isArray(type)) {
-            // Verify what we think is the min/max is the min/max
+            // Verify what we think is the; min/max is the min/max
             assert (testCase1.getInput(0) == min[type]);
             assert (testCase1.getInput(1) == max[type]);
         }
