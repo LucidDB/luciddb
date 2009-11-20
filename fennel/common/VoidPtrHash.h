@@ -24,6 +24,8 @@
 #ifndef Fennel_VoidPtrHash_Included
 #define Fennel_VoidPtrHash_Included
 
+#include <boost/shared_ptr.hpp>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -35,6 +37,15 @@ struct FENNEL_COMMON_EXPORT VoidPtrHash
     size_t operator() (void *key) const
     {
         return reinterpret_cast<size_t>(key);
+    }
+};
+
+template<typename T>
+struct FENNEL_COMMON_EXPORT VoidSharedPtrHash
+{
+    size_t operator() (boost::shared_ptr<T> key) const
+    {
+        return reinterpret_cast<size_t>(key.get());
     }
 };
 

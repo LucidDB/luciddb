@@ -46,7 +46,7 @@ public class FarragoJdbcEnginePreparedDdl
      * @param stmtContext the underyling FarragoSessionStmtContext (unprepared)
      * @param sql the text of the DDL statement
      */
-    FarragoJdbcEnginePreparedDdl(
+    public FarragoJdbcEnginePreparedDdl(
         FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)

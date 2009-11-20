@@ -8,7 +8,7 @@ set -v
 
 cd ${BOOST_DIR}
 ./configure --prefix=${BOOST_DIR} \
-    --with-libraries=date_time,filesystem,regex,system,thread,test \
+    --with-libraries=date_time,filesystem,regex,system,thread,task,test \
     --without-icu
 echo "using stlport : 5.1.6 : ${STLPORT_LOCATION}/stlport ${STLPORT_LOCATION}/lib ;" >> ${BOOST_DIR}/user-config.jam
 echo "stage: .dummy" >> ${BOOST_DIR}/Makefile

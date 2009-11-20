@@ -423,6 +423,11 @@ public class FarragoJdbcTest
         // infinite loop, guaranteeing that cancel is required to
         // be working in order to break out of it.  Without that,
         // the test would hang.
+        try {
+            stmt.execute("drop schema BAD_VOLCANO cascade");
+        } catch (Exception e) {
+        }
+
         String sql = "create schema BAD_VOLCANO";
         stmt.execute(sql);
         sql = "set schema 'BAD_VOLCANO'";
@@ -453,9 +458,15 @@ public class FarragoJdbcTest
         sql = "alter session implementation set default";
         stmt.execute(sql);
 
-        FarragoJdbcEngineConnection farragoConnection =
-            (FarragoJdbcEngineConnection) connection;
-        farragoConnection.getSession().getSessionVariables().schemaName = null;
+        // if connection is internal
+        if (connection instanceof FarragoJdbcEngineConnection) {
+            FarragoJdbcEngineConnection farragoConnection =
+                (FarragoJdbcEngineConnection) connection;
+            farragoConnection.getSession().getSessionVariables().schemaName =
+                null;
+        } else {
+            stmt.close();
+        }
     }
 
     // See FRG-349 for purpose of this test.
@@ -495,7 +506,12 @@ public class FarragoJdbcTest
     public void testRebuildCancel()
         throws Exception
     {
-        String sql = "create schema rebuild_cancel";
+        String sql = "drop schema rebuild_cancel cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+        }
+        sql = "create schema rebuild_cancel";
         stmt.execute(sql);
         sql = "create table rebuild_cancel.t(i int primary key, j int)";
         stmt.execute(sql);

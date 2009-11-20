@@ -137,9 +137,10 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
 
     // NOTE:  this protects against implicit self-delete until end-of-method
     SharedLogicalTxn pThis = shared_from_this();
-
-    // do this now so that participants don't try to write to log during
-    // rollback
+    std::vector<SharedLogicalTxnParticipant> toRollback(participants);
+    // forget the participants so that participants don't try to write
+    // to log during rollback, but we keep the references
+    // until after we finish using them
     forgetAllParticipants();
 
     SharedSegment pLongLogSegment = pOutputStream->getSegment();
@@ -153,6 +154,8 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
         LogicalRecoveryTxn recoveryTxn(pInputStream, NULL);
         recoveryTxn.undoActions(svpt);
     }
+    // clear out the participants
+    toRollback.clear();
 
     svpt.cbLogged = pInputStream->getOffset();
     state = STATE_ROLLED_BACK;

@@ -52,7 +52,7 @@ public class FarragoJdbcEnginePreparedNonDdl
      * @param stmtContext the underyling prepared FarragoSessionStmtContext
      * @param sql the text of the SQL statement
      */
-    FarragoJdbcEnginePreparedNonDdl(
+    public FarragoJdbcEnginePreparedNonDdl(
         FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)

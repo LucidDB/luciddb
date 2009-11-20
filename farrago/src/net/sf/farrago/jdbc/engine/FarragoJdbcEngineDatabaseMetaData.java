@@ -1028,7 +1028,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         return stmt.executeQuery(query);
     }
 
-    private void daemonize(Statement stmt)
+    protected void daemonize(Statement stmt)
     {
         FarragoJdbcEngineStatement farragoStmt =
             (FarragoJdbcEngineStatement) stmt;
