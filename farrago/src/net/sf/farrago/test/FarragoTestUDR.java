@@ -301,7 +301,7 @@ public abstract class FarragoTestUDR
         PreparedStatement resultInserter)
         throws Exception
     {
-        Random r = new Random();
+        Random r = new Random(seed);
         for (long i = 0; i < n; ++i) {
             resultInserter.setLong(1, r.nextLong());
             resultInserter.executeUpdate();
