@@ -32,7 +32,7 @@ ant -Dtest.sessionfactory=class:net.sf.farrago.defimpl.FarragoDefaultSessionFact
 # cd ../luciddb
 # sed -i -e 's/VIEW/AUTO_VIEW/g' catalog/ReposStorage.properties
 cd ../firewater
-junitSingle initsql/installSystemObjects.sql
+./junitSingle initsql/installSystemObjects.sql
 # cd ../luciddb
 # sed -i -e 's/AUTO_VIEW/VIEW/g' catalog/ReposStorage.properties
 # cd ../firewater

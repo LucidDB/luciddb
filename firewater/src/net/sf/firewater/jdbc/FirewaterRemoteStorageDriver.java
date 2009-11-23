@@ -26,13 +26,13 @@ import net.sf.farrago.session.*;
 
 /**
  * FirewaterRemoteStorageDriver is a JDBC driver used by a Firewater
- * engine to connect to remote storage via RMI.
+ * engine to connect to remote storage via HTTP.
  *
  * @author John Sichi
  * @version $Id$
  */
 public class FirewaterRemoteStorageDriver
-    extends FarragoUnregisteredVjdbcClientDriver
+    extends FarragoUnregisteredVjdbcHttpClientDriver
 {
     static {
         new FirewaterRemoteStorageDriver().register();
