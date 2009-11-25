@@ -24,6 +24,8 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/tuple/UnalignedAttributeAccessor.h"
 
+#include <numeric>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
@@ -353,6 +355,7 @@ void LbmGeneratorExecStream::closeImpl()
     BTreeExecStream::closeImpl();
     LcsRowScanBaseExecStream::closeImpl();
     keyCodes.clear();
+    keyReductionMap.clear();
     bitmapTable.clear();
     scratchPages.clear();
 
@@ -387,6 +390,15 @@ bool LbmGeneratorExecStream::generateBitmaps()
         colReader.readCompressedBatch(nRows, &keyCodes[0], &nRead);
         assert(nRows == nRead);
 
+        // By default, use an identity map for key reduction
+        keyReductionMap.resize(nDistinctVals);
+        std::iota(keyReductionMap.begin(), keyReductionMap.end(), 0);
+
+        // Then make any adjustments needed.  Note that the scope of
+        // this mapping relies on the fact that we call flushTable
+        // at the end of each batch.
+        remapTrailingBlanks();
+
         batchRead = true;
         currBatch = 0;
     }
@@ -394,8 +406,10 @@ bool LbmGeneratorExecStream::generateBitmaps()
     // resume reading batch values based on where we last left off;
     // if the value has been read but not yet processed, skip the read
     for (uint i = currBatch; i < nRows; i++) {
+        uint16_t keyCode = keyCodes[i];
+        keyCode = keyReductionMap[keyCode];
         if (!skipRead) {
-            PBuffer curValue = colReader.getBatchValue(keyCodes[i]);
+            PBuffer curValue = colReader.getBatchValue(keyCode);
             // reset buffer before loading new value, in case previous
             // row had nulls
             bitmapTuple.resetBuffer();
@@ -403,7 +417,7 @@ bool LbmGeneratorExecStream::generateBitmaps()
             attrAccessors[0].loadValue(bitmapTuple[0], curValue);
             initRidAndBitmap(bitmapTuple, &currRid);
         }
-        if (!addRidToBitmap(keyCodes[i], bitmapTuple, currRid)) {
+        if (!addRidToBitmap(keyCode, bitmapTuple, currRid)) {
             currBatch = i;
             skipRead = true;
             return false;
@@ -423,6 +437,77 @@ bool LbmGeneratorExecStream::generateBitmaps()
     }
 
     return true;
+}
+
+void LbmGeneratorExecStream::remapTrailingBlanks()
+{
+    // For an explanation of the problem this solves, see
+    // http://jira.eigenbase.org/browse/LDB-198
+    StoredTypeDescriptor const &typeDesc =
+        *(bitmapTupleDesc[0].pTypeDescriptor);
+
+    // Only needed for VARCHAR
+    bool unicode;
+    if (typeDesc.getOrdinal() == STANDARD_TYPE_VARCHAR) {
+        unicode = false;
+    } else if (typeDesc.getOrdinal() == STANDARD_TYPE_UNICODE_VARCHAR) {
+        unicode = true;
+    } else {
+        return;
+    }
+
+    // For each distinct value with trailing blanks, compare it against
+    // all other distinct values; if it is equivalent to one with
+    // fewer blanks, then map the longer one to the shorter one.
+    TupleDatum datum1, datum2;
+    LcsColumnReader &colReader = pClusters[0]->clusterCols[0];
+    uint nDistinctVals = colReader.getBatchValCount();
+    for (uint i1 = 0; i1 < nDistinctVals; ++i1) {
+        PBuffer pVal = colReader.getBatchValue(i1);
+        attrAccessors[0].referenceValue(datum1, pVal);
+        if (!datum1.pData) {
+            continue;
+        }
+        if (!datum1.cbData) {
+            continue;
+        }
+        if (unicode) {
+            // TODO jvs 15-Sept-2009:  this won't work on architectures
+            // which require aligned memory access.
+            Ucs2ConstBuffer pLast = reinterpret_cast<Ucs2ConstBuffer>
+                (datum1.pData + datum1.cbData - 2);
+            if (*pLast != ' ') {
+                continue;
+            }
+        } else {
+            if (datum1.pData[datum1.cbData - 1] != ' ') {
+                continue;
+            }
+        }
+        uint cbMin = datum1.cbData;
+        for (uint i2 = 0; i2 < nDistinctVals; ++i2) {
+            if (i1 == i2) {
+                continue;
+            }
+            PBuffer pVal2 = colReader.getBatchValue(i2);
+            attrAccessors[0].referenceValue(datum2, pVal2);
+            if (!datum2.pData) {
+                continue;
+            }
+            if (datum2.cbData >= cbMin) {
+                continue;
+            }
+            int c = typeDesc.compareValues(
+                datum1.pData,
+                datum1.cbData,
+                datum2.pData,
+                datum2.cbData);
+            if (c == 0) {
+                cbMin = datum2.cbData;
+                keyReductionMap[i1] = i2;
+            }
+        }
+    }
 }
 
 bool LbmGeneratorExecStream::generateSingletons()

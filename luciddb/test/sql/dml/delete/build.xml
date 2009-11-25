@@ -41,7 +41,7 @@
 
   <!-- directories for csv data files -->
   <property name="csv.dir" value="${dml_delete.dir}/csv" />
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">

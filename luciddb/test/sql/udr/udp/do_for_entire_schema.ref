@@ -11,7 +11,7 @@ Error: Can't executeUpdate a query:  select * from "TESTSCHEMA_SIMPLE"."T1" (sta
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema TESTSCHEMA;
 0: jdbc:luciddb:> set schema 'TESTSCHEMA';
-0: jdbc:luciddb:> create user MONDRIAN_USER authorization NOPE default schema TESTSCHEMA;
+0: jdbc:luciddb:> create user MONDRIAN_USER authorization 'NOPE' default schema TESTSCHEMA;
 0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
 0: jdbc:luciddb:> create view V1 as select * from T2;

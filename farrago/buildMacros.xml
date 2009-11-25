@@ -121,8 +121,10 @@ ${farrago.test.jvmargs}
   <fail unless="rmijdbc.dir"/>
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
+  <fail unless="jtds.dir"/>
   <fail unless="findbugs.dir"/>
   <fail unless="mysql.dir"/>
+  <fail unless="jetty.dir"/>
 
   <!-- Directories -->
 
@@ -387,6 +389,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
     <pathelement location="${thirdparty.dir}/postgresql-8.1-406.jdbc2.jar"/>
+    <pathelement location="${jtds.dir}/jtds-1.2.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
@@ -394,6 +397,8 @@ ${farrago.test.jvmargs}
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <!-- REVIEW jvs 22-Sept-2009:  do we need ALL of these? -->
+    <fileset dir="${jetty.dir}" includes="lib/*.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
@@ -506,6 +511,7 @@ ${farrago.test.jvmargs}
         fork="true"
         classpathref="@{classpathref}">
         <jvmarg line="-Xmx256m"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>

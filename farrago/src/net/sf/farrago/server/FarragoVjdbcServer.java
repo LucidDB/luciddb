@@ -50,6 +50,7 @@ public class FarragoVjdbcServer
     //~ Instance fields --------------------------------------------------------
 
     private FarragoJdbcServerDriver jdbcDriver;
+    private FarragoJettyEmbedding jettyEmbedding;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -96,6 +97,12 @@ public class FarragoVjdbcServer
         configFarrago.setPrefetchResultSetMetaData(true);
         vjdbcConfig.addConnection(configFarrago);
 
+        if (protocol.equals(ListeningProtocol.HTTP)) {
+            jettyEmbedding = new FarragoJettyEmbedding();
+            jettyEmbedding.startServlet(vjdbcConfig, httpPort);
+            return httpPort;
+        }
+
         // NOTE:  This odd sequence is required because of the
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);
@@ -128,6 +135,18 @@ public class FarragoVjdbcServer
         return rmiRegistryPort;
     }
 
+    protected void stopNetwork()
+    {
+        if (protocol.equals(ListeningProtocol.HTTP)) {
+            if (jettyEmbedding != null) {
+                jettyEmbedding.stopServlet();
+                jettyEmbedding = null;
+            }
+        } else {
+            super.stopNetwork();
+        }
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     // NOTE jvs 7-Sept-2006:  This is to avoid calling DriverManager,
@@ -146,7 +165,7 @@ public class FarragoVjdbcServer
                 // remote or not, it is VITAL that the remoteProtocol is
                 // overwritten here. Otherwise this is a potential security
                 // hole!
-                props.setProperty("remoteProtocol", "RMI");
+                props.setProperty("remoteProtocol", protocol.toString());
                 return jdbcDriver.connect(jdbcDriver.getBaseUrl(), props);
             } catch (Throwable t) {
                 throw SQLExceptionHelper.wrap(t);

@@ -13,7 +13,7 @@
 
 <h3>Current Release</h3>
 
-The current open-source release (0.8.0) of LucidDB is available for
+The current open-source release (0.9.2) of LucidDB is available for
 download.  It is packed with <a href="features.html">advanced
 features</a>; there are also some limitations you should be aware of:
 
@@ -22,14 +22,14 @@ features</a>; there are also some limitations you should be aware of:
 <li>support for correlated subqueries is still under development
 (uncorrelated subqueries are now fully optimized via constant reduction)
 
-<li>security features are incomplete
+<li>security features remain incomplete
 
 <li>writers never block readers, but writers block other writers on
 the same table
 
 <li>all transactions are autocommit
 
-<li>any join condition is now supported for LEFT/RIGHT OUTER JOIN, but
+<li>any join condition is supported for LEFT/RIGHT OUTER JOIN, but
 FULL OUTER JOIN support is limited to equijoins
 
 <li>one single database-wide auto-extend tablespace
@@ -38,12 +38,14 @@ FULL OUTER JOIN support is limited to equijoins
 
 <li>a limited number of system views and management procedures are available
 
-<li>only single-byte character sets are supported; collation is always
-case-sensitive
+<li>collation is always case-sensitive
 
 <li>no support for timezones and time intervals
 
-<li>no ODBC driver is provided (JDBC must be used to connect to LucidDB)
+<li>the only client API provided out-of-the-box is JDBC; however,
+integrations for other client/language environments <a target="_top"
+href="http://pub.eigenbase.org/wiki/LucidDbNonJavaClients">are
+ available</a>
 
 <li>external user-defined routines are written in Java
 
@@ -58,6 +60,8 @@ listed here or items of your own.)
 
 <ul>
 
+<li>out-of-the-box client support beyond JDBC (e.g. ODBC, DBI)</li>
+
 <li>complete subquery support</li>
 
 <li>tablespaces</li>
@@ -69,7 +73,7 @@ including parallelism</li>
 
 <li>more management views and functions</li>
 
-<li>UNICODE, collations, timezones, and time intervals</li>
+<li>collations, timezones, and time intervals</li>
 
 <li>SQL/J support</li>
 
@@ -77,7 +81,7 @@ including parallelism</li>
 
 <li>tighter Mondrian and J2EE integration</li>
 
-<li>more connectors (e.g. XLS via <a
+<li>more connectors (e.g. XLS via <a target="_top"
 href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 
 </ul>
@@ -94,15 +98,14 @@ href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 
 <li>FOREIGN KEY and CHECK constraints</li>
 
-<li>ODBC driver</li>
-
 <li>fully cost-based optimization</li>
 
 <li>user-defined types</li>
 
 <li>bulk write to external systems</li>
 
-<li>clustering</li>
+<li>clustering (see the <a target="_top"
+href="http://firewater.sf.net">Firewater project</a>)</li>
 
 <li>support for both row-store and column-store tables in the same database
 
@@ -122,5 +125,17 @@ href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 
 </ul>
 
+<!-- Piwik -->
+<script type="text/javascript">
+var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/luciddb/" : "http://apps.sourceforge.net/piwik/luciddb/");
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
+piwik_action_name = '';
+piwik_idsite = 1;
+piwik_url = pkBaseURL + "piwik.php";
+piwik_log(piwik_action_name, piwik_idsite, piwik_url);
+</script>
+<object><noscript><p><img src="http://apps.sourceforge.net/piwik/luciddb/piwik.php?idsite=1" alt="piwik"/></p></noscript></object>
+<!-- End Piwik Tag -->
 
 </body>

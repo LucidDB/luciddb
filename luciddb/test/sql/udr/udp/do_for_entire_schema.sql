@@ -10,7 +10,7 @@ call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA_SIMPL
 
 create schema TESTSCHEMA;
 set schema 'TESTSCHEMA';
-create user MONDRIAN_USER authorization NOPE default schema TESTSCHEMA;
+create user MONDRIAN_USER authorization 'NOPE' default schema TESTSCHEMA;
 create table T1(col1 integer, col2 integer);
 create table T2(col3 varchar(255), col4 integer);
 create view V1 as select * from T2;

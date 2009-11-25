@@ -206,6 +206,12 @@ class FENNEL_LBM_EXPORT LbmGeneratorExecStream
     std::vector<uint16_t> keyCodes;
 
     /**
+     * Mapping of original keys to canonical equivalences under the
+     * collation rules which will be used by bitmap indexing.
+     */
+    std::vector<uint16_t> keyReductionMap;
+
+    /**
      * Table of bitmap entries under construction
      */
     std::vector<LbmEntryInfo> bitmapTable;
@@ -264,6 +270,13 @@ class FENNEL_LBM_EXPORT LbmGeneratorExecStream
      * of buffer space
      */
     bool revertToSingletons;
+
+    /**
+     * For VARCHAR data, edits keyReductionMap so that canonical
+     * representatives are used for any values equivalent after ignoring
+     * trailing blanks.
+     */
+    void remapTrailingBlanks();
 
     /**
      * Generates bitmaps for a single column index

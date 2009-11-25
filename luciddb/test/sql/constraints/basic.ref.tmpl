@@ -342,6 +342,46 @@
       p_size, p_container, p_retailprice, p_comment)  |
 +-----------------------------------+--------------+----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- the following updates will result in replacement of the existing column;
+0: jdbc:luciddb:> -- selecting the max rid column will confirm that replacement was done; the
+0: jdbc:luciddb:> -- value needs to match the value before the updates
+0: jdbc:luciddb:> -- as opposed
+0: jdbc:luciddb:> alter session set "errorMax" = 0;
+0: jdbc:luciddb:> select max(lcs_rid(partkey)) from part_uc;
++---------+
+| EXPR$0  |
++---------+
+| 60777   |
++---------+
+0: jdbc:luciddb:> update part_uc set partkey = partkey + 1;
+0: jdbc:luciddb:> select max(lcs_rid(partkey)) from part_uc;
++---------+
+| EXPR$0  |
++---------+
+| 60777   |
++---------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 18961        |
++-------------------------+--------------+
+0: jdbc:luciddb:> update part_uc set partkey = partkey + 20000 where name <> 'SUPERDELUX!';
+0: jdbc:luciddb:> select max(lcs_rid(partkey)) from part_uc;
++---------+
+| EXPR$0  |
++---------+
+| 60777   |
++---------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 1002         |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop table part_uc cascade;
 0: jdbc:luciddb:> drop view part_src_dups;
@@ -384,7 +424,7 @@
 +-------------------------+--------------+
 |       PARAM_NAME        | PARAM_VALUE  |
 +-------------------------+--------------+
-| lastUpsertRowsInserted  | 0            |
+| lastUpsertRowsInserted  | 1002         |
 +-------------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view part_10000 as select * from ff_tpch.bcp."part" where F1 <= 10000;

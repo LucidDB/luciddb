@@ -43,7 +43,7 @@
   <property name="bh.log.basedir" value="${vi_tbs.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${vi_tbs.dir}/csv" />
   <property name="csv.copy.dir" value="${vi_tbs.dir}/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />

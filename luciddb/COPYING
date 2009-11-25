@@ -19,6 +19,8 @@ including all of these:
 
 - Hibernate and supporting libraries from Red Hat Middleware
 
+- Jetty from the Eclipse Project
+
 You must obey the GNU General Public License in all respects for all
 of the code used other than the libraries listed above.  If you modify
 this program, you may extend this exception to your version of the

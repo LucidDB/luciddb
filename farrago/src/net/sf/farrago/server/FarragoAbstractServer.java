@@ -48,6 +48,15 @@ public abstract class FarragoAbstractServer
 
     protected static Registry rmiRegistry;
 
+    /**
+     * Enumeration of supported listening protocols.
+     */
+    public static enum ListeningProtocol
+    {
+        HTTP,
+        RMI
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     protected final PrintWriter pw;
@@ -56,7 +65,13 @@ public abstract class FarragoAbstractServer
 
     protected int singleListenerPort;
 
+    protected int httpPort;
+
     protected long connectionTimeoutMillis;
+
+    protected ListeningProtocol protocol;
+
+    private ListeningProtocol defaultProtocol = ListeningProtocol.HTTP;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -84,13 +99,25 @@ public abstract class FarragoAbstractServer
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Sets the default protocol to use when no port is explicitly configured
+     * in the catalog, and when the subclass is not protocol-specific.  If this
+     * method is not called, the default is HTTP.
+     *
+     * @param defaultProtocol new default
+     */
+    public void setDefaultProtocol(ListeningProtocol defaultProtocol)
+    {
+        this.defaultProtocol = defaultProtocol;
+    }
+
     protected void configureNetwork(
         FarragoReleaseProperties releaseProps,
         FemFarragoConfig config)
     {
         rmiRegistryPort = config.getServerRmiRegistryPort();
-
         singleListenerPort = config.getServerSingleListenerPort();
+        httpPort = config.getServerHttpPort();
 
         Long longObjValue = config.getConnectionTimeoutMillis();
         connectionTimeoutMillis =
@@ -98,8 +125,27 @@ public abstract class FarragoAbstractServer
                 ? FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS
                 : longObjValue.longValue());
 
-        if (rmiRegistryPort == -1) {
+
+        if (defaultProtocol == ListeningProtocol.HTTP) {
+            if (rmiRegistryPort <= 0) {
+                // use HTTP unless RMI port is set explicitly
+                protocol = ListeningProtocol.HTTP;
+            } else {
+                protocol = ListeningProtocol.RMI;
+            }
+        } else {
+            if (httpPort <= 0) {
+                // use RMI unless HTTP port is set explicitly
+                protocol = ListeningProtocol.RMI;
+            } else {
+                protocol = ListeningProtocol.HTTP;
+            }
+        }
+        if (rmiRegistryPort <= 0) {
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
+        }
+        if (httpPort <= 0) {
+            httpPort = releaseProps.jdbcUrlHttpPortDefault.get();
         }
     }
 
@@ -206,7 +252,7 @@ public abstract class FarragoAbstractServer
             int port = startNetwork(jdbcDriver);
 
             pw.println(
-                res.ServerListening.str(port));
+                res.ServerListening.str(protocol.toString(), port));
             success = true;
         } finally {
             if (!success) {

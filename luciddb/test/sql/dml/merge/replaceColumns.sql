@@ -34,10 +34,20 @@ insert into tempemps
         from emps;
 select * from tempemps order by t_empno;
 
+create table nullableTempEmps(
+    t_empno int unique, t_name varchar(25), t_deptno int,
+    t_gender char(1), t_city char(35), t_age int);
+insert into nullableTempEmps select * from tempemps;
+insert into nullableTempEmps values
+    (null, 'Unknown', null, null, 'Unknown', null);
+select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
+
 -- Set fake stats so index-only scans will be used in cases where filtering is
 -- done on indexed columns.
 call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'EMPS', 1000);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'TEMPEMPS', 1000);
+call sys_boot.mgmt.stat_set_row_count
+    ('LOCALDB', 'RC', 'NULLABLETEMPEMPS', 1000);
 
 ------------------------------------------------------------------------------
 -- Cases where the optimization can be used.  Note that we can verify that it
@@ -237,17 +247,31 @@ alter session set "label" = null;
 create table nonUniqueEmps(
     empno int not null, name varchar(20) not null, deptno int,
     gender char(1), city char(30), age smallint, salary numeric(10,2));
-call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 insert into nonUniqueEmps select * from emps;
 insert into nonUniqueEmps values(
     110, 'EricJr', 20, 'M', 'San Francisco', 40, 36000);
 insert into nonUniqueEmps values(130, 'JohnJr', 40, 'M', 'Vancouver', 10, null);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 select lcs_rid(empno), * from nonUniqueEmps order by empno;
 merge into nonUniqueEmps e
     using tempemps t on t.t_empno = e.empno
     when matched then
         update set city = upper(t.t_city);
 select lcs_rid(empno), * from nonUniqueEmps order by empno;
+-- And also if the join key from the source is nullable
+merge into nonUniqueEmps e
+    using nullableTempEmps t on t.t_empno = e.empno
+    when matched then
+        update set city = lower(t.t_city);
+select lcs_rid(empno), * from nonUniqueEmps order by empno;
+-- Source has a non-nullable key while target has a nullable one.  The row
+-- with the null key should not be updated.
+select * from emps order by empno;
+merge into nullableTempEmps t
+    using emps e on t.t_empno = e.empno
+    when matched then
+        update set t_city = upper(e.city);
+select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
 
 ---------------------------------------------------------------------------
 -- Exercise cases where the optimization cannot be used.  In this case, the
@@ -425,6 +449,38 @@ select * from u where a >= 0 order by a;
 -- make sure violations are returned when appropriate
 update u set a = 2;
 select lcs_rid(a), * from u order by a;
+-- verify the case where the deleted keys appear as singletons
+truncate table u;
+insert into u values(0,0);
+insert into u values(1,1);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+merge into u as tgt using (select * from u where a = 1) as src
+    on tgt.a = src.a when matched then update set b = 2;
+merge into u as tgt using (select * from u where a = 1) as src 
+    on tgt.a = src.a when matched then update set b = 3;
+insert into u values(3,3),(4,4),(5,5),(6,6),(7,7),(8,8);
+update u set a = a + 1 where a > 2;
+select lcs_rid(a), * from u order by a;
+select * from u where a >= 0 order by a;
+-- do a no-op update; verify this by checking that no new pages are allocated
+-- after the update
+call applib.create_var('RC', null, 'test context');
+call applib.create_var(
+    'RC', 'pageCount', ' used to store current page allocation count');
+call applib.set_var(
+    'RC',
+    'pageCount',
+    (select counter_value from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated'));
+update u set a = a;
+select lcs_rid(a), * from u order by a;
+select * from u where a >= 0 order by a;
+-- sleep before retrieving the stats again
+select sys_boot.mgmt.sleep(1000) from u where a = 0;
+select (counter_value = applib.get_var('RC', 'pageCount'))
+    from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated';
 
 drop label l;
 drop schema rc cascade;
+call applib.delete_var('RC', 'pageCount');

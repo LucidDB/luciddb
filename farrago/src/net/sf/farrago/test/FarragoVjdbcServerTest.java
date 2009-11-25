@@ -27,7 +27,8 @@ import net.sf.farrago.server.*;
 
 
 /**
- * FarragoServerTest tests Farrago client/server connections via VJDBC.
+ * FarragoServerTest tests Farrago client/server connections via VJDBC's
+ * RMI implementation.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -52,7 +53,9 @@ public class FarragoVjdbcServerTest
 
     protected FarragoAbstractServer newServer()
     {
-        return new FarragoVjdbcServer();
+        FarragoVjdbcServer server = new FarragoVjdbcServer();
+        server.setDefaultProtocol(FarragoVjdbcServer.ListeningProtocol.RMI);
+        return server;
     }
 
     protected FarragoAbstractJdbcDriver newClientDriver()

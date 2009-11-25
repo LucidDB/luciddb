@@ -54,10 +54,31 @@
 | 150      | Betty   | 21        | F         | San Francisco                        | 40     |
 +----------+---------+-----------+-----------+--------------------------------------+--------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table nullableTempEmps(
+. . . . . . . . >     t_empno int unique, t_name varchar(25), t_deptno int,
+. . . . . . . . >     t_gender char(1), t_city char(35), t_age int);
+0: jdbc:luciddb:> insert into nullableTempEmps select * from tempemps;
+0: jdbc:luciddb:> insert into nullableTempEmps values
+. . . . . . . . >     (null, 'Unknown', null, null, 'Unknown', null);
+0: jdbc:luciddb:> select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
+| EXPR$0  | T_EMPNO  |  T_NAME  | T_DEPTNO  | T_GENDER  |                T_CITY                | T_AGE  |
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
+| 6       |          | Unknown  |           |           | Unknown                              |        |
+| 0       | 100      | Fred     | 11        |           | San Mateo                            | 25     |
+| 1       | 110      | Eric     | 21        | M         | San Francisco                        | 80     |
+| 2       | 120      | Wilma    | 21        | F         | San Mateo                            | 50     |
+| 3       | 130      | John     | 41        | M         | Vancouver                            |        |
+| 4       | 140      | Barney   | 11        | M         | San Mateo                            | 41     |
+| 5       | 150      | Betty    | 21        | F         | San Francisco                        | 40     |
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Set fake stats so index-only scans will be used in cases where filtering is
 0: jdbc:luciddb:> -- done on indexed columns.
 0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'EMPS', 1000);
 0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'TEMPEMPS', 1000);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count
+. . . . . . . . >     ('LOCALDB', 'RC', 'NULLABLETEMPEMPS', 1000);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> ------------------------------------------------------------------------------
 0: jdbc:luciddb:> -- Cases where the optimization can be used.  Note that we can verify that it
@@ -555,11 +576,11 @@ Error: Unique constraint violation (state=,code=0)
 0: jdbc:luciddb:> create table nonUniqueEmps(
 . . . . . . . . >     empno int not null, name varchar(20) not null, deptno int,
 . . . . . . . . >     gender char(1), city char(30), age smallint, salary numeric(10,2));
-0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 0: jdbc:luciddb:> insert into nonUniqueEmps select * from emps;
 0: jdbc:luciddb:> insert into nonUniqueEmps values(
 . . . . . . . . >     110, 'EricJr', 20, 'M', 'San Francisco', 40, 36000);
 0: jdbc:luciddb:> insert into nonUniqueEmps values(130, 'JohnJr', 40, 'M', 'Vancouver', 10, null);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'NONUNIQUEEMPS', 1000);
 0: jdbc:luciddb:> select lcs_rid(empno), * from nonUniqueEmps order by empno;
 +---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
 | EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               |  AGE   |  SALARY   |
@@ -586,6 +607,49 @@ Error: Unique constraint violation (state=,code=0)
 | 2       | 140    | barney  | 9       | M       | SAN MATEO                       | 32729  | 50000.00  |
 | 3       | 150    | betty   | 19      | F       | SAN FRANCISCO                   | 32728  | 90000.00  |
 +---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+0: jdbc:luciddb:> -- And also if the join key from the source is nullable
+0: jdbc:luciddb:> merge into nonUniqueEmps e
+. . . . . . . . >     using nullableTempEmps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set city = lower(t.t_city);
+0: jdbc:luciddb:> select lcs_rid(empno), * from nonUniqueEmps order by empno;
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| EXPR$0  | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               |  AGE   |  SALARY   |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+| 0       | 110    | ERIC    | 20      | M       | san francisco                   | 80     | 72000.00  |
+| 4       | 110    | EricJr  | 20      | M       | san francisco                   | 40     | 36000.00  |
+| 1       | 130    | JOHN    | 40      | M       | vancouver                       |        |           |
+| 5       | 130    | JohnJr  | 40      | M       | vancouver                       | 10     |           |
+| 2       | 140    | barney  | 9       | M       | san mateo                       | 32729  | 50000.00  |
+| 3       | 150    | betty   | 19      | F       | san francisco                   | 32728  | 90000.00  |
++---------+--------+---------+---------+---------+---------------------------------+--------+-----------+
+0: jdbc:luciddb:> -- Source has a non-nullable key while target has a nullable one.  The row
+0: jdbc:luciddb:> -- with the null key should not be updated.
+0: jdbc:luciddb:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+--------+-----------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               |  AGE   |  SALARY   |
++--------+---------+---------+---------+---------------------------------+--------+-----------+
+| 110    | ERIC    | 20      | M       | San Francisco                   | 80     | 72000.00  |
+| 130    | JOHN    | 40      | M       | Vancouver                       |        |           |
+| 140    | barney  | 9       | M       | San Mateo                       | 32729  | 50000.00  |
+| 150    | betty   | 19      | F       | San Francisco                   | 32728  | 90000.00  |
++--------+---------+---------+---------+---------------------------------+--------+-----------+
+0: jdbc:luciddb:> merge into nullableTempEmps t
+. . . . . . . . >     using emps e on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set t_city = upper(e.city);
+0: jdbc:luciddb:> select lcs_rid(t_empno), * from nullableTempEmps order by t_empno;
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
+| EXPR$0  | T_EMPNO  |  T_NAME  | T_DEPTNO  | T_GENDER  |                T_CITY                | T_AGE  |
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
+| 6       |          | Unknown  |           |           | Unknown                              |        |
+| 0       | 100      | Fred     | 11        |           | San Mateo                            | 25     |
+| 1       | 110      | Eric     | 21        | M         | SAN FRANCISCO                        | 80     |
+| 2       | 120      | Wilma    | 21        | F         | San Mateo                            | 50     |
+| 3       | 130      | John     | 41        | M         | VANCOUVER                            |        |
+| 4       | 140      | Barney   | 11        | M         | SAN MATEO                            | 41     |
+| 5       | 150      | Betty    | 21        | F         | SAN FRANCISCO                        | 40     |
++---------+----------+----------+-----------+-----------+--------------------------------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> ---------------------------------------------------------------------------
 0: jdbc:luciddb:> -- Exercise cases where the optimization cannot be used.  In this case, the
@@ -1244,8 +1308,98 @@ Error: Unique constraint violation (state=,code=0)
 | 0       | 1  | 0  |
 | 3       | 3  | 4  |
 +---------+----+----+
+0: jdbc:luciddb:> -- verify the case where the deleted keys appear as singletons
+0: jdbc:luciddb:> truncate table u;
+0: jdbc:luciddb:> insert into u values(0,0);
+0: jdbc:luciddb:> insert into u values(1,1);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RC', 'U', 10000);
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where a = 1) as src
+. . . . . . . . >     on tgt.a = src.a when matched then update set b = 2;
+0: jdbc:luciddb:> merge into u as tgt using (select * from u where a = 1) as src 
+. . . . . . . . >     on tgt.a = src.a when matched then update set b = 3;
+0: jdbc:luciddb:> insert into u values(3,3),(4,4),(5,5),(6,6),(7,7),(8,8);
+0: jdbc:luciddb:> update u set a = a + 1 where a > 2;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 3  |
+| 4       | 4  | 3  |
+| 5       | 5  | 4  |
+| 6       | 6  | 5  |
+| 7       | 7  | 6  |
+| 8       | 8  | 7  |
+| 9       | 9  | 8  |
++---------+----+----+
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 0  | 0  |
+| 1  | 3  |
+| 4  | 3  |
+| 5  | 4  |
+| 6  | 5  |
+| 7  | 6  |
+| 8  | 7  |
+| 9  | 8  |
++----+----+
+0: jdbc:luciddb:> -- do a no-op update; verify this by checking that no new pages are allocated
+0: jdbc:luciddb:> -- after the update
+0: jdbc:luciddb:> call applib.create_var('RC', null, 'test context');
+0: jdbc:luciddb:> call applib.create_var(
+. . . . . . . . >     'RC', 'pageCount', ' used to store current page allocation count');
+0: jdbc:luciddb:> call applib.set_var(
+. . . . . . . . >     'RC',
+. . . . . . . . >     'pageCount',
+. . . . . . . . >     (select counter_value from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated'));
+0: jdbc:luciddb:> update u set a = a;
+0: jdbc:luciddb:> select lcs_rid(a), * from u order by a;
++---------+----+----+
+| EXPR$0  | A  | B  |
++---------+----+----+
+| 0       | 0  | 0  |
+| 3       | 1  | 3  |
+| 4       | 4  | 3  |
+| 5       | 5  | 4  |
+| 6       | 6  | 5  |
+| 7       | 7  | 6  |
+| 8       | 8  | 7  |
+| 9       | 9  | 8  |
++---------+----+----+
+0: jdbc:luciddb:> select * from u where a >= 0 order by a;
++----+----+
+| A  | B  |
++----+----+
+| 0  | 0  |
+| 1  | 3  |
+| 4  | 3  |
+| 5  | 4  |
+| 6  | 5  |
+| 7  | 6  |
+| 8  | 7  |
+| 9  | 8  |
++----+----+
+0: jdbc:luciddb:> -- sleep before retrieving the stats again
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from u where a = 0;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select (counter_value = applib.get_var('RC', 'pageCount'))
+. . . . . . . . >     from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop label l;
 0: jdbc:luciddb:> drop schema rc cascade;
+0: jdbc:luciddb:> call applib.delete_var('RC', 'pageCount');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

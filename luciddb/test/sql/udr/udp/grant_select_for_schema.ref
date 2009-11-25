@@ -1,6 +1,6 @@
 0: jdbc:luciddb:> -- Test the grant_select_for_schema UDP
 0: jdbc:luciddb:> create schema MASSGRANTTEST;
-0: jdbc:luciddb:> create user MONDRIAN_USER authorization NOPE default schema MASSGRANTTEST;
+0: jdbc:luciddb:> create user MONDRIAN_USER authorization 'NOPE' default schema MASSGRANTTEST;
 0: jdbc:luciddb:> set schema 'MASSGRANTTEST';
 0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);

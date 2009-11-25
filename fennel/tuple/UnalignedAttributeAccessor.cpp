@@ -232,6 +232,36 @@ void UnalignedAttributeAccessor::loadValue(
     }
 }
 
+void UnalignedAttributeAccessor::referenceValue(
+    TupleDatum &datum,
+    PConstBuffer pDataWithLen) const
+{
+    assert(isInitialized());
+
+    // fixed width, non-nullable data is stored without leading length byte(s)
+    if (omitLengthIndicator) {
+        datum.cbData = cbStorage;
+        datum.pData = pDataWithLen;
+    } else {
+        uint8_t firstByte = *pDataWithLen;
+        if (!firstByte) {
+            // null value
+            datum.pData = NULL;
+        } else if (firstByte & TWO_BYTE_LENGTH_BIT) {
+            // not null, so must have a length that requires 2 bytes to
+            // store
+            datum.cbData =
+                ((firstByte & ONE_BYTE_LENGTH_MASK) << 8)
+                | *(pDataWithLen + 1);
+            datum.pData = pDataWithLen + 2;
+        } else {
+            // data that requires 1 byte to store the length
+            datum.cbData = firstByte;
+            datum.pData = pDataWithLen + 1;
+        }
+    }
+}
+
 TupleStorageByteLength UnalignedAttributeAccessor::getStoredByteCount(
     PConstBuffer pDataWithLen) const
 {

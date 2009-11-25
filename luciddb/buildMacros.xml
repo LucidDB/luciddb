@@ -59,18 +59,15 @@ ${farrago.test.jvmargs}
   <filelist dir="${open.dir}/farrago/initsql" id="farrago.filelist.initsql"
     files="createStorageWrappers.sql,createReposStorageServers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
 
+  <!-- Create foreign wrappers SQL file if we are doing a dev build -->
   <condition property="luciddb.createForeignWrappers.sql" 
     value="createForeignWrappers.sql" else="">
-    <not>
-      <istrue value="${release.gpl}"/>
-    </not>
+    <equals arg1="${build.mode}" arg2="developer" />
   </condition>
 
   <condition property="luciddb.createTestHarness.sql" 
     value="createTestHarness.sql" else="">
-    <not>
-      <istrue value="${release.gpl}"/>
-    </not>
+      <equals arg1="${build.mode}" arg2="developer"/>
   </condition>
 
   <condition property="luciddb.setDeviceSchedulerType.sql"
@@ -91,6 +88,7 @@ ${farrago.test.jvmargs}
       <junit printsummary="yes" fork="yes" haltonerror="yes" 
         haltonfailure="yes" tempdir="${testlog.dir}">
         <classpath path="@{sqltest.classpath}"/>
+        <jvmarg line="-Xmx512m -Xms512m" />
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"

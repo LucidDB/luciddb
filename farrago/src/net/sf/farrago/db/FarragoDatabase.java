@@ -91,7 +91,7 @@ public class FarragoDatabase
     private List<FarragoSessionModelExtension> modelExtensions;
     private FarragoDdlLockManager ddlLockManager;
     private FarragoSessionTxnMgr txnMgr;
-    private Configuration authenticationConfig;
+    private Configuration jaasConfig;
     private boolean authenticateLocalConnections = false;
 
     /**
@@ -280,7 +280,7 @@ public class FarragoDatabase
                     System.setProperty(
                         "java.security.auth.login.config",
                         jaasConfigFile.getPath());
-                    authenticationConfig = new ConfigFile();
+                    jaasConfig = new ConfigFile();
                 }
             } finally {
                 systemRepos.endReposSession();
@@ -713,9 +713,9 @@ public class FarragoDatabase
      * @return true if there is a JAAS configuration entry for application
      * "Farrago".
      */
-    public boolean isAuthenticationEnabled()
+    public boolean isJaasAuthenticationEnabled()
     {
-        if (authenticationConfig == null) {
+        if (jaasConfig == null) {
             return false;
         } else {
             return true;
@@ -725,9 +725,9 @@ public class FarragoDatabase
     /**
      * @return the JAAS authentication configuration.
      */
-    public Configuration getAuthenticationConfig()
+    public Configuration getJaasConfig()
     {
-        return authenticationConfig;
+        return jaasConfig;
     }
 
     /**
@@ -1336,7 +1336,7 @@ public class FarragoDatabase
         database.close(false);
     }
 
-    public boolean isAuthenticateLocalConnections()
+    public boolean shouldAuthenticateLocalConnections()
     {
         return authenticateLocalConnections;
     }

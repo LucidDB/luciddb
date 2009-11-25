@@ -338,12 +338,6 @@ endif()
 
 add_subdirectory(lucidera)
 
-# NOTE jvs 15-Jul-2009:  storage engine bridge is experimental for now;
-# only build it if ScaleDB interfaces have been added
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/seb/interface")
-add_subdirectory(seb)
-endif()
-
 add_custom_target(checkPreambles build/checkPreambleFennel.sh)
 
 add_custom_target(

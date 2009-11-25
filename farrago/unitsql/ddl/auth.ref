@@ -7,8 +7,6 @@
 > 
 > -- Create a security manager and login as this user to perform all grant 
 > -- tests. 
-> -- TODO: grant all appropriate system privileges for this user once
-> -- these privs are available.
 > 
 > create schema extra;
 > create table extra.t(i int not null primary key);
@@ -16,11 +14,29 @@
 > create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
 > create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
 > 
-> create user SECMAN_3 authorization 'Unknown' DEFAULT CATALOG sys_boot;
+> create user SECMAN_3 identified by 'tiger' DEFAULT CATALOG sys_boot;
 > 
-> create user SECMAN_4 authorization 'Unknown' DEFAULT SCHEMA extra;
+> create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 > 
 > grant select on extra.t to secman_4;
+> 
+> -- should fail:  duplicate user
+> create user SECMAN_4;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains user "SECMAN_4" with same name (state=,code=0)
+> 
+> create role R1;
+> 
+> -- should fail:  duplicate role
+> create role R1;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
+> 
+> -- should fail:  role name conflicts with user name
+> create role SECMAN_4;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains user "SECMAN_4" with same name (state=,code=0)
+> 
+> -- should fail:  user name conflicts with role name
+> create user R1;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
 > 
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
@@ -91,6 +107,17 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 +------------------+----------+----------+---------------+------------------+
 | R1_L1            | U1       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
+> 
+> -- verify password encryption; we use a platform-independent algorithm
+> -- so it should always come out the same
+> select "encryptedPassword", "passwordEncryptionAlgorithm"
+> from sys_fem."Security"."User"
+> where "name" = 'SECMAN_3';
++-----------------------------------------------+------------------------------+
+|               encryptedPassword               | passwordEncryptionAlgorithm  |
++-----------------------------------------------+------------------------------+
+| 8D5IVPZslzRYhb+JQ7SfJBfWpgdy+PyRDN/9ownV5bs=  | SHA-256                      |
++-----------------------------------------------+------------------------------+
 > 
 > -------------------------------------------------------------------------
 > -- Test 2: user, roles at two different levels hierarchies
@@ -235,6 +262,37 @@ Error: Login failed for "MockLoginModuleTestUser": invalid username/password com
 > !closeall
 sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
 > 
+> -- should succeed:  correct catalog password
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+> 
+> -- should fail:  incorrect catalog password
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 hobbes
+Error: Login failed for "SECMAN_3": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  blank password is equivalent to no password
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_4 whatever
+> 
+> -- change password
+> create or replace user SECMAN_3 identified by 'cougar';
+> 
+> -- should fail:  old password no longer works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+Error: Login failed for "SECMAN_3": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  new password works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 cougar
+> 
+> -- unset password
+> create or replace user SECMAN_3;
+> 
+> -- should succeed:  any password works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 puma
 > 
 > -------------------------------------------------------------------------
 > -- Test 4:

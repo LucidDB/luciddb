@@ -123,6 +123,11 @@ ${farrago.test.jvmargs}
   <property name="testsrc.dir" location="${luciddb.test.dir}/sql"/>
 
   <property name="project.testlog.dir" location="${testlog.dir}" />
+
+  <!-- Default build mode is "dev", in this mode load some specific sqls needed for running -->
+  <!-- the automated test targets  -->
+  <property name="build.mode" value="developer"/>
+
   <import file="${open.dir}/farrago/buildMacros.xml" />
   <import file="${luciddb.dir}/buildMacros.xml" />
 
@@ -162,7 +167,6 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
-    <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
     <pathelement path="${luciddb.plugin.dir}/luciddb-mbean.jar"/>
     <pathelement path="${luciddb.plugin.dir}/applib.jar"/>
     <pathelement path="${test.emma.classpath}" />
@@ -219,6 +223,15 @@ ${farrago.test.jvmargs}
     <pathelement path="${mbean.dir}"/>
   </path>
   <property name="mbean.run.classpath" refid="mbean.run.classpath"/>
+
+  <!-- LucidDb Defaults, can override in ${luciddb.dir}/customBuild.properties -->
+  <property name="fennel.databaseInitSize" value="2000"/>
+  <property name="fennel.tempInitSize" value="3000"/>
+  <property name="fennel.checkpointInterval" value="0"/>
+  <property name="fennel.cachePageSize" value="32768"/>
+  <property name="fennel.cachePagesMax" value="5000"/>
+  <property name="fennel.cachePagesInit" value="5000"/>
+  <property name="fennel.groupCommitInterval" value="0"/>
 
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
@@ -468,7 +481,6 @@ ${farrago.test.jvmargs}
     </farrago.javaCompile>
     <antcall target="buildApplibPlugin"/>
     <antcall target="buildMBeanPlugin"/>
-    <antcall target="buildJdbcPlugin" />
     <antcall target="buildClientJar"/>
     <farrago.javaCompile
       deprecation="off"
@@ -604,13 +616,13 @@ ${farrago.test.jvmargs}
     <copy file="${FarragoConfTemplate.xmi}"
       tofile="${LucidDbConf.xmi}" overwrite="true"/>
     <replace file="${LucidDbConf.xmi}">
-      <replacefilter token="@databaseInitSize@" value="2000"/>
-      <replacefilter token="@tempInitSize@" value="3000"/>
-      <replacefilter token="@checkpointInterval@" value="0"/>
-      <replacefilter token="@cachePageSize@" value="32768"/>
-      <replacefilter token="@cachePagesMax@" value="5000"/>
-      <replacefilter token="@cachePagesInit@" value="5000"/>
-      <replacefilter token="@groupCommitInterval@" value="0"/>
+      <replacefilter token="@databaseInitSize@" value="${fennel.databaseInitSize}"/>
+      <replacefilter token="@tempInitSize@" value="${fennel.tempInitSize}"/>
+      <replacefilter token="@checkpointInterval@" value="${fennel.checkpointInterval}"/>
+      <replacefilter token="@cachePageSize@" value="${fennel.cachePageSize}"/>
+      <replacefilter token="@cachePagesMax@" value="${fennel.cachePagesMax}"/>
+      <replacefilter token="@cachePagesInit@" value="${fennel.cachePagesInit}"/>
+      <replacefilter token="@groupCommitInterval@" value="${fennel.groupCommitInterval}"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
       <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>
@@ -708,6 +720,8 @@ ${farrago.test.jvmargs}
       </fileset>
       <fileset dir="${farrago.classes.dir}">
         <include
+          name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
+        <include
           name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
         <include
           name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
@@ -729,34 +743,6 @@ ${farrago.test.jvmargs}
           name="org/eigenbase/util14/ConnectStringParser.class"/>
       </fileset>
     </jar>
-  </target>
-
-  <!-- create FarragoMedJdbc3p plugin jar -->
-  <!-- FarragoMedJdbc.jar + jtds and oracle jdbc drivers -->
-  <target name="buildJdbcPlugin" depends="makePluginDirs">
-    <!-- assume farrago jdbc plugin has already been created -->
-    <if>
-      <not>
-        <istrue value="${release.gpl}"/>
-      </not>
-      <then>
-        <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
-          filesetmanifest="merge">
-          <manifest>
-            <attribute name="Class-Path" value="LucidDbClient.jar"/>
-          </manifest>
-          <zipgroupfileset dir="${farrago.plugin.dir}">
-            <include name="FarragoMedJdbc.jar"/>
-          </zipgroupfileset>
-          <zipgroupfileset dir="${open.dir}/thirdparty/jtds">
-            <include name="jtds-1.2.jar"/>
-          </zipgroupfileset>
-          <zipgroupfileset dir="${env.LUCIDERA_PLATFORM_HOME}/thirdparty">
-            <include name="ojdbc14_g.jar"/>
-          </zipgroupfileset>
-        </jar>
-      </then>
-    </if>
   </target>
 
   <!-- create applib plugin jar -->
@@ -926,7 +912,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
             sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -937,7 +923,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
             sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
@@ -946,7 +932,7 @@ ${farrago.test.jvmargs}
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.txnsql}"
+    <luciddb.runSqlTests filelist="${filelist.txnsql}"
             sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -955,7 +941,7 @@ ${farrago.test.jvmargs}
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.txnsql}"
+    <luciddb.runSqlTests filelist="${filelist.txnsql}"
             sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
@@ -966,7 +952,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
       sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -977,7 +963,7 @@ ${farrago.test.jvmargs}
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"
+    <luciddb.runSqlTests filelist="${filelist.shortregsql}"
       sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
@@ -1128,7 +1114,7 @@ ${farrago.test.jvmargs}
     </antcall>
   </target>
 
-  <target name="dist" depends="clean-dist,buildJdbcPlugin">
+  <target name="dist" depends="clean-dist">
     <property file="${release.properties.source}" />
     <property name="lucidera.release.spec"
       value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
@@ -1235,11 +1221,11 @@ ${farrago.test.jvmargs}
     </if>
 
     <replace file="${release.bin.dir}/${sqllineClient}">
-        <replacefilter token="jdbc:farrago:rmi://localhost"
-        value="jdbc:luciddb:rmi://localhost"/>
+        <replacefilter token="jdbc:farrago:http://localhost"
+        value="jdbc:luciddb:http://localhost"/>
         <replacefilter
-        token="net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver"
-        value="com.lucidera.jdbc.LucidDbRmiDriver"/>
+        token="net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver"
+        value="org.luciddb.jdbc.LucidDbClientDriver"/>
         <replacefilter token="guest" value="sa"/>
     </replace>
     <chmod file="${release.bin.dir}/${sqllineClient}" perm="u+x" />
@@ -1277,6 +1263,7 @@ ${farrago.test.jvmargs}
       </then>
     </if>
 
+    <!-- we don't use the release.gpl flag any more. This block is for non-gpl
     <if>
       <not>
         <istrue value="${release.gpl}"/>
@@ -1290,16 +1277,12 @@ ${farrago.test.jvmargs}
         <jar update="true"
           destfile="${lib.farrago.jar}"
           basedir="${jar.tmp.dir}"
-          keepcompression="true"
-          excludes="**/disruptivetech/**"/>
-
-        <delete quiet="false" includeEmptyDirs="true">
-          <fileset dir="${dist.dir}" includes="**/*_dt*.so*"/>
-        </delete>
+          keepcompression="true"/>
 
         <delete dir="${jar.tmp.dir}" quiet="true"/>
       </then>
     </if>
+    -->
 
     <jar update="true"
       destfile="${lib.farrago.jar}"

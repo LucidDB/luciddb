@@ -6,6 +6,6 @@
 source ./defineLucidDbRuntime.sh
 
 java ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
-    -u jdbc:luciddb:rmi://localhost \
-    -d com.lucidera.jdbc.LucidDbRmiDriver \
+    -u jdbc:luciddb:http://localhost \
+    -d org.luciddb.jdbc.LucidDbClientDriver \
     -n sa $*
