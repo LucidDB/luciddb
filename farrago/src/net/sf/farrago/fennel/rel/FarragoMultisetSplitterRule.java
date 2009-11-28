@@ -956,8 +956,7 @@ public class FarragoMultisetSplitterRule
                                 call,
                                 false);
                         }
-                    }
-                    ,
+                    },
                     new CalcRelSplitter.RelType("REL_TYPE_NOT_MULTISET") {
                         protected boolean canImplement(RexFieldAccess field)
                         {
@@ -1016,8 +1015,7 @@ public class FarragoMultisetSplitterRule
                         {
                             return containsNestedMultiset(call, false);
                         }
-                    }
-                    ,
+                    },
                     new CalcRelSplitter.RelType("REL_TYPE_NOT_NESTED") {
                         protected boolean canImplement(RexFieldAccess field)
                         {

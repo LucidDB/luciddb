@@ -178,7 +178,7 @@ CalcInstFactoryTest::testBoolNative()
 
     const char* boolnative[][2] = {
        { "EQ", "3" },
-       { "NE" , "3" },
+       { "NE", "3" },
        { "GT", "3" },
        { "GE", "3" },
        { "LT", "3" },
@@ -277,7 +277,7 @@ CalcInstFactoryTest::testIntegralPointer()
 
     const char* integralpointer[][2] = {
        { "GETS", "2", },
-       { "GETMS" , "2", },
+       { "GETMS", "2", },
        { "", "" },
     };
 
@@ -362,7 +362,7 @@ CalcInstFactoryTest::testBoolPointer()
 
     const char* boolpointer[][2] = {
        { "EQ", "3", },
-       { "NE" , "3", },
+       { "NE", "3", },
        { "GT", "3", },
        { "GE", "3", },
        { "LT", "3", },
@@ -456,7 +456,7 @@ CalcInstFactoryTest::testNativeNative()
 
     const char* nativenative[][2] = {
        { "ADD", "3" },
-       { "SUB" , "3" },
+       { "SUB", "3" },
        { "MUL", "3" },
        { "DIV", "3" },
        { "NEG", "2" },
@@ -507,7 +507,7 @@ CalcInstFactoryTest::testPointerPointer()
 
     const char* pointerpointer[][3] = {
        { "ADD", "2", "1" },
-       { "SUB" , "2", "1" },
+       { "SUB", "2", "1" },
        { "MOVE", "2", "0" },
        { "REF", "2", "0" },
        { "TONULL", "1", "0" },

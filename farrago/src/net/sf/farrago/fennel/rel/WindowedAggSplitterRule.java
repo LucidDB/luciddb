@@ -128,9 +128,7 @@ public class WindowedAggSplitterRule
                                 child,
                                 program);
                         }
-                    }
-                    ,
-
+                    },
                     new CalcRelSplitter.RelType("WinAggRelType") {
                         protected boolean canImplement(RexFieldAccess field)
                         {
