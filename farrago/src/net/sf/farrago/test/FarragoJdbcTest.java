@@ -372,7 +372,7 @@ public class FarragoJdbcTest
 
         // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
-            int millis = (int) (rand.nextDouble() * 5);
+            int millis = (int) (rand.nextDouble() * 4);
             queryCancel(millis, "JAVA", false);
         }
 
