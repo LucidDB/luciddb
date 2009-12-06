@@ -176,7 +176,11 @@ public:
         // In debug mode, guard pages flank each real page.
         guardPages = 2;
 #endif
+#ifdef __APPLE__
+        int osPageSize = 0;
+#else
         int osPageSize = getpagesize();
+#endif
 
         return addressSpaceSize / (pageSize + (guardPages * osPageSize) + 4);
     }

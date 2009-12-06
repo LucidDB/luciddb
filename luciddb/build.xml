@@ -1139,7 +1139,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-xf"/>
           <arg value="${farrago.dist.file}"/>
@@ -1248,7 +1248,12 @@ ${farrago.test.jvmargs}
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />
 
     <if>
+      <and>
         <equals arg1="${osfamily}" arg2="unix"/>
+        <not>
+          <os family="mac"/>
+        </not>
+      </and>
       <then>
         <copy 
           file="${luciddb.dir}/allocFile" 
@@ -1294,7 +1299,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-cf"/>
           <arg value="${lu.release.file}"/>
@@ -1370,7 +1375,12 @@ ${farrago.test.jvmargs}
 
   <target name="copyFennelFiles">
     <if>
-      <equals arg1="${osfamily}" arg2="unix"/>
+      <and>
+        <equals arg1="${osfamily}" arg2="unix"/>
+        <not>
+          <os family="mac"/>
+        </not>
+      </and>
       <then>
         <copy file="${fennel.dir}/util/allocFile" overwrite="true"
           tofile="${luciddb.dir}/allocFile"/>

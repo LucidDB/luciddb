@@ -51,7 +51,9 @@
 
 #include <boost/lexical_cast.hpp>
 
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 

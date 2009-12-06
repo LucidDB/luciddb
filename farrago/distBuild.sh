@@ -41,12 +41,16 @@ case "`uname`" in
   CYGWIN*) cygwin=true ;;
 esac
 
+CP_ARCHIVE_FLAG=-d
 if [ $cygwin = "true" ]; then
-    SO_3P_PATTERN="*.dll"
     SO_PATTERN="*.dll"
 else
-    SO_3P_PATTERN="lib*.so*"
-    SO_PATTERN=$SO_3P_PATTERN
+    if [ `uname` = "Darwin" ]; then
+        SO_PATTERN="lib*.dylib*"
+        CP_ARCHIVE_FLAG=-PR
+    else
+        SO_PATTERN="lib*.so*"
+    fi
 fi
 
 #default
@@ -164,8 +168,8 @@ cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
 rm -f stlport/lib/libstlport_gcc_debug.so
 if $dist_fennel; then
-    cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
-    cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} stlport/lib/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} boost/lib/$SO_PATTERN $LIB_DIR/fennel
 fi
 cp jetty/lib/*.jar $LIB_DIR
 cp jetty/LICENSE-APACHE-2.0.txt $LIB_DIR/jetty.license.txt
@@ -178,17 +182,17 @@ cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005
 # if dist_fennel; then
-#   cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+#   cp ${CP_ARCHIVE_FLAG} icu/lib/$SO_PATTERN $LIB_DIR/fennel
 # fi
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
 
 # copy fennel libs
 if $dist_fennel; then
     cd $FENNEL_DIR
-    cp -d libfennel/$SO_PATTERN $LIB_DIR/fennel
-    cp -d farrago/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/libfennel_lu/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/farrago/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} libfennel/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} farrago/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} lucidera/libfennel_lu/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} lucidera/farrago/$SO_PATTERN $LIB_DIR/fennel
 
     # if possible, strip rpath info
     if [ $cygwin = "false" ]; then

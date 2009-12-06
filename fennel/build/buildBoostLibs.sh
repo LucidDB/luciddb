@@ -14,9 +14,14 @@ echo "using stlport : 5.1.6 : ${STLPORT_LOCATION}/stlport ${STLPORT_LOCATION}/li
 echo "stage: .dummy" >> ${BOOST_DIR}/Makefile
 echo '	@$(BJAM) $(BJAM_CONFIG) --user-config=user-config.jam --prefix=$(prefix) --exec-prefix=$(exec_prefix) --stagedir=$(prefix) $(LIBS) stage || echo "Not all Boost libraries built properly."' >> ${BOOST_DIR}/Makefile
 
-if test "${TARGET_OS}" = "linux-gnu"
+if test "${TARGET_OS}" = "win32"
 then
-    make BJAM_CONFIG="toolset=${BOOST_TOOLSET} variant=debug,release link=shared runtime-link=shared stdlib=stlport --layout=system" stage
-else
     make BJAM_CONFIG="toolset=${BOOST_TOOLSET} target-os=windows threadapi=win32 variant=debug,release link=shared runtime-link=shared stdlib=stlport --layout=system" stage
+else
+    if test "${TARGET_OS}" = "darwin"
+    then
+        make BJAM_CONFIG="toolset=darwin variant=debug,release link=shared runtime-link=shared stdlib=stlport define=_REENTRANT --layout=system" stage
+    else
+        make BJAM_CONFIG="toolset=${BOOST_TOOLSET} variant=debug,release link=shared runtime-link=shared stdlib=stlport --layout=system" stage
+    fi
 fi

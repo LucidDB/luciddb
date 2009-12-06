@@ -17,9 +17,13 @@ then
     echo SELECTED_COMPILER=msvc >> ${STLPORT_DIR}/build/Makefiles/config.mak
     echo SELECTED_COMPILER_VERSION=90 >> ${STLPORT_DIR}/build/Makefiles/config.mak
     echo TARGET_OS=x86 >> ${STLPORT_DIR}/build/Makefiles/config.mak
-    echo "#define _STLP_STATIC_CONST_INIT_BUG 1" >> ${STLPORT_DIR}/stlport/stl/config/user_config.h
+    echo "#define _STLP_STATIC_CONST_INIT_BUG 1" > ${STLPORT_DIR}/stlport/stl/config/user_config.h
     nmake SHELL=/bin/bash TARGET_OS=x86 /fmsvc.mak ${TARGET_LIST}
 else
+    if test "${TARGET_OS}" = "darwin"
+    then
+       echo "#define _STLP_NATIVE_INCLUDE_PATH /usr/include/c++/${GCC_VER}" > ${STLPORT_DIR}/stlport/stl/config/user_config.h
+    fi
     make SHELL=/bin/bash -f gcc.mak ${TARGET_LIST}
 fi
 
@@ -33,6 +37,9 @@ then
     cp ../bin/*.dll .
     cp ../bin/*.pdb .
 else
-    ln -s -f libstlport.so libstlport.5.1.so
-    ln -s -f libstlportstlg.so libstlportstlg.5.1.so
+    if test "${TARGET_OS}" = "linux-gnu"
+    then
+        ln -s -f libstlport.so libstlport.5.1.so
+        ln -s -f libstlportstlg.so libstlportstlg.5.1.so
+    fi
 fi

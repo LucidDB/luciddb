@@ -27,7 +27,11 @@
 #include <ostream>
 #include <stdlib.h>
 
-#ifndef __MSVC__
+#if !defined(__MSVC__) && !defined (__APPLE__)
+#define FENNEL_BACKTRACE_SUPPORTED
+#endif
+
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 #include <signal.h>
 #include <execinfo.h>
 #include <link.h>
@@ -50,7 +54,7 @@ class FENNEL_COMMON_EXPORT Backtrace
     const size_t bufsize;
     void** addrbuf;                     // [bufsize]
 
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     struct LibraryInfo
     {
         ElfW(Addr) baseAddress;
@@ -123,7 +127,7 @@ class FENNEL_COMMON_EXPORT AutoBacktrace
     static std::ostream* pstream;
     static SharedTraceTarget ptrace;
     static void signal_handler(int signum);
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 #define BACKTRACE_SIG_MAX 32
     static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif

@@ -26,11 +26,22 @@
 #include "fennel/common/SysCallExcn.h"
 
 #include <stdlib.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 
 #ifdef HAVE_MMAP
 #include <sys/resource.h>
 #include <sys/mman.h>
+#ifndef NDEBUG
+#ifndef __APPLE__
+#define FENNEL_CACHE_GUARD
+#endif
+#endif
+#endif
+
+#ifdef __APPLE__
+#define MAP_ANONYMOUS MAP_ANON
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -83,7 +94,8 @@ void *VMAllocator::allocate(int *pErrorCode)
 #ifdef HAVE_MMAP
 
     uint cbActualAlloc = cbAlloc;
-#ifndef NDEBUG
+
+#ifdef FENNEL_CACHE_GUARD
     // For a debug build, allocate "fence" regions before and after each
     // allocated buffer.  This helps to catch stray pointers around buffer
     // boundaries.  The fence size is one OS memory page, since that's
@@ -102,7 +114,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         return NULL;
     }
 
-#ifndef NDEBUG
+#ifdef FENNEL_CACHE_GUARD
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
@@ -161,7 +173,7 @@ int VMAllocator::deallocate(void *p, int *pErrorCode)
     }
 
     uint cbActualAlloc = cbAlloc;
-#ifndef NDEBUG
+#ifdef FENNEL_CACHE_GUARD
     PBuffer p2 = static_cast<PBuffer>(p);
     p2 -= getpagesize();
     p = p2;

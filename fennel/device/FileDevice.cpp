@@ -109,7 +109,12 @@ FileDevice::FileDevice(
 
 #else
 
+#ifdef __APPLE__
+    int access = 0;
+#else
     int access = O_LARGEFILE;
+#endif
+
     int permission = S_IRUSR;
     if (mode.readOnly) {
         access |= O_RDONLY;
@@ -143,12 +148,17 @@ FileDevice::FileDevice(
     if (flock(handle, LOCK_SH | LOCK_NB) < 0) {
         throw SysCallExcn("File lock failed");
     }
+
     cbFile = ::lseek(handle, 0, SEEK_END);
 
     // Preallocate the file if we're creating the file, and an initial size
     // is specified.
     if (mode.create && initialSize > 0) {
+#ifdef __APPLE__
+        int rc = ftruncate(handle, initialSize);
+#else
         int rc = posix_fallocate(handle, 0, initialSize);
+#endif
         if (rc) {
             throw SysCallExcn("File allocation failed", rc);
         }
@@ -189,9 +199,11 @@ void FileDevice::flush()
         throw SysCallExcn("Flush failed");
     }
 #else
+#ifndef __APPLE__
     if (::fdatasync(handle)) {
         throw SysCallExcn("Flush failed");
     }
+#endif
 #endif
 }
 

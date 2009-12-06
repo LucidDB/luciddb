@@ -27,7 +27,7 @@
 
 #include <sstream>
 
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 #include <cxxabi.h>
 #endif
 
@@ -46,7 +46,7 @@ Backtrace::~Backtrace()
 Backtrace::Backtrace(size_t maxdepth)
     : ownbuf(true), bufsize(maxdepth + 1)
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     addrbuf = new void * [bufsize];
     depth = backtrace(addrbuf, bufsize);
 #endif
@@ -55,7 +55,7 @@ Backtrace::Backtrace(size_t maxdepth)
 Backtrace::Backtrace(size_t bufsize, void** buffer)
     : ownbuf(false), bufsize(bufsize)
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     addrbuf = buffer;
     depth = backtrace(addrbuf, bufsize);
 #endif
@@ -66,7 +66,7 @@ Backtrace::Backtrace(size_t bufsize, void** buffer)
 
 void Backtrace::print(int fd) const
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     // skip 1st stack frame (the Backtrace constructor)
     if (depth > 1) {
         backtrace_symbols_fd(addrbuf + 1, depth - 1, fd);
@@ -74,7 +74,7 @@ void Backtrace::print(int fd) const
 #endif
 }
 
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 int Backtrace::lookupLibraryBase(
     struct dl_phdr_info *pInfo, size_t size, void *pData)
 {
@@ -94,7 +94,7 @@ int Backtrace::lookupLibraryBase(
 // open/util/bin/analyzeBacktrace utility.
 ostream& Backtrace::print(ostream& os) const
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     char **syms = backtrace_symbols(addrbuf, depth);
     if (syms) {
         // skip 1st stack frame (the Backtrace constructor)
@@ -174,7 +174,7 @@ void Backtrace::writeDemangled(std::ostream &out, char const *pMangled)
 {
     int status = -3;
     char *pDemangled = NULL;
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     pDemangled =
         abi::__cxa_demangle(pMangled, NULL, NULL, &status);
 #endif
@@ -191,13 +191,13 @@ void Backtrace::writeDemangled(std::ostream &out, char const *pMangled)
 std::ostream* AutoBacktrace::pstream = &std::cerr;
 SharedTraceTarget AutoBacktrace::ptrace;
 
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 struct sigaction AutoBacktrace::nextAction[BACKTRACE_SIG_MAX];
 #endif
 
 void AutoBacktrace::signal_handler(int signum)
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     Backtrace bt;
     if (ptrace) {
         std::ostringstream oss;
@@ -241,7 +241,7 @@ void AutoBacktrace::install(bool includeSegFault)
     // Traps SIGABRT: this handles assert(); unless NDEBUG, permAssert() =>
     // assert(), so that's covered. std::terminate() also => abort().  TODO:
     // trap permAssert() directly.
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     installSignal(SIGILL);
     installSignal(SIGABRT);
 
@@ -255,7 +255,7 @@ void AutoBacktrace::install(bool includeSegFault)
 
 void AutoBacktrace::installSignal(int signum)
 {
-#ifndef __MSVC__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
     permAssert(signum < BACKTRACE_SIG_MAX);
     struct sigaction act;
     struct sigaction old_act;

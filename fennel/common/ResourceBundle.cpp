@@ -295,6 +295,12 @@ void ResourceBundle::loadMessages()
         }
     }
 
+#ifdef __APPLE__
+    // FIXME jvs 5-Dec-2009:  need to find out why getline below
+    // is going into an infinite loop
+    in.close();
+    return;
+#else
     string line, key, message;
     while (in.good()) {
         getline(in, line);
@@ -317,6 +323,7 @@ void ResourceBundle::loadMessages()
     }
 
     in.close();
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -17,10 +17,10 @@ set(GENERIC_DEFINES "-DHAVE_CONFIG_H -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_S
 
 if ("${OPT_FLAG}" STREQUAL "--with-optimization")
    set(CMAKE_BUILD_TYPE Release)
-   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-      set(OPT_DEFINES "-Wno-unused-variable -Wno-uninitialized")
-   else()
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
       set(OPT_DEFINES "")
+   else()
+      set(OPT_DEFINES "-Wno-unused-variable -Wno-uninitialized")
    endif()
    set(BOOST_LIB_SUFFIX "mt-p")
    set(STLPORT_LIB "stlport")
@@ -32,10 +32,10 @@ else()
 endif()
 
 if ("${DEBUG_FLAG}" STREQUAL "--with-debug")
-   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-      set(DEBUG_DEFINES "-g")
-   else()
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
       set(DEBUG_DEFINES "/Zi")
+   else()
+      set(DEBUG_DEFINES "-g")
    endif()
 else()
 set(DEBUG_DEFINES "")
@@ -50,12 +50,16 @@ else()
    set(ENDIAN_DEFINES "-DLITTLEENDIAN")
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Wno-parentheses -Wno-missing-braces -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} -fPIC -DPIC")
-   set(JDK_PLATFORM linux)
-else()
-    set(CMAKE_CXX_FLAGS "${GENERIC_DEFINES} ${ENDIAN_DEFINES}=1 ${OPT_DEFINES} ${DEBUG_DEFINES} -D__MSVC__ -DBOOST_ALL_NO_LIB /EHsc")
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+   set(CMAKE_CXX_FLAGS "${GENERIC_DEFINES} ${ENDIAN_DEFINES}=1 ${OPT_DEFINES} ${DEBUG_DEFINES} -D__MSVC__ -DBOOST_ALL_NO_LIB /EHsc")
    set(JDK_PLATFORM win32)
+else()
+   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Wno-parentheses -Wno-missing-braces -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} -fPIC -DPIC")
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+      set(JDK_PLATFORM linux)
+   else()
+      set(JDK_PLATFORM darwin)
+   endif()
 endif()
 
 if (NOT boost_location)
@@ -82,13 +86,13 @@ if (with_farrago)
    endif()
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
-   set(JAVA_INCLUDE ${JNI_INCLUDE_DIRS})
-else()
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
    # FindJNI doesn't work very well on Linux
    set(JAVA_INCLUDE
       ${JAVA_HOME_NATIVE}/include
       ${JAVA_HOME_NATIVE}/include/${JDK_PLATFORM})
+else()
+   set(JAVA_INCLUDE ${JNI_INCLUDE_DIRS})
 endif()
 
 set(DEFAULT_LIB
@@ -97,11 +101,13 @@ ${stlport_location}/lib
 )
 
 include (CheckIncludeFiles)
-check_include_files (aio.h HAVE_AIO_H)
-check_include_files (libaio.h HAVE_LIBAIO_H)
-if (NOT with_farrago)
-   check_include_files (uuid.h HAVE_UUID_H)
-   check_include_files (uuid/uuid.h HAVE_UUID_UUID_H)
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+   check_include_files (aio.h HAVE_AIO_H)
+   check_include_files (libaio.h HAVE_LIBAIO_H)
+   if (NOT with_farrago)
+      check_include_files (uuid.h HAVE_UUID_H)
+      check_include_files (uuid/uuid.h HAVE_UUID_UUID_H)
+   endif()
 endif()
 check_include_files (sched.h HAVE_SCHED_H)
 
@@ -131,15 +137,7 @@ endif ()
 
 set(BOOST_LINKAGE runtime-link-dynamic/shared-linkable-true)
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-   set(BOOST_TOOLSET gcc-stlport)
-   set(DLLEXT so)
-   set(EXTRA_LDFLAGS "-lpthread -lstdc++ -lgcc_s -lrt -ldl ${UUID_LINK_FLAG}")
-   set(boost_jam_platform linuxx86)
-   set(lib_path_var LD_LIBRARY_PATH)
-   set(jdk_platform linux)
-   set(target_os linux-gnu)
-else()
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
    set(BOOST_TOOLSET msvc-stlport)
    set(DLLEXT dll)
    set(EXTRA_LDFLAGS "")
@@ -147,12 +145,29 @@ else()
    set(lib_path_var PATH)
    set(jdk_platform win32)
    set(target_os win32)
+else()
+   set(BOOST_TOOLSET gcc-stlport)
+   set(boost_jam_platform linuxx86)
+   set(jdk_platform linux)
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+      set(target_os linux-gnu)
+      set(DLLEXT so)
+      set(lib_path_var LD_LIBRARY_PATH)
+      set(EXTRA_LDFLAGS 
+          "-lpthread -lstdc++ -lgcc_s -lrt -ldl ${UUID_LINK_FLAG}")
+   else()
+      set(target_os darwin)
+      set(DLLEXT dylib)
+      set(lib_path_var DYLD_LIBRARY_PATH)
+      set(EXTRA_LDFLAGS 
+          "-lpthread -lstdc++ -ldl ${UUID_LINK_FLAG}")
+   endif()
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-   set(BOOST_THREADLIB boost_thread-${BOOST_LIB_SUFFIX})
-else()
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
    set(BOOST_THREADLIB boost_thread_win32-${BOOST_LIB_SUFFIX})
+else()
+   set(BOOST_THREADLIB boost_thread-${BOOST_LIB_SUFFIX})
 endif()
 set(BOOST_REGEXLIB boost_regex-${BOOST_LIB_SUFFIX})
 set(BOOST_DATETIMELIB boost_date_time-${BOOST_LIB_SUFFIX})
@@ -194,29 +209,38 @@ set(STL_BOOST_LIBS
   ${BOOST_SYSTEMLIB}
   ${STLPORT_LIB})
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-   set(STD_LIBS
-     ${STL_BOOST_LIBS}
-     pthread 
-     stdc++ 
-     gcc_s 
-     rt 
-     dl 
-   )
-else()
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
    set(STD_LIBS
      ${STL_BOOST_LIBS}
      rpcrt4.lib
      wsock32.lib
      ws2_32.lib
    )
+else()
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+      set(STD_LIBS
+        ${STL_BOOST_LIBS}
+        pthread 
+        stdc++ 
+        gcc_s 
+        rt 
+        dl 
+      )
+   else()
+      set(STD_LIBS
+        ${STL_BOOST_LIBS}
+        pthread 
+        stdc++ 
+        dl 
+      )
+   endif()
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
    set(PREVENT_UNDEFINED -Wl,--no-undefined)
    set(LINK_WHOLE_ARCHIVE -Wl,-whole-archive)
    set(LINK_NO_WHOLE_ARCHIVE -Wl,-no-whole-archive)
-endif ()
+endif()
 
 
 macro(add_suffix rootlist suffix)

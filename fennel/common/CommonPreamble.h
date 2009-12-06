@@ -43,6 +43,9 @@
 
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE 1
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
 
 // Request support for large file offsets (> 4G) without needing special
 // versions of standard I/O calls.
@@ -62,12 +65,18 @@
 #include <sstream>
 #include <string>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <new>
 #include <cassert>
 #include <vector>
 #include <boost/thread/tss.hpp>
 
+#ifdef __APPLE__
+#define FMT_INT64      "lld"
+#define FMT_UINT64     "llu"
+#define isnan __inline_isnan
+#else
 #ifndef __MSVC__
 #if __WORDSIZE == 64
 #define FMT_INT64      "ld"
@@ -89,6 +98,7 @@
 #define round(x) (((x) >= 0) ? floor((x) + 0.5) : ceil((x) - 0.5))
 #define roundf round
 
+#endif
 #endif
 
 typedef unsigned uint;

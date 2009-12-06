@@ -611,6 +611,8 @@ ${farrago.test.jvmargs}
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_generateMetamodelCode"/>
     <farrago.javaCompile
+      fork="true"
+      memoryMaximumSize="512m"
       srcdir="${farrago.catalog.src.dir}"
       destdir="${farrago.catalog.src.dir}"
       classpathref="farrago.3p.classpath">
