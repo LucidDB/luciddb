@@ -1008,13 +1008,6 @@ ${farrago.test.jvmargs}
       locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>
-    <farrago.javaCompile
-      srcdir="${farrago.src.dir}"
-      destdir="${farrago.classes.dir}"
-      classpathref="farrago.3p.classpath">
-      <include name="org/eigenbase/resource/*.java" />
-      <include name="net/sf/farrago/resource/*.java" />
-    </farrago.javaCompile>
   </target>
 
   <target name="checkFennelResourceUptodate">
