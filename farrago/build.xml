@@ -313,8 +313,6 @@ ${farrago.test.jvmargs}
       classpathref="farrago.build.classpath">
       <include name="org/eigenbase/util14/**/*.java" />
       <include name="org/eigenbase/util/property/**/*.java" />
-      <include name="org/eigenbase/resource/*.java" />
-      <include name="net/sf/farrago/resource/*.java" />
     </farrago.javaCompileClient>
     <farrago.javaCompile
       deprecation="off"
@@ -324,8 +322,6 @@ ${farrago.test.jvmargs}
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
       <exclude name="org/eigenbase/inventory/**/*.java" />
-      <include name="org/eigenbase/resource/*.java" />
-      <include name="net/sf/farrago/resource/*.java" />
     </farrago.javaCompile>
   </target>
 
