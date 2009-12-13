@@ -6,6 +6,13 @@ project(fennel)
 include(CTest)
 include(FindJNI)
 
+# detect if we are a 32 or 64 bit build
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(CPU_BITS 64)
+else()
+    set(CPU_BITS 32)
+endif()
+
 # TODO jvs 25-Jun-2009:  get rid of this (FNL-84)
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
    set(TEST_LIBRARY_LINKAGE "STATIC")
