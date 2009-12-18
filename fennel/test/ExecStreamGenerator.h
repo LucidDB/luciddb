@@ -115,8 +115,9 @@ public:
         for (i = 0; i < nRows / partitionSize; i++) {
             int start = i * partitionSize;
             int end = start + partitionSize - 1;
-            std::random_shuffle(values.begin() + start,
-                    values.begin() + end);
+            std::random_shuffle(
+                values.begin() + start,
+                values.begin() + end);
         }
     }
 
