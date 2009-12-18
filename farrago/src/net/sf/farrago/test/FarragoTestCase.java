@@ -1175,7 +1175,7 @@ public abstract class FarragoTestCase
      * <p>Lame implementation which buffers its input and applies replacement
      * only when {@link #close} is called.
      */
-    private static class ReplacingOutputStream
+    protected static class ReplacingOutputStream
         extends FilterOutputStream
     {
         private final OutputStream outputStream;
