@@ -63,6 +63,11 @@ public interface TupleIter
             {
             }
 
+            public StringBuilder printStatus(StringBuilder b)
+            {
+                return b;
+            }
+
             public void closeAllocation()
             {
             }
@@ -146,6 +151,14 @@ public interface TupleIter
      * iterated.
      */
     public void restart();
+
+    /**
+     * Prints the state of the iterator.
+     * (Avoids constructing a String; uses no locks.)
+     * @param b target
+     * @return b
+     */
+    public StringBuilder printStatus(StringBuilder b);
 
     /**
      * One way to indicate that {@link TupleIter#fetchNext} timed-out. The other

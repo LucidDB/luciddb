@@ -68,6 +68,12 @@ public abstract class CalcTupleIter
     }
 
     // implement TupleIter
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        return inputIterator.printStatus(b);
+    }
+
+    // implement TupleIter
     public void closeAllocation()
     {
         inputIterator.closeAllocation();

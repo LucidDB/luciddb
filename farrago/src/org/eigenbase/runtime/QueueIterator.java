@@ -122,7 +122,27 @@ public class QueueIterator
         hasNext = true;
     }
 
-    //~ Methods ----------------------------------------------------------------
+    //~ Methods ---------------------------------------------------------------
+
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        b.append(this);
+        if (throwable != null) {
+            b.append(" error: ").append(throwable);
+        }
+        if (hasNext) {
+            if (queue instanceof ArrayBlockingQueue) {
+                // Kludge - expect an ArrayBlockingQueue
+                ArrayBlockingQueue abq = (ArrayBlockingQueue) queue;
+                b.append(" size: ").append(abq.size());
+            } else {
+                b.append("size ?");
+            }
+        } else {
+            b.append(" done");
+        }
+        return b;
+    }
 
     protected void reset(int n)
     {
