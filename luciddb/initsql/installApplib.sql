@@ -1019,3 +1019,26 @@ language java
 parameter style java 
 reads sql data 
 external name  'applib.applibJar:com.lucidera.luciddb.applib.util.ExecSqlIfNoRows.execute'; 
+
+create or replace function APPLIB.WRITE_ROWS_TO_FILE(
+IN_CURSOR cursor, 
+URL varchar(255), 
+IS_COMPRESSED boolean)
+returns table(status int, message varchar(6000))
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.WriteRowsToFileUDX.execute';
+ 
+ 
+create or replace function APPLIB.READ_ROWS_FROM_FILE(
+IN_CURSOR cursor, 
+URL varchar(255), 
+IS_COMPRESSED boolean)
+returns table (IN_CURSOR.*)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.ReadRowsFromFileUDX.execute';
