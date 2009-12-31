@@ -46,6 +46,12 @@ bool showProgram = true;
 #define USING_NOISY_ARITHMETIC    (1)
 /* #define USING_NOISY_ARITHMETIC    (1) */
 
+#ifdef __APPLE__
+#define OUT_OF_RANGE_ERR "Result too large"
+#else
+#define OUT_OF_RANGE_ERR "out of range"
+#endif
+
 template <typename T>
 class RegisterTestInfo
 {
@@ -2173,7 +2179,11 @@ void CalcAssemblerTest::testStandardTypes()
             CalcAssemblerTestCase testCase3(
                 __LINE__, testdesc.c_str(), teststr3.c_str());
             if (type == STANDARD_TYPE_INT_64 || type == STANDARD_TYPE_DOUBLE) {
+#ifdef __APPLE__
+                testCase3.expectAssemblerError(OUT_OF_RANGE_ERR);
+#else
                 testCase3.expectAssemblerError("out of");
+#endif
             } else if (underflow[type] == "-1") {
                 testCase3.expectAssemblerError("Invalid value");
             } else {
@@ -2198,7 +2208,7 @@ void CalcAssemblerTest::testStandardTypes()
                 __LINE__, testdesc.c_str(),
                 teststr4.c_str());
             if (type == STANDARD_TYPE_UINT_64 || type == STANDARD_TYPE_DOUBLE) {
-                testCase4.expectAssemblerError("out of range");
+                testCase4.expectAssemblerError(OUT_OF_RANGE_ERR);
             } else if (type == STANDARD_TYPE_BOOL) {
                 testCase4.expectAssemblerError("Invalid value");
             } else {
@@ -2629,7 +2639,7 @@ void CalcAssemblerTest::testInvalidPrograms()
         __LINE__, "BAD REG INDEX",
         "I u2, u4;\nO u4;\nT;\n"
         "ADD O0, I0, I888888888888888888888888888888888888888888;");
-    testCase7.expectAssemblerError("out of range");
+    testCase7.expectAssemblerError(OUT_OF_RANGE_ERR);
     testCase7.assemble();
 
     // TODO: Test extremely long programs and stuff

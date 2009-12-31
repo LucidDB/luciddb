@@ -49,6 +49,8 @@ Backtrace::Backtrace(size_t maxdepth)
 #ifdef FENNEL_BACKTRACE_SUPPORTED
     addrbuf = new void * [bufsize];
     depth = backtrace(addrbuf, bufsize);
+#else
+    addrbuf = NULL;
 #endif
 }
 

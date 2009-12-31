@@ -91,7 +91,7 @@ void LcsClusterDump::dump(
 
     // print header
 
-    callTrace("Cluster Page Dump - PageId %ld", pageId);
+    callTrace("Cluster Page Dump - PageId %" FMT_UINT64, pageId);
     callTrace("-----------------------------");
     callTrace("Header");
     callTrace("------");

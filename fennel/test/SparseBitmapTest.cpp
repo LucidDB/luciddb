@@ -605,7 +605,7 @@ void SparseBitmapTest::testFullDirectory()
     try {
         bitmap.setBit(iOffset, 1);
         BOOST_FAIL("directory full exception expected");
-    } catch (std::exception ex) {
+    } catch (std::runtime_error &ex) {
         // failure expected
     }
 }

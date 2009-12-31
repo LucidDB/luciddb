@@ -356,6 +356,7 @@ void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
         pSegmentFactory->newScratchSegment(pCache, 10);
     sortParams.keyProj.push_back(0);
     sortParams.storeFinalRun = false;
+    sortParams.partitionKeyCount = 0;
 
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
