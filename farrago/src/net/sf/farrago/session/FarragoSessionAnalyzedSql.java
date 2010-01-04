@@ -29,6 +29,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.util.SqlString;
 
 
 /**
@@ -53,8 +54,12 @@ public class FarragoSessionAnalyzedSql
      * The text of the SQL expression after expansion by the validator. This
      * contains no context-dependent information (e.g. all objects are fully
      * qualified), so it can be stored in the catalog.
+     *
+     * <p>Its type is {@link SqlString} to remind developers to apply hygienic
+     * practices to prevent SQL injection and poorly quoted identifiers and
+     * literals.
      */
-    public String canonicalString;
+    public SqlString canonicalString;
 
     /**
      * Set of catalog objects on which the expression directly depends.

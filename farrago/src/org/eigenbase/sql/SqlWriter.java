@@ -22,6 +22,8 @@
  */
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.util.SqlString;
+
 /**
  * A <code>SqlWriter</code> is the target to construct a SQL statement from a
  * parse tree. It deals with dialect differences; for example, Oracle quotes
@@ -203,6 +205,12 @@ public interface SqlWriter
             return needsIndent;
         }
 
+        /**
+         * Creates a frame type.
+         *
+         * @param name Name
+         * @return frame type
+         */
         public static FrameType create(final String name)
         {
             return new FrameType() {
@@ -237,7 +245,19 @@ public interface SqlWriter
      */
     void resetSettings();
 
+    /**
+     * Returns the dialect of SQL.
+     *
+     * @return SQL dialect
+     */
     SqlDialect getDialect();
+
+    /**
+     * Returns the contents of this writer as a 'certified kocher' SQL string.
+     *
+     * @return SQL string
+     */
+    SqlString toSqlString();
 
     /**
      * Prints a literal, exactly as provided. Does not attempt to indent or
@@ -258,6 +278,11 @@ public interface SqlWriter
      */
     void print(String s);
 
+    /**
+     * Prints an integer.
+     *
+     * @param x Integer
+     */
     void print(int x);
 
     /**
@@ -270,12 +295,36 @@ public interface SqlWriter
      */
     void newlineAndIndent();
 
+    /**
+     * Returns whether this writer should quote all identifiers, even those
+     * that do not contain mixed-case identifiers or punctuation.
+     *
+     * @return whether to quote all identifiers
+     */
     boolean isQuoteAllIdentifiers();
 
+    /**
+     * Returns whether this writer should start each clause (e.g. GROUP BY) on
+     * a new line.
+     *
+     * @return whether to start each clause on a new line
+     */
     boolean isClauseStartsLine();
 
+    /**
+     * Returns whether the items in the SELECT clause should each be on a
+     * separate line.
+     *
+     * @return whether to put each SELECT clause item on a new line
+     */
     boolean isSelectListItemsOnSeparateLines();
 
+    /**
+     * Returns whether to output all keywords (e.g. SELECT, GROUP BY) in lower
+     * case.
+     *
+     * @return whether to output SQL keywords in lower case
+     */
     boolean isKeywordsLowerCase();
 
     /**
@@ -288,7 +337,7 @@ public interface SqlWriter
     /**
      * Ends a list which is a call to a function.
      *
-     * @param frame
+     * @param frame Frame
      *
      * @see #startFunCall(String)
      */
@@ -312,7 +361,7 @@ public interface SqlWriter
      * @param frameType Type of list. For example, a SELECT list will be
      * governed according to SELECT-list formatting preferences.
      * @param open String to start the list; typically "(" or the empty string.
-     * @param close
+     * @param close String to close the list
      */
     Frame startList(FrameType frameType, String open, String close);
 
@@ -394,8 +443,19 @@ public interface SqlWriter
 
     interface FrameType
     {
+        /**
+         * Returns the name of this frame type.
+         *
+         * @return name
+         */
         String getName();
 
+        /**
+         * Returns whether this frame type should cause the code be further
+         * indented.
+         *
+         * @return whether to further indent code within a frame of this type
+         */
         boolean needsIndent();
     }
 }

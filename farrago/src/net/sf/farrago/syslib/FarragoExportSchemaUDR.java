@@ -30,6 +30,8 @@ import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
@@ -818,7 +820,7 @@ public abstract class FarragoExportSchemaUDR
      * @param foreignSchema name of the foreign schema
      * @param exclude if true, tables matching either the tableList of the
      * tablePattern will be excluded. if false, tables will be included
-     * @param tableList comma separated list of tables or null value if
+     * @param tableListString comma separated list of tables or null value if
      * tablePattern is being used
      * @param tablePattern table name pattern where '_' represents any single
      * character and '%' represents any sequence of zero or more characters. Set
@@ -840,7 +842,7 @@ public abstract class FarragoExportSchemaUDR
         String foreignServer,
         String foreignSchema,
         boolean exclude,
-        String tableList,
+        String tableListString,
         String tablePattern,
         Timestamp lastModified,
         String lastModifiedColumn,
@@ -855,7 +857,7 @@ public abstract class FarragoExportSchemaUDR
 
         boolean tmpSchemaExists = false;
 
-        if ((tableList != null) && (tablePattern != null)) {
+        if ((tableListString != null) && (tablePattern != null)) {
             throw FarragoResource.instance().ExportSchemaSpecifyListOrPattern
             .ex();
         }
@@ -863,13 +865,15 @@ public abstract class FarragoExportSchemaUDR
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
         Statement stmt = conn.createStatement();
+        final SqlDialect dialect = SqlDialect.create(conn.getMetaData());
+        final SqlBuilder buf = new SqlBuilder(dialect);
 
         try {
             // create temporary local schema
             try {
-                stmt.executeUpdate(
-                    "create schema " + QUOTE + tmpLocalSchema
-                    + QUOTE);
+                buf.append("create schema ");
+                buf.identifier(tmpLocalSchema);
+                stmt.executeUpdate(buf.getSql());
             } catch (SQLException e) {
                 throw FarragoResource.instance()
                 .ExportSchemaCreateTempSchemaError.ex(
@@ -879,8 +883,19 @@ public abstract class FarragoExportSchemaUDR
             }
             tmpSchemaExists = true;
 
-            String importSql =
+            final List<String> tableList;
+            if (tableListString == null) {
+                tableList = null;
+            } else {
+                // remove all spaces in table list
+                // this means we can't have table names with spaces
+                tableListString = tableListString.replaceAll("\\s*", "");
+                tableList = Arrays.asList(tableListString.split(","));
+            }
+
+            SqlString importSql =
                 buildImportForeignSchemaSql(
+                    dialect,
                     foreignServer,
                     foreignSchema,
                     tableList,
@@ -890,7 +905,7 @@ public abstract class FarragoExportSchemaUDR
 
             // import foreign schema into temp schema
             try {
-                stmt.executeUpdate(importSql);
+                stmt.executeUpdate(importSql.getSql());
             } catch (SQLException e) {
                 throw FarragoResource.instance()
                 .ExportSchemaImportForeignSchemaError.ex(
@@ -914,7 +929,7 @@ public abstract class FarragoExportSchemaUDR
                     foreignServer,
                     foreignSchema,
                     String.valueOf(exclude),
-                    tableList,
+                    tableListString,
                     tablePattern,
                     tmpLocalSchema);
             } else {
@@ -950,9 +965,11 @@ public abstract class FarragoExportSchemaUDR
 
             // drop temp schema
             try {
-                stmt.executeUpdate(
-                    "drop schema " + QUOTE + tmpLocalSchema
-                    + QUOTE + " cascade");
+                buf.clear();
+                buf.append("drop schema ");
+                buf.identifier(tmpLocalSchema);
+                buf.append(" cascade");
+                stmt.executeUpdate(buf.getSql());
             } catch (SQLException se) {
                 throw FarragoResource.instance().ExportSchemaDropTempSchemaError
                 .ex(
@@ -964,9 +981,11 @@ public abstract class FarragoExportSchemaUDR
         } finally {
             if (tmpSchemaExists) {
                 try {
-                    stmt.executeUpdate(
-                        "drop schema " + QUOTE + tmpLocalSchema
-                        + QUOTE + " cascade");
+                    buf.clear();
+                    buf.append("drop schema ");
+                    buf.identifier(tmpLocalSchema);
+                    buf.append(" cascade");
+                    stmt.executeUpdate(buf.getSql());
                 } catch (SQLException ex1) {
                     // TODO: warn that we tried our best and schema still
                     // wasn't dropped. If it gets here, any previous exception
@@ -1646,7 +1665,7 @@ public abstract class FarragoExportSchemaUDR
         String literalSep;
         if (colNum == rsmd.getColumnCount()) {
             literalSep = "\"\\r\\n\"";
-        } else if (fieldDelim == TAB) {
+        } else if (fieldDelim.equals(TAB)) {
             literalSep = "\"\\t\"";
         } else {
             literalSep = "\"" + fieldDelim + "\"";
@@ -1655,7 +1674,8 @@ public abstract class FarragoExportSchemaUDR
         int colJdbcType = rsmd.getColumnType(colNum);
         String colName = rsmd.getColumnName(colNum);
 
-        // if spaces exist within column name, quote it
+        // If spaces exist within column name, quote it.
+        // REVIEW: What if there are quotes in the column name?
         if (colName.contains(" ")) {
             colName = QUOTE + colName + QUOTE;
         }
@@ -1773,99 +1793,103 @@ public abstract class FarragoExportSchemaUDR
         String incrCatalog,
         String incrSchema)
     {
-        String oldQualifiedTable;
-
+        List<String> qualifiedTableNames = new ArrayList<String>();
         if (catalog != null) {
-            oldQualifiedTable =
-                QUOTE + catalog + QUOTE + "." + QUOTE + schema
-                + QUOTE + "." + QUOTE + tblName + QUOTE;
-        } else {
-            oldQualifiedTable =
-                QUOTE + schema + QUOTE + "." + QUOTE + tblName
-                + QUOTE;
+            qualifiedTableNames.add(catalog);
         }
+        qualifiedTableNames.add(schema);
+        qualifiedTableNames.add(tblName);
 
-        StringBuilder querySql =
-            new StringBuilder(
-                "select * from " + oldQualifiedTable);
+        SqlBuilder querySql =
+            new SqlBuilder(SqlDialect.EIGENBASE);
 
         switch (expType) {
         case FULL_EXPORT:
 
             // does nothing, sql complete
+            querySql.append("select * from ");
+            querySql.identifier(qualifiedTableNames);
             break;
+
         case INCR_EXPORT:
-
             // appends where clause to filter out incremental data here
-            querySql.append(
-                " where " + QUOTE + colName + QUOTE
-                + " >= TIMESTAMP'" + lastModifiedTs.toString() + "'");
+            querySql.append("select * from ");
+            querySql.identifier(qualifiedTableNames);
+            querySql.append(" where ");
+            querySql.identifier(colName);
+            querySql.append(" >= ");
+            querySql.literal(lastModifiedTs);
             break;
-        case MERGE_EXPORT:
 
+        case MERGE_EXPORT:
             // gets all records which haven't been changed in the old schema
             // and all the new and updated records from the new/incr schema
-            String incrQualifiedTable;
-            String tempTableName1 =
-                QUOTE + UUID.randomUUID().toString()
-                + QUOTE;
-            String tempTableName2 =
-                QUOTE + UUID.randomUUID().toString()
-                + QUOTE;
-
+            List<String> incrQualifiedTable = new ArrayList<String>();
             if (incrCatalog != null) {
-                incrQualifiedTable =
-                    QUOTE + incrCatalog + QUOTE + "." + QUOTE
-                    + incrSchema + QUOTE + "." + QUOTE + tblName + QUOTE;
-            } else {
-                incrQualifiedTable =
-                    QUOTE + incrSchema + QUOTE + "." + QUOTE
-                    + tblName + QUOTE;
+                incrQualifiedTable.add(incrCatalog);
             }
+            incrQualifiedTable.add(incrSchema);
+            incrQualifiedTable.add(tblName);
 
-            // select out one set of columns only
-            querySql.insert(7, tempTableName1 + ".");
-
-            querySql.append(
-                " " + tempTableName1 + " inner join ( select "
-                + QUOTE + colName + QUOTE + " from " + oldQualifiedTable
-                + " except select " + QUOTE + colName + QUOTE + " from "
-                + incrQualifiedTable + ") " + tempTableName2 + " on "
-                + tempTableName1 + "." + colName + "=" + tempTableName2
-                + "." + QUOTE + colName + QUOTE + ")");
+            String tempTableName1 = UUID.randomUUID().toString();
+            String tempTableName2 = UUID.randomUUID().toString();
 
             // put incremental first in union all so resulting column names
             // will be the same as the columns in incremental table
-            querySql.insert(
-                0,
-                "select * from " + incrQualifiedTable
-                + " union all (");
-            break;
-        default:
+            querySql.append("select * from ");
+            querySql.identifier(incrQualifiedTable);
+            querySql.append(" union all (");
 
+            // select out one set of columns only
+            querySql.append("select ");
+            querySql.identifier(tempTableName1);
+            querySql.append(".* from ");
+            querySql.identifier(qualifiedTableNames);
+
+            querySql.append(" ");
+            querySql.identifier(tempTableName1);
+            querySql.append(" inner join ( select ");
+            querySql.identifier(colName);
+            querySql.append(" from ");
+            querySql.identifier(qualifiedTableNames);
+            querySql.append(" except select ");
+            querySql.identifier(colName);
+            querySql.append(" from ");
+            querySql.identifier(incrQualifiedTable);
+            querySql.append(") ");
+            querySql.identifier(tempTableName2);
+            querySql.append(" on ");
+            querySql.identifier(tempTableName1, colName);
+            querySql.append("=");
+            querySql.identifier(tempTableName2, colName);
+            querySql.append(")");
+            break;
+
+        default:
             // should never get here
             throw FarragoResource.instance().ExportSchemaInvalidExpType.ex(
                 String.valueOf(expType));
         }
-        return querySql.toString();
+        return querySql.getSql();
     }
 
     /**
      * Helper function to build the import foreign schema SQL used in exporting
      * from a foreign schema
      */
-    private static String buildImportForeignSchemaSql(
+    private static SqlString buildImportForeignSchemaSql(
+        SqlDialect dialect,
         String foreignServer,
         String foreignSchema,
-        String tableList,
+        List<String> tableList,
         String tablePattern,
         boolean exclude,
         String tempSchema)
     {
-        StringBuilder importSql = new StringBuilder();
-
-        importSql.append(
-            "import foreign schema " + QUOTE + foreignSchema + QUOTE + " ");
+        SqlBuilder importSql = new SqlBuilder(dialect);
+        importSql.append("import foreign schema ");
+        importSql.identifier(foreignSchema);
+        importSql.append(" ");
 
         // if there is filtering
         if (!((tableList == null) && (tablePattern == null))) {
@@ -1876,25 +1900,26 @@ public abstract class FarragoExportSchemaUDR
             }
 
             if (tableList != null) {
-                // remove all spaces in table list
-                // this means we can't have table names with spaces
-                tableList = tableList.replaceAll("\\s*", "");
-                importSql.append(
-                    "(" + QUOTE
-                    + tableList.replaceAll(",", QUOTE + "," + QUOTE)
-                    + QUOTE
-                    + ") ");
+                importSql.append("(");
+                for (int i = 0; i < tableList.size(); i++) {
+                    if (i > 0) {
+                        importSql.append(", ");
+                    }
+                    importSql.identifier(tableList.get(i));
+                }
+                importSql.append(") ");
             } else {
-                importSql.append(
-                    "table_name like '" + tablePattern
-                    + "' ");
+                importSql.append("table_name like ");
+                importSql.literal(tablePattern);
+                importSql.append(" ");
             }
         }
-        importSql.append(
-            "from server " + QUOTE + foreignServer + QUOTE + " into "
-            + QUOTE + tempSchema + QUOTE);
+        importSql.append("from server ");
+        importSql.identifier(foreignServer);
+        importSql.append(" into ");
+        importSql.identifier(tempSchema);
 
-        return importSql.toString();
+        return importSql.toSqlString();
     }
 
     /**

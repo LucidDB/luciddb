@@ -39,6 +39,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.jdbc4.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -530,8 +531,12 @@ public class FarragoJdbcEngineConnection
         String initialSchema = info.getProperty("schema");
         if (initialSchema != null) {
             Statement stmt = this.createStatement();
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+            buf.append("set schema ");
+            buf.literal(initialSchema);
+            final String sql = buf.getSql();
             try {
-                stmt.executeUpdate("set schema '" + initialSchema + "'");
+                stmt.executeUpdate(sql);
             } finally {
                 try {
                     stmt.close();

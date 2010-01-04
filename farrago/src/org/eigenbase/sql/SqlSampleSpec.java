@@ -108,7 +108,7 @@ public abstract class SqlSampleSpec
         public String toString()
         {
             return "SUBSTITUTE("
-                + SqlUtil.eigenbaseDialect.quoteStringLiteral(name)
+                + SqlDialect.EIGENBASE.quoteStringLiteral(name)
                 + ")";
         }
     }

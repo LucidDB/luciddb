@@ -372,7 +372,7 @@ public class DdlRoutineHandler
                 FarragoCatalogUtil.getQualifiedName(sqlRoutine.getJar());
             SqlPrettyWriter pw =
                 new SqlPrettyWriter(
-                    new SqlDialect(
+                    SqlDialect.create(
                         validator.getStmtValidator().getSession()
                                  .getDatabaseMetaData()));
             String fqjn = pw.format(jarId);
@@ -466,7 +466,7 @@ public class DdlRoutineHandler
 
         routine.getBody().setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(
-                analyzedSql.canonicalString));
+                analyzedSql.canonicalString.getSql()));
 
         if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2004:  add a test for this; currently
@@ -494,7 +494,8 @@ public class DdlRoutineHandler
         FemSqlobjectType objectType)
     {
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
-        SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect sqlDialect =
+            SqlDialect.create(session.getDatabaseMetaData());
         FarragoSessionParser parser =
             session.getPersonality().newParser(session);
         SqlNodeList nodeList =
@@ -524,7 +525,7 @@ public class DdlRoutineHandler
             // adjust parser pos in error msgs
             analyzedSql =
                 session.analyzeSql(
-                    expr.toSqlString(sqlDialect),
+                    expr.toSqlString(sqlDialect).getSql(),
                     typeFactory,
                     paramRowType,
                     false);

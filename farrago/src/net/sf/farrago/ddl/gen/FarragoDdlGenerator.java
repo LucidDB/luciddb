@@ -35,7 +35,9 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.sql.SqlDialect;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -69,10 +71,14 @@ public class FarragoDdlGenerator
      * DdlGenerator#gatherElements} or {@link #getExportText(java.util.List,
      * boolean)} with <code>sort=true</code>.
      *
+     * @param sqlDialect SQL dialect
      * @param modelView Model graph
      */
-    public FarragoDdlGenerator(JmiModelView modelView)
+    public FarragoDdlGenerator(
+        SqlDialect sqlDialect,
+        JmiModelView modelView)
     {
+        super(sqlDialect);
         this.modelView = modelView;
     }
 
@@ -155,7 +161,7 @@ public class FarragoDdlGenerator
     }
 
     protected void createHeader(
-        StringBuilder sb,
+        SqlBuilder sb,
         String typeName,
         GeneratedDdlStmt stmt)
     {
@@ -167,7 +173,7 @@ public class FarragoDdlGenerator
     }
 
     protected void createHeader(
-        StringBuilder sb,
+        SqlBuilder sb,
         String typeName,
         boolean replace,
         String newName)
@@ -178,7 +184,7 @@ public class FarragoDdlGenerator
         }
         if (newName != null) {
             sb.append("RENAME TO ");
-            sb.append(quote(newName));
+            sb.identifier(newName);
             sb.append(" ");
         }
         sb.append(typeName);
@@ -196,61 +202,60 @@ public class FarragoDdlGenerator
             stmt.addStmt(";" + NL);
         }
 
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "VIEW", stmt);
 
         name(sb, view.getNamespace(), view.getName());
         addDescription(sb, view);
         sb.append(" AS");
         sb.append(NL);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
 
-        sb.setLength(0);
         sb.append(view.getOriginalDefinition());
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
         FemLocalSchema schema,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "SCHEMA", stmt);
 
         name(sb, null, schema.getName());
         addDescription(sb, schema);
 
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
         FemLocalTable table,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "TABLE", false, null);
 
         name(sb, table.getNamespace(), table.getName());
-        stmt.addStmt(sb.toString());
-        sb.setLength(0);
+        stmt.addStmt(sb.getSqlAndClear());
+
         addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
         addOptions(
             sb,
             table.getStorageOptions());
         addDescription(sb, table);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
         FemForeignTable table,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "FOREIGN TABLE", false, null);
 
         name(sb, table.getNamespace(), table.getName());
-        stmt.addStmt(sb.toString());
-        sb.setLength(0);
+        stmt.addStmt(sb.getSqlAndClear());
+
         addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
         sb.append(NL);
         sb.append("SERVER ");
@@ -262,24 +267,23 @@ public class FarragoDdlGenerator
             sb,
             ((FemElementWithStorageOptions) table).getStorageOptions());
         addDescription(sb, table);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
         FemDataWrapper wrapper,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "FOREIGN DATA WRAPPER", stmt);
 
         name(sb, null, wrapper.getName());
-        stmt.addStmt(sb.toString());
-        sb.setLength(0);
+        stmt.addStmt(sb.getSqlAndClear());
 
         // "LIBRARY" clause is optional
         if (wrapper.getLibraryFile() != null) {
             sb.append(" LIBRARY ");
-            sb.append(literal(wrapper.getLibraryFile()));
+            sb.literal(wrapper.getLibraryFile());
         }
         sb.append(NL);
         sb.append("LANGUAGE ");
@@ -288,7 +292,7 @@ public class FarragoDdlGenerator
             sb,
             wrapper.getStorageOptions());
         addDescription(sb, wrapper);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
@@ -305,7 +309,7 @@ public class FarragoDdlGenerator
         FemRoutine routine,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         final ProcedureType routineType = routine.getType();
         final CwmClassifier owner = routine.getSpecification().getOwner();
         boolean method =
@@ -321,8 +325,7 @@ public class FarragoDdlGenerator
         }
 
         name(sb, routine.getNamespace(), routine.getName());
-        stmt.addStmt(sb.toString());
-        sb.setLength(0);
+        stmt.addStmt(sb.getSqlAndClear());
 
         if (method) {
             sb.append(NL);
@@ -337,7 +340,7 @@ public class FarragoDdlGenerator
             sb.append(routine.getBody().getBody());
         }
 
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     /**
@@ -348,7 +351,7 @@ public class FarragoDdlGenerator
      */
     private void methodBody(
         FemRoutine routine,
-        StringBuilder sb)
+        SqlBuilder sb)
     {
         final ProcedureType routineType = routine.getType();
         boolean method =
@@ -417,7 +420,7 @@ public class FarragoDdlGenerator
         if (routine.getExternalName() != null) {
             sb.append(NL);
             sb.append("EXTERNAL NAME ");
-            sb.append(literal(routine.getExternalName()));
+            sb.literal(routine.getExternalName());
         }
     }
 
@@ -431,7 +434,7 @@ public class FarragoDdlGenerator
     private void add(
         FemRoutineParameter parameter,
         ProcedureType routineType,
-        StringBuilder sb)
+        SqlBuilder sb)
     {
         final ParameterDirectionKind kind = parameter.getKind();
         boolean qualifyType = false;
@@ -441,13 +444,13 @@ public class FarragoDdlGenerator
             } else {
                 sb.append("  ");
             }
-            sb.append(quote(parameter.getName()));
+            sb.identifier(parameter.getName());
         } else if (kind.equals(ParameterDirectionKindEnum.PDK_INOUT)) {
             sb.append("  INOUT ");
-            sb.append(quote(parameter.getName()));
+            sb.identifier(parameter.getName());
         } else if (kind.equals(ParameterDirectionKindEnum.PDK_OUT)) {
             sb.append("  OUT ");
-            sb.append(quote(parameter.getName()));
+            sb.identifier(parameter.getName());
         } else if (kind.equals(ParameterDirectionKindEnum.PDK_RETURN)) {
             qualifyType = true;
             sb.append("RETURNS");
@@ -469,7 +472,7 @@ public class FarragoDdlGenerator
     }
 
     private void appendType(
-        StringBuilder sb,
+        SqlBuilder sb,
         CwmClassifier type,
         Integer precision,
         Integer scale,
@@ -510,29 +513,27 @@ public class FarragoDdlGenerator
      * Format the core elements of a column's type (type name, precision, scale,
      * length) into SQL format.
      *
+     * @param sb SQL builder
      * @param col CwmColumn object we want type info for
-     *
-     * @return String containing formatted type info
      */
-    public static String formatTypeInfo(CwmColumn col)
+    public static void formatTypeInfo(
+        SqlBuilder sb,
+        CwmColumn col)
     {
-        StringBuilder sb = new StringBuilder();
         formatTypeInfo(
             sb,
             col.getType(),
             col.getPrecision(),
             col.getScale(),
             col.getLength());
-        return sb.toString();
     }
 
     /**
      * Format the core elements of a column's type (type name, precision, scale,
      * length) into SQL format.
      *
-     * <p>Note that this was refactored out of {@link #appendType(StringBuilder,
-     * CwmClassifier, Integer, Integer, Integer, NullableType, CwmExpression,
-     * boolean)} to allow separate access.
+     * <p>Note that this was refactored out of {@link #appendType} to allow
+     * separate access.
      *
      * @param sb StringBuilder to hold the formatted type information
      * @param type CwmClassifier object representing the column type
@@ -541,7 +542,7 @@ public class FarragoDdlGenerator
      * @param length Integer specifying the column's length
      */
     public static void formatTypeInfo(
-        StringBuilder sb,
+        SqlBuilder sb,
         CwmClassifier type,
         Integer precision,
         Integer scale,
@@ -580,7 +581,7 @@ public class FarragoDdlGenerator
         FemSqlobjectType type,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "TYPE", stmt);
         name(sb, type.getNamespace(), type.getName());
         sb.append(" AS");
@@ -592,17 +593,17 @@ public class FarragoDdlGenerator
         addDescription(sb, type);
 
         addOperations(sb, Util.filter(type.getFeature(), CwmOperation.class));
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     private void addOperations(
-        StringBuilder sb,
+        SqlBuilder sb,
         List<CwmOperation> operations)
     {
         for (CwmOperation operation : operations) {
             sb.append(NL);
             sb.append("CONSTRUCTOR METHOD ");
-            sb.append(quote(operation.getName()));
+            sb.identifier(operation.getName());
             sb.append(" ");
 
             // REVIEW: I think there is precisely one method per operation
@@ -616,7 +617,7 @@ public class FarragoDdlGenerator
         FemSqldistinguishedType type,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "TYPE", stmt);
         name(sb, type.getNamespace(), type.getName());
         sb.append(" AS ");
@@ -636,32 +637,31 @@ public class FarragoDdlGenerator
         sb.append(NL);
         sb.append(maybeNot(!type.isAbstract(), "INSTANTIABLE"));
         addDescription(sb, type);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
         FemDataServer server,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "SERVER", stmt);
 
         name(sb, null, server.getName());
-        stmt.addStmt(sb.toString());
-        sb.setLength(0);
+        stmt.addStmt(sb.getSqlAndClear());
 
         // "TYPE" clause is optional
         final String type = server.getType();
         if ((type != null) && !type.equals("UNKNOWN")) {
             sb.append(" TYPE ");
-            sb.append(literal(type));
+            sb.literal(type);
         }
 
         // "VERSION" clause is optional
         final String version = server.getVersion();
         if ((version != null) && !version.equals("UNKNOWN")) {
             sb.append(" VERSION ");
-            sb.append(literal(version));
+            sb.literal(version);
         }
         sb.append(NL);
         sb.append("FOREIGN DATA WRAPPER ");
@@ -670,7 +670,7 @@ public class FarragoDdlGenerator
             sb,
             server.getStorageOptions());
         addDescription(sb, server);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
@@ -686,13 +686,13 @@ public class FarragoDdlGenerator
         CwmSchema schema,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         sb.append("DROP SCHEMA ");
         name(sb, null, schema.getName());
         if (dropCascade) {
             sb.append(" CASCADE");
         }
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void drop(
@@ -713,13 +713,13 @@ public class FarragoDdlGenerator
         CwmTable table,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         sb.append("DROP TABLE ");
         name(sb, table.getNamespace(), table.getName());
         if (dropCascade) {
             sb.append(" CASCADE");
         }
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void drop(
@@ -739,7 +739,7 @@ public class FarragoDdlGenerator
         {
             stmt.setTopLevel(false);
         }
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(
             sb,
             index.isClustered() ? "CLUSTERED INDEX" : "INDEX",
@@ -754,11 +754,11 @@ public class FarragoDdlGenerator
             if (++k > 0) {
                 sb.append(", ");
             }
-            sb.append(quote(feature.getName()));
+            sb.identifier(feature.getName());
         }
         sb.append(")");
         addDescription(sb, index);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void drop(
@@ -772,7 +772,7 @@ public class FarragoDdlGenerator
         FemLabel label,
         GeneratedDdlStmt stmt)
     {
-        StringBuilder sb = new StringBuilder();
+        SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "LABEL", stmt);
         name(sb, null, label.getName());
         if (label.getParentLabel() != null) {
@@ -780,7 +780,7 @@ public class FarragoDdlGenerator
             name(sb, null, label.getParentLabel().getName());
         }
         addDescription(sb, label);
-        stmt.addStmt(sb.toString());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void drop(
@@ -791,14 +791,14 @@ public class FarragoDdlGenerator
     }
 
     protected void addColumns(
-        StringBuilder sb,
+        SqlBuilder sb,
         List<CwmColumn> columns)
     {
         addColumns(sb, columns, false, false);
     }
 
     protected void addColumns(
-        StringBuilder sb,
+        SqlBuilder sb,
         List<CwmColumn> columns,
         boolean skipDefaults,
         boolean skipNullable)
@@ -817,7 +817,7 @@ public class FarragoDdlGenerator
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
      */
     public void generateColumnsAndKeys(
-        StringBuilder sb,
+        SqlBuilder sb,
         List<CwmColumn> columns,
         boolean skipDefaults,
         boolean skipNullable,
@@ -848,7 +848,7 @@ public class FarragoDdlGenerator
 
                 isLast = !columnIter.hasNext() && (pk == null);
 
-                sb.append("   ").append(quote(col.getName()));
+                sb.append("   ").identifier(col.getName());
 
                 sb.append(" ");
                 CwmExpression e;
@@ -895,14 +895,14 @@ public class FarragoDdlGenerator
     }
 
     protected void addOptions(
-        StringBuilder sb,
+        SqlBuilder sb,
         Collection<FemStorageOption> options)
     {
         addOptions(sb, options, 1);
     }
 
     protected void addOptions(
-        StringBuilder sb,
+        SqlBuilder sb,
         Collection<FemStorageOption> options,
         int indent)
     {
@@ -922,9 +922,9 @@ public class FarragoDdlGenerator
         int k = 0;
         for (FemStorageOption option : sortedOptions) {
             indent(sb, indent * 2);
-            sb.append(quote(option.getName()));
+            sb.identifier(option.getName());
             sb.append(" ");
-            sb.append(literal(option.getValue()));
+            sb.literal(option.getValue());
             if (++k < sortedOptions.size()) {
                 sb.append(",");
             }
@@ -933,7 +933,7 @@ public class FarragoDdlGenerator
         sb.append(")");
     }
 
-    private static void indent(StringBuilder sb, int indent)
+    private static void indent(SqlBuilder sb, int indent)
     {
         for (int j = 0; j < indent; j++) {
             sb.append(' ');
@@ -941,7 +941,7 @@ public class FarragoDdlGenerator
     }
 
     private void addPrimaryKeyConstraint(
-        StringBuilder sb,
+        SqlBuilder sb,
         List<String> keyColumns)
     {
         if (keyColumns != null) {
@@ -953,7 +953,7 @@ public class FarragoDdlGenerator
                 } else {
                     isFirst = false;
                 }
-                sb.append(quote(keyColumn));
+                sb.identifier(keyColumn);
             }
             sb.append(")");
             sb.append(NL);
@@ -961,14 +961,14 @@ public class FarragoDdlGenerator
     }
 
     protected void addDescription(
-        StringBuilder sb,
+        SqlBuilder sb,
         FemAnnotatedElement element)
     {
         String desc = element.getDescription();
         if ((desc != null) && (desc.length() > 0)) {
             sb.append(NL);
             sb.append("DESCRIPTION ");
-            sb.append(literal(desc));
+            sb.literal(desc);
         }
     }
 
@@ -977,16 +977,17 @@ public class FarragoDdlGenerator
         String elementType,
         GeneratedDdlStmt stmt)
     {
-        if (e != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("DROP ").append(elementType).append(" ");
-
-            name(sb, e.getNamespace(), e.getName());
-            if (dropCascade) {
-                sb.append(" CASCADE");
-            }
-            stmt.addStmt(sb.toString());
+        if (e == null) {
+            return;
         }
+        SqlBuilder sb = createSqlBuilder();
+        sb.append("DROP ").append(elementType).append(" ");
+
+        name(sb, e.getNamespace(), e.getName());
+        if (dropCascade) {
+            sb.append(" CASCADE");
+        }
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     //~ Inner Classes ----------------------------------------------------------

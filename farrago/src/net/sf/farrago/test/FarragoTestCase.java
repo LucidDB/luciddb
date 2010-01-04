@@ -49,6 +49,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
@@ -970,11 +971,13 @@ public abstract class FarragoTestCase
             }
 
             tracer.finer("Schema name list has " + list.size() + " entries");
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
             for (String name : list) {
                 String dropStmt =
-                    "drop schema "
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                    + " cascade";
+                    buf.append("drop schema ")
+                        .identifier(name)
+                        .append(" cascade")
+                        .getSqlAndClear();
                 tracer.finer(dropStmt);
                 try {
                     getStmt().execute(dropStmt);
@@ -1023,13 +1026,17 @@ public abstract class FarragoTestCase
             tracer.finer(
                 "Datawrapper name list has " + list.size() + " entries");
             Iterator<String> iter = list.iterator();
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
             while (iter.hasNext()) {
                 String wrapperType = iter.next();
                 String name = iter.next();
                 String sql =
-                    "drop " + wrapperType + " data wrapper "
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                    + " cascade";
+                    buf.append("drop ")
+                        .append(wrapperType)
+                        .append(" data wrapper ")
+                        .identifier(name)
+                        .append(" cascade")
+                        .getSqlAndClear();
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }
@@ -1072,11 +1079,13 @@ public abstract class FarragoTestCase
 
             tracer.finer(
                 "Dataserver name list has " + list.size() + " entries");
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
             for (String name : list) {
                 String sql =
-                    "drop server "
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                    + " cascade";
+                    buf.append("drop server ")
+                        .identifier(name)
+                        .append(" cascade")
+                        .getSqlAndClear();
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }
@@ -1116,11 +1125,13 @@ public abstract class FarragoTestCase
             }
 
             tracer.finer("Label name list has " + list.size() + " entries");
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
             for (String name : list) {
                 String sql =
-                    "drop label "
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                    + " cascade";
+                    buf.append("drop label ")
+                        .identifier(name)
+                        .append(" cascade")
+                        .getSqlAndClear();
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }
@@ -1132,16 +1143,18 @@ public abstract class FarragoTestCase
             tracer.fine("Dropping AuthIds.");
             List<String> list = new ArrayList<String>();
             final FarragoRepos repos = getRepos();
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
             if (repos != null) {
                 for (FemAuthId authId : repos.allOfType(FemAuthId.class)) {
                     if (isBlessedAuthId(authId)) {
                         continue;
                     }
                     list.add(
-                        ((authId instanceof FemRole) ? "ROLE" : "USER")
-                        + " "
-                        + SqlUtil.eigenbaseDialect.quoteIdentifier(
-                            authId.getName()));
+                        buf.append("drop ")
+                            .append(authId instanceof FemRole ? "ROLE" : "USER")
+                            .append(" ")
+                            .identifier(authId.getName())
+                            .getSqlAndClear());
                 }
             } else if (stmt != null) {
                 if (stmt.execute(
@@ -1155,14 +1168,16 @@ public abstract class FarragoTestCase
                         if (isBlessedAuthId(name)) {
                             continue;
                         }
-                        list.add(className + " " + name);
+                        list.add(
+                            buf.append("drop ")
+                                .append(className + " " + name)
+                                .getSqlAndClear());
                     }
                 }
             }
 
             tracer.finer("AuthId name list has " + list.size() + " entries");
-            for (String name : list) {
-                String sql = "drop " + name;
+            for (String sql : list) {
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }

@@ -43,12 +43,12 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -1662,7 +1662,7 @@ public class DdlValidator
             Util.cast(view.getFeature(), FemViewColumn.class);
         boolean updateSql = false;
         if (columnList.size() > 0) {
-            StringBuilder buf = new StringBuilder("SELECT");
+            SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE, "SELECT");
             int k = 0;
             for (RelDataTypeField field : analyzedSql.resultType.getFields()) {
                 String targetType = null;
@@ -1684,29 +1684,23 @@ public class DdlValidator
                     buf.append(", ");
                 }
                 if (targetType == null) {
-                    SqlUtil.eigenbaseDialect.quoteIdentifier(
-                        buf,
-                        field.getName());
+                    buf.identifier(field.getName());
                 } else {
                     buf.append(" CAST(");
-                    SqlUtil.eigenbaseDialect.quoteIdentifier(
-                        buf,
-                        field.getName());
+                    buf.identifier(field.getName());
                     buf.append(" AS ");
                     buf.append(targetType);
                     buf.append(")");
                 }
                 buf.append(" AS ");
-                SqlUtil.eigenbaseDialect.quoteIdentifier(
-                    buf,
-                    viewColumn.getName());
+                buf.identifier(viewColumn.getName());
                 k++;
             }
             buf.append(" FROM (").append(analyzedSql.canonicalString).append(
                 ")");
 
             if (updateSql) {
-                analyzedSql.canonicalString = buf.toString();
+                analyzedSql.canonicalString = buf.toSqlString();
             }
         }
     }

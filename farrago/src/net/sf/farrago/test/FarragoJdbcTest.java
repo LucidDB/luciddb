@@ -46,6 +46,8 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
@@ -2859,9 +2861,11 @@ public class FarragoJdbcTest
         doEmpInsert(name, 10);
 
         // only query what we insert above
-        String query;
-        query = "select gender, city, empid from sales.emps where name like '";
-        query += name + "%'";
+        final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+        buf.append(
+            "select gender, city, empid from sales.emps where name like ")
+            .literal(name + "%");
+        String query = buf.getSql();
 
         preparedStmt = connection.prepareStatement(query);
 

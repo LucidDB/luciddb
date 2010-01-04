@@ -22,8 +22,6 @@
 */
 package org.eigenbase.sql;
 
-import java.lang.reflect.*;
-
 import java.nio.charset.*;
 
 import java.sql.*;
@@ -50,23 +48,6 @@ import org.eigenbase.util14.*;
  */
 public abstract class SqlUtil
 {
-    //~ Static fields/initializers ---------------------------------------------
-
-    /**
-     * A {@link SqlDialect} useful for generating generic SQL. If you need to do
-     * something database-specific like quoting identifiers, don't rely on this
-     * dialect to do what you want.
-     */
-    public static final SqlDialect dummyDialect =
-        new SqlDialect(dummyDatabaseMetaData("fooBar", "`"));
-
-    /**
-     * A {@link SqlDialect} useful for generating SQL which can be parsed by the
-     * Eigenbase parser, but not much else.
-     */
-    public static final SqlDialect eigenbaseDialect =
-        new SqlDialect(dummyDatabaseMetaData("EigenbaseDummy", "\""));
-
     //~ Methods ----------------------------------------------------------------
 
     static SqlNode andExpressions(
@@ -318,25 +299,6 @@ public abstract class SqlUtil
             binop.getRightPrec(),
             rightPrec);
         writer.endList(frame);
-    }
-
-    /**
-     * Creates a {@link DatabaseMetaData} object good enough to create a {@link
-     * SqlDialect} object with, but not good for much else.
-     *
-     * @param databaseProductName Database product name
-     * @param identifierQuoteString Identifier quote string
-     */
-    private static DatabaseMetaData dummyDatabaseMetaData(
-        String databaseProductName,
-        String identifierQuoteString)
-    {
-        return (DatabaseMetaData) Proxy.newProxyInstance(
-            null,
-            new Class[] { DatabaseMetaData.class },
-            new DatabaseMetaDataInvocationHandler(
-                databaseProductName,
-                identifierQuoteString));
     }
 
     /**

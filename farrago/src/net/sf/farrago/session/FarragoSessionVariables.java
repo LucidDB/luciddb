@@ -167,7 +167,7 @@ public class FarragoSessionVariables
         DatabaseMetaData databaseMetadata)
     {
         // The SQL standard is very precise about the formatting
-        SqlDialect dialect = new SqlDialect(databaseMetadata);
+        SqlDialect dialect = SqlDialect.create(databaseMetadata);
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         StringBuilder buf = new StringBuilder();
         int k = 0;

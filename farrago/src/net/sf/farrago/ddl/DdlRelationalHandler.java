@@ -424,7 +424,7 @@ public class DdlRelationalHandler
         validator.fixupView(view, analyzedSql);
 
         view.setOriginalDefinition(sql);
-        view.getQueryExpression().setBody(analyzedSql.canonicalString);
+        view.getQueryExpression().setBody(analyzedSql.canonicalString.getSql());
         analyzedSql.setModality(view);
 
         validator.createDependency(view, analyzedSql.dependencies);
