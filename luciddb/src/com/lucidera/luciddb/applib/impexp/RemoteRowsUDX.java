@@ -12,145 +12,194 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-public class RemoteRowsUDX {
+/**
+ * Purpose: Allow serialized rows to be streamed via HTTP from remote Java
+ * applications (PDI / Talend).<br>
+ * Please refer to http://pub.eigenbase.org/wiki/LucidDbAppLib_REMOTE_ROWS<br>
+ * 
+ * @author Ray Zhang
+ * @since Dec-16-2009
+ */
+public class RemoteRowsUDX
+{
 
-	public static void execute(ResultSet inputSet, int port,
-			boolean is_compressed, PreparedStatement resultInserter)
-			throws Exception {
+    public static void execute(
+        ResultSet inputSet,
+        int port,
+        boolean is_compressed,
+        PreparedStatement resultInserter)
+        throws Exception
+    {
 
-		ServerSocket ss = new ServerSocket(port);
-		Socket socket;
+        ServerSocket ss = new ServerSocket(port);
+        Socket socket = null;
 
-		while (true) {
+        while (true) {
 
-			socket = ss.accept();
-			InputStream sIn = socket.getInputStream();
-			GZIPInputStream gzIn = null;
-			ObjectInputStream objIn = null;
-			if (is_compressed) {
+            try {
 
-				gzIn = new GZIPInputStream(sIn);
-				objIn = new ObjectInputStream(gzIn);
+                socket = ss.accept();
+                InputStream sIn = socket.getInputStream();
+                GZIPInputStream gzIn = null;
+                ObjectInputStream objIn = null;
 
-			} else {
+                if (is_compressed) {
 
-				objIn = new ObjectInputStream(sIn);
+                    gzIn = new GZIPInputStream(sIn);
+                    objIn = new ObjectInputStream(gzIn);
 
-			}
+                } else {
 
-			boolean is_header = true;
-			int row_counter = 0;
+                    objIn = new ObjectInputStream(sIn);
 
-			while (true) {
+                }
 
-				try {
+                boolean is_header = true;
+                int row_counter = 0;
 
-					List entity = (ArrayList) objIn.readObject();
+                while (true) {
 
-					if (is_header) {
+                    try {
 
-		
-						List header_from_cursor = getHeaderInfoFromCursor(inputSet);
-						List header_from_file = (ArrayList) entity.get(1);
+                        List entity = (ArrayList) objIn.readObject();
 
-						if (verifyHeaderInfo(header_from_cursor,
-								header_from_file)) {
+                        // disable header format check.
+                        if (is_header) {
 
-							is_header = false;
+                            // check if header info is matched.
+                            // List header_from_cursor =
+                            // getHeaderInfoFromCursor(inputSet);
+                            // List header_from_file = (ArrayList)
+                            // entity.get(1);
+                            //
+                            // if (verifyHeaderInfo(
+                            // header_from_cursor,
+                            // header_from_file))
+                            // {
+                            //
+                            // is_header = false;
+                            //
+                            // } else {
+                            //
+                            // throw new Exception(
+                            // "Header Info was unmatched! Please check");
+                            // }
 
-						} else {
+                            is_header = false;
 
-							throw new Exception(
-									"Header Info was unmatched! Please check");
-						}
+                        } else {
 
-					} else {
+                            int col_count = entity.size();
+                            for (int i = 0; i < col_count; i++) {
 
-						int col_count = entity.size();
-						for (int i = 0; i < col_count; i++) {
+                                resultInserter.setObject((i + 1), entity.get(i));
 
-							resultInserter.setObject((i + 1), entity.get(i));
+                            }
+                            resultInserter.executeUpdate();
+                            row_counter++;
+                        }
 
-						}
-						resultInserter.executeUpdate();
-						row_counter++;
-					}
+                    } catch (EOFException ex) {
 
-				} catch (EOFException ex) {
+                        break;
 
-					break;
+                    } catch (Exception e) {
 
-				} catch (Exception e) {
+                        // release resource.
+                        objIn.close();
 
-					throw new Exception("Error: " + e.getMessage() + "\n"
-							+ row_counter + " rows are inserted successfully.");
-				}
+                        if (is_compressed) {
 
-			}
+                            gzIn.close();
+                        }
+                        sIn.close();
 
-			objIn.close();
+                        throw new Exception("Error: " + e.getMessage() + "\n"
+                            + row_counter + " rows are inserted successfully.");
+                    }
 
-			if (is_compressed) {
+                }
 
-				gzIn.close();
-			}
-			sIn.close();
+                // release all resources.
 
-			if (is_header == false) {
+                objIn.close();
 
-				socket.close();
-				break;
+                if (is_compressed) {
 
-			}
-		}
+                    gzIn.close();
+                }
+                sIn.close();
 
-		ss.close();
-	}
+                if (is_header == false) {
 
-	protected static boolean verifyHeaderInfo(List header_from_cursor,
-			List header_from_file) {
+                    socket.close();
+                    break;
 
-		boolean is_matched = false;
+                }
 
-		if (header_from_cursor.size() == header_from_file.size()) {
+            } catch (Exception ex) {
 
-			int col_raw_count = header_from_cursor.size();
+                if (socket != null) {
 
-			for (int i = 0; i < col_raw_count; i++) {
+                    socket.close();
+                }
 
-				int length_of_field_from_cursor = (Integer) header_from_cursor
-						.get(i);
-				int length_of_field_from_file = (Integer) header_from_file
-						.get(i);
-				if (length_of_field_from_cursor == length_of_field_from_file) {
+                ss.close();
+                throw ex;
 
-					is_matched = true;
+            }
 
-				} else {
+        }
 
-					is_matched = false;
-					break;
-				}
-			}
+        ss.close();
+    }
 
-		}
+    protected static boolean verifyHeaderInfo(
+        List header_from_cursor,
+        List header_from_file)
+    {
 
-		return is_matched;
-	}
+        boolean is_matched = false;
 
-	protected static List getHeaderInfoFromCursor(ResultSet rs_in)
-			throws SQLException {
+        // 1. check column raw count
+        if (header_from_cursor.size() == header_from_file.size()) {
 
-		int columnCount = rs_in.getMetaData().getColumnCount();
-		List ret = new ArrayList(columnCount);
-		for (int i = 0; i < columnCount; i++) {
+            // 2. check the length of every field.
+            int col_raw_count = header_from_cursor.size();
 
-			ret.add(rs_in.getMetaData().getColumnDisplaySize(i + 1));
-		}
+            for (int i = 0; i < col_raw_count; i++) {
 
-		return ret;
+                int length_of_field_from_cursor = (Integer) header_from_cursor.get(i);
+                int length_of_field_from_file = (Integer) header_from_file.get(i);
+                if (length_of_field_from_cursor == length_of_field_from_file) {
 
-	}
+                    is_matched = true;
+
+                } else {
+
+                    is_matched = false;
+                    break;
+                }
+            }
+
+        }
+
+        return is_matched;
+    }
+
+    protected static List getHeaderInfoFromCursor(ResultSet rs_in)
+        throws SQLException
+    {
+
+        int columnCount = rs_in.getMetaData().getColumnCount();
+        List ret = new ArrayList(columnCount);
+        for (int i = 0; i < columnCount; i++) {
+
+            ret.add(rs_in.getMetaData().getColumnDisplaySize(i + 1));
+        }
+
+        return ret;
+
+    }
 
 }
-

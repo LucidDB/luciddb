@@ -1042,3 +1042,11 @@ parameter style system defined java
 deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.ReadRowsFromFileUDX.execute';
+
+create or replace function APPLIB.REMOTE_ROWS(IN_CURSOR cursor, PORT int, IS_COMPRESSED boolean)
+returns table (IN_CURSOR.*)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
