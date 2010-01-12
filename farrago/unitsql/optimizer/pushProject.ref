@@ -395,7 +395,7 @@
 '    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[true], $f0=[$t4])'
 '      LhxAggRel(groupCount=[4])'
 '        FennelMergeRel'
-'          FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t1)], expr#5=[2], expr#6=[*($t3, $t5)], expr#7=[CAST($t4):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], ENO=[$t0], NAME=[$t7], DEPTNO=[$t2], DOUBLEAGE=[$t6])'
+'          FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t1)], expr#5=[CAST($t4):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#6=[2], expr#7=[*($t3, $t6)], ENO=[$t0], NAME=[$t5], DEPTNO=[$t2], DOUBLEAGE=[$t7])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[0, 1, 2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO, SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '          FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER ENO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER DEPTNO, INTEGER DOUBLEAGE) NOT NULL])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'

@@ -1386,9 +1386,9 @@ V 1;
 T;
 CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
 CALL 'WinAggInit(O0, L0) /* 1: $HISTOGRAM($t9) */;
-ADD L1, I0, C0 /* 2: +($t0, $t10) */;
-CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
-CALL 'WinAggInit(O1, L2) /* 4: $HISTOGRAM($t12) */;
+ADD L1, I0, C0 /* 2: +($t0, $t11) */;
+CAST L2, L1 /* 3: CAST($t12):BIGINT NOT NULL */;
+CALL 'WinAggInit(O1, L2) /* 4: $HISTOGRAM($t13) */;
 RETURN /* 5: */;]]>
         </Resource>
         <Resource name="expectedAdd">
@@ -1401,9 +1401,9 @@ V 1;
 T;
 CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
 CALL 'WinAggAdd(L0, O0) /* 1: $HISTOGRAM($t9) */;
-ADD L1, I0, C0 /* 2: +($t0, $t10) */;
-CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
-CALL 'WinAggAdd(L2, O1) /* 4: $HISTOGRAM($t12) */;
+ADD L1, I0, C0 /* 2: +($t0, $t11) */;
+CAST L2, L1 /* 3: CAST($t12):BIGINT NOT NULL */;
+CALL 'WinAggAdd(L2, O1) /* 4: $HISTOGRAM($t13) */;
 RETURN /* 5: */;]]>
         </Resource>
         <Resource name="expectedDrop">
@@ -1416,9 +1416,9 @@ V 1;
 T;
 CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
 CALL 'WinAggDrop(L0, O0) /* 1: $HISTOGRAM($t9) */;
-ADD L1, I0, C0 /* 2: +($t0, $t10) */;
-CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
-CALL 'WinAggDrop(L2, O1) /* 4: $HISTOGRAM($t12) */;
+ADD L1, I0, C0 /* 2: +($t0, $t11) */;
+CAST L2, L1 /* 3: CAST($t12):BIGINT NOT NULL */;
+CALL 'WinAggDrop(L2, O1) /* 4: $HISTOGRAM($t13) */;
 RETURN /* 5: */;]]>
         </Resource>
         <Resource name="expectedOutput">
@@ -1430,15 +1430,15 @@ C s4, s4, vc,5;
 V 2, 3, 0x3232303034 /* 22004 */;
 T;
 CALL 'WinAggFirstValue(L0, I9) /* 0: $HISTOGRAM_FIRST_VALUE($t9) */;
-CAST L1, L0 /* 1: CAST($t13):INTEGER NOT NULL */;
+CAST L1, L0 /* 1: CAST($t11):INTEGER NOT NULL */;
 CALL 'WinAggLastValue(L2, I9) /* 2: $HISTOGRAM_LAST_VALUE($t9) */;
-CAST L3, L2 /* 3: CAST($t15):INTEGER NOT NULL */;
+CAST L3, L2 /* 3: CAST($t13):INTEGER NOT NULL */;
 CALL 'WinAggFirstValue(L4, I10) /* 4: $HISTOGRAM_FIRST_VALUE($t10) */;
-CAST L5, L4 /* 5: CAST($t17):INTEGER NOT NULL */;
-ADD L6, L5, C0 /* 6: +($t18, $t11) */;
+CAST L5, L4 /* 5: CAST($t15):INTEGER NOT NULL */;
+ADD L6, L5, C0 /* 6: +($t16, $t17) */;
 CALL 'WinAggMin(L7, I10) /* 7: $HISTOGRAM_MIN($t10) */;
 CAST L8, L7 /* 8: CAST($t20):INTEGER */;
-ADD L9, C1, L8 /* 9: +($t12, $t21) */;
+ADD L9, C1, L8 /* 9: +($t19, $t21) */;
 ISNULL L10, L1 /* 10: */;
 JMPF @14, L10 /* 11: */;
 RAISE C2 /* 12: */;

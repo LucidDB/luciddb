@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2002-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -569,7 +569,10 @@ public class Rex2CalcPlanTest
                 programBuilder.addCondition(condition);
             }
 
-            RexProgram program = programBuilder.getProgram();
+            // Don't normalize the program. In actual use it probably would be
+            // normalized, but our goal here is test coverage.
+            final boolean normalize = false;
+            RexProgram program = programBuilder.getProgram(normalize);
 
             // rewrite decimals
             ReduceDecimalsRule rule = ReduceDecimalsRule.instance;
@@ -584,7 +587,7 @@ public class Rex2CalcPlanTest
                     program.getOutputRowType(),
                     shuttle,
                     true);
-            program = updater.getProgram();
+            program = updater.getProgram(normalize);
 
             RexToCalcTranslator translator =
                 new RexToCalcTranslator(rexBuilder, rootRel);

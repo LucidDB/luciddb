@@ -410,7 +410,7 @@ No rows affected
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t0)], expr#5=[5], expr#6=[+($t0, $t5)], expr#7=[ROW($t6)], expr#8=[$IS_DIFFERENT_FROM($t4, $t7)], expr#9=[CAST($t3):BIGINT NOT NULL], rid=[$t9], EMPNO=[$t6], NAME=[$t1], DEPTNO=[$t2], $condition=[$t8])'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t3):BIGINT NOT NULL], expr#5=[5], expr#6=[+($t0, $t5)], expr#7=[ROW($t0)], expr#8=[ROW($t6)], expr#9=[$IS_DIFFERENT_FROM($t7, $t8)], rid=[$t4], EMPNO=[$t6], NAME=[$t1], DEPTNO=[$t2], $condition=[$t9])'
 '        FennelToIteratorConverter'
 '          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]])'
 6 rows selected
@@ -424,7 +424,7 @@ No rows affected
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t0, $t1)], expr#5=[5], expr#6=[+($t0, $t5)], expr#7=[UPPER($t1)], expr#8=[ROW($t6, $t7)], expr#9=[$IS_DIFFERENT_FROM($t4, $t8)], expr#10=[CAST($t3):BIGINT NOT NULL], rid=[$t10], EMPNO=[$t6], NAME=[$t7], DEPTNO=[$t2], $condition=[$t9])'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t3):BIGINT NOT NULL], expr#5=[5], expr#6=[+($t0, $t5)], expr#7=[UPPER($t1)], expr#8=[ROW($t0, $t1)], expr#9=[ROW($t6, $t7)], expr#10=[$IS_DIFFERENT_FROM($t8, $t9)], rid=[$t4], EMPNO=[$t6], NAME=[$t7], DEPTNO=[$t2], $condition=[$t10])'
 '        FennelToIteratorConverter'
 '          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]], residual columns=[[2]])'
 '            FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
@@ -437,7 +437,7 @@ No rows affected
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t2)], expr#5=[?0], expr#6=[ROW($t5)], expr#7=[$IS_DIFFERENT_FROM($t4, $t6)], expr#8=[CAST($t3):BIGINT NOT NULL], rid=[$t8], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t5], $condition=[$t7])'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t3):BIGINT NOT NULL], expr#5=[?0], expr#6=[ROW($t2)], expr#7=[ROW($t5)], expr#8=[$IS_DIFFERENT_FROM($t6, $t7)], rid=[$t4], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t5], $condition=[$t8])'
 '        FennelToIteratorConverter'
 '          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]])'
 6 rows selected

@@ -123,7 +123,7 @@ Error: Cannot specify more than one identity column in definition of table "X"."
 > 
 > -- but this should fail
 > insert into x.t2(a) values ('whoops');
-Error: Target CAST($t1):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
+Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
 > 
 > -- make sure we can add a UDT-typed column
 > create type x.rectilinear_coord as (
@@ -327,7 +327,7 @@ Error: Target CAST($t1):INTEGER NOT NULL cannot be assigned null value (state=,c
 > 
 > -- but this should fail
 > insert into x.t2(a) values ('whoops');
-Error: Target CAST($t1):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
+Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
 > 
 > -- make sure we can add a UDT-typed column
 > create type x.rectilinear_coord as (

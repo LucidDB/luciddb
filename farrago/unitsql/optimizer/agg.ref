@@ -1233,7 +1233,7 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 >     emps
 > group by deptno;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t0)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[CAST($t3):INTEGER], expr#6=[1], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t2, $t5, $t7)], expr#9=[+($t0, $t8)], expr#10=[CASE($t2, $t5, $t9)], expr#11=[100], expr#12=[*($t10, $t11)], expr#13=[true], expr#14=[Reinterpret($t12, $t13)], expr#15=[Reinterpret($t14)], expr#16=[Reinterpret($t15)], expr#17=[Reinterpret($t4)], expr#18=[Reinterpret($t16)], expr#19=[CASE($t2, $t17, $t18)], expr#20=[Reinterpret($t19)], EXPR$0=[$t20])'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t0)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[Reinterpret($t4)], expr#6=[CAST($t3):INTEGER], expr#7=[1], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t2, $t6, $t8)], expr#10=[+($t0, $t9)], expr#11=[CASE($t2, $t6, $t10)], expr#12=[100], expr#13=[*($t11, $t12)], expr#14=[true], expr#15=[Reinterpret($t13, $t14)], expr#16=[Reinterpret($t15)], expr#17=[Reinterpret($t16)], expr#18=[Reinterpret($t17)], expr#19=[CASE($t2, $t5, $t18)], expr#20=[Reinterpret($t19)], EXPR$0=[$t20])'
 '  FennelToIteratorConverter'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
