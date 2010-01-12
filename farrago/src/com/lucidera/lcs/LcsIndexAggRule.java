@@ -92,6 +92,16 @@ public class LcsIndexAggRule
     public void onMatch(RelOptRuleCall call)
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
+        boolean allowRidOnlyProjection = true;
+        // If any agg call references any column of the input,
+        // then we have something other than COUNT(*), in which case
+        // the LDB-201 special case does not apply.
+        for (AggregateCall aggCall : aggRel.getAggCallList()) {
+            if (aggCall.getArgList().size() > 0) {
+                allowRidOnlyProjection = false;
+                break;
+            }
+        }
         LcsRowScanRel rowScan = null;
         LcsIndexOnlyScanRel indexOnlyScan = null;
         if (call.rels[1] instanceof LcsRowScanRel) {
@@ -132,7 +142,8 @@ public class LcsIndexAggRule
 
             for (FemLocalIndex index : indexSet) {
                 Integer [] proj =
-                    LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
+                    LcsIndexOptimizer.findIndexOnlyProjection(
+                        rowScan, index, allowRidOnlyProjection);
                 if ((proj != null)
                     && projectionSatisfiesGroupBy(
                         proj,

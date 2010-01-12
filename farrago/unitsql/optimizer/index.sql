@@ -672,6 +672,10 @@ select id from person where id = 30;
 explain plan for
 select id from person where id > 30;
 
+-- full-table count
+explain plan for
+select count(*) from person;
+
 -- histogram type aggregate
 explain plan for 
 select age, count(*) from person group by age order by age;

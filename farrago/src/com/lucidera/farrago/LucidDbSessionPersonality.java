@@ -592,6 +592,7 @@ public class LucidDbSessionPersonality
 
         // Bitmap aggregation is favored
         if (enableIndexOnlyScans) {
+            builder.addRuleInstance(LcsRemoveDummyAggInputRule.instance);
             builder.addRuleInstance(LcsIndexAggRule.instanceRowScan);
             builder.addRuleInstance(LcsIndexAggRule.instanceNormalizer);
         }

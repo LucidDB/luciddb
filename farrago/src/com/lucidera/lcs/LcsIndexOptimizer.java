@@ -261,13 +261,18 @@ public class LcsIndexOptimizer
      *
      * @param index the index which is to be projected
      *
+     * @param allowRidOnlyProjection if true, and the only projection is
+     * LCS_RID, then automatically accept any index as a candidate--otherwise,
+     * reject all of them
+     *
      * @return a projection on the index that satisfies the columns of the row
      * scan and includes bitmap data, or null if a satisfying projection could
      * not be found
      */
     public static Integer [] findIndexOnlyProjection(
         LcsRowScanRel rowScan,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        boolean allowRidOnlyProjection)
     {
         // determine columns to be satisfied
         Integer [] proj = rowScan.projectedColumns;
@@ -291,9 +296,17 @@ public class LcsIndexOptimizer
                 FemAbstractColumn.class);
 
         for (int i = 0; i < proj.length; i++) {
-            // TODO: handle lcs rid
             if (LucidDbSpecialOperators.isLcsRidColumnId(proj[i])) {
-                return null;
+                if (allowRidOnlyProjection && (proj.length == 1)) {
+                    // We don't actually want to project anything when
+                    // allowRidOnlyProjection=true, so just arbitrarily
+                    // project the first column.
+                    indexProj.add(0);
+                    continue;
+                } else {
+                    // Can't deal with LCS_RID here
+                    return null;
+                }
             }
             FemAbstractColumn keyCol = columns.get(proj[i]);
             int next = idxCols.indexOf(keyCol);

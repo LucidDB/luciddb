@@ -144,8 +144,8 @@ public class LcsIndexOnlyAccessRule
             // Starting from the "thinnest" indexes
             if (samePrefix(origIndex, index, nInputKeys)) {
                 Integer [] proj =
-                    LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
-
+                    LcsIndexOptimizer.findIndexOnlyProjection(
+                        rowScan, index, false);
                 if (proj != null) {
                     bestIndex = index;
                     bestProj = proj;
