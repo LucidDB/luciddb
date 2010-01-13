@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2005-2009 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
@@ -848,6 +848,29 @@ loop:
             exprs,
             null);
         return paramIdSet;
+    }
+
+    /**
+     * Returns whether this program is in canonical form.
+     *
+     * @param fail Whether to throw an assertion error if not in canonical form
+     * @param rexBuilder Rex builder
+     * @return whether in canonical form
+     */
+    public boolean isNormalized(boolean fail, RexBuilder rexBuilder)
+    {
+        final RexProgram normalizedProgram =
+            RexProgramBuilder.normalize(rexBuilder, this);
+        String normalized = normalizedProgram.toString();
+        String string = toString();
+        if (!normalized.equals(string)) {
+            assert !fail
+                : "Program is not normalized:\n"
+                + "program:    " + string + "\n"
+                + "normalized: " + normalized + "\n";
+            return false;
+        }
+        return true;
     }
 
     //~ Inner Classes ----------------------------------------------------------

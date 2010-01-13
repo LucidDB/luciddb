@@ -99,7 +99,7 @@ public abstract class DdlReloadTableStmt
     {
         repos = session.getRepos();
         wrapperCache = ddlValidator.getDataWrapperCache();
-        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
 
         rebuildingIndexes = shouldRebuildIndexes(ddlValidator);

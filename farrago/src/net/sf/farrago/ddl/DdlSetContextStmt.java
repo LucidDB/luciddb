@@ -95,7 +95,7 @@ public abstract class DdlSetContextStmt
         // evaluate it to a string value.  We do this by executing
         // the query "VALUES <valueExpr>".
 
-        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         writer.keyword("VALUES");
         valueExpr.unparse(writer, 0, 0);

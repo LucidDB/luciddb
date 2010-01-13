@@ -89,7 +89,7 @@ public class SqlPrettyWriterTest
     {
         final SqlNode node = parseQuery(sql);
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
@@ -113,7 +113,7 @@ public class SqlPrettyWriterTest
         final SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
         final SqlNode node = rowCall.getOperands()[0];
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
@@ -170,7 +170,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
@@ -178,7 +178,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setIndentation(8);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -187,7 +187,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setClauseStartsLine(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -196,7 +196,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -205,7 +205,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         prettyWriter.setSelectListExtraIndentFlag(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
@@ -215,7 +215,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setKeywordsLowerCase(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -224,7 +224,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -233,7 +233,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setQuoteAllIdentifiers(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -244,7 +244,7 @@ public class SqlPrettyWriterTest
         // Note that ( is at the indent, SELECT is on the same line, and ) is
         // below it.
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSubqueryStyle(SqlWriter.SubqueryStyle.Black);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -378,7 +378,7 @@ public class SqlPrettyWriterTest
     private void checkPrettySeparateLines(String sql)
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         prettyWriter.setSelectListExtraIndentFlag(false);
 

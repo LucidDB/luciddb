@@ -33,6 +33,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlString;
 
 
 /**
@@ -126,7 +127,9 @@ public abstract class FarragoAbstractParserImpl
         SqlNode defaultClause)
     {
         CwmExpression defaultExpression = getRepos().newCwmExpression();
-        defaultExpression.setBody(defaultClause.toSqlString(null));
+        final SqlString sqlString =
+            defaultClause.toSqlString(SqlDialect.EIGENBASE);
+        defaultExpression.setBody(sqlString.getSql());
         defaultExpression.setLanguage("SQL");
         attribute.setInitialValue(defaultExpression);
     }

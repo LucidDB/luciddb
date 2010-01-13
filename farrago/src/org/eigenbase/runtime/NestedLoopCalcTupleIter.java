@@ -143,6 +143,16 @@ public abstract class NestedLoopCalcTupleIter
     {
         return null;
     }
+
+    //  override CalcTupleIter
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        super.printStatus(b.append("left: "));
+        if (rightIterator instanceof TupleIter) {
+            ((TupleIter) rightIterator).printStatus(b.append("right: "));
+        }
+        return b;
+    }
 }
 
 // End NestedLoopCalcTupleIter.java

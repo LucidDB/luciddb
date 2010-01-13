@@ -143,10 +143,10 @@ public abstract class FarragoTransformImpl
             Object o = tupleIter.fetchNext();
 
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
-                tracer.fine("end of data");
+                traceOutput(Level.FINER, 0, outputBuffer);
                 return 0;
             } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
-                tracer.fine("underflow");
+                traceOutput(Level.FINER, -1, outputBuffer);
                 return -1;
             }
             next = o;
@@ -196,9 +196,33 @@ public abstract class FarragoTransformImpl
             next = o;
         }
 
-        tracer.log(Level.FINER, "wrote {0} rows", tupleCount);
+        traceOutput(Level.FINER, tupleCount, outputBuffer);
         outputBuffer.flip();
         return outputBuffer.limit();
+    }
+
+    protected void traceOutput(
+        Level level, long nrows, ByteBuffer outputBuffer)
+    {
+        if (!tracer.isLoggable(level)) {
+            return;
+        }
+        StringBuilder buf = new StringBuilder();
+        if (nrows == 0) {
+            buf.append("end of data");
+        } else if (nrows < 0) {
+            buf.append("underflow");
+        } else {
+            buf.append("wrote ").append(nrows).append(" rows");
+        }
+        // be cautious for the sake of subclasses
+        if (tupleIter != null) {
+            tupleIter.printStatus(buf.append(", input: "));
+        }
+        if (outputBuffer != null) {
+            buf.append(", output: ").append(outputBuffer);
+        }
+        tracer.log(level, buf.toString());
     }
 
     /**

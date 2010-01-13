@@ -24,6 +24,8 @@ package net.sf.farrago.ddl;
 
 import java.sql.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -53,10 +55,15 @@ public abstract class DdlSqlj
         }
         url = url.trim();
         jar = jar.trim();
-        String sql =
-            "CREATE JAR " + jar + " library '" + url
-            + "' options(" + deploy + ")";
-        executeSql(sql);
+        SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
+        sql.append("CREATE JAR ");
+        sql.append(jar); // REVIEW: should be sql.identifier(jar)?
+        sql.append(" library ");
+        sql.literal(url);
+        sql.append(" options(");
+        sql.append(deploy);
+        sql.append(")");
+        executeSql(sql.getSql());
     }
 
     /**
@@ -87,10 +94,13 @@ public abstract class DdlSqlj
             // TODO jvs 18-Jan-2005
             throw Util.needToImplement("deploy");
         }
-        String sql =
-            "DROP JAR " + jar
-            + " options (" + undeploy + ")" + " RESTRICT";
-        executeSql(sql);
+        SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
+        sql.append("DROP JAR ");
+        sql.append(jar); // REVIEW: should be sql.identifier(jar)?
+        sql.append(" options (");
+        sql.append(undeploy);
+        sql.append(") RESTRICT");
+        executeSql(sql.getSql());
     }
 
     /**

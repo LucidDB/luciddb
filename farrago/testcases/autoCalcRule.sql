@@ -1,4 +1,5 @@
 -- $Id$
+!set outputformat csv
 
 explain plan for select jplus(1, 1) from (values(true));
 

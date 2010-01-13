@@ -46,6 +46,8 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
@@ -372,14 +374,14 @@ public class FarragoJdbcTest
 
         // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
-            int millis = (int) (rand.nextDouble() * 5);
+            int millis = (int) (rand.nextDouble() * 4);
             queryCancel(millis, "JAVA", false);
         }
 
         // test more "reasonable" cancellation intervals
         rand.setSeed(seed);
         for (int i = 0; i < 10; i++) {
-            int millis = (int) (rand.nextDouble() * 5000);
+            int millis = (int) (rand.nextDouble() * 4000);
             queryCancel(millis, "JAVA", false);
         }
     }
@@ -2859,9 +2861,11 @@ public class FarragoJdbcTest
         doEmpInsert(name, 10);
 
         // only query what we insert above
-        String query;
-        query = "select gender, city, empid from sales.emps where name like '";
-        query += name + "%'";
+        final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+        buf.append(
+            "select gender, city, empid from sales.emps where name like ")
+            .literal(name + "%");
+        String query = buf.getSql();
 
         preparedStmt = connection.prepareStatement(query);
 

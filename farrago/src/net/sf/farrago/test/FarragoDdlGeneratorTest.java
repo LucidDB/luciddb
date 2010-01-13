@@ -36,6 +36,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.enki.mdr.*;
+import org.eigenbase.sql.SqlDialect;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 
@@ -61,7 +62,9 @@ public class FarragoDdlGeneratorTest
 
     protected DdlGenerator newDdlGenerator()
     {
-        return new FarragoDdlGenerator(repos.getModelView());
+        return new FarragoDdlGenerator(
+            SqlDialect.DatabaseProduct.LUCIDDB.getDialect(),
+            repos.getModelView());
     }
 
     protected DiffRepository getDiffRepos()

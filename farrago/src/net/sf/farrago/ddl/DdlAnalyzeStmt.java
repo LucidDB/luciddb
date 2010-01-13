@@ -172,7 +172,7 @@ public class DdlAnalyzeStmt
         tableName = FarragoCatalogUtil.getQualifiedName(table);
 
         stmtContext = session.newStmtContext(null, rootStmtContext);
-        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(session.getDatabaseMetaData());
         writer = new SqlPrettyWriter(dialect);
         repos = session.getRepos();
 

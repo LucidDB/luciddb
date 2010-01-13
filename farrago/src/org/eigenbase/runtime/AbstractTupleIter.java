@@ -46,6 +46,11 @@ public abstract class AbstractTupleIter
     public void restart()
     {
     }
+
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        return b;
+    }
 }
 
 // End AbstractTupleIter.java

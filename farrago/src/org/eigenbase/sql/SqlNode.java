@@ -124,14 +124,14 @@ public abstract class SqlNode
 
     public String toString()
     {
-        return toSqlString(null);
+        return toSqlString(null).getSql();
     }
 
     /**
      * Returns the SQL text of the tree of which this <code>SqlNode</code> is
      * the root.
      *
-     * @param dialect
+     * @param dialect Dialect
      * @param forceParens wraps all expressions in parentheses; good for parse
      * test, but false by default.
      *
@@ -144,20 +144,21 @@ public abstract class SqlNode
      * <li>DATE '1969-04-29'</li>
      * </ul>
      */
-    public String toSqlString(SqlDialect dialect, boolean forceParens)
+    public SqlString toSqlString(SqlDialect dialect, boolean forceParens)
     {
         if (dialect == null) {
-            dialect = SqlUtil.dummyDialect;
+            dialect = SqlDialect.DUMMY;
         }
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         writer.setAlwaysUseParentheses(forceParens);
         writer.setSelectListItemsOnSeparateLines(false);
         writer.setIndentation(0);
         unparse(writer, 0, 0);
-        return writer.toString();
+        final String sql = writer.toString();
+        return new SqlString(dialect, sql);
     }
 
-    public String toSqlString(SqlDialect dialect)
+    public SqlString toSqlString(SqlDialect dialect)
     {
         return toSqlString(dialect, false);
     }

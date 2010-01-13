@@ -287,7 +287,7 @@
 'FennelToIteratorConverter'
 '  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[0], expr#3=[=($t1, $t2)], expr#4=[CAST($t0):BIGINT NOT NULL], rid=[$t4], $condition=[$t3])'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):BIGINT NOT NULL], expr#2=[?0], expr#3=[0], expr#4=[=($t2, $t3)], rid=[$t1], $condition=[$t4])'
 '        FennelToIteratorConverter'
 '          LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$A1]])'
 > explain plan for

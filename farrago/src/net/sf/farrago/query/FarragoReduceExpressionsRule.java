@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2010 SQLstream, Inc.
 // Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -244,14 +244,7 @@ public abstract class FarragoReduceExpressionsRule
                             calc.getCluster().getRexBuilder());
                     List<RexLocalRef> list = new ArrayList<RexLocalRef>();
                     for (RexNode expr : expandedExprList) {
-                        if (expr instanceof RexInputRef) {
-                            list.add(
-                                new RexLocalRef(
-                                    ((RexInputRef) expr).getIndex(),
-                                    expr.getType()));
-                        } else {
-                            list.add(builder.addExpr(expr));
-                        }
+                        list.add(builder.registerInput(expr));
                     }
                     if (program.getCondition() != null) {
                         final int conditionIndex =
@@ -279,11 +272,10 @@ public abstract class FarragoReduceExpressionsRule
                     for (RexLocalRef projectExpr : program.getProjectList()) {
                         final int index = projectExpr.getIndex();
                         builder.addProject(
-                            list.get(index),
+                            list.get(index).getIndex(),
                             program.getOutputRowType().getFieldList().get(k++)
                                    .getName());
                     }
-                    builder.eliminateUnused();
                     call.transformTo(
                         new CalcRel(
                             calc.getCluster(),

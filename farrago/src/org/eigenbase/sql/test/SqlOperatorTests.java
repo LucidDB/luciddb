@@ -35,6 +35,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 
@@ -4202,8 +4203,8 @@ public abstract class SqlOperatorTests
             for (Object o : getValues(type, true)) {
                 SqlLiteral literal =
                     type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
-                String literalString =
-                    literal.toSqlString(SqlUtil.dummyDialect);
+                SqlString literalString =
+                    literal.toSqlString(SqlDialect.DUMMY);
                 final String expr =
                     "CAST(" + literalString
                     + " AS " + type + ")";
@@ -4257,8 +4258,8 @@ public abstract class SqlOperatorTests
             for (Object o : getValues(type, false)) {
                 SqlLiteral literal =
                     type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
-                String literalString =
-                    literal.toSqlString(SqlUtil.dummyDialect);
+                SqlString literalString =
+                    literal.toSqlString(SqlDialect.DUMMY);
 
                 if ((type.getSqlTypeName() == SqlTypeName.BIGINT)
                     || ((type.getSqlTypeName() == SqlTypeName.DECIMAL)

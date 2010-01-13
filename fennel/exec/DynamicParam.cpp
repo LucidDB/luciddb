@@ -32,7 +32,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 DynamicParam::DynamicParam(
     TupleAttributeDescriptor const &descInit,
     bool isCounterInit)
-    : desc(descInit) , isCounter(isCounterInit)
+    : desc(descInit), isCounter(isCounterInit)
 {
     pBuffer.reset(new FixedBuffer[desc.cbStorage]);
 }

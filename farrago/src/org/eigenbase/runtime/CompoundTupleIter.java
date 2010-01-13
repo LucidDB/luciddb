@@ -126,6 +126,11 @@ public class CompoundTupleIter
         initIterator();
     }
 
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        return iterator.printStatus(b);
+    }
+
     public void closeAllocation()
     {
         for (TupleIter iter : iterators) {

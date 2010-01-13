@@ -134,8 +134,8 @@ public class FennelPipeTupleIter
     // override FennelAbstractTupleIter
     protected void traceNext(Object val)
     {
-        if (tracer.isLoggable(Level.FINER)) {
-            tracer.finer(getStatus(this.toString()) + " => " + val);
+        if (tracer.isLoggable(Level.FINEST)) {
+            tracer.finest(getStatus(this.toString()) + " => " + val);
         }
     }
 
@@ -148,7 +148,9 @@ public class FennelPipeTupleIter
 
     protected int populateBuffer()
     {
-        tracer.fine(this + " reader waits");
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(this + " reader waits");
+        }
         byteBuffer = dequeue(); // get next buffer; may block
         int n = byteBuffer.limit();
         if (n > 0) {
@@ -206,10 +208,14 @@ public class FennelPipeTupleIter
                 bb = ByteBuffer.wrap(b);
             }
 
-            tracer.fine(
-                this + " writer waits (buf: " + bb + " bytes: " + bblen);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer(this + " writer waits");
+            }
             enqueue(bb);
-            tracer.fine(this + " writer proceeds");
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine(
+                    this + " writer put (buf: " + bb + " bytes: " + bblen);
+            }
         } catch (Throwable e) {
             tracer.throwing(null, null, e);
             throw e;

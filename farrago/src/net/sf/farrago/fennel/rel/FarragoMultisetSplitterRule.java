@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -202,8 +202,7 @@ public class FarragoMultisetSplitterRule
                 shuttle,
                 false);
 
-        // Eliminate unused expressions, and create a program.
-        programBuilder.eliminateUnused();
+        // Create a program in canonical form.
         RexProgram newProgram = programBuilder.getProgram();
         CalcRel newCalc =
             new CalcRel(
@@ -956,8 +955,7 @@ public class FarragoMultisetSplitterRule
                                 call,
                                 false);
                         }
-                    }
-                    ,
+                    },
                     new CalcRelSplitter.RelType("REL_TYPE_NOT_MULTISET") {
                         protected boolean canImplement(RexFieldAccess field)
                         {
@@ -1016,8 +1014,7 @@ public class FarragoMultisetSplitterRule
                         {
                             return containsNestedMultiset(call, false);
                         }
-                    }
-                    ,
+                    },
                     new CalcRelSplitter.RelType("REL_TYPE_NOT_NESTED") {
                         protected boolean canImplement(RexFieldAccess field)
                         {

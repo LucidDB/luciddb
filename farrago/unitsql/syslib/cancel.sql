@@ -16,7 +16,7 @@ external name 'class net.sf.farrago.test.FarragoTestUDR.noiseWithCancel';
 -- a million rows and then schedules a timer to cancel the rest of the
 -- execution after 5 seconds.
 select * 
-from table(cancel_test.noise_with_cancel(1000000, 0, 5000)) order by 1;
+from table(cancel_test.noise_with_cancel(1000000, 0, 4000)) order by 1;
 
 -- Likewise for hash partitioning (LDB-122).
 -- But wait less time since there's no sort to sop up time.

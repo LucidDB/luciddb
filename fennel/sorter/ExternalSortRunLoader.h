@@ -223,20 +223,22 @@ public:
 
     /**
      * checks for "end of partition".
+     * @param bufAccessor buffer from which to read run
+     * @param pSrcTuple tuple buffer to check end Of Partition
      * @return true, if "end of partition" detected.
      */
     virtual bool checkEndOfPartition(
-       ExecStreamBufAccessor &bufAccessor
-       , PConstBuffer pSrcTuple);
+       ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
 
     /**
      * check if the tuple pSrcTuple needs to be skipped from sort operation.
+     * @param bufAccessor buffer from which to read run
+     * @param pSrcTuple tuple buffer to check if it needs to be skipped
      * @return true, if the tuple is to be skipped. Base class always returns
      *               false.
      */
     virtual bool skipRow(
-       ExecStreamBufAccessor &bufAccessor
-       , PConstBuffer pSrcTuple);
+       ExecStreamBufAccessor &bufAccessor, PConstBuffer pSrcTuple);
 
     /**
      * Sorts loaded run.

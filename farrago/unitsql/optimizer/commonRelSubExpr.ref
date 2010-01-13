@@ -461,7 +461,7 @@
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, CRSE, SALES]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$SID]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(expr#0..1=[{inputs}], expr#2=['r%'], expr#3=[LIKE($t1, $t2)], expr#4=[CAST($t0):INTEGER], proj#0..1=[{exprs}], CAST($0):INTEGER=[$t4], $condition=[$t3])'
+'        IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):INTEGER], expr#3=['r%'], expr#4=[LIKE($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel(table=[[LOCALDB, CRSE, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
 > 

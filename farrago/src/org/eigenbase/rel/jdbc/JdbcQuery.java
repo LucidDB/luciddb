@@ -35,6 +35,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.util.*;
 
 
@@ -65,7 +66,7 @@ public class JdbcQuery
     /**
      * For debug. Set on register.
      */
-    protected String queryString;
+    protected SqlString queryString;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -166,7 +167,7 @@ public class JdbcQuery
      *
      * @see #getSql()
      */
-    public String getForeignSql()
+    public SqlString getForeignSql()
     {
         if (queryString == null) {
             queryString = sql.toSqlString(dialect);
@@ -282,7 +283,7 @@ public class JdbcQuery
         return new MethodCall(
             new MethodCall(connectionExpr, "createStatement", null),
             "executeQuery",
-            new ExpressionList(Literal.makeLiteral(queryString)));
+            new ExpressionList(Literal.makeLiteral(queryString.getSql())));
     }
 
     /**

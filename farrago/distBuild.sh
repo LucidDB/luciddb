@@ -154,8 +154,8 @@ cp jgrapht/license-LGPL.txt $LIB_DIR/vjdbc.license.txt
 cp jgrapht/license-LGPL.txt $LIB_DIR/RmiJdbc.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
-if [ -e postgresql-8.1-406.jdbc2.jar ]; then
-    cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
+if [ -e postgresql-8.4-701.jdbc3.jar ]; then
+    cp postgresql-8.4-701.jdbc3.jar $LIB_DIR
 fi
 cp commons-transaction-1.1.jar $LIB_DIR
 cp vjdbc/lib/vjdbc.jar $LIB_DIR

@@ -37,6 +37,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
 
 
 /**
@@ -230,7 +231,7 @@ public class MedJdbcNameDirectory
         RelDataType origRowType = null;
         RelDataType mdRowType = null;
 
-        SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(server.getDatabaseMetaData());
         SqlSelect select =
             newSelectStarQuery(foreignQualifiedName, foreignTableProps);
 
@@ -251,7 +252,7 @@ public class MedJdbcNameDirectory
         }
 
         // fetch row type from foreign server
-        String sql = select.toSqlString(dialect);
+        SqlString sql = select.toSqlString(dialect);
         sql = normalizeQueryString(sql);
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("get foreign table metadata using " + sql);
@@ -259,7 +260,7 @@ public class MedJdbcNameDirectory
 
         PreparedStatement ps = null;
         try {
-            ps = server.getConnection().prepareStatement(sql);
+            ps = server.getConnection().prepareStatement(sql.getSql());
         } catch (Exception ex) {
             // Some drivers don't support prepareStatement
         }
@@ -280,7 +281,7 @@ public class MedJdbcNameDirectory
                     rs = ps.executeQuery();
                 } else {
                     stmt = server.getConnection().createStatement();
-                    rs = stmt.executeQuery(sql);
+                    rs = stmt.executeQuery(sql.getSql());
                 }
                 md = rs.getMetaData();
             }
@@ -385,13 +386,15 @@ public class MedJdbcNameDirectory
     }
 
 
-    String normalizeQueryString(String sql)
+    SqlString normalizeQueryString(SqlString sql)
     {
         // some drivers don't like multi-line SQL, so convert all
         // whitespace into plain spaces, and also mask Windows
         // line-ending diffs
-        sql = sql.replaceAll("\\r\\n", " ");
-        return sql.replaceAll("\\s", " ");
+        String s = sql.getSql();
+        s = s.replaceAll("\\r\\n", " ");
+        s = s.replaceAll("\\s", " ");
+        return new SqlBuilder(sql.getDialect(), s).toSqlString();
     }
 
     // implement FarragoMedNameDirectory
@@ -981,8 +984,9 @@ public class MedJdbcNameDirectory
     protected boolean isRemoteSqlValid(SqlNode sqlNode)
     {
         try {
-            SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
-            String sql = sqlNode.toSqlString(dialect);
+            SqlDialect dialect =
+                SqlDialect.create(server.getDatabaseMetaData());
+            SqlString sql = sqlNode.toSqlString(dialect);
             sql = normalizeQueryString(sql);
 
             // test if sql can be executed against source
@@ -993,25 +997,31 @@ public class MedJdbcNameDirectory
                 // Workaround for Oracle JDBC thin driver, where
                 // PreparedStatement.getMetaData does not actually get metadata
                 // before execution
-                if (dialect.isOracle()) {
-                    String quotedSql = dialect.quoteStringLiteral(sql);
-                    String sqlTest =
+                if (dialect.getDatabaseProduct()
+                    == SqlDialect.DatabaseProduct.ORACLE)
+                {
+                    SqlBuilder buf = new SqlBuilder(dialect);
+                    buf.append(
                         " DECLARE"
                         + "   test_cursor integer;"
                         + " BEGIN"
                         + "   test_cursor := dbms_sql.open_cursor;"
-                        + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
+                        + "   dbms_sql.parse(test_cursor, ");
+                    buf.literal(dialect.quoteStringLiteral(sql.getSql()));
+                    buf.append(
+                        ", "
                         + "   dbms_sql.native);"
                         + "   dbms_sql.close_cursor(test_cursor);"
                         + " EXCEPTION"
                         + " WHEN OTHERS THEN"
                         + "   dbms_sql.close_cursor(test_cursor);"
                         + "   RAISE;"
-                        + " END;";
+                        + " END;");
                     testStatement = server.getConnection().createStatement();
-                    rs = testStatement.executeQuery(sqlTest);
+                    SqlString sqlTest = buf.toSqlString();
+                    rs = testStatement.executeQuery(sqlTest.getSql());
                 } else {
-                    ps = server.getConnection().prepareStatement(sql);
+                    ps = server.getConnection().prepareStatement(sql.getSql());
                     if (ps != null) {
                         if (ps.getMetaData() == null) {
                             return false;

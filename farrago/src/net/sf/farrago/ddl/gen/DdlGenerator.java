@@ -39,6 +39,7 @@ import net.sf.farrago.fem.sql2003.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -64,7 +65,6 @@ public abstract class DdlGenerator
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    protected static final SqlDialect sqlDialect = SqlUtil.eigenbaseDialect;
     protected static final String VALUE_NULL = "NULL";
     protected static final String NL = System.getProperty("line.separator");
     protected static final String SEP = ";" + NL + NL;
@@ -74,6 +74,7 @@ public abstract class DdlGenerator
 
     //~ Instance fields --------------------------------------------------------
 
+    protected final SqlDialect sqlDialect;
     private boolean schemaQualified;
     protected boolean dropCascade;
     protected String previousSetSchema;
@@ -85,6 +86,16 @@ public abstract class DdlGenerator
                 CwmModelElement.class);
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Creates a DdlGenerator.
+     *
+     * @param sqlDialect SQL dialect
+     */
+    protected DdlGenerator(SqlDialect sqlDialect)
+    {
+        this.sqlDialect = sqlDialect;
+    }
 
     protected abstract JmiModelView getModelView();
 
@@ -132,15 +143,20 @@ public abstract class DdlGenerator
                 || (previousSetSchema == null)
                 || !previousSetSchema.equals(schemaName)))
         {
-            StringBuilder sb = new StringBuilder();
+            SqlBuilder sb = createSqlBuilder();
             sb.append("SET SCHEMA ");
-            sb.append(literal(quote(schemaName)));
-            stmt.addStmt(sb.toString());
+            sb.literal(sb.getDialect().quoteIdentifier(schemaName));
+            stmt.addStmt(sb.getSql());
             previousSetSchema = schemaName;
             return true;
         } else {
             return false;
         }
+    }
+
+    protected SqlBuilder createSqlBuilder()
+    {
+        return new SqlBuilder(sqlDialect);
     }
 
     public void generateCreate(CwmModelElement e, GeneratedDdlStmt stmt)
@@ -178,21 +194,6 @@ public abstract class DdlGenerator
                 throw Util.newInternal(e1, "while exporting '" + e + "'");
             }
         }
-    }
-
-    public static String quote(String str)
-    {
-        return sqlDialect.quoteIdentifier(str);
-    }
-
-    public static String literal(String str)
-    {
-        return sqlDialect.quoteStringLiteral(str);
-    }
-
-    public static String unquoteLiteral(String str)
-    {
-        return sqlDialect.unquoteStringLiteral(str);
     }
 
     protected static SqlTypeName getSqlTypeName(CwmClassifier classifier)
@@ -409,21 +410,21 @@ public abstract class DdlGenerator
     /**
      * Outputs the name of an object, optionally qualified by a schema name.
      *
-     * @param sb StringBuilder to write to
+     * @param sb SqlBuilder to write to
      * @param schema Schema object belongs to, or null if object does not belong
      * to a schema
      * @param objectName Name of object
      */
     protected void name(
-        StringBuilder sb,
+        SqlBuilder sb,
         CwmNamespace schema,
         String objectName)
     {
         if (schemaQualified && (schema != null)) {
-            sb.append(quote(schema.getName()));
-            sb.append('.');
+            sb.identifier(schema.getName(), objectName);
+        } else {
+            sb.identifier(objectName);
         }
-        sb.append(quote(objectName));
     }
 
     //~ Inner Classes ----------------------------------------------------------

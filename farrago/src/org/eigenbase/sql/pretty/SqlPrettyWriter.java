@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
@@ -125,7 +126,7 @@ public class SqlPrettyWriter
      * Bean holding the default property values.
      */
     private static final Bean defaultBean =
-        new SqlPrettyWriter(SqlUtil.dummyDialect).getBean();
+        new SqlPrettyWriter(SqlDialect.DUMMY).getBean();
     protected static final String NL = System.getProperty("line.separator");
 
     private static final String [] spaces =
@@ -880,6 +881,11 @@ public class SqlPrettyWriter
     {
         pw.flush();
         return sw.toString();
+    }
+
+    public SqlString toSqlString()
+    {
+        return new SqlBuilder(dialect, toString()).toSqlString();
     }
 
     public SqlDialect getDialect()

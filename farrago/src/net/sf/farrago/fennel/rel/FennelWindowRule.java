@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -266,7 +266,8 @@ public abstract class FennelWindowRule
             RexProgramBuilder.mergePrograms(
                 winAggRel.getProgram(),
                 inProgram,
-                cluster.getRexBuilder());
+                cluster.getRexBuilder(),
+                false);
 
         // The purpose of the input program is to provide the expressions
         // needed by all of the aggregate functions. Its outputs are (a) all
@@ -299,7 +300,6 @@ public abstract class FennelWindowRule
                 aggMap.put(over, aggCall);
             }
         }
-        inputProgramBuilder.eliminateUnused();
         final RexProgram inputProgram = inputProgramBuilder.getProgram();
 
         // Partitioning expressions must be evaluated before rows enter the XO.

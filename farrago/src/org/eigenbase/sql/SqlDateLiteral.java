@@ -82,10 +82,13 @@ public class SqlDateLiteral
         int leftPrec,
         int rightPrec)
     {
-        if (writer.getDialect().isSqlServer()) {
+        switch (writer.getDialect().getDatabaseProduct()) {
+        case MSSQL:
             writer.literal("'" + this.toFormattedString() + "'");
-        } else {
+            break;
+        default:
             writer.literal(this.toString());
+            break;
         }
     }
 }

@@ -5502,7 +5502,7 @@ public class SqlParserTest
             final SqlNode sqlNode = parseStmtAndHandleEx(sql);
 
             // no dialect, always parenthesize
-            final String actual = sqlNode.toSqlString(null, true);
+            final String actual = sqlNode.toSqlString(null, true).getSql();
             TestUtil.assertEqualsVerbose(expected, actual);
         }
 
@@ -5526,7 +5526,7 @@ public class SqlParserTest
             String expected)
         {
             final SqlNode sqlNode = parseExpressionAndHandleEx(sql);
-            final String actual = sqlNode.toSqlString(null, true);
+            final String actual = sqlNode.toSqlString(null, true).getSql();
             TestUtil.assertEqualsVerbose(expected, actual);
         }
 
@@ -5594,18 +5594,18 @@ public class SqlParserTest
             SqlNode sqlNode = parseStmtAndHandleEx(sql);
 
             // Unparse with no dialect, always parenthesize.
-            final String actual = sqlNode.toSqlString(null, true);
+            final String actual = sqlNode.toSqlString(null, true).getSql();
             assertEquals(expected, actual);
 
             // Unparse again in Eigenbase dialect (which we can parse), and
             // minimal parentheses.
             final String sql1 =
-                sqlNode.toSqlString(SqlUtil.eigenbaseDialect, false);
+                sqlNode.toSqlString(SqlDialect.EIGENBASE, false).getSql();
 
             // Parse and unparse again.
             SqlNode sqlNode2 = parseStmtAndHandleEx(sql1);
             final String sql2 =
-                sqlNode2.toSqlString(SqlUtil.eigenbaseDialect, false);
+                sqlNode2.toSqlString(SqlDialect.EIGENBASE, false).getSql();
 
             // Should be the same as we started with.
             assertEquals(sql1, sql2);
@@ -5613,7 +5613,7 @@ public class SqlParserTest
             // Now unparse again in the null dialect.
             // If the unparser is not including sufficient parens to override
             // precedence, the problem will show up here.
-            final String actual2 = sqlNode2.toSqlString(null, true);
+            final String actual2 = sqlNode2.toSqlString(null, true).getSql();
             assertEquals(expected, actual2);
         }
 
@@ -5622,18 +5622,18 @@ public class SqlParserTest
             SqlNode sqlNode = parseExpressionAndHandleEx(sql);
 
             // Unparse with no dialect, always parenthesize.
-            final String actual = sqlNode.toSqlString(null, true);
+            final String actual = sqlNode.toSqlString(null, true).getSql();
             assertEquals(expected, actual);
 
             // Unparse again in Eigenbase dialect (which we can parse), and
             // minimal parentheses.
             final String sql1 =
-                sqlNode.toSqlString(SqlUtil.eigenbaseDialect, false);
+                sqlNode.toSqlString(SqlDialect.EIGENBASE, false).getSql();
 
             // Parse and unparse again.
             SqlNode sqlNode2 = parseExpressionAndHandleEx(sql1);
             final String sql2 =
-                sqlNode2.toSqlString(SqlUtil.eigenbaseDialect, false);
+                sqlNode2.toSqlString(SqlDialect.EIGENBASE, false).getSql();
 
             // Should be the same as we started with.
             assertEquals(sql1, sql2);
@@ -5641,7 +5641,7 @@ public class SqlParserTest
             // Now unparse again in the null dialect.
             // If the unparser is not including sufficient parens to override
             // precedence, the problem will show up here.
-            final String actual2 = sqlNode2.toSqlString(null, true);
+            final String actual2 = sqlNode2.toSqlString(null, true).getSql();
             assertEquals(expected, actual2);
         }
 

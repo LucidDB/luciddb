@@ -22,13 +22,13 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -54,7 +54,7 @@ class FarragoView
      * @param cwmView catalog definition for view
      * @param rowType type for rows produced by view
      * @param datasetName Name of sample dataset, or null to use vanilla
-     * @param modality
+     * @param modality Modality of the view (relational versus streaming)
      */
     FarragoView(
         FemLocalView cwmView,
@@ -81,15 +81,17 @@ class FarragoView
     {
         String queryString = getFemView().getQueryExpression().getBody();
         if (datasetName != null) {
-            queryString =
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+            buf.append(
                 ((modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
-                    ? "SELECT STREAM"
-                    : "SELECT")
-                + " * FROM ("
-                + queryString
-                + ") AS x TABLESAMPLE SUBSTITUTE ("
-                + SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName)
-                + ")";
+                 ? "SELECT STREAM"
+                 : "SELECT"))
+                .append(" * FROM (")
+                .append(queryString)
+                .append(") AS x TABLESAMPLE SUBSTITUTE (")
+                .literal(datasetName)
+                .append(")");
+            queryString = buf.getSql();
         }
         return expandView(queryString);
     }

@@ -914,7 +914,7 @@ public class SqlValidatorTestCase
         {
             SqlNode rewrittenNode = parseAndValidate(validator, query);
             String actualRewrite =
-                rewrittenNode.toSqlString(SqlUtil.dummyDialect, false);
+                rewrittenNode.toSqlString(SqlDialect.DUMMY, false).getSql();
             TestUtil.assertEqualsVerbose(expectedRewrite, actualRewrite);
         }
 

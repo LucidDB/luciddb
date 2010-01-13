@@ -60,6 +60,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
@@ -1040,8 +1041,8 @@ public class FarragoDatabase
         timingTracer.traceTime("end validation");
 
         SqlDialect sqlDialect =
-            new SqlDialect(stmt.getSession().getDatabaseMetaData());
-        final String sql = validatedSqlNode.toSqlString(sqlDialect);
+            SqlDialect.create(stmt.getSession().getDatabaseMetaData());
+        final SqlString sql = validatedSqlNode.toSqlString(sqlDialect);
 
         if (analyzedSql != null) {
             if (validatedSqlNode instanceof SqlSelect) {
@@ -1088,7 +1089,7 @@ public class FarragoDatabase
                     FarragoSessionExecutableStmt executableStmt =
                         stmt.prepare(validatedSqlNode, sqlNode);
                     long memUsage =
-                        FarragoUtil.getStringMemoryUsage(sql)
+                        FarragoUtil.getStringMemoryUsage(sql.getSql())
                         + executableStmt.getMemoryUsage();
                     entry.initialize(
                         executableStmt,

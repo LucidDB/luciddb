@@ -16,7 +16,7 @@
 > -- a million rows and then schedules a timer to cancel the rest of the
 > -- execution after 5 seconds.
 > select * 
-> from table(cancel_test.noise_with_cancel(1000000, 0, 5000)) order by 1;
+> from table(cancel_test.noise_with_cancel(1000000, 0, 4000)) order by 1;
 Error: Execution aborted (state=,code=0)
 > 
 > -- Likewise for hash partitioning (LDB-122).

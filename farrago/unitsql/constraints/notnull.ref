@@ -10,7 +10,7 @@ Error: Target CAST($t0):INTEGER NOT NULL cannot be assigned null value (state=,c
 > 
 > -- NOT NULL enforcement:  should fail due to implicit NULL
 > insert into sales.emps(name,empno) values ('wael',300);
-Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
+Error: Target CAST($t3):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
 > 
 > -- switch to LucidDB personality
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;

@@ -606,7 +606,7 @@ void LcsClusterNodeWriter::putCompressedBatch(
         case 4:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
                 setBits(
-                    p[j] + i / 2 ,
+                    p[j] + i / 2,
                     4,
                     (i % 2) * 4,
                     (uint16_t)(((uint16_t *) pRows)[i] >> b));
@@ -616,7 +616,7 @@ void LcsClusterNodeWriter::putCompressedBatch(
         case 2:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
                 setBits(
-                    p[j] + i / 4 ,
+                    p[j] + i / 4,
                     2,
                     (i % 4) * 2,
                     (uint16_t)(((uint16_t *) pRows)[i] >> b));
@@ -626,7 +626,7 @@ void LcsClusterNodeWriter::putCompressedBatch(
         case 1:
             for (i = 0; i < batchDirs[column].nRow ; i++) {
                 setBits(
-                    p[j] + i / 8 ,
+                    p[j] + i / 8,
                     1,
                     (i % 8),
                     (uint16_t)(((uint16_t *)pRows)[i] >> b));

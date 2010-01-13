@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2005-2009 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
  *
  * @author jhyde
  * @version $Id$
- * @see RexProgramBuilder
  * @since Aug 18, 2005
  */
 public class RexProgramBuilder
@@ -93,6 +92,7 @@ public class RexProgramBuilder
      * @param projectRefList Projections
      * @param conditionRef Condition, or null
      * @param outputRowType Output row type
+     * @param normalize Whether to normalize
      */
     private RexProgramBuilder(
         RexBuilder rexBuilder,
@@ -100,30 +100,33 @@ public class RexProgramBuilder
         final List<RexNode> exprList,
         final List<RexLocalRef> projectRefList,
         final RexLocalRef conditionRef,
-        final RelDataType outputRowType)
+        final RelDataType outputRowType,
+        boolean normalize)
     {
         this(inputRowType, rexBuilder);
-        final RelDataTypeField [] outFields = outputRowType.getFields();
 
         // Create a shuttle for registering input expressions.
-        final RexShuttle shuttle = new RegisterMidputShuttle(true, exprList);
+        final RexShuttle shuttle =
+            new RegisterMidputShuttle(true, exprList);
 
-        // First register the common expressions; projects and conditions may
-        // depend upon these recursively.
-        for (RexNode expr : exprList) {
-            expr.accept(shuttle);
+        // If we are not normalizing, register all internal expressions. If we
+        // are normalizing, expressions will be registered if and when they are
+        // first used.
+        if (!normalize) {
+            for (RexNode expr : exprList) {
+                expr.accept(shuttle);
+            }
         }
 
-        // Register project expressions (they should be registered already)
+        // Register project expressions
         // and create a named project item.
         int i = 0;
         for (RexLocalRef projectRef : projectRefList) {
-            final RexNode expr = exprList.get(projectRef.getIndex());
+            final String name = outputRowType.getFieldList().get(i++).getName();
+            final int oldIndex = projectRef.getIndex();
+            final RexNode expr = exprList.get(oldIndex);
             final RexLocalRef ref = (RexLocalRef) expr.accept(shuttle);
-            addProject(
-                ref,
-                outFields[i].getName());
-            ++i;
+            addProject(ref.getIndex(), name);
         }
 
         // Register the condition, if there is one.
@@ -198,24 +201,24 @@ public class RexProgramBuilder
     public RexLocalRef addProject(RexNode expr, String name)
     {
         final RexLocalRef ref = registerInput(expr);
-        projectRefList.add(ref);
-        projectNameList.add(name);
-        return ref;
+        return addProject(ref.getIndex(), name);
     }
 
     /**
      * Adds a projection based upon the <code>index</code>th expression.
      *
      * @param ordinal Index of expression to project
-     * @param name
+     * @param name Name of field in output row type; if null, a unique name will
+     * be generated when the program is created
      *
      * @return the ref created
      */
     public RexLocalRef addProject(int ordinal, final String name)
     {
-        return addProject(
-            localRefList.get(ordinal),
-            name);
+        final RexLocalRef ref = localRefList.get(ordinal);
+        projectRefList.add(ref);
+        projectNameList.add(name);
+        return ref;
     }
 
     /**
@@ -245,7 +248,8 @@ public class RexProgramBuilder
      *
      * @param at Position in project list to add expression
      * @param ordinal Index of expression to project
-     * @param name
+     * @param name Name of field in output row type; if null, a unique name will
+     * be generated when the program is created
      *
      * @return the ref created
      */
@@ -379,35 +383,44 @@ public class RexProgramBuilder
     }
 
     /**
-     * Converts the state of the program builder to an immutable program.
+     * Converts the state of the program builder to an immutable program,
+     * normalizing in the process.
      *
      * <p>It is OK to call this method, modify the program specification (by
      * adding projections, and so forth), and call this method again.
      */
     public RexProgram getProgram()
     {
+        return getProgram(true);
+    }
+
+    /**
+     * Converts the state of the program builder to an immutable program.
+     *
+     * <p>It is OK to call this method, modify the program specification (by
+     * adding projections, and so forth), and call this method again.
+     *
+     * @param normalize Whether to normalize
+     */
+    public RexProgram getProgram(boolean normalize)
+    {
         assert projectRefList.size() == projectNameList.size();
 
         // Make sure all fields have a name.
         generateMissingNames();
-        RelDataType outputRowType =
-            rexBuilder.typeFactory.createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return projectRefList.size();
-                    }
+        RelDataType outputRowType = computeOutputRowType();
 
-                    public String getFieldName(int index)
-                    {
-                        return projectNameList.get(index);
-                    }
-
-                    public RelDataType getFieldType(int index)
-                    {
-                        return projectRefList.get(index).getType();
-                    }
-                });
+        if (normalize) {
+            return create(
+                rexBuilder,
+                inputRowType,
+                exprList,
+                projectRefList,
+                conditionRef,
+                outputRowType,
+                true)
+                .getProgram(false);
+        }
 
         // Clone expressions, so builder can modify them after they have
         // been put into the program. The projects and condition do not need
@@ -422,6 +435,27 @@ public class RexProgramBuilder
             projectRefList,
             conditionRef,
             outputRowType);
+    }
+
+    private RelDataType computeOutputRowType()
+    {
+        return rexBuilder.typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return projectRefList.size();
+                }
+
+                public String getFieldName(int index)
+                {
+                    return projectNameList.get(index);
+                }
+
+                public RelDataType getFieldType(int index)
+                {
+                    return projectRefList.get(index).getType();
+                }
+            });
     }
 
     private void generateMissingNames()
@@ -453,12 +487,13 @@ public class RexProgramBuilder
      *
      * @param program Existing program
      * @param rexBuilder Rex builder
-     *
+     * @param normalize Whether to normalize
      * @return A program builder initialized with an equivalent program
      */
     public static RexProgramBuilder forProgram(
         RexProgram program,
-        RexBuilder rexBuilder)
+        RexBuilder rexBuilder,
+        boolean normalize)
     {
         assert program.isValid(true);
         final RelDataType inputRowType = program.getInputRowType();
@@ -472,11 +507,34 @@ public class RexProgramBuilder
             exprs,
             projectRefs,
             conditionRef,
-            outputRowType);
+            outputRowType,
+            normalize);
     }
 
     /**
      * Creates a program builder with the same contents as a program.
+     *
+     * <p>If {@code normalize}, converts the program to canonical form. In
+     * canonical form, in addition to the usual constraints:
+     *
+     * <ul>
+     * <li>The first N internal expressions are {@link RexInputRef}s to the N
+     *     input fields;
+     * <li>Subsequent internal expressions reference only preceding expressions;
+     * <li>Arguments to {@link RexCall}s must be {@link RexLocalRef}s (that is,
+     *     expressions must have maximum depth 1)
+     * </ul>
+     *
+     * there are additional constraints:
+     *
+     * <ul>
+     * <li>Expressions appear in the left-deep order they are needed by
+     *     the projections and (if present) the condition. Thus, expression N+1
+     *     is the leftmost argument (literal or or call) in the expansion of
+     *     projection #0.
+     * <li>There are no duplicate expressions
+     * <li>There are no unused expressions
+     * </ul>
      *
      * @param rexBuilder Rex builder
      * @param inputRowType Input row type
@@ -484,7 +542,7 @@ public class RexProgramBuilder
      * @param projectRefList Projections
      * @param conditionRef Condition, or null
      * @param outputRowType Output row type
-     *
+     * @param normalize Whether to normalize
      * @return A program builder
      */
     public static RexProgramBuilder create(
@@ -493,7 +551,8 @@ public class RexProgramBuilder
         final List<RexNode> exprList,
         final List<RexLocalRef> projectRefList,
         final RexLocalRef conditionRef,
-        final RelDataType outputRowType)
+        final RelDataType outputRowType,
+        boolean normalize)
     {
         return new RexProgramBuilder(
             rexBuilder,
@@ -501,7 +560,8 @@ public class RexProgramBuilder
             exprList,
             projectRefList,
             conditionRef,
-            outputRowType);
+            outputRowType,
+            normalize);
     }
 
     /**
@@ -543,6 +603,24 @@ public class RexProgramBuilder
             shuttle,
             updateRefs);
         return progBuilder;
+    }
+
+    /**
+     * Normalizes a program.
+     *
+     * @param rexBuilder Rex builder
+     * @param program Program
+     * @return Normalized program
+     */
+    public static RexProgram normalize(
+        RexBuilder rexBuilder,
+        RexProgram program)
+    {
+        // Normalize program by creating program builder from the program, then
+        // converting to a program. getProgram does not need to normalize
+        // because the builder was normalized on creation.
+        return forProgram(program, rexBuilder, true)
+            .getProgram(false);
     }
 
     /**
@@ -609,66 +687,24 @@ public class RexProgramBuilder
     }
 
     /**
-     * Eliminate unused expressions.
+     * Merges two programs together, and normalizes the result.
+     *
+     * @see #mergePrograms(RexProgram, RexProgram, RexBuilder, boolean)
+     *
+     * @param topProgram Top program. Its expressions are in terms of the
+     * outputs of the bottom program.
+     * @param bottomProgram Bottom program. Its expressions are in terms of the
+     * result fields of the relational expression's input
+     * @param rexBuilder Rex builder
+     *
+     * @return Merged program
      */
-    public void eliminateUnused()
+    public static RexProgram mergePrograms(
+        RexProgram topProgram,
+        RexProgram bottomProgram,
+        RexBuilder rexBuilder)
     {
-        // Figure out which expressions are used.
-        final int exprCount = exprList.size();
-        final UsageVisitor usageVisitor = new UsageVisitor();
-        for (int i = 0; i < projectRefList.size(); i++) {
-            projectRefList.get(i).accept(usageVisitor);
-        }
-        if (conditionRef != null) {
-            conditionRef.accept(usageVisitor);
-        }
-
-        // Are all fields still used?
-        if (usageVisitor.unusedCount == 0) {
-            return;
-        }
-
-        // There are some unused fields. Figure out which fields need to be
-        // eliminated, and how much the other fields should shift down.
-        final int newExprCount = exprCount - usageVisitor.unusedCount;
-        final int [] targetOrdinals = new int[exprCount];
-        final int [] sourceOrdinals = new int[newExprCount];
-        int j = 0;
-        for (int i = 0; i < exprCount; i++) {
-            if (usageVisitor.usedExprs[i]) {
-                targetOrdinals[i] = j;
-                sourceOrdinals[j] = i;
-                ++j;
-            } else {
-                targetOrdinals[i] = -1;
-            }
-        }
-        assert j == newExprCount;
-
-        // Relocate the fields.
-        final RexShuttle shuttle =
-            new RexShuttle() {
-                public RexNode visitLocalRef(RexLocalRef localRef)
-                {
-                    return new RexLocalRef(
-                        targetOrdinals[localRef.index],
-                        localRef.getType());
-                }
-            };
-
-        List<RexNode> oldExprList = new ArrayList<RexNode>(exprList);
-        exprList.clear();
-        for (int i = 0; i < newExprCount; i++) {
-            final RexNode oldExpr = oldExprList.get(sourceOrdinals[i]);
-            exprList.add(oldExpr.accept(shuttle));
-        }
-        for (int i = 0; i < projectRefList.size(); i++) {
-            RexLocalRef ref = projectRefList.get(i);
-            projectRefList.set(i, (RexLocalRef) ref.accept(shuttle));
-        }
-        if (conditionRef != null) {
-            conditionRef = (RexLocalRef) conditionRef.accept(shuttle);
-        }
+        return mergePrograms(topProgram, bottomProgram, rexBuilder, true);
     }
 
     /**
@@ -732,21 +768,22 @@ public class RexProgramBuilder
      * outputs of the bottom program.
      * @param bottomProgram Bottom program. Its expressions are in terms of the
      * result fields of the relational expression's input
-     * @param rexBuilder
-     *
+     * @param rexBuilder Rex builder
+     * @param normalize Whether to convert program to canonical form
      * @return Merged program
      */
     public static RexProgram mergePrograms(
         RexProgram topProgram,
         RexProgram bottomProgram,
-        RexBuilder rexBuilder)
+        RexBuilder rexBuilder,
+        boolean normalize)
     {
         // Initialize a program builder with the same expressions, outputs
         // and condition as the bottom program.
         assert bottomProgram.isValid(true);
         assert topProgram.isValid(true);
         final RexProgramBuilder progBuilder =
-            RexProgramBuilder.forProgram(bottomProgram, rexBuilder);
+            RexProgramBuilder.forProgram(bottomProgram, rexBuilder, false);
 
         // Drive from the outputs of the top program. Register each expression
         // used as an output.
@@ -765,8 +802,7 @@ public class RexProgramBuilder
                 ref,
                 outputFields[i].getName());
         }
-        progBuilder.eliminateUnused();
-        return progBuilder.getProgram();
+        return progBuilder.getProgram(normalize);
     }
 
     private List<RexLocalRef> registerProjectsAndCondition(RexProgram program)
@@ -825,7 +861,7 @@ public class RexProgramBuilder
     }
 
     /**
-     * Creates a reference to a given input field
+     * Creates a reference to a given input field.
      *
      * @param index Ordinal of input field, must be less than the number of
      * fields in the input type
@@ -1063,42 +1099,6 @@ public class RexProgramBuilder
         public RexNode visitLocalRef(RexLocalRef localRef)
         {
             return newRefs.get(localRef.getIndex());
-        }
-    }
-
-    /**
-     * Visitor which marks which expressions are used.
-     */
-    private class UsageVisitor
-        extends RexVisitorImpl<Void>
-    {
-        final boolean [] usedExprs;
-        int unusedCount;
-
-        public UsageVisitor()
-        {
-            super(true);
-            usedExprs = new boolean[exprList.size()];
-            final int inputFieldCount = inputRowType.getFieldCount();
-            for (int i = 0; i < inputFieldCount; i++) {
-                usedExprs[i] = true;
-            }
-            unusedCount = exprList.size() - inputFieldCount;
-        }
-
-        public Void visitLocalRef(RexLocalRef localRef)
-        {
-            final int index = localRef.getIndex();
-            if (!usedExprs[index]) {
-                usedExprs[index] = true;
-                --unusedCount;
-
-                // We have just discovered an indirect use of this
-                // expression. Recurse, and we may find further indirect
-                // uses.
-                exprList.get(index).accept(this);
-            }
-            return null;
         }
     }
 }

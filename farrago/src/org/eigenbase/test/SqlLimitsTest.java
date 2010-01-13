@@ -226,7 +226,7 @@ public class SqlLimitsTest
         SqlLiteral literal =
             type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
         pw.print("; as SQL: ");
-        pw.print(literal.toSqlString(SqlUtil.dummyDialect));
+        pw.print(literal.toSqlString(SqlDialect.DUMMY));
         pw.println();
     }
 }

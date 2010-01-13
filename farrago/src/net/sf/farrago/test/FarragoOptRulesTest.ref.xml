@@ -734,7 +734,7 @@ TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], update
         <Resource name="planAfter">
             <![CDATA[
 TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], updateColumnList=[[]], flattened=[false])
-  CalcRel(expr#0..9=[{inputs}], expr#10=[CAST(null):INTEGER NOT NULL], expr#11=[CAST($3):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], DEPTNO=[$t10], NAME=[$t11])
+  CalcRel(expr#0..9=[{inputs}], expr#10=[null], expr#11=[CAST($t10):INTEGER NOT NULL], expr#12=[CAST($t3):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], DEPTNO=[$t11], NAME=[$t12])
     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
 ]]>
         </Resource>

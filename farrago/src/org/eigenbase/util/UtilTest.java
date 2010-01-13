@@ -28,13 +28,15 @@ import java.lang.management.*;
 
 import java.math.*;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 import junit.framework.*;
 
 import junit.textui.*;
 
-import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.test.*;
 
 
@@ -544,6 +546,49 @@ public class UtilTest
         assertEquals("HEAP", Util.enumVal(MemoryType.class, "HEAP").name());
         assertNull(Util.enumVal(MemoryType.class, "heap"));
         assertNull(Util.enumVal(MemoryType.class, "nonexistent"));
+    }
+
+    /**
+     * Tests SQL builders.
+     */
+    public void testSqlBuilder()
+    {
+        final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+        assertEquals(0, buf.length());
+        buf.append("select ");
+        assertEquals("select ", buf.getSql());
+
+        buf.identifier("x");
+        assertEquals("select \"x\"", buf.getSql());
+
+        buf.append(", ");
+        buf.identifier("y", "a b");
+        assertEquals("select \"x\", \"y\".\"a b\"", buf.getSql());
+
+        final SqlString sqlString = buf.toSqlString();
+        assertEquals(SqlDialect.EIGENBASE, sqlString.getDialect());
+        assertEquals(buf.getSql(), sqlString.getSql());
+
+        assertTrue(buf.getSql().length() > 0);
+        assertEquals(buf.getSqlAndClear(), sqlString.getSql());
+        assertEquals(0, buf.length());
+
+        buf.clear();
+        assertEquals(0, buf.length());
+
+        buf.literal("can't get no satisfaction");
+        assertEquals("'can''t get no satisfaction'", buf.getSqlAndClear());
+
+        buf.literal(new Timestamp(0));
+        assertEquals("TIMESTAMP '1970-01-01 00:00:00'", buf.getSqlAndClear());
+
+        buf.clear();
+        assertEquals(0, buf.length());
+
+        buf.append("hello world");
+        assertEquals(2, buf.indexOf("l"));
+        assertEquals(-1, buf.indexOf("z"));
+        assertEquals(9, buf.indexOf("l", 5));
     }
 
     /**

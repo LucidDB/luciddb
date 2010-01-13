@@ -34,6 +34,7 @@ import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.util.*;
 
 import java.util.*;
@@ -97,7 +98,7 @@ public class MedJdbcQueryRel
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
 
-        String sql = columnSet.directory.normalizeQueryString(queryString);
+        SqlString sql = columnSet.directory.normalizeQueryString(queryString);
 
         Expression allocExpression =
             new CastExpression(
@@ -108,7 +109,7 @@ public class MedJdbcQueryRel
                     new ExpressionList(
                         Literal.makeLiteral(
                             columnSet.directory.server.getServerMofId()),
-                        Literal.makeLiteral(sql))));
+                        Literal.makeLiteral(sql.getSql()))));
         return new MethodCall(
             allocExpression,
             "getResultSet",
