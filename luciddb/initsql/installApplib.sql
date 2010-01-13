@@ -1011,6 +1011,15 @@ language java
 modifies sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ReplicateMondrianUdp.execute';
 
+-- UDP for clearing Mondrian Schema Cache on Pentaho Server
+create or replace procedure applib.clear_pentaho_mondrian_cache(
+    base_server_url varchar(65535), 
+    username varchar(128), 
+    password varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ClearPentahoMondrianCacheUdp.execute';
+
 -- UDP for conditionally executing a SQL statement based on input set 
 create or replace procedure exec_sql_if_no_rows( 
 in evalSQL varchar(4096), 
