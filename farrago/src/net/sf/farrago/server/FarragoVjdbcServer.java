@@ -97,7 +97,7 @@ public class FarragoVjdbcServer
         configFarrago.setPrefetchResultSetMetaData(true);
         vjdbcConfig.addConnection(configFarrago);
 
-        if (protocol.equals(ListeningProtocol.HTTP)) {
+        if (protocol == ListeningProtocol.HTTP) {
             jettyEmbedding = new FarragoJettyEmbedding();
             jettyEmbedding.startServlet(vjdbcConfig, httpPort);
             return httpPort;
@@ -137,7 +137,7 @@ public class FarragoVjdbcServer
 
     protected void stopNetwork()
     {
-        if (protocol.equals(ListeningProtocol.HTTP)) {
+        if (protocol == ListeningProtocol.HTTP) {
             if (jettyEmbedding != null) {
                 jettyEmbedding.stopServlet();
                 jettyEmbedding = null;

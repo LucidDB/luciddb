@@ -103,7 +103,7 @@ public class FarragoServletCommandSink extends HttpServlet
             String method = httpServletRequest.getHeader(
                 ServletCommandSinkIdentifier.METHOD_IDENTIFIER);
 
-            if(method != null) {
+            if (method != null) {
                 ois = new ObjectInputStream(
                     httpServletRequest.getInputStream());
                 // And initialize the output
@@ -113,7 +113,7 @@ public class FarragoServletCommandSink extends HttpServlet
 
                 try {
                     // Some command to process ?
-                    if(method.equals(
+                    if (method.equals(
                            ServletCommandSinkIdentifier.PROCESS_COMMAND))
                     {
                         // Read parameter objects
@@ -124,7 +124,7 @@ public class FarragoServletCommandSink extends HttpServlet
                         // Delegate execution to the CommandProcessor
                         objectToReturn = processor.process(
                             connuid, uid, cmd, ctx);
-                    } else if(method.equals(
+                    } else if (method.equals(
                                   ServletCommandSinkIdentifier.CONNECT_COMMAND))
                     {
                         String url = ois.readUTF();
@@ -135,7 +135,7 @@ public class FarragoServletCommandSink extends HttpServlet
                         ConnectionConfiguration connectionConfiguration =
                             VJdbcConfiguration.singleton().getConnection(url);
 
-                        if(connectionConfiguration != null) {
+                        if (connectionConfiguration != null) {
                             Connection conn = connectionConfiguration.create(
                                 props);
                             objectToReturn = processor.registerConnection(
