@@ -357,6 +357,11 @@ public abstract class FarragoDbSingleton
         backupInProgress = inProgress;
         return true;
     }
+
+    public static boolean isInShutdown()
+    {
+        return inShutdown;
+    }
 }
 
 // End FarragoDbSingleton.java
