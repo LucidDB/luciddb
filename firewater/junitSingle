@@ -1,9 +1,0 @@
-#!/bin/bash
-# $Id$
-# Convenience script for running a single Firewater unit test from the
-# command line, as with Farrago
-
-export EIGEN_TEST_DEFAULT_PACKAGE=net.sf.firewater.test
-export EIGEN_JUNIT_CLASS=net.sf.firewater.test.FirewaterSqlTest
-
-../farrago/junitSingle $*
