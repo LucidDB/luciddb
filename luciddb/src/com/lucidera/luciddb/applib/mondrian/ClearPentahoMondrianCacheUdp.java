@@ -2,7 +2,7 @@
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2010 DynamoBI Corporation
-// Copyright (C) 2007-2007 The Eigenbase Project
+// Copyright (C) 2010 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,39 +30,48 @@ import java.net.URL;
  * @version $Id$
  */
 public abstract class ClearPentahoMondrianCacheUdp
-{
-    private static String URLTemplate = "<<server url>>ViewAction?solution=admin&path=&action=clear_mondrian_schema_cache.xaction&userid=<<username>>&password=<<password>>";
-    private static String defaultUserName = "joe";
-    private static String defaultPassword = "password";
+// NOTE: Intentionally breaking build to test CI
+//{
+    private static String URL_TEMPLATE = "<<server url>>ViewAction?solution=admin&path=&action=clear_mondrian_schema_cache.xaction&userid=<<username>>&password=<<password>>";
+    private static String DEFAULT_USER_NAME = "joe";
+    private static String DEFAULT_PASSWORD = "password";
 
     public static void execute(
-        String base_server_url,
-        String username,
+        String baseServerUrl,
+        String userName,
         String password)
         throws Exception
     {
 
-        String userreplacement = defaultUserName;
-        String passwordreplacement = defaultPassword;
+        String userReplacement = DEFAULT_USER_NAME;
+        String passwordReplacement = DEFAULT_PASSWORD;
 
         // Check values
-        if (username != null)
-            userreplacement = username;
+        if (userName != null)
+            userReplacement = userName;
         if (password != null)
-            passwordreplacement = password;
+            passwordReplacement = password;
 
         // Replace Values in template
-        String URLString = URLTemplate.replace(
+        String finalUrlString = URL_TEMPLATE.replace(
             "<<server url>>",
-            base_server_url).replace("<<username>>", userreplacement).replace(
+            baseServerUrl).replace("<<username>>", userReplacement).replace(
             "<<password>>",
-            passwordreplacement);
+            passwordReplacement);
 
         // HIT URL
-        URL url = new URL(URLString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        if (conn.getResponseCode() != 200)
-            throw new Exception("ERROR CODE from URL:" + URLString);
+        HttpURLConnection httpConn = null;
+        try {
+            URL url = new URL(finalUrlString);
+            httpConn = (HttpURLConnection) url.openConnection();
+            if (httpConn.getResponseCode() != 200)
+                throw new Exception("URL is not 200:" + finalUrlString + httpConn.getResponseMessage());
+        } finally {
+            if ( httpConn != null ) {
+                httpConn.disconnect();
+            }
+        }
+        
 
     }
 }
