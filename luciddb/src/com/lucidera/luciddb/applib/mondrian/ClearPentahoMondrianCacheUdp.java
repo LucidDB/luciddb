@@ -30,8 +30,7 @@ import java.net.URL;
  * @version $Id$
  */
 public abstract class ClearPentahoMondrianCacheUdp
-// NOTE: Intentionally breaking build to test CI
-//{
+{
     private static String URL_TEMPLATE = "<<server url>>ViewAction?solution=admin&path=&action=clear_mondrian_schema_cache.xaction&userid=<<username>>&password=<<password>>";
     private static String DEFAULT_USER_NAME = "joe";
     private static String DEFAULT_PASSWORD = "password";
