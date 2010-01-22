@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2002-2009 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -1678,7 +1678,7 @@ public class CalcRexImplementorTableImpl
             final String afterCorrectionLabel = translator.newLabel();
             CalcProgramBuilder.jumpFalseInstruction.add(
                 translator.builder,
-                translator.builder.newLine(afterCorrectionLabel),
+                new CalcProgramBuilder.Line(afterCorrectionLabel),
                 negativeReg);
             CalcProgramBuilder.nativeAdd.add(
                 translator.builder,
@@ -1749,7 +1749,7 @@ public class CalcRexImplementorTableImpl
             final String afterCorrectionLabel = translator.newLabel();
             CalcProgramBuilder.jumpFalseInstruction.add(
                 translator.builder,
-                translator.builder.newLine(afterCorrectionLabel),
+                new CalcProgramBuilder.Line(afterCorrectionLabel),
                 negativeReg);
             CalcProgramBuilder.nativeAdd.add(
                 translator.builder,
@@ -1926,7 +1926,7 @@ public class CalcRexImplementorTableImpl
                 CalcReg overflowed = translator.implementNode(comparison);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(endCheck),
+                    new CalcProgramBuilder.Line(endCheck),
                     overflowed);
                 CalcReg errorMsg =
                     translator.builder.newVarcharLiteral(
@@ -2479,7 +2479,7 @@ public class CalcRexImplementorTableImpl
                     input);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,
@@ -2537,7 +2537,7 @@ public class CalcRexImplementorTableImpl
                     input);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -2591,7 +2591,7 @@ public class CalcRexImplementorTableImpl
                     input);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -2702,7 +2702,7 @@ public class CalcRexImplementorTableImpl
                     input);
                 CalcProgramBuilder.jumpTrueInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(next),
+                    new CalcProgramBuilder.Line(next),
                     isNullReg);
                 CalcProgramBuilder.boolNativeIsNull.add(
                     translator.builder,
@@ -2710,7 +2710,7 @@ public class CalcRexImplementorTableImpl
                     accumulatorRegister);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 // Use ref instead of move.
                 // Streaming agg marshalls and unmarshalls
@@ -2762,7 +2762,7 @@ public class CalcRexImplementorTableImpl
                     translator.implementNode(operand));
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -2850,7 +2850,7 @@ public class CalcRexImplementorTableImpl
                     translator.implementNode(operand));
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,
@@ -2908,7 +2908,7 @@ public class CalcRexImplementorTableImpl
                     translator.implementNode(operand));
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -2954,7 +2954,7 @@ public class CalcRexImplementorTableImpl
                     translator.implementNode(operand));
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -3132,7 +3132,7 @@ public class CalcRexImplementorTableImpl
                     accumulatorRegister);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(wasNotNull),
+                    new CalcProgramBuilder.Line(wasNotNull),
                     isNullReg);
                 CalcReg input = translator.implementNode(operand);
                 CalcProgramBuilder.refInstruction.add(
@@ -3198,7 +3198,7 @@ public class CalcRexImplementorTableImpl
                     input);
                 CalcProgramBuilder.jumpTrueInstruction.add(
                     translator.builder,
-                    translator.builder.newLine(isNull),
+                    new CalcProgramBuilder.Line(isNull),
                     isNullReg);
                 CalcProgramBuilder.refInstruction.add(
                     translator.builder,

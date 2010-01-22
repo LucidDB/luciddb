@@ -280,6 +280,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     return (btreeRid == rid);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#8 $");
+FENNEL_END_CPPFILE("$Id: //open/dy/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#1 $");
 
 // End LbmRidReader.cpp

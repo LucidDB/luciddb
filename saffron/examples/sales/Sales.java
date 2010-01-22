@@ -177,7 +177,7 @@ public class Sales extends net.sf.saffron.ext.JdbcConnection
             Connection connection = null;
             try {
                 connection = dataSource.getConnection();
-                this.dialect = SqlDialect.create(connection.getMetaData());
+                this.dialect = new SqlDialect(connection.getMetaData());
                 RelDataTypeFactory typeFactory = null;
                 this.emps =
                     new JdbcTable(

@@ -650,16 +650,12 @@ public class Rex2CalcPlanTest
                     "expectedInit",
                     "expectedAdd",
                     "expectedDrop",
-                    "expectedDropOptimized",
-                    "expectedDropMapping",
                     "expectedOutput",
                 },
                 new String[] {
                     "${expectedInit}",
                     "${expectedAdd}",
                     "${expectedDrop}",
-                    "${expectedDropOptimized}",
-                    "${expectedDropMapping}",
                     "${expectedOutput}",
                 },
                 new String[] {
@@ -667,8 +663,6 @@ public class Rex2CalcPlanTest
                     TestUtil.NL + programs[1],
                     TestUtil.NL + programs[2],
                     TestUtil.NL + programs[3],
-                    programs[4],
-                    TestUtil.NL + programs[5],
                 },
                 false);
         }
@@ -731,37 +725,21 @@ public class Rex2CalcPlanTest
             translator.setGenerateComments(doComments);
 
             DiffRepository diffRepos = getDiffRepos();
-            final String initProgram =
-                translator.getAggProgram(program, AggOp.Init, null);
-            final String addProgram =
-                translator.getAggProgram(program, AggOp.Add, null);
-            final String dropProgram =
-                translator.getAggProgram(program, AggOp.Drop, null);
-            final BitSet bitset = new BitSet();
-            final String dropProgramOptimized =
-                translator.getAggProgram(program, AggOp.Drop, bitset);
-            final String dropProgramMapping = bitset.toString();
             diffRepos.assertEqualsMulti(
                 new String[] {
                     "expectedInit",
                     "expectedAdd",
                     "expectedDrop",
-                    "expectedDropOptimized",
-                    "expectedDropMapping",
                 },
                 new String[] {
                     "${expectedInit}",
                     "${expectedAdd}",
                     "${expectedDrop}",
-                    "${expectedDropOptimized}",
-                    "${expectedDropMapping}",
                 },
                 new String[] {
-                    TestUtil.NL + initProgram,
-                    TestUtil.NL + addProgram,
-                    TestUtil.NL + dropProgram,
-                    TestUtil.NL + dropProgramOptimized,
-                    TestUtil.NL + dropProgramMapping
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Init),
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Add),
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Drop)
                 },
                 false);
         }

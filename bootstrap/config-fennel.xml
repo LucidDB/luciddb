@@ -19,16 +19,14 @@
 		<modificationset quietperiod="300">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
-			<filesystem folder="forcebuild"/>
 		</modificationset>
 
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval;">
-			<ant buildfile="&open_default.build.home;/build-fennel.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="&open_default.build.home;/bootstrap/build-fennel.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
-			    <property name="srcdir" value="&open_integration.src.default;"/>
 			</ant>
 		</schedule>
 

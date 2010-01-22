@@ -31,19 +31,6 @@ T;
 SUB O0, O0, C0 /* 0: COUNT($t0) */;
 RETURN /* 1: */;]]>
         </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O s8;
-C s8;
-V 1;
-T;
-SUB O0, O0, C0 /* 0: COUNT($t0) */;
-RETURN /* 1: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[
-{}]]>
-        </Resource>
     </TestCase>
     <TestCase name="testAggSum">
         <Resource name="expectedInit">
@@ -71,18 +58,6 @@ I s4;
 T;
 SUB O0, O0, I0 /* 0: SUM($t0) */;
 RETURN /* 1: */;]]>
-        </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O s4;
-I s4;
-T;
-SUB O0, O0, I0 /* 0: SUM($t0) */;
-RETURN /* 1: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[
-{0}]]>
         </Resource>
     </TestCase>
     <TestCase name="testAggSumExp">
@@ -118,21 +93,6 @@ T;
 SUB O0, O0, I2 /* 0: SUM($t2) */;
 SUB O1, O1, C0 /* 1: COUNT($t0) */;
 RETURN /* 2: */;]]>
-        </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O s4, s8;
-I s4;
-C s8;
-V 1;
-T;
-SUB O0, O0, I0 /* 0: SUM($t2) */;
-SUB O1, O1, C0 /* 1: COUNT($t0) */;
-RETURN /* 2: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[
-{2}]]>
         </Resource>
     </TestCase>
     <TestCase name="testSimplePassThroughFilter">
@@ -1414,19 +1374,6 @@ REF O0, L1 /* 4: */;
 REF O1, L3 /* 5: */;
 RETURN /* 6: */;]]>
         </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O vb,8;
-I s4;
-L s8;
-T;
-CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
-CALL 'WinAggDrop(L0, O0) /* 1: $HISTOGRAM($t9) */;
-RETURN /* 2: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[{0}]]>
-        </Resource>
     </TestCase>
     <TestCase name="testWindowedFirstLastValue">
         <Resource name="expectedInit">
@@ -1510,24 +1457,6 @@ REF O2, L6 /* 24: */;
 REF O3, L9 /* 25: */;
 RETURN /* 26: */;]]>
         </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O vb,8, vb,8;
-I s4;
-L s8, s4, s8;
-C s4;
-V 1;
-T;
-CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
-CALL 'WinAggDrop(L0, O0) /* 1: $HISTOGRAM($t9) */;
-ADD L1, I0, C0 /* 2: +($t0, $t11) */;
-CAST L2, L1 /* 3: CAST($t12):BIGINT NOT NULL */;
-CALL 'WinAggDrop(L2, O1) /* 4: $HISTOGRAM($t13) */;
-RETURN /* 5: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[{0}]]>
-        </Resource>
     </TestCase>
     <TestCase name="testWindowDisallowPartial">
         <Resource name="expectedInit">
@@ -1596,21 +1525,6 @@ REF O0, L0 /* 18: */;
 REF O1, L6 /* 19: */;
 REF O2, L9 /* 20: */;
 RETURN /* 21: */;]]>
-        </Resource>
-        <Resource name="expectedDropOptimized">
-            <![CDATA[
-O s8, s4, s8;
-I s4;
-C s8;
-V 1;
-T;
-SUB O0, O0, C0 /* 0: COUNT() */;
-SUB O1, O1, I0 /* 1: $SUM0($t0) */;
-SUB O2, O2, C0 /* 2: COUNT($t0) */;
-RETURN /* 3: */;]]>
-        </Resource>
-        <Resource name="expectedDropMapping">
-            <![CDATA[{0}]]>
         </Resource>
     </TestCase>
 </Root>

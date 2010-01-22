@@ -151,6 +151,10 @@ public class RexProgram
 
     //~ Methods ----------------------------------------------------------------
 
+    // REVIEW jvs 16-Oct-2006:  The description below is confusing.  I
+    // think it means "none of the entries are null, there may be none,
+    // and there is no further reduction into smaller common subexpressions
+    // possible"?
     /**
      * Returns the common sub-expressions of this program.
      *
