@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -535,7 +535,7 @@ public class RexToCalcTranslator
                     res);
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     builder,
-                    new CalcProgramBuilder.Line(wasNotNull),
+                    builder.newLine(wasNotNull),
                     isNullRes);
                 CalcProgramBuilder.raise.add(
                     builder,
@@ -552,7 +552,7 @@ public class RexToCalcTranslator
         }
 
         builder.addReturn();
-        return builder.getProgram();
+        return builder.getProgram(null);
     }
 
     /**
@@ -603,13 +603,18 @@ public class RexToCalcTranslator
      * the translator is re-usable.
      *
      * @param program Program, containing pre-expressions, aggregate
-     * expressions, post-expressions, and optionally a filter.
+     *     expressions, post-expressions, and optionally a filter.
      * @param aggOp Aggregate operation (Init, Add, InitAdd or Drop), must not
-     * be null.
+     *     be null.
+     * @param usedInputFields If not null, method tries to optimize program,
+     *     removing instructions, constants and ultimately input fields not
+     *     used to create the final result, and populates the bitset with the
+     *     fields that are actually used. If null, does not optimize.
      */
     public String getAggProgram(
         RexProgram program,
-        AggOp aggOp)
+        AggOp aggOp,
+        BitSet usedInputFields)
     {
         RexNode [] aggs = null;
 
@@ -749,7 +754,7 @@ public class RexToCalcTranslator
         }
 
         builder.addReturn();
-        return builder.getProgram();
+        return builder.getProgram(usedInputFields);
     }
 
     private void fixOutputExps(
@@ -956,7 +961,7 @@ public class RexToCalcTranslator
             if (op.getKind().isA(SqlKind.And)) {
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     builder,
-                    new CalcProgramBuilder.Line(shortCut),
+                    builder.newLine(shortCut),
                     reg0);
             } else {
                 builder.addLabelJumpTrue(shortCut, reg0);

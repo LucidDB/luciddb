@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -47,7 +47,6 @@ import org.eigenbase.util.*;
  * @author jhyde
  * @version $Id$
  * @since Jan 11, 2004
- * @testcase
  */
 public class CalcProgramBuilder
 {
@@ -65,7 +64,7 @@ public class CalcProgramBuilder
     // -- instructions -------------------------------------------------------
 
     public static final InstructionDef refInstruction =
-        new InstructionDef("REF", 2);
+        new InstructionDef("REF", 2, RegisterUsePattern.ASSIGN);
     public static final JumpInstructionDef jumpInstruction =
         new JumpInstructionDef("JMP", 1);
     public static final JumpInstructionDef jumpTrueInstruction =
@@ -77,12 +76,12 @@ public class CalcProgramBuilder
     public static final JumpInstructionDef jumpNotNullInstruction =
         new JumpInstructionDef("JMPNN", 2);
     public static final InstructionDef returnInstruction =
-        new InstructionDef("RETURN", 0);
+        new InstructionDef("RETURN", 0, RegisterUsePattern.READ_ALL);
 
     public static final InstructionDef nativeAdd =
         new NativeInstructionDef("ADD", 3);
     public static final InstructionDef pointerAdd =
-        new InstructionDef("ADD", 3) {
+        new InstructionDef("ADD", 3, RegisterUsePattern.ASSIGN) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg ... regs)
@@ -101,13 +100,27 @@ public class CalcProgramBuilder
         new IntegralNativeInstructionDef("AND", 3);
     public static final InstructionDef cast =
         new NativeInstructionDef("CAST", 2);
+
+    // READ_ALL because, to be safe, assume that all registers are always read.
     public static final InstructionDef call =
-        new InstructionDef("CALL", 1) {
+        new InstructionDef("CALL", 1, RegisterUsePattern.READ_ALL) {
             void add(
                 CalcProgramBuilder builder,
                 Operand ... operands)
             {
                 addInternal(builder, operands);
+            }
+
+            @Override
+            public void markUsed(
+                Operand[] operands, Set<CalcReg> usedRegisters)
+            {
+                assert operands.length == 1;
+                FunctionCall call = (FunctionCall) operands[0];
+                for (CalcReg register : call.registers) {
+                    usedRegisters.add(register);
+                }
+                usedRegisters.add(call.result);
             }
         };
 
@@ -184,7 +197,7 @@ public class CalcProgramBuilder
         };
 
     public static final InstructionDef move =
-        new InstructionDef("MOVE", 2) {
+        new InstructionDef("MOVE", 2, RegisterUsePattern.ASSIGN) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg ... regs)
@@ -203,7 +216,7 @@ public class CalcProgramBuilder
     public static final InstructionDef nativeMove =
         new NativeInstructionDef("MOVE", 2);
     public static final InstructionDef pointerMove =
-        new InstructionDef("MOVE", 2) {
+        new InstructionDef("MOVE", 2, RegisterUsePattern.ASSIGN) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg ... regs)
@@ -231,7 +244,7 @@ public class CalcProgramBuilder
     public static final InstructionDef nativeNeg =
         new NativeInstructionDef("NEG", 2);
     public static final InstructionDef raise =
-        new InstructionDef("RAISE", 1) {
+        new InstructionDef("RAISE", 1, RegisterUsePattern.READ_ALL) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg ... regs)
@@ -310,6 +323,27 @@ public class CalcProgramBuilder
         returnInstruction,
         round,
     };
+
+    /**
+     * Creates a new Line with a given label.
+     *
+     * @param label Label
+     * @return Line
+     */
+    public Line newLine(String label)
+    {
+        return new Line(label);
+    }
+
+    public Line newLine(int lineNum)
+    {
+        compilationAssert(
+            lineNum >= 0,
+            "Line can not be negative. Value=" + lineNum);
+        String label = "_" + lineNum;
+        labels.put(label, lineNum);
+        return new Line(label);
+    }
 
     //~ Enums ------------------------------------------------------------------
 
@@ -407,7 +441,9 @@ public class CalcProgramBuilder
     protected String separator = SEPARATOR_SEMICOLON_NEWLINE;
     protected final List<Instruction> instructions =
         new ArrayList<Instruction>();
-    protected RegisterSets registerSets = new RegisterSets();
+    protected final List<CalcReg> registers = new ArrayList<CalcReg>();
+    protected final Map<RegisterSetType, List<CalcReg>> registersByType =
+        new HashMap<RegisterSetType, List<CalcReg>>();
     protected final Map<LiteralPair, CalcReg> literals =
         new HashMap<LiteralPair, CalcReg>();
     protected final Map<String, Integer> labels =
@@ -421,6 +457,9 @@ public class CalcProgramBuilder
      */
     public CalcProgramBuilder()
     {
+        for (RegisterSetType registerSetType : RegisterSetType.values()) {
+            registersByType.put(registerSetType, new ArrayList<CalcReg>());
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -431,7 +470,10 @@ public class CalcProgramBuilder
     public void clear()
     {
         instructions.clear();
-        registerSets.clear();
+        registers.clear();
+        for (List<CalcReg> regList : registersByType.values()) {
+            regList.clear();
+        }
         literals.clear();
         labels.clear();
     }
@@ -475,21 +517,56 @@ public class CalcProgramBuilder
     }
 
     /**
-     * A program consists of two parts, its instructions and the user defined
+     * Returns the text of the program.
+     *
+     * <p>A program consists of two parts, its instructions and the user defined
      * registers with its value. The string representation of the program will
-     * be in the following format <Register Set Definitions> See {@link
-     * #getRegisterSetsLayout}<br>
-     * <"\n"><br>
-     * <Instruction set> See {@link #getInstructions}<br>
-     * <br>
+     * be in the following format:
+     *
+     * <blockquote>
+     * [Register Set Definitions] (see {@link #getRegisterSetsLayout})<br/>
+     * [Newline]<br/>
+     * [Instruction set] (see {@link #getInstructions})
+     * </blockquote>
+     *
+     * <p>Thus, a very simple program is:
+     *
+     * <blockquote><code>O s4;<br/>
+     * C s4;<br/>
+     * V 100;<br/>
+     * T;<br/>
+     * MOVE O0, C0;</code></blockquote>
+     *
+     * @param usedInputFields If not null, optimize program and populate mapping
+     *    of which input fields are required
      */
-    public String getProgram()
+    public String getProgram(BitSet usedInputFields)
     {
+        validate();
+
+        // Optimize by removing unused input registers.
+        boolean optimized = false;
+        if (usedInputFields != null) {
+            removeUnusedInputRegisters(usedInputFields);
+        }
+
+        if (optimized) {
+            // validate again to check if the optimization broke something
+            validate();
+        }
+
         bindReferences();
         validate();
-        optimize();
-        validate(); //validate again to check if the optimization broke
-                    //something
+
+        // Other possible optimizations:
+        // 1. Remove unused constants and local registers;
+        // 2. Implement an algorithm that reduces and reuses local registers
+        //    (Useful? Dangerous?)
+        // 3. Constant reduction. Look for instruction like "literal operation
+        //    literal" and precalcuate if possible. (How likely is this to occur
+        //    in real programs?)
+
+
         StringWriter sw = new StringWriter();
         PrintWriter writer = new PrintWriter(sw);
         getRegisterSetsLayout(writer);
@@ -505,6 +582,90 @@ public class CalcProgramBuilder
     }
 
     /**
+     * Optimizes the program, removing unused registers.
+     *
+     * @param usedInputRegisters Populated with which registers are used
+     */
+    private void removeUnusedInputRegisters(BitSet usedInputRegisters)
+    {
+        final Set<CalcReg> usedRegisters = new HashSet<CalcReg>();
+
+        // All output and status registers are used.
+        usedRegisters.addAll(registersByType.get(RegisterSetType.Output));
+        usedRegisters.addAll(registersByType.get(RegisterSetType.Status));
+
+        // Use a fixed-point algorithm to figure out which other registers are
+        // used.
+        BitSet usedInstructions = new BitSet(instructions.size());
+        int usedCount = -1;
+        while (usedRegisters.size() > usedCount) {
+            usedCount = usedRegisters.size();
+            for (int i = 0; i < instructions.size(); i++) {
+                Instruction instruction = instructions.get(i);
+                if (!usedInstructions.get(i)) {
+                    if (instruction.markUsed(usedRegisters)) {
+                        usedInstructions.set(i);
+                    }
+                }
+            }
+        }
+
+        // Compute which input registers are used.
+        for (CalcReg reg : usedRegisters) {
+            if (reg.getRegisterType() == RegisterSetType.Input) {
+                usedInputRegisters.set(reg.index);
+            }
+        }
+
+        if (usedInstructions.cardinality() == instructions.size()
+            && usedRegisters.size() == registers.size())
+        {
+            assert usedInputRegisters.cardinality()
+               == registersByType.get(RegisterSetType.Input).size()
+                : "How can an input reg be unused if no reg was unused?";
+            return;
+        }
+
+        // Remove unused instructions.
+        List<Instruction> oldInstructions =
+            new ArrayList<Instruction>(instructions);
+        instructions.clear();
+        for (int i = 0; i < oldInstructions.size(); i++) {
+            Instruction instruction = oldInstructions.get(i);
+            if (usedInstructions.get(i)) {
+                instructions.add(instruction);
+            } else {
+                // This instruction is not used. Adjust all labels that point
+                // to after this line.
+                for (Map.Entry<String, Integer> entry : labels.entrySet()) {
+                    final int line = entry.getValue().intValue();
+                    if (line > i) {
+                        entry.setValue(line - 1);
+                    }
+                }
+            }
+        }
+
+        // Rebuild registers.
+        List<CalcReg> oldRegisters = new ArrayList<CalcReg>(registers);
+        registers.clear();
+        for (List<CalcReg> list : registersByType.values()) {
+            list.clear();
+        }
+        for (CalcReg register : oldRegisters) {
+            if (usedRegisters.contains(register)) {
+                registers.add(register);
+                final List<CalcReg> list =
+                    registersByType.get(register.getRegisterType());
+                register.index = list.size();
+                list.add(register);
+            } else {
+                register.index = -1;
+            }
+        }
+    }
+
+    /**
      * Introduces NL's for prettiness. Comments would be nice too.
      */
     private String prettyPrint(String program)
@@ -513,17 +674,6 @@ public class CalcProgramBuilder
             return program.replaceAll(separator, SEPARATOR_SEMICOLON_NEWLINE);
         }
         return program;
-    }
-
-    /**
-     * Returns the register of a given ordinal and type.
-     */
-    CalcReg getRegister(
-        int ordinal,
-        CalcProgramBuilder.RegisterSetType registerType)
-    {
-        List<CalcReg> regList = registerSets.getRegisterList(registerType);
-        return regList.get(ordinal);
     }
 
     /**
@@ -536,16 +686,13 @@ public class CalcProgramBuilder
             // Look for instructions that have Line as operands.
             instruction.setLineNumber(i++);
             Operand [] operands = instruction.getOperands();
-            for (int j = 0; (null != operands) && (j < operands.length); j++) {
+            for (int j = 0; j < operands.length; j++) {
                 Operand operand = operands[j];
                 if (operand instanceof Line) {
                     Line line = (Line) operand;
                     if (line.getLabel() != null) {
                         // We have a label; update the line number with what's
                         // in the labels map
-                        compilationAssert(
-                            null == line.getLine(),
-                            "Line has already been bind.");
                         Integer lineNumberFromLabel =
                             labels.get(line.getLabel());
                         if (null == lineNumberFromLabel) {
@@ -554,7 +701,6 @@ public class CalcProgramBuilder
                                 "Label '"
                                 + line.getLabel() + "' not defined");
                         }
-                        line.setLine(lineNumberFromLabel.intValue());
                     }
                 }
             }
@@ -598,7 +744,7 @@ public class CalcProgramBuilder
         PrintWriter writer,
         RegisterSetType registerSetType)
     {
-        List<CalcReg> regList = registerSets.getRegisterList(registerSetType);
+        List<CalcReg> regList = registersByType.get(registerSetType);
         if (regList.isEmpty()) {
             return;
         }
@@ -642,8 +788,7 @@ public class CalcProgramBuilder
 
     private void generateRegValues(PrintWriter writer)
     {
-        List<CalcReg> regList =
-            registerSets.getRegisterList(RegisterSetType.Literal);
+        List<CalcReg> regList = registersByType.get(RegisterSetType.Literal);
         if (regList.isEmpty()) {
             return;
         }
@@ -654,8 +799,6 @@ public class CalcProgramBuilder
             }
             CalcReg reg = regList.get(j);
 
-            //final Object value = reg.getValue();
-            //assert value != null;
             reg.printValue(writer, outputComments);
         }
         writer.print(separator);
@@ -664,25 +807,13 @@ public class CalcProgramBuilder
     /**
      * See {@link #getProgram}
      *
-     * @param writer
+     * @param writer Writer
      */
     protected void getInstructions(PrintWriter writer)
     {
         for (Instruction instruction : instructions) {
-            instruction.print(writer);
+            instruction.print(writer, outputComments, separator);
         }
-    }
-
-    /**
-     * Tries to optimize the program.
-     */
-    private void optimize()
-    {
-        //todo 1 look and remove unused registers todo 2 maybe dangersous but an
-        //idea anyway, implement an algorithm that reduces and reuses local
-        //registers todo 3 look for instruction like "literal operation
-        //literal" and precalcuate if possible. todo    Probably wouldnt happen
-        //too often. Who would query "not true"=false
     }
 
     /**
@@ -699,37 +830,38 @@ public class CalcProgramBuilder
         for (Instruction inst : instructions) {
             ++i;
 
-            //this try-catch clause will pick up any compiler excpetions
-            //messages and wrap it into a msg containg what line went wrong
+            // This try-catch clause will pick up any compiler exception
+            // message and wrap it into a msg containg what line went wrong.
             try {
-                // Check if any jump instructions are jumping off the cliff
                 if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
-                    if (line.getLine().intValue() >= instructions.size()) {
-                        throw FarragoResource.instance().ProgramCompilationError
-                            .ex(
-                                "Line " + line.getLine() + " doesn't exist");
-                    }
-                }
+                    Integer lineNum = line.getLine();
+                    if (lineNum != null) {
+                        // Check if any jump instructions are jumping off the
+                        // cliff
+                        if (lineNum >= instructions.size()) {
+                            throw FarragoResource.instance()
+                                .ProgramCompilationError.ex(
+                                    "Line " + lineNum
+                                    + " doesn't exist");
+                        }
 
-                // Check if any jump instruction jumps to itself
-                if (inst.def instanceof JumpInstructionDef) {
-                    Line line = (Line) inst.getOperands()[0];
-                    if (line.getLine().intValue() == i) {
-                        throw FarragoResource.instance().ProgramCompilationError
-                        .ex(
-                            "Cannot jump to the same line as the instruction");
-                    }
-                }
+                        // Check if any jump instruction jumps to itself
+                        if (lineNum == i) {
+                            throw FarragoResource.instance()
+                                .ProgramCompilationError.ex(
+                                    "Cannot jump to the same line as the "
+                                    + "instruction");
+                        }
 
-                // Forbidding loops. Check if any jump instruction jumps to a
-                // previous line.
-                if (inst.def instanceof JumpInstructionDef) {
-                    Line line = (Line) inst.getOperands()[0];
-                    if (line.getLine().intValue() < i) {
-                        throw FarragoResource.instance().ProgramCompilationError
-                        .ex(
-                            "Loops are forbidden. Cannot jump to a previous line");
+                        // Forbidding loops. Check if any jump instruction jumps
+                        // to a previous line.
+                        if (lineNum < i) {
+                            throw FarragoResource.instance()
+                                .ProgramCompilationError.ex(
+                                    "Loops are forbidden. Cannot jump to a "
+                                    + "previous line");
+                        }
                     }
                 }
 
@@ -744,7 +876,7 @@ public class CalcProgramBuilder
                 // assigned to
             } catch (Throwable e) {
                 StringWriter log = new StringWriter();
-                inst.print(new PrintWriter(log));
+                inst.print(new PrintWriter(log), outputComments, separator);
                 throw FarragoResource.instance().ProgramCompilationError.ex(
                     log.toString() + NL + e.getMessage(),
                     e);
@@ -752,7 +884,7 @@ public class CalcProgramBuilder
         }
     }
 
-    private void printOperands(
+    private static void printOperands(
         PrintWriter writer,
         Operand [] operands)
     {
@@ -778,7 +910,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(
+        return newRegister(
             type,
             null,
             RegisterSetType.Output,
@@ -814,7 +946,7 @@ public class CalcProgramBuilder
             ret = literals.get(key);
         } else {
             ret =
-                registerSets.newRegister(
+                newRegister(
                     type,
                     value,
                     RegisterSetType.Literal,
@@ -961,7 +1093,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(
+        return newRegister(
             type,
             null,
             RegisterSetType.Input,
@@ -982,7 +1114,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(
+        return newRegister(
             type,
             null,
             RegisterSetType.Local,
@@ -1006,7 +1138,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(
+        return newRegister(
             type,
             null,
             RegisterSetType.Status,
@@ -1154,7 +1286,7 @@ public class CalcProgramBuilder
     {
         if ((reg.getRegisterType() == RegisterSetType.Literal)
             && (reg.getValue() != null)
-            && (reg.getValue() instanceof java.lang.Integer))
+            && (reg.getValue() instanceof Integer))
         {
             compilationAssert(
                 !reg.getValue().equals(0),
@@ -1229,50 +1361,6 @@ public class CalcProgramBuilder
 
     // Jump-related instructions----------------------
 
-    protected void addJumpBooleanWithCondition(
-        JumpInstructionDef op,
-        int line,
-        CalcReg reg)
-    {
-        op.add(this, line, reg);
-    }
-
-    /**
-     * Adds an condtional JMP instruction. Jumps to <code>line</code> if the
-     * value in <code>reg</code> is TRUE.
-     *
-     * @pre reg of Boolean Type
-     * @pre line>=0
-     * @post line < number of calls to addXxxInstruction methods
-     */
-    public void addJumpTrue(
-        int line,
-        CalcReg reg)
-    {
-        addJumpBooleanWithCondition(jumpTrueInstruction, line, reg);
-    }
-
-    public void addJumpFalse(
-        int line,
-        CalcReg reg)
-    {
-        addJumpBooleanWithCondition(jumpFalseInstruction, line, reg);
-    }
-
-    public void addJumpNull(
-        int line,
-        CalcReg reg)
-    {
-        addJumpBooleanWithCondition(jumpNullInstruction, line, reg);
-    }
-
-    public void addJumpNotNull(
-        int line,
-        CalcReg reg)
-    {
-        addJumpBooleanWithCondition(jumpNotNullInstruction, line, reg);
-    }
-
     public void addReturn()
     {
         returnInstruction.add(this);
@@ -1285,6 +1373,14 @@ public class CalcProgramBuilder
             label);
     }
 
+    /**
+     * Adds an condtional JMP instruction. Jumps to <code>label</code> if the
+     * value in <code>reg</code> is TRUE.
+     *
+     * @pre reg of Boolean Type
+     * @pre line>=0
+     * @post line < number of calls to addXxxInstruction methods
+     */
     public void addLabelJumpTrue(
         String label,
         CalcReg reg)
@@ -1336,12 +1432,10 @@ public class CalcProgramBuilder
             line);
     }
 
-    // -- Inner classes -------------------------------------------------------
-
     //~ Inner Interfaces -------------------------------------------------------
 
     /**
-     * Represents an Operand in an opereation e.g. a register, line number or a
+     * Represents an Operand in an operation e.g. a register, line number or a
      * call to a function
      */
     interface Operand
@@ -1406,26 +1500,21 @@ public class CalcProgramBuilder
     /**
      * Reference to a line number
      */
-    public static class Line
+    public class Line
         implements Operand
     {
-        java.lang.Integer line = null;
-        String label = null;
+        final String label;
 
-        Line(int line)
-        {
-            this.line = line;
-        }
-
-        Line(String label)
+        private Line(String label)
         {
             this.label = label;
         }
 
         public String toString()
         {
+            final Integer lineNum = getLine();
             return (label != null) ? label
-                : ((line != null) ? line.toString() : "null");
+                : ((lineNum != null) ? lineNum.toString() : "null");
         }
 
         final public String getLabel()
@@ -1433,21 +1522,20 @@ public class CalcProgramBuilder
             return label;
         }
 
-        final public void setLine(int line)
+        final public Integer getLine()
         {
-            assert null == this.line;
-            this.line = line;
-        }
-
-        final public java.lang.Integer getLine()
-        {
-            return line;
+            return labels.get(label);
         }
 
         final public void print(PrintWriter writer)
         {
-            writer.print("@");
-            writer.print(line.intValue());
+            final Integer lineNum = getLine();
+            if (lineNum != null) {
+                writer.print("@");
+                writer.print(lineNum.intValue());
+            } else {
+                writer.print(label);
+            }
         }
     }
 
@@ -1479,27 +1567,30 @@ public class CalcProgramBuilder
     /**
      * Represents an instruction and its operands
      */
-    class Instruction
+    static final class Instruction
     {
-        private InstructionDef def;
-        private Operand [] operands;
+        private final InstructionDef def;
+        private final Operand [] operands;
         private String comment;
         private Integer lineNumber;
 
         public Instruction(
-            InstructionDef opCode,
+            InstructionDef def,
             Operand [] operands)
         {
-            this.def = opCode;
+            this.def = def;
             this.operands = operands;
             comment = null;
             lineNumber = null;
+            assert this.def != null;
+            assert this.operands != null;
         }
 
-        final void print(PrintWriter writer)
+        void print(
+            PrintWriter writer, boolean outputComments, String separator)
         {
             writer.print(def.name);
-            if ((null != operands) && (operands.length > 0)) {
+            if (operands.length > 0) {
                 writer.print(' ');
                 printOperands(writer, operands);
             }
@@ -1537,76 +1628,68 @@ public class CalcProgramBuilder
         {
             this.lineNumber = lineNumber;
         }
+
+        /**
+         * Deduces whether an instruction is used, and if it is used, sets its
+         * input registers to used.
+         *
+         * <p>An instruction that assigns to an output register is used if
+         * it assigns to a register that is used later in the program, or
+         * as an output register. Instructions that do not assign to a register
+         * are deemed to be always executed.
+         *
+         * @param usedRegisters Set of used registers, modified during call
+         * @return whether this instruction is used, based on used registers
+         */
+        public boolean markUsed(Set<CalcReg> usedRegisters)
+        {
+            switch (def.registerUsePattern) {
+            case ASSIGN:
+                if (!usedRegisters.contains((CalcReg) operands[0])) {
+                    return false;
+                }
+                break;
+            }
+            def.markUsed(operands, usedRegisters);
+            return true;
+        }
     }
 
     /**
-     * A place holder to hold defined register sets
+     * Creates a register.
+     *
+     * @param opType Data type of register value
+     * @param initValue Initial value
+     * @param registerType Register type
+     *
+     * @return the newly created Register
      */
-    protected class RegisterSets
+    private CalcReg newRegister(
+        OpType opType,
+        Object initValue,
+        RegisterSetType registerType,
+        int storageBytes)
     {
-        private final List<List<CalcReg>> sets =
-            new ArrayList<List<CalcReg>>(RegisterSetType.ValueCount);
+        compilationAssert(opType != null, "null is an invalid OpType");
+        compilationAssert(
+            registerType != null,
+            "null is an invalid RegisterSetType");
 
-        RegisterSets()
-        {
-            for (int i = 0; i < RegisterSetType.ValueCount; ++i) {
-                sets.add(new ArrayList<CalcReg>());
-            }
+        List<CalcReg> list = registersByType.get(registerType);
+        if (list == null) {
+            list = new ArrayList<CalcReg>();
+            registersByType.put(registerType, list);
         }
-
-        public void clear()
-        {
-            for (List<CalcReg> set : sets) {
-                set.clear();
-            }
-        }
-
-        /**
-         * Returns the list of registers of a given type.
-         *
-         * @param registerSetType Type of register
-         *
-         * @return list of registers of given type, never null
-         */
-        public final List<CalcReg> getRegisterList(
-            RegisterSetType registerSetType)
-        {
-            return sets.get(registerSetType.ordinal());
-        }
-
-        /**
-         * Creates a register in a register set
-         *
-         * @param opType what type the value in the register should have
-         * @param initValue initial value
-         * @param registerType specifies in which register set the register
-         * should live
-         *
-         * @return the newly created Register
-         */
-        public CalcReg newRegister(
-            OpType opType,
-            Object initValue,
-            RegisterSetType registerType,
-            int storageBytes)
-        {
-            compilationAssert(opType != null, "null is an invalid OpType");
-            compilationAssert(
-                registerType != null,
-                "null is an invalid RegisterSetType");
-
-            int ordinal = registerType.ordinal();
-            final List<CalcReg> set = sets.get(ordinal);
-            CalcReg newReg =
-                new CalcReg(
-                    opType,
-                    initValue,
-                    registerType,
-                    storageBytes,
-                    set.size());
-            set.add(newReg);
-            return newReg;
-        }
+        CalcReg newReg =
+            new CalcReg(
+                opType,
+                initValue,
+                registerType,
+                storageBytes,
+                list.size());
+        registers.add(newReg);
+        list.add(newReg);
+        return newReg;
     }
 
     /**
@@ -1619,18 +1702,22 @@ public class CalcProgramBuilder
     {
         public final String name;
         protected final int regCount;
+        private final RegisterUsePattern registerUsePattern;
 
         InstructionDef(
             String name,
-            int regCount)
+            int regCount,
+            RegisterUsePattern registerUsePattern)
         {
             this.name = name;
             this.regCount = regCount;
+            this.registerUsePattern = registerUsePattern;
+            assert registerUsePattern != null;
         }
 
         /**
          * Convenience method which converts the register list into an array and
-         * calls the {@link #add(CalcProgramBuilder,CalcReg[])} method.
+         * calls the {@link #add(CalcProgramBuilder, CalcReg...)} method.
          */
         final void add(
             CalcProgramBuilder builder,
@@ -1645,7 +1732,7 @@ public class CalcProgramBuilder
          * Adds this instruction with a set of operands to a program.
          *
          * <p>The default implementation casts each operand to a {@link
-         * CalcReg}, and calls {@link #add(CalcProgramBuilder, CalcReg[])}. If
+         * CalcReg}, and calls {@link #add(CalcProgramBuilder, CalcReg...)}. If
          * this instruction's operands are not registers, override this method.
          *
          * @param builder Program builder
@@ -1689,6 +1776,53 @@ public class CalcProgramBuilder
         {
             return name;
         }
+
+        /**
+         * Propagates a dataflow usage by marking registers as used.
+         *
+         * <p>Specifically, if the output register of this instruction is used,
+         * or if this instruction has no output register, marks the other
+         * registers as being used. (If an instruction's has an output register
+         * and it is not being used, then it is a useless instruction and can
+         * be eliminated. If it has no output register, we assume that it
+         * must always be called.)
+         *
+         * <p>If the instruction "ADD L3 L2 L1" is called with L3 in the used
+         * set, then L1 and L2 are added to the used set. If L3 is not in the
+         * used set, then the instruction is not used. This is an example of
+         * an instruction with an {@link RegisterUsePattern#ASSIGN} use pattern.
+         *
+         * <p>In other words, it is up to the instruction to know which are
+         * the output operands.
+         *
+         * <p>The default implementation assumes that operands are all
+         * registers. If that is not the case for particular instruction,
+         * override this method.
+         *
+         * @param operands Operands
+         * @param usedRegisters Set of registers known to be used in this
+         *     program
+         */
+        public void markUsed(
+            Operand[] operands,
+            Set<CalcReg> usedRegisters)
+        {
+            CalcReg[] calcRegs = (CalcReg[]) operands;
+            usedRegisters.addAll(Arrays.asList(calcRegs));
+        }
+    }
+
+    enum RegisterUsePattern {
+        /**
+         * Usage pattern where all operands are used.
+         */
+        READ_ALL,
+        /**
+         * Assignment usage pattern, where operand zero is written, other
+         * operands are read. If operand zero is assigned to a register that
+         * is never used, then the instruction can be eliminated.
+         */
+        ASSIGN
     }
 
     static class IntegralNativeInstructionDef
@@ -1698,7 +1832,7 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.ASSIGN);
         }
 
         void add(
@@ -1718,7 +1852,7 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.ASSIGN);
         }
 
         /**
@@ -1749,7 +1883,7 @@ public class CalcProgramBuilder
     {
         ComparisonInstructionDef(String name)
         {
-            super(name, 3);
+            super(name, 3, RegisterUsePattern.ASSIGN);
         }
 
         /**
@@ -1778,7 +1912,7 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.ASSIGN);
         }
 
         /**
@@ -1810,7 +1944,7 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.ASSIGN);
         }
 
         /**
@@ -1837,7 +1971,7 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.ASSIGN);
         }
 
         /**
@@ -1873,7 +2007,8 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            // To be safe, assume that all operands are read.
+            super(name, regCount, RegisterUsePattern.READ_ALL);
         }
 
         void add(
@@ -1953,12 +2088,12 @@ public class CalcProgramBuilder
                 && ((op2.getOpType() == OpType.Int4)
                     || (op2.getOpType() == OpType.Int8))
                 && (op2.getValue() != null)
-                && (op2.getValue() instanceof java.lang.Integer))
+                && (op2.getValue() instanceof Integer))
             {
                 builder.compilationAssert(
-                    ((java.lang.Integer) op2.getValue()).intValue() >= 0,
+                    ((Integer) op2.getValue()).intValue() >= 0,
                     "Cannot shift negative amout of steps. Value="
-                    + ((java.lang.Integer) op2.getValue()).intValue());
+                    + ((Integer) op2.getValue()).intValue());
             }
             super.add(builder, regs);
         }
@@ -1971,21 +2106,13 @@ public class CalcProgramBuilder
             String name,
             int regCount)
         {
-            super(name, regCount);
+            super(name, regCount, RegisterUsePattern.READ_ALL);
         }
 
         void add(
             CalcProgramBuilder builder,
             Operand ... operands)
         {
-            if (operands[0] instanceof Line) {
-                Line line = (Line) operands[0];
-                if (line.line != null) {
-                    builder.compilationAssert(
-                        line.line >= 0,
-                        "Line can not be negative. Value=" + line);
-                }
-            }
             if (regCount == 2) {
                 builder.assertRegisterBool((CalcReg) operands[1]);
             }
@@ -1994,24 +2121,39 @@ public class CalcProgramBuilder
 
         void add(CalcProgramBuilder builder, int line)
         {
-            add(builder, new Line(line));
+            builder.compilationAssert(
+                line >= 0,
+                "Line can not be negative. Value=" + line);
+            add(builder, builder.newLine(line));
         }
 
         void add(CalcProgramBuilder builder, String label)
         {
-            add(builder, new Line(label));
+            add(builder, builder.newLine(label));
         }
 
         void add(CalcProgramBuilder builder, int line, CalcReg reg)
         {
             builder.assertRegisterBool(reg);
-            add(builder, new Line(line));
+            add(builder, builder.newLine(line));
         }
 
         void add(CalcProgramBuilder builder, String label, CalcReg reg)
         {
             builder.assertRegisterBool(reg);
-            add(builder, new Line(label), reg);
+            add(builder, builder.newLine(label), reg);
+        }
+
+        @Override
+        public void markUsed(
+            Operand[] operands, Set<CalcReg> usedRegisters)
+        {
+            for (Operand operand : operands) {
+                if (operand instanceof CalcReg) {
+                    CalcReg calcReg = (CalcReg) operand;
+                    usedRegisters.add(calcReg);
+                }
+            }
         }
     }
 

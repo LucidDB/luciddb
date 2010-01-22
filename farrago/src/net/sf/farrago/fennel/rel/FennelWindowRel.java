@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -407,12 +407,29 @@ public class FennelWindowRel
                         inputProgram,
                         partition.overList);
 
-                windowPartitionDef.setInitializeProgram(
-                    translator.getAggProgram(combinedProgram, AggOp.Init));
-                windowPartitionDef.setAddProgram(
-                    translator.getAggProgram(combinedProgram, AggOp.Add));
-                windowPartitionDef.setDropProgram(
-                    translator.getAggProgram(combinedProgram, AggOp.Drop));
+                final String initProgram =
+                    translator.getAggProgram(combinedProgram, AggOp.Init, null);
+                final String addProgram =
+                    translator.getAggProgram(combinedProgram, AggOp.Add, null);
+                final BitSet bitSet;
+                final boolean ENABLE_SLIM_DROP_QUEUE = false;
+                if (ENABLE_SLIM_DROP_QUEUE) {
+                    bitSet = new BitSet();
+                } else {
+                    bitSet = null;
+                }
+                final String dropProgram =
+                    translator.getAggProgram(
+                        combinedProgram, AggOp.Drop, bitSet);
+
+                windowPartitionDef.setInitializeProgram(initProgram);
+                windowPartitionDef.setAddProgram(addProgram);
+                windowPartitionDef.setDropProgram(dropProgram);
+                if (ENABLE_SLIM_DROP_QUEUE) {
+                    windowPartitionDef.setDropProgramKeyList(
+                        FennelRelUtil.createTupleProjection(
+                            repos, Util.toList(bitSet)));
+                }
 
                 List<RexNode> dups =
                     removeDuplicates(translator, partition.overList);
@@ -455,12 +472,20 @@ public class FennelWindowRel
                         outputProgram.getInputRowType(),
                         outputProgram);
 
+                final String initProgram =
+                    translator.getAggProgram(combinedProgram, AggOp.Init, null);
+                final String addProgram =
+                    translator.getAggProgram(combinedProgram, AggOp.Add, null);
+                final String dropProgram =
+                    translator.getAggProgram(combinedProgram, AggOp.Drop, null);
+                final BitSet bitSet = new BitSet();
+                final String dropProgramOptimized =
+                    translator.getAggProgram(
+                        combinedProgram, AggOp.Drop, bitSet);
+                final String dropProgramMapping = bitSet.toString();
                 return new String[] {
-                        translator.getAggProgram(combinedProgram, AggOp.Init),
-                        translator.getAggProgram(combinedProgram, AggOp.Add),
-                        translator.getAggProgram(combinedProgram, AggOp.Drop),
-                        outputProgramString
-                    };
+                    initProgram, addProgram, dropProgram, dropProgramOptimized,
+                    dropProgramMapping, outputProgramString};
             }
         }
 

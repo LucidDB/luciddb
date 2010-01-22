@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -71,7 +71,7 @@ public class CalcProgramBuilderTest
      */
     public void testEmpty()
     {
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         assertEquals("T;", program);
     }
 
@@ -80,10 +80,18 @@ public class CalcProgramBuilderTest
         CalcReg litReg = builder.newInt4Literal(100);
         CalcReg outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         CalcProgramBuilder.move.add(builder, outReg, litReg);
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         final String expected =
-            "O s4;" + "C s4;" + "V 100;" + "T;" + "MOVE O0, C0;";
+            "O s4;"
+            + "C s4;"
+            + "V 100;"
+            + "T;"
+            + "MOVE O0, C0;";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        TestUtil.assertEqualsVerbose(expected, program2);
     }
 
     public void testComments()
@@ -100,12 +108,30 @@ public class CalcProgramBuilderTest
         CalcProgramBuilder.move.add(builder, out0, lit0);
         builder.addComment("/*d*/");
         builder.setOutputComments(true);
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         final String expected =
-            "O s4;" + "C s4, vc,2;" + "V 100, 0x41 /* A */;" + "T;"
-            + "MOVE O0, C0 /* 0: hej */;" + "MOVE O0, C0 /* 1: ab c */;"
-            + "MOVE O0, C0 /* 2: */;" + "MOVE O0, C0 /* 3: \\*d*\\ */;";
+            "O s4;"
+            + "C s4, vc,2;"
+            + "V 100, 0x41 /* A */;"
+            + "T;"
+            + "MOVE O0, C0 /* 0: hej */;"
+            + "MOVE O0, C0 /* 1: ab c */;"
+            + "MOVE O0, C0 /* 2: */;"
+            + "MOVE O0, C0 /* 3: \\*d*\\ */;";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        final String expected2 =
+            "O s4;"
+            + "C s4;"
+            + "V 100;"
+            + "T;"
+            + "MOVE O0, C0 /* 0: hej */;"
+            + "MOVE O0, C0 /* 1: ab c */;"
+            + "MOVE O0, C0 /* 2: */;"
+            + "MOVE O0, C0 /* 3: \\*d*\\ */;";
+        TestUtil.assertEqualsVerbose(expected2, program2);
     }
 
     public void testRef()
@@ -115,10 +141,19 @@ public class CalcProgramBuilderTest
             builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
 
         builder.addRef(outIntReg, litIntReg);
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         final String expected =
-            "O s4;" + "C s4;" + "V 100;" + "T;" + "REF O0, C0;";
+            "O s4;"
+            + "C s4;"
+            + "V 100;"
+            + "T;"
+            + "REF O0, C0;";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        TestUtil.assertEqualsVerbose(expected, program2);
+        TestUtil.assertEqualsVerbose("{}", usedInputFields.toString());
     }
 
     public void testRefFails()
@@ -159,12 +194,25 @@ public class CalcProgramBuilderTest
 
         CalcReg outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         CalcProgramBuilder.move.add(builder, outReg, longConst1);
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         final String expected =
-            "O s4;" + "C s4, vc,22, vc,24;"
+            "O s4;"
+            + "C s4, vc,22, vc,24;"
             + "V 100, 0x48656C6C6F20776F726C64, 0x48656C6C6F20776F726C6473;"
-            + "T;" + "MOVE O0, C0;";
+            + "T;"
+            + "MOVE O0, C0;";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        final String expected2 =
+            "O s4;"
+            + "C s4;"
+            + "V 100;"
+            + "T;"
+            + "MOVE O0, C0;";
+        TestUtil.assertEqualsVerbose(expected2, program2);
+        TestUtil.assertEqualsVerbose("{}", usedInputFields.toString());
     }
 
     public void testInconstentTypes()
@@ -180,14 +228,19 @@ public class CalcProgramBuilderTest
         CalcReg const1 = builder.newInt4Literal(3);
         CalcReg const2 = builder.newInt4Literal(5);
         new CalcProgramBuilder.ExtInstrDef("SUBSTR", 4).add(
-            builder,
-            new CalcReg[] { out0, const0, const1, const2 });
-        final String program = builder.getProgram();
+            builder, out0, const0, const1, const2);
+        final String program = builder.getProgram(null);
         final String expected =
-            "O vc,10;" + "C vc,22, s4, s4;"
-            + "V 0x48656C6C6F20776F726C64, 3, 5;" + "T;"
+            "O vc,10;"
+            + "C vc,22, s4, s4;"
+            + "V 0x48656C6C6F20776F726C64, 3, 5;"
+            + "T;"
             + "CALL 'SUBSTR(O0, C0, C1, C2);";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        TestUtil.assertEqualsVerbose(expected, program2);
     }
 
     public void testJmpToNoWhere()
@@ -236,7 +289,7 @@ public class CalcProgramBuilderTest
         builder.addLabelJumpTrue("label$0", out0);
         CalcProgramBuilder.jumpFalseInstruction.add(
             builder,
-            new CalcProgramBuilder.Line("label$1"),
+            builder.newLine("label$1"),
             out0);
         builder.addLabel("label$0");
         builder.addLabelJumpNull("label$1", out0);
@@ -244,12 +297,24 @@ public class CalcProgramBuilderTest
         builder.addLabel("label$1");
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
 
-        final String program = builder.getProgram();
+        final String program = builder.getProgram(null);
         String expected =
-            "O bo;" + "C bo, bo;" + "V 1, 0;" + "T;" + "AND O0, C0, C1;"
-            + "JMP @4;" + "JMPT @4, O0;" + "JMPF @6, O0;" + "JMPN @6, O0;"
-            + "JMPNN @6, O0;" + "AND O0, C0, C1;";
+            "O bo;"
+            + "C bo, bo;"
+            + "V 1, 0;"
+            + "T;"
+            + "AND O0, C0, C1;"
+            + "JMP @4;"
+            + "JMPT @4, O0;"
+            + "JMPF @6, O0;"
+            + "JMPN @6, O0;"
+            + "JMPNN @6, O0;"
+            + "AND O0, C0, C1;";
         TestUtil.assertEqualsVerbose(expected, program);
+
+        final BitSet usedInputFields = new BitSet();
+        final String program2 = builder.getProgram(usedInputFields);
+        TestUtil.assertEqualsVerbose(expected, program2);
     }
 
     public void testLabelJumpFails()
@@ -298,7 +363,7 @@ public class CalcProgramBuilderTest
         CalcReg const0 = builder.newInt4Literal(3);
         args =
             new CalcProgramBuilder.Operand[] {
-                new CalcProgramBuilder.Line(2),
+                builder.newLine(2),
                 const0
             };
         for (
@@ -317,33 +382,17 @@ public class CalcProgramBuilderTest
         }
 
         // Testing jumps with negative line nbr
-        CalcReg input0 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
-        CalcProgramBuilder.Operand [] args1 =
-        {
-            new CalcProgramBuilder.Line(-2)
-        };
-        CalcProgramBuilder.Operand [] args2 =
-        {
-            new CalcProgramBuilder.Line(-2),
-            input0
-        };
-        args = args1;
-        for (
-            CalcProgramBuilder.InstructionDef instr
-            : CalcProgramBuilder.allInstrDefs)
-        {
-            if (!(instr instanceof CalcProgramBuilder.JumpInstructionDef)) {
-                continue;
+        try {
+            CalcProgramBuilder.Line line = builder.newLine(-2);
+            fail("Expected exception, got  " + line);
+        } catch (Exception e) {
+            String actualMsg = e.getMessage() + "\n";
+            if (null != e.getCause()) {
+                actualMsg += e.getCause().getMessage();
             }
-            if (instr.regCount == 2) {
-                args = args2;
-            } else {
-                args = args1;
-            }
-            assertExceptionIsThrown(
-                instr,
-                args,
-                "(?s).*Line can not be negative. Value=-2.*");
+            assertTrue(
+                actualMsg.matches(
+                    "(?s).*Line can not be negative. Value=-2.*"));
         }
     }
 
@@ -667,31 +716,28 @@ public class CalcProgramBuilderTest
             }
             if (!actualMsg.matches(expectedMsg)) {
                 fail(
-                    "Unexpected message while invokig method "
-                    + instr.name + ". Actual:\n" + actualMsg
+                    "Unexpected message while invokig method " + instr.name
+                    + ". Actual:\n" + actualMsg
                     + "\n\nExpected:\n" + expectedMsg);
             }
         }
     }
 
-    void assertExceptionIsThrown(
-        String methodName,
-        Object [] args,
-        String expectedMsg)
-        throws Exception
-    {
-        Class [] params = new Class[args.length];
-        for (int i = 0; i < params.length; i++) {
-            params[i] = args[i].getClass();
-        }
-        Method method = builder.getClass().getMethod(methodName, params);
-        assertExceptionIsThrown(method, args, expectedMsg);
-    }
-
     void assertExceptionIsThrown(String expectedMsg)
     {
         try {
-            String program = builder.getProgram();
+            String program = builder.getProgram(null);
+            fail("Exception was not thrown for program=" + program);
+        } catch (Exception e) {
+            String actualMsg = e.getMessage();
+            if (!actualMsg.matches(expectedMsg)) {
+                fail(
+                    "Unexpected message. Actual:\n" + actualMsg
+                    + "\n\nExpected:\n" + expectedMsg);
+            }
+        }
+        try {
+            String program = builder.getProgram(new BitSet());
             fail("Exception was not thrown for program=" + program);
         } catch (Exception e) {
             String actualMsg = e.getMessage();

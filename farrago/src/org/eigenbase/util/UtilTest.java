@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2005-2009 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
@@ -546,6 +546,80 @@ public class UtilTest
         assertEquals("HEAP", Util.enumVal(MemoryType.class, "HEAP").name());
         assertNull(Util.enumVal(MemoryType.class, "heap"));
         assertNull(Util.enumVal(MemoryType.class, "nonexistent"));
+    }
+
+    /**
+     * Tests the method {@link Util#toIter(java.util.BitSet)}.
+     */
+    public void testToIterBitSet()
+    {
+        BitSet bitSet = new BitSet();
+
+        assertToIterBitSet("", bitSet);
+        bitSet.set(0);
+        assertToIterBitSet("0", bitSet);
+        bitSet.set(1);
+        assertToIterBitSet("0, 1", bitSet);
+        bitSet.clear();
+        bitSet.set(10);
+        assertToIterBitSet("10", bitSet);
+    }
+
+    /**
+     * Tests that iterating over a BitSet yields the expected string.
+     *
+     * @param expected Expected string
+     * @param bitSet Bit set
+     */
+    private void assertToIterBitSet(
+        final String expected, BitSet bitSet)
+    {
+        StringBuilder buf = new StringBuilder();
+        for (int i : Util.toIter(bitSet)) {
+            if (buf.length() > 0) {
+                buf.append(", ");
+            }
+            buf.append(Integer.toString(i));
+        }
+        assertEquals(expected, buf.toString());
+    }
+
+    /**
+     * Tests the method {@link Util#toList(java.util.BitSet)}.
+     */
+    public void testToListBitSet()
+    {
+        BitSet bitSet = new BitSet(10);
+        assertEquals(Util.toList(bitSet), Collections.<Integer>emptyList());
+        bitSet.set(5);
+        assertEquals(Util.toList(bitSet), Arrays.asList(5));
+        bitSet.set(3);
+        assertEquals(Util.toList(bitSet), Arrays.asList(3, 5));
+    }
+
+    /**
+     * Tests the method {@link Util#bitSetOf(int...)}.
+     */
+    public void testBitSetOf()
+    {
+        assertEquals(
+            Util.toList(Util.bitSetOf(0, 4, 2)), Arrays.asList(0, 2, 4));
+        assertEquals(
+            Util.toList(Util.bitSetOf()), Collections.<Integer>emptyList());
+    }
+
+    /**
+     * Tests the method {@link Util#bitSetBetween(int, int)}.
+     */
+    public void testBitSetBetween()
+    {
+        assertEquals(
+            Util.toList(Util.bitSetBetween(0, 4)), Arrays.asList(0, 1, 2, 3));
+        assertEquals(
+            Util.toList(Util.bitSetBetween(1, 4)), Arrays.asList(1, 2, 3));
+        assertEquals(
+            Util.toList(Util.bitSetBetween(2, 2)),
+            Collections.<Integer>emptyList());
     }
 
     /**

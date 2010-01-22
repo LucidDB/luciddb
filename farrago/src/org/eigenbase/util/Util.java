@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2002-2010 SQLstream, Inc.
 // Copyright (C) 2005-2009 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
@@ -2009,6 +2009,159 @@ public class Util
             mapClazzToMapNameToEnum.put(clazz, mapNameToEnum);
         }
         return mapNameToEnum.get(name);
+    }
+
+    /**
+     * Returns an iterable over the bits in a bitmap that are set to '1'.
+     *
+     * <p>This allows you to iterate over a bit set using a 'foreach' construct.
+     * For instance:
+     *
+     * <blockquote><code>
+     * BitSet bitSet;<br/>
+     * for (int i : Util.toIter(bitSet)) {<br/>
+     * &nbsp;&nbsp;print(i);<br/>
+     * }<br/></code></blockquote>
+     *
+     * @param bitSet Bit set
+     * @return Iterable
+     */
+    public static Iterable<Integer> toIter(final BitSet bitSet)
+    {
+        return new Iterable<Integer>()
+        {
+            public Iterator<Integer> iterator()
+            {
+                return new Iterator<Integer>()
+                {
+                    int i = bitSet.nextSetBit(0);
+
+                    public boolean hasNext()
+                    {
+                        return i >= 0;
+                    }
+
+                    public Integer next()
+                    {
+                        int prev = i;
+                        i = bitSet.nextSetBit(i + 1);
+                        return prev;
+                    }
+
+                    public void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+
+    /**
+     * Converts a bitset to a list.
+     *
+     * <p>The list is mutable, and future changes to the list do not affect the
+     * contents of the bit set.
+     *
+     * @param bitSet Bit set
+     * @return List of set bits
+     */
+    public static List<Integer> toList(final BitSet bitSet)
+    {
+        final List<Integer> list = new ArrayList<Integer>();
+        for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1))
+        {
+            list.add(i);
+        }
+        return list;
+    }
+
+    /**
+     * Converts a bitset to an array.
+     *
+     * @param bitSet Bit set
+     * @return List of set bits
+     */
+    public static Integer[] toArray(final BitSet bitSet)
+    {
+        final List<Integer> list = toList(bitSet);
+        return list.toArray(new Integer[list.size()]);
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(0, 3)} returns a bit set with bits {0, 3}
+     * set.
+     *
+     * @param bits Array of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(int... bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(new Integer[] {0, 3})} returns a bit set
+     * with bits {0, 3} set.
+     *
+     * @param bits Array of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(Integer[] bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(Arrays.asList(0, 3)) } returns a bit set
+     * with bits {0, 3} set.
+     *
+     * @param bits Collection of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(Collection<Integer> bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with bits from {@code fromIndex} (inclusive) to
+     * specified {@code toIndex} (exclusive) set to {@code true}.
+     *
+     * <p>For example, {@code bitSetBetween(0, 3)} returns a bit set with bits
+     * {0, 1, 2} set.
+     *
+     * @param fromIndex Index of the first bit to be set.
+     * @param toIndex   Index after the last bit to be set.
+     * @return Bit set
+     */
+    public static BitSet bitSetBetween(int fromIndex, int toIndex)
+    {
+        final BitSet bitSet = new BitSet();
+        if (toIndex > fromIndex) {
+            // Avoid http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222207
+            // "BitSet internal invariants may be violated"
+            bitSet.set(fromIndex, toIndex);
+        }
+        return bitSet;
     }
 
     //~ Inner Classes ----------------------------------------------------------
