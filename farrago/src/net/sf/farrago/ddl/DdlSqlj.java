@@ -57,7 +57,11 @@ public abstract class DdlSqlj
         jar = jar.trim();
         SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
         sql.append("CREATE JAR ");
-        sql.append(jar); // REVIEW: should be sql.identifier(jar)?
+        // REVIEW: We can't use sql.identifier(jar), because
+        // the jar argument to install_jar is already quoted
+        // if needed.  But is there some sanitization we need
+        // to do, or is no SQL injection attack possible?
+        sql.append(jar);
         sql.append(" library ");
         sql.literal(url);
         sql.append(" options(");
@@ -96,7 +100,9 @@ public abstract class DdlSqlj
         }
         SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
         sql.append("DROP JAR ");
-        sql.append(jar); // REVIEW: should be sql.identifier(jar)?
+        // REVIEW: see comments in install_jar regarding possible
+        // sanitization needed
+        sql.append(jar);
         sql.append(" options (");
         sql.append(undeploy);
         sql.append(") RESTRICT");
