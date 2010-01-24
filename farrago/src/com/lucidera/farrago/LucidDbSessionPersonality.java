@@ -20,7 +20,6 @@
 */
 package com.lucidera.farrago;
 
-import com.lucidera.farrago.fennel.*;
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;

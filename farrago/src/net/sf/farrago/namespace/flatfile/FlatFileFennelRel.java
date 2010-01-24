@@ -54,7 +54,7 @@ public class FlatFileFennelRel
 
     // max length of text for a row when signalling an error
     // NOTE: keep this consistent with the Fennel file
-    //   fennel/lucidera/flatfile/FlatFileExecStreamImpl.cpp
+    //   fennel/flatfile/FlatFileExecStreamImpl.cpp
     public static final int MAX_ROW_ERROR_TEXT_WIDTH = 4000;
 
     //~ Instance fields --------------------------------------------------------

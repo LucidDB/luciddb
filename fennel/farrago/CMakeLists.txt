@@ -29,6 +29,7 @@ target_link_libraries(
   farrago
   ${PREVENT_UNDEFINED}
   ${STD_LIBS}
+  fennel_lcs
   fennel_calculator
   fennel_hashexe
   fennel_flatfile

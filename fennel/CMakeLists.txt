@@ -289,29 +289,6 @@ else()
 endif()
 endmacro()
 
-macro(generate_subdir_obj_list subdir dir)
-  string(TOUPPER ${dir} DIR_UPPER)
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
-  if (CMAKE_CONFIGURATION_TYPES)
-    set(${DIR_UPPER}_OBJ_DIR
-      ${CMAKE_BINARY_DIR}/${subdir}/${dir}/${dir}.dir/${CMAKE_CFG_INTDIR}/)
-  else ()
-    set(${DIR_UPPER}_OBJ_DIR
-      ${CMAKE_BINARY_DIR}/${subdir}/${dir}${CMAKE_FILES_DIRECTORY}/${dir}.dir/)
-  endif ()
-  get_target_property(${DIR_UPPER}_SOURCES ${dir} SOURCES)
-  set(${DIR_UPPER}_OBJ_LIST ${${DIR_UPPER}_SOURCES})
-  add_suffix(${DIR_UPPER}_OBJ_LIST ${CMAKE_C_OUTPUT_EXTENSION})
-  add_prefix(${${DIR_UPPER}_OBJ_DIR} ${DIR_UPPER}_OBJ_LIST)
-  file(MAKE_DIRECTORY ${${DIR_UPPER}_OBJ_DIR})
-  foreach(file ${${DIR_UPPER}_OBJ_LIST})
-    execute_process(COMMAND ${CMAKE_COMMAND} -E touch ${file})
-  endforeach(file)
-else()
-  set(${DIR_UPPER}_LIB ${dir})
-endif()
-endmacro()
-
 add_subdirectory(common)
 generate_obj_list(common)
 
@@ -357,17 +334,22 @@ generate_obj_list(flatfile)
 add_subdirectory(sorter)
 generate_obj_list(sorter)
 
+add_subdirectory(lcs)
+generate_obj_list(lcs)
+
+add_subdirectory(lbm)
+generate_obj_list(lbm)
+
 add_subdirectory(util)
 
 add_subdirectory(libfennel)
 add_subdirectory(test)
 add_subdirectory(calctest)
+add_subdirectory(ldbtest)
 
 if (with_farrago)
 add_subdirectory(farrago)
 endif()
-
-add_subdirectory(lucidera)
 
 add_custom_target(checkPreambles build/checkPreambleFennel.sh)
 
