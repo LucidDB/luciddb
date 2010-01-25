@@ -16,14 +16,7 @@ farragoDir=$(dirname $0)/../../farrago
 # the util build, not part of the main Eigenbase build.
 # resgenDir=$(dirname $0)/../../util/resgen
 
-# Check preambles of all Java files. Which copyright notices are
-# required depends upon the zone of the file:
-# * LucidEra: Files under farrago/src/com/lucidera must have
-#   Eigenbase and LucidEra copyright notices.
-# * SQLstream: Files under farrago/src/com/disruptivetech must
-#   have Eigenbase and SQLstream copyright notices.
-# * Eigenbase: All other files must have Eigenbase, LucidEra and
-#   SQLstream copyright notices.
+# Check preambles of all Java files.
 
 # NOTE jvs 16-Nov-2005:  I removed $resgenDir/src from the find directory
 # list below for the reasons given above.
@@ -51,12 +44,6 @@ do
     zone=eigenbase
     component=farrago
     case "$filename" in
-    */farrago/src/com/lucidera/*) 
-        zone=lucidera
-        ;;
-    */farrago/src/com/disruptivetech/*) 
-        zone=disruptivetech
-        ;;
     */farrago/src/org/eigenbase/util/property/*) 
         component=farrago-eigenbase-lgpl
         ;;

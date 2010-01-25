@@ -23,8 +23,8 @@ package com.lucidera.luciddb.test;
 import net.sf.farrago.server.*;
 import net.sf.farrago.util.*;
 
-import com.lucidera.jdbc.*;
-import com.lucidera.farrago.*;
+import org.luciddb.jdbc.*;
+import org.luciddb.session.*;
 
 import org.eigenbase.util.property.*;
 

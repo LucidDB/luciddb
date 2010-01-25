@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.lucidera.opt.*;
-
 import java.util.*;
 
 import net.sf.farrago.fem.config.*;
