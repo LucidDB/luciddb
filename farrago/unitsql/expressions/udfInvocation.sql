@@ -75,7 +75,7 @@ returns varchar(128)
 language java
 no sql
 called on null input
-external name 
+external name
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 
 create function null_preserving_int_to_hex_string(i int)
@@ -83,10 +83,10 @@ returns varchar(128)
 language java
 no sql
 returns null on null input
-external name 
+external name
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 
-create function decimal_abs(n decimal(6, 4)) 
+create function decimal_abs(n decimal(6, 4))
 returns decimal(6, 4)
 language java
 no sql
@@ -204,6 +204,16 @@ no sql
 external name
 'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
 
+
+-- The identity UDX copies its input to its output.
+-- Its name is "self" because "identity" is a SQL reserved word.
+create function self(c cursor)
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+
 -- UDX with input
 create function stringify(c cursor, delimiter varchar(128))
 returns table(v varchar(65535))
@@ -306,21 +316,21 @@ external name
 
 create view ramp_view as select * from table(ramp(3));
 
-create view stringified_view as 
-select * 
+create view stringified_view as
+select *
 from table(stringify(
     cursor(select * from sales.depts where deptno=20 order by 1),
     '|'));
 
 create view stringifiedColumns_view as
-select * 
+select *
 from table(stringifyColumns(
     cursor(select * from sales.emps where deptno=20 order by 1),
     row(name, empno, gender),
     '|'));
 
 create view combineStringifiedColumns_view as
-select * 
+select *
 from table(combineStringifyColumns(
     cursor(select * from sales.emps where deptno=20 order by 1),
     row(name, empno, gender),
@@ -329,7 +339,7 @@ from table(combineStringifyColumns(
     '|'));
 
 -- should fail : empno doesn't exist
-select * 
+select *
 from table(stringifyColumns(
     cursor(select * from sales.depts where deptno=20 order by 1),
     row(name, empno),
@@ -343,7 +353,7 @@ from table(stringifyColumns(
     '|'));
 
 -- should fail : wrong number of arguments
-select * 
+select *
 from table(stringifyColumns(
     cursor(select * from sales.emps where deptno=20 order by 1),
     row(name, empno, gender)));
@@ -618,7 +628,7 @@ select * from stringifiedColumns_view;
 select * from combineStringifiedColumns_view;
 
 -- udx invocation with input auto-propagated to output
-select * 
+select *
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
 

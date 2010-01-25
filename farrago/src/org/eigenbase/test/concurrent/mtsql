@@ -1,8 +1,8 @@
 #! /bin/bash
 # $Id$
 # Command-line tool to run an mtsql script.
-# Usage: mtlsql [-vg] -s URL -d DRIVER [-n USER] [-p PASSWORD] SCRIPT [SCRIPT]...
-#   -s URL : sets the server connected to; argument is a jdbc URL. Required.
+# Usage: mtlsql [-vg] -u URL -d DRIVER [-n USER] [-p PASSWORD] SCRIPT [SCRIPT]...
+#   -u URL : sets the server connected to; argument is a jdbc URL. Required.
 #   -d DRIVER : specifies the jdbc driver class. Required.
 #   -v : print sql results to stdout
 #   -g : print some trace messages to stderr

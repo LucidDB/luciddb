@@ -28,6 +28,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -779,6 +780,13 @@ loop:
         int index = project.index;
         while (true) {
             RexNode expr = exprs[index];
+            if (expr instanceof RexCall
+                && ((RexCall) expr).getOperator()
+                == SqlStdOperatorTable.inFennelFunc)
+            {
+                // drill through identity function
+                expr = ((RexCall) expr).getOperands()[0];
+            }
             if (expr instanceof RexLocalRef) {
                 index = ((RexLocalRef) expr).index;
             } else if (expr instanceof RexInputRef) {

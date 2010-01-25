@@ -10,12 +10,15 @@
 -- end of setup
 
 -- thread reader
-hostname
-teapot
 pwd
 /work/dt/src/stab/farrago/src/org/eigenbase/test/concurrent
 echo mtsql*
 mtsql mtsql.loggers
+hostname; whoami
+teapot
+mb
+head -1 < package.html | cat | cat > foo; cat foo
+<html>
 $N is 7 and $S is bagel bag.
 The $HOSTNAME is teapot.
 The $HOSTNAME is teapot, teapot, "teapot", "teapot", 'teapot', 'teapot'.

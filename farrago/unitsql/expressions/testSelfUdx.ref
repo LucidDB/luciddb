@@ -1,0 +1,33 @@
+> create or replace schema udftest;
+> set schema 'udftest';
+> set path 'udftest';
+> 
+> -- The identity UDX copies its input to its output.
+> -- Its name is "self" because "identity" is a SQL reserved word.
+> create function self(c cursor)
+> returns table(c.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+> 
+> explain plan for
+> select * from table(self(cursor(select * from sales.depts)));
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                      column0                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FarragoJavaUdxRel(invocation=[CAST(SELF(CAST($0):CURSOR)):RecordType(INTEGER DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])  |
+|   FennelToIteratorConverter                                                                                                                                                       |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> select * from table(self(cursor(select * from sales.depts)));
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+> 
+> !quit

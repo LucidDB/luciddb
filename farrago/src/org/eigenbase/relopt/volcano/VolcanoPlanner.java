@@ -1026,7 +1026,7 @@ SUBSET_LOOP:
                 // Remove rel from its subset. (This may leave the subset
                 // empty, but if so, that will be dealt with when the sets
                 // get merged.)
-                final RelSubset subset = mapRel2Subset.remove(rel);
+                final RelSubset subset = mapRel2Subset.put(rel, equivRelSubset);
                 assert subset != null;
                 boolean existed = subset.rels.remove(rel);
                 assert existed : "rel was not known to its subset";

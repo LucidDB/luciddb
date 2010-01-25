@@ -23,9 +23,10 @@
 @end
 
 @thread reader
-  @shell hostname
   @shell pwd
   @shell echo mtsql*
+  @shell hostname; whoami
+  @shell head -1 < package.html | cat | cat > foo; cat foo
   @echo $$N is $N and $$S is $S.
   @echo The $$HOSTNAME is $HOSTNAME.
   @echo The $$HOSTNAME is $HOSTNAME, ${HOSTNAME}, "$HOSTNAME", "${HOSTNAME}", '$HOSTNAME', '${HOSTNAME}'.

@@ -76,7 +76,7 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 > language java
 > no sql
 > called on null input
-> external name 
+> external name
 > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 > 
 > create function null_preserving_int_to_hex_string(i int)
@@ -84,10 +84,10 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 > language java
 > no sql
 > returns null on null input
-> external name 
+> external name
 > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 > 
-> create function decimal_abs(n decimal(6, 4)) 
+> create function decimal_abs(n decimal(6, 4))
 > returns decimal(6, 4)
 > language java
 > no sql
@@ -206,6 +206,16 @@ Error: Object definition contains recursive cycle (state=,code=0)
 > external name
 > 'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
 > 
+> 
+> -- The identity UDX copies its input to its output.
+> -- Its name is "self" because "identity" is a SQL reserved word.
+> create function self(c cursor)
+> returns table(c.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+> 
 > -- UDX with input
 > create function stringify(c cursor, delimiter varchar(128))
 > returns table(v varchar(65535))
@@ -308,21 +318,21 @@ Error: Object definition contains recursive cycle (state=,code=0)
 > 
 > create view ramp_view as select * from table(ramp(3));
 > 
-> create view stringified_view as 
-> select * 
+> create view stringified_view as
+> select *
 > from table(stringify(
 >     cursor(select * from sales.depts where deptno=20 order by 1),
 >     '|'));
 > 
 > create view stringifiedColumns_view as
-> select * 
+> select *
 > from table(stringifyColumns(
 >     cursor(select * from sales.emps where deptno=20 order by 1),
 >     row(name, empno, gender),
 >     '|'));
 > 
 > create view combineStringifiedColumns_view as
-> select * 
+> select *
 > from table(combineStringifyColumns(
 >     cursor(select * from sales.emps where deptno=20 order by 1),
 >     row(name, empno, gender),
@@ -331,7 +341,7 @@ Error: Object definition contains recursive cycle (state=,code=0)
 >     '|'));
 > 
 > -- should fail : empno doesn't exist
-> select * 
+> select *
 > from table(stringifyColumns(
 >     cursor(select * from sales.depts where deptno=20 order by 1),
 >     row(name, empno),
@@ -347,7 +357,7 @@ Error: From line 4, column 15 to line 4, column 19: Column 'EMPNO' not found in 
 Error: From line 4, column 9 to line 4, column 12: Column 'NAME' not found in any table (state=,code=0)
 > 
 > -- should fail : wrong number of arguments
-> select * 
+> select *
 > from table(stringifyColumns(
 >     cursor(select * from sales.emps where deptno=20 order by 1),
 >     row(name, empno, gender)));
@@ -975,7 +985,7 @@ Error: From line 1, column 8 to line 1, column 35: No match found for function s
 +--------------+
 > 
 > -- udx invocation with input auto-propagated to output
-> select * 
+> select *
 > from table(digest(cursor(select * from sales.depts)))
 > order by row_digest;
 +---------+------------+--------------+

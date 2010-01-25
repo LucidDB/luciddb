@@ -290,6 +290,28 @@ public abstract class FarragoTestUDR
         ramp(n.intValue(), resultInserter);
     }
 
+    /** The identity UDX: copies any input to its output.
+     * Named "self" as "identity" is a SQL reserved word.
+     */
+    public static void self(
+        ResultSet inputSet,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        int nInput = inputSet.getMetaData().getColumnCount();
+        int nOutput = resultInserter.getParameterMetaData().getParameterCount();
+        assert (nOutput == nInput)
+            : describeInputOutput(inputSet, resultInserter);
+
+        while (inputSet.next()) {
+            for (int i = 0; i < nInput; i++) {
+                Object value = inputSet.getObject(i + 1);
+                resultInserter.setObject(i + 1, value);
+            }
+            resultInserter.executeUpdate();
+        }
+    }
+
     // NOTE jvs 17-Nov-2008:  This one is kind of dangerous,
     // because it can cancel another statement executed after
     // the one which actually invoked the UDX.  You can avoid this
