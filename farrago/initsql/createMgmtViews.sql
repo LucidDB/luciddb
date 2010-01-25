@@ -1072,5 +1072,5 @@ external name
 
 -- variation of LucidDB session personality but with index only scans enabled
 create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin 
-library 'class com.lucidera.farrago.LucidDbIndexOnlySessionFactory' 
+library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory' 
 options(0);

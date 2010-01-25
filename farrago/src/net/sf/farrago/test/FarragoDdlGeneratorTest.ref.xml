@@ -134,7 +134,7 @@ select empno, name from temps;
 ]]>
         </Resource>
         <Resource name="output-hibernate">
-            <![CDATA[CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class com.lucidera.lcs.LcsDataWrapper'
+            <![CDATA[CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class org.luciddb.lcs.LcsDataWrapper'
 LANGUAGE JAVA;
 
 CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
@@ -456,8 +456,8 @@ select decrypt_public_key(v3.y) FROM v3, v;
         </Resource>
     </TestCase>
     <TestCase name="testCascade">
-    	<Resource name="output">
-    		<![CDATA[DROP SCHEMA "CASCADE_TEST" CASCADE
+        <Resource name="output">
+            <![CDATA[DROP SCHEMA "CASCADE_TEST" CASCADE
 
 DROP SCHEMA "CASCADE_TEST"
 
@@ -470,6 +470,6 @@ DROP VIEW "BAR" CASCADE
 DROP VIEW "BAR"
 
 ]]>
-    	</Resource>
+        </Resource>
     </TestCase>
 </Root>

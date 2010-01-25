@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// Firewater is a scaleout column store DBMS.
+// Copyright (C) 2009-2009 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<!-- Firewater ant build script -->
+
+<project name="firewater" basedir="." default="jar">
+  <dirname property="firewater.dir" file="${ant.file}" />
+
+  <!-- Definitions for Farrago build properties and macros -->
+  <import file="../farrago/buildMacros.xml"/>
+
+  <!-- Specialization definitions required by buildPlugin.xml -->
+
+  <property name="plugin.dir" location="${firewater.dir}"/>
+  <property name="plugin.jar.basename" value="firewater"/>
+  <property name="plugin.model.name" value="Fwm"/>
+  <property name="plugin.model.basename" value="Firewater"/>
+  <property name="plugin.model.prefix" value="Fwm"/>
+  <property name="plugin.model.package" value="net.sf.farrago.fwm"/>
+  <property name="plugin.resource.package" value="net/sf/firewater/resource"/>
+  <property name="plugin.resource.basename" value="FirewaterResource"/>
+  <!-- property name="plugin.manifest.attr.name" 
+    value="SessionFactoryClassName"/ -->
+  <property name="plugin.factory.class" 
+    value="net.sf.firewater.FirewaterSessionFactory"/>
+  <property name="plugin.parser.impl.package" 
+    value="net/sf/firewater/parserimpl"/>
+  <property name="plugin.parser.jj" 
+    value="net/sf/firewater/FirewaterParser.jj"/>
+
+  <!-- Classpath for plugin dependencies -->
+  <path id="plugin.3p.classpath">
+    <pathelement location="${farrago.dir}/plugin/FarragoMedJdbc.jar"/>
+    <pathelement location="../luciddb/classes"/>
+  </path>
+  <property name="plugin.3p.classpath" refid="plugin.3p.classpath"/>
+
+  <!-- Standard definitions for Farrago plugin build -->
+  <import file="../farrago/plugin/buildPlugin.xml"/>
+
+  <property name="plugin.resource.dir" 
+    location="${plugin.src.dir}/firewater/resource"/>
+
+  <property name="testlog.dir" location="${firewater.dir}/testlog"/>
+
+  <property name="test.sessionfactory" value="./plugin/firewater.jar"/>
+
+  <!-- a fileset of all SQL unit tests -->
+  <fileset dir="${firewater.dir}/unitsql" id="fileset.unitsql">
+    <include name="**/*.sql"/>
+  </fileset>
+  <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
+    pathsep="${line.separator}" dirsep="${file.separator}" />
+
+  <!-- a fileset of all files for which tags should be built -->
+  <fileset dir="${basedir}" id="fileset.taggable">
+    <include name="catalog/java/**/*.java"/>
+    <include name="src/**/*.jj"/>
+    <include name="src/**/*.java"/>
+    <include name="src/**/package.html"/>
+    <exclude name="src/**/parserimpl/*"/>
+  </fileset>
+
+  <target name="compile" depends="plugin.buildResources,plugin.buildParser">
+    <mkdir dir="${plugin.classes.dir}"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${plugin.src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.classpath">
+      <include name="**/*.java" />
+    </farrago.javaCompile>
+  </target>
+
+  <target name="jar" depends="compile, copyProperties, plugin.buildJar">
+    <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF" mode="update">
+      <attribute
+        name="SessionFactoryClassName"
+        value="net.sf.firewater.FirewaterSessionFactory"/>
+      <attribute
+        name="DataWrapperClassName"
+        value="net.sf.firewater.FirewaterDataWrapper"/>
+    </manifest>
+    <jar destfile="${plugin.jar.file}" compress="true" update="true"
+      manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
+    </jar>
+    <mkdir dir="testclasses"/>
+    <copy todir="testclasses">
+      <fileset dir="classes" includes="**/*Test*.class"/>
+    </copy>
+    <jar jarfile="plugin/firewater-jdbc.jar"
+      filesetmanifest="skip">
+      <zipgroupfileset dir="${vjdbc.dir}/lib">
+        <include name="vjdbc.jar"/>
+        <include name="commons-logging-1.1.jar"/>
+      </zipgroupfileset>
+      <fileset dir="classes">
+        <include name="FarragoRelease.properties"/>
+        <include name="net/sf/firewater/jdbc/**/*.class"/>
+      </fileset>
+      <fileset dir="${farrago.classes.dir}">
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="copyProperties">
+    <copy todir="classes" overwrite="true">
+      <fileset dir="catalog/xmi" includes="FarragoRelease.properties"/>
+    </copy>
+  </target>
+
+  <target name="createPlugin">
+    <antcall target="clean"/>
+    <antcall target="plugin.buildModel"/>
+    <antcall target="jar"/>
+  </target>
+
+  <target name="clean" depends="plugin.clean">
+  </target>
+
+  <target name="junit" depends="test">
+  </target>
+
+  <target name="test">
+    <farrago.runTests fork="yes">
+      <testfileset>
+        <fileset dir="${plugin.classes.dir}">
+          <include name="**/*Test.class"/>
+        </fileset>
+      </testfileset>
+      <junitargs>
+        <classpath>
+          <pathelement path="plugin/firewater-jdbc.jar"/>
+          <pathelement path="${farrago.sqlline.classpath}"/>
+          <pathelement path="${plugin.3p.classpath}"/>
+          <pathelement path="${farrago.run.classpath}"/>
+          <pathelement path="testclasses"/>
+        </classpath>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <sysproperty key="net.sf.farrago.home"
+          file="."/>
+        <sysproperty key="net.sf.farrago.catalog"
+          file="./catalog/data"/>
+        <sysproperty key="net.sf.farrago.test.jdbcDriverClass"
+          value="net.sf.firewater.jdbc.FirewaterLocalDriver"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          value="${fileset.unitsql}"/>
+        <sysproperty key="net.sf.farrago.defaultSessionFactoryLibraryName"
+          value="${test.sessionfactory}"/>
+        <sysproperty key="java.util.logging.config.file"
+          value="./trace/FirewaterTrace.properties"/>
+      </junitargs>
+    </farrago.runTests>
+  </target>
+  
+  <target name="backupCatalog">
+    <farrago.backupCatalog catalogDir="./catalog/data" 
+      backupDir="./catalog/backup"/>
+  </target>
+  
+  <target name="restoreCatalog">
+    <farrago.restoreCatalog catalogDir="./catalog/data" 
+      backupDir="./catalog/backup"/>
+  </target>
+
+  <target name="initFiles">
+    <!-- TODO:  factor up from luciddb copyFarragoCatalog -->
+    <delete quiet="true">
+      <fileset dir="./catalog/data"/>
+    </delete>
+    <mkdir dir="./catalog/data"/>
+    <copy 
+      todir="./catalog/data"
+      file="../luciddb/catalog/ReposStorage.properties"
+      overwrite="true" />
+    <copy todir="./catalog/data">
+      <fileset dir="../luciddb/catalog/backup" includes="*"/>
+    </copy>
+    <copy todir="./plugin">
+      <fileset dir="../farrago/plugin" includes="FarragoMedJdbc.jar"/>
+    </copy>
+    <farrago.configureTrace 
+      propFile="./trace/FirewaterTrace.properties"
+      logFile="./trace/FirewaterTrace.log"
+      />
+  </target>
+
+  <!-- generate Emacs tags -->
+  <target name="etags">
+    <farrago.createEmacsTags filesetPropertyName="fileset.taggable"/>
+  </target>
+
+</project>

@@ -191,8 +191,6 @@ if $dist_fennel; then
     cd $FENNEL_DIR
     cp ${CP_ARCHIVE_FLAG} libfennel/$SO_PATTERN $LIB_DIR/fennel
     cp ${CP_ARCHIVE_FLAG} farrago/$SO_PATTERN $LIB_DIR/fennel
-    cp ${CP_ARCHIVE_FLAG} lucidera/libfennel_lu/$SO_PATTERN $LIB_DIR/fennel
-    cp ${CP_ARCHIVE_FLAG} lucidera/farrago/$SO_PATTERN $LIB_DIR/fennel
 
     # if possible, strip rpath info
     if [ $cygwin = "false" ]; then

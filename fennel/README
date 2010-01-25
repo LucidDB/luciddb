@@ -80,8 +80,15 @@ flatfile:  flatfile reader
 
 hashexe:  hash join/aggregation
 
+lcs:  LucidDB column store
+
+lbm:  LucidDB bitmap indexes
+
 test:  unit tests
+
+calctest:  unit tests for calculator
+
+ldbctest:  unit tests for lcs/lbm
 
 farrago:  JNI integration for the companion Farrago project
 
-lucidera:  column store and bitmap indexes contributed by LucidEra, Inc.

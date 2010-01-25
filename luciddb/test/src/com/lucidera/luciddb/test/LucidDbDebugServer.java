@@ -72,7 +72,7 @@ public class LucidDbDebugServer
         
         System.setProperty(
             FarragoProperties.instance().defaultSessionFactoryLibraryName
-                .getPath(), "class:com.lucidera.farrago.LucidDbSessionFactory");
+                .getPath(), "class:org.luciddb.session.LucidDbSessionFactory");
     }
 }
 

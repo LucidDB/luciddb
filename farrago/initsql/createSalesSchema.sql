@@ -88,6 +88,6 @@ options(0);
 
 -- likewise for LucidDB session personality
 create jar sys_boot.sys_boot.luciddb_plugin 
-library 'class com.lucidera.farrago.LucidDbSessionFactory' 
+library 'class org.luciddb.session.LucidDbSessionFactory' 
 options(0);
 

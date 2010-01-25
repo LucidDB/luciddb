@@ -214,3 +214,19 @@ ${LINK_WHOLE_ARCHIVE}
 ${HASHEXE_LIB}
 ${LINK_NO_WHOLE_ARCHIVE}
 ${HASHEXE_DEPS})
+
+set(LCS_DEPS fennel_ftrs ${FTRS_DEPS})
+
+add_library(fennel_lcs SHARED ${fennel_SOURCE_DIR}/dummy.cpp
+${LCS_OBJ_LIST}
+${LBM_OBJ_LIST})
+target_link_libraries(
+fennel_lcs
+${PREVENT_UNDEFINED}
+${STD_LIBS}
+${LINK_WHOLE_ARCHIVE}
+${LCS_LIB}
+${LBM_LIB}
+${LINK_NO_WHOLE_ARCHIVE}
+${LCS_DEPS}
+)

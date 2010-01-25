@@ -48,6 +48,9 @@ class TupleProjection;
 class StoredTypeDescriptorFactory;
 class SingleOutputExecStreamParams;
 class SortedAggExecStreamParams;
+class LcsRowScanBaseExecStreamParams;
+class LcsClusterAppendExecStreamParams;
+class LbmBitOpExecStreamParams;
 
 /**
  * ExecStreamFactory builds an ExecStreamEmbryo from the
@@ -131,8 +134,28 @@ protected:
     virtual void visit(ProxyFlatFileTupleStreamDef &streamDef);
     virtual void visit(ProxyLhxJoinStreamDef &streamDef);
     virtual void visit(ProxyLhxAggStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterReplaceStreamDef &streamDef);
+    virtual void visit(ProxyLcsRowScanStreamDef &streamDef);
+    virtual void visit(ProxyLbmGeneratorStreamDef &streamDef);
+    virtual void visit(ProxyLbmSplicerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSearchStreamDef &streamDef);
+    virtual void visit(ProxyLbmChopperStreamDef &streamDef);
+    virtual void visit(ProxyLbmUnionStreamDef &streamDef);
+    virtual void visit(ProxyLbmIntersectStreamDef &streamDef);
+    virtual void visit(ProxyLbmMinusStreamDef &streamDef);
+    virtual void visit(ProxyLbmNormalizerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSortedAggStreamDef &streamDef);
 
     void implementSortWithBTree(ProxySortingStreamDef &streamDef);
+    void readClusterScan(
+        ProxyLcsRowScanStreamDef &streamDef,
+        LcsRowScanBaseExecStreamParams &params);
+    void readClusterAppendParams(
+        ProxyLcsClusterAppendStreamDef &streamDef,
+        LcsClusterAppendExecStreamParams &params);
+    void readBitOpDynamicParams(
+        ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params);
 
 public:
     explicit ExecStreamFactory(

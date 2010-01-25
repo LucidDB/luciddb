@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.lucidera.farrago.fennel.*;
-
 import java.io.*;
 
 import java.sql.*;
@@ -172,7 +170,10 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoStreamFactoryProvider
     public void registerStreamFactories(long hStreamGraph)
     {
-        LucidEraJni.registerStreamFactory(hStreamGraph);
+        // we used to register C++ plugins for LucidEra and
+        // SQLstream here, but now they are part of the
+        // main fennel::ExecStreamFactory, so nothing to do
+        // for the default personality.
     }
 
     // implement FarragoSessionPersonality

@@ -52,7 +52,7 @@ language java;
 
 -- create wrapper for access to local LucidDB column-store data
 create or replace local data wrapper sys_column_store
-library 'class com.lucidera.lcs.LcsDataWrapper'
+library 'class org.luciddb.lcs.LcsDataWrapper'
 language java;
 
 -- create wrapper for access to local mock data

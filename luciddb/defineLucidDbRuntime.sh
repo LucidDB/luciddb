@@ -2,7 +2,7 @@
 # This script is meant to be sourced from other scripts, not
 # executed directly.
 
-SESSION_FACTORY="class:com.lucidera.farrago.LucidDbSessionFactory"
+SESSION_FACTORY="class:org.luciddb.session.LucidDbSessionFactory"
 
 SERVER_JAVA_ARGS="-Xms512m -Xmx512m -ea -esa \
   -cp classes:`cat ../farrago/classpath.gen` \

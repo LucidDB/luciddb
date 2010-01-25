@@ -20,7 +20,7 @@
 */
 package com.lucidera.luciddb.test;
 
-import com.lucidera.jdbc.*;
+import org.luciddb.jdbc.*;
 import java.io.*;
 import java.sql.*;
 import java.util.regex.*;
@@ -56,9 +56,9 @@ public class SqlTest extends DiffTestCase {
 
         // set luciddb-specific properties
         System.setProperty("net.sf.farrago.defaultSessionFactoryLibraryName",
-            "class:com.lucidera.farrago.LucidDbSessionFactory");
+            "class:org.luciddb.session.LucidDbSessionFactory");
         System.setProperty("net.sf.farrago.test.jdbcDriverClass",
-            "com.lucidera.jdbc.LucidDbLocalDriver");
+            "org.luciddb.jdbc.LucidDbLocalDriver");
 
         String eigenhome = System.getenv("EIGEN_HOME");
         System.setProperty("java.util.logging.config.file",

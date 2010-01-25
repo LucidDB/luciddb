@@ -20,7 +20,7 @@
 */
 package com.lucidera.luciddb.test.bh;
 
-import com.lucidera.jdbc.*;
+import org.luciddb.jdbc.*;
 import java.io.*;
 import java.util.regex.*;
 import net.sf.farrago.catalog.*;
@@ -58,9 +58,9 @@ public class SqlTest extends AutoTest {
 
         // set luciddb-specific properties
         System.setProperty("net.sf.farrago.defaultSessionFactoryLibraryName",
-            "class:com.lucidera.farrago.LucidDbSessionFactory");
+            "class:org.luciddb.session.LucidDbSessionFactory");
         System.setProperty("net.sf.farrago.test.jdbcDriverClass",
-            "com.lucidera.jdbc.LucidDbLocalDriver");
+            "org.luciddb.jdbc.LucidDbLocalDriver");
 
         Parameters param = tc.getParameters();
         // obtain sql-file parameter - required

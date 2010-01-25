@@ -37,7 +37,7 @@ FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
 }
 
 // NOTE: keep this consistent with the Farrago java file
-//   com.lucidera.farrago.namespace.flatfile.FlatFileFennelRel.java
+//   net.sf.farrago.namespace.flatfile.FlatFileFennelRel.java
 const uint FlatFileExecStreamImpl::MAX_ROW_ERROR_TEXT_WIDTH = 4000;
 
 void FlatFileExecStreamImpl::prepare(

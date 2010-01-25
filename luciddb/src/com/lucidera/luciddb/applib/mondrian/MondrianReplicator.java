@@ -25,6 +25,7 @@ import java.io.*;
 import java.sql.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.util.*;
 
 import org.xml.sax.*;
@@ -170,8 +171,8 @@ class MondrianReplicator implements ClosableAllocation
     private void replicateTable(String tableName)
         throws Exception
     {
-        SqlDialect dialect = SqlUtil.eigenbaseDialect;
-        
+        SqlDialect dialect = SqlDialect.EIGENBASE;
+
         String linkTableName = tableName + "_link";
         String sql =
             "CREATE FOREIGN TABLE "
@@ -273,8 +274,9 @@ class MondrianReplicator implements ClosableAllocation
         if (primaryKeyColumns.isEmpty()) {
             primaryKeyColumns = null;
         }
-        FarragoDdlGenerator ddlGen = new FarragoDdlGenerator(null);
-        StringBuilder sb = new StringBuilder();
+        FarragoDdlGenerator ddlGen =
+            new FarragoDdlGenerator(SqlDialect.EIGENBASE, null);
+        SqlBuilder sb = new SqlBuilder(SqlDialect.EIGENBASE);
         ddlGen.generateColumnsAndKeys(
             sb,
             Util.cast(foreignTable.getFeature(), CwmColumn.class),
