@@ -25,7 +25,7 @@
 
 <project name="farragoDistribution" basedir="." default="mustSpecify">
 
-  <import file="../buildMacros.xml"/>
+  <import file="./../buildMacros.xml"/>
 
   <!-- Load properties needed to derive release spec. -->
   <property file="FarragoRelease.properties"/>

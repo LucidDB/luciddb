@@ -62,6 +62,10 @@ fi
 set -x
 set -v
 
+# get the thirdparty ant
+cd ${luciddb_dir}/../farrago
+. ./farragoenv.sh `pwd`/../thirdparty
+
 if $without_farrago_build ; then
     echo "Skip Farrago Packaging ..."
 else
@@ -69,9 +73,6 @@ else
     /bin/bash -x ./distBuild.sh --without-init-build ${FARRAGO_DIST_FLAGS}
 fi
 
-# get the thirdparty ant
-cd ${luciddb_dir}/../farrago
-. farragoenv.sh `pwd`/../thirdparty
 
 cd ${luciddb_dir}
 ant dist
