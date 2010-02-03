@@ -33,6 +33,7 @@
     <orderEntry type="library" name="jgrapht" level="project" />
     <orderEntry type="library" name="commons-dbcp" level="project" />
     <orderEntry type="library" name="commons-pool" level="project" />
+    <orderEntry type="library" name="jetty" level="project" />
   </component>
 </module>
 
