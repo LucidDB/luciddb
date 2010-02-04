@@ -2640,6 +2640,21 @@ public class FarragoJdbcTest
         }
     }
 
+    protected void checkNegativeTimeouts(PreparedStatement preparedStmt)
+    {
+        // negative timeouts should throw
+        for (int i = 0; i >= -2; i--) {
+            try {
+                preparedStmt.setQueryTimeout(i);
+                assertTrue("negative timeout=" + i + " should throw", i >= 0);
+            } catch (SQLException e) {
+                assertContains(
+                    FarragoStatement.ERRMSG_REQ_NON_NEG,
+                    e.getMessage());
+            }
+        }
+    }
+
     /**
      * Tests setQueryTimeout.
      *
@@ -2662,17 +2677,7 @@ public class FarragoJdbcTest
                 Arrays.asList("San Francisco", null, "Vancouver", null));
         }
 
-        // negative timeouts should throw
-        for (int i = 0; i >= -2; i--) {
-            try {
-                preparedStmt.setQueryTimeout(i);
-                assertTrue("negative timeout=" + i + " should throw", i >= 0);
-            } catch (SQLException e) {
-                assertContains(
-                    FarragoStatement.ERRMSG_REQ_NON_NEG,
-                    e.getMessage());
-            }
-        }
+        checkNegativeTimeouts(preparedStmt);
 
         sql = "select empid from sales.emps where name=?";
         preparedStmt = connection.prepareStatement(sql);
