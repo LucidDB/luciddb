@@ -151,7 +151,7 @@ strSimilarEscapeA(
             } catch (boost::bad_expression badexp) {
                 // SQL2003 Part 2 Section 8.6 General Rule 2
                 // Data Exception - Invalid Regular Expression
-                throw "2201B";
+                throw SqlState::instance().code2201B();
             }
             // get context anew
             ctxP = static_cast<ExtRegExpContext*>(context.get());
