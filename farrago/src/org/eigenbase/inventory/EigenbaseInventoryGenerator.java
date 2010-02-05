@@ -42,8 +42,8 @@ import static com.sun.mirror.util.DeclarationVisitors.*;
 public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
 {
     // Process any set of annotations
-    private static final Collection<String> supportedAnnotations
-        = unmodifiableCollection(Arrays.asList("*"));
+    private static final Collection<String> supportedAnnotations =
+        unmodifiableCollection(Arrays.asList("*"));
 
     // No supported options
     private static final Collection<String> supportedOptions = emptySet();

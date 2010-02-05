@@ -57,11 +57,11 @@ class MedMqlDataServer
 
     public static final String PROP_UDX_SPECIFIC_NAME = "UDX_SPECIFIC_NAME";
 
-    public static final String DEFAULT_URL
-        = "http://api.freebase.com/api/service/mqlread";
+    public static final String DEFAULT_URL =
+        "http://api.freebase.com/api/service/mqlread";
 
-    public static final String DEFAULT_UDX_SPECIFIC_NAME
-        = "LOCALDB.METAWEB.MQL_QUERY";
+    public static final String DEFAULT_UDX_SPECIFIC_NAME =
+        "LOCALDB.METAWEB.MQL_QUERY";
 
     //~ Instance fields --------------------------------------------------------
 
