@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -31,6 +31,8 @@
 #endif
 
 #include <limits>
+
+#include "fennel/calculator/SqlState.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -285,7 +287,7 @@ SqlStrCpy_Fix(
 {
     if (strLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
     memcpy(dest, str, strLenBytes);
 
@@ -406,7 +408,7 @@ SqlStrOverlay(
                 // conditions. Therefore:
                 // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
                 // "data exception substring error". SQL99 22.1 22-011
-                throw "22011";
+                throw SqlState::instance().code22011();
             }
 
             int leftLenBytes = startChar - 1;         // 1-index to 0-index
@@ -426,7 +428,7 @@ SqlStrOverlay(
                 > destStorageBytes)
             {
                 // SQL99 22.1 22-001 "String Data Right truncation"
-                throw "22001";
+                throw SqlState::instance().code22001();
             }
 
             char *dp = dest;
@@ -443,7 +445,8 @@ SqlStrOverlay(
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no such encoding");        }
+            throw std::logic_error("no such encoding");
+        }
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
@@ -544,7 +547,7 @@ SqlStrSubStr(
             if (e < subStartChar) {
                 // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
                 // "data exception substring error". SQL99 22.1 22-011
-                throw "22011";
+                throw SqlState::instance().code22011();
             }
 
             if (subStartChar > strLenBytes || e < 1) {
@@ -563,12 +566,12 @@ SqlStrSubStr(
 
             if (l1 > destStorageBytes) {
                 // SQL99 22.1 22-001 "String Data Right truncation"
-                throw "22001";
+                throw SqlState::instance().code22001();
             }
             if (l1 < 0) {
                 // Expected behavior not clear.
                 // "data exception substring error". SQL99 22.1 22-011
-                throw "22011";
+                throw SqlState::instance().code22011();
             }
 
             // - 1 converts from 1-indexed to 0-indexed
@@ -609,7 +612,7 @@ SqlStrAlterCase(
 
     if (srcLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     if (MaxCodeUnitsPerCodePoint == 1) {
@@ -673,7 +676,7 @@ SqlStrAlterCase(
 
             if (newLenUChar > destStorageUChar) {
                 // SQL99 22.1 22-001 "String Data Right truncation"
-                throw "22001";
+                throw SqlState::instance().code22001();
             }
             if (U_FAILURE(errorCode)) {
                 // TODO: Clean up ICU error handling.
@@ -773,7 +776,7 @@ SqlStrTrim(
 
     if (newLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
     memcpy(dest, start, newLenBytes);
     return newLenBytes;
@@ -905,7 +908,7 @@ SqlStrCastToExact(
                     // unexpected character found
                     // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                     // exception -- invalid character value for cast
-                    throw "22018";
+                    throw SqlState::instance().code22018();
                 }
             }
 
@@ -913,7 +916,7 @@ SqlStrCastToExact(
                 // no number found
                 // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // STATE: Parse numbers until padChar, end, or illegal char
@@ -978,13 +981,13 @@ SqlStrCastToExact(
             if (!parsed) {
                 // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // Throw overflow exception only if parse okay
             if (overflow) {
                 // data exception -- numeric value out of range
-                throw "22003";
+                throw SqlState::instance().code22003();
             }
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -1076,7 +1079,7 @@ SqlStrCastToExact(
                     // unexpected character found
                     // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                     // exception -- invalid character value for cast
-                    throw "22018";
+                    throw SqlState::instance().code22018();
                 }
             }
 
@@ -1084,7 +1087,7 @@ SqlStrCastToExact(
                 // no number found
                 // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // STATE: Parse numbers until padChar, end, or illegal char
@@ -1193,13 +1196,13 @@ SqlStrCastToExact(
             if (!parsed) {
                 // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // Throw overflow exception only if parse okay
             if (overflow) {
                 // data exception -- numeric value out of range
-                throw "22003";
+                throw SqlState::instance().code22003();
             }
 
             if (!decimal_parsed) {
@@ -1221,7 +1224,7 @@ SqlStrCastToExact(
                 // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
                 // data exception -- numeric value out of range
                 // (if leading significant digits are lost)
-                throw "22003";
+                throw SqlState::instance().code22003();
             }
 
             rv = mantissa;
@@ -1233,7 +1236,7 @@ SqlStrCastToExact(
                     // Check for overflow
                     if (tmp < rv) {
                         // data exception -- numeric value out of range
-                        throw "22003";
+                        throw SqlState::instance().code22003();
                     }
                     rv = tmp;
                 }
@@ -1261,7 +1264,7 @@ SqlStrCastToExact(
                             // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
                             // data exception -- numeric value out of range
                             // (if leading significant digits are lost)
-                            throw "22003";
+                            throw SqlState::instance().code22003();
                         }
                     }
                     rv++;
@@ -1326,7 +1329,7 @@ SqlStrCastToApprox(
             if (endptr == tmp) {
                 // SQL99 Part 2 Section 6.22 General Rule 7.b.i "22018"
                 // data exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // verify that trailing characters are all padChar
@@ -1335,7 +1338,7 @@ SqlStrCastToApprox(
                 if (*ptr != padChar) {
                     // SQL99 Part 2 Section 6.22 General Rule 7.b.i "22018"
                     // data exception -- invalid character value for cast
-                    throw "22018";
+                    throw SqlState::instance().code22018();
                 }
                 ptr++;
             }
@@ -1344,7 +1347,7 @@ SqlStrCastToApprox(
             double dmax = std::numeric_limits<double>::max();
             if (rv > dmax || rv < -dmax) {
                 // Overflow
-                throw "22003";
+                throw SqlState::instance().code22003();
             }
 
         } else if (CodeUnitBytes == 2) {
@@ -1421,7 +1424,7 @@ SqlStrCastFromExact(
                 // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                 // length) "22001" data exception -- string data, right
                 // truncation
-                throw "22001";
+                throw SqlState::instance().code22001();
             }
 
 
@@ -1450,7 +1453,7 @@ SqlStrCastFromExact(
                 // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                 // length) "22001" data exception -- string data, right
                 // truncation
-                throw "22001";
+                throw SqlState::instance().code22001();
             }
 #endif
 
@@ -1474,7 +1477,7 @@ SqlStrCastFromExact(
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length), "22001" data exception -- string data, right
                     // truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
             } else {
                 // If src is somewhat less than max or min, it might
@@ -1492,7 +1495,7 @@ SqlStrCastFromExact(
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length) "22001" data exception -- string data, right
                     // truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
                 memcpy(dest, buf, rv);
             }
@@ -1580,7 +1583,7 @@ SqlStrCastFromExact(
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length) "22001" data exception -- string data, right
                     // truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
 
                 // Copy into destination buffer, placing the '.' appropriately
@@ -1625,7 +1628,7 @@ SqlStrCastFromExact(
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length) "22001" data exception -- string data, right
                     // truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
 
                 // Add zeros
@@ -1698,7 +1701,7 @@ SqlStrCastFromApprox(
                     // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
                     // (variable length) "22001" data exception -- string data,
                     // right truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
             } else {
                 // Note: can't always snprintf directly into dest, due to
@@ -1812,7 +1815,7 @@ SqlStrCastFromApprox(
                     // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
                     // (variable length) "22001" data exception -- string data,
                     // right truncation
-                    throw "22001";
+                    throw SqlState::instance().code22001();
                 }
             }
 
@@ -2004,7 +2007,7 @@ SqlStrCastToBoolean(
             } else {
                 // SQL2003 Part 2 Section 6.12 General Rule 20.a.ii "22018"
                 // data exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             // verify that trailing characters are all padChar
@@ -2012,7 +2015,7 @@ SqlStrCastToBoolean(
                 if (*ptr != padChar) {
                     // SQL2003 Part 2 Section 6.12 General Rule 20.a.ii "22018"
                     // data exception -- invalid character value for cast
-                    throw "22018";
+                    throw SqlState::instance().code22018();
                 }
                 ptr++;
             }
@@ -2062,7 +2065,7 @@ SqlStrCastFromBoolean(
                 // SQL2003 Part 2 Section 6.12 General Rule
                 // 10.e.iii (fixed length) and 11.e.iii (variable length)
                 // "22018" data exception -- invalid character value for cast
-                throw "22018";
+                throw SqlState::instance().code22018();
             }
 
             if (fixed) {

@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -230,7 +230,7 @@ castStrToVarCharA(
                 &rightTruncWarning));
         if (rightTruncWarning) {
             // TODO: throw 22001 as a warning
-//            throw "22001";
+//            throw SqlState::instance().code22001();
         }
     }
 }
@@ -260,7 +260,7 @@ castStrToCharA(
 
         if (rightTruncWarning) {
             // TODO: throw 22001 as a warning
-//            throw "22001";
+//            throw SqlState::instance().code22001();
         }
     }
 }
@@ -291,7 +291,7 @@ castStrToVarBinaryA(
                 0));
         if (rightTruncWarning) {
             // TODO: throw 22001 as a warning
-//            throw "22001";
+//            throw SqlState::instance().code22001();
         }
     }
 }
@@ -322,7 +322,7 @@ castStrToBinaryA(
 
         if (rightTruncWarning) {
             // TODO: throw 22001 as a warning
-//            throw "22001";
+//            throw SqlState::instance().code22001();
         }
     }
 }

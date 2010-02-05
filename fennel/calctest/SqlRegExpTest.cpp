@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -485,9 +485,9 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
                 strlen(test[i][1]),
                 strlen(test[i][0]),
                 exp);
-        } catch (char const * const ex) {
+        } catch (SqlStateInfo const &ex) {
             caught = true;
-            BOOST_CHECK(!strcmp(ex,       test[i][3]));
+            BOOST_CHECK(!strcmp(ex.str().c_str(), test[i][3]));
         }
         if (!caught) {
             BOOST_CHECK(0);
@@ -1327,7 +1327,8 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
                 strlen(test[i][1]),
                 strlen(test[i][0]),
                 exp);
-        } catch (char const * const ex) {
+        } catch (SqlStateInfo const &info) {
+            const char *ex = info.str().c_str();
             caught = true;
             if (strcmp(ex, test[i][3])) {
                 BOOST_MESSAGE(

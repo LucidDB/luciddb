@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -122,7 +122,7 @@ public:
                 }
             }
             if (thr) {
-                throw CalcMessage("22003", pc - 1);
+                throw CalcMessage(SqlState::instance().code22003(), pc - 1);
             }
             // HACK: End. (Phew.)
 
@@ -134,7 +134,8 @@ public:
                 // class contains no useful information about what went wrong
                 // SQL99 Part 2 Section 6.2 General Rule 6.a.ii, 7.a.ii
                 // 22003 - Data Exception -- Numeric Value Out of Range
-                throw CalcMessage("22003", pc - 1);
+                throw CalcMessage(
+                    SqlState::instance().code22003(), pc - 1);
             }
         }
     }

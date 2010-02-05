@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2004-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -355,7 +355,8 @@ SqlStringTest::testSqlStringAsciiCatF()
                                         dst.mStr, dst_storage,
                                         src1.mStr, src1_storage,
                                         src2.mStr, src2_storage);
-                                } catch (const char *str) {
+                                } catch (SqlStateInfo const &info) {
+                                    const char *str = info.str().c_str();
                                     caught = true;
                                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                                     BOOST_CHECK(
@@ -383,7 +384,8 @@ SqlStringTest::testSqlStringAsciiCatF()
                                             newlen,
                                             src3.mStr,
                                             src3_storage);
-                                    } catch (const char *str) {
+                                    } catch (SqlStateInfo const &info) {
+                                        const char *str = info.str().c_str();
                                         caught = true;
                                         BOOST_CHECK_EQUAL(
                                             strcmp(str, "22001"),
@@ -464,7 +466,8 @@ SqlStringTest::testSqlStringAsciiCatV2()
                                 src1_len,
                                 src2.mStr,
                                 src2_len);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(src1_len + src2_len > dst_storage);
@@ -522,7 +525,8 @@ SqlStringTest::testSqlStringAsciiCatV()
                             dst_len,
                             src.mStr,
                             src_len);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len + dst_len > dst_storage);

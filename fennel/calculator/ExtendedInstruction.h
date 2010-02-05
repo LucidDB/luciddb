@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -250,8 +250,8 @@ public:
         pc++;
         try {
             (*_def._functor)();
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -318,8 +318,8 @@ public:
             (*_def._functor)(
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
                     _ctx));
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -388,8 +388,8 @@ public:
         pc++;
         try {
             (*_def._functor)(_reg0);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo  const& stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -469,8 +469,8 @@ public:
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
                     _ctx),
                 _reg0);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -550,8 +550,8 @@ public:
         pc++;
         try {
             (*_def._functor)(_reg0,_reg1);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -642,8 +642,8 @@ public:
                     _ctx),
                 _reg0,
                 _reg1);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -731,8 +731,8 @@ public:
         pc++;
         try {
             (*_def._functor)(_reg0,_reg1,_reg2);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -830,8 +830,8 @@ public:
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
                     _ctx),
                 _reg0, _reg1, _reg2);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -927,8 +927,8 @@ public:
         pc++;
         try {
             (*_def._functor)(_reg0,_reg1,_reg2,_reg3);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -1032,8 +1032,8 @@ public:
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
                     _ctx),
                 _reg0, _reg1, _reg2, _reg3);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -1137,8 +1137,8 @@ public:
         pc++;
         try {
             (*_def._functor)(_reg0,_reg1,_reg2,_reg3,_reg4);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
@@ -1250,8 +1250,8 @@ public:
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
                     _ctx),
                 _reg0, _reg1, _reg2, _reg3, _reg4);
-        } catch (char const * str) {
-            throw CalcMessage(str, pc - 1);
+        } catch (SqlStateInfo const &stateInfo) {
+            throw CalcMessage(stateInfo, pc - 1);
         }
     }
 };
