@@ -1026,6 +1026,7 @@ public class MedJdbcDataServer
         pushdownRuleList.add(r3);
         pushdownRuleList.add(r4);
         pushdownRuleList.add(MedJdbcAggPushDownRule.instance);
+        pushdownRuleList.add(MedJdbcJoinPushDownRule.instance);
 
         // add the non-disabled pushdown rules
         for (RelOptRule rule : pushdownRuleList) {
