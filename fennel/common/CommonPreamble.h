@@ -65,7 +65,6 @@
 #include <sstream>
 #include <string>
 #include <string.h>
-#include <strings.h>
 #include <time.h>
 #include <new>
 #include <cassert>
@@ -73,6 +72,7 @@
 #include <boost/thread/tss.hpp>
 
 #ifdef __APPLE__
+#include <strings.h>
 #define FMT_INT64      "lld"
 #define FMT_UINT64     "llu"
 #define isnan __inline_isnan
