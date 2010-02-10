@@ -902,7 +902,7 @@ public class MedJdbcDataServer
             if (fetchSize != DEFAULT_FETCH_SIZE) {
                 stmt.setFetchSize(fetchSize);
             }
-            stmtAlloc.setResultSet(stmt.executeQuery(sql));
+            stmtAlloc.setSql(sql);
             stmt = null;
             return stmtAlloc;
         } finally {

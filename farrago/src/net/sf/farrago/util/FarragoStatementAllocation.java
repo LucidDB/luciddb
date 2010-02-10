@@ -24,6 +24,7 @@ package net.sf.farrago.util;
 
 import java.sql.*;
 
+import org.eigenbase.runtime.*;
 
 /**
  * FarragoStatementAllocation takes care of closing a JDBC Statement (and its
@@ -33,13 +34,14 @@ import java.sql.*;
  * @version $Id$
  */
 public class FarragoStatementAllocation
-    implements FarragoAllocation
+    implements FarragoAllocation, ResultSetProvider
 {
     //~ Instance fields --------------------------------------------------------
 
     private Connection conn;
     private Statement stmt;
     private ResultSet resultSet;
+    private String sql;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,6 +61,11 @@ public class FarragoStatementAllocation
     public void setResultSet(ResultSet resultSet)
     {
         this.resultSet = resultSet;
+    }
+
+    public void setSql(String sql)
+    {
+        this.sql = sql;
     }
 
     // implement FarragoAllocation
@@ -87,8 +94,15 @@ public class FarragoStatementAllocation
         return stmt;
     }
 
+    // implement ResultSetProvider
     public ResultSet getResultSet()
+        throws SQLException
     {
+        if (resultSet == null) {
+            if (sql != null) {
+                resultSet = stmt.executeQuery(sql);
+            }
+        }
         return resultSet;
     }
 }

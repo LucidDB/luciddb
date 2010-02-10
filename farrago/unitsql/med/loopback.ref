@@ -1,6 +1,11 @@
 > -- $Id$
 > -- Test SQL/MED loopback link support
 > 
+> create schema gloop;
+> create table gloop.t1(v varchar(10) not null primary key);
+> create user vogon identified by '' default schema gloop;
+> grant select on gloop.t1 to vogon;
+> 
 > -- create a server which will loop back to the default catalog (localdb)
 > create server loopback_localdb
 > foreign data wrapper sys_jdbc
@@ -17,6 +22,16 @@
 >     url 'jdbc:farrago:',
 >     user_name 'sa',
 >     qualifying_catalog_name 'SYS_BOOT');
+> 
+> -- create a server which will not loop back at all
+> create server no_loopback
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver',
+>     url 'jdbc:farrago:',
+>     user_name 'VOGON',
+>     schema_name 'BOGUS',
+>     skip_type_check 'TRUE');
 > 
 > -- test loopback queries
 > 
@@ -37,6 +52,7 @@
 | LOCALDB                       |
 | LOOPBACK_LOCALDB              |
 | LOOPBACK_SYS_BOOT             |
+| NO_LOOPBACK                   |
 | SYS_BOOT                      |
 | SYS_COLUMN_STORE_DATA_SERVER  |
 | SYS_CWM                       |
@@ -103,6 +119,33 @@ Error: java.lang.NumberFormatException: For input string: "foofah" (state=,code=
 > -- call sys_boot.mgmt.flush_code_cache();
 > -- select * from x.bar;
 > 
+> -- Next test is for making sure that for non-loopback links,
+> -- we defer all execution until rows are actually fetched.  To
+> -- avoid foreign SQL access at prepare time, we use
+> -- SKIP_TYPE_CHECK=TRUE on the no_loopback server, and
+> -- explicitly instantiate a foreign table.
+> create foreign table x.pokemon(
+>     v varchar(10))
+> server no_loopback
+> options(table_name 'T1');
+> create view x.baz as
+> select * from 
+> (values ('three'), ('two'))
+> union all
+> select * from x.pokemon;
+> -- break the view by yanking out the underlying table
+> drop table gloop.t1;
+> -- this should NOT produce an exception since we should never
+> -- actually execute the underlying SQL for the x.pokemon reference
+> !set rowlimit 1
+> select * from x.baz;
++---------+
+| EXPR$0  |
++---------+
+| three   |
++---------+
+> !set rowlimit 0
+> 
 > -- verify loopback via EXPLAIN PLAN
 > !set outputformat csv
 > 
@@ -131,5 +174,19 @@ Error: java.lang.NumberFormatException: For input string: "foofah" (state=,code=
 '      FtrsIndexSearchRel'
 '        FtrsIndexScanRel'
 > 
+> -- verify that loopback is NOT used here
+> explain plan for
+> select * from x.baz;
+'column0'
+'IterConcatenateRel(all=[true])'
+'  FennelToIteratorConverter'
+'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
+'      FennelValuesRel(tuples=[[{ 'three' }, { 'two  ' }]])'
+'  FennelToIteratorConverter'
+'    FennelRenameRel(fieldNames=[[EXPR$0]])'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT *'
+'FROM "T1"])'
 > 
 > !quit

@@ -110,10 +110,7 @@ public class MedJdbcQueryRel
                         Literal.makeLiteral(
                             columnSet.directory.server.getServerMofId()),
                         Literal.makeLiteral(sql.getSql()))));
-        return new MethodCall(
-            allocExpression,
-            "getResultSet",
-            new ExpressionList());
+        return allocExpression;
     }
 
     // override JdbcQuery
