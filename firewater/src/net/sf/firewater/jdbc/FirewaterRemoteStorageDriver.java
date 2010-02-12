@@ -19,7 +19,7 @@
 */
 package net.sf.firewater.jdbc;
 
-import com.lucidera.farrago.*;
+import org.luciddb.session.*;
 
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.session.*;
