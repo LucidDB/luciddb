@@ -131,16 +131,21 @@ public abstract class AbstractSqlTester
     public static String generateAggQuery(String expr, String [] inputValues)
     {
         StringBuilder buf = new StringBuilder();
-        buf.append("SELECT ").append(expr).append(" FROM (");
-        for (int i = 0; i < inputValues.length; i++) {
-            if (i > 0) {
-                buf.append(" UNION ALL ");
+        buf.append("SELECT ").append(expr).append(" FROM ");
+        if (inputValues.length == 0) {
+            buf.append("(VALUES 1) AS t(x) WHERE false");
+        } else {
+            buf.append("(");
+            for (int i = 0; i < inputValues.length; i++) {
+                if (i > 0) {
+                    buf.append(" UNION ALL ");
+                }
+                buf.append("SELECT ");
+                String inputValue = inputValues[i];
+                buf.append(inputValue).append(" AS x FROM (VALUES (1))");
             }
-            buf.append("SELECT ");
-            String inputValue = inputValues[i];
-            buf.append(inputValue).append(" AS x FROM (VALUES (1))");
+            buf.append(")");
         }
-        buf.append(")");
         return buf.toString();
     }
 

@@ -265,7 +265,8 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Returns a list of the names of the fields in a given struct type.
+     * Returns a list of the names of the fields in a given struct type. The
+     * list is immutable.
      *
      * @param type Struct type
      *
@@ -274,13 +275,19 @@ public abstract class RelOptUtil
      * @see #getFieldTypeList(RelDataType)
      * @see #getFieldNames(RelDataType)
      */
-    public static List<String> getFieldNameList(RelDataType type)
+    public static List<String> getFieldNameList(final RelDataType type)
     {
-        List<String> nameList = new ArrayList<String>(type.getFields().length);
-        for (RelDataTypeField field : type.getFields()) {
-            nameList.add(field.getName());
-        }
-        return nameList;
+        return new AbstractList<String>() {
+            public String get(int index)
+            {
+                return type.getFieldList().get(index).getName();
+            }
+
+            public int size()
+            {
+                return type.getFieldCount();
+            }
+        };
     }
 
     /**
@@ -303,7 +310,8 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Returns a list of the types of the fields in a given struct type.
+     * Returns a list of the types of the fields in a given struct type. The
+     * list is immutable.
      *
      * @param type Struct type
      *
@@ -312,14 +320,19 @@ public abstract class RelOptUtil
      * @see #getFieldNameList(RelDataType)
      * @see #getFieldTypes(RelDataType)
      */
-    public static List<RelDataType> getFieldTypeList(RelDataType type)
+    public static List<RelDataType> getFieldTypeList(final RelDataType type)
     {
-        final RelDataTypeField [] fields = type.getFields();
-        final List<RelDataType> typeList = new ArrayList<RelDataType>();
-        for (int i = 0; i < fields.length; i++) {
-            typeList.add(fields[i].getType());
-        }
-        return typeList;
+        return new AbstractList<RelDataType>() {
+            public RelDataType get(int index)
+            {
+                return type.getFieldList().get(index).getType();
+            }
+
+            public int size()
+            {
+                return type.getFieldCount();
+            }
+        };
     }
 
     /**

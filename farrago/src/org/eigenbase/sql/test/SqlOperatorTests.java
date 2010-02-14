@@ -3142,11 +3142,32 @@ public abstract class SqlOperatorTests
         getTester().checkNull("power(cast(null as integer),2)");
         getTester().checkNull("power(2,cast(null as double))");
 
-        // 'power' is an obsolete form of the 'power' function
+        // 'pow' is an obsolete form of the 'power' function
         getTester().checkFails(
             "^pow(2,-2)^",
             "No match found for function signature POW\\(<NUMERIC>, <NUMERIC>\\)",
             false);
+    }
+
+    public void testSqrtFunc()
+    {
+        getTester().setFor(
+            SqlStdOperatorTable.sqrtFunc, SqlTester.VmName.EXPAND);
+        getTester().checkType("sqrt(2)", "DOUBLE NOT NULL");
+        getTester().checkType("sqrt(cast(2 as float))", "DOUBLE NOT NULL");
+        getTester().checkType(
+            "sqrt(case when false then 2 else null end)", "DOUBLE");
+        getTester().checkFails(
+            "^sqrt('abc')^",
+            "Cannot apply 'SQRT' to arguments of type 'SQRT\\(<CHAR\\(3\\)>\\)'\\. Supported form\\(s\\): 'SQRT\\(<NUMERIC>\\)'",
+            false);
+        getTester().checkScalarApprox(
+            "sqrt(2)",
+            "DOUBLE NOT NULL",
+            1.4142d,
+            0.0001d);
+        getTester().checkNull("sqrt(cast(null as integer))");
+        getTester().checkNull("sqrt(cast(null as double))");
     }
 
     public void testExpFunc()
@@ -4041,6 +4062,178 @@ public abstract class SqlOperatorTests
             "avg(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
             values,
             result,
+            0d);
+    }
+
+    public void testStddevPopFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.stddevPopOperator, VM_EXPAND);
+        getTester().checkFails(
+            "stddev_pop(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkFails(
+            "^stddev_pop(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'STDDEV_POP' to arguments of type 'STDDEV_POP\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'STDDEV_POP\\(<NUMERIC>\\)'.*",
+            false);
+        getTester().checkType("stddev_pop(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkType("stddev_pop(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        final String [] values = { "0", "CAST(null AS FLOAT)", "3", "3" };
+        getTester().checkAgg(
+            "stddev_pop(x)",
+            values,
+            1.414213562373095d, // verified on Oracle 10g
+            0.000000000000001d);
+        getTester().checkAgg(
+            "stddev_pop(DISTINCT x)", // Oracle does not allow distinct
+            values,
+            1.5d,
+            0d);
+        getTester().checkAgg(
+            "stddev_pop(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            0,
+            0d);
+        // with one value
+        getTester().checkAgg(
+            "stddev_pop(x)",
+            new String[] {"5"},
+            0,
+            0d);
+        // with zero values
+        getTester().checkAgg(
+            "stddev_pop(x)",
+            new String[] {},
+            null,
+            0d);
+    }
+
+    public void testStddevSampFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.stddevSampOperator, VM_EXPAND);
+        getTester().checkFails(
+            "stddev_samp(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkFails(
+            "^stddev_samp(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'STDDEV_SAMP' to arguments of type 'STDDEV_SAMP\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'STDDEV_SAMP\\(<NUMERIC>\\)'.*",
+            false);
+        getTester().checkType("stddev_samp(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkType("stddev_samp(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        final String [] values = { "0", "CAST(null AS FLOAT)", "3", "3" };
+        getTester().checkAgg(
+            "stddev_samp(x)",
+            values,
+            1.732050807568877d, // verified on Oracle 10g
+            0.000000000000001d);
+        getTester().checkAgg(
+            "stddev_samp(DISTINCT x)", // Oracle does not allow distinct
+            values,
+            2.121320343559642d,
+            0.000000000000001d);
+        getTester().checkAgg(
+            "stddev_samp(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            null,
+            0d);
+        // with one value
+        getTester().checkAgg(
+            "stddev_samp(x)",
+            new String[] {"5"},
+            null,
+            0d);
+        // with zero values
+        getTester().checkAgg(
+            "stddev_samp(x)",
+            new String[] {},
+            null,
+            0d);
+    }
+
+    public void testVarPopFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.varPopOperator, VM_EXPAND);
+        getTester().checkFails(
+            "var_pop(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkFails(
+            "^var_pop(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'VAR_POP' to arguments of type 'VAR_POP\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'VAR_POP\\(<NUMERIC>\\)'.*",
+            false);
+        getTester().checkType("var_pop(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkType("var_pop(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        final String [] values = { "0", "CAST(null AS FLOAT)", "3", "3" };
+        getTester().checkAgg(
+            "var_pop(x)",
+            values,
+            2d, // verified on Oracle 10g
+            0d);
+        getTester().checkAgg(
+            "var_pop(DISTINCT x)", // Oracle does not allow distinct
+            values,
+            2.25d,
+            0.0001d);
+        getTester().checkAgg(
+            "var_pop(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            0,
+            0d);
+        // with one value
+        getTester().checkAgg(
+            "var_pop(x)",
+            new String[] {"5"},
+            0,
+            0d);
+        // with zero values
+        getTester().checkAgg(
+            "var_pop(x)",
+            new String[] {},
+            null,
+            0d);
+    }
+
+    public void testVarSampFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.varSampOperator, VM_EXPAND);
+        getTester().checkFails(
+            "var_samp(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        getTester().checkFails(
+            "^var_samp(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'VAR_SAMP' to arguments of type 'VAR_SAMP\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'VAR_SAMP\\(<NUMERIC>\\)'.*",
+            false);
+        getTester().checkType("var_samp(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkType("var_samp(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        final String [] values = { "0", "CAST(null AS FLOAT)", "3", "3" };
+        getTester().checkAgg(
+            "var_samp(x)",
+            values,
+            3d, // verified on Oracle 10g
+            0d);
+        getTester().checkAgg(
+            "var_samp(DISTINCT x)", // Oracle does not allow distinct
+            values,
+            4.5d,
+            0.0001d);
+        getTester().checkAgg(
+            "var_samp(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            null,
+            0d);
+        // with one value
+        getTester().checkAgg(
+            "var_samp(x)",
+            new String[] {"5"},
+            null,
+            0d);
+        // with zero values
+        getTester().checkAgg(
+            "var_samp(x)",
+            new String[] {},
+            null,
             0d);
     }
 

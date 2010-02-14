@@ -433,7 +433,9 @@ public class SqlToRelConverter
 
     protected RelDataType uniquifyFields(RelDataType rowType)
     {
-        final List<String> fieldNameList = RelOptUtil.getFieldNameList(rowType);
+        final List<String> fieldNameList =
+            new ArrayList<String>(
+                RelOptUtil.getFieldNameList(rowType));
         final List<RelDataType> fieldTypeList =
             RelOptUtil.getFieldTypeList(rowType);
         SqlValidatorUtil.uniquify(fieldNameList);

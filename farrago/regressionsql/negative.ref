@@ -74,6 +74,11 @@ Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
+> values sqrt(-1.0);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
 > values ln(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
@@ -222,7 +227,6 @@ Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES opera
 Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES operator must have compatible types (state=,code=0)
 > values (1,'1'),(2,3);
 Error: From line 1, column 1 to line 1, column 20: Values passed to VALUES operator must have compatible types (state=,code=0)
-> 
-> 
+> -- End negative.sql
 > 
 > !quit

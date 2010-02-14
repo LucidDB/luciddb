@@ -156,6 +156,8 @@ public class SqlAdvisorTest
             "Keyword(SPECIFIC)",
             "Keyword(SQRT)",
             "Keyword(SUBSTRING)",
+            "Keyword(STDDEV_POP)",
+            "Keyword(STDDEV_SAMP)",
             "Keyword(SUM)",
             "Keyword(SYSTEM_USER)",
             "Keyword(TIME)",
@@ -165,7 +167,9 @@ public class SqlAdvisorTest
             "Keyword(TRUE)",
             "Keyword(UNKNOWN)",
             "Keyword(UPPER)",
-            "Keyword(USER)");
+            "Keyword(USER)",
+            "Keyword(VAR_POP)",
+            "Keyword(VAR_SAMP)");
 
     protected static final List<String> SELECT_KEYWORDS =
         Arrays.asList(
