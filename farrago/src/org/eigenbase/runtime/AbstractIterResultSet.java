@@ -246,13 +246,13 @@ public abstract class AbstractIterResultSet
         public String getCatalogName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public String getColumnClassName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public int getColumnCount()
@@ -333,7 +333,7 @@ public abstract class AbstractIterResultSet
         public String getSchemaName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isSearchable(int column)
@@ -351,7 +351,7 @@ public abstract class AbstractIterResultSet
         public String getTableName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isWritable(int column)
