@@ -312,19 +312,21 @@ public class RexBuilder
         RexNode result = over;
 
         // This should be correct but need time to go over test results.
-        // Also want to look at combing with section below. if
-        // (nullWhenCountZero) { final RelDataType bigintType =
-        // getTypeFactory().createSqlType( SqlTypeName.BIGINT); result =
-        // makeCall( SqlStdOperatorTable.caseOperator, makeCall(
-        // SqlStdOperatorTable.greaterThanOperator, new RexOver( bigintType,
-        // SqlStdOperatorTable.countOperator, exprs, window), makeLiteral( //
-        // todo: read bound new BigDecimal(0), bigintType,
-        // SqlTypeName.DECIMAL)), over, constantNull); }
+        // Also want to look at combing with section below.
+        if (nullWhenCountZero) {
+            final RelDataType bigintType = getTypeFactory().createSqlType(
+                SqlTypeName.BIGINT);
+            result = makeCall(SqlStdOperatorTable.caseOperator, makeCall(
+                SqlStdOperatorTable.greaterThanOperator, new RexOver(
+                    bigintType, SqlStdOperatorTable.countOperator, exprs,
+                    window), makeLiteral(
+                    new BigDecimal(0), bigintType, SqlTypeName.DECIMAL)), over,
+                makeCast(over.getType(), constantNull()));
+        }
         if (!allowPartial) {
             Util.permAssert(physical, "DISALLOW PARTIAL over RANGE");
-            final RelDataType bigintType =
-                getTypeFactory().createSqlType(
-                    SqlTypeName.BIGINT);
+            final RelDataType bigintType = getTypeFactory().createSqlType(
+                SqlTypeName.BIGINT);
             // todo: read bound
             result =
                 makeCall(
@@ -340,7 +342,7 @@ public class RexBuilder
                             new BigDecimal(2),
                             bigintType,
                             SqlTypeName.DECIMAL)),
-                    over,
+                    result,
                     constantNull);
         }
         return result;
