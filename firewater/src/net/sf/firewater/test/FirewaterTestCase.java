@@ -150,7 +150,7 @@ public abstract class FirewaterTestCase extends LucidDbSqlTest
                 String name = iter.next();
                 String sql =
                     "drop partition " 
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name);
+                    + SqlDialect.EIGENBASE.quoteIdentifier(name);
                 getStmt().execute(sql);
             }
         }

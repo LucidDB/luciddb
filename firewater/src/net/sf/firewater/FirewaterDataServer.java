@@ -89,7 +89,7 @@ public class FirewaterDataServer
                 null,
                 null,
                 SqlParserPos.ZERO);
-        SqlDialect dialect = new SqlDialect(getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(getDatabaseMetaData());
         String partitioningString =
             tableProps.getProperty(PROP_PARTITIONING, DEFAULT_PARTITIONING);
         FirewaterPartitioning partitioning = null;

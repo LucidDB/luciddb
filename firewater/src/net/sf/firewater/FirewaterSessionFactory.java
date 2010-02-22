@@ -39,8 +39,8 @@ import net.sf.farrago.fwm.distributed.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 
-import com.lucidera.farrago.*;
-import com.lucidera.jdbc.*;
+import org.luciddb.session.*;
+import org.luciddb.jdbc.*;
 
 import net.sf.firewater.resource.*;
 import net.sf.firewater.parserimpl.*;

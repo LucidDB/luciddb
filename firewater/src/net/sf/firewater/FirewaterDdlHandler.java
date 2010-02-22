@@ -234,6 +234,7 @@ public class FirewaterDdlHandler extends DdlHandler
         boolean isPartitioned)
     {
         DdlGenerator ddlGen = new FarragoDdlGenerator(
+            SqlDialect.EIGENBASE,
             repos.getModelView());
         ddlGen.setSchemaQualified(true);
         GeneratedDdlStmt stmt = new GeneratedDdlStmt(false);
@@ -247,6 +248,7 @@ public class FirewaterDdlHandler extends DdlHandler
         boolean isPartitioned)
     {
         DdlGenerator ddlGen = new FarragoDdlGenerator(
+            SqlDialect.EIGENBASE,
             repos.getModelView());
         ddlGen.setSchemaQualified(true);
         if (element instanceof FemLabel) {
@@ -308,7 +310,7 @@ public class FirewaterDdlHandler extends DdlHandler
     public void executeCreation(FwmPartition partition)
     {
         String sql = "create catalog "
-            + SqlUtil.eigenbaseDialect.quoteIdentifier(
+            + SqlDialect.EIGENBASE.quoteIdentifier(
                 partition.getName());
         setLastSql(sql);
         serverSpecificSql.add(
@@ -322,7 +324,7 @@ public class FirewaterDdlHandler extends DdlHandler
     {
         String sql =
             "drop catalog "
-            + SqlUtil.eigenbaseDialect.quoteIdentifier(
+            + SqlDialect.EIGENBASE.quoteIdentifier(
                 partition.getName())
             + " cascade";
         setLastSql(sql);

@@ -137,7 +137,8 @@ public class CallingConvention
 
     /**
      * The <code>RESULT_SET</code> calling convention means that the expression
-     * is a {@link java.sql.ResultSet JDBC result set}. When a result set is
+     * is a {@link java.sql.ResultSet JDBC result set} or {@link
+     * org.eigenbase.runtime.ResultSetProvider}. When a result set is
      * converted to another convention such as array or iterator, the default
      * object type is {@link org.eigenbase.runtime.Row}.
      */

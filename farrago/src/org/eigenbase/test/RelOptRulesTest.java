@@ -129,6 +129,24 @@ public class RelOptRulesTest
             "select sal from "
             + "(select * from emp e1 union all select * from emp e2)");
     }
+
+    public void testPushJoinThroughUnionOnLeft()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnLeft,
+            "select r1.sal from "
+            + "(select * from emp e1 union all select * from emp e2) r1, "
+            + "emp r2");
+    }
+
+    public void testPushJoinThroughUnionOnRight()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnRight,
+            "select r1.sal from "
+            + "emp r1, "
+            + "(select * from emp e1 union all select * from emp e2) r2");
+    }
 }
 
 // End RelOptRulesTest.java

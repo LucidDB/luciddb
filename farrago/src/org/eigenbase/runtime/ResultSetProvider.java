@@ -1,7 +1,9 @@
 /*
 // $Id$
-// Firewater is a scaleout column store DBMS.
-// Copyright (C) 2009-2009 John V. Sichi
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2010-2010 The Eigenbase Project
+// Copyright (C) 2010-2010 SQLstream, Inc.
+// Copyright (C) 2010-2010 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -17,32 +19,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.firewater.jdbc;
+package org.eigenbase.runtime;
 
-import org.luciddb.session.*;
-
-import net.sf.farrago.jdbc.client.*;
-import net.sf.farrago.session.*;
+import java.sql.*;
 
 /**
- * FirewaterRemoteStorageDriver is a JDBC driver used by a Firewater
- * engine to connect to remote storage via HTTP.
+ * ResultSetProvider is an interface for supplying a result set, typically
+ * for use where deferred ResultSet creation is required.
  *
  * @author John Sichi
  * @version $Id$
  */
-public class FirewaterRemoteStorageDriver
-    extends FarragoUnregisteredVjdbcHttpClientDriver
+public interface ResultSetProvider
 {
-    static {
-        new FirewaterRemoteStorageDriver().register();
-    }
-
-    // override FarragoAbstractJdbcDriver
-    public String getBaseUrl()
-    {
-        return "jdbc:firewater_storage:remote:";
-    }
+    /**
+     * @return result set to be used
+     */
+    public ResultSet getResultSet() throws SQLException;
 }
 
-// End FirewaterRemoteStorageDriver.java
+// End ResultSetProvider.java
