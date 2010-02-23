@@ -88,6 +88,12 @@
 
       <test name="contiguousValueIntervals">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/contiguousValueIntervals.sql"/>
+
+      </test>
+
+      <test name="remoteRowsUDXTest">
+        <junit testclass="com.lucidera.luciddb.test.udr.TestRemoteRowsUDX"
+            methodnames="testRemoteRowsUDX"/>
       </test>
 
       <test-suite-call testfile="enforceRowConstraints/test.xml"/>
