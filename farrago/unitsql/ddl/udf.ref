@@ -99,6 +99,35 @@ Error: DDL validation error near line 1, column 36: Parameter mode to routine "U
 > return i + j + k;
 Error: At line 4, column 16: Unknown identifier 'K' (state=,code=0)
 > 
+> -- no parameters; parens are required for declaration and call
+> -- should fail (parens required)
+> create function pi
+> returns double
+> contains sql
+> return 3.141592653589793;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "returns" at line 2, column 1.
+Was expecting one of:
+    "(" ...
+    "." ... (state=,code=0)
+> 
+> -- ok
+> create function pi()
+> returns double
+> contains sql
+> return 3.141592653589793;
+> 
+> -- should fail (parens required)
+> values pi;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'PI' (state=,code=0)
+> 
+> -- ok
+> values pi();
++--------------------+
+|       EXPR$0       |
++--------------------+
+| 3.141592653589793  |
++--------------------+
+> 
 > -- test various modifiers
 > 
 > -- should fail:  NO SQL can't be specified for SQL-defined routines
@@ -636,5 +665,6 @@ Error: Cursor parameter "COLUMNSUBSET" does not exist. (state=,code=0)
 > external name
 > 'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
 Error: Cursor parameter "COLUMNSUBSET" does not exist. (state=,code=0)
+> -- End udf.sql
 > 
 > !quit
