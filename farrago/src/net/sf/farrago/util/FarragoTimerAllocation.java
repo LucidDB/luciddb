@@ -68,6 +68,10 @@ public class FarragoTimerAllocation
     // implement FarragoAllocation
     public void closeAllocation()
     {
+        if (timer == null) {
+            return;
+        }
+
         // We want synchronous cancellation as soon as possible.  Timer
         // guarantees that if timer.cancel is called from within a task
         // scheduled by timer, then timer will not execute any more tasks after
@@ -75,9 +79,6 @@ public class FarragoTimerAllocation
         // to request immediate execution.  If there is already a task in
         // progress, it will complete first.
         synchronized (shutdownSynch) {
-            if (timer == null) {
-                return;
-            }
             timer.schedule(
                 new CancelTask(),
                 0);
@@ -102,8 +103,8 @@ public class FarragoTimerAllocation
         // implement Runnable
         public void run()
         {
+            timer.cancel();
             synchronized (shutdownSynch) {
-                timer.cancel();
                 timer = null;
                 shutdownSynch.notifyAll();
             }
