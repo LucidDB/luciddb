@@ -138,6 +138,20 @@ public:
         return _code2201B;
     }
 
+    /// SQL2003 Part 2 Section 6.27 General Rule 10.b
+    /// Data Exception - Invalid Argument For Natural Logarithm
+    const SqlStateInfo &code2201E() const
+    {
+        return _code2201E;
+    }
+
+    /// SQL2003 Part 2 Section 6.27 General rule 12.b
+    /// Data Exception - Invalid Argument For Power Function
+    const SqlStateInfo &code2201F() const
+    {
+        return _code2201F;
+    }
+
     /// SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
     const SqlStateInfo &code22023() const
     {
@@ -176,6 +190,8 @@ private:
     SqlStateInfo _code22018;
     SqlStateInfo _code22019;
     SqlStateInfo _code2201B;
+    SqlStateInfo _code2201E;
+    SqlStateInfo _code2201F;
     SqlStateInfo _code22023; /* S_INVL: INVALID_PARAMETER_VALUE */
     SqlStateInfo _code22025;
     SqlStateInfo _code22027;
