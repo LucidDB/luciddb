@@ -1159,6 +1159,13 @@ ${farrago.test.jvmargs}
       <property name="lu.product.version.point" 
         value="${product.version.point}"/>
     </ant>
+  
+  	<!-- Remove RmiJdbc stuff 
+	TODO: As soon as LDB-158 is resolved, we can remove this
+	-->
+  	<delete>
+  	    <fileset dir="${dist.dir}/${lucidera.release.spec}/lib" includes="RmiJdbc*"/>
+  	</delete>
 
     <delete dir="${dist.dir}/${lucidera.release.spec}/catalog" quiet="true"/>
     <mkdir dir="${dist.dir}/${lucidera.release.spec}/catalog"/>
