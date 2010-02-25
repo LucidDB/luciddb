@@ -42,6 +42,7 @@ public class RandUdf
         Random oRand = (Random)FarragoUdrRuntime.getContext();
         if (oRand == null) {
             oRand = new Random();
+            FarragoUdrRuntime.setContext(oRand);
         }
 
         // Generate a double precision number between 0 and 1
