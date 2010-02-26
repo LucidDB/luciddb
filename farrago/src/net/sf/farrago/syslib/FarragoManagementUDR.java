@@ -860,6 +860,24 @@ public abstract class FarragoManagementUDR
     {
         return FarragoUdrRuntime.getSession().getSessionInfo().getId();
     }
+
+    /**
+     * Simple server shutdown statement
+     */
+    public static void shutdownServer (boolean killSessions)
+        throws Exception
+    {
+        if (!killSessions) {
+            // TODO: nag 25-feb-2010 Ground References should come from where?
+            if (!FarragoDbSingleton.shutdownConditional(1)) {
+                throw new Exception(
+                        "Shutdown failed because of oustanding sessions, use true for killSessions");
+            }
+        } else {
+            FarragoDbSingleton.shutdown();
+        }
+    }
+
 }
 
 // End FarragoManagementUDR.java
