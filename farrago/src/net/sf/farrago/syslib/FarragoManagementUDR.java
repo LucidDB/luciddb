@@ -855,6 +855,11 @@ public abstract class FarragoManagementUDR
             element.setCollationName(collationName);
         }
     }
+
+    public static long getCurrentSessionId()
+    {
+        return FarragoUdrRuntime.getSession().getSessionInfo().getId();
+    }
 }
 
 // End FarragoManagementUDR.java
