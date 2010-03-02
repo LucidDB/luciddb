@@ -82,7 +82,7 @@ void ExternalSortMerger::startMerge(
     std::vector<SharedSegStreamAllocation>::iterator pStoredRun,
     uint nRunsToMerge)
 {
-    assert (nRunsToMerge < nMergeMemPages);
+    assert(nRunsToMerge < nMergeMemPages);
 
     nRuns = nRunsToMerge;
 

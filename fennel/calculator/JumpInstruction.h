@@ -99,7 +99,7 @@ class FENNEL_CALCULATOR_EXPORT JumpTrue
 public:
     explicit
     JumpTrue(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op)
+        : JumpInstruction(pc, op)
     {}
 
     virtual
@@ -140,7 +140,7 @@ class FENNEL_CALCULATOR_EXPORT JumpFalse
 public:
     explicit
     JumpFalse(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op)
+        : JumpInstruction(pc, op)
     {}
 
     virtual
@@ -182,7 +182,7 @@ class FENNEL_CALCULATOR_EXPORT JumpNull
 public:
     explicit
     JumpNull(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op)
+        : JumpInstruction(pc, op)
     {}
 
     virtual
@@ -224,7 +224,7 @@ class FENNEL_CALCULATOR_EXPORT JumpNotNull
 public:
     explicit
     JumpNotNull(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op)
+        : JumpInstruction(pc, op)
     {}
 
     virtual

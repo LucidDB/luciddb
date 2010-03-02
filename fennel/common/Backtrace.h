@@ -27,7 +27,7 @@
 #include <ostream>
 #include <stdlib.h>
 
-#if !defined(__MSVC__) && !defined (__APPLE__)
+#if !defined(__MSVC__) && !defined(__APPLE__)
 #define FENNEL_BACKTRACE_SUPPORTED
 #endif
 

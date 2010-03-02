@@ -164,7 +164,7 @@ void FlatFileParser::scanRow(
         if (bounded) {
             int target = mapped ? columns.getMap(i) : i;
             if (target >= 0) {
-                assert (target < resultColumns);
+                assert(target < resultColumns);
                 result.setColumn(target, offset, columnResult.size);
             }
         } else {

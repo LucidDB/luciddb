@@ -369,7 +369,7 @@ class RegisterRef : public RegisterReference
 public:
     explicit
     //! Creates an invalid object.
-    RegisterRef () : RegisterReference()
+    RegisterRef() : RegisterReference()
     {}
 
     //! Creates a valid register reference

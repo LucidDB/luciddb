@@ -117,14 +117,14 @@ public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         // must be generated in order
-        assert (lastRow <= iRow);
+        assert(lastRow <= iRow);
         lastRow = iRow;
 
         if (iRow >= changeIndexes[current]) {
             current++;
-            assert (current < interval);
+            assert(current < interval);
         }
-        assert (iCol < nKeys);
+        assert(iCol < nKeys);
         return current % repeatSeqValues[iCol];
     }
 };

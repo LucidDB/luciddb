@@ -43,7 +43,7 @@ void LhxHashDataAccessor::unpack(
 {
     PBuffer buf = getBuffer();
 
-    assert (buf != NULL);
+    assert(buf != NULL);
 
     if (destProj.size() > 0) {
         // REVIEW jvs 25-Aug-2006:  It looks like there's a potential
@@ -133,7 +133,7 @@ void LhxHashKeyAccessor::unpack(
 {
     PBuffer buf = getBuffer();
 
-    assert (buf != NULL);
+    assert(buf != NULL);
 
     if (destProj.size() > 0) {
         /*
@@ -235,7 +235,7 @@ PBuffer LhxHashBlockAccessor::allocBuffer(uint bufSize)
 
 PBuffer *LhxHashBlockAccessor::getSlot(uint slotNum)
 {
-    assert (getCurrent() != NULL);
+    assert(getCurrent() != NULL);
     if (slotNum >= numSlotsPerBlock) {
         /*
          * slotNum starts from 0.
@@ -252,7 +252,7 @@ void LhxHashTable::init(
     uint buildInputIndex)
 {
     maxBlockCount = hashInfo.numCachePages;
-    assert (maxBlockCount > 1);
+    assert(maxBlockCount > 1);
     scratchAccessor = hashInfo.memSegmentAccessor;
     partitionLevel = partitionLevelInit;
     bufferLock.accessSegment(scratchAccessor);
@@ -403,7 +403,7 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
             nodeBlockAccessor.setCurrent(currentBlock, false, false);
             resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
 
-            assert (resultBuf);
+            assert(resultBuf);
         }
     }
 
@@ -412,7 +412,7 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
 
 bool LhxHashTable::allocateResources(bool reuse)
 {
-    assert (numSlots != 0);
+    assert(numSlots != 0);
 
     PBuffer newBlock;
 
@@ -429,7 +429,7 @@ bool LhxHashTable::allocateResources(bool reuse)
     /*
      * Should be able to allocate at least one block.
      */
-    assert (currentBlock != NULL);
+    assert(currentBlock != NULL);
 
     uint numSlotsPerBlock = blockAccessor.getSlotsPerBlock();
 
@@ -607,7 +607,7 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
 
     slot = blockAccessor.getSlot(slotNum % slotsPerBlock);
 
-    assert (slot);
+    assert(slot);
 
     return slot;
 }
@@ -927,7 +927,7 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
              */
             memcpy((PBuffer*)&destKey, destKeyLoc, sizeof(PBuffer));
 
-            assert (destKey);
+            assert(destKey);
 
             return addData(destKey, inputTuple);
         } else {
@@ -1192,7 +1192,7 @@ void LhxHashTableReader::init(
 bool LhxHashTableReader::getNext(TupleData &outputTuple)
 {
     if (!isPositioned) {
-        assert (!(boundKey && returnUnMatched));
+        assert(!(boundKey && returnUnMatched));
 
         /*
          * Position at the first qualifying key of the first slot.

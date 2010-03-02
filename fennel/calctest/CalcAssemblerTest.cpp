@@ -2136,8 +2136,8 @@ void CalcAssemblerTest::testStandardTypes()
 
         if (!StandardTypeDescriptor::isArray(type)) {
             // Verify what we think is the; min/max is the min/max
-            assert (testCase1.getInput(0) == min[type]);
-            assert (testCase1.getInput(1) == max[type]);
+            assert(testCase1.getInput(0) == min[type]);
+            assert(testCase1.getInput(1) == max[type]);
         }
 
         // Now test literal binding for the type
@@ -2715,7 +2715,7 @@ void CalcAssemblerTest::testComments()
 }
 
 #if 0
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
     ProgramName = argv[0];
     InstructionFactory inst();

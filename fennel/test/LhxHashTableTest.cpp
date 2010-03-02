@@ -298,7 +298,7 @@ void LhxHashTableTest::testInsert(
         dataTrace << "\n";
         numTuples ++;
     }
-    assert (numTuples == numRows);
+    assert(numTuples == numRows);
 
     /*
      * Verify that the keys are inserted.
@@ -330,7 +330,7 @@ void LhxHashTableTest::testInsert(
         }
     }
 
-    assert (numTuples == numRows);
+    assert(numTuples == numRows);
 
     if (dumpHashTable) {
         LhxHashTableDump hashTableDump(
@@ -369,7 +369,7 @@ void LhxHashTableTest::testInsert(
             hashTableDump.dump(dataTrace.str());
         }
         // verify read/write row count match.
-        assert (tuplesWritten == numRows && tuplesRead == tuplesWritten);
+        assert(tuplesWritten == numRows && tuplesRead == tuplesWritten);
     }
 
     if (recursivePartitioning > 0) {

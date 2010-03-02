@@ -500,7 +500,7 @@ bool LbmMinusExecStream::produceTuple(TupleData bitmapTuple)
         for (uint i = 0; i < nFields; i++) {
             prefixedBitmapTuple[i].copyFrom(prevTuple[i]);
         }
-        assert (prefixedBitmapTuple.size() == nFields + bitmapTuple.size());
+        assert(prefixedBitmapTuple.size() == nFields + bitmapTuple.size());
         for (uint i = 0; i < 3; i++) {
             prefixedBitmapTuple[nFields + i].copyFrom(bitmapTuple[i]);
         }

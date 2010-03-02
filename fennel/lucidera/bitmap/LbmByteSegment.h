@@ -150,7 +150,7 @@ public:
                     slowBits++;
                 }
             }
-            assert (slowBits == bitsInByte[i]);
+            assert(slowBits == bitsInByte[i]);
         }
     }
 

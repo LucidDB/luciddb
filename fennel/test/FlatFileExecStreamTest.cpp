@@ -207,7 +207,7 @@ void FlatFileExecStreamTest::checkTrim(
     const char *result)
 {
     char buffer[128];
-    assert (strlen(string) < sizeof(buffer));
+    assert(strlen(string) < sizeof(buffer));
     strcpy(buffer, string);
 
     uint size = strlen(result);
@@ -221,7 +221,7 @@ void FlatFileExecStreamTest::checkStrip(
     const char *result)
 {
     char buffer[128];
-    assert (strlen(string) < sizeof(buffer));
+    assert(strlen(string) < sizeof(buffer));
     strcpy(buffer, string);
 
     uint size = strlen(result);

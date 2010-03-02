@@ -57,7 +57,7 @@ void RegisterSetBinding::rebind(
     TupleData* newBase, bool ownIt)
 {
     assert(newBase);
-    assert (ncols == newBase->size());
+    assert(ncols == newBase->size());
     if (ownTheBase) {
         // previous base owned by me.
         delete base;
@@ -101,7 +101,7 @@ void RegisterSetBinding::rebind(
     TupleData* newBase, const TupleData* shadow, bool ownIt)
 {
     assert(newBase);
-    assert (ncols == newBase->size());
+    assert(ncols == newBase->size());
     if (ownTheBase) {
         // previous base owned by me.
         delete base;

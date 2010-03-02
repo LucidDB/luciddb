@@ -33,7 +33,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void LhxJoinExecStream::prepare(
     LhxJoinExecStreamParams const &params)
 {
-    assert (params.leftKeyProj.size() == params.rightKeyProj.size());
+    assert(params.leftKeyProj.size() == params.rightKeyProj.size());
 
     ConfluenceExecStream::prepare(params);
 
@@ -229,7 +229,7 @@ void LhxJoinExecStream::open(bool restart)
     hashTableReader.init(&hashTable, hashInfo, curPlan->getBuildInput());
 
     bool status = hashTable.allocateResources();
-    assert (status);
+    assert(status);
 
     buildReader.open(curPlan->getBuildPartition(), hashInfo);
 
@@ -418,7 +418,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     curPlan->getBuildInput());
 
                 bool status = hashTable.allocateResources();
-                assert (status);
+                assert(status);
                 buildReader.open(curPlan->getBuildPartition(), hashInfo);
 
                 joinState =
@@ -445,7 +445,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         curPlan->getBuildInput());
 
                     bool status = hashTable.allocateResources();
-                    assert (status);
+                    assert(status);
                     buildReader.open(curPlan->getBuildPartition(), hashInfo);
                     joinState =
                         (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
@@ -720,7 +720,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
     /*
      * The state machine should never come here.
      */
-    assert (false);
+    assert(false);
 }
 
 void LhxJoinExecStream::closeImpl()
@@ -773,13 +773,13 @@ void LhxJoinExecStream::setJoinType(
      * Otherwise, the optimizer has passed in a join type not supported by this
      * join implementation.
      */
-    assert (joinType->count() != 0);
+    assert(joinType->count() != 0);
 
     regularJoin   = !params.setopDistinct && !params.setopAll;
     setopDistinct =  params.setopDistinct && !params.setopAll;
     setopAll      = !params.setopDistinct &&  params.setopAll;
 
-    assert (!setopAll && (regularJoin || setopDistinct));
+    assert(!setopAll && (regularJoin || setopDistinct));
 
     /*
      * Anit joins with duplicate removal needs to use hash table to remove
@@ -789,7 +789,7 @@ void LhxJoinExecStream::setJoinType(
     bool leftAnti =
         (returnProbeOuter() && !returnProbeInner() && !returnBuild());
 
-    assert (!(leftAnti && setopDistinct));
+    assert(!(leftAnti && setopDistinct));
 }
 
 void LhxJoinExecStream::setHashInfo(

@@ -828,7 +828,7 @@ void ExecStreamFactory::readBTreeParams(
 DynamicParamId ExecStreamFactory::readDynamicParamId(const int val)
 {
     // NOTE: zero is a special code for no parameter id
-    uint (id) = (val < 0) ? 0 : (uint) val;
+    uint id = (val < 0) ? 0 : (uint) val;
     return (DynamicParamId) id;
 }
 

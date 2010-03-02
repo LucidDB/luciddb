@@ -40,7 +40,7 @@ class RegisterReference;
 class TupleDescriptor;
 class StoredTypeDescriptorFactory;
 
-extern int CalcYYparse (void *);
+extern int CalcYYparse(void *);
 
 /**
  * The CalcAssembler is responsible for taking a textual representation
@@ -258,7 +258,7 @@ public:
         PConstBuffer buffer);
 
 protected:
-    friend int CalcYYparse (void *);
+    friend int CalcYYparse(void *);
 
     // Protected functions that are used by CalcYYparse
 
