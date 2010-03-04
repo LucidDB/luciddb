@@ -73,9 +73,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/str_replace.sql"/>
       </test>
 
+      <!-- ngoodman: disabling until we can get it so it's not timezone specific 
       <test name="dateInternal" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/date_internal.sql"/>
-      </test>
+      </test>-->
 
       <test name="dayInYear" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/day_in_year.sql"/>
