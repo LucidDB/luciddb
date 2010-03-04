@@ -215,8 +215,9 @@ void LcsClusterNodeWriter::openNew(LcsRid startRID)
         szBlock
         - hdrSize
         - (2 * sizeof(LcsBatchDir)) * nClusterCols;
-    szLeft = std::max(szLeft, 0);
-    assert(szLeft >= 0);
+    if (szLeft < 0) {
+        szLeft = 0;
+    }
 }
 
 bool LcsClusterNodeWriter::openAppend(
@@ -229,8 +230,9 @@ bool LcsClusterNodeWriter::openAppend(
         lastVal[nClusterCols - 1]
         - pHdr->oBatch
         - (pHdr->nBatch + 2* nClusterCols) * sizeof(LcsBatchDir);
-    szLeft = std::max(szLeft, 0);
-    assert(szLeft >= 0);
+    if (szLeft < 0) {
+        szLeft = 0;
+    }
 
     // Let's move the values, batch directories, and batches to
     // temporary blocks from index block
@@ -376,8 +378,9 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     newSz = lastVal[column] - batchOffset[column]
         - (batchCount[column] + 2) * sizeof(LcsBatchDir);
     szLeft += (newSz - origSzLeft);
-    szLeft = std::max(szLeft, 0);
-    assert(szLeft >= 0);
+    if (szLeft < 0) {
+        szLeft = 0;
+    }
 
     // # of bits it takes to represent 0 values
     nBits[column] = 0;
@@ -939,8 +942,9 @@ void LcsClusterNodeWriter::pickCompressionMode(
     // adjust szLeft for the space used by the next batch to reflect only
     // its batch directory
     szLeft -= sizeof(LcsBatchDir);
-    szLeft = std::max(szLeft, 0);
-    assert(szLeft >= 0);
+    if (szLeft < 0) {
+        szLeft = 0;
+    }
 
     // batchDirs[column].oVal points to where the batch dir used to be,
     // and this is where the batch records will start
