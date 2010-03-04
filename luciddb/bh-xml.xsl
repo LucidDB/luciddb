@@ -61,10 +61,10 @@
 							<failure>
 								<xsl:attribute name="type">
 									<xsl:value-of
-										select="/test-log/test-result/execution-output/@errorname" />
+										select="./execution-output/@errorname" />
 								</xsl:attribute>
 								<xsl:value-of
-									select="/test-log/test-result/execution-output/output-details" />
+									select="./execution-output/output-details" />
 							</failure>
 
 						</xsl:otherwise>
