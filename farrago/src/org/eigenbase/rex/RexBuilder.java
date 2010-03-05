@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -201,6 +201,15 @@ public class RexBuilder
         SqlOperator op,
         RexNode ... exprs)
     {
+        if (op == SqlStdOperatorTable.andOperator
+            && exprs.length == 2
+            && exprs[0].equals(exprs[1]))
+        {
+            // Avoid generating 'AND(x, x)'; this can cause plan explosions if a
+            // relnode is its own child and is merged with itself.
+            return exprs[0];
+        }
+
         final RelDataType type = deriveReturnType(op, typeFactory, exprs);
         RexNode [] fixExprs = exprs;
 

@@ -85,3 +85,10 @@ select e.name, d.*
 explain plan for
 select d.*, e.name
     from (select min(deptno) from lcsdepts) d, lcsemps e order by 2;
+
+-- with dtbug 2070, constant reduction throws the volcano planner into a loop
+explain plan for
+select * from (values (1)) as va(i), (values (4, 4)) as vb(x, j) where j = x;
+
+-- End cartesian.sql
+
