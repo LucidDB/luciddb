@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2003-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2003-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -69,7 +69,7 @@ import org.netbeans.api.mdr.events.*;
  * object-specific rules should be implemented in handler classes for the
  * appropriate catalog objects.</p>
  *
- * NOTE: all validation activity must take place in the same thread in which
+ * <p>NOTE: all validation activity must take place in the same thread in which
  * DdlValidator's constructor is called.
  *
  * @author John V. Sichi
@@ -1517,16 +1517,17 @@ public class DdlValidator
         ValidatedOp action)
     {
         stmtValidator.setParserPosition(null);
-        if (action == ValidatedOp.CREATION) {
+        switch (action) {
+        case CREATION:
             return invokeHandler(modelElement, "validateDefinition");
-        } else if (action == ValidatedOp.MODIFICATION) {
+        case MODIFICATION:
             return invokeHandler(modelElement, "validateModification");
-        } else if (action == ValidatedOp.DELETION) {
+        case DELETION:
             return invokeHandler(modelElement, "validateDrop");
-        } else if (action == ValidatedOp.TRUNCATION) {
+        case TRUNCATION:
             return invokeHandler(modelElement, "validateTruncation");
-        } else {
-            throw new AssertionError();
+        default:
+            throw Util.unexpected(action);
         }
     }
 
@@ -1633,17 +1634,17 @@ public class DdlValidator
     // implement FarragoSessionDdlValidator
     public Set<CwmModelElement> getDependencies(CwmModelElement rootElement)
     {
-        Set<CwmModelElement> result = new HashSet<CwmModelElement>();
-
-        DependencySupplier s =
+        // Use LinkedHashSet so that order is deterministic. Otherwise, if a
+        // change to a view invalidates multiple dependent views, the error
+        // message might be different each time.
+        final Set<CwmModelElement> result =
+            new LinkedHashSet<CwmModelElement>();
+        final DependencySupplier s =
             getRepos().getCorePackage().getDependencySupplier();
-        for (Object o : s.getSupplierDependency(rootElement)) {
-            if (o instanceof CwmDependency) {
-                CwmDependency dep = (CwmDependency) o;
-                Collection<CwmModelElement> c = dep.getClient();
-                for (CwmModelElement e : c) {
-                    result.add(e);
-                }
+        for (CwmDependency dep : s.getSupplierDependency(rootElement)) {
+            Collection<CwmModelElement> c = dep.getClient();
+            for (CwmModelElement e : c) {
+                result.add(e);
             }
         }
         return result;

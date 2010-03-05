@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2005-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -51,6 +51,11 @@ public class FarragoSessionAnalyzedSql
     public boolean optimized;
 
     /**
+     * The text of the SQL expression before expansion by the validator.
+     */
+    public SqlString rawString;
+
+    /**
      * The text of the SQL expression after expansion by the validator. This
      * contains no context-dependent information (e.g. all objects are fully
      * qualified), so it can be stored in the catalog.
@@ -60,6 +65,16 @@ public class FarragoSessionAnalyzedSql
      * literals.
      */
     public SqlString canonicalString;
+
+    /**
+     * The text of the SQL expression after modest expansion by the validator.
+     *
+     * <p>Any "*" or "relation.*" in the SELECT clause are expanded, ensuring
+     * that the query still returns the same columns if a source table's columns
+     * change, but the text is otherwise the same as the end-user entered it,
+     * including the same formatting.
+     */
+    public SqlString expandedString;
 
     /**
      * Set of catalog objects on which the expression directly depends.

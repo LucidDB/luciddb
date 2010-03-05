@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2003-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2003-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -60,6 +60,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
@@ -1033,7 +1034,22 @@ public class FarragoDatabase
                     sqlNode,
                     nameToTypeMap);
         } else {
+            SqlNode clonedSqlNode = null;
+            if (analyzedSql != null) {
+                clonedSqlNode = sqlNode.clone(SqlParserPos.ZERO);
+            }
             validatedSqlNode = sqlValidator.validate(sqlNode);
+            if (analyzedSql != null) {
+                // Identify the "*" and "relation.*" elements in the SELECT
+                // clause, and the lists of expressions that replaced them.
+                String expandedSql =
+                    replaceStars(
+                        clonedSqlNode,
+                        validatedSqlNode,
+                        analyzedSql.rawString.getSql());
+                analyzedSql.expandedString =
+                    new SqlString(SqlDialect.DUMMY, expandedSql);
+            }
         }
 
         stmt.postValidate(validatedSqlNode);
@@ -1120,6 +1136,102 @@ public class FarragoDatabase
             (FarragoSessionExecutableStmt) cacheEntry.getValue();
         owner.addAllocation(cacheEntry);
         return executableStmt;
+    }
+
+    /**
+     * Replaces each "*" or "relation.*" in a query with its expanded
+     * replacement, keeping the other text and formatting unchanged.
+     *
+     * @param sqlNode SQL node before validation
+     * @param expandedSqlNode SQL node after validation (and expansion of stars)
+     * @param sql SQL text
+     * @return Replaced SQL text
+     */
+    private String replaceStars(
+        SqlNode sqlNode,
+        SqlNode expandedSqlNode,
+        String sql)
+    {
+        List<Pair<SqlNode, List<SqlNode>>> starsAndReplacements =
+            new ArrayList<Pair<SqlNode, List<SqlNode>>>();
+        findStars(expandedSqlNode, sqlNode, starsAndReplacements);
+        for (int i = starsAndReplacements.size() - 1; i >= 0; --i) {
+            Pair<SqlNode, List<SqlNode>> pair = starsAndReplacements.get(i);
+            final SqlParserPos pos = pair.left.getParserPosition();
+            final int start =
+                SqlParserUtil.lineColToIndex(
+                    sql, pos.getLineNum(), pos.getColumnNum());
+            final int end =
+                SqlParserUtil.lineColToIndex(
+                    sql, pos.getEndLineNum(),
+                    pos.getEndColumnNum()) + 1;
+            sql =
+                sql.substring(0, start)
+                + new SqlNodeList(pair.right, pos).toString()
+                + sql.substring(end);
+        }
+        return sql;
+    }
+
+    /**
+     * Locates all "*" and ".*" expressions in the top-level SELECT clause
+     * (or in SELECT clauses of a top-level set operation like UNION).
+     *
+     * @param validatedSqlNode
+     *     Parse tree after validation (stars have been expanded)
+     * @param clonedSqlNode
+     *     Parse tree before validation (stars hve not been expanded)
+     * @param starsAndReplacements
+     *     List of stars and the expressions they expanded to. Populated by this
+     *     method
+     */
+    private void findStars(
+        SqlNode validatedSqlNode,
+        SqlNode clonedSqlNode,
+        List<Pair<SqlNode, List<SqlNode>>> starsAndReplacements)
+    {
+        if (clonedSqlNode instanceof SqlSelect) {
+            SqlSelect clonedSelect = (SqlSelect) clonedSqlNode;
+            final SqlNodeList selectList =
+                ((SqlSelect) validatedSqlNode).getSelectList();
+            final ListIterator<SqlNode> selectIter =
+                selectList.getList().listIterator();
+            for (SqlNode expr : clonedSelect.getSelectList()) {
+                if (!(expr instanceof SqlIdentifier)) {
+                    continue;
+                }
+                SqlIdentifier id = (SqlIdentifier) expr;
+                if (!id.isStar()) {
+                    continue;
+                }
+                List<SqlNode> replacements =
+                    new ArrayList<SqlNode>();
+                final SqlParserPos idPos = id.getParserPosition();
+                while (selectIter.hasNext()) {
+                    final SqlNode node = selectIter.next();
+                    if (node.getParserPosition().equals(idPos)) {
+                        replacements.add(node);
+                    } else if (!replacements.isEmpty()) {
+                        // Replacements are not empty, so we must have moved
+                        // past the last replacement.
+                        break;
+                    }
+                }
+                starsAndReplacements.add(
+                    new Pair<SqlNode, List<SqlNode>>(
+                        id, replacements));
+            }
+        } else if (clonedSqlNode instanceof SqlCall) {
+            final SqlCall clonedCall = (SqlCall) clonedSqlNode;
+            final SqlCall validatedCall = (SqlCall) validatedSqlNode;
+            if (clonedCall.getOperator() instanceof SqlSetOperator) {
+                int i = 0;
+                for (SqlNode cloneChild : clonedCall.getOperands()) {
+                    SqlNode validatedChild = validatedCall.getOperands()[i++];
+                    findStars(validatedChild, cloneChild, starsAndReplacements);
+                }
+            }
+        }
     }
 
     private boolean isExecutableStmtStale(
