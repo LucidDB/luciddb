@@ -277,6 +277,17 @@
   <result DEPTNO="10" DNAME="ACCOUNTING" LOC="NEW YORK" EMPNO="7934" ENAME="MILLER" JOB="CLERK" MGR="7782" HIREDATE="1982-01-23" SAL="1300" COMM="null" DEPTNO0="10"/>
 </resultset>
 > 
+> -- rename can be pushed down to remote server
+> select deptno as d
+> from hsqldb_demo.sales.dept
+> order by d;
+<resultset>
+  <result D="10"/>
+  <result D="20"/>
+  <result D="30"/>
+  <result D="40"/>
+</resultset>
+> 
 > -- now explain plans for above queries
 > !set outputformat csv
 > 
@@ -537,6 +548,14 @@
 '(SELECT *'
 'FROM "SALES"."DEPT") AS "RIGHT_INPUT"'
 'WHERE "LEFT_INPUT"."DEPTNO" = "RIGHT_INPUT"."DEPTNO"])'
+> 
+> explain plan for
+> select deptno as d
+> from hsqldb_demo.sales.dept;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO" AS "D"'
+'FROM "SALES"."DEPT"])'
 > 
 > explain plan for
 > select *
