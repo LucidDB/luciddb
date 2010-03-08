@@ -67,16 +67,6 @@ public class FarragoSessionAnalyzedSql
     public SqlString canonicalString;
 
     /**
-     * The text of the SQL expression after modest expansion by the validator.
-     *
-     * <p>Any "*" or "relation.*" in the SELECT clause are expanded, ensuring
-     * that the query still returns the same columns if a source table's columns
-     * change, but the text is otherwise the same as the end-user entered it,
-     * including the same formatting.
-     */
-    public SqlString expandedString;
-
-    /**
      * Set of catalog objects on which the expression directly depends.
      */
     public Set<CwmModelElement> dependencies;

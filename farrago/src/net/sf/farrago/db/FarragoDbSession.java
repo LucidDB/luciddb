@@ -778,7 +778,7 @@ public class FarragoDbSession
         boolean optimize)
     {
         FarragoSessionAnalyzedSql analyzedSql = getAnalysisBlock(typeFactory);
-        analyzedSql.rawString = new SqlString(SqlDialect.DUMMY, sql);
+        analyzedSql.rawString = new SqlString(SqlDialect.EIGENBASE, sql);
         analyzedSql.optimized = optimize;
         analyzedSql.paramRowType = paramRowType;
         FarragoSessionExecutableStmt stmt =

@@ -332,42 +332,19 @@ public class DdlRelationalHandler
         FemLocalView view)
         throws Throwable
     {
-        // If enabled by the personality, use the original SQL.
-        FarragoSessionAnalyzedSql analyzedSql = null;
-        String sql = view.getOriginalDefinition();
-        if (sql != null
-            && session.getPersonality().shouldReplacePreserveOriginalSql())
-        {
-            tracer.fine(sql);
-            try {
-                analyzedSql =
-                    session.analyzeSql(
-                        sql,
-                        validator.getTypeFactory(),
-                        null,
-                        false);
-                assert analyzedSql != null;
-            } catch (RuntimeException ex) {
-                // validation errors indicate that we will just have to use the
-                // canonical SQL
-                Util.swallow(ex, null);
-            }
-        }
-
-        // Second attempt, use the canonical SQL.
-        if (analyzedSql == null) {
-            sql = view.getQueryExpression().getBody();
-            try {
-                analyzedSql =
-                    session.analyzeSql(
-                        sql,
-                        validator.getTypeFactory(),
-                        null,
-                        false);
-                assert analyzedSql != null;
-            } catch (Throwable ex) {
-                throw adjustExceptionParserPosition(view, ex);
-            }
+        final FarragoSessionAnalyzedSql analyzedSql;
+        final String sql = view.getQueryExpression().getBody();
+        tracer.fine(sql);
+        try {
+            analyzedSql =
+                session.analyzeSql(
+                    sql,
+                    validator.getTypeFactory(),
+                    null,
+                    false);
+            assert analyzedSql != null;
+        } catch (Throwable ex) {
+            throw adjustExceptionParserPosition(view, ex);
         }
 
         final RelDataType rowType = analyzedSql.resultType;
@@ -414,7 +391,11 @@ public class DdlRelationalHandler
 
         validator.fixupView(view, analyzedSql);
 
-        view.setOriginalDefinition(analyzedSql.expandedString.getSql());
+        if (!session.getPersonality().shouldReplacePreserveOriginalSql()) {
+            view.setOriginalDefinition(analyzedSql.canonicalString.getSql());
+        } else if (view.getOriginalDefinition() == null) {
+            view.setOriginalDefinition(sql);
+        }
         view.getQueryExpression().setBody(analyzedSql.canonicalString.getSql());
         analyzedSql.setModality(view);
 
