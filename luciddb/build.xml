@@ -235,16 +235,16 @@ ${farrago.test.jvmargs}
 
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
-  	<xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
-  		<mapper type="glob" from="*.xml" to="TEST-*.xml" />
-  	</xslt>
+    <xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
+      <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
+    </xslt>
   </target>
 
   <target name="gen-bh-report-all">
     <xslt basedir="." destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
-  	<xslt basedir="." destdir="testlog/bh" style="bh-xml.xsl" includes="**/bh.xml">
-  		<mapper type="glob" from="*.xml" to="TEST-*.xml" />
-  	</xslt>
+    <xslt basedir="." destdir="testlog/bh" style="bh-xml.xsl" includes="**/bh.xml">
+      <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
+    </xslt>
   </target>
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
