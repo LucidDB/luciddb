@@ -91,12 +91,9 @@
 
       </test>
 
-      <test name="remoteRowsUDXTest">
-        <junit testclass="com.lucidera.luciddb.test.udr.TestRemoteRowsUDX"
-            methodnames="testRemoteRowsUDX"/>
-      </test>
-
       <test-suite-call testfile="enforceRowConstraints/test.xml"/>
+
+      <test-suite-call testfile="impexp/test.xml"/>
 
       <cleanup-hook>
         <test-suite name="cleanup">
