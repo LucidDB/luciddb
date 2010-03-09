@@ -1,0 +1,328 @@
+0: jdbc:luciddb:> -- Test for WriteRowsToFileUDX.java
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema wrtfudx;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'wrtfudx';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table MyTestTb(
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > id int,
+. . . . . . . . > 
+. . . . . . . . > name varchar(255),
+. . . . . . . . > 
+. . . . . . . . > birthday date,
+. . . . . . . . > 
+. . . . . . . . > is_married boolean
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyTestTb values(1,'ray',DATE'1983-12-25',FALSE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyTestTb values(2,'john',DATE'1983-1-17',FALSE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyTestTb values(3,'mike',DATE'1983-1-17',TRUE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyTestTb values(4,'tom',DATE'1983-1-17',FALSE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyTestTb values(5,'jim',DATE'1983-1-17',FALSE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(1) from wrtfudx.MyTestTb;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'file://@DIR@/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 5 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'file://@DIR@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 5 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'classpath://@PACKAGE@/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 5 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'classpath://@PACKAGE@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 5 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --Verify a zero row file is written, and reads properly with READ_ROWS_FROM_FILE 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb where 1=2),'file://@DIR@/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 0 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(cursor(
+. . . . . . . . > 
+. . . . . . . . >      select cast(null as int) as id, cast(null as varchar(255)) as name,
+. . . . . . . . > 
+. . . . . . . . >      cast(null as date) as birthday, cast(null as boolean) as is_married
+. . . . . . . . > 
+. . . . . . . . >      from (values(0))
+. . . . . . . . > 
+. . . . . . . . >     ),'file://@DIR@/GZIP.wrtfudx.MyTestTb.dat',TRUE)
+. . . . . . . . > 
+. . . . . . . . > );
++-----+-------+-----------+-------------+
+| ID  | NAME  | BIRTHDAY  | IS_MARRIED  |
++-----+-------+-----------+-------------+
++-----+-------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb where 1=2),'file://@DIR@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 0 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(cursor(
+. . . . . . . . > 
+. . . . . . . . >      select cast(null as int) as id, cast(null as varchar(255)) as name,
+. . . . . . . . > 
+. . . . . . . . >      cast(null as date) as birthday, cast(null as boolean) as is_married
+. . . . . . . . > 
+. . . . . . . . >      from (values(0))
+. . . . . . . . > 
+. . . . . . . . >     ),'file://@DIR@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE)
+. . . . . . . . > 
+. . . . . . . . > );
++-----+-------+-----------+-------------+
+| ID  | NAME  | BIRTHDAY  | IS_MARRIED  |
++-----+-------+-----------+-------------+
++-----+-------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb where 1=2),'classpath://@PACKAGE@/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 0 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(cursor(
+. . . . . . . . > 
+. . . . . . . . >      select cast(null as int) as id, cast(null as varchar(255)) as name,
+. . . . . . . . > 
+. . . . . . . . >      cast(null as date) as birthday, cast(null as boolean) as is_married
+. . . . . . . . > 
+. . . . . . . . >      from (values(0))
+. . . . . . . . > 
+. . . . . . . . >     ),'classpath://@PACKAGE@/GZIP.wrtfudx.MyTestTb.dat',TRUE)
+. . . . . . . . > 
+. . . . . . . . > );
++-----+-------+-----------+-------------+
+| ID  | NAME  | BIRTHDAY  | IS_MARRIED  |
++-----+-------+-----------+-------------+
++-----+-------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb where 1=2),'classpath://@PACKAGE@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE));
++---------+--------------------------------------------------------------+
+| STATUS  |                           MESSAGE                            |
++---------+--------------------------------------------------------------+
+| 0       | 0 rows have been written in the specific file successfully!  |
++---------+--------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(cursor(
+. . . . . . . . > 
+. . . . . . . . >      select cast(null as int) as id, cast(null as varchar(255)) as name,
+. . . . . . . . > 
+. . . . . . . . >      cast(null as date) as birthday, cast(null as boolean) as is_married
+. . . . . . . . > 
+. . . . . . . . >      from (values(0))
+. . . . . . . . > 
+. . . . . . . . >     ),'classpath://@PACKAGE@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE)
+. . . . . . . . > 
+. . . . . . . . > );
++-----+-------+-----------+-------------+
+| ID  | NAME  | BIRTHDAY  | IS_MARRIED  |
++-----+-------+-----------+-------------+
++-----+-------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --Verify that writing to a malformed URL throws an exception (bad file location) 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'file://@DIR@1/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+----------------------------------------------------------------------------------------------------+
+| STATUS  |                                              MESSAGE                                               |
++---------+----------------------------------------------------------------------------------------------------+
+| 1       | @DIR@1/GZIP.wrtfudx.MyTestTb.dat (No such file or directory)  |
++---------+----------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'classpath://@PACKAGE@1/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+---------------------------------------------------------------------+
+| STATUS  |                               MESSAGE                               |
++---------+---------------------------------------------------------------------+
+| 1       | Bad File Location: @PACKAGE@1/ is not exist. Please change it.  |
++---------+---------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --Test creating a large, big file. Consider using fiscal time dimension applib extension as source.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table MyFiscalTimeTb(
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > TIME_KEY_SEQ int,
+. . . . . . . . > 
+. . . . . . . . > TIME_KEY date
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyFiscalTimeTb
+. . . . . . . . > 
+. . . . . . . . > select TIME_KEY_SEQ ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2050,12,31,1));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into wrtfudx.MyFiscalTimeTb
+. . . . . . . . > 
+. . . . . . . . > select * from wrtfudx.MyFiscalTimeTb;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyFiscalTimeTb),'file://@DIR@/GZIP.wrtfudx.MyTestTb.dat',TRUE));
++---------+------------------------------------------------------------------+
+| STATUS  |                             MESSAGE                              |
++---------+------------------------------------------------------------------+
+| 0       | 29950 rows have been written in the specific file successfully!  |
++---------+------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(1) from wrtfudx.MyFiscalTimeTb;
++---------+
+| EXPR$0  |
++---------+
+| 29950   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(1) from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(
+. . . . . . . . > 
+. . . . . . . . >     cursor(
+. . . . . . . . > 
+. . . . . . . . >       select cast(null as int) as TIME_KEY_SEQ, 
+. . . . . . . . > 
+. . . . . . . . >       cast(null as date) as TIME_KEY 
+. . . . . . . . > 
+. . . . . . . . >       from (values(0)
+. . . . . . . . > 
+. . . . . . . . >   )
+. . . . . . . . > 
+. . . . . . . . >   ),'file://@DIR@/GZIP.wrtfudx.MyTestTb.dat',TRUE)
+. . . . . . . . > 
+. . . . . . . . > );
++---------+
+| EXPR$0  |
++---------+
+| 29950   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyFiscalTimeTb),'classpath://@PACKAGE@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE));
++---------+------------------------------------------------------------------+
+| STATUS  |                             MESSAGE                              |
++---------+------------------------------------------------------------------+
+| 0       | 29950 rows have been written in the specific file successfully!  |
++---------+------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(1) from table(
+. . . . . . . . > 
+. . . . . . . . >   APPLIB.READ_ROWS_FROM_FILE(
+. . . . . . . . > 
+. . . . . . . . >     cursor(
+. . . . . . . . > 
+. . . . . . . . >       select cast(null as int) as TIME_KEY_SEQ, 
+. . . . . . . . > 
+. . . . . . . . >       cast(null as date) as TIME_KEY 
+. . . . . . . . > 
+. . . . . . . . >       from (values(0)
+. . . . . . . . > 
+. . . . . . . . >   )
+. . . . . . . . > 
+. . . . . . . . >   ),'classpath://@PACKAGE@/NON_GZIP.wrtfudx.MyTestTb.dat',FALSE)
+. . . . . . . . > 
+. . . . . . . . > );
++---------+
+| EXPR$0  |
++---------+
+| 29950   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table MyFiscalTimeTb cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table MyTestTb cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema wrtfudx cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
