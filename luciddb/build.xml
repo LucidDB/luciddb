@@ -415,7 +415,8 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-all.xml"
-      classpathref="test.classpath"/>
+      classpathref="test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
   </target>
 
