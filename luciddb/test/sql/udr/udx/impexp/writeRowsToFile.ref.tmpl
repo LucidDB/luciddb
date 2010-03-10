@@ -127,17 +127,9 @@
 0: jdbc:luciddb:> --Verify that writing to a malformed URL throws an exception (bad file location) 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'file://@DIR@1/GZIP.wrtfudx.MyTestTb.dat',TRUE));
-+---------+----------------------------------------------------------------------------------------------------+
-| STATUS  |                                              MESSAGE                                               |
-+---------+----------------------------------------------------------------------------------------------------+
-| 1       | @DIR@1/GZIP.wrtfudx.MyTestTb.dat (No such file or directory)  |
-+---------+----------------------------------------------------------------------------------------------------+
+Error: java.io.FileNotFoundException: @DIR@1/GZIP.wrtfudx.MyTestTb.dat (No such file or directory) (state=,code=0)
 0: jdbc:luciddb:> select * from table(APPLIB.WRITE_ROWS_TO_FILE(cursor(select * from wrtfudx.MyTestTb),'classpath://@PACKAGE@1/GZIP.wrtfudx.MyTestTb.dat',TRUE));
-+---------+---------------------------------------------------------------------+
-| STATUS  |                               MESSAGE                               |
-+---------+---------------------------------------------------------------------+
-| 1       | Bad File Location: @PACKAGE@1/ is not exist. Please change it.  |
-+---------+---------------------------------------------------------------------+
+Error: java.net.MalformedURLException: Bad File Location: @PACKAGE@1/ is not exist. Please change it. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --Test creating a large, big file. Consider using fiscal time dimension applib extension as source.
 0: jdbc:luciddb:> 

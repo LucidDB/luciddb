@@ -118,7 +118,7 @@ public class WriteRowsToFileUDX
         String url,
         boolean is_compressed,
         PreparedStatement resultInserter)
-        throws SQLException
+        throws Exception
     {
 
         int status = 0;
@@ -181,8 +181,9 @@ public class WriteRowsToFileUDX
 
         } catch (Exception ex) {
 
-            status = 1;
-            err_msg = ex.getMessage();
+            //status = 1;
+            //err_msg = ex.getMessage();
+            throw ex;
 
         } finally {
 
