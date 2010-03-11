@@ -238,6 +238,16 @@ ${farrago.test.jvmargs}
     <xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
       <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
     </xslt>
+    <!-- If test is failed, let it exit(ie.,BUILD FAILED)-->
+    <length file="${luciddb.dir}/testlog/bh/bh.debug" property="bh.testres.filesize"/>
+      <if>
+        <equals arg1="${bh.testres.filesize}" arg2="0" />
+          <then>
+          </then>
+      <else>
+         <fail message="Some tests were failed."/>
+      </else>
+      </if>
   </target>
 
   <target name="gen-bh-report-all">
@@ -439,8 +449,10 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test.xml"
-      classpathref="test.classpath"/>
+      classpathref="test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
+
   </target>
 
   <!-- ************** Emma ****************** 
@@ -454,7 +466,8 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test.xml"
-      classpathref="emma.test.classpath"/>
+      classpathref="emma.test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
   </target>
 
