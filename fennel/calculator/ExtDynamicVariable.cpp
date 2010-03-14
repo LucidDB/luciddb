@@ -29,7 +29,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-PConstBuffer getData(RegisterRef<int>* id) {
+PConstBuffer getData(RegisterRef<int32_t>* id) {
     assert(!id->isNull());
     return id->getDynamicParamManager()->getParam(
         DynamicParamId(id->value())).getDatum().pData;
@@ -149,7 +149,7 @@ ExtDynamicVariableRegister(ExtendedInstructionTable* eit)
     params_u1.push_back(STANDARD_TYPE_INT_32);
     eit->add(
         "dynamicVariable", params_u1,
-        (ExtendedInstruction2<uint8_t, int>*) NULL,
+        (ExtendedInstruction2<uint8_t, int32_t>*) NULL,
         &dynamicVariable);
 
     vector<StandardTypeDescriptorOrdinal> params_s2;

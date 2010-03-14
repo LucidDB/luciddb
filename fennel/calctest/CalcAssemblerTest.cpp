@@ -2551,7 +2551,7 @@ void CalcAssemblerTest::testReturn()
 }
 
 void convertFloatToInt(
-    RegisterRef<int>* regOut,
+    RegisterRef<int32_t>* regOut,
     RegisterRef<float>* regIn)
 {
     regOut->value((int)regIn->value());

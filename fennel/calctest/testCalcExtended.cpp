@@ -109,7 +109,7 @@ void convertDecimal(
 }
 
 void convertStringToExactNumber(
-    RegisterRef<int>* regOut,
+    RegisterRef<int32_t>* regOut,
     RegisterRef<char *>* regIn)
 {
 #if 0
@@ -689,7 +689,7 @@ void testConvertDecimal(const char * const str, int val, int exp, int expected)
     table.add(
         "convert",
         parameterTypes,
-        (ExtendedInstruction3<int, int, int>*) NULL,
+        (ExtendedInstruction3<int32_t, int32_t, int32_t>*) NULL,
         &convertDecimal);
     // lookup a function
     string s("convert(");
