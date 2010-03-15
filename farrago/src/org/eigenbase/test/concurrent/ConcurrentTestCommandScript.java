@@ -372,11 +372,29 @@ public class ConcurrentTestCommandScript
             connection.setAutoCommit(false);
         }
 
+        boolean forced = false;         // flag, keep going after an error
         try {
             for (String command : commands) {
                 String sql = (command).trim();
-
                 storeSql(threadID, sql);
+
+                if (isComment(sql)) {
+                    continue;
+                }
+
+                // handle sqlline-type directives:
+                if (sql.startsWith("!set")) {
+                    String[] tokens = sql.split(" +");
+                    // handle only SET FORCE
+                    if ((tokens.length > 2)
+                        && tokens[1].equalsIgnoreCase("force"))
+                        {
+                            forced = asBoolValue(tokens[2]);
+                        }
+                    continue;           // else ignore
+                } else if (sql.startsWith("!")) {
+                    continue;           // else ignore
+                }
 
                 if (sql.endsWith(";")) {
                     sql = sql.substring(0, sql.length() - 1);
@@ -398,7 +416,6 @@ public class ConcurrentTestCommandScript
                     Statement stmt = connection.createStatement();
                     try {
                         int rows = stmt.executeUpdate(sql);
-
                         if (rows != 1) {
                             storeMessage(
                                 threadID,
@@ -406,6 +423,12 @@ public class ConcurrentTestCommandScript
                                     + " rows affected.");
                         } else {
                             storeMessage(threadID, "1 row affected.");
+                        }
+                    } catch (SQLException ex) {
+                        if (forced) {
+                            storeMessage(threadID, ex.getMessage()); //swallow
+                        } else {
+                            throw ex;
                         }
                     } finally {
                         stmt.close();
@@ -430,6 +453,19 @@ public class ConcurrentTestCommandScript
         r.read(rset, withTimeout);
     }
 
+    /** Identifies the start of a comment line; same rules as sqlline */
+    private boolean isComment(String line)
+    {
+        return line.startsWith("--") || line.startsWith("#");
+    }
+
+    /** translates argument of !set force etc. */
+    private boolean asBoolValue(String s)
+    {
+        s = s.toLowerCase();
+        return s.equals("true") || s.equals("yes") || s.equals("on");
+    }
+
     /**
      * Determines if a block of SQL is a select statment or not.
      */
@@ -441,10 +477,9 @@ public class ConcurrentTestCommandScript
             String line;
             while ((line = rdr.readLine()) != null) {
                 line = line.trim().toLowerCase();
-                if (line.startsWith("--")) {
+                if (isComment(line)) {
                     continue;
                 }
-
                 if (line.startsWith("select")
                     || line.startsWith("values")
                     || line.startsWith("explain"))
@@ -860,7 +895,7 @@ public class ConcurrentTestCommandScript
                                 "Command '" + command + "' not allowed in '"
                                 + state + "' state");
                         }
-                    } else if (line.equals("") || line.startsWith("--")) {
+                    } else if (line.equals("") || isComment(line)) {
                         continue;
                     } else {
                         isSql = true;
