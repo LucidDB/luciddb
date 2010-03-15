@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2009-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2009-2010 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -105,8 +105,7 @@ public abstract class CalcRelSplitter
         // expressions to the left.
         assert program.isValid(true);
         final List<RexNode> exprList = program.getExprList();
-        final RexNode [] exprs =
-            (RexNode []) exprList.toArray(new RexNode[exprList.size()]);
+        final RexNode [] exprs = exprList.toArray(new RexNode[exprList.size()]);
         assert !RexUtil.containComplexExprs(exprList);
 
         // Figure out what level each expression belongs to.
@@ -252,9 +251,9 @@ public abstract class CalcRelSplitter
             // be at a level greater than or equal to all of its inputs.
             int level = maxInputFinder.maxInputFor(expr);
 
-// Try to implement this expression at this level.
-// If that is not possible, try to implement it at higher levels.
-levelLoop:
+            // Try to implement this expression at this level.
+            // If that is not possible, try to implement it at higher levels.
+            levelLoop:
             for (;; ++level) {
                 if (level >= levelCount) {
                     // This is a new level. We can use any reltype we like.
@@ -497,12 +496,10 @@ levelLoop:
                         }
                     });
         }
-        return new RexProgram(
-            inputRowType,
-            exprs,
-            projectRefs,
-            conditionRef,
-            outputRowType);
+        final RexProgram program =
+            new RexProgram(
+                inputRowType, exprs, projectRefs, conditionRef, outputRowType);
+        return RexProgramBuilder.normalize(cluster.getRexBuilder(), program);
     }
 
     /**

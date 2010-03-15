@@ -43,8 +43,8 @@ uint LbmEntryDump::dump(BTreeDescriptor const &treeDescriptor, bool printRID)
     SharedBTreeReader pReader = SharedBTreeReader(
         new BTreeReader(treeDescriptor));
 
-    TupleAccessor const& indexTupleAccessor
-        = pReader->getTupleAccessorForRead();
+    TupleAccessor const& indexTupleAccessor =
+        pReader->getTupleAccessorForRead();
 
     indexTuple.compute(indexTupleDesc);
 

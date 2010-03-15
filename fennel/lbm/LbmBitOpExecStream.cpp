@@ -157,7 +157,7 @@ ExecStreamResult LbmBitOpExecStream::readInput(
 
 bool LbmBitOpExecStream::flush()
 {
-    assert (!producePending);
+    assert(!producePending);
 
     if (!segmentWriter.isEmpty()) {
         outputTuple = segmentWriter.produceSegmentTuple();

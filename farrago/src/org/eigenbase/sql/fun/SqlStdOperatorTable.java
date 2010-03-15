@@ -629,7 +629,31 @@ public class SqlStdOperatorTable
      * <code>AVG</code> aggregate function.
      */
     public static final SqlAggFunction avgOperator =
-        new SqlAvgAggFunction(null);
+        new SqlAvgAggFunction(null, SqlAvgAggFunction.Subtype.AVG);
+
+    /**
+     * <code>STDDEV_POP</code> aggregate function.
+     */
+    public static final SqlAggFunction stddevPopOperator =
+        new SqlAvgAggFunction(null, SqlAvgAggFunction.Subtype.STDDEV_POP);
+
+    /**
+     * <code>STDDEV_SAMP</code> aggregate function.
+     */
+    public static final SqlAggFunction stddevSampOperator =
+        new SqlAvgAggFunction(null, SqlAvgAggFunction.Subtype.STDDEV_SAMP);
+
+    /**
+     * <code>VAR_POP</code> aggregate function.
+     */
+    public static final SqlAggFunction varPopOperator =
+        new SqlAvgAggFunction(null, SqlAvgAggFunction.Subtype.VAR_POP);
+
+    /**
+     * <code>VAR_SAMP</code> aggregate function.
+     */
+    public static final SqlAggFunction varSampOperator =
+        new SqlAvgAggFunction(null, SqlAvgAggFunction.Subtype.VAR_SAMP);
 
     //-------------------------------------------------------------
     // WINDOW Aggregate Functions
@@ -1012,6 +1036,15 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumericX2,
+            SqlFunctionCategory.Numeric);
+
+    public static final SqlFunction sqrtFunc =
+        new SqlFunction(
+            "SQRT",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableDouble,
+            null,
+            SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
 
     public static final SqlFunction modFunc =

@@ -358,7 +358,7 @@ class ConstExecStreamGenerator : public MockProducerExecStreamGenerator
     uint constVal;
 
 public:
-    ConstExecStreamGenerator (uint constValInit)
+    ConstExecStreamGenerator(uint constValInit)
     {
         constVal = constValInit;
     }

@@ -44,19 +44,30 @@ public class SqlAvgAggFunction
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;
+    private final Subtype subtype;
 
     //~ Constructors -----------------------------------------------------------
 
-    public SqlAvgAggFunction(RelDataType type)
+    /**
+     * Creates a SqlAvgAggFunction
+     *
+     *
+     * @param type Data type
+     * @param subtype Specific function, e.g. AVG or STDDEV_POP
+     */
+    public SqlAvgAggFunction(
+        RelDataType type,
+        Subtype subtype)
     {
         super(
-            "AVG",
+            subtype.name(),
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
         this.type = type;
+        this.subtype = subtype;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -64,11 +75,6 @@ public class SqlAvgAggFunction
     public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         return new RelDataType[] { type };
-    }
-
-    public RelDataType getType()
-    {
-        return type;
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
@@ -79,6 +85,24 @@ public class SqlAvgAggFunction
     public OJClass [] getStartParameterTypes()
     {
         return new OJClass[0];
+    }
+
+    /**
+     * Returns the specific function, e.g. AVG or STDDEV_POP.
+     *
+     * @return Subtype
+     */
+    public Subtype getSubtype()
+    {
+        return subtype;
+    }
+
+    public enum Subtype {
+        AVG,
+        STDDEV_POP,
+        STDDEV_SAMP,
+        VAR_POP,
+        VAR_SAMP
     }
 }
 

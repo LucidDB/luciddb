@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module version="4" relativePaths="true" type="JAVA_MODULE">
-  <component name="ModuleRootManager" />
+<module relativePaths="true" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../classes" />
     <exclude-output />
@@ -12,12 +11,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="farrago" />
+    <orderEntry type="library" name="resgen" level="project" />
     <orderEntry type="library" name="ant" level="project" />
     <orderEntry type="library" name="junit" level="project" />
-    <orderEntry type="library" name="servlet" level="project" />
-    <orderEntry type="library" name="resgen" level="project" />
-    <orderEntry type="library" name="diffj" level="project" />
-    <orderEntryProperties />
+    <orderEntry type="library" name="xml" level="project" />
   </component>
 </module>
 

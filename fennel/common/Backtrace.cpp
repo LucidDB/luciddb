@@ -262,7 +262,7 @@ void AutoBacktrace::installSignal(int signum)
     struct sigaction act;
     struct sigaction old_act;
     act.sa_handler = signal_handler;
-    sigemptyset (&act.sa_mask);
+    sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     int rc = sigaction(signum, &act, &old_act);
     if (rc) {

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -201,6 +201,15 @@ public class RexBuilder
         SqlOperator op,
         RexNode ... exprs)
     {
+        if (op == SqlStdOperatorTable.andOperator
+            && exprs.length == 2
+            && exprs[0].equals(exprs[1]))
+        {
+            // Avoid generating 'AND(x, x)'; this can cause plan explosions if a
+            // relnode is its own child and is merged with itself.
+            return exprs[0];
+        }
+
         final RelDataType type = deriveReturnType(op, typeFactory, exprs);
         RexNode [] fixExprs = exprs;
 
@@ -312,19 +321,21 @@ public class RexBuilder
         RexNode result = over;
 
         // This should be correct but need time to go over test results.
-        // Also want to look at combing with section below. if
-        // (nullWhenCountZero) { final RelDataType bigintType =
-        // getTypeFactory().createSqlType( SqlTypeName.BIGINT); result =
-        // makeCall( SqlStdOperatorTable.caseOperator, makeCall(
-        // SqlStdOperatorTable.greaterThanOperator, new RexOver( bigintType,
-        // SqlStdOperatorTable.countOperator, exprs, window), makeLiteral( //
-        // todo: read bound new BigDecimal(0), bigintType,
-        // SqlTypeName.DECIMAL)), over, constantNull); }
+        // Also want to look at combing with section below.
+        if (nullWhenCountZero) {
+            final RelDataType bigintType = getTypeFactory().createSqlType(
+                SqlTypeName.BIGINT);
+            result = makeCall(SqlStdOperatorTable.caseOperator, makeCall(
+                SqlStdOperatorTable.greaterThanOperator, new RexOver(
+                    bigintType, SqlStdOperatorTable.countOperator, exprs,
+                    window), makeLiteral(
+                    new BigDecimal(0), bigintType, SqlTypeName.DECIMAL)), over,
+                makeCast(over.getType(), constantNull()));
+        }
         if (!allowPartial) {
             Util.permAssert(physical, "DISALLOW PARTIAL over RANGE");
-            final RelDataType bigintType =
-                getTypeFactory().createSqlType(
-                    SqlTypeName.BIGINT);
+            final RelDataType bigintType = getTypeFactory().createSqlType(
+                SqlTypeName.BIGINT);
             // todo: read bound
             result =
                 makeCall(
@@ -340,7 +351,7 @@ public class RexBuilder
                             new BigDecimal(2),
                             bigintType,
                             SqlTypeName.DECIMAL)),
-                    over,
+                    result,
                     constantNull);
         }
         return result;

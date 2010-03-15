@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -74,14 +74,14 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 static void Raise(
     TExceptionCBData *pData,
     TProgramCounter pc,
-    const char *pMsg)
+    SqlStateInfo const &stateInfo)
     throw(CalcMessage)
 {
     if (pData) {
         assert(pData->fnCB);
-        (pData->fnCB)(pMsg, pData->pData);
+        (pData->fnCB)(stateInfo, pData->pData);
     }
-    throw CalcMessage(pMsg, pc);
+    throw CalcMessage(stateInfo, pc);
 }
 
 #if defined(NOISY_DISABLED) && NOISY_DISABLED
@@ -116,7 +116,7 @@ static void Raise(
         const type left, const type right,                              \
         TExceptionCBData *pExData) throw(CalcMessage) {                 \
         if (right == 0) {                                               \
-            Raise(pExData, pc, S_DIV0);                                 \
+            Raise(pExData, pc, SqlState::instance().code22012());       \
         }                                                               \
         return left / right;                                            \
     }                                                                   \
@@ -157,7 +157,7 @@ DO(long double)
     {                                                                   \
         register type result;                                           \
         if (left > (std::numeric_limits<type>::max() - right)) {        \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         result = left + right;                                          \
         assert(result == (left + right));                               \
@@ -171,10 +171,10 @@ DO(long double)
     {                                                                   \
         register type result = left + right;                            \
         if (left < 0 && right < 0 && result >= 0) {                     \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         if (left > 0 && right > 0 && result <= 0) {                     \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         assert(result == (left + right));                               \
         return result;                                                  \
@@ -187,7 +187,7 @@ DO(long double)
     {                                                                   \
         register type result;                                           \
         if (right > left) {                                             \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         return left - right;                                            \
         result = left - right;                                          \
@@ -205,7 +205,7 @@ DO(long double)
         register type result;                                           \
         if (r == std::numeric_limits<type>::min()) {                    \
             if (l == std::numeric_limits<type>::max()) {                \
-                Raise(pExData, pc, S_OVER);                             \
+                Raise(pExData, pc, SqlState::instance().code22003());   \
             }                                                           \
             r++;                                                        \
             l++;                                                        \
@@ -241,7 +241,7 @@ DO(long double)
                 break;                                                  \
             }                                                           \
             if (msb & r) {                                              \
-                Raise(pExData, pc, S_OVER);                             \
+                Raise(pExData, pc, SqlState::instance().code22003());   \
             }                                                           \
             r <<= 1;                                                    \
         }                                                               \
@@ -266,7 +266,7 @@ DO(long double)
         assert(r <= l);                                                 \
         if (l < 0 /* infers r<0, both negative */) {                    \
             if (r == std::numeric_limits<type>::min()) {                \
-                Raise(pExData, pc, S_OVER);                             \
+                Raise(pExData, pc, SqlState::instance().code22003());   \
             }                                                           \
             assert(l != std::numeric_limits<type>::min());              \
             l = -l;                                                     \
@@ -285,7 +285,7 @@ DO(long double)
                 break;                                                  \
             }                                                           \
             if (r < n_max || r > p_max) {                               \
-                Raise(pExData, pc, S_OVER);                             \
+                Raise(pExData, pc, SqlState::instance().code22003());   \
             }                                                           \
             r *= 2;                                                     \
         }                                                               \
@@ -299,7 +299,7 @@ DO(long double)
         const type right, TExceptionCBData *pExData) throw(CalcMessage) \
     {                                                                   \
         if (right == 0) {                                               \
-            Raise(pExData, pc, S_DIV0);                                 \
+            Raise(pExData, pc, SqlState::instance().code22012());       \
         }                                                               \
         register type result = left / right;                            \
         assert(result == (left / right));                               \
@@ -313,10 +313,10 @@ DO(long double)
     {                                                                   \
         /* this only holds for 2's complement representations */        \
         if (left == std::numeric_limits<type>::min() && right == -1) {  \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         if (right == 0) {                                               \
-            Raise(pExData, pc, S_DIV0);                                 \
+            Raise(pExData, pc, SqlState::instance().code22012());       \
         }                                                               \
         register type result = left / right;                            \
         assert(result == (left / right));                               \
@@ -329,7 +329,7 @@ DO(long double)
         const type right, TExceptionCBData *pExData) throw(CalcMessage) \
     {                                                                   \
         if (right != 0) {                                               \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         return 0;                                                       \
     }
@@ -341,7 +341,7 @@ DO(long double)
     {                                                                   \
         /* this only holds for 2's complement representations */        \
         if (right == std::numeric_limits<type>::min()) {                \
-            Raise(pExData, pc, S_OVER);                                 \
+            Raise(pExData, pc, SqlState::instance().code22003());       \
         }                                                               \
         return -(right);                                                \
     }
@@ -355,13 +355,13 @@ inline void maybe_raise_fe_exception(
     int fe = ::fetestexcept(FE_ALL_EXCEPT);
     if (0) {
     } else if (fe & FE_DIVBYZERO) {
-        Raise(pExData, pc, S_DIV0);
+        Raise(pExData, pc, SqlState::instance().code22012());
     } else if (fe & FE_UNDERFLOW) {
-        Raise(pExData, pc, S_UNDR);
+        Raise(pExData, pc, SqlState::instance().code22000());
     } else if (fe & FE_OVERFLOW) {
-        Raise(pExData, pc, S_OVER);
+        Raise(pExData, pc, SqlState::instance().code22003());
     } else if (fe & FE_INVALID) {
-        Raise(pExData, pc, S_INVL);
+        Raise(pExData, pc, SqlState::instance().code22023());
 
     /* leave this last because it occurs in conjunction with other
         flags */

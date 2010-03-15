@@ -91,6 +91,25 @@ returns int
 contains sql
 return i + j + k;
 
+-- no parameters; parens are required for declaration and call
+-- should fail (parens required)
+create function pi
+returns double
+contains sql
+return 3.141592653589793;
+
+-- ok
+create function pi()
+returns double
+contains sql
+return 3.141592653589793;
+
+-- should fail (parens required)
+values pi;
+
+-- ok
+values pi();
+
 -- test various modifiers
 
 -- should fail:  NO SQL can't be specified for SQL-defined routines
@@ -566,3 +585,4 @@ parameter style system defined java
 no sql
 external name
 'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+-- End udf.sql

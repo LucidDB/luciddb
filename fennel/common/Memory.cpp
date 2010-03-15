@@ -73,7 +73,7 @@ int getCurrentThreadId()
 {
 #ifdef __MSVC__
     return static_cast<int>(GetCurrentThreadId());
-#elif defined (__APPLE__)
+#elif defined(__APPLE__)
     return reinterpret_cast<int64_t>(pthread_self());
 #else
     return static_cast<int>(pthread_self());

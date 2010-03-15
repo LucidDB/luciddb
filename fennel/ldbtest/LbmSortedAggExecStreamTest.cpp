@@ -133,8 +133,8 @@ public:
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        assert (iRow < interval);
-        assert (iCol < nKeys + 1);
+        assert(iRow < interval);
+        assert(iCol < nKeys + 1);
 
         if (iRow != current) {
             current = iRow;

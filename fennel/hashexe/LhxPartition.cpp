@@ -351,7 +351,7 @@ void LhxPartitionInfo::open(
     AggComputerList *aggList)
 {
     uint i, j;
-    assert (numInputs == 1);
+    assert(numInputs == 1);
     uint buildIndex = numInputs - 1;
 
     curInputIndex = buildIndex;

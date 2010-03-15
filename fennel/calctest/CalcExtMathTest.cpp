@@ -201,7 +201,7 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
         TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
         calc.bind(&inTuple, &outTuple);
-        checkWarnings(calc, "22023");
+        checkWarnings(calc, "2201E");
         if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }
@@ -359,7 +359,7 @@ CalcExtMathTest::testCalcExtMathPowFails()
         TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
         calc.bind(&inTuple, &outTuple);
-        checkWarnings(calc, "22023");
+        checkWarnings(calc, "2201F");
         if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }

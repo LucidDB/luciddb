@@ -3695,8 +3695,12 @@ SqlIdentifier ReservedFunctionName() :
         | <RANK>
         | <ROW_NUMBER>
         | <SQRT>
+        | <STDDEV_POP>
+        | <STDDEV_SAMP>
         | <SUM>
         | <UPPER>
+        | <VAR_POP>
+        | <VAR_SAMP>
     )
     {
         name = new SqlIdentifier(

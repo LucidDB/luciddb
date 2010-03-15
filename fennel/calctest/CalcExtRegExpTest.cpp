@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -83,9 +83,6 @@ class CalcExtRegExpTest : virtual public TestBase, public TraceSource
         ostringstream& pg,
         int count);
 
-    static const char* truncErr;
-    static const char* substrErr;
-
 public:
     explicit CalcExtRegExpTest()
         : TraceSource(shared_from_this(), "CalcExtRegExpTest")
@@ -103,12 +100,6 @@ public:
     {
     }
 };
-
-const char *
-CalcExtRegExpTest::truncErr = "22001";
-
-const char *
-CalcExtRegExpTest::substrErr = "22011";
 
 int
 CalcExtRegExpTest::cmpTupStr(

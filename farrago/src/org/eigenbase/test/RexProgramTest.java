@@ -141,16 +141,33 @@ public class RexProgramTest
     }
 
     /**
+     * Tests that AND(x, x) is translated to x.
+     */
+    public void testDuplicateAnd()
+    {
+        final RexProgramBuilder builder = createProg(2);
+        final String program = builder.getProgram(true).toString();
+        TestUtil.assertEqualsVerbose(
+            "(expr#0..1=[{inputs}], expr#2=[+($t0, $t1)], expr#3=[1], "
+            + "expr#4=[+($t0, $t3)], expr#5=[+($t2, $t4)], "
+            + "expr#6=[+($t0, $t0)], expr#7=[>($t2, $t0)], "
+            + "a=[$t5], b=[$t6], $condition=[$t7])",
+            program);
+    }
+
+    /**
      * Creates a program, depending on variant:
      * <ol>
      * <li><code>select (x + y) + (x + 1) as a, (x + x) as b from t(x, y)</code>
      * <li><code>select (x + y) + (x + 1) as a, (x + (x + 1)) as b
      *     from t(x, y)</code>
+     * <li><code>select (x + y) + (x + 1) as a, (x + x) as b from t(x, y)
+     *     where ((x + y) > 1) and ((x + y) > 1)</code>
      * </ul>
      */
     private RexProgramBuilder createProg(int variant)
     {
-        assert variant == 0 || variant == 1;
+        assert variant == 0 || variant == 1 || variant == 2;
         List<RelDataType> types =
             Arrays.asList(
                 typeFactory.createSqlType(SqlTypeName.INTEGER),
@@ -192,6 +209,7 @@ public class RexProgramTest
         RexLocalRef t5;
         switch (variant) {
         case 0:
+        case 2:
             // $t5 = $t0 + $t0 (i.e. x + x)
             t5 = builder.addExpr(
                 rexBuilder.makeCall(
@@ -227,6 +245,25 @@ public class RexProgramTest
                     t2));
         builder.addProject(t6.getIndex(), "a");
         builder.addProject(t5.getIndex(), "b");
+
+        if (variant == 2) {
+            // $t7 = $t4 > $i0 (i.e. (x + y) > 0)
+            RexLocalRef t7 =
+                builder.addExpr(
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.greaterThanOperator,
+                        t4,
+                        i0));
+            // $t8 = $t7 AND $t7
+            RexLocalRef t8 =
+                builder.addExpr(
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.andOperator,
+                        t7,
+                        t7));
+            builder.addCondition(t8);
+            builder.addCondition(t7);
+        }
         return builder;
     }
 }

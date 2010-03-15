@@ -33,6 +33,7 @@ values 1/0;
 values 1.1/0.0;
 values MOD(1, 0);
 values power(0.0, -1.0);
+values sqrt(-1.0);
 values ln(0.0);
 values log10(0.0);
 
@@ -109,5 +110,4 @@ values log10(1,2,3);
 values (1),(2,3);
 values (1),('1');
 values (1,'1'),(2,3);
-
-
+-- End negative.sql

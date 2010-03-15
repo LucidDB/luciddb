@@ -1272,7 +1272,7 @@ inline void LhxHashBlockAccessor::allocSlots(uint slotCount)
      * A slot is a pointer to a hash key.
      */
     PBuffer bufPtr = allocBuffer(slotCount * sizeof(PBuffer));
-    assert (bufPtr != NULL);
+    assert(bufPtr != NULL);
 }
 
 inline uint LhxHashTable::slotsNeeded(RecordNum cndKeys)

@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
 #define Fennel_CalcMessage_Included
 
 #include "fennel/calculator/CalcTypedefs.h"
+#include "fennel/calculator/SqlState.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -37,14 +38,16 @@ class FENNEL_CALCULATOR_EXPORT CalcMessage
 {
 public:
     /**
+     * Creates a message.
+     *
      * strA is a 5 character long string, per SQL99 Part 2 Section 22.1.
      * strA can be either null terminated or simply 5 characters long.
      */
     explicit
-    CalcMessage(const char* strA, TProgramCounter pcA)
+    CalcMessage(SqlStateInfo const &info, TProgramCounter pcA)
         : pc(pcA)
     {
-        memcpy(str, strA, 5);
+        strncpy(str, info.str().c_str(), 5);
         str[5] = 0; // insure null termination
     }
 

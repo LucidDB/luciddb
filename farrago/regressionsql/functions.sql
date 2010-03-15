@@ -5,6 +5,7 @@
 -- and another time to use java. The caller of this script is setting the flag so no need
 -- to do it directly unless you need to do acrobatics.
 
+select sqrt(12.96) as x from sales.emps where empno=100;
 select power(2.0,2.0) as exponential from sales.emps where empno=100 ;
 select -power(2.0,2.0) as exponential from sales.emps where empno=100 ;
 select mod(age,9) from sales.emps order by 1;
@@ -62,3 +63,4 @@ values trim('a' from 'Aa');
 values trim(leading 'a' from 'Aa');
 values trim('a' from 'aAa');
 values trim(trailing 'a' from 'Aa');
+-- End functions.sql

@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -473,7 +473,8 @@ SqlStringTest::testSqlStringCat_Fix()
                                         dst.mStr, dst_storage,
                                         src1.mStr, src1_storage,
                                         src2.mStr, src2_storage);
-                                } catch (const char *str) {
+                                } catch (SqlStateInfo const &info) {
+                                    const char *str = info.str().c_str();
                                     caught = true;
                                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                                     BOOST_CHECK(
@@ -502,7 +503,8 @@ SqlStringTest::testSqlStringCat_Fix()
                                             newlen,
                                             src3.mStr,
                                             src3_storage);
-                                    } catch (const char *str) {
+                                    } catch (SqlStateInfo const &info) {
+                                        const char *str = info.str().c_str();
                                         caught = true;
                                         BOOST_CHECK_EQUAL(
                                             strcmp(str, "22001"), 0);
@@ -583,7 +585,8 @@ SqlStringTest::testSqlStringCat_Var2()
                             src1_len,
                             src2.mStr,
                             src2_len);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(src1_len + src2_len > dst_storage);
@@ -642,7 +645,8 @@ SqlStringTest::testSqlStringCat_Var()
                             dst_len,
                             src.mStr,
                             src_len);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len + dst_len > dst_storage);
@@ -696,7 +700,8 @@ SqlStringTest::testSqlStringCpy_Fix()
                             dst_storage,
                             src.mStr,
                             src_len);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len > dst_storage);
@@ -738,7 +743,8 @@ SqlStringTest::testSqlStringCpy_Fix()
                             dstU2.mStorage,
                             srcU2.mStr,
                             srcU2.mSize);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(srcU2.mSize > dstU2.mStorage);
@@ -808,7 +814,8 @@ SqlStringTest::testSqlStringCpy_Var()
                             dst_storage,
                             src.mStr,
                             src_len);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len > dst_storage);
@@ -841,7 +848,8 @@ SqlStringTest::testSqlStringCpy_Var()
                             dstU2.mStorage,
                             srcU2.mStr,
                             srcU2.mSize);
-                    } catch (const char *str) {
+                    } catch (SqlStateInfo const &info) {
+                        const char *str = info.str().c_str();
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(srcU2.mSize > dstU2.mStorage);
@@ -1433,7 +1441,8 @@ SqlStringTest::testSqlStringOverlay()
                                 position,
                                 length,
                                 lenSpecified);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(
@@ -1607,7 +1616,8 @@ SqlStringTest::testSqlStringSubStr()
                                 &resultP, dst_storage,
                                 src.mStr, src_storage,
                                 sub_start, sub_len, true);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(sub_len < 0);
@@ -1642,7 +1652,8 @@ SqlStringTest::testSqlStringSubStr()
                                     &resultP, dst_storage,
                                     src.mStr, src_storage,
                                     sub_start, 0, false);
-                            } catch (const char *str) {
+                            } catch (SqlStateInfo const &info) {
+                                const char *str = info.str().c_str();
                                 caught = true;
                                 if (!strcmp(str, "22011")) {
                                     BOOST_CHECK(sub_len < 0);
@@ -1708,7 +1719,8 @@ SqlStringTest::testSqlStringAlterCase_Ascii(
             BOOST_REQUIRE(0);
             break;
         }
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(src_len > dst_storage);
@@ -1778,7 +1790,8 @@ SqlStringTest::testSqlStringAlterCase_UCS2(
             BOOST_REQUIRE(0);
             break;
         }
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(src_len > dst_storage);
@@ -2025,7 +2038,8 @@ SqlStringTest::testSqlStringTrim_Helper(
                 src_len + leftpad + rightpad,
                 lefttrim,
                 righttrim);
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(expectsize > dst_storage);
@@ -2060,7 +2074,8 @@ SqlStringTest::testSqlStringTrim_Helper(
                  + srcU2.mRightPad),
                 lefttrim,
                 righttrim);
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(expectsize > dst_storage);
@@ -2190,7 +2205,8 @@ SqlStringTest::testSqlStringCastToExact_Helper(
         newvalue = SqlStrCastToExact<1, 1>(
             src.mStr,
             src_len);
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22018"), 0);
     }
@@ -2440,7 +2456,8 @@ SqlStringTest::testSqlStringCastToDecimal_Helper(
             src_len,
             precision,
             scale);
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         if (outOfRangeExpected) {
             BOOST_CHECK_EQUAL(strcmp(str, "22003"), 0);
@@ -2858,7 +2875,8 @@ SqlStringTest::testSqlStringCastToApprox_Helper(
         newvalue = SqlStrCastToApprox<1, 1>(
             src.mStr,
             src_len);
-    } catch (const char *str) {
+    } catch (SqlStateInfo const &info) {
+        const char *str = info.str().c_str();
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22018"), 0);
     }
@@ -3177,7 +3195,8 @@ SqlStringTest::testSqlStringCastFromExact()
                                 dst_storage,
                                 value,
                                 false);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect.length() > dst_storage);
@@ -3202,7 +3221,8 @@ SqlStringTest::testSqlStringCastFromExact()
                                 dst_storage,
                                 value,
                                 true);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect_fix.length() > dst_storage);
@@ -3326,7 +3346,8 @@ SqlStringTest::testSqlStringCastFromDecimal()
                                 precision,
                                 scale,
                                 false);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect.length() > dst_storage);
@@ -3353,7 +3374,8 @@ SqlStringTest::testSqlStringCastFromDecimal()
                                 precision,
                                 scale,
                                 true);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect_fix.length() > dst_storage);
@@ -3529,7 +3551,8 @@ SqlStringTest::testSqlStringCastFromApprox()
                                 value,
                                 isFloat,
                                 false);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect.length() > dst_storage);
@@ -3562,7 +3585,8 @@ SqlStringTest::testSqlStringCastFromApprox()
                                 value,
                                 isFloat,
                                 true);
-                        } catch (const char *str) {
+                        } catch (SqlStateInfo const &info) {
+                            const char *str = info.str().c_str();
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(expect_fix.length() > dst_storage);

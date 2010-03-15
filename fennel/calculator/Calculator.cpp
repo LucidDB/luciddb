@@ -210,20 +210,38 @@ void Calculator::bind(
     mRegisterReset.reserve(totalResetableRegisters);
 }
 
+// PERFORMANCE: If RegisterSetBinding is NULL, create a new instance.
+// Otherwise, rebind new TupleData values to it.
+// Earlier, we called unbind() and created a new instance of RegisterSetBinding.
+// bind() could potentially be called for every row in an XO.
 void Calculator::bind(
     TupleData* input, TupleData* output,
     bool takeOwnwership, const TupleData* outputWrite)
 {
-    unbind(RegisterReference::EInput, false);
-    mRegisterSetBinding[RegisterReference::EInput] =
-        new RegisterSetBinding(input, takeOwnwership);
-    unbind(RegisterReference::EOutput, false);
-    if (outputWrite) {
-        mRegisterSetBinding[RegisterReference::EOutput] =
-            new RegisterSetBinding(output, outputWrite, takeOwnwership);
+    if (mRegisterSetBinding[RegisterReference::EInput] == NULL) {
+        mRegisterSetBinding[RegisterReference::EInput] =
+            new RegisterSetBinding(input, takeOwnwership);
     } else {
-        mRegisterSetBinding[RegisterReference::EOutput] =
-            new RegisterSetBinding(output, takeOwnwership);
+        mRegisterSetBinding[RegisterReference::EInput]->rebind(
+            input, takeOwnwership);
+    }
+
+    if (mRegisterSetBinding[RegisterReference::EOutput] == NULL) {
+        if (outputWrite) {
+            mRegisterSetBinding[RegisterReference::EOutput] =
+                new RegisterSetBinding(output, outputWrite, takeOwnwership);
+        } else {
+            mRegisterSetBinding[RegisterReference::EOutput] =
+                new RegisterSetBinding(output, takeOwnwership);
+        }
+    } else {
+        if (outputWrite) {
+            mRegisterSetBinding[RegisterReference::EOutput]->rebind(
+                output, outputWrite, takeOwnwership);
+        } else {
+            mRegisterSetBinding[RegisterReference::EOutput]->rebind(
+                output, takeOwnwership);
+        }
     }
 }
 

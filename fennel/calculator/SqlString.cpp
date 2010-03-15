@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ SqlStrCat(
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     memcpy(dest + destLenBytes, str, strLenBytes);
@@ -59,7 +59,7 @@ SqlStrCat(
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001
         // "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     memcpy(dest, str1, str1LenBytes);
@@ -108,7 +108,7 @@ SqlStrCpy_Var(
     if (strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001
         // "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
     memcpy(dest, str, strLenBytes);
     return strLenBytes;

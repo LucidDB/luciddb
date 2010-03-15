@@ -299,7 +299,7 @@ void LhxJoinExecStreamTest::testSequentialImpl(
     uint keyCount = 1;
     uint cndKeys = numRows;
 
-    assert (keyCount <= numColsRight && keyCount <= numColsLeft);
+    assert(keyCount <= numColsRight && keyCount <= numColsLeft);
 
     vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
         leftColumnGenerators;
@@ -376,7 +376,7 @@ void LhxJoinExecStreamTest::testDupImpl(
     bool needSort,
     bool fakeInterrupt)
 {
-    assert (!fakeInterrupt || !needSort);
+    assert(!fakeInterrupt || !needSort);
 
     uint numColsLeft;
     uint numColsRight;
@@ -384,7 +384,7 @@ void LhxJoinExecStreamTest::testDupImpl(
     uint keyCount = 1;
     uint cndKeys;
 
-    assert (keyCount <= numColsRight && keyCount <= numColsLeft);
+    assert(keyCount <= numColsRight && keyCount <= numColsLeft);
 
     vector<boost::shared_ptr<ColumnGenerator< ::int64_t > > >
         leftColumnGenerators;

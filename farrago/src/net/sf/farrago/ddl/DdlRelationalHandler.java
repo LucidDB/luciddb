@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2005-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -332,10 +332,9 @@ public class DdlRelationalHandler
         FemLocalView view)
         throws Throwable
     {
-        String sql = view.getQueryExpression().getBody();
-
+        final FarragoSessionAnalyzedSql analyzedSql;
+        final String sql = view.getQueryExpression().getBody();
         tracer.fine(sql);
-        FarragoSessionAnalyzedSql analyzedSql;
         try {
             analyzedSql =
                 session.analyzeSql(
@@ -343,43 +342,12 @@ public class DdlRelationalHandler
                     validator.getTypeFactory(),
                     null,
                     false);
+            assert analyzedSql != null;
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }
 
-        RelDataType rowType = analyzedSql.resultType;
-
-        // We would prefer to use the original SQL, if it is sufficiently
-        // similar. We require that (a) it gives no validation error, (b) it
-        // produces the same result type, and (c) it is equivalent to
-        // the same canonical SQL.
-        String originalSql = view.getOriginalDefinition();
-        boolean analyzeOriginalSql =
-            session.getPersonality().shouldReplacePreserveOriginalSql();
-        if (analyzeOriginalSql && (originalSql != null)) {
-            FarragoSessionAnalyzedSql analyzedOriginalSql;
-            try {
-                analyzedOriginalSql =
-                    session.analyzeSql(
-                        originalSql,
-                        validator.getTypeFactory(),
-                        null,
-                        false);
-                if (analyzedOriginalSql.canonicalString.equals(
-                        analyzedSql.canonicalString)
-                    && analyzedOriginalSql.resultType.equals(
-                        analyzedSql.resultType))
-                {
-                    sql = originalSql;
-                    analyzedSql = analyzedOriginalSql;
-                }
-            } catch (RuntimeException ex) {
-                // validation errors indicate that we will just have to use the
-                // canonical SQL
-                Util.swallow(ex, null);
-            }
-        }
-
+        final RelDataType rowType = analyzedSql.resultType;
         List<CwmFeature> columnList = view.getFeature();
         boolean implicitColumnNames = true;
 
@@ -423,7 +391,13 @@ public class DdlRelationalHandler
 
         validator.fixupView(view, analyzedSql);
 
-        view.setOriginalDefinition(sql);
+        if (!session.getPersonality().shouldReplacePreserveOriginalSql()
+            && validator.isReplace())
+        {
+            view.setOriginalDefinition(analyzedSql.canonicalString.getSql());
+        } else if (view.getOriginalDefinition() == null) {
+            view.setOriginalDefinition(sql);
+        }
         view.getQueryExpression().setBody(analyzedSql.canonicalString.getSql());
         analyzedSql.setModality(view);
 

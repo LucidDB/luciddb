@@ -666,6 +666,74 @@ public class UtilTest
     }
 
     /**
+     * Unit test for {@link org.eigenbase.util.CompositeList}.
+     */
+    public void testCompositeList()
+    {
+        // Made up of zero lists
+        CompositeList<String> list = new CompositeList<String>();
+        assertEquals(0, list.size());
+        assertTrue(list.isEmpty());
+        try {
+            final String s = list.get(0);
+            fail("expected error, got " + s);
+        } catch (IndexOutOfBoundsException e) {
+            // ok
+        }
+        assertFalse(list.listIterator().hasNext());
+
+        List<String> listEmpty = Collections.emptyList();
+        List<String> listAbc = Arrays.asList("a", "b", "c");
+        List<String> listEmpty2 = new ArrayList<String>();
+
+        // Made up of two lists, two of which are empty
+        list = new CompositeList<String>(listEmpty, listAbc, listEmpty2);
+        assertEquals(3, list.size());
+        assertFalse(list.isEmpty());
+        assertEquals("a", list.get(0));
+        assertEquals("c", list.get(2));
+        try {
+            final String s = list.get(3);
+            fail("expected error, got " + s);
+        } catch (IndexOutOfBoundsException e) {
+            // ok
+        }
+        try {
+            final String s = list.set(0, "z");
+            fail("expected error, got " + s);
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
+
+        // Iterator
+        final Iterator<String> iterator = list.iterator();
+        assertTrue(iterator.hasNext());
+        assertEquals("a", iterator.next());
+        assertEquals("b", iterator.next());
+        assertTrue(iterator.hasNext());
+        try {
+            iterator.remove();
+            fail("expected error");
+        } catch (UnsupportedOperationException e) {
+            // ok
+        }
+        assertEquals("c", iterator.next());
+        assertFalse(iterator.hasNext());
+
+        // Extend one of the backing lists, and list grows.
+        listEmpty2.add("zz");
+        assertEquals(4, list.size());
+        assertEquals("zz", list.get(3));
+
+        // Syntactic sugar 'of' method
+        String ss = "";
+        for (String s : CompositeList.of(list, list)) {
+            ss += s;
+        }
+        assertEquals("abczzabczz", ss);
+    }
+
+    /**
      * Runs the test suite.
      */
     public static void main(String [] args)

@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -42,8 +42,8 @@ mathLn(
         result->toNull();
     } else if (x->value() <= 0.0) {
         result->toNull();
-        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-        throw "22023";
+        // Invalid Argument For Natural Logarithm
+        throw SqlState::instance().code2201E();
     } else {
         result->value(log(x->value())); //using the c math library log
     }
@@ -60,8 +60,8 @@ mathLn(
         result->toNull();
     } else if (x->value() <= 0) {
         result->toNull();
-        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-        throw "22023";
+        // Invalid Argument For Natural Logarithm
+        throw SqlState::instance().code2201E();
     } else {
         result->value(log(double(x->value()))); //using the c math library log
     }
@@ -78,8 +78,8 @@ mathLog10(
         result->toNull();
     } else if (x->value() <= 0.0) {
         result->toNull();
-        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-        throw "22023";
+        // Invalid Argument For Natural Logarithm
+        throw SqlState::instance().code2201E();
     } else {
         result->value(log10(x->value()));
     }
@@ -96,8 +96,8 @@ mathLog10(
         result->toNull();
     } else if (x->value() <= 0) {
         result->toNull();
-        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-        throw "22023";
+        // Invalid Argument For Natural Logarithm
+        throw SqlState::instance().code2201E();
     } else {
         result->value(log10(double(x->value())));
     }
@@ -156,8 +156,8 @@ mathPow(
             // If this is the case then the result is NaN
 
             result->toNull();
-            // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-            throw "22023";
+            // Data Exception - Invalid Argument For Power Function
+            throw SqlState::instance().code2201F();
 
         } else {
             result->value(r);
