@@ -151,7 +151,7 @@ protected:
      * Performs enough sorting to be able to start returning results
      * (non-parallel version).
      */
-    ExecStreamResult computeFirstResult();
+    virtual ExecStreamResult computeFirstResult();
 
     /**
      * Performs enough sorting to be able to start returning results
