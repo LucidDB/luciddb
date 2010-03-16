@@ -127,15 +127,14 @@ Error: From line 1, column 11 to line 1, column 13: Column 'I' not found in tabl
 'I','X'
 '1','2'
 > 
-> -- Alter VB so that both VA and VB have a column J.
-> -- Expect error 'column ... is ambiguous' because the canonical SQL does not
-> -- qualify expressions in the WHERE clause. (Arguably this is a minor bug.)
-> CREATE OR REPLACE VIEW vb AS SELECT * FROM (VALUES (2, 4)) AS t(x, j);
-Error: From line 5, column 7 to line 5, column 9: Column 'J' is ambiguous (state=,code=0)
+> -- Alter VB so that both VA and VB have a column J.  This should be OK
+> -- since the canonical SQL early binding prevents ambiguity from creeping
+> -- in subsequently.
+> CREATE OR REPLACE VIEW vb AS SELECT * FROM (VALUES (2, 3, 4)) AS t(x, y, j);
 > 
-> -- Neither can we remove column J from VA.
+> -- But we cannot remove column J from VA, since that would break a binding.
 > CREATE OR REPLACE VIEW va AS SELECT * FROM (VALUES (2)) AS t(x);
-Error: From line 5, column 7 to line 5, column 9: Column 'J' not found in any table (state=,code=0)
+Error: From line 5, column 12 to line 5, column 14: Column 'J' not found in table 'VA' (state=,code=0)
 > 
 > 
 > -- repeat, this time with LucidDB personality, which eschews

@@ -600,6 +600,11 @@ public interface SqlValidator
     void setColumnReferenceExpansion(boolean expandColumnReferences);
 
     /**
+     * @return whether column reference expansion is enabled
+     */
+    boolean getColumnReferenceExpansion();
+
+    /**
      * Returns expansion of identifiers.
      *
      * @return whether this validator should expand identifiers

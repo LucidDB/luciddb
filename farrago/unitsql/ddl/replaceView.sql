@@ -85,12 +85,12 @@ CREATE VIEW vc AS
 SELECT "originalDefinition" FROM sys_fem."SQL2003"."LocalView" WHERE "name" = 'VC';
 SELECT * FROM vc;
 
--- Alter VB so that both VA and VB have a column J.
--- Expect error 'column ... is ambiguous' because the canonical SQL does not
--- qualify expressions in the WHERE clause. (Arguably this is a minor bug.)
-CREATE OR REPLACE VIEW vb AS SELECT * FROM (VALUES (2, 4)) AS t(x, j);
+-- Alter VB so that both VA and VB have a column J.  This should be OK
+-- since the canonical SQL early binding prevents ambiguity from creeping
+-- in subsequently.
+CREATE OR REPLACE VIEW vb AS SELECT * FROM (VALUES (2, 3, 4)) AS t(x, y, j);
 
--- Neither can we remove column J from VA.
+-- But we cannot remove column J from VA, since that would break a binding.
 CREATE OR REPLACE VIEW va AS SELECT * FROM (VALUES (2)) AS t(x);
 
 
