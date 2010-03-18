@@ -232,7 +232,7 @@ public class ConcurrentTestCommandScript
     private Boolean disabled;
     private VariableTable vars = new VariableTable();
     private File scriptDirectory;
-    private long executionStartTime = 0;
+    private long scriptStartTime = 0;
 
     private final List<ConcurrentTestPlugin> plugins =
         new ArrayList<ConcurrentTestPlugin>();
@@ -271,11 +271,9 @@ public class ConcurrentTestCommandScript
 
     /**
      * Gets ready to execute: loads script FILENAME applying external variable
-     * BINDINGS.
+     * BINDINGS
      */
-    private void prepare(
-        String filename,
-        List<String> bindings)
+    private void prepare(String filename, List<String> bindings)
         throws IOException
     {
         vars = new VariableTable();
@@ -286,6 +284,7 @@ public class ConcurrentTestCommandScript
         for (Integer threadId : getThreadIds()) {
             addThreadWriters(threadId);
         }
+
         // Backwards compatible: printed results always has a setup section, but
         // cleanup section is optional:
         setThreadName(SETUP_THREAD_ID, "setup");
@@ -299,7 +298,7 @@ public class ConcurrentTestCommandScript
     /** Executes the script */
     public void execute() throws Exception
     {
-        executionStartTime = System.currentTimeMillis();
+        scriptStartTime = System.currentTimeMillis();
         executeSetup();
         ConcurrentTestCommandExecutor threads[] = innerExecute();
         executeCleanup();
@@ -404,7 +403,7 @@ public class ConcurrentTestCommandScript
                     Statement stmt = connection.createStatement();
                     try {
                         ResultSet rset = stmt.executeQuery(sql);
-                        storeResults(threadID, rset, false);
+                        storeResults(threadID, rset, -1);
                     } finally {
                         stmt.close();
                     }
@@ -443,14 +442,12 @@ public class ConcurrentTestCommandScript
         }
     }
 
-    private void storeResults(
-        Integer threadId,
-        ResultSet rset,
-        boolean withTimeout)
+    // timeout < 0 means no timeout
+    private void storeResults(Integer threadId, ResultSet rset, long timeout)
         throws SQLException
     {
         ResultsReader r = threadResultsReaders.get(threadId);
-        r.read(rset, withTimeout);
+        r.read(rset, timeout);
     }
 
     /** Identifies the start of a comment line; same rules as sqlline */
@@ -601,8 +598,9 @@ public class ConcurrentTestCommandScript
                 message.append("\n\t").append(aTrace.toString());
             }
         } else {
-            message.append(cause.getClass().getName()).append(": ").append(
-                cause.getMessage());
+            message.append(cause.getClass().getName())
+                .append(": ")
+                .append(cause.getMessage());
         }
 
         storeMessage(
@@ -664,6 +662,10 @@ public class ConcurrentTestCommandScript
     {
         BufferedWriter out = getThreadWriter(threadId);
         try {
+            if (verbose) {
+                long t = System.currentTimeMillis() - scriptStartTime;
+                out.write("at " + t + ": ");
+            }
             out.write(message);
             out.newLine();
         } catch (IOException e) {
@@ -887,329 +889,35 @@ public class ConcurrentTestCommandScript
                     Map<String, String> commandStateMap = lookupState(state);
                     String command = null;
                     boolean isSql = false;
-
-                    if (line.startsWith("@")) {
-                        command = firstWord(line);
-                        if (!commandStateMap.containsKey(command)) {
-                            throw new IllegalStateException(
-                                "Command '" + command + "' not allowed in '"
-                                + state + "' state");
-                        }
-                    } else if (line.equals("") || isComment(line)) {
+                    if (line.equals("") || line.startsWith("--")) {
                         continue;
+                    } else if (line.startsWith("@")) {
+                        command = firstWord(line);
                     } else {
                         isSql = true;
-                        if (!commandStateMap.containsKey(SQL)) {
-                            throw new IllegalStateException(
-                                "SQL not allowed in '" + state + "' state");
-                        }
-                    }
-
-                    if (isSql) {
                         command = SQL;
+                    }
+                    if (!commandStateMap.containsKey(command)) {
+                        throw new IllegalStateException(
+                            command + " not allowed in state " + state);
+                    }
+
+                    boolean changeState;
+                    if (isSql) {
                         String sql = readSql(line, in);
-
-                        if (SETUP_STATE.equals(state)) {
-                            trace("@setup", sql);
-                            setupCommands.add(sql);
-                        } else if (CLEANUP_STATE.equals(state)) {
-                            trace("@cleanup", sql);
-                            cleanupCommands.add(sql);
-                        } else if (THREAD_STATE.equals(state)
-                            || REPEAT_STATE.equals(state))
-                        {
-                            boolean isSelect = isSelect(sql);
-                            trace(sql);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd =
-                                    isSelect
-                                    ? new SelectCommand(sql)
-                                    : new SqlCommand(sql);
-                                addCommand(i, order, cmd);
-                            }
-                            order++;
-                        } else {
-                            assert (false);
-                        }
-
+                        loadSql(sql);
+                        changeState = true;
                     } else {
-                        // commands are handled here
-                        if (VAR.equals(command)) {
-                            String args = line.substring(VAR_LEN).trim();
-                            scriptHasVars = true;
-                            trace("@var",  args);
-                            defineVariables(args);
-
-                        } else if (LOCKSTEP.equals(command)) {
-                            assert (lockstep == null) : LOCKSTEP + " and "
-                                + NOLOCKSTEP
-                                + " may only appear once";
-                            lockstep = Boolean.TRUE;
-                            trace("lockstep");
-
-                        } else if (NOLOCKSTEP.equals(command)) {
-                            assert (lockstep == null) : LOCKSTEP + " and "
-                                + NOLOCKSTEP
-                                + " may only appear once";
-                            lockstep = Boolean.FALSE;
-                            trace("no lockstep");
-
-                        } else if (DISABLED.equals(command)) {
-                            assert disabled == null
-                                : DISABLED + " and " + ENABLED
-                                + " may only appear once";
-                            disabled = Boolean.TRUE;
-                            trace("disabled");
-
-                        } else if (ENABLED.equals(command)) {
-                            assert disabled == null
-                                : DISABLED + " and " + ENABLED
-                                + " may only appear once";
-                            disabled = Boolean.FALSE;
-                            trace("enabled");
-
-                        } else if (SETUP.equals(command)) {
-                            trace("@setup");
-
-                        } else if (CLEANUP.equals(command)) {
-                            trace("@cleanup");
-
-                        } else if (INCLUDE.equals(command)) {
-                            String includedFile =
-                                line.substring(INCLUDE_LEN).trim();
-                            trace("@include", includedFile);
-                            load(includedFile);
-                            trace("end @include", includedFile);
-
-                        } else if (THREAD.equals(command)) {
-                            String threadNamesStr =
-                                line.substring(THREAD_LEN).trim();
-                            trace("@thread", threadNamesStr);
-                            StringTokenizer threadNamesTok =
-                                new StringTokenizer(threadNamesStr, ",");
-                            while (threadNamesTok.hasMoreTokens()) {
-                                setThreadName(
-                                    nextThreadId++,
-                                    threadNamesTok.nextToken());
-                            }
-                        } else if (REPEAT.equals(command)) {
-                            String arg = line.substring(REPEAT_LEN).trim();
-                            repeatCount = Integer.parseInt(vars.expand(arg));
-                            trace("start @repeat block", repeatCount);
-                            assert repeatCount > 0
-                                : "Repeat count must be > 0";
-                            in.mark(REPEAT_READ_AHEAD_LIMIT);
-
-                        } else if (END.equals(command)) {
-                            if (SETUP_STATE.equals(state)) {
-                                trace("end @setup");
-                            } else if (CLEANUP_STATE.equals(state)) {
-                                trace("end @cleanup");
-                            } else if (THREAD_STATE.equals(state)) {
-                                threadId = nextThreadId;
-                            } else if (REPEAT_STATE.equals(state)) {
-                                trace("repeating");
-                                repeatCount--;
-                                if (repeatCount > 0) {
-                                    try {
-                                        in.reset();
-                                    } catch (IOException e) {
-                                        throw new IllegalStateException(
-                                            "Unable to reset reader -- repeat "
-                                            + "contents must be less than "
-                                            + REPEAT_READ_AHEAD_LIMIT
-                                            + " bytes");
-                                    }
-
-                                    trace("end @repeat block");
-                                    // don't let the state change
-                                    continue;
-                                }
-                            } else {
-                                assert (false);
-                            }
-
-                        } else if (SYNC.equals(command)) {
-                            trace("@sync");
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addSynchronizationCommand(i, order);
-                            }
-                            order++;
-
-                        } else if (TIMEOUT.equals(command)) {
-                            String args = line.substring(TIMEOUT_LEN).trim();
-                            String millisStr = vars.expand(firstWord(args));
-                            long millis = Long.parseLong(millisStr);
-                            assert (millis >= 0L) : "Timeout must be >= 0";
-
-                            String sql =
-                                readSql(skipFirstWord(args).trim(), in);
-                            trace("@timeout", sql);
-                            boolean isSelect = isSelect(sql);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd =
-                                    isSelect
-                                    ? new SelectCommand(sql, millis)
-                                    : new SqlCommand(sql, millis);
-                                addCommand(i, order, cmd);
-                            }
-                            order++;
-
-                        } else if (ROWLIMIT.equals(command)) {
-                            String args = line.substring(ROWLIMIT_LEN).trim();
-                            String limitStr = vars.expand(firstWord(args));
-                            int limit = Integer.parseInt(limitStr);
-                            assert (limit >= 0) : "Rowlimit must be >= 0";
-
-                            String sql =
-                                readSql(skipFirstWord(args).trim(), in);
-                            trace("@rowlimit ", sql);
-                            boolean isSelect = isSelect(sql);
-                            if (!isSelect) {
-                                throw new IllegalStateException(
-                                    "Only select can be used with rowlimit");
-                            }
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(
-                                    i,
-                                    order,
-                                    new SelectCommand(sql, 0, limit));
-                            }
-                            order++;
-
-                        } else if (PRINT.equals(command)) {
-                            String spec =
-                                vars.expand(line.substring(PRINT_LEN).trim());
-                            trace("@print", spec);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(i, order, new PrintCommand(spec));
-                            }
-                            order++;
-
-                        } else if (PREPARE.equals(command)) {
-                            String startOfSql =
-                                line.substring(PREPARE_LEN).trim();
-                            String sql = readSql(startOfSql, in);
-                            trace("@prepare", sql);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(i, order, new PrepareCommand(sql));
-                            }
-                            order++;
-
-                        } else if (PLUGIN.equals(command)) {
-                            String cmd = line.substring(PLUGIN_LEN).trim();
-                            String pluginName = readLine(cmd, in).trim();
-                            trace("@plugin", pluginName);
-                            plugin(pluginName);
-
-                        } else if (pluginForCommand.containsKey(command)) {
-                            String cmd = line.substring(command.length())
-                                .trim();
-                            cmd = readLine(cmd, in);
-                            trace("@" + command, cmd);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(
-                                    i,
-                                    order,
-                                    new PluginCommand(
-                                        command, cmd));
-                            }
-                            order++;
-
-                        } else if (preSetupPluginForCommand.containsKey(
-                            command))
-                        {
-                            String cmd = line.substring(command.length())
-                                .trim();
-                            cmd = readLine(cmd, in);
-                            trace("@" + command, cmd);
-                            ConcurrentTestPlugin plugin =
-                                preSetupPluginForCommand.get(command);
-                            plugin.preSetupFor(command, cmd);
-
-                        } else if (SHELL.equals(command)) {
-                            String cmd = line.substring(SHELL_LEN).trim();
-                            cmd = readLine(cmd, in);
-                            trace("@shell", cmd);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(i, order, new ShellCommand(cmd));
-                            }
-                            order++;
-
-                        } else if (ECHO.equals(command)) {
-                            String msg = line.substring(ECHO_LEN).trim();
-                            msg = readLine(msg, in);
-                            trace("@echo", msg);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(i, order, new EchoCommand(msg));
-                            }
-                            order++;
-
-                        } else if (ERR.equals(command)) {
-                            String startOfSql =
-                                line.substring(ERR_LEN).trim();
-                            String sql = readSql(startOfSql, in);
-                            trace("@err ", sql);
-                            boolean isSelect = isSelect(sql);
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                CommandWithTimeout cmd =
-                                    isSelect
-                                    ? new SelectCommand(sql, true)
-                                    : new SqlCommand(sql, true);
-                                addCommand(i, order, cmd);
-                            }
-                            order++;
-
-                        } else if (FETCH.equals(command)) {
-                            trace("@fetch");
-                            String millisStr =
-                                vars.expand(line.substring(FETCH_LEN).trim());
-                            long millis = 0L;
-                            if (millisStr.length() > 0) {
-                                millis = Long.parseLong(millisStr);
-                                assert millis >= 0L
-                                    : "Fetch timeout must be >= 0";
-                            }
-
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCommand(
-                                    i,
-                                    order,
-                                    new FetchAndPrintCommand(millis));
-                            }
-                            order++;
-
-                        } else if (CLOSE.equals(command)) {
-                            trace("@close");
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addCloseCommand(i, order);
-                            }
-                            order++;
-
-                        } else if (SLEEP.equals(command)) {
-                            String arg =
-                                vars.expand(line.substring(SLEEP_LEN).trim());
-                            trace("@sleep", arg);
-                            long millis = Long.parseLong(arg);
-                            assert millis >= 0L
-                                : "Sleep timeout must be >= 0";
-
-                            for (int i = threadId; i < nextThreadId; i++) {
-                                addSleepCommand(i, order, millis);
-                            }
-                            order++;
-
-                        } else {
-                            assert false : "Unknown command " + command;
+                        changeState = loadCommand(command, line, in);
+                    }
+                    if (changeState) {
+                        String nextState = commandStateMap.get(command);
+                        assert (nextState != null);
+                        if (! nextState.equals(state)) {
+                            doEndOfState(state);
                         }
+                        state = nextState;
                     }
-
-                    String nextState = commandStateMap.get(command);
-                    assert (nextState != null);
-                    if (! nextState.equals(state)) {
-                        doEndOfState(state);
-                    }
-                    state = nextState;
                 }
 
                 // at EOF
@@ -1224,6 +932,286 @@ public class ConcurrentTestCommandScript
             } finally {
                 in.close();
             }
+        }
+
+        private void loadSql(String sql) {
+            if (SETUP_STATE.equals(state)) {
+                trace("@setup", sql);
+                setupCommands.add(sql);
+            } else if (CLEANUP_STATE.equals(state)) {
+                trace("@cleanup", sql);
+                cleanupCommands.add(sql);
+            } else if (
+                THREAD_STATE.equals(state) || REPEAT_STATE.equals(state))
+            {
+                boolean isSelect = isSelect(sql);
+                trace(sql);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    CommandWithTimeout cmd = isSelect?
+                        new SelectCommand(sql) : new SqlCommand(sql);
+                    addCommand(i, order, cmd);
+                }
+                order++;
+            } else {
+                assert (false);
+            }
+        }
+
+        // returns TRUE when load-state should advance, FALSE when it must not.
+        private boolean loadCommand(
+            String command, String line, BufferedReader in)
+            throws IOException
+        {
+            if (VAR.equals(command)) {
+                String args = line.substring(VAR_LEN).trim();
+                scriptHasVars = true;
+                trace("@var",  args);
+                defineVariables(args);
+
+            } else if (LOCKSTEP.equals(command)) {
+                assert (lockstep == null)
+                    : LOCKSTEP + " and " + NOLOCKSTEP + " may only appear once";
+                lockstep = Boolean.TRUE;
+                trace("lockstep");
+
+            } else if (NOLOCKSTEP.equals(command)) {
+                assert (lockstep == null)
+                    : LOCKSTEP + " and " + NOLOCKSTEP + " may only appear once";
+                lockstep = Boolean.FALSE;
+                trace("no lockstep");
+
+            } else if (DISABLED.equals(command)) {
+                assert (disabled == null)
+                    : DISABLED + " and " + ENABLED + " may only appear once";
+                disabled = Boolean.TRUE;
+                trace("disabled");
+
+            } else if (ENABLED.equals(command)) {
+                assert (disabled == null)
+                    : DISABLED + " and " + ENABLED + " may only appear once";
+                disabled = Boolean.FALSE;
+                trace("enabled");
+
+            } else if (SETUP.equals(command)) {
+                trace("@setup");
+
+            } else if (CLEANUP.equals(command)) {
+                trace("@cleanup");
+
+            } else if (INCLUDE.equals(command)) {
+                String includedFile =
+                    vars.expand(line.substring(INCLUDE_LEN).trim());
+                trace("@include", includedFile);
+                load(includedFile);
+                trace("end @include", includedFile);
+
+            } else if (THREAD.equals(command)) {
+                String threadNamesStr = line.substring(THREAD_LEN).trim();
+                trace("@thread", threadNamesStr);
+                StringTokenizer threadNamesTok =
+                    new StringTokenizer(threadNamesStr, ",");
+                while (threadNamesTok.hasMoreTokens()) {
+                    setThreadName(
+                        nextThreadId++,
+                        threadNamesTok.nextToken());
+                }
+
+            } else if (REPEAT.equals(command)) {
+                String arg = line.substring(REPEAT_LEN).trim();
+                repeatCount = Integer.parseInt(vars.expand(arg));
+                trace("start @repeat block", repeatCount);
+                assert (repeatCount > 0) : "Repeat count must be > 0";
+                in.mark(REPEAT_READ_AHEAD_LIMIT);
+
+            } else if (END.equals(command)) {
+                if (SETUP_STATE.equals(state)) {
+                    trace("end @setup");
+                } else if (CLEANUP_STATE.equals(state)) {
+                    trace("end @cleanup");
+                } else if (THREAD_STATE.equals(state)) {
+                    threadId = nextThreadId;
+                } else if (REPEAT_STATE.equals(state)) {
+                    trace("repeating");
+                    repeatCount--;
+                    if (repeatCount > 0) {
+                        try {
+                            in.reset();
+                        } catch (IOException e) {
+                            throw new IllegalStateException(
+                                "Unable to reset reader -- repeat "
+                                + "contents must be less than "
+                                + REPEAT_READ_AHEAD_LIMIT + " bytes");
+                        }
+
+                        trace("end @repeat block");
+                        return false;   // don't change the state
+                    }
+                } else {
+                    assert (false);
+                }
+
+            } else if (SYNC.equals(command)) {
+                trace("@sync");
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addSynchronizationCommand(i, order);
+                }
+                order++;
+
+            } else if (TIMEOUT.equals(command)) {
+                String args = line.substring(TIMEOUT_LEN).trim();
+                String millisStr = vars.expand(firstWord(args));
+                long millis = Long.parseLong(millisStr);
+                assert (millis >= 0L) : "Timeout must be >= 0";
+
+                String sql = readSql(skipFirstWord(args).trim(), in);
+                trace("@timeout", sql);
+                boolean isSelect = isSelect(sql);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    CommandWithTimeout cmd =
+                        isSelect ? new SelectCommand(sql, millis)
+                        : new SqlCommand(sql, millis);
+                    addCommand(i, order, cmd);
+                }
+                order++;
+
+            } else if (ROWLIMIT.equals(command)) {
+                String args = line.substring(ROWLIMIT_LEN).trim();
+                String limitStr = vars.expand(firstWord(args));
+                int limit = Integer.parseInt(limitStr);
+                assert (limit >= 0) : "Rowlimit must be >= 0";
+
+                String sql = readSql(skipFirstWord(args).trim(), in);
+                trace("@rowlimit ", sql);
+                boolean isSelect = isSelect(sql);
+                if (!isSelect) {
+                    throw new IllegalStateException(
+                        "Only select can be used with rowlimit");
+                }
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(i, order, new SelectCommand(sql, 0, limit));
+                }
+                order++;
+
+            } else if (PRINT.equals(command)) {
+                String spec = vars.expand(line.substring(PRINT_LEN).trim());
+                trace("@print", spec);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(i, order, new PrintCommand(spec));
+                }
+                order++;
+
+            } else if (PREPARE.equals(command)) {
+                String startOfSql =
+                    line.substring(PREPARE_LEN).trim();
+                String sql = readSql(startOfSql, in);
+                trace("@prepare", sql);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(i, order, new PrepareCommand(sql));
+                }
+                order++;
+
+            } else if (PLUGIN.equals(command)) {
+                String cmd = line.substring(PLUGIN_LEN).trim();
+                String pluginName = readLine(cmd, in).trim();
+                trace("@plugin", pluginName);
+                plugin(pluginName);
+
+            } else if (pluginForCommand.containsKey(command)) {
+                String cmd = line.substring(command.length())
+                    .trim();
+                cmd = readLine(cmd, in);
+                trace("@" + command, cmd);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(
+                        i,
+                        order,
+                        new PluginCommand(
+                            command, cmd));
+                }
+                order++;
+
+            } else if (preSetupPluginForCommand.containsKey(command)) {
+                String cmd = line.substring(command.length()) .trim();
+                cmd = readLine(cmd, in);
+                trace("@" + command, cmd);
+                ConcurrentTestPlugin plugin =
+                    preSetupPluginForCommand.get(command);
+                plugin.preSetupFor(command, cmd);
+
+
+            } else if (SHELL.equals(command)) {
+                String cmd = line.substring(SHELL_LEN).trim();
+                cmd = readLine(cmd, in);
+                trace("@shell", cmd);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(i, order, new ShellCommand(cmd));
+                }
+                order++;
+
+            } else if (ECHO.equals(command)) {
+                String msg = line.substring(ECHO_LEN).trim();
+                msg = readLine(msg, in);
+                trace("@echo", msg);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(i, order, new EchoCommand(msg));
+                }
+                order++;
+
+            } else if (ERR.equals(command)) {
+                String startOfSql =
+                    line.substring(ERR_LEN).trim();
+                String sql = readSql(startOfSql, in);
+                trace("@err ", sql);
+                boolean isSelect = isSelect(sql);
+                for (int i = threadId; i < nextThreadId; i++) {
+                    CommandWithTimeout cmd =
+                        isSelect ? new SelectCommand(sql, true)
+                        : new SqlCommand(sql, true);
+                    addCommand(i, order, cmd);
+                }
+                order++;
+
+            } else if (FETCH.equals(command)) {
+                trace("@fetch");
+                String millisStr =
+                    vars.expand(line.substring(FETCH_LEN).trim());
+                long millis = 0L;
+                if (millisStr.length() > 0) {
+                    millis = Long.parseLong(millisStr);
+                    assert (millis >= 0L) : "Fetch timeout must be >= 0";
+                }
+
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCommand(
+                        i,
+                        order,
+                        new FetchAndPrintCommand(millis));
+                }
+                order++;
+
+            } else if (CLOSE.equals(command)) {
+                trace("@close");
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addCloseCommand(i, order);
+                }
+                order++;
+
+            } else if (SLEEP.equals(command)) {
+                String arg = vars.expand(line.substring(SLEEP_LEN).trim());
+                trace("@sleep", arg);
+                long millis = Long.parseLong(arg);
+                assert (millis >= 0L) : "Sleep timeout must be >= 0";
+
+                for (int i = threadId; i < nextThreadId; i++) {
+                    addSleepCommand(i, order, millis);
+                }
+                order++;
+
+            } else {
+                assert false : "Unknown command " + command;
+            }
+
+            return true;                // normally, advance the state
         }
 
         private void doEndOfState(String state)
@@ -1418,35 +1406,47 @@ public class ConcurrentTestCommandScript
         private final int nth;
         private final boolean count;    // print a sequence number
         private final boolean time;     // print the time row was fetched
+        // print total row count and elapsed fetch time:
+        private final boolean total;
         // TODO: more control of formats
 
         PrintCommand(String spec)
         {
-            int nth = 1;
+            int nth = 0;
             boolean count = false;
             boolean time = false;
+            boolean total = false;
             StringTokenizer tokenizer = new StringTokenizer(spec);
-            while (tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken();
-                if (token.equalsIgnoreCase("none")) {
-                    nth = 0;
-                } else if (token.equalsIgnoreCase("all")) {
-                    nth = 1;
-                } else if (token.equalsIgnoreCase("count")) {
-                    count = true;
-                } else if (token.equalsIgnoreCase("time")) {
-                    time = true;
-                } else if (token.equalsIgnoreCase("every")) {
-                    nth = 1;
-                    if (tokenizer.hasMoreTokens()) {
-                        token = tokenizer.nextToken();
-                        nth = Integer.parseInt(token);
+
+            if (tokenizer.countTokens() == 0) {
+                // a bare "@print" means "@print all"
+                nth = 1;
+            } else {
+                while (tokenizer.hasMoreTokens()) {
+                    String token = tokenizer.nextToken();
+                    if (token.equalsIgnoreCase("none")) {
+                        nth = 0;
+                    } else if (token.equalsIgnoreCase("all")) {
+                        nth = 1;
+                    } else if (token.equalsIgnoreCase("total")) {
+                        total = true;
+                    } else if (token.equalsIgnoreCase("count")) {
+                        count = true;
+                    } else if (token.equalsIgnoreCase("time")) {
+                        time = true;
+                    } else if (token.equalsIgnoreCase("every")) {
+                        nth = 1;
+                        if (tokenizer.hasMoreTokens()) {
+                            token = tokenizer.nextToken();
+                            nth = Integer.parseInt(token);
+                        }
                     }
                 }
             }
             this.nth = nth;
             this.count = count;
             this.time = time;
+            this.total = total;
         }
 
         protected void doExecute(ConcurrentTestCommandExecutor executor)
@@ -1455,8 +1455,7 @@ public class ConcurrentTestCommandScript
             Integer threadId = executor.getThreadId();
             BufferedWriter out = threadBufferedWriters.get(threadId);
             threadResultsReaders.put(
-                threadId,
-                new ResultsReader(out, nth, count, time));
+                threadId, new ResultsReader(out, nth, count, time, total));
         }
     }
 
@@ -1567,15 +1566,13 @@ public class ConcurrentTestCommandScript
                         pb, null, null, getThreadWriter(threadId));
                 if (status != 0) {
                     storeMessage(
-                        threadId,
-                        "command " + command + ": exited with status "
-                        + status);
+                        threadId, "command " + command
+                        + ": exited with status " + status);
                 }
             } catch (Exception e) {
                 storeMessage(
-                    threadId,
-                    "command " + command + ": failed with exception "
-                    + e.getMessage());
+                    threadId, "command " + command
+                    + ": failed with exception " + e.getMessage());
             }
         }
     }
@@ -1592,20 +1589,20 @@ public class ConcurrentTestCommandScript
             this.timeout = timeout;
         }
 
-        protected boolean setTimeout(Statement stmt)
+        // returns the timeout as set (-1 means no timeout)
+        protected long setTimeout(Statement stmt)
             throws SQLException
         {
             assert (timeout >= 0);
-
             if (timeout > 0) {
                 // TODO: add support for millisecond timeouts to
                 // FarragoJdbcEngineStatement
                 assert (timeout >= 1000) : "timeout too short";
-                stmt.setQueryTimeout((int) (timeout / 1000));
-                return true;
+                int t = (int) (timeout / 1000);
+                stmt.setQueryTimeout(t);
+                return t;
             }
-
-            return false;
+            return -1;
         }
     }
 
@@ -1685,15 +1682,14 @@ public class ConcurrentTestCommandScript
 
             PreparedStatement stmt =
                 executor.getConnection().prepareStatement(properSql);
-
-            boolean timeoutSet = setTimeout(stmt);
+            long timeout = setTimeout(stmt);
             setRowLimit(stmt);
 
             try {
                 storeResults(
                     executor.getThreadId(),
                     stmt.executeQuery(),
-                    timeoutSet);
+                    timeout);
             } finally {
                 stmt.close();
             }
@@ -1753,8 +1749,8 @@ public class ConcurrentTestCommandScript
 
             PreparedStatement stmt =
                 executor.getConnection().prepareStatement(properSql);
-
-            boolean timeoutSet = setTimeout(stmt);
+            long timeout = setTimeout(stmt);
+            boolean timeoutSet = (timeout >= 0);
 
             try {
                 boolean haveResults = stmt.execute();
@@ -1849,50 +1845,48 @@ public class ConcurrentTestCommandScript
         {
             PreparedStatement stmt =
                 (PreparedStatement) executor.getStatement();
-
-            boolean timeoutSet = setTimeout(stmt);
+            long timeout = setTimeout(stmt);
 
             storeResults(
                 executor.getThreadId(),
                 stmt.executeQuery(),
-                timeoutSet);
+                timeout);
         }
     }
 
     private class ResultsReader
     {
         private final PrintWriter out;
-
-        /** print every Nth row. 1 means all rows, 0 means none. */
+        // print every Nth row. 1 means all rows, 0 means none.
         private final int nth;
-
-        /** prefix printed row with its sequence number */
+        // prefix printed row with its sequence number
         private final boolean counted;
-
-        /** prefix printed row with time it was fetched */
+        // prefix printed row with time it was fetched
         private final boolean timestamped;
+        // print final summary, rows & elapsed time.
+        private final boolean totaled;
 
         private long baseTime = 0;
+        private int rowCount = 0;
         private int ncols = 0;
         private int[] widths;
         private String[] labels;
 
         ResultsReader(BufferedWriter out)
         {
-            this(out, 1, false, false);
+            this(out, 1, false, false, false);
         }
 
         ResultsReader(
             BufferedWriter out,
-            int nth,
-            boolean counted,
-            boolean timestamped)
+            int nth, boolean counted, boolean timestamped, boolean totaled)
         {
             this.out = new PrintWriter(out);
             this.nth = nth;
             this.counted = counted;
             this.timestamped = timestamped;
-            this.baseTime = executionStartTime;
+            this.totaled = totaled;
+            this.baseTime = scriptStartTime;
         }
 
         void prepareFormat(ResultSet rset) throws SQLException
@@ -1921,8 +1915,11 @@ public class ConcurrentTestCommandScript
             printSeparator();
         }
 
-        void read(ResultSet rset, boolean withTimeout) throws SQLException
+        void read(ResultSet rset, long timeout) throws SQLException
         {
+            boolean withTimeout = (timeout >= 0);
+            boolean timedOut = false;
+            long startTime = 0, endTime = 0;
             try {
                 prepareFormat(rset);
                 String [] values = new String[ncols];
@@ -1930,7 +1927,8 @@ public class ConcurrentTestCommandScript
                 if (nth > 0) {
                     printHeaders();
                 }
-                for (int rowCount = 0; rset.next(); rowCount++) {
+                startTime = System.currentTimeMillis();
+                for (rowCount = 0; rset.next(); rowCount++) {
                     if (nth == 0) {
                         continue;
                     }
@@ -1938,9 +1936,9 @@ public class ConcurrentTestCommandScript
                         long time = System.currentTimeMillis();
                         if (printedRowCount > 0
                             && (printedRowCount % 100 == 0))
-                        {
-                            printHeaders();
-                        }
+                            {
+                                printHeaders();
+                            }
                         for (int i = 0; i < ncols; i++) {
                             values[i] = rset.getString(i + 1);
                         }
@@ -1955,11 +1953,16 @@ public class ConcurrentTestCommandScript
                     }
                 }
             } catch (AbstractIterResultSet.SqlTimeoutException e) {
+                endTime = System.currentTimeMillis();
+                timedOut = true;
                 if (!withTimeout) {
                     throw e;
                 }
                 Util.swallow(e, null);
             } catch (SQLException e) {
+                endTime = System.currentTimeMillis();
+                timedOut = true;
+
                 // 2007-10-23 hersker: hack to ignore timeout exceptions
                 // from other Farrago projects without being able to
                 // import/reference the actual exceptions
@@ -1977,10 +1980,23 @@ public class ConcurrentTestCommandScript
                 e.printStackTrace();
                 throw e;
             } finally {
+                if (endTime == 0) {
+                    endTime = System.currentTimeMillis();
+                }
                 rset.close();
                 if (nth > 0) {
                     printSeparator();
                     out.println();
+                }
+                if (totaled) {
+                    long dt = endTime - startTime;
+                    if (withTimeout) {
+                        dt -= timeout;
+                    }
+                    assert (dt >= 0);
+                    out.printf(
+                        "fetched %d rows in %d msecs %s%n",
+                        rowCount, dt, timedOut ? "(timeout)" : "(end)");
                 }
             }
         }
@@ -2106,14 +2122,17 @@ public class ConcurrentTestCommandScript
                 for (String file : files) {
                     ConcurrentTestCommandScript script =
                         new ConcurrentTestCommandScript();
-                    script.setQuiet(quiet);
-                    script.setVerbose(verbose);
-                    script.setDebug(debug);
-                    script.prepare(file, bindings);
-                    script.setDataSource(server, jdbcProps);
-                    script.execute();
-                    if (!quiet) {
-                        script.printResults(cout);
+                    try {
+                        script.setQuiet(quiet);
+                        script.setVerbose(verbose);
+                        script.setDebug(debug);
+                        script.prepare(file, bindings);
+                        script.setDataSource(server, jdbcProps);
+                        script.execute();
+                    } finally {
+                        if (!quiet) {
+                            script.printResults(cout);
+                        }
                     }
                 }
             } catch (Exception e) {
