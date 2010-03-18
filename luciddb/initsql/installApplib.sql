@@ -1059,3 +1059,13 @@ parameter style system defined java
 deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
+
+create or replace procedure create_table_from_source_table(
+in sourceTable varchar(65535),
+in schemaName varchar(255),
+in tableName varchar(255),
+in additonalColsInfo varchar(65535))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';

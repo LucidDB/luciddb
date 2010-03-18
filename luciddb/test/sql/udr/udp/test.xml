@@ -61,6 +61,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/misc.sql"/>
       </test>
 
+      <test name="createTableFromSourceTableUDP">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/create_table_from_source_table.sql"/>
+      </test>
+
       <test name="exportLocalInc" requiresSuccess="crSource">
         <!-- TODO: FRG-172, FRG-175, FRG-176 -->
         <test-metadata>
