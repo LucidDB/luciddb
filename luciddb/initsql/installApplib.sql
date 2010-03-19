@@ -1069,3 +1069,13 @@ language java
 parameter style java
 reads sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';
+
+create or replace procedure create_table_as(
+in schemaName varchar(255),
+in tableName varchar(255),
+in selectStmt varchar(65535),
+in shouldLoad boolean)
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSelectStmtUdp.execute';
