@@ -318,8 +318,8 @@ class MedJdbcPushDownRule
                 queryRel.columnSet,
                 queryRel.getCluster(),
                 rt,
-                queryRel.connection,
-                queryRel.dialect,
+                queryRel.getConnection(),
+                queryRel.getDialect(),
                 selectWithFilter);
 
         if (newTopProject != null) {
