@@ -215,10 +215,20 @@ public class FirewaterDataServer
         // (then we can skip top-level agg).
         planner.addRule(
             PushAggregateThroughUnionRule.instance);
+        planner.addRule(
+            PushJoinThroughUnionRule.instanceUnionOnLeft);
+        planner.addRule(
+            PushJoinThroughUnionRule.instanceUnionOnRight);
         // REVIEW jvs 13-May-2009:  Can this be moved up in LucidDB
         // Hep program?
         planner.addRule(
             ReduceAggregatesRule.instance);
+        planner.addRule(
+            FirewaterArbitraryReplicaRule.instance);
+        planner.addRule(
+            FirewaterReplicaJoinRule.instanceReplicaOnLeft);
+        planner.addRule(
+            FirewaterReplicaJoinRule.instanceReplicaOnRight);
     }
 
     public static FirewaterPartitioning getPartitioning(
