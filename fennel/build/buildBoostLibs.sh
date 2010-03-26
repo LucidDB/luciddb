@@ -21,6 +21,7 @@ echo "using stlport : 5.1.6 : ${STLPORT_LOCATION}/stlport : ${STLPORT_LOCATION}/
 
 if test "${TARGET_OS}" = "win32"
 then
+    export INCLUDE=$INCLUDE;.
     ./bjam toolset=${BOOST_TOOLSET} stdlib=stlport target-os=windows threadapi=win32 variant=debug,release link=shared runtime-link=shared threading=multi address-model=${CPU_BITS} --layout=tagged  --stagedir=${BOOST_DIR}
 else
     if test "${TARGET_OS}" = "darwin"
