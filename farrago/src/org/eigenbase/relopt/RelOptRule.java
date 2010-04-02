@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -422,16 +422,13 @@ public abstract class RelOptRule
         if (punc >= 0) {
             description = className.substring(punc + 1);
         }
-        try {
-            Integer.valueOf(description);
+        if (description.matches("[0-9]+")) {
             throw new RuntimeException(
                 "Derived description of rule class " + className
                 + " is an integer, not valid. "
                 + "Supply a description manually.");
-        } catch (NumberFormatException e) {
-            // Good, the description is not a number.
-            return description;
         }
+        return description;
     }
 }
 
