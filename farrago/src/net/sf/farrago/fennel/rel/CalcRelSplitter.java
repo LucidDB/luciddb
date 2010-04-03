@@ -34,6 +34,9 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 
 /**
  * CalcRelSplitter operates on a {@link CalcRel} with multiple {@link RexCall}
@@ -61,7 +64,7 @@ public abstract class CalcRelSplitter
 
     //~ Instance fields --------------------------------------------------------
 
-    private final RexProgram program;
+    protected final RexProgram program;
     private final RelDataTypeFactory typeFactory;
 
     private final RelType [] relTypes;
@@ -240,6 +243,7 @@ public abstract class CalcRelSplitter
      * condition
      * @param exprLevels Level ordinal for each expression (output)
      * @param levelTypeOrdinals The type of each level (output)
+     * @return Number of levels required
      */
     private int chooseLevels(
         final RexNode [] exprs,
@@ -253,7 +257,13 @@ public abstract class CalcRelSplitter
         final MaxInputFinder maxInputFinder = new MaxInputFinder(exprLevels);
         boolean [] relTypesPossibleForTopLevel = new boolean[relTypes.length];
         Arrays.fill(relTypesPossibleForTopLevel, true);
-        for (int i = 0; i < exprs.length; i++) {
+
+        // Compute the order in which to visit expressions.
+        final List<Set<Integer>> cohorts = getCohorts();
+        final List<Integer> permutation =
+            computeTopologicalOrdering(exprs, cohorts);
+
+        for (int i : permutation) {
             RexNode expr = exprs[i];
             final boolean condition = i == conditionOrdinal;
 
@@ -266,6 +276,24 @@ public abstract class CalcRelSplitter
             // Deduce the minimum level of the expression. An expression must
             // be at a level greater than or equal to all of its inputs.
             int level = maxInputFinder.maxInputFor(expr);
+
+            // If the expression is in a cohort, it can occur no lower than the
+            // levels of other expressions in the same cohort.
+            Set<Integer> cohort = findCohort(cohorts, i);
+            if (cohort != null) {
+                for (Integer exprOrdinal : cohort) {
+                    if (exprOrdinal == i) {
+                        // Already did this member of the cohort. It's a waste
+                        // of effort to repeat.
+                        continue;
+                    }
+                    final RexNode cohortExpr = exprs[exprOrdinal];
+                    int cohortLevel = maxInputFinder.maxInputFor(cohortExpr);
+                    if (cohortLevel > level) {
+                        level = cohortLevel;
+                    }
+                }
+            }
 
             // Try to implement this expression at this level.
             // If that is not possible, try to implement it at higher levels.
@@ -351,6 +379,85 @@ public abstract class CalcRelSplitter
             }
         }
         return levelCount;
+    }
+
+    /**
+     * Computes the order in which to visit expressions, so that we decide the
+     * level of an expression only after the levels of lower expressions have
+     * been decided.
+     *
+     * <p>First, we need to ensure that an expression is visited after all of
+     * its inputs.
+     *
+     * <p>Further, if the expression is a member of a cohort, we need to visit
+     * it after the inputs of all other expressions in that cohort. With this
+     * condition, expressions in the same cohort will very likely end up in the
+     * same level.
+     *
+     * <p>Note that if there are no cohorts, the expressions from the
+     * {@link RexProgram} are already in a suitable order. We perform the
+     * topological sort just to ensure that the code path is well-trodden.
+     *
+     * @param exprs Expressions
+     * @param cohorts List of cohorts, each of which is a set of expr ordinals
+     * @return Expression ordinals in topological order
+     */
+    private List<Integer> computeTopologicalOrdering(
+        RexNode[] exprs,
+        List<Set<Integer>> cohorts)
+    {
+        final DirectedGraph<Integer, DefaultEdge> graph =
+            new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+        for (int i = 0; i < exprs.length; i++) {
+            graph.addVertex(i);
+        }
+        for (int i = 0; i < exprs.length; i++) {
+            final RexNode expr = exprs[i];
+            final Set<Integer> cohort = findCohort(cohorts, i);
+            final Set<Integer> targets;
+            if (cohort == null) {
+                targets = Collections.singleton(i);
+            } else {
+                targets = cohort;
+            }
+            expr.accept(
+                new RexVisitorImpl<Void>(true) {
+                    public Void visitLocalRef(RexLocalRef localRef)
+                    {
+                        for (Integer target : targets) {
+                            graph.addEdge(localRef.getIndex(), target);
+                        }
+                        return null;
+                    }
+                }
+            );
+        }
+        TopologicalOrderIterator<Integer, DefaultEdge> iter =
+            new TopologicalOrderIterator<Integer, DefaultEdge>(graph);
+        final List<Integer> permutation = new ArrayList<Integer>();
+        while (iter.hasNext()) {
+            permutation.add(iter.next());
+        }
+        return permutation;
+    }
+
+    /**
+     * Finds the cohort that contains the given integer, or returns null.
+     *
+     * @param cohorts List of cohorts, each a set of integers
+     * @param ordinal Integer to search for
+     * @return Cohort that contains the integer, or null if not found
+     */
+    private static Set<Integer> findCohort(
+        List<Set<Integer>> cohorts,
+        int ordinal)
+    {
+        for (Set<Integer> cohort : cohorts) {
+            if (cohort.contains(ordinal)) {
+                return cohort;
+            }
+        }
+        return null;
     }
 
     private int [] identityArray(int length)
@@ -613,6 +720,31 @@ public abstract class CalcRelSplitter
             }
         }
         throw Util.newInternal("unknown reltype " + relTypeName);
+    }
+
+    /**
+     * Returns a list of sets of expressions that should be on the same level.
+     *
+     * <p>For example, if this method returns { {3, 5}, {4, 7} }, it means that
+     * expressions 3 and 5, should be on the same level, and expressions 4 and 7
+     * should be on the same level. The two cohorts do not need to be on the
+     * same level.
+     *
+     * <p>The list is best effort. If it is not possible to arrange that the
+     * expressions in a cohort are on the same level, the {@link #execute()}
+     * method will still succeed.
+     *
+     * <p>The default implementation of this method returns the empty list;
+     * expressions will be put on the most suitable level. This is generally
+     * the lowest possible level, except for literals, which are placed at the
+     * level where they are used.
+     *
+     * @return List of cohorts, that is sets of expressions, that the splitting
+     * algorithm should attempt to place on the same level
+     */
+    protected List<Set<Integer>> getCohorts()
+    {
+        return Collections.emptyList();
     }
 
     //~ Inner Classes ----------------------------------------------------------
