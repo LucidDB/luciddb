@@ -98,6 +98,7 @@ public class FarragoVjdbcServer
         vjdbcConfig.addConnection(configFarrago);
 
         if (protocol == ListeningProtocol.HTTP) {
+            configureConnectionTimeout(vjdbcConfig);
             jettyEmbedding = new FarragoJettyEmbedding();
             jettyEmbedding.startServlet(vjdbcConfig, httpPort);
             return httpPort;
@@ -107,15 +108,7 @@ public class FarragoVjdbcServer
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);
         vjdbcConfig = VJdbcConfiguration.singleton();
-        if (connectionTimeoutMillis == -1) {
-            // -1 means never timeout, so set OCCT checking period to 0
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
-                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
-            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
-        } else {
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
-                connectionTimeoutMillis);
-        }
+        configureConnectionTimeout(vjdbcConfig);
 
         RmiConfiguration rmiConfig = new RmiConfiguration();
         vjdbcConfig.setRmiConfiguration(rmiConfig);
@@ -133,6 +126,19 @@ public class FarragoVjdbcServer
         locateRmiRegistry();
 
         return rmiRegistryPort;
+    }
+
+    private void configureConnectionTimeout(VJdbcConfiguration vjdbcConfig)
+    {
+        if (connectionTimeoutMillis == -1) {
+            // -1 means never timeout, so set OCCT checking period to 0
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
+        } else {
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                connectionTimeoutMillis);
+        }
     }
 
     protected void stopNetwork()
