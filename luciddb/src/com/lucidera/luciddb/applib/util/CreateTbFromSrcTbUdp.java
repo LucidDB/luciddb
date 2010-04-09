@@ -115,7 +115,19 @@ public abstract class CreateTbFromSrcTbUdp
                 sql.append("Where SCHEMA_NAME='" + ss[0] + "' And TABLE_NAME='"
                     + ss[1] + "'");
                 break;
+            case 1:
 
+                String defaultSchema = "";
+                ps = conn.prepareStatement("select PARAM_VALUE from sys_root.user_session_parameters where param_name = 'schemaName'");
+                rs = ps.executeQuery();
+
+                while (rs.next()) {
+
+                    defaultSchema = rs.getString(1);
+                }
+                sql.append("Where SCHEMA_NAME='" + defaultSchema
+                    + "' And TABLE_NAME='" + ss[0] + "'");
+                break;
             default:
                 throw new Exception("Source table or view[" + sourceTbName
                     + "] is invalid.");

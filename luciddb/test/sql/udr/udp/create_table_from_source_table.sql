@@ -20,6 +20,10 @@ select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba
 -- test adding additional columns
 call applib.create_table_from_source_table ( '"S"."T1"', null, 'T3_TARGET', 'desc varchar(255)');
 select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
+--The source table input, if a simple table name, should try and access tables in the default schema
+drop table "T3_TARGET";
+call applib.create_table_from_source_table ( '"T1"', null, 'T3_TARGET', 'desc varchar(255)');
+select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
 
 -- test to make sure that it works with remote tables
 --TODO: NOT UNDERSTAND REMOTE TABLES.

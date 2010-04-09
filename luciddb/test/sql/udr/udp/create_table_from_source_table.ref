@@ -39,6 +39,17 @@
 | T3_TARGET   | COL1         | VARCHAR   | 50         | true         |
 | T3_TARGET   | DESC         | VARCHAR   | 255        | true         |
 +-------------+--------------+-----------+------------+--------------+
+0: jdbc:luciddb:> --The source table input, if a simple table name, should try and access tables in the default schema
+0: jdbc:luciddb:> drop table "T3_TARGET";
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"T1"', null, 'T3_TARGET', 'desc varchar(255)');
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
++-------------+--------------+-----------+------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
++-------------+--------------+-----------+------------+--------------+
+| T1          | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | DESC         | VARCHAR   | 255        | true         |
++-------------+--------------+-----------+------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test to make sure that it works with remote tables
 0: jdbc:luciddb:> --TODO: NOT UNDERSTAND REMOTE TABLES.
@@ -66,4 +77,5 @@ Error: java.lang.Exception: [ErrorInfo]: DDL validation error near line 1, colum
 0: jdbc:luciddb:> drop table "T2_TARGET";
 0: jdbc:luciddb:> drop table "T3_TARGET";
 0: jdbc:luciddb:> drop schema "S";
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
