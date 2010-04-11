@@ -143,6 +143,24 @@ from hsqldb_demo.sales.emp
 group by deptno
 order by deptno;
 
+-- JOIN which can be pushed down to remote server
+select *
+from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept where dept.deptno=20
+order by empno;
+select *
+from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept
+where emp.deptno=dept.deptno
+order by empno;
+select *
+from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
+on dept.deptno=emp.deptno
+order by empno;
+
+-- rename can be pushed down to remote server
+select deptno as d
+from hsqldb_demo.sales.dept
+order by d;
+
 -- now explain plans for above queries
 !set outputformat csv
 
@@ -270,6 +288,25 @@ select deptno, count(distinct sal)
 from hsqldb_demo.sales.emp
 group by deptno
 order by deptno;
+
+explain plan for
+select *
+from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept where dept.deptno=20
+order by empno;
+
+explain plan for
+select *
+from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept
+where emp.deptno=dept.deptno;
+
+explain plan for
+select deptno as d
+from hsqldb_demo.sales.dept;
+
+explain plan for
+select *
+from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
+on dept.deptno=emp.deptno;
 
 -- join on pseudocolumn (FRG-69)
 

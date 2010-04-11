@@ -902,7 +902,7 @@ public class MedJdbcDataServer
             if (fetchSize != DEFAULT_FETCH_SIZE) {
                 stmt.setFetchSize(fetchSize);
             }
-            stmtAlloc.setResultSet(stmt.executeQuery(sql));
+            stmtAlloc.setSql(sql);
             stmt = null;
             return stmtAlloc;
         } finally {
@@ -1026,6 +1026,7 @@ public class MedJdbcDataServer
         pushdownRuleList.add(r3);
         pushdownRuleList.add(r4);
         pushdownRuleList.add(MedJdbcAggPushDownRule.instance);
+        pushdownRuleList.add(MedJdbcJoinPushDownRule.instance);
 
         // add the non-disabled pushdown rules
         for (RelOptRule rule : pushdownRuleList) {

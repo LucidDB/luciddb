@@ -150,6 +150,14 @@ public class JdbcQuery
         return dataSource;
     }
 
+    /**
+     * @return the SQL dialect understood by the data source
+     */
+    public SqlDialect getDialect()
+    {
+        return dialect;
+    }
+
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {

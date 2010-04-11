@@ -3793,6 +3793,15 @@ public class FarragoJdbcTest
         assertEquals(expected, resultSet.getString(1));
     }
 
+    public void testExplainMetadata()
+        throws SQLException
+    {
+        String sql = "explain plan for values(0)";
+        resultSet = stmt.executeQuery(sql);
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        assertEquals("", metaData.getCatalogName(1));
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester

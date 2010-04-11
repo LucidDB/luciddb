@@ -117,8 +117,8 @@ class MedJdbcAggPushDownRule
                 queryRel.columnSet,
                 queryRel.getCluster(),
                 aggRel.getRowType(),
-                queryRel.connection,
-                queryRel.dialect,
+                queryRel.getConnection(),
+                queryRel.getDialect(),
                 selectWithAgg,
                 uniqueKeys);
         call.transformTo(rel);

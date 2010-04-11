@@ -25,7 +25,7 @@ library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 language java
 options(
   browse_connect_description 'LucidDb Loopback Connection',
-  driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
+  driver_class 'org.luciddb.jdbc.LucidDbLocalDriver',
   url 'jdbc:luciddb:'
 );
 
@@ -35,6 +35,6 @@ library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 language java
 options(
   browse_connect_description 'LucidDb Connection',
-  driver_class 'com.lucidera.jdbc.LucidDbRmiDriver',
+  driver_class 'org.luciddb.jdbc.LucidDbRmiDriver',
   url 'jdbc:luciddb:rmi:'
 );

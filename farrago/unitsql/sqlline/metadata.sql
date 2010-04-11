@@ -87,7 +87,9 @@ create table "p%nt" ("i" int not null primary key);
 -- no args, error
 !metadata
 -- bad arg
-!metadata getIcecream
+-- TODO jvs 14-Mar-2010:  re-enable this once we drop JDK 1.5 support
+-- (for now it gives a diff between 1.5 and 1.6)
+-- !metadata getIcecream
 -- ok
 !metadata getSchemas
 -- 3 args

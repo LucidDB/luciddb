@@ -6,7 +6,7 @@
 source ./defineLucidDbRuntime.sh
 
 if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
-    -u jdbc:luciddb: -d com.lucidera.jdbc.LucidDbLocalDriver \
+    -u jdbc:luciddb: -d org.luciddb.jdbc.LucidDbLocalDriver \
     -n sa $*;
 then
     echo

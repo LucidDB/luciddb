@@ -25,8 +25,8 @@ import javax.management.*;
 import junit.framework.*;
 import org.junit.*;
 
-import com.lucidera.farrago.*;
-import com.lucidera.jdbc.*;
+import org.luciddb.session.*;
+import org.luciddb.jdbc.*;
 import com.lucidera.luciddb.mbean.*;
 import com.lucidera.luciddb.mbean.server.*;
 import com.lucidera.luciddb.mbean.sysviews.*;

@@ -27,8 +27,8 @@
 -Dnet.sf.farrago.home=${luciddb.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${project.trace.propfile}
--Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:com.lucidera.farrago.LucidDbSessionFactory
--Dnet.sf.farrago.test.jdbcDriverClass=com.lucidera.jdbc.LucidDbLocalDriver
+-Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:org.luciddb.session.LucidDbSessionFactory
+-Dnet.sf.farrago.test.jdbcDriverClass=org.luciddb.jdbc.LucidDbLocalDriver
 ${farrago.test.jvmargs}
 ">
 
@@ -1159,6 +1159,13 @@ ${farrago.test.jvmargs}
       <property name="lu.product.version.point" 
         value="${product.version.point}"/>
     </ant>
+  
+  	<!-- Remove RmiJdbc stuff 
+	TODO: As soon as LDB-158 is resolved, we can remove this
+	-->
+  	<delete>
+  	    <fileset dir="${dist.dir}/${lucidera.release.spec}/lib" includes="RmiJdbc*"/>
+  	</delete>
 
     <delete dir="${dist.dir}/${lucidera.release.spec}/catalog" quiet="true"/>
     <mkdir dir="${dist.dir}/${lucidera.release.spec}/catalog"/>
@@ -1234,7 +1241,7 @@ ${farrago.test.jvmargs}
       tofile="${release.bin.dir}/${lucidDbServer}"/>
     <replace file="${release.bin.dir}/${lucidDbServer}">
         <replacefilter token="net.sf.farrago.server.FarragoVjdbcServer"
-        value="com.lucidera.farrago.LucidDbServer"/>
+        value="org.luciddb.session.LucidDbServer"/>
     </replace>
     <chmod file="${release.bin.dir}/${lucidDbServer}" perm="u+x" />
 
@@ -1242,7 +1249,7 @@ ${farrago.test.jvmargs}
         <replacefilter token="jdbc:farrago:" value="jdbc:luciddb:"/>
         <replacefilter
         token="net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver"
-        value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        value="org.luciddb.jdbc.LucidDbLocalDriver"/>
         <replacefilter token="guest" value="sa"/>
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />

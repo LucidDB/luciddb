@@ -210,22 +210,43 @@ class MedJdbcPushDownRule
             }
         }
 
-        List<SqlIdentifier> projList = null;
+        List<SqlNode> projList = null;
         String [] fieldNames = null;
+        Map<String, String> aliasMap = new HashMap<String, String>();
         RelDataType [] fieldTypes = null;
         List<RelDataTypeField> fields = null;
 
         // push down projection
         if (projOnFilter) {
-            projList = new ArrayList<SqlIdentifier>();
+            projList = new ArrayList<SqlNode>();
             fields = topProj.getRowType().getFieldList();
         } else if (!filterOnly) {
-            projList = new ArrayList<SqlIdentifier>();
+            projList = new ArrayList<SqlNode>();
 
             if (newTopProject != null) {
-                if (isPermutation(newTopProject)) {
+                boolean eliminateTopProj = true;
+                RexNode [] projectExprs = newTopProject.getProjectExps();
+                for (int i = 0; i < projectExprs.length; ++i) {
+                    RexNode node = projectExprs[i];
+                    if (!(node instanceof RexInputRef)) {
+                        eliminateTopProj = false;
+                        break;
+                    }
+                    String newFieldName =
+                        newTopProject.getRowType().getFieldList()
+                        .get(i).getName();
+                    String oldFieldName =
+                        bottomProj.getRowType().getFieldList()
+                        .get(((RexInputRef) node).getIndex()).getName();
+                    if (!newFieldName.equals(oldFieldName)) {
+                        aliasMap.put(newFieldName, oldFieldName);
+                    }
+                }
+                if (eliminateTopProj) {
                     fields = newTopProject.getRowType().getFieldList();
                     newTopProject = null;
+                } else {
+                    aliasMap.clear();
                 }
             }
 
@@ -234,27 +255,36 @@ class MedJdbcPushDownRule
             }
         }
 
+        SqlNodeList projection = origSelectList;
         if (projList != null) {
             int fieldLen = fields.size();
             fieldNames = new String[fieldLen];
             fieldTypes = new RelDataType[fieldLen];
             for (int i = 0; i < fieldLen; i++) {
                 RelDataTypeField field = fields.get(i);
-                projList.add(
-                    new SqlIdentifier(
-                        getSourceFieldName(queryRel, field.getName()),
-                        SqlParserPos.ZERO));
+                String oldFieldName = aliasMap.get(field.getName());
+                if (oldFieldName == null) {
+                    projList.add(
+                        new SqlIdentifier(
+                            getSourceFieldName(queryRel, field.getName()),
+                            SqlParserPos.ZERO));
+                } else {
+                    projList.add(
+                        SqlStdOperatorTable.asOperator.createCall(
+                            SqlParserPos.ZERO,
+                            new SqlIdentifier(
+                                getSourceFieldName(queryRel, oldFieldName),
+                                SqlParserPos.ZERO),
+                            new SqlIdentifier(
+                                field.getName(),
+                                SqlParserPos.ZERO)));
+                }
                 fieldNames[i] = field.getName();
                 fieldTypes[i] = field.getType();
             }
-        }
-
-        SqlNodeList projection = origSelectList;
-        if (projList != null) {
             projection =
                 new SqlNodeList(
-                    Collections.unmodifiableList(
-                        projList),
+                    Collections.unmodifiableList(projList),
                     SqlParserPos.ZERO);
         }
 
@@ -288,8 +318,8 @@ class MedJdbcPushDownRule
                 queryRel.columnSet,
                 queryRel.getCluster(),
                 rt,
-                queryRel.connection,
-                queryRel.dialect,
+                queryRel.getConnection(),
+                queryRel.getDialect(),
                 selectWithFilter);
 
         if (newTopProject != null) {
@@ -304,16 +334,6 @@ class MedJdbcPushDownRule
         }
 
         call.transformTo(rel);
-    }
-
-    private boolean isPermutation(ProjectRel projectRel)
-    {
-        for (RexNode node : projectRel.getProjectExps()) {
-            if (!(node instanceof RexInputRef)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private String getSourceFieldName(MedJdbcQueryRel queryRel, String name)

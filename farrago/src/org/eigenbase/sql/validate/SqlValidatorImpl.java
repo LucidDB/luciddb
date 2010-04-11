@@ -230,6 +230,7 @@ public class SqlValidatorImpl
         booleanType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
 
         rewriteCalls = true;
+        expandColumnReferences = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -1734,6 +1735,12 @@ public class SqlValidatorImpl
         boolean expandColumnReferences)
     {
         this.expandColumnReferences = expandColumnReferences;
+    }
+
+    // implement SqlValidator
+    public boolean getColumnReferenceExpansion()
+    {
+        return expandColumnReferences;
     }
 
     // implement SqlValidator

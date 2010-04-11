@@ -252,7 +252,7 @@ class ResultSetToFarragoIteratorConverter
             stmt.getResultSetTupleIterTypeName(),
             new ExpressionList(
                 new CastExpression(
-                    TypeName.forOJClass(OJUtil.clazzResultSet),
+                    OJUtil.typeNameForClass(ResultSetProvider.class),
                     childObj)),
             memberList);
     }

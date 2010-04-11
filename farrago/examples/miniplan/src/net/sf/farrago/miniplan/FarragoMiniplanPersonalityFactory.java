@@ -23,7 +23,7 @@ package net.sf.farrago.miniplan;
 
 import net.sf.farrago.fennel.rel.*;
 import org.eigenbase.relopt.volcano.*;
-import com.lucidera.opt.*;
+import org.luciddb.optimizer.*;
 
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.query.*;

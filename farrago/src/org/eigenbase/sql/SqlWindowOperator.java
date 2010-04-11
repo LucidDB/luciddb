@@ -296,7 +296,15 @@ public class SqlWindowOperator
             if (0 != orderList.size()) {
                 for (int i = 0; i < orderList.size(); i++) {
                     SqlNode orderItem = orderList.get(i);
-                    orderItem.validateExpr(validator, scope);
+                    boolean savedColumnReferenceExpansion =
+                        validator.getColumnReferenceExpansion();
+                    validator.setColumnReferenceExpansion(false);
+                    try {
+                        orderItem.validateExpr(validator, scope);
+                    } finally {
+                        validator.setColumnReferenceExpansion(
+                            savedColumnReferenceExpansion);
+                    }
                 }
             } else {
                 // list is empty so reset the base reference to null so

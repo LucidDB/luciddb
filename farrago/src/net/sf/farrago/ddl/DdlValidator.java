@@ -208,11 +208,11 @@ public class DdlValidator
         schedulingMap = new LinkedHashMap<String, SchedulingDetail>();
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
+        revalidateQueue = new LinkedHashSet<CwmModelElement>();
 
         parserContextMap = new HashMap<Object, SqlParserPos>();
         parserOffsetMap = new HashMap<RefObject, SqlParserPos>();
         sqlMap = new HashMap<RefObject, SqlNode>();
-        revalidateQueue = new HashSet<CwmModelElement>();
 
         // NOTE:  dropRules are populated implicitly as action handlers
         // are set up below.

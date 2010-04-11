@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Information about a particular error code.
  */
-class SqlStateInfo {
+class FENNEL_CALCULATOR_EXPORT SqlStateInfo {
 private:
     std::string _code;
 
@@ -48,7 +48,7 @@ public:
 /**
  * Enumeration of the SqlState values defined in the SQL:2008 standard.
  */
-class SqlState
+class FENNEL_CALCULATOR_EXPORT SqlState
 {
 public:
     static const SqlState &instance();

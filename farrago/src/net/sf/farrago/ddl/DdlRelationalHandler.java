@@ -391,7 +391,9 @@ public class DdlRelationalHandler
 
         validator.fixupView(view, analyzedSql);
 
-        if (!session.getPersonality().shouldReplacePreserveOriginalSql()) {
+        if (!session.getPersonality().shouldReplacePreserveOriginalSql()
+            && validator.isReplace())
+        {
             view.setOriginalDefinition(analyzedSql.canonicalString.getSql());
         } else if (view.getOriginalDefinition() == null) {
             view.setOriginalDefinition(sql);
