@@ -120,5 +120,10 @@ if ! $skip_tests ; then
     # Set up Fennel runtime environment
     . fennelenv.sh `pwd`
 
+if $cygwin ; then
+    nmake check
+else    
     make check
+fi
+
 fi
