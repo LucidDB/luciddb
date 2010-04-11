@@ -72,8 +72,8 @@ void LhxHashGenerator::init(uint levelInit)
     magicTable = LhxHashGeneratorMagicTable;
 
     uint base = level * 4;
-    hashValueSeed
-        = (uint8_t(base) << 24)
+    hashValueSeed =
+        (uint8_t(base) << 24)
         | (uint8_t(base + 1) << 16)
         | (uint8_t(base + 2) << 8)
         | (uint8_t(base + 3));

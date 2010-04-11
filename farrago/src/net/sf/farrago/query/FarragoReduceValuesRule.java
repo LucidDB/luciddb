@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2009 The Eigenbase Project
-// Copyright (C) 2007-2009 SQLstream, Inc.
-// Copyright (C) 2007-2009 LucidEra, Inc.
+// Copyright (C) 2007-2010 The Eigenbase Project
+// Copyright (C) 2007-2010 SQLstream, Inc.
+// Copyright (C) 2007-2010 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -252,12 +252,17 @@ public abstract class FarragoReduceValuesRule
             }
             call.transformTo(newRel);
 
-            // New plan is absolutely better than old plan.
-            call.getPlanner().setImportance(filter, 0.0);
         } else {
             // Filter had no effect, so we can say that Filter(Values) ==
             // Values.
             call.transformTo(values);
+        }
+
+        // New plan is absolutely better than old plan. (Moreover, if
+        // changeCount == 0, we've proved that the filter was trivial, and that
+        // can send the volcano planner into a loop; see dtbug 2070.)
+        if (filter != null) {
+            call.getPlanner().setImportance(filter, 0.0);
         }
     }
 

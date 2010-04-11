@@ -88,7 +88,7 @@ void StandardTypeTest::testStandardTypeToString()
         v = StandardTypeDescriptorOrdinal(i);
         str = StandardTypeDescriptor::toString(v);
         x = StandardTypeDescriptor::fromString(str);
-        BOOST_CHECK_EQUAL (x, v);
+        BOOST_CHECK_EQUAL(x, v);
         BOOST_MESSAGE(v << " -> " << str << " -> " << x);
         concat += str;
     }

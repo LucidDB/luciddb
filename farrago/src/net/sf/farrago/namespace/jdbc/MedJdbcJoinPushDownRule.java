@@ -154,8 +154,8 @@ class MedJdbcJoinPushDownRule
                 leftRel.columnSet,
                 leftRel.getCluster(),
                 joinRel.getRowType(),
-                leftRel.connection,
-                leftRel.dialect,
+                leftRel.getConnection(),
+                leftRel.getDialect(),
                 selectWithJoin);
         call.transformTo(rel);
     }

@@ -1,4 +1,4 @@
-<p><html>
+<html>
 <head>
 <title>Package org.eigenbase.test.concurrent</title>
 </head>
@@ -95,11 +95,16 @@ The directive &#64;disable means "skip this script". The deault is the antonym
 
 <h4>Error handling: </h4>
 <p>
-When a command fails, the rest of its section is skipped. If this happens in a
-thread section, the thread stops, but the other threads continue (with one fewer
-partner to synchronize with), and finally the cleanup section runs.
-If the setup section fails, then only the cleanup section is run.
-(<i>Note:</i> Not sure this behavior is correct or desirable.)
+When a sql command fails, the rest of its section is skipped. However, if the
+attribute <i>force</i> is true the error is ignored, and the section continues.
+<i>force</i> has an independent value in each section.
+Within a section it can be toggled using the sql directive
+<code>!SET FORCE <i>val</i></code>, where <i>val</i> can be <i>true, false, on, off.</i>
+(This is modelled after sqlline and sqllineClient. Other sqlline <i>!-</i>directives are ignored.)
+<p>
+An error in a thread section will stop that thread, but the other threads
+continue (with one fewer partner to synchronize with), and finally the cleanup
+section runs. If the setup section quits, then only the cleanup section is run.
 <p>
 
 <h4>Basic Commands (allowed in any section):</h4>
@@ -136,9 +141,12 @@ If the setup section fails, then only the cleanup section is run.
         none             -- means print nothing
         all              -- means print all rows (the default)
         every N          -- means print the first row (row 0), then row N, 2N, etc.
-        count            -- means print the row number before the row (starts with 0).
-        time             -- means print the actual time the row was fetched
+        count            -- means print row number (starts with 0).
+        time             -- means print the time each printed row was fetched.
+        total            -- means print a final summary, 
+                            with row count and net fetch time (not including any timeout).
    (Sorry, no way yet to print selected columns, to print time in a special way, etc.)
+
 
 &#64;fetch &lt;timeout&gt;?
     Starts fetching and printing result rows, with an optional timeout (in msecs).

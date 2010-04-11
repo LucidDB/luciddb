@@ -22,6 +22,7 @@ package net.sf.firewater;
 import java.sql.*;
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -71,16 +72,44 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
+        FarragoRepos repos = getPreparingStmt().getRepos();
         FirewaterPartitioning partitioning =
             FirewaterDataServer.getPartitioning(
-                getPreparingStmt().getRepos(),
+                repos,
                 (FemLocalTable) getCwmColumnSet());
 
         if (!partitioning.equals(FirewaterPartitioning.HASH)) {
+            // REVIEW jvs 20-Mar-2010:  This is a workaround
+            // which preloads the data servers; if we don't do
+            // that now, we run into assertions later.  There
+            // must be a better way.
+            Collection<FemDataServer> servers =
+                repos.allOfType(FemDataServer.class);
+            for (FemDataServer server : servers) {
+                String wrapperName = server.getWrapper().getName();
+                if (!wrapperName.startsWith("SYS_FIREWATER")) {
+                    continue;
+                }
+                if (wrapperName.contains("DISTRIBUTED")) {
+                    continue;
+                }
+                String catalogName =
+                    FirewaterDdlHandler.getCatalogNameForServer(server);
+                createRelForSpecificNode(
+                    cluster,
+                    connection,
+                    server,
+                    catalogName);
+            }
             return new FirewaterReplicatedTableRel(
                 cluster, this, connection);
         }
-        
+
+        // TODO jvs 20-Mar-2010:  Defer this, and return
+        // a new FirewaterPartitionedTableRel instead.  This will
+        // allow us to efficiently join a partitioned table with
+        // another partitioned table in the case where the
+        // partitioning key is the same.
         Collection c = FirewaterSessionFactory.getFwmPackage(
             getPreparingStmt().getRepos()).
             getDistributed().getFwmPartition().refAllOfClass();
@@ -93,41 +122,52 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
             FwmPartition partition = (FwmPartition) o;
             FemDataServer node =
                 FirewaterDdlHandler.getNodeForPartition(partition);
-            // REVIEW jvs 19-May-2009:  see comments in
-            // FarragoPreparingStmt.loadDataServerFromCache; and maybe
-            // we should be making that public and calling it here?
-            FarragoMedDataServer dataServer =
-                getPreparingStmt().getStmtValidator().getDataWrapperCache().
-                loadServerFromCatalog(node);
-            String [] partitionName = new String[3];
-            partitionName[0] = partition.getName();
-            partitionName[1] = getForeignName()[1];
-            partitionName[2] = getForeignName()[2];
-            RelNode rel = null;
-            try {
-                if (node.getWrapper().getName().equals(
-                        "SYS_FIREWATER_EMBEDDED_WRAPPER"))
-                {
-                    rel = optimizeLoopbackLink(
-                        cluster, connection, partitionName);
-                }
-            } catch (SQLException ex) {
-                // fall through to generateForeignSql below
-            }
-            if (rel == null) {
-                rel = generateForeignSql(
-                    cluster, connection, partitionName, dataServer);
-            }
+            RelNode rel = createRelForSpecificNode(
+                cluster, connection, node, partition.getName());
             inputs[i] = rel;
             ++i;
         }
         return new UnionRel(cluster, inputs, true);
     }
 
+    RelNode createRelForSpecificNode(
+        RelOptCluster cluster,
+        RelOptConnection connection,
+        FemDataServer node,
+        String catalogName)
+    {
+        // REVIEW jvs 19-May-2009: see comments in
+        // FarragoPreparingStmt.loadDataServerFromCache; and maybe we should be
+        // making that public and calling it here?
+        FarragoMedDataServer dataServer =
+            getPreparingStmt().getStmtValidator().getDataWrapperCache().
+            loadServerFromCatalog(node);
+        String [] actualName = new String[3];
+        actualName[0] = catalogName;
+        actualName[1] = getForeignName()[1];
+        actualName[2] = getForeignName()[2];
+        RelNode rel = null;
+        try {
+            if (node.getWrapper().getName().equals(
+                    "SYS_FIREWATER_EMBEDDED_WRAPPER"))
+            {
+                rel = optimizeLoopbackLink(
+                    cluster, connection, actualName);
+            }
+        } catch (SQLException ex) {
+            // fall through to generateForeignSql below
+        }
+        if (rel == null) {
+            rel = generateForeignSql(
+                cluster, connection, actualName, dataServer);
+        }
+        return rel;
+    }
+    
     private RelNode generateForeignSql(
         RelOptCluster cluster,
         RelOptConnection connection,
-        String [] partitionName,
+        String [] actualName,
         FarragoMedDataServer dataServer)
     {
         SqlSelect select =
@@ -137,7 +177,7 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
                     Collections.singletonList(
                         new SqlIdentifier("*", SqlParserPos.ZERO)),
                     SqlParserPos.ZERO),
-                new SqlIdentifier(partitionName, SqlParserPos.ZERO),
+                new SqlIdentifier(actualName, SqlParserPos.ZERO),
                 null,
                 null,
                 null,
@@ -152,7 +192,7 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
         MedJdbcColumnSet columnSet =
             new MedJdbcColumnSet(
                 nameDirectory,
-                partitionName,
+                actualName,
                 getLocalName(),
                 select,
                 getDialect(),

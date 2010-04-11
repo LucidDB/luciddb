@@ -51,6 +51,26 @@ RegisterSetBinding::RegisterSetBinding(TupleData* base, bool ownIt)
     }
 }
 
+// Rebind to new Tuple as base. Make sure old base and newBase have the same
+// size.
+void RegisterSetBinding::rebind(
+    TupleData* newBase, bool ownIt)
+{
+    assert(newBase);
+    assert(ncols == newBase->size());
+    if (ownTheBase) {
+        // previous base owned by me.
+        delete base;
+    }
+    base = newBase;
+    ownTheBase = ownIt;
+    ncols = base->size();
+    for (int i = 0; i < ncols; i++) {
+        const TupleDatum& baseCol = (*base)[i];
+        datumAddr[i] = baseCol.pData;
+    }
+}
+
 RegisterSetBinding::RegisterSetBinding(
     TupleData* base,
     const TupleData* shadow,
@@ -62,6 +82,34 @@ RegisterSetBinding::RegisterSetBinding(
     ncols = base->size();
     assert(shadow->size() == ncols);
     datumAddr = new PConstBuffer[ncols];
+    for (int i = 0; i < ncols; i++) {
+        const TupleDatum& baseCol = (*base)[i];
+        const TupleDatum& shadowCol = (*shadow)[i];
+        datumAddr[i] = shadowCol.pData;
+        // check that SHADOW coincides with BASE
+        if (baseCol.pData) {
+            assert(baseCol.pData == shadowCol.pData);
+        } else {
+            assert(shadowCol.pData);
+        }
+    }
+}
+
+// Rebind to new Tuple as base. Make sure old base and newBase have the same
+// size.
+void RegisterSetBinding::rebind(
+    TupleData* newBase, const TupleData* shadow, bool ownIt)
+{
+    assert(newBase);
+    assert(ncols == newBase->size());
+    if (ownTheBase) {
+        // previous base owned by me.
+        delete base;
+    }
+    base = newBase;
+    ownTheBase = ownIt;
+    ncols = base->size();
+    assert(shadow->size() == ncols);
     for (int i = 0; i < ncols; i++) {
         const TupleDatum& baseCol = (*base)[i];
         const TupleDatum& shadowCol = (*shadow)[i];

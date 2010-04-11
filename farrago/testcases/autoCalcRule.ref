@@ -15,32 +15,32 @@
 > 
 > explain plan for select cplus(1, 1), jplus(2, 2) from (values(true));
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[JPLUS($t1, $t1)], EXPR$0=[$t0], EXPR$1=[$t2])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[JPLUS($t1, $t1)], EXPR$0=[$t0], EXPR$1=[$t2])'
 '  FennelToIteratorConverter'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], expr#3=[2], $0=[$t2], $1=[$t3])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], $0=[$t2])'
 '      FennelValuesRel(tuples=[[{ true }]])'
 > 
 > explain plan for select jplus(2, 2), cplus(1, 1) from (values(true));
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[JPLUS($t0, $t0)], EXPR$0=[$t2], EXPR$1=[$t1])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[JPLUS($t1, $t1)], EXPR$0=[$t2], EXPR$1=[$t0])'
 '  FennelToIteratorConverter'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[1], expr#3=[CPLUS($t2, $t2)], $0=[$t1], $1=[$t3])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], $0=[$t2])'
 '      FennelValuesRel(tuples=[[{ true }]])'
 > 
 > explain plan for select cplus(jplus(1, 1), 2) from (values(true));
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])'
+'  FennelCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[JPLUS($t1, $t1)], expr#3=[2], $0=[$t2], $1=[$t3])'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[JPLUS($t1, $t1)], $0=[$t2])'
 '        FennelToIteratorConverter'
 '          FennelValuesRel(tuples=[[{ true }]])'
 > 
 > explain plan for select jplus(cplus(1, 1), 2) from (values(true));
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[JPLUS($t0, $t1)], EXPR$0=[$t2])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[JPLUS($t0, $t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], expr#3=[2], $0=[$t2], $1=[$t3])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], $0=[$t2])'
 '      FennelValuesRel(tuples=[[{ true }]])'
 > 
 > explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;
@@ -61,17 +61,17 @@
 > 
 > explain plan for select * from sales.emps where jplus(cplus(deptno, 1), 2) = 100;
 'column0'
-'IterCalcRel(expr#0..12=[{inputs}], expr#13=[JPLUS($t10, $t11)], expr#14=[=($t13, $t12)], proj#0..9=[{exprs}], $condition=[$t14])'
+'IterCalcRel(expr#0..10=[{inputs}], expr#11=[2], expr#12=[JPLUS($t10, $t11)], expr#13=[100], expr#14=[=($t12, $t13)], proj#0..9=[{exprs}], $condition=[$t14])'
 '  FennelToIteratorConverter'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[CPLUS($t2, $t10)], expr#12=[2], expr#13=[100], proj#0..9=[{exprs}], $10=[$t11], $11=[$t12], $12=[$t13])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[CPLUS($t2, $t10)], proj#0..9=[{exprs}], $10=[$t11])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for select * from sales.emps where cplus(jplus(deptno, 1), 2) = 100;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CPLUS($t12, $t10)], expr#14=[=($t13, $t11)], proj#0..9=[{exprs}], $condition=[$t14])'
+'  FennelCalcRel(expr#0..10=[{inputs}], expr#11=[2], expr#12=[CPLUS($t10, $t11)], expr#13=[100], expr#14=[=($t12, $t13)], proj#0..9=[{exprs}], $condition=[$t14])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..9=[{inputs}], expr#10=[2], expr#11=[100], expr#12=[1], expr#13=[JPLUS($t2, $t12)], proj#0..11=[{exprs}], $12=[$t13])'
+'      IterCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[JPLUS($t2, $t10)], proj#0..9=[{exprs}], $10=[$t11])'
 '        FennelToIteratorConverter'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
@@ -87,29 +87,29 @@
 > explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where slacker;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CPLUS($t2, $t0)], EXPR$0=[$t1], EXPR$1=[$t3])'
+'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[CPLUS($t1, $t2)], EXPR$0=[$t0], EXPR$1=[$t3])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t3, $t1)], expr#5=[JPLUS($t0, $t2)], $0=[$t1], $1=[$t4], $2=[$t5])'
+'      IterCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[JPLUS($t1, $t2)], expr#4=[1], expr#5=[JPLUS($t0, $t4)], $0=[$t3], $1=[$t5])'
 '        FennelToIteratorConverter'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[1], expr#4=[CPLUS($t0, $t3)], DEPTNO=[$t0], $1=[$t2], $2=[$t3], $3=[$t4], $condition=[$t1])'
+'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[CPLUS($t0, $t2)], DEPTNO=[$t0], $1=[$t3], $condition=[$t1])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > -- Test top-most level can be implemented in any calc and last
 > -- expression isn't a RexCall.  dtbug 210
 > explain plan for select deptno + jplus(cplus(deptno, 1), 2), empno, city from sales.emps;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], expr#5=[JPLUS($t3, $t4)], expr#6=[+($t1, $t5)], EXPR$0=[$t6], EMPNO=[$t0], CITY=[$t2])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[JPLUS($t3, $t4)], expr#6=[+($t1, $t5)], EXPR$0=[$t6], EMPNO=[$t0], CITY=[$t2])'
 '  FennelToIteratorConverter'
-'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[CPLUS($t1, $t3)], expr#5=[2], proj#0..2=[{exprs}], $3=[$t4], $4=[$t5])'
+'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[CPLUS($t1, $t3)], proj#0..2=[{exprs}], $3=[$t4])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > -- Equivalent to dtbug 210
 > explain plan for select cplus(t.r."second", 1) from (select jrow(deptno, empno) as r from sales.emps) as t;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])'
+'  FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], expr#2=[JROW($t1, $t0)], expr#3=[$t2.second], expr#4=[1], $0=[$t3], $1=[$t4])'
+'      IterCalcRel(expr#0..1=[{inputs}], expr#2=[JROW($t1, $t0)], expr#3=[$t2.second], $0=[$t3])'
 '        FennelToIteratorConverter'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
 > 

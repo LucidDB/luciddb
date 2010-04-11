@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calculator/SqlStringAscii.h"
+#include "fennel/calculator/SqlState.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -39,7 +40,7 @@ SqlStrCat_Ascii(
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     memcpy(dest + destLenBytes, str, strLenBytes);
@@ -58,7 +59,7 @@ SqlStrCat_Ascii(
 {
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     memcpy(dest, str1, str1LenBytes);
@@ -204,7 +205,7 @@ SqlStrOverlay_Ascii(
         // conditions. Therefore, per:
         // SQL99 Part 2 Section 6.18 General Rule 3.d generate a
         // SQL99 Part 2 Section 22.1 22-011 "data exception substring error".
-        throw "22011";
+        throw SqlState::instance().code22011();
     }
 
     int leftLenBytes = startChar - 1;         // 1-index to 0-index
@@ -222,7 +223,7 @@ SqlStrOverlay_Ascii(
 
     if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     char *dp = dest;
@@ -299,7 +300,7 @@ SqlStrSubStr_Ascii(
     if (e < subStartChar) {
         // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
         // "data exception substring error". SQL99 Part 2 Section 22.1 22-011
-        throw "22011";
+        throw SqlState::instance().code22011();
     }
 
     if (subStartChar > strLenBytes || e < 1) {
@@ -320,12 +321,12 @@ SqlStrSubStr_Ascii(
 
     if (l1 > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
     if (l1 < 0) {
         // Expected behavior not clear.
         // SQL99 Part 2 Section 22.1 22-011 "data exception substring error".
-        throw "22011";
+        throw SqlState::instance().code22011();
     }
 
     // - 1 converts from 1-indexed to 0-indexed
@@ -346,7 +347,7 @@ SqlStrToLower_Ascii(
 
     if (srcLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     while (d < e) {
@@ -368,7 +369,7 @@ SqlStrToUpper_Ascii(
 
     if (srcLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
 
     while (d < e) {
@@ -410,7 +411,7 @@ SqlStrTrim_Ascii(
 
     if (newLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
-        throw "22001";
+        throw SqlState::instance().code22001();
     }
     memcpy(dest, start, newLenBytes);
     return newLenBytes;

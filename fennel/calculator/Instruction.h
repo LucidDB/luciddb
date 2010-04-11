@@ -45,7 +45,7 @@ class FENNEL_CALCULATOR_EXPORT Instruction
 {
 public:
     explicit
-    Instruction () {}
+    Instruction() {}
 
     virtual
     ~Instruction() {}

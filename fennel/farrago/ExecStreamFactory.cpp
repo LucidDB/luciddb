@@ -23,6 +23,23 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
+// REVIEW jvs 13-Mar-2010:  For some reason, these lcs/lbm includes
+// need to come before some of the others; otherwise, we get
+// errors about ambiguity with respect to boost::uint16_t on Windows.
+// I moved them up as a workaround.
+#include "fennel/lcs/LcsClusterAppendExecStream.h"
+#include "fennel/lcs/LcsClusterReplaceExecStream.h"
+#include "fennel/lcs/LcsRowScanExecStream.h"
+#include "fennel/lbm/LbmGeneratorExecStream.h"
+#include "fennel/lbm/LbmSplicerExecStream.h"
+#include "fennel/lbm/LbmSearchExecStream.h"
+#include "fennel/lbm/LbmChopperExecStream.h"
+#include "fennel/lbm/LbmUnionExecStream.h"
+#include "fennel/lbm/LbmIntersectExecStream.h"
+#include "fennel/lbm/LbmMinusExecStream.h"
+#include "fennel/lbm/LbmBitOpExecStream.h"
+#include "fennel/lbm/LbmNormalizerExecStream.h"
+#include "fennel/lbm/LbmSortedAggExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
@@ -61,19 +78,6 @@
 #include "fennel/flatfile/FlatFileExecStream.h"
 #include "fennel/hashexe/LhxJoinExecStream.h"
 #include "fennel/hashexe/LhxAggExecStream.h"
-#include "fennel/lcs/LcsClusterAppendExecStream.h"
-#include "fennel/lcs/LcsClusterReplaceExecStream.h"
-#include "fennel/lcs/LcsRowScanExecStream.h"
-#include "fennel/lbm/LbmGeneratorExecStream.h"
-#include "fennel/lbm/LbmSplicerExecStream.h"
-#include "fennel/lbm/LbmSearchExecStream.h"
-#include "fennel/lbm/LbmChopperExecStream.h"
-#include "fennel/lbm/LbmUnionExecStream.h"
-#include "fennel/lbm/LbmIntersectExecStream.h"
-#include "fennel/lbm/LbmMinusExecStream.h"
-#include "fennel/lbm/LbmBitOpExecStream.h"
-#include "fennel/lbm/LbmNormalizerExecStream.h"
-#include "fennel/lbm/LbmSortedAggExecStream.h"
 
 FENNEL_BEGIN_CPPFILE(
         "$Id$");
@@ -1012,7 +1016,7 @@ void ExecStreamFactory::readBTreeParams(
 DynamicParamId ExecStreamFactory::readDynamicParamId(const int val)
 {
     // NOTE: zero is a special code for no parameter id
-    uint (id) = (val < 0) ? 0 : (uint) val;
+    uint id = (val < 0) ? 0 : (uint) val;
     return (DynamicParamId) id;
 }
 
@@ -1121,6 +1125,10 @@ void ExecStreamFactory::readBitOpDynamicParams(
 {
     params.rowLimitParamId = readDynamicParamId(streamDef.getRowLimitParamId());
     params.startRidParamId = readDynamicParamId(streamDef.getStartRidParamId());
+}
+
+ExecStreamSubFactory::~ExecStreamSubFactory()
+{
 }
 
 FENNEL_END_CPPFILE("$Id$");

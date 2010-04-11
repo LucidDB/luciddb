@@ -48,9 +48,9 @@ typedef uint32_t TRegisterRefProp;
 //! How a register set is bound to data.
 class FENNEL_CALCULATOR_EXPORT RegisterSetBinding
 {
-    const bool ownTheBase;              // we own (and will delete) the base
+    bool ownTheBase;              // we own (and will delete) the base
     uint ncols;
-    TupleData *const base;              // the underlying data
+    TupleData *base;              // the underlying data
     PConstBuffer *datumAddr;            // we allocate
     // In this set, the nth register is bound to TupleDatum d = (*base)[n].
     // Its length is d.cbLen, its location is d.pDatum.
@@ -68,6 +68,11 @@ public:
     //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
     RegisterSetBinding(TupleData* base, bool ownIt = false);
 
+    //! rebind a register set to a tuple. Deletes the old base if owner.
+    //! @param newBase the new underlying tuple
+    //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
+    void rebind(TupleData* newBase, bool ownIt = false);
+
     //! bind an output register set bound to a tuple, with supplementary target
     //! address info.
     //! @param base the underlying tuple (some columns may be null)
@@ -78,6 +83,15 @@ public:
         TupleData* base,
         const TupleData* shadow,
         bool ownIt = false);
+
+    //! rebind an output register set bound to a tuple, with supplementary
+    //! target address info.. Deletes the old base if owner.
+    //! @param newBase the new underlying tuple (some columns may be null)
+    //! @param shadow Equivalent to newBase, but all TupleDatum elements have
+    //! a non-null address.
+    //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
+    void rebind(
+        TupleData* newBase, const TupleData* shadow, bool ownIt = false);
 
     //! view the register set as a tuple (read-only)
     const TupleData& asTupleData() const {
@@ -355,7 +369,7 @@ class RegisterRef : public RegisterReference
 public:
     explicit
     //! Creates an invalid object.
-    RegisterRef () : RegisterReference()
+    RegisterRef() : RegisterReference()
     {}
 
     //! Creates a valid register reference

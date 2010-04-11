@@ -38,7 +38,7 @@
 #define __STDC_LIMIT_MACROS
 #else
 #define NOMINMAX
-#pragma warning (disable : 4355)
+#pragma warning(disable : 4355)
 #endif
 
 #define _XOPEN_SOURCE 500

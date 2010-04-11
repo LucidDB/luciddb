@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2005-2010 SQLstream, Inc.
+// Copyright (C) 2005-2010 LucidEra, Inc.
 // Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -49,6 +49,11 @@ public class FarragoSessionAnalyzedSql
      * noted below are invalid.
      */
     public boolean optimized;
+
+    /**
+     * The text of the SQL expression before expansion by the validator.
+     */
+    public SqlString rawString;
 
     /**
      * The text of the SQL expression after expansion by the validator. This

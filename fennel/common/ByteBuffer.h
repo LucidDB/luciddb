@@ -281,7 +281,7 @@ public:
      */
     void advance(IndexT pos)
     {
-        assert (pos >= start);
+        assert(pos >= start);
 
         // If we not keeping any data, reset the start pointer to the
         // beginning of the internal buffer. Otherwise, advance it.

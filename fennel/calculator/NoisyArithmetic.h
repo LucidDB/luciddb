@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -44,10 +44,10 @@ be NULL.
  --- */
 struct TExceptionCBData
 {
-    void (* fnCB)(const char *, void *);
+    void (* fnCB)(SqlStateInfo const &, void *);
     void *pData;
     TExceptionCBData(
-        void (* fnTheCB)(const char *, void *),
+        void (* fnTheCB)(SqlStateInfo const &, void *),
         void *pTheData)
     :   fnCB(fnTheCB),
         pData(pTheData)

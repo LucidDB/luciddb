@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -363,7 +363,7 @@ CalcMiscTest::testCalcRaise()
     pg << "I u4;" << endl;
     pg << "S u4;" << endl;
     pg << "C u4, u4, vc,5, vc,5;" << endl;
-    pg << "V 4, 5, 0x" << stringToHex("12345") << ",;" << endl;
+    pg << "V 4, 5, 0x" << stringToHex("22001") << ",;" << endl;
     pg << "T;" << endl;
     pg << "MOVE S0, C0;" << endl;
     pg << "RAISE C2;" << endl;
@@ -408,7 +408,7 @@ CalcMiscTest::testCalcRaise()
 
     BOOST_CHECK(iter != end);
     BOOST_CHECK_EQUAL(iter->pc, 1);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "12345"));
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22001"));
     iter++;
     BOOST_CHECK(iter == end);
 }
@@ -421,7 +421,7 @@ CalcMiscTest::testCalcContinueOnException()
     pg << "I u4;" << endl;
     pg << "S u4;" << endl;
     pg << "C u4, u4, vc,5, vc,5;" << endl;
-    pg << "V 4, 5, 0x" << stringToHex("12345") << ",;" << endl;
+    pg << "V 4, 5, 0x" << stringToHex("22001") << ",;" << endl;
     pg << "T;" << endl;
     pg << "MOVE S0, C0;" << endl;
     pg << "RAISE C2;" << endl;
@@ -468,7 +468,7 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_CHECK_EQUAL(
             iter->pc, 1);
     BOOST_CHECK_EQUAL(
-            0, strcmp(iter->str, "12345"));
+            0, strcmp(iter->str, "22001"));
     iter++;
     BOOST_CHECK(iter == end);
 
@@ -490,7 +490,7 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_CHECK_EQUAL(
             iter->pc, 1);
     BOOST_CHECK_EQUAL(
-            0, strcmp(iter->str, "12345"));
+            0, strcmp(iter->str, "22001"));
     iter++;
     BOOST_CHECK(iter == end);
 

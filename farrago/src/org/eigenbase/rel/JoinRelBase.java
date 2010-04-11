@@ -144,16 +144,14 @@ public abstract class JoinRelBase
             // fields, left fields, and right fields. Very similar to the
             // output row type, except that fields have not yet been made due
             // due to outer joins.
-            final List<RelDataTypeField> fieldList =
-                new ArrayList<RelDataTypeField>();
-            fieldList.addAll(getSystemFieldList());
-            fieldList.addAll(getLeft().getRowType().getFieldList());
-            fieldList.addAll(getRight().getRowType().getFieldList());
             RexChecker checker =
                 new RexChecker(
                     getCluster().getTypeFactory().createStructType(
                         new RelDataTypeFactory.ListFieldInfo(
-                            fieldList)),
+                            CompositeList.of(
+                                getSystemFieldList(),
+                                getLeft().getRowType().getFieldList(),
+                                getRight().getRowType().getFieldList()))),
                     fail);
             condition.accept(checker);
             if (checker.getFailureCount() > 0) {

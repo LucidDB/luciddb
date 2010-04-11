@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -33,6 +33,8 @@
 #ifdef HAVE_ICU
 #include <unicode/ustring.h>
 #endif
+
+#include "fennel/calculator/SqlState.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -107,7 +109,7 @@ SqlLikePrep(
                 } else {
                     // SQL99 Part 2 Section 8.5 General Rule 3.b.i1
                     // Invalid Escape Character
-                    throw "22019";
+                    throw SqlState::instance().code22019();
                 }
             }
 
@@ -132,7 +134,7 @@ SqlLikePrep(
                         // SQL99 Part 2 Section 8.5 General Rule
                         // 3.d.ii, I think.
                         // Invalid Escape Sequence
-                        throw "22025";
+                        throw SqlState::instance().code22025();
                     }
                     if (escapeIsRegexpSpecial
                         && expPat[pos + 1] == escapeChar)
@@ -227,7 +229,7 @@ SqlSimilarPrepEscapeProcessing(
                     {
                         // SQL2003 Part 2 Section 8.6 General Rule 3.b
                         // Data Exception - Invalid Use of Escape Character
-                        throw "2200C";
+                        throw SqlState::instance().code2200C();
                     }
                     pos += 2; // skip by <escape><special char>
                 }
@@ -238,16 +240,16 @@ SqlSimilarPrepEscapeProcessing(
             {
                 // SQL2003 Part 2 Section 8.6 General Rule 3.c
                 // Data Exception -- Escape Character Conflict
-                throw "2200B";
+                throw SqlState::instance().code2200B();
             }
         } else {
-            if (!escape & ! escapeLenBytes) {
+            if (!escape & !escapeLenBytes) {
                 // Default to no escape character
                 escapeChar = 0; // should not match anything
             } else {
                 // SQL2003 Part 2 Section 8.6 General Rule 3,
                 // Invalid Escape Character
-                throw "22019";
+                throw SqlState::instance().code22019();
             }
         }
     }
@@ -311,7 +313,7 @@ SqlSimilarPrepRewriteCharEnumeration(
                     //
                     // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
-                    throw "2201B";
+                    throw SqlState::instance().code2201B();
                 }
             }
             return;
@@ -373,7 +375,7 @@ SqlSimilarPrepRewriteCharEnumeration(
         }
         // SQL2003 Part 2 Section 8.6 General Rule 2
         // Data Exception - Invalid Regular Expression
-        throw "2201B";
+        throw SqlState::instance().code2201B();
     }
 }
 
@@ -418,7 +420,7 @@ SqlSimilarPrepReWrite(
                     // Escape char at end of string. See large note above
                     // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
-                    throw "2201B";
+                    throw SqlState::instance().code2201B();
                 }
                 if (strchr(SqlSimilarPrepSyntaxRule6, expPat[pos + 1])) {
                     // Valid <escaped char>, per SQL2003 Part 2 Section 8.6
@@ -446,7 +448,7 @@ SqlSimilarPrepReWrite(
                     //
                     // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
-                    throw "2201B";
+                    throw SqlState::instance().code2201B();
                 }
             } else {
                 switch (expPat[pos]) {
@@ -466,7 +468,7 @@ SqlSimilarPrepReWrite(
                         // Closing ']'  w/o opening ']'
                         // SQL2003 Part 2 Section 8.6 General Rule 2
                         // Data Exception - Invalid Regular Expression
-                        throw "2201B";
+                        throw SqlState::instance().code2201B();
                     }
                     characterEnumeration = false;
                     pos++;
@@ -517,7 +519,7 @@ SqlSimilarPrepReWrite(
             // Opening '[' w/o closing ']'
             // SQL2003 Part 2 Section 8.6 General Rule 2
             // Data Exception - Invalid Regular Expression
-            throw "2201B";
+            throw SqlState::instance().code2201B();
         }
     }
 }

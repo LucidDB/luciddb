@@ -342,6 +342,19 @@ public class FirewaterDdlHandler extends DdlHandler
         return replica.getNode();
     }
 
+    public static String getCatalogNameForServer(FemDataServer server)
+    {
+        String wrapperName = server.getWrapper().getName();
+        if ((wrapperName.equals("SYS_FIREWATER_FAKEREMOTE_WRAPPER"))
+            || (wrapperName.equals("SYS_FIREWATER_EMBEDDED_WRAPPER")))
+        {
+            // TODO jvs 20-Mar-2010:  use symbolic name
+            return "LOCAL_REPLICAS";
+        } else {
+            return null;
+        }
+    }
+
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalSchema schema)
     {

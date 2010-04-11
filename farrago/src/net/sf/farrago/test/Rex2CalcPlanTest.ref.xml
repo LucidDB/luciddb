@@ -1532,81 +1532,93 @@ RETURN /* 5: */;]]>
     <TestCase name="testWindowDisallowPartial">
         <Resource name="expectedInit">
             <![CDATA[
-O s8, s4, s8;
+O s8, s8, s4;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 C s8, s4;
 V 0, 0;
 T;
 MOVE O0, C0 /* 0: COUNT() */;
-MOVE O1, C1 /* 1: $SUM0($t0) */;
-MOVE O2, C0 /* 2: COUNT($t0) */;
+MOVE O1, C0 /* 1: COUNT($t0) */;
+MOVE O2, C1 /* 2: $SUM0($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
         <Resource name="expectedAdd">
             <![CDATA[
-O s8, s4, s8;
+O s8, s8, s4;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 C s8;
 V 1;
 T;
 ADD O0, O0, C0 /* 0: COUNT() */;
-ADD O1, O1, I0 /* 1: $SUM0($t0) */;
-ADD O2, O2, C0 /* 2: COUNT($t0) */;
+ADD O1, O1, C0 /* 1: COUNT($t0) */;
+ADD O2, O2, I0 /* 2: $SUM0($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
         <Resource name="expectedDrop">
             <![CDATA[
-O s8, s4, s8;
+O s8, s8, s4;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 C s8;
 V 1;
 T;
 SUB O0, O0, C0 /* 0: COUNT() */;
-SUB O1, O1, I0 /* 1: $SUM0($t0) */;
-SUB O2, O2, C0 /* 2: COUNT($t0) */;
+SUB O1, O1, C0 /* 1: COUNT($t0) */;
+SUB O2, O2, I0 /* 2: $SUM0($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
         <Resource name="expectedOutput">
             <![CDATA[
 O s4, s4, s4;
-I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, s8, s4, s8;
-L s4, bo, s8, s8, s8, s8, s4, s8, s8, s4;
-C s8, s4, s8;
-V 2,  /* <NULL> */,  /* <NULL> */;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, s8, s8, s4;
+L s4, bo, s4, bo, s8, s8, s8, s8, s4, s4, bo, s8, s8, s4;
+C s8, s8, s4, s8;
+V 2, 0,  /* <NULL> */,  /* <NULL> */;
 T;
 GE L1, I9, C0 /* 0: >=($t9, $t12) */;
-JMPF @5, L1 /* 1: */;
-JMPN @5, L1 /* 2: */;
-MOVE L0, I10 /* 3: */;
-JMP @6 /* 4: */;
-MOVE L0, C1 /* 5: CASE($t13, $t10, $t14) */;
-JMPF @11, L1 /* 6: */;
-JMPN @11, L1 /* 7: */;
-CAST L3, I11 /* 8: CAST($t11):BIGINT */;
-MOVE L2, L3 /* 9: */;
+JMPF @11, L1 /* 1: */;
+JMPN @11, L1 /* 2: */;
+GT L3, I10, C1 /* 3: >($t10, $t14) */;
+JMPF @8, L3 /* 4: */;
+JMPN @8, L3 /* 5: */;
+MOVE L2, I11 /* 6: */;
+JMP @9 /* 7: */;
+MOVE L2, C2 /* 8: CASE($t15, $t11, $t17) */;
+MOVE L0, L2 /* 9: */;
 JMP @12 /* 10: */;
-MOVE L2, C2 /* 11: CASE($t13, $t11, $t14) */;
-CAST L4, L0 /* 12: CAST($t15):BIGINT */;
-DIV L5, L4, L2 /* 13: /($t15, $t16) */;
-CAST L6, L5 /* 14: CAST($t17):INTEGER */;
-CAST L7, I10 /* 15: CAST($t10):BIGINT NOT NULL */;
-DIV L8, L7, I11 /* 16: /($t10, $t11) */;
-CAST L9, L8 /* 17: CAST($t19):INTEGER */;
-REF O0, L0 /* 18: */;
-REF O1, L6 /* 19: */;
-REF O2, L9 /* 20: */;
-RETURN /* 21: */;]]>
+MOVE L0, C2 /* 11: CASE($t13, $t18, $t16) */;
+JMPF @17, L1 /* 12: */;
+JMPN @17, L1 /* 13: */;
+CAST L5, I10 /* 14: CAST($t10):BIGINT */;
+MOVE L4, L5 /* 15: */;
+JMP @18 /* 16: */;
+MOVE L4, C3 /* 17: CASE($t13, $t10, $t16) */;
+CAST L6, L0 /* 18: CAST($t19):BIGINT */;
+DIV L7, L6, L4 /* 19: /($t19, $t20) */;
+CAST L8, L7 /* 20: CAST($t21):INTEGER */;
+GT L10, I10, C1 /* 21: >($t10, $t14) */;
+JMPF @26, L10 /* 22: */;
+JMPN @26, L10 /* 23: */;
+MOVE L9, I11 /* 24: */;
+JMP @27 /* 25: */;
+MOVE L9, C2 /* 26: CASE($t15, $t11, $t17) */;
+CAST L11, L9 /* 27: CAST($t18):BIGINT NOT NULL */;
+DIV L12, L11, I10 /* 28: /($t18, $t10) */;
+CAST L13, L12 /* 29: CAST($t23):INTEGER */;
+REF O0, L0 /* 30: */;
+REF O1, L8 /* 31: */;
+REF O2, L13 /* 32: */;
+RETURN /* 33: */;]]>
         </Resource>
         <Resource name="expectedDropOptimized">
             <![CDATA[
-O s8, s4, s8;
+O s8, s8, s4;
 I s4;
 C s8;
 V 1;
 T;
 SUB O0, O0, C0 /* 0: COUNT() */;
-SUB O1, O1, I0 /* 1: $SUM0($t0) */;
-SUB O2, O2, C0 /* 2: COUNT($t0) */;
+SUB O1, O1, C0 /* 1: COUNT($t0) */;
+SUB O2, O2, I0 /* 2: $SUM0($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
         <Resource name="expectedDropMapping">

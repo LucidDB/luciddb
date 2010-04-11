@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -51,6 +51,13 @@ bool showProgram = true;
 #else
 #define OUT_OF_RANGE_ERR "out of range"
 #endif
+
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+static SqlStateInfo const *overflow = &SqlState::instance().code22003();
+static SqlStateInfo const *underflow = &SqlState::instance().code22000();
+// static SqlStateInfo const *invalid = &SqlState::instance().code22023();
+#endif
+static SqlStateInfo const *divbyzero = &SqlState::instance().code22012();
 
 template <typename T>
 class RegisterTestInfo
@@ -200,12 +207,16 @@ public:
         mOutRegInfo.push_back(RegisterTestInfo<T>(desc, pc));
     }
 
-    void addWarning(const char* msg, TProgramCounter pc)
+    void addWarning(SqlStateInfo const &msg, TProgramCounter pc)
     {
         mWarnings.push_back(CalcMessage(msg, pc));
     }
 
-    void add(string desc, const char* error, TProgramCounter pc, uint line = 0)
+    void add(
+        string desc,
+        SqlStateInfo const *error,
+        TProgramCounter pc,
+        uint line = 0)
     {
         if (line) {
             ostringstream ostr("");
@@ -214,7 +225,7 @@ public:
         }
         addRegister(desc, pc);
         if (error != NULL) {
-            addWarning(error, pc);
+            addWarning(*error, pc);
         }
     }
 
@@ -1080,8 +1091,6 @@ void CalcAssemblerTest::testIntegralNativeInstructions(
     volatile T  max = std::numeric_limits<T>::max();
     volatile T  mid = 10;
 
-    const char* divbyzero = "22012";
-
     // Test MOD
     string modstr = string("MOD ") + typestr;
     addBinaryInstructions(instostr, "MOD", outreg, inregs);
@@ -1360,13 +1369,6 @@ void CalcAssemblerTest::testNativeInstructions(
     T  min = minSafeValue<T>();
     T  max = std::numeric_limits<T>::max();
     T  mid = 10;
-
-#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    const char *overflow = "22003";
-    const char *underflow = "22000";
-//    const char *invalid = "22023";
-#endif
-    const char *divbyzero = "22012";
 
     // Test ADD
     addBinaryInstructions(instostr, "ADD", outreg, inregs);
@@ -2134,8 +2136,8 @@ void CalcAssemblerTest::testStandardTypes()
 
         if (!StandardTypeDescriptor::isArray(type)) {
             // Verify what we think is the; min/max is the min/max
-            assert (testCase1.getInput(0) == min[type]);
-            assert (testCase1.getInput(1) == max[type]);
+            assert(testCase1.getInput(0) == min[type]);
+            assert(testCase1.getInput(1) == max[type]);
         }
 
         // Now test literal binding for the type
@@ -2551,7 +2553,7 @@ void CalcAssemblerTest::testReturn()
 }
 
 void convertFloatToInt(
-    RegisterRef<int>* regOut,
+    RegisterRef<int32_t>* regOut,
     RegisterRef<float>* regIn)
 {
     regOut->value((int)regIn->value());
@@ -2713,7 +2715,7 @@ void CalcAssemblerTest::testComments()
 }
 
 #if 0
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
     ProgramName = argv[0];
     InstructionFactory inst();

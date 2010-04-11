@@ -57,7 +57,7 @@ void LhxAggExecStream::prepare(
     outputDesc = hashInfo.inputDesc[buildInputIndex];
 
     if (!params.outputTupleDesc.empty()) {
-        assert (outputDesc == params.outputTupleDesc);
+        assert(outputDesc == params.outputTupleDesc);
     }
 
     outputTuple.compute(outputDesc);
@@ -512,7 +512,7 @@ void LhxAggExecStream::setAggComputers(
 
     uint i = 0;
 
-    assert (aggInvocations.size() == aggsProj.size());
+    assert(aggInvocations.size() == aggsProj.size());
 
     for (AggInvocationConstIter pInvocation(aggInvocations.begin());
          pInvocation != aggInvocations.end();

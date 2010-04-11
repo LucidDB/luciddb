@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2009-2009 LucidEra, Inc.
+// Copyright (C) 2005-2010 The Eigenbase Project
+// Copyright (C) 2002-2010 SQLstream, Inc.
+// Copyright (C) 2009-2010 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,6 +34,9 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 
 /**
  * CalcRelSplitter operates on a {@link CalcRel} with multiple {@link RexCall}
@@ -61,7 +64,7 @@ public abstract class CalcRelSplitter
 
     //~ Instance fields --------------------------------------------------------
 
-    private final RexProgram program;
+    protected final RexProgram program;
     private final RelDataTypeFactory typeFactory;
 
     private final RelType [] relTypes;
@@ -105,8 +108,7 @@ public abstract class CalcRelSplitter
         // expressions to the left.
         assert program.isValid(true);
         final List<RexNode> exprList = program.getExprList();
-        final RexNode [] exprs =
-            (RexNode []) exprList.toArray(new RexNode[exprList.size()]);
+        final RexNode [] exprs = exprList.toArray(new RexNode[exprList.size()]);
         assert !RexUtil.containComplexExprs(exprList);
 
         // Figure out what level each expression belongs to.
@@ -164,6 +166,13 @@ public abstract class CalcRelSplitter
                 // before, and will be used at later levels.
                 IntList projectExprOrdinalList = new IntList();
                 for (int i = 0; i < exprs.length; i++) {
+                    RexNode expr = exprs[i];
+                    if (expr instanceof RexLiteral) {
+                        // Don't project literals. They are always created in
+                        // the level where they are used.
+                        exprLevels[i] = -1;
+                        continue;
+                    }
                     if ((exprLevels[i] <= level)
                         && (exprMaxUsingLevelOrdinals[i] > level))
                     {
@@ -192,6 +201,7 @@ public abstract class CalcRelSplitter
             RexProgram program1 =
                 createProgramForLevel(
                     level,
+                    levelCount,
                     rel.getRowType(),
                     exprs,
                     exprLevels,
@@ -206,6 +216,14 @@ public abstract class CalcRelSplitter
                     program1.getOutputRowType(),
                     rel,
                     program1);
+
+            // Sometimes a level's program merely projects its inputs. We don't
+            // want these. They cause an explosion in the search space.
+            if (rel instanceof CalcRel
+                && ((CalcRel) rel).getProgram().isTrivial())
+            {
+                rel = rel.getInput(0);
+            }
 
             // The outputs of this level will be the inputs to the next level.
             inputExprOrdinals = projectExprOrdinals;
@@ -225,6 +243,7 @@ public abstract class CalcRelSplitter
      * condition
      * @param exprLevels Level ordinal for each expression (output)
      * @param levelTypeOrdinals The type of each level (output)
+     * @return Number of levels required
      */
     private int chooseLevels(
         final RexNode [] exprs,
@@ -238,7 +257,13 @@ public abstract class CalcRelSplitter
         final MaxInputFinder maxInputFinder = new MaxInputFinder(exprLevels);
         boolean [] relTypesPossibleForTopLevel = new boolean[relTypes.length];
         Arrays.fill(relTypesPossibleForTopLevel, true);
-        for (int i = 0; i < exprs.length; i++) {
+
+        // Compute the order in which to visit expressions.
+        final List<Set<Integer>> cohorts = getCohorts();
+        final List<Integer> permutation =
+            computeTopologicalOrdering(exprs, cohorts);
+
+        for (int i : permutation) {
             RexNode expr = exprs[i];
             final boolean condition = i == conditionOrdinal;
 
@@ -252,9 +277,27 @@ public abstract class CalcRelSplitter
             // be at a level greater than or equal to all of its inputs.
             int level = maxInputFinder.maxInputFor(expr);
 
-// Try to implement this expression at this level.
-// If that is not possible, try to implement it at higher levels.
-levelLoop:
+            // If the expression is in a cohort, it can occur no lower than the
+            // levels of other expressions in the same cohort.
+            Set<Integer> cohort = findCohort(cohorts, i);
+            if (cohort != null) {
+                for (Integer exprOrdinal : cohort) {
+                    if (exprOrdinal == i) {
+                        // Already did this member of the cohort. It's a waste
+                        // of effort to repeat.
+                        continue;
+                    }
+                    final RexNode cohortExpr = exprs[exprOrdinal];
+                    int cohortLevel = maxInputFinder.maxInputFor(cohortExpr);
+                    if (cohortLevel > level) {
+                        level = cohortLevel;
+                    }
+                }
+            }
+
+            // Try to implement this expression at this level.
+            // If that is not possible, try to implement it at higher levels.
+            levelLoop:
             for (;; ++level) {
                 if (level >= levelCount) {
                     // This is a new level. We can use any reltype we like.
@@ -312,17 +355,14 @@ levelLoop:
                     // None of the reltypes still active for this level could
                     // implement expr. But maybe we could succeed with a new
                     // level, with all options open?
-                    if (count(relTypesPossibleForTopLevel) < relTypes.length) {
-                        // Move to next level.
-                        levelTypeOrdinals[levelCount] =
-                            firstSet(relTypesPossibleForTopLevel);
-                        ++levelCount;
-                        Arrays.fill(relTypesPossibleForTopLevel, true);
-                        continue;
-                    } else {
+                    if (count(relTypesPossibleForTopLevel) >= relTypes.length) {
                         // Cannot implement for any reltype.
                         throw Util.newInternal("cannot implement " + expr);
                     }
+                    levelTypeOrdinals[levelCount] =
+                        firstSet(relTypesPossibleForTopLevel);
+                    ++levelCount;
+                    Arrays.fill(relTypesPossibleForTopLevel, true);
                 } else {
                     final int levelTypeOrdinal = levelTypeOrdinals[level];
                     if (!relTypes[levelTypeOrdinal].canImplement(
@@ -339,6 +379,85 @@ levelLoop:
             }
         }
         return levelCount;
+    }
+
+    /**
+     * Computes the order in which to visit expressions, so that we decide the
+     * level of an expression only after the levels of lower expressions have
+     * been decided.
+     *
+     * <p>First, we need to ensure that an expression is visited after all of
+     * its inputs.
+     *
+     * <p>Further, if the expression is a member of a cohort, we need to visit
+     * it after the inputs of all other expressions in that cohort. With this
+     * condition, expressions in the same cohort will very likely end up in the
+     * same level.
+     *
+     * <p>Note that if there are no cohorts, the expressions from the
+     * {@link RexProgram} are already in a suitable order. We perform the
+     * topological sort just to ensure that the code path is well-trodden.
+     *
+     * @param exprs Expressions
+     * @param cohorts List of cohorts, each of which is a set of expr ordinals
+     * @return Expression ordinals in topological order
+     */
+    private List<Integer> computeTopologicalOrdering(
+        RexNode[] exprs,
+        List<Set<Integer>> cohorts)
+    {
+        final DirectedGraph<Integer, DefaultEdge> graph =
+            new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+        for (int i = 0; i < exprs.length; i++) {
+            graph.addVertex(i);
+        }
+        for (int i = 0; i < exprs.length; i++) {
+            final RexNode expr = exprs[i];
+            final Set<Integer> cohort = findCohort(cohorts, i);
+            final Set<Integer> targets;
+            if (cohort == null) {
+                targets = Collections.singleton(i);
+            } else {
+                targets = cohort;
+            }
+            expr.accept(
+                new RexVisitorImpl<Void>(true) {
+                    public Void visitLocalRef(RexLocalRef localRef)
+                    {
+                        for (Integer target : targets) {
+                            graph.addEdge(localRef.getIndex(), target);
+                        }
+                        return null;
+                    }
+                }
+            );
+        }
+        TopologicalOrderIterator<Integer, DefaultEdge> iter =
+            new TopologicalOrderIterator<Integer, DefaultEdge>(graph);
+        final List<Integer> permutation = new ArrayList<Integer>();
+        while (iter.hasNext()) {
+            permutation.add(iter.next());
+        }
+        return permutation;
+    }
+
+    /**
+     * Finds the cohort that contains the given integer, or returns null.
+     *
+     * @param cohorts List of cohorts, each a set of integers
+     * @param ordinal Integer to search for
+     * @return Cohort that contains the integer, or null if not found
+     */
+    private static Set<Integer> findCohort(
+        List<Set<Integer>> cohorts,
+        int ordinal)
+    {
+        for (Set<Integer> cohort : cohorts) {
+            if (cohort.contains(ordinal)) {
+                return cohort;
+            }
+        }
+        return null;
     }
 
     private int [] identityArray(int length)
@@ -359,6 +478,7 @@ levelLoop:
      * Expressions are mapped according to <code>inputExprOrdinals</code>.
      *
      * @param level Level ordinal
+     * @param levelCount Number of levels
      * @param inputRowType Input row type
      * @param allExprs Array of all expressions
      * @param exprLevels Array of the level ordinal of each expression
@@ -375,28 +495,17 @@ levelLoop:
      */
     private RexProgram createProgramForLevel(
         int level,
+        int levelCount,
         RelDataType inputRowType,
-        RexNode [] allExprs,
-        int [] exprLevels,
-        int [] inputExprOrdinals,
-        int [] projectExprOrdinals,
+        RexNode[] allExprs,
+        int[] exprLevels,
+        int[] inputExprOrdinals,
+        final int[] projectExprOrdinals,
         int conditionExprOrdinal,
         RelDataType outputRowType)
     {
-        // Count how many expressions are going to be at this level.
-        int exprCount = inputExprOrdinals.length;
-        for (int i = 0; i < allExprs.length; i++) {
-            if (exprLevels[i] == level) {
-                ++exprCount;
-            }
-        }
-
         // Build a list of expressions to form the calc.
-        RexNode [] exprs = new RexNode[exprCount];
-
-        // exprOrdinals describes what position in allExprs a given expression
-        // in inputExprOrdinals goes to
-        int [] exprOrdinals = new int[exprCount];
+        List<RexNode> exprs = new ArrayList<RexNode>();
 
         // exprInverseOrdinals describes where an expression in allExprs comes
         // from -- from an input, from a calculated expression, or -1 if not
@@ -409,11 +518,10 @@ levelLoop:
         // and are used here.
         for (int i = 0; i < inputExprOrdinals.length; i++) {
             final int inputExprOrdinal = inputExprOrdinals[i];
-            exprs[j] =
+            exprs.add(
                 new RexInputRef(
                     i,
-                    allExprs[inputExprOrdinal].getType());
-            exprOrdinals[j] = inputExprOrdinal;
+                    allExprs[inputExprOrdinal].getType()));
             exprInverseOrdinals[inputExprOrdinal] = j;
             ++j;
         }
@@ -424,48 +532,39 @@ levelLoop:
                 exprInverseOrdinals,
                 exprLevels,
                 level,
-                inputExprOrdinals);
+                inputExprOrdinals,
+                allExprs);
         for (int i = 0; i < allExprs.length; i++) {
-            if (exprLevels[i] == level) {
+            if (exprLevels[i] == level
+                || exprLevels[i] == -1
+                   && level == (levelCount - 1)
+                   && allExprs[i] instanceof RexLiteral)
+            {
                 RexNode expr = allExprs[i];
                 final RexNode translatedExpr = expr.accept(shuttle);
-                exprs[j] = translatedExpr;
-                exprOrdinals[j] = i;
+                exprs.add(translatedExpr);
                 assert exprInverseOrdinals[i] == -1;
                 exprInverseOrdinals[i] = j;
                 ++j;
             }
         }
-        assert j == exprCount;
 
         // Form the projection and condition list. Project and condition
         // ordinals are offsets into allExprs, so we need to map them into
         // exprs.
-        final RexLocalRef [] projectRefs =
-            new RexLocalRef[projectExprOrdinals.length];
-        final String [] fieldNames = new String[projectExprOrdinals.length];
-        for (int i = 0; i < projectRefs.length; i++) {
+        final List<RexLocalRef > projectRefs =
+            new ArrayList<RexLocalRef>(projectExprOrdinals.length);
+        final List<String> fieldNames =
+            new ArrayList<String>(projectExprOrdinals.length);
+        for (int i = 0; i < projectExprOrdinals.length; i++) {
             final int projectExprOrdinal = projectExprOrdinals[i];
             final int index = exprInverseOrdinals[projectExprOrdinal];
             assert index >= 0;
             RexNode expr = allExprs[projectExprOrdinal];
-            projectRefs[i] = new RexLocalRef(index, expr.getType());
+            projectRefs.add(new RexLocalRef(index, expr.getType()));
 
             // Inherit meaningful field name if possible.
-            if (expr instanceof RexInputRef) {
-                int inputIndex = ((RexInputRef) expr).getIndex();
-                fieldNames[i] =
-                    child.getRowType().getFields()[inputIndex].getName();
-                if (fieldNames[i].startsWith("$")
-                    && !fieldNames[i].startsWith("$EXPR"))
-                {
-                    // Don't inherit field names like '$3' from child: that's
-                    // confusing.
-                    fieldNames[i] = "$" + i;
-                }
-            } else {
-                fieldNames[i] = "$" + i;
-            }
+            fieldNames.add(deriveFieldName(expr, i));
         }
         RexLocalRef conditionRef;
         if (conditionExprOrdinal >= 0) {
@@ -483,26 +582,39 @@ levelLoop:
                     new RelDataTypeFactory.FieldInfo() {
                         public int getFieldCount()
                         {
-                            return projectRefs.length;
+                            return projectExprOrdinals.length;
                         }
 
                         public String getFieldName(int index)
                         {
-                            return fieldNames[index];
+                            return fieldNames.get(index);
                         }
 
                         public RelDataType getFieldType(int index)
                         {
-                            return projectRefs[index].getType();
+                            return projectRefs.get(index).getType();
                         }
                     });
         }
-        return new RexProgram(
-            inputRowType,
-            exprs,
-            projectRefs,
-            conditionRef,
-            outputRowType);
+        final RexProgram program =
+            new RexProgram(
+                inputRowType, exprs, projectRefs, conditionRef, outputRowType);
+        return RexProgramBuilder.normalize(cluster.getRexBuilder(), program);
+    }
+
+    private String deriveFieldName(RexNode expr, int ordinal)
+    {
+        if (expr instanceof RexInputRef) {
+            int inputIndex = ((RexInputRef) expr).getIndex();
+            String fieldName =
+                child.getRowType().getFields()[inputIndex].getName();
+            // Don't inherit field names like '$3' from child: that's
+            // confusing.
+            if (!fieldName.startsWith("$") || fieldName.startsWith("$EXPR")) {
+                return fieldName;
+            }
+        }
+        return "$" + ordinal;
     }
 
     /**
@@ -608,6 +720,31 @@ levelLoop:
             }
         }
         throw Util.newInternal("unknown reltype " + relTypeName);
+    }
+
+    /**
+     * Returns a list of sets of expressions that should be on the same level.
+     *
+     * <p>For example, if this method returns { {3, 5}, {4, 7} }, it means that
+     * expressions 3 and 5, should be on the same level, and expressions 4 and 7
+     * should be on the same level. The two cohorts do not need to be on the
+     * same level.
+     *
+     * <p>The list is best effort. If it is not possible to arrange that the
+     * expressions in a cohort are on the same level, the {@link #execute()}
+     * method will still succeed.
+     *
+     * <p>The default implementation of this method returns the empty list;
+     * expressions will be put on the most suitable level. This is generally
+     * the lowest possible level, except for literals, which are placed at the
+     * level where they are used.
+     *
+     * @return List of cohorts, that is sets of expressions, that the splitting
+     * algorithm should attempt to place on the same level
+     */
+    protected List<Set<Integer>> getCohorts()
+    {
+        return Collections.emptyList();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -772,17 +909,20 @@ levelLoop:
         private final int [] exprLevels;
         private final int level;
         private final int [] inputExprOrdinals;
+        private final RexNode[] allExprs;
 
         public InputToCommonExprConverter(
             int [] exprInverseOrdinals,
             int [] exprLevels,
             int level,
-            int [] inputExprOrdinals)
+            int [] inputExprOrdinals,
+            RexNode [] allExprs)
         {
             this.exprInverseOrdinals = exprInverseOrdinals;
             this.exprLevels = exprLevels;
             this.level = level;
             this.inputExprOrdinals = inputExprOrdinals;
+            this.allExprs = allExprs;
         }
 
         public RexNode visitInputRef(RexInputRef input)
@@ -799,7 +939,12 @@ levelLoop:
             // A reference to a local variable becomes a reference to an input
             // if the local was computed at a previous level.
             final int localIndex = local.getIndex();
-            if (exprLevels[localIndex] < level) {
+            final int exprLevel = exprLevels[localIndex];
+            if (exprLevel < level) {
+                if (allExprs[localIndex] instanceof RexLiteral) {
+                    // Expression is to be inlined. Use the original expression.
+                    return allExprs[localIndex];
+                }
                 int inputIndex = indexOf(localIndex, inputExprOrdinals);
                 assert inputIndex >= 0;
                 return new RexLocalRef(
@@ -865,6 +1010,13 @@ levelLoop:
             this.maxUsingLevelOrdinals = new int[exprs.length];
             Arrays.fill(maxUsingLevelOrdinals, -1);
             for (int i = 0; i < exprs.length; i++) {
+                if (exprs[i] instanceof RexLiteral) {
+                    // Literals are always used directly. It never makes sense
+                    // to compute them at a lower level and project them to
+                    // where they are used.
+                    maxUsingLevelOrdinals[i] = -1;
+                    continue;
+                }
                 currentLevel = exprLevels[i];
                 exprs[i].accept(this);
             }

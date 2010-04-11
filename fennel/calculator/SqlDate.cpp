@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2010 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -111,7 +111,7 @@ int64_t IsoStringToDate(const char * const src, int len)
     // Parse of date failed
     // SQL2003 Part 2 Section 6.12 General Rule 13 data
     // exception -- invalid datetime format
-    throw "22007";
+    throw SqlState::instance().code22007();
 }
 
 int64_t IsoStringToTime(const char * const src, int len)
@@ -145,7 +145,7 @@ int64_t IsoStringToTime(const char * const src, int len)
     // Parse of time failed
     // SQL2003 Part 2 Section 6.12 General Rule 15,16 data
     // exception -- invalid datetime format
-    throw "22007";
+    throw SqlState::instance().code22007();
 }
 
 int64_t IsoStringToTimestamp(const char * const src, int len)
@@ -182,7 +182,7 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     // Parse of timestamp failed
     // SQL2003 Part 2 Section 6.12 General Rule 17,18 data
     // exception -- invalid datetime format
-    throw "22007";
+    throw SqlState::instance().code22007();
 }
 
 int64_t UniversalTime()

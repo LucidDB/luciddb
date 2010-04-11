@@ -55,4 +55,5 @@ ExtWinAggFuncs.cpp
 NoisyArithmetic.cpp
 CalcExecStream.cpp
 CalcExcn.cpp
+SqlState.cpp
 )

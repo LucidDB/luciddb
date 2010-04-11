@@ -219,7 +219,7 @@ public:
      *
      * @return result of load
      */
-    ExternalSortRC loadRun(ExecStreamBufAccessor &bufAccessor);
+    virtual ExternalSortRC loadRun(ExecStreamBufAccessor &bufAccessor);
 
     /**
      * checks for "end of partition".

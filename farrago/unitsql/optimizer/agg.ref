@@ -73,6 +73,34 @@
 | 20      |
 +---------+
 > 
+> select stddev_pop(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 8       |
++---------+
+> 
+> select stddev_samp(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+> 
+> select var_pop(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 66      |
++---------+
+> 
+> select var_samp(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+> 
 > select min(TRUE) from emps group by deptno;
 +---------+
 | EXPR$0  |
@@ -88,6 +116,45 @@
 +---------+
 | false   |
 +---------+
+> 
+> -- applied to empty set
+> select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+>     avg(deptno) as _avg, sum(deptno) as _sum,
+>     stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+>     var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+> from emps
+> where deptno = 50;
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+| _MIN  | _MAX  | _COUNT  | _AVG  | _SUM  | _STDDEV_POP  | _STDDEV_SAMP  | _VAR_POP  | _VAR_SAMP  |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+|       |       | 0       |       |       |              |               |           |            |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+> 
+> -- applied to set with one element
+> select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+>     avg(deptno) as _avg, sum(deptno) as _sum,
+>     stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+>     var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+> from emps
+> where deptno = 10;
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+| _MIN  | _MAX  | _COUNT  | _AVG  | _SUM  | _STDDEV_POP  | _STDDEV_SAMP  | _VAR_POP  | _VAR_SAMP  |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+| 10    | 10    | 1       | 10    | 10    | 0            |               | 0         |            |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+> 
+> -- applied to set with 4 elements
+> select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+>     avg(deptno) as _avg, sum(deptno) as _sum,
+>     stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+>     var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+> from emps
+> where deptno > 0;
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+| _MIN  | _MAX  | _COUNT  | _AVG  | _SUM  | _STDDEV_POP  | _STDDEV_SAMP  | _VAR_POP  | _VAR_SAMP  |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
+| 10    | 40    | 4       | 22    | 90    | 11           | 13            | 118       | 158        |
++-------+-------+---------+-------+-------+--------------+---------------+-----------+------------+
 > 
 > ------------
 > -- group bys
@@ -197,6 +264,42 @@
 '  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM($0)], agg#1=[COUNT($0)])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select stddev_pop(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[*($t1, $t1)], expr#4=[/($t3, $t2)], expr#5=[-($t0, $t4)], expr#6=[/($t5, $t2)], expr#7=[0.5], expr#8=[Reinterpret($t7)], expr#9=[CAST($t8):DOUBLE NOT NULL], expr#10=[1E1], expr#11=[/INT($t9, $t10)], expr#12=[POWER($t6, $t11)], expr#13=[CAST($t12):INTEGER], EXPR$0=[$t13])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM($1)], agg#1=[SUM($0)], agg#2=[COUNT($0)])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], proj#0..1=[{exprs}])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select stddev_samp(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[*($t1, $t1)], expr#4=[/($t3, $t2)], expr#5=[-($t0, $t4)], expr#6=[1], expr#7=[=($t2, $t6)], expr#8=[null], expr#9=[CAST($t8):BIGINT], expr#10=[-($t2, $t6)], expr#11=[CASE($t7, $t9, $t10)], expr#12=[/($t5, $t11)], expr#13=[0.5], expr#14=[Reinterpret($t13)], expr#15=[CAST($t14):DOUBLE NOT NULL], expr#16=[1E1], expr#17=[/INT($t15, $t16)], expr#18=[POWER($t12, $t17)], expr#19=[CAST($t18):INTEGER], EXPR$0=[$t19])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM($1)], agg#1=[SUM($0)], agg#2=[COUNT($0)])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], proj#0..1=[{exprs}])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select var_pop(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[*($t1, $t1)], expr#4=[/($t3, $t2)], expr#5=[-($t0, $t4)], expr#6=[/($t5, $t2)], expr#7=[CAST($t6):INTEGER], EXPR$0=[$t7])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM($1)], agg#1=[SUM($0)], agg#2=[COUNT($0)])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], proj#0..1=[{exprs}])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select var_samp(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[*($t1, $t1)], expr#4=[/($t3, $t2)], expr#5=[-($t0, $t4)], expr#6=[1], expr#7=[=($t2, $t6)], expr#8=[null], expr#9=[CAST($t8):BIGINT], expr#10=[-($t2, $t6)], expr#11=[CASE($t7, $t9, $t10)], expr#12=[/($t5, $t11)], expr#13=[CAST($t12):INTEGER], EXPR$0=[$t13])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM($1)], agg#1=[SUM($0)], agg#2=[COUNT($0)])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], proj#0..1=[{exprs}])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
 > explain plan without implementation for
 > select deptno,max(name) from sales.emps group by deptno;

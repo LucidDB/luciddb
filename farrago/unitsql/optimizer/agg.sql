@@ -33,9 +33,41 @@ select min(deptno) from depts;
 
 select avg(deptno) from depts;
 
+select stddev_pop(deptno) from depts;
+
+select stddev_samp(deptno) from depts;
+
+select var_pop(deptno) from depts;
+
+select var_samp(deptno) from depts;
+
 select min(TRUE) from emps group by deptno;
 
 select max(FALSE) from depts;
+
+-- applied to empty set
+select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+    avg(deptno) as _avg, sum(deptno) as _sum,
+    stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+    var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+from emps
+where deptno = 50;
+
+-- applied to set with one element
+select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+    avg(deptno) as _avg, sum(deptno) as _sum,
+    stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+    var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+from emps
+where deptno = 10;
+
+-- applied to set with 4 elements
+select min(deptno) as _min, max(deptno) as _max, count(deptno) as _count,
+    avg(deptno) as _avg, sum(deptno) as _sum,
+    stddev_pop(deptno) as _stddev_pop, stddev_samp(deptno) as _stddev_samp,
+    var_pop(deptno) as _var_pop, var_samp(deptno) as _var_samp
+from emps
+where deptno > 0;
 
 ------------
 -- group bys
@@ -80,6 +112,18 @@ select min(deptno) from depts;
 
 explain plan for
 select avg(deptno) from depts;
+
+explain plan for
+select stddev_pop(deptno) from depts;
+
+explain plan for
+select stddev_samp(deptno) from depts;
+
+explain plan for
+select var_pop(deptno) from depts;
+
+explain plan for
+select var_samp(deptno) from depts;
 
 explain plan without implementation for
 select deptno,max(name) from sales.emps group by deptno;

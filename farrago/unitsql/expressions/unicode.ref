@@ -526,7 +526,7 @@ Error: From line 1, column 28 to line 1, column 35: Cannot apply = to the two di
 > -- should fail:  character set mismatch
 > 
 > select * from uni.t6 where v like 'H%';
-Error: From line 0, column 0 to line 1, column 38: Operands V, 'H%' not comparable to each other (state=,code=0)
+Error: From line 0, column 0 to line 1, column 38: Operands T6.V, 'H%' not comparable to each other (state=,code=0)
 > 
 > 
 > -- test conversion

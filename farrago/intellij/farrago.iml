@@ -13,26 +13,23 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="farragoCatalog" />
-    <orderEntry type="library" name="janino" level="project" />
-    <orderEntry type="library" name="rmiJdbc" level="project" />
-    <orderEntry type="library" name="mdr" level="project" />
-    <orderEntry type="library" name="jaxb" level="project" />
-    <orderEntry type="library" name="hsqldb" level="project" />
-    <orderEntry type="library" name="jakarta-oro" level="project" />
-    <orderEntry type="library" name="junit" level="project" />
-    <orderEntry type="library" name="jfreechart" level="project" />
-    <orderEntry type="library" name="servlet" level="project" />
-    <orderEntry type="library" name="resgen" level="project" />
-    <orderEntry type="library" name="oj" level="project" />
     <orderEntry type="library" name="sqlline" level="project" />
-    <orderEntry type="library" name="xml" level="project" />
-    <orderEntry type="library" name="commons-transaction" level="project" />
-    <orderEntry type="library" name="vjdbc" level="project" />
     <orderEntry type="library" name="diffj" level="project" />
     <orderEntry type="library" name="enki" level="project" />
+    <orderEntry type="library" name="mdr" level="project" />
+    <orderEntry type="library" name="resgen" level="project" />
+    <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" name="tools" level="project" />
+    <orderEntry type="library" name="rmiJdbc" level="project" />
+    <orderEntry type="library" name="csvjdbc" level="project" />
+    <orderEntry type="library" name="janino" level="project" />
+    <orderEntry type="library" name="oj" level="project" />
+    <orderEntry type="library" name="hsqldb" level="project" />
+    <orderEntry type="library" name="commons-transaction" level="project" />
+    <orderEntry type="library" name="jtds" level="project" />
+    <orderEntry type="library" name="vjdbc" level="project" />
     <orderEntry type="library" name="jgrapht" level="project" />
-    <orderEntry type="library" name="commons-dbcp" level="project" />
-    <orderEntry type="library" name="commons-pool" level="project" />
+    <orderEntry type="library" name="jetty" level="project" />
   </component>
 </module>
 

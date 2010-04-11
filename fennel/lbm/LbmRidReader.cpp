@@ -281,6 +281,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     return (btreeRid == rid);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lbm/LbmRidReader.cpp#1 $");
 
 // End LbmRidReader.cpp

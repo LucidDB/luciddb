@@ -62,7 +62,7 @@ ExecStreamResult LbmNormalizerExecStream::execute(
             } else if (rc != EXECRC_YIELD) {
                 return rc;
             }
-            assert (producePending);
+            assert(producePending);
         }
         if (! produceTuple()) {
             return EXECRC_BUF_OVERFLOW;
@@ -73,14 +73,14 @@ ExecStreamResult LbmNormalizerExecStream::execute(
 
 ExecStreamResult LbmNormalizerExecStream::readSegment()
 {
-    assert (! producePending);
+    assert(!producePending);
 
     ExecStreamResult rc = segmentReader.readSegmentAndAdvance(
         segment.byteNum, segment.byteSeg, segment.len);
     if (rc == EXECRC_YIELD) {
         producePending = true;
         nTuplesPending = segment.countBits();
-        assert (nTuplesPending > 0);
+        assert(nTuplesPending > 0);
     }
     return rc;
 }

@@ -297,7 +297,7 @@ bool ExternalSortRunLoader::checkEndOfPartition(
 
 void ExternalSortRunLoader::sort()
 {
-    assert (nTuplesLoaded);
+    assert(nTuplesLoaded);
 
     quickSort(0, nTuplesLoaded - 1);
 }

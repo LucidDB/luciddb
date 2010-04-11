@@ -84,19 +84,7 @@ public class RexChecker
      */
     public RexChecker(final RelDataType inputRowType, boolean fail)
     {
-        this(
-            new AbstractList<RelDataType>() {
-                public RelDataType get(int index)
-                {
-                    return inputRowType.getFieldList().get(index).getType();
-                }
-
-                public int size()
-                {
-                    return inputRowType.getFieldCount();
-                }
-            },
-            fail);
+        this(RelOptUtil.getFieldTypeList(inputRowType), fail);
     }
 
     /**
