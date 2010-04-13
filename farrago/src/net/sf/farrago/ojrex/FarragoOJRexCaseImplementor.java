@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2005-2009 Xiaoyang Luo
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 Xiaoyang Luo
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free

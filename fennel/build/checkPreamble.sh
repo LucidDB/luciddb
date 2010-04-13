@@ -45,12 +45,12 @@ BEGIN {
     }
 
     if (zone == "eigenbase") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
-        actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] SQLstream, Inc.";
-        actuals[n]   = "// Copyright (C) year-year SQLstream, Inc.";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
-        actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] The Eigenbase Project";
+        actuals[n]   = "// Copyright (C) year The Eigenbase Project";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] SQLstream, Inc.";
+        actuals[n]   = "// Copyright (C) year SQLstream, Inc.";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] Dynamo BI Corporation";
+        actuals[n]   = "// Copyright (C) year Dynamo BI Corporation";
     }
 
     expects[++n] = "//";
@@ -125,7 +125,7 @@ BEGIN {
             exit -1;
         }
     }
-    if ($0 ~ "// Portions Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] .*") {
+    if ($0 ~ "// Portions Copyright \\(C\\) [0-9][0-9][0-9][0-9] .*") {
         ++offset;
     }
     next;

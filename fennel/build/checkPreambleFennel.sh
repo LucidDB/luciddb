@@ -8,7 +8,7 @@ fennelDir=$(dirname $0)/..
 
 # Check preambles of Eigenbase ('green zone') files.
 # These are all files under fennel.
-# They must have Eigenbase, SQLstream and LucidEra
+# They must have Eigenbase, SQLstream and Dynamo BI
 # copyright notices.
 
 /usr/bin/find $fennelDir \( -name \*.cpp -o -name \*.h \) |

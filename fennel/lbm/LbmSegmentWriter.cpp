@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2010-2010 SQLstream, Inc.
-// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -130,6 +130,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lbm/LbmSegmentWriter.cpp#1 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lbm/LbmSegmentWriter.cpp#2 $");
 
 // End LbmSegmentWriter.cpp

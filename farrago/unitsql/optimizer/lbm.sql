@@ -411,7 +411,6 @@ create index typed_m on typed(m);
 create index typed_n on typed(n);
 
 -- LER-422: merging with singleton 
--- http://jira.lucidera.com/browse/LER-422
 insert into typed values(
     1,X'deadbeef',null,'first',
     0.16,1,1,1,

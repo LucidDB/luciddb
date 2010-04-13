@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2006-2009 SQLstream, Inc.
-// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -981,7 +981,7 @@ public class FarragoMetadataTest
         // - table level filter on t2
         // - semijoin filter on t1
         // - join filter
-        // Because this test does not exercise LucidEra logic that accounts
+        // Because this test does not exercise LucidDB logic that accounts
         // for the double counting of semijoins, that is why the selectivity
         // is multiplied three times
 
