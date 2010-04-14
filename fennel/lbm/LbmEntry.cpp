@@ -2143,9 +2143,8 @@ int LbmEntry::segmentContainsRid(
         } else {
             return -1;
         }
-    } else {
-        return 1;
     }
+    return 1;
 }
 
 bool LbmEntry::inRange(LcsRid rid)

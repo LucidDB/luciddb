@@ -396,7 +396,7 @@ inline Numeric sqr(Numeric n)
 }
 
 // NOTE jvs 18-Mar-2005:  neither boost nor stlport exposes this
-extern int FENNEL_COMMON_EXPORT getCurrentThreadId();
+extern int64_t FENNEL_COMMON_EXPORT getCurrentThreadId();
 
 extern std::logic_error FENNEL_COMMON_EXPORT constructAssertion(
     char const *pFilename,int lineNum,char const *condExpr);

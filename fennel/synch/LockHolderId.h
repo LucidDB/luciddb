@@ -91,7 +91,7 @@ inline void LockHolderId::assignFrom(TxnId txnId)
     if (txnId == IMPLICIT_TXN_ID) {
         // NOTE jvs 2-Jun-2007:  Not exactly posixly correct,
         // but it will probably do for most environments.
-        holderId = TxnId(uint(getCurrentThreadId()));
+        holderId = TxnId(getCurrentThreadId());
         holderType = TYPE_THREAD;
     } else {
         holderId = txnId;

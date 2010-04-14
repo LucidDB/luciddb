@@ -168,7 +168,7 @@ do { \
 // return a string id for the current thread
 inline char *get_tid(char *tidstr, int cb)
 {
-    snprintf(tidstr, cb, "%d", getCurrentThreadId());
+    snprintf(tidstr, cb, "%" FMT_INT64, getCurrentThreadId());
     return tidstr;
 }
 

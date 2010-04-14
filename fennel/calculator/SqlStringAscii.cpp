@@ -304,6 +304,7 @@ SqlStrSubStr_Ascii(
     }
 
     if (subStartChar > strLenBytes || e < 1) {
+        *dest = str;
         return 0;
     }
 

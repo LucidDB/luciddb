@@ -50,7 +50,7 @@ std::logic_error constructAssertion(
         (fmt % condExpr % lineNum % pFilename).str());
 }
 
-int getCurrentThreadId()
+int64_t getCurrentThreadId()
 {
 #ifdef __MSVC__
     return static_cast<int>(GetCurrentThreadId());

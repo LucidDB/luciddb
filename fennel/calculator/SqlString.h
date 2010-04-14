@@ -551,6 +551,7 @@ SqlStrSubStr(
             }
 
             if (subStartChar > strLenBytes || e < 1) {
+                *dest = str;
                 return 0;
             }
 

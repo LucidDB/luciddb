@@ -824,7 +824,7 @@ ${farrago.test.jvmargs}
         </classpath>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
-        <jvmarg line="-Xmx768m"/>
+        <jvmarg line="-Xmx1024m"/>
         <jvmarg line="-XX:MaxPermSize=160m" />
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>
