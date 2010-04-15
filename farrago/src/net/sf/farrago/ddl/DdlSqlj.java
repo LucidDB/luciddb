@@ -128,26 +128,27 @@ public abstract class DdlSqlj
         throws SQLException, IOException
     {
         jar = jar.trim();
-        String url = getJarURL(jar);
 
         if (undeploy != 0) {
             // TODO jvs 18-Jan-2005
             // throw Util.needToImplement("deploy");
-            String myUrl = FarragoProperties.instance().expandProperties(url);
-            // Support deploy descriptor file FRG-387
-            String[] sqls = getDeploySQLs(myUrl, REMOVE);
-
-            if (sqls != null || sqls.length > 0) {
+            String url = getJarURL(jar);
+            if (url != null) {
+                String myUrl =
+                    FarragoProperties.instance().expandProperties(url);
+                String[] sqls = getDeploySQLs(myUrl, REMOVE);
+                if (sqls != null || sqls.length > 0) {
                 // logic:If there are any failures, ignore, and continue
                 // executing statements
-                for (String sql : sqls) {
-                    try {
-                        System.out.println(sql);
-                        executeSql(sql);
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
+                    for (String sql : sqls) {
+                        try {
+                            System.out.println(sql);
+                            executeSql(sql);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
                     }
-                }
+               }
             }
             undeploy = 0;
         }
@@ -221,7 +222,7 @@ public abstract class DdlSqlj
         if (catalog.length() == 0) {
             mysql = new StringBuffer();
             mysql.append("select PARAM_VALUE from ");
-            mysql.append("sys_root.user_session_parameters ");
+            mysql.append("sys_boot.mgmt.session_parameters_view ");
             mysql.append("where PARAM_NAME ='catalogName'");
             ps = conn.prepareStatement(mysql.toString());
             rs = ps.executeQuery();
@@ -232,7 +233,7 @@ public abstract class DdlSqlj
         if (schema.length() == 0) {
             mysql = new StringBuffer();
             mysql.append("select PARAM_VALUE from ");
-            mysql.append("sys_root.user_session_parameters ");
+            mysql.append("sys_boot.mgmt.session_parameters_view ");
             mysql.append("where PARAM_NAME ='schemaName'");
             ps = conn.prepareStatement(mysql.toString());
             rs = ps.executeQuery();
