@@ -1,13 +1,9 @@
 > -- Test SQLJ Using a Deployment Descriptor.
-> 
 > create or replace schema "S";
-> 
 > set schema 'S';
 > 
-> 
-> 
 > CALL sqlj.install_jar('file:${FARRAGO_HOME}/unitsql/ddl/ddlsqljtest.jar', 'ddlsqlj_jar', 1);
-jarUrl: file:/dev01/farrago/unitsql/ddl/ddlsqljtest.jar
+jarUrl: file:/build/shared_workspaces/open_dy_dev/farrago/unitsql/ddl/ddlsqljtest.jar
 deplyFiles:deploy2.txt
 deployFlag:TRUE
 create table S.T(id int generated always as identity not null primary key)
@@ -28,8 +24,8 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error ne
 	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.executeUpdate(FarragoJdbcEngineStatement.java:142)
 	at net.sf.farrago.ddl.DdlSqlj.executeSql(DdlSqlj.java:184)
 	at net.sf.farrago.ddl.DdlSqlj.install_jar(DdlSqlj.java:87)
-	at net.sf.farrago.dynamic.stmt2.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
-	at net.sf.farrago.dynamic.stmt2.ExecutableStmt$2.fetchNext(Unknown Source)
+	at net.sf.farrago.dynamic.stmt4200.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
+	at net.sf.farrago.dynamic.stmt4200.ExecutableStmt$2.fetchNext(Unknown Source)
 	at org.eigenbase.runtime.TupleIterResultSet.next(TupleIterResultSet.java:98)
 	at net.sf.farrago.runtime.FarragoTupleIterResultSet.next(FarragoTupleIterResultSet.java:137)
 	at net.sf.farrago.defimpl.FarragoDefaultSessionPersonality.getRowCounts(FarragoDefaultSessionPersonality.java:590)
@@ -90,30 +86,25 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error ne
 	at org.apache.tools.ant.Main.startAnt(Main.java:199)
 	at org.apache.tools.ant.Main.start(Main.java:161)
 	at org.apache.tools.ant.Main.main(Main.java:250)
-> 
 > select "name","url" from sys_fem.sql2003."Jar";
 +----------------------------+----------------------------------------------------------------+
 |            name            |                              url                               |
 +----------------------------+----------------------------------------------------------------+
-| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
 | LUCIDDB_PLUGIN             | class org.luciddb.session.LucidDbSessionFactory                |
+| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
 | LUCIDDB_INDEX_ONLY_PLUGIN  | class org.luciddb.session.LucidDbIndexOnlySessionFactory       |
 | DDLSQLJ_JAR                | file:${FARRAGO_HOME}/unitsql/ddl/ddlsqljtest.jar               |
 +----------------------------+----------------------------------------------------------------+
-> 
 > select * from S.T;
 +-----+
 | ID  |
 +-----+
 +-----+
-> 
 > select * from S.T2;
 Error: From line 1, column 15 to line 1, column 18: Table 'S.T2' not found (state=,code=0)
 > 
-> 
-> 
 > CALL sqlj.remove_jar('DDLSQLJ_JAR', 1);
-jarUrl: file:/dev01/farrago/unitsql/ddl/ddlsqljtest.jar
+jarUrl: file:/build/shared_workspaces/open_dy_dev/farrago/unitsql/ddl/ddlsqljtest.jar
 deplyFiles:deploy2.txt
 deployFlag:TRUE
 drop table S.T3
@@ -133,8 +124,8 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error ne
 	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.executeUpdate(FarragoJdbcEngineStatement.java:142)
 	at net.sf.farrago.ddl.DdlSqlj.executeSql(DdlSqlj.java:184)
 	at net.sf.farrago.ddl.DdlSqlj.remove_jar(DdlSqlj.java:146)
-	at net.sf.farrago.dynamic.stmt5.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
-	at net.sf.farrago.dynamic.stmt5.ExecutableStmt$2.fetchNext(Unknown Source)
+	at net.sf.farrago.dynamic.stmt4203.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
+	at net.sf.farrago.dynamic.stmt4203.ExecutableStmt$2.fetchNext(Unknown Source)
 	at org.eigenbase.runtime.TupleIterResultSet.next(TupleIterResultSet.java:98)
 	at net.sf.farrago.runtime.FarragoTupleIterResultSet.next(FarragoTupleIterResultSet.java:137)
 	at net.sf.farrago.defimpl.FarragoDefaultSessionPersonality.getRowCounts(FarragoDefaultSessionPersonality.java:590)
@@ -196,22 +187,17 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error ne
 	at org.apache.tools.ant.Main.start(Main.java:161)
 	at org.apache.tools.ant.Main.main(Main.java:250)
 drop table S.T
-> 
 > select "name","url" from sys_fem.sql2003."Jar";
 +----------------------------+----------------------------------------------------------------+
 |            name            |                              url                               |
 +----------------------------+----------------------------------------------------------------+
-| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
 | LUCIDDB_PLUGIN             | class org.luciddb.session.LucidDbSessionFactory                |
+| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
 | LUCIDDB_INDEX_ONLY_PLUGIN  | class org.luciddb.session.LucidDbIndexOnlySessionFactory       |
 +----------------------------+----------------------------------------------------------------+
-> 
 > select * from S.T;
 Error: From line 1, column 15 to line 1, column 17: Table 'S.T' not found (state=,code=0)
 > 
-> 
-> 
 > drop schema "S" cascade;
-> 
 > 
 > !quit
