@@ -41,6 +41,8 @@
   <property name="dist.dir" location="${farrago.dir}/dist"/>
   <property name="dist.plugin.dir" location="${dist.dir}/plugin"/>
   <property name="dist.jar.file" location="${dist.dir}/farrago.jar"/>
+  <property name="dist.jar.jdbc.file" location="${dist.dir}/farrago-jdbc.jar"/>
+  <property name="dist.jar.jdbc.client.file" location="${dist.dir}/farrago-jdbc-client.jar"/>
 
   <target name="createReleaseDir">
     <mkdir dir="${dist.dir}/tmp/${release.spec}"/>
@@ -86,7 +88,44 @@
       <lib dir="${thirdparty.dir}/vjdbc/lib" excludes="j2ee_api.jar,junit.jar"/>
     </war>
   </target>
-
+  <target name="jdbcClientOnlyJar">
+    <jar destfile="${dist.jar.jdbc.client.file}" update="true" compress="true" filesetmanifest="skip">
+      <fileset dir="${farrago.classes.dir}">
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+  <target name="jdbcJar">
+    <jar destfile="${dist.jar.jdbc.file}" update="true" compress="true" filesetmanifest="skip">
+      <fileset dir="${farrago.classes.dir}">
+	<include name="net/sf/farrago/jdbc/engine/*.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+      
   <!-- TODO jvs 26-June-2005:  this isn't used yet -->
   <target name="createPlannervizRelease">
     <copy 
