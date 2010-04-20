@@ -1,0 +1,217 @@
+> -- Test SQLJ Using a Deployment Descriptor.
+> 
+> create or replace schema "S";
+> 
+> set schema 'S';
+> 
+> 
+> 
+> CALL sqlj.install_jar('file:${FARRAGO_HOME}/unitsql/ddl/ddlsqljtest.jar', 'ddlsqlj_jar', 1);
+jarUrl: file:/dev01/farrago/unitsql/ddl/ddlsqljtest.jar
+deplyFiles:deploy2.txt
+deployFlag:TRUE
+create table S.T(id int generated always as identity not null primary key)
+drop table S.T1
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error near line 1, column 14: Reference to unknown table "T1"
+	at net.sf.farrago.resource.FarragoResource$_Def5.ex(FarragoResource.java:2049)
+	at net.sf.farrago.parser.FarragoAbstractParser.newPositionalError(FarragoAbstractParser.java:79)
+	at net.sf.farrago.query.FarragoStmtValidator.newPositionalError(FarragoStmtValidator.java:802)
+	at net.sf.farrago.query.FarragoStmtValidator.findSchemaObject(FarragoStmtValidator.java:515)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.TableIdentifier(FarragoParserImpl.java:1403)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.TableDrop(FarragoParserImpl.java:2183)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.DdlStmtEof(FarragoParserImpl.java:635)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.FarragoSqlStmtEof(FarragoParserImpl.java:505)
+	at net.sf.farrago.parser.FarragoAbstractParser.parseSqlText(FarragoAbstractParser.java:138)
+	at net.sf.farrago.db.FarragoDbSession.prepareImpl(FarragoDbSession.java:1229)
+	at net.sf.farrago.db.FarragoDbSession.prepare(FarragoDbSession.java:1168)
+	at net.sf.farrago.db.FarragoDbStmtContext.prepare(FarragoDbStmtContext.java:130)
+	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.executeUpdate(FarragoJdbcEngineStatement.java:142)
+	at net.sf.farrago.ddl.DdlSqlj.executeSql(DdlSqlj.java:184)
+	at net.sf.farrago.ddl.DdlSqlj.install_jar(DdlSqlj.java:87)
+	at net.sf.farrago.dynamic.stmt2.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
+	at net.sf.farrago.dynamic.stmt2.ExecutableStmt$2.fetchNext(Unknown Source)
+	at org.eigenbase.runtime.TupleIterResultSet.next(TupleIterResultSet.java:98)
+	at net.sf.farrago.runtime.FarragoTupleIterResultSet.next(FarragoTupleIterResultSet.java:137)
+	at net.sf.farrago.defimpl.FarragoDefaultSessionPersonality.getRowCounts(FarragoDefaultSessionPersonality.java:590)
+	at net.sf.farrago.db.FarragoDbStmtContext.executeImpl(FarragoDbStmtContext.java:332)
+	at net.sf.farrago.db.FarragoDbStmtContext.execute(FarragoDbStmtContext.java:227)
+	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.execute(FarragoJdbcEngineStatement.java:113)
+	at sqlline.SqlLine$Commands.execute(Unknown Source)
+	at sqlline.SqlLine$Commands.sql(Unknown Source)
+	at sqlline.SqlLine.dispatch(Unknown Source)
+	at sqlline.SqlLine.begin(Unknown Source)
+	at sqlline.SqlLine.mainWithInputRedirection(Unknown Source)
+	at net.sf.farrago.test.FarragoTestCase.runSqlLineTest(FarragoTestCase.java:632)
+	at net.sf.farrago.test.FarragoTestCase.runSqlLineTest(FarragoTestCase.java:578)
+	at net.sf.farrago.test.FarragoSqlTest.runTest(FarragoSqlTest.java:111)
+	at junit.framework.TestCase.runBare(TestCase.java:130)
+	at junit.framework.TestResult$1.protect(TestResult.java:110)
+	at junit.framework.TestResult.runProtected(TestResult.java:128)
+	at junit.framework.TestResult.run(TestResult.java:113)
+	at junit.framework.TestCase.run(TestCase.java:120)
+	at junit.framework.TestSuite.runTest(TestSuite.java:228)
+	at junit.framework.TestSuite.run(TestSuite.java:223)
+	at junit.extensions.TestDecorator.basicRun(TestDecorator.java:24)
+	at junit.extensions.TestSetup$1.protect(TestSetup.java:23)
+	at junit.framework.TestResult.runProtected(TestResult.java:128)
+	at junit.extensions.TestSetup.run(TestSetup.java:27)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner.run(JUnitTestRunner.java:421)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.executeInVM(JUnitTask.java:1245)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.execute(JUnitTask.java:814)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.executeOrQueue(JUnitTask.java:1657)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.execute(JUnitTask.java:764)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.taskdefs.Sequential.execute(Sequential.java:62)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.taskdefs.MacroInstance.execute(MacroInstance.java:391)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.Target.execute(Target.java:357)
+	at org.apache.tools.ant.Target.performTasks(Target.java:385)
+	at org.apache.tools.ant.Project.executeSortedTargets(Project.java:1329)
+	at org.apache.tools.ant.Project.executeTarget(Project.java:1298)
+	at org.apache.tools.ant.helper.DefaultExecutor.executeTargets(DefaultExecutor.java:41)
+	at org.apache.tools.ant.Project.executeTargets(Project.java:1181)
+	at org.apache.tools.ant.Main.runBuild(Main.java:698)
+	at org.apache.tools.ant.Main.startAnt(Main.java:199)
+	at org.apache.tools.ant.Main.start(Main.java:161)
+	at org.apache.tools.ant.Main.main(Main.java:250)
+> 
+> select "name","url" from sys_fem.sql2003."Jar";
++----------------------------+----------------------------------------------------------------+
+|            name            |                              url                               |
++----------------------------+----------------------------------------------------------------+
+| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
+| LUCIDDB_PLUGIN             | class org.luciddb.session.LucidDbSessionFactory                |
+| LUCIDDB_INDEX_ONLY_PLUGIN  | class org.luciddb.session.LucidDbIndexOnlySessionFactory       |
+| DDLSQLJ_JAR                | file:${FARRAGO_HOME}/unitsql/ddl/ddlsqljtest.jar               |
++----------------------------+----------------------------------------------------------------+
+> 
+> select * from S.T;
++-----+
+| ID  |
++-----+
++-----+
+> 
+> select * from S.T2;
+Error: From line 1, column 15 to line 1, column 18: Table 'S.T2' not found (state=,code=0)
+> 
+> 
+> 
+> CALL sqlj.remove_jar('DDLSQLJ_JAR', 1);
+jarUrl: file:/dev01/farrago/unitsql/ddl/ddlsqljtest.jar
+deplyFiles:deploy2.txt
+deployFlag:TRUE
+drop table S.T3
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: DDL validation error near line 1, column 14: Reference to unknown table "T3"
+	at net.sf.farrago.resource.FarragoResource$_Def5.ex(FarragoResource.java:2049)
+	at net.sf.farrago.parser.FarragoAbstractParser.newPositionalError(FarragoAbstractParser.java:79)
+	at net.sf.farrago.query.FarragoStmtValidator.newPositionalError(FarragoStmtValidator.java:802)
+	at net.sf.farrago.query.FarragoStmtValidator.findSchemaObject(FarragoStmtValidator.java:515)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.TableIdentifier(FarragoParserImpl.java:1403)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.TableDrop(FarragoParserImpl.java:2183)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.DdlStmtEof(FarragoParserImpl.java:635)
+	at net.sf.farrago.parser.impl.FarragoParserImpl.FarragoSqlStmtEof(FarragoParserImpl.java:505)
+	at net.sf.farrago.parser.FarragoAbstractParser.parseSqlText(FarragoAbstractParser.java:138)
+	at net.sf.farrago.db.FarragoDbSession.prepareImpl(FarragoDbSession.java:1229)
+	at net.sf.farrago.db.FarragoDbSession.prepare(FarragoDbSession.java:1168)
+	at net.sf.farrago.db.FarragoDbStmtContext.prepare(FarragoDbStmtContext.java:130)
+	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.executeUpdate(FarragoJdbcEngineStatement.java:142)
+	at net.sf.farrago.ddl.DdlSqlj.executeSql(DdlSqlj.java:184)
+	at net.sf.farrago.ddl.DdlSqlj.remove_jar(DdlSqlj.java:146)
+	at net.sf.farrago.dynamic.stmt5.ExecutableStmt$2.calc_oj_var3_f_0$(Unknown Source)
+	at net.sf.farrago.dynamic.stmt5.ExecutableStmt$2.fetchNext(Unknown Source)
+	at org.eigenbase.runtime.TupleIterResultSet.next(TupleIterResultSet.java:98)
+	at net.sf.farrago.runtime.FarragoTupleIterResultSet.next(FarragoTupleIterResultSet.java:137)
+	at net.sf.farrago.defimpl.FarragoDefaultSessionPersonality.getRowCounts(FarragoDefaultSessionPersonality.java:590)
+	at net.sf.farrago.db.FarragoDbStmtContext.executeImpl(FarragoDbStmtContext.java:332)
+	at net.sf.farrago.db.FarragoDbStmtContext.execute(FarragoDbStmtContext.java:227)
+	at net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement.execute(FarragoJdbcEngineStatement.java:113)
+	at sqlline.SqlLine$Commands.execute(Unknown Source)
+	at sqlline.SqlLine$Commands.sql(Unknown Source)
+	at sqlline.SqlLine.dispatch(Unknown Source)
+	at sqlline.SqlLine.begin(Unknown Source)
+	at sqlline.SqlLine.mainWithInputRedirection(Unknown Source)
+	at net.sf.farrago.test.FarragoTestCase.runSqlLineTest(FarragoTestCase.java:632)
+	at net.sf.farrago.test.FarragoTestCase.runSqlLineTest(FarragoTestCase.java:578)
+	at net.sf.farrago.test.FarragoSqlTest.runTest(FarragoSqlTest.java:111)
+	at junit.framework.TestCase.runBare(TestCase.java:130)
+	at junit.framework.TestResult$1.protect(TestResult.java:110)
+	at junit.framework.TestResult.runProtected(TestResult.java:128)
+	at junit.framework.TestResult.run(TestResult.java:113)
+	at junit.framework.TestCase.run(TestCase.java:120)
+	at junit.framework.TestSuite.runTest(TestSuite.java:228)
+	at junit.framework.TestSuite.run(TestSuite.java:223)
+	at junit.extensions.TestDecorator.basicRun(TestDecorator.java:24)
+	at junit.extensions.TestSetup$1.protect(TestSetup.java:23)
+	at junit.framework.TestResult.runProtected(TestResult.java:128)
+	at junit.extensions.TestSetup.run(TestSetup.java:27)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner.run(JUnitTestRunner.java:421)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.executeInVM(JUnitTask.java:1245)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.execute(JUnitTask.java:814)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.executeOrQueue(JUnitTask.java:1657)
+	at org.apache.tools.ant.taskdefs.optional.junit.JUnitTask.execute(JUnitTask.java:764)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.taskdefs.Sequential.execute(Sequential.java:62)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.taskdefs.MacroInstance.execute(MacroInstance.java:391)
+	at org.apache.tools.ant.UnknownElement.execute(UnknownElement.java:288)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.tools.ant.dispatch.DispatchUtils.execute(DispatchUtils.java:105)
+	at org.apache.tools.ant.Task.perform(Task.java:348)
+	at org.apache.tools.ant.Target.execute(Target.java:357)
+	at org.apache.tools.ant.Target.performTasks(Target.java:385)
+	at org.apache.tools.ant.Project.executeSortedTargets(Project.java:1329)
+	at org.apache.tools.ant.Project.executeTarget(Project.java:1298)
+	at org.apache.tools.ant.helper.DefaultExecutor.executeTargets(DefaultExecutor.java:41)
+	at org.apache.tools.ant.Project.executeTargets(Project.java:1181)
+	at org.apache.tools.ant.Main.runBuild(Main.java:698)
+	at org.apache.tools.ant.Main.startAnt(Main.java:199)
+	at org.apache.tools.ant.Main.start(Main.java:161)
+	at org.apache.tools.ant.Main.main(Main.java:250)
+drop table S.T
+> 
+> select "name","url" from sys_fem.sql2003."Jar";
++----------------------------+----------------------------------------------------------------+
+|            name            |                              url                               |
++----------------------------+----------------------------------------------------------------+
+| VOLCANO_PLUGIN             | class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory  |
+| LUCIDDB_PLUGIN             | class org.luciddb.session.LucidDbSessionFactory                |
+| LUCIDDB_INDEX_ONLY_PLUGIN  | class org.luciddb.session.LucidDbIndexOnlySessionFactory       |
++----------------------------+----------------------------------------------------------------+
+> 
+> select * from S.T;
+Error: From line 1, column 15 to line 1, column 17: Table 'S.T' not found (state=,code=0)
+> 
+> 
+> 
+> drop schema "S" cascade;
+> 
+> 
+> !quit
