@@ -39,6 +39,11 @@
 #else
 #define NOMINMAX
 #pragma warning(disable : 4355)
+#ifdef _WIN64
+#define __WORDSIZE 64
+#else
+#define __WORDSIZE 32
+#endif
 #endif
 
 #define _XOPEN_SOURCE 500

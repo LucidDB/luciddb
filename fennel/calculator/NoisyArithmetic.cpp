@@ -50,6 +50,11 @@
 #endif
 #ifndef __MSVC__
 #include <fenv.h>
+#if __WORDSIZE == 64
+#define NOISY_LONGINT
+#endif
+#else
+#define NOISY_LONG
 #endif
 #include <string>
 
@@ -134,11 +139,11 @@ DO(short)
 DO(unsigned short)
 DO(int)
 DO(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 DO(long)
 DO(unsigned long)
 #endif
-#if __WORDSIZE == 64
+#ifdef NOISY_LONGINT
 DO(long int)
 DO(long unsigned int)
 #else
@@ -486,7 +491,7 @@ SIGNED_ADD(char)
 SIGNED_ADD(signed char)
 SIGNED_ADD(short)
 SIGNED_ADD(int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 SIGNED_ADD(long)
 #endif
 SIGNED_ADD(long long int)
@@ -494,7 +499,7 @@ SIGNED_ADD(long long int)
 UNSIGNED_ADD(unsigned char)
 UNSIGNED_ADD(unsigned short)
 UNSIGNED_ADD(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 UNSIGNED_ADD(unsigned long)
 #endif
 UNSIGNED_ADD(unsigned long long int)
@@ -503,7 +508,7 @@ SIGNED_SUB(char)
 SIGNED_SUB(signed char)
 SIGNED_SUB(short)
 SIGNED_SUB(int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 SIGNED_SUB(long)
 #endif
 SIGNED_SUB(long long int)
@@ -511,7 +516,7 @@ SIGNED_SUB(long long int)
 UNSIGNED_SUB(unsigned char)
 UNSIGNED_SUB(unsigned short)
 UNSIGNED_SUB(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 UNSIGNED_SUB(unsigned long)
 #endif
 UNSIGNED_SUB(unsigned long long int)
@@ -520,7 +525,7 @@ SIGNED_MUL(char)
 SIGNED_MUL(signed char)
 SIGNED_MUL(short)
 SIGNED_MUL(int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 SIGNED_MUL(long)
 #endif
 SIGNED_MUL(long long int)
@@ -528,7 +533,7 @@ SIGNED_MUL(long long int)
 UNSIGNED_MUL(unsigned char)
 UNSIGNED_MUL(unsigned short)
 UNSIGNED_MUL(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 UNSIGNED_MUL(unsigned long)
 #endif
 UNSIGNED_MUL(unsigned long long int)
@@ -537,7 +542,7 @@ SIGNED_DIV(char)
 SIGNED_DIV(signed char)
 SIGNED_DIV(short)
 SIGNED_DIV(int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 SIGNED_DIV(long)
 #endif
 SIGNED_DIV(long long int)
@@ -546,7 +551,7 @@ SIGNED_NEG(char)
 SIGNED_NEG(signed char)
 SIGNED_NEG(short)
 SIGNED_NEG(int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 SIGNED_NEG(long)
 #endif
 SIGNED_NEG(long long int)
@@ -554,7 +559,7 @@ SIGNED_NEG(long long int)
 UNSIGNED_DIV(unsigned char)
 UNSIGNED_DIV(unsigned short)
 UNSIGNED_DIV(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 UNSIGNED_DIV(unsigned long)
 #endif
 UNSIGNED_DIV(unsigned long long int)
@@ -562,7 +567,7 @@ UNSIGNED_DIV(unsigned long long int)
 UNSIGNED_NEG(unsigned char)
 UNSIGNED_NEG(unsigned short)
 UNSIGNED_NEG(unsigned int)
-#ifdef __MSVC__
+#ifdef NOISY_LONG
 UNSIGNED_NEG(unsigned long)
 #endif
 UNSIGNED_NEG(unsigned long long int)
