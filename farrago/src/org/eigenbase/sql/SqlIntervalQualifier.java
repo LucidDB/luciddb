@@ -390,6 +390,16 @@ public class SqlIntervalQualifier
         }
     }
 
+    /**
+     * Does this interval have a single datetime field
+     *
+     * Return true not of form unit TO unit.
+     */
+    public boolean isSingleDatetimeField()
+    {
+        return endUnit == null;
+    }
+
     public boolean isYearMonth()
     {
         return TimeUnit.Year.equals(startUnit)

@@ -278,6 +278,17 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
+     * Assigns the internal value of this decimal to a long variable
+     *
+     * @param target the variable to be assigned
+     */
+    public void assignTo(NullablePrimitive.NullableLong target)
+    {
+        target.setNull(isNull());
+        target.value = value.internalTime;
+    }
+
+    /**
      * Attempts to parse the string, throwing an understandable exception if an
      * error was detected.
      */

@@ -380,7 +380,8 @@ public class RexUtil
 
     /**
      * Determines whether a {@link RexCall} requires decimal expansion. It
-     * usually requires expansion if it has decimal operands.
+     * usually requires expansion if it has decimal operands or casts
+     * between intervals and numerics.
      *
      * <p>Exceptions to this rule are:
      *
@@ -424,6 +425,14 @@ public class RexUtil
                 localCheck = false;
             } else if (SqlTypeUtil.isDecimal(lhsType)
                 && (lhsType != rhsType))
+            {
+                return true;
+            } else if (SqlTypeUtil.isInterval(lhsType)
+                && SqlTypeUtil.isExactNumeric(rhsType))
+            {
+                return true;
+            } else if (SqlTypeUtil.isInterval(rhsType)
+                && SqlTypeUtil.isExactNumeric(lhsType))
             {
                 return true;
             }

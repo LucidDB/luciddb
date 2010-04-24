@@ -136,6 +136,68 @@ public abstract class EncodedSqlInterval
         return toString();
     }
 
+    /**
+     * Encodes a long value as an EncodedSqlInterval, with an optional overflow
+     * check.
+     *
+     * @param value value to be encoded as an EncodedSqlInterval
+     * @param overflowCheck whether to check for overflow
+     */
+    public void reinterpret(long value, boolean overflowCheck)
+    {
+        // For now ignore overflow
+        assignFrom(value);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval without an overflow check.
+     *
+     * @param value value to be encoded as an EncodedSqlDecimal
+     */
+    public void reinterpret(long value)
+    {
+        reinterpret(value, false);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval, with an optional overflow
+     * check.
+     *
+     * @param primitive value to be encoded as an EncodedSqlInterval
+     * @param overflowCheck whether to check for overflow
+     */
+    public void reinterpret(
+        NullablePrimitive.NullableLong primitive,
+        boolean overflowCheck)
+    {
+        if (primitive.isNull()) {
+            setNull(true);
+            return;
+        }
+        reinterpret(primitive.value, overflowCheck);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval without an overflow check.
+     *
+     * @param primitive value to be encoded as an EncodedSqlInterval
+     */
+    public void reinterpret(NullablePrimitive.NullableLong primitive)
+    {
+        reinterpret(primitive, false);
+    }
+
+    /**
+     * Assigns the internal value of this decimal to a long variable
+     *
+     * @param target the variable to be assigned
+     */
+    public void assignTo(NullablePrimitive.NullableLong target)
+    {
+        target.setNull(isNull());
+        target.value = this.value;
+    }
+
     // Implemented by code generation
     protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
 

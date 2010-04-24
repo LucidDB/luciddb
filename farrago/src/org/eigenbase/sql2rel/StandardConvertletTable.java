@@ -426,7 +426,8 @@ public class StandardConvertletTable
 
             RexNode pad =
                 rexBuilder.makeExactLiteral(BigDecimal.valueOf(val - 1));
-            RexNode cast = rexBuilder.makeCast(rexInterval.getType(), pad);
+            RexNode cast = rexBuilder.makeReinterpretCast(
+                rexInterval.getType(), pad, rexBuilder.makeLiteral(false));
             SqlOperator op =
                 floor ? SqlStdOperatorTable.minusOperator
                 : SqlStdOperatorTable.plusOperator;
@@ -481,7 +482,8 @@ public class StandardConvertletTable
             cx.getTypeFactory().createTypeWithNullability(
                 resType,
                 exprs[1].getType().isNullable());
-        RexNode cast = rexBuilder.makeCast(resType, exprs[1]);
+        RexNode cast = rexBuilder.makeReinterpretCast(
+            resType, exprs[1], rexBuilder.makeLiteral(false));
 
         SqlIntervalQualifier.TimeUnit unit =
             ((SqlIntervalQualifier) operands[0]).getStartUnit();
@@ -569,7 +571,10 @@ public class StandardConvertletTable
                 casts);
         final RelDataType resType =
             cx.getValidator().getValidatedNodeType(call);
-        final RexNode res = rexBuilder.makeCast(resType, minus);
+        final RexNode res = rexBuilder.makeReinterpretCast(
+            resType,
+            minus,
+            rexBuilder.makeLiteral(false));
         return res;
     }
 

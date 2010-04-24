@@ -68,7 +68,12 @@ public enum SqlTypeName
     TIME(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIME),
     TIMESTAMP(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIMESTAMP),
     INTERVAL_YEAR_MONTH(PrecScale.NoNo, false, Types.OTHER),
-    INTERVAL_DAY_TIME(PrecScale.NoNo, false, Types.OTHER),
+    INTERVAL_DAY_TIME(
+        PrecScale.NoNo
+        | PrecScale.YesNo
+        | PrecScale.YesYes,
+        false,
+        Types.OTHER),
     CHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.CHAR),
     VARCHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.VARCHAR),
     BINARY(PrecScale.NoNo | PrecScale.YesNo, false, Types.BINARY),
