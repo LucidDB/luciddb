@@ -2274,7 +2274,7 @@ public class CalcRexImplementorTableImpl
      * <p>The prefix plus operator uses this implementor, because "+ x" is
      * always the same as "x".
      */
-    private static class IdentityImplementor
+    public static class IdentityImplementor
         implements CalcRexImplementor
     {
         public CalcReg implement(

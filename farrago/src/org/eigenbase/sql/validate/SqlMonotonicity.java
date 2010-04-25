@@ -30,7 +30,18 @@ package org.eigenbase.sql.validate;
  */
 public enum SqlMonotonicity
 {
-    StrictlyIncreasing, Increasing, StrictlyDecreasing, Decreasing, Constant,
+    StrictlyIncreasing,
+    Increasing,
+    StrictlyDecreasing,
+    Decreasing,
+    Constant,
+    /**
+     * Catch-all value for expressions that have some monotonic properties.
+     * Maybe it isn't known whether the expression is increasing or decreasing;
+     * or maybe the value is neither increasing nor decreasing but the value
+     * never repeats.
+     */
+    Monotonic,
     NotMonotonic;
 
     /**
@@ -91,8 +102,9 @@ public enum SqlMonotonicity
     }
 
     /**
-     * Returns whether values of this monotonicity may ever repeat: true for
-     * {@link #NotMonotonic} and {@link #Constant}, false otherwise.
+     * Returns whether values of this monotonicity may ever repeat after moving
+     * to another value: true for {@link #NotMonotonic} and {@link #Constant},
+     * false otherwise.
      *
      * <p>If a column is known not to repeat, a sort on that column can make
      * progress before all of the input has been seen.
