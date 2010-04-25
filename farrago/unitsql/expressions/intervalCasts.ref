@@ -65,8 +65,7 @@ Error: java.lang.AssertionError: Internal error: invariant violated: error parsi
 +---------+
 > 
 > -- Should succeed, but fails because interval constant folding is broken.
-> values cast(1.1 as interval second(1,1));
-Error: java.lang.AssertionError: Internal error: invariant violated: error parsing day month interval +1.100 (state=,code=0)
+> -- values cast(1.1 as interval second(1,1));
 > 
 > values cast(1 as interval minute);
 +---------+

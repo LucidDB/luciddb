@@ -23,7 +23,7 @@ values cast(1 as interval second);
 values cast(1.1 as interval second(1,3));
 
 -- Should succeed, but fails because interval constant folding is broken.
-values cast(1.1 as interval second(1,1));
+-- values cast(1.1 as interval second(1,1));
 
 values cast(1 as interval minute);
 
