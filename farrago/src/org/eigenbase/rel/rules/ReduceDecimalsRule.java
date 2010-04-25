@@ -32,7 +32,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -567,12 +566,8 @@ public class ReduceDecimalsRule
          */
         protected RexNode decodeValue(RexNode decimalNode)
         {
-            assert (SqlTypeUtil.isDecimal(decimalNode.getType())
-                || SqlTypeUtil.isInterval(decimalNode.getType()));
-            return builder.makeReinterpretCast(
-                matchNullability(int8, decimalNode),
-                decimalNode,
-                builder.makeLiteral(false));
+            assert (SqlTypeUtil.isDecimal(decimalNode.getType()));
+            return builder.decodeIntervalOrDecimal(decimalNode);
         }
 
         /**
@@ -630,11 +625,8 @@ public class ReduceDecimalsRule
             RelDataType decimalType,
             boolean checkOverflow)
         {
-            RexNode cast = ensureType(int8, value);
-            return builder.makeReinterpretCast(
-                decimalType,
-                cast,
-                builder.makeLiteral(checkOverflow));
+            return builder.encodeIntervalOrDecimal(
+                value, decimalType, checkOverflow);
         }
 
         /**
@@ -671,31 +663,7 @@ public class ReduceDecimalsRule
             RexNode node,
             boolean matchNullability)
         {
-            RelDataType targetType = type;
-            if (matchNullability) {
-                targetType = matchNullability(type, node);
-            }
-            if (node.getType() != targetType) {
-                return builder.makeCast(targetType, node);
-            }
-            return node;
-        }
-
-        /**
-         * Ensure's type's nullability matches a value's nullability
-         */
-        protected RelDataType matchNullability(
-            RelDataType type,
-            RexNode value)
-        {
-            boolean typeNullability = type.isNullable();
-            boolean valueNullability = value.getType().isNullable();
-            if (typeNullability != valueNullability) {
-                return builder.getTypeFactory().createTypeWithNullability(
-                    type,
-                    valueNullability);
-            }
-            return type;
+            return builder.ensureType(type, node, matchNullability);
         }
 
         protected RexNode makeCase(
@@ -786,7 +754,7 @@ public class ReduceDecimalsRule
     }
 
     /**
-     * Expands a decimal or interval cast expression
+     * Expands a decimal cast expression
      */
     private class CastExpander
         extends RexExpander
@@ -810,15 +778,9 @@ public class ReduceDecimalsRule
             RelDataType fromType = operand.getType();
             RelDataType toType = call.getType();
             assert (SqlTypeUtil.isDecimal(fromType)
-                || SqlTypeUtil.isDecimal(toType)
-                || SqlTypeUtil.isInterval(fromType)
-                || SqlTypeUtil.isInterval(toType));
+                || SqlTypeUtil.isDecimal(toType));
 
-            if (SqlTypeUtil.isInterval(toType)) {
-                return castToInterval(operand, toType);
-            } else if (SqlTypeUtil.isInterval(fromType)) {
-                return castFromInterval(operand, toType, fromType);
-            } else if (SqlTypeUtil.isIntType(toType)) {
+            if (SqlTypeUtil.isIntType(toType)) {
                 // decimal to int
                 return ensureType(
                     toType,
@@ -896,64 +858,6 @@ public class ReduceDecimalsRule
                 throw Util.needToImplement(
                     "Reduce decimal cast from " + fromType + " to " + toType);
             }
-        }
-
-        private RexNode castFromInterval(
-            RexNode operand, RelDataType toType, RelDataType fromType)
-        {
-            assert fromType instanceof IntervalSqlType;
-            IntervalSqlType intervalType = (IntervalSqlType) fromType;
-            TimeUnit endUnit = intervalType.getIntervalQualifier().getEndUnit();
-            if (endUnit == null) {
-                endUnit = intervalType.getIntervalQualifier().getStartUnit();
-            }
-            int scale = 0;
-            if (endUnit == TimeUnit.Second) {
-                scale = Math.min(
-                    intervalType.getIntervalQualifier()
-                    .getFractionalSecondPrecision(), 3);
-            }
-            long multiplier = endUnit.multiplier / powerOfTen(scale);
-            RexNode value = decodeValue(operand);
-            if (multiplier > 1) {
-                value = makeDivide(value, makeExactLiteral(multiplier));
-            }
-            if (scale > 0) {
-                RelDataType decimalType =
-                    builder.getTypeFactory().createSqlType(
-                        SqlTypeName.DECIMAL,
-                        scale + intervalType.getPrecision(),
-                        scale);
-                value = encodeValue(value, decimalType);
-            }
-            return ensureType(toType, value, false);
-        }
-
-        private RexNode castToInterval(RexNode operand, RelDataType toType)
-        {
-            assert  toType instanceof IntervalSqlType;
-            IntervalSqlType intervalType = (IntervalSqlType) toType;
-            TimeUnit endUnit = intervalType.getIntervalQualifier().getEndUnit();
-            if (endUnit == null) {
-                endUnit = intervalType.getIntervalQualifier().getStartUnit();
-            }
-            int scale = 0;
-            if (endUnit == TimeUnit.Second) {
-                scale = Math.min(
-                    intervalType.getIntervalQualifier()
-                    .getFractionalSecondPrecision(), 3);
-            }
-            long multiplier = endUnit.multiplier / powerOfTen(scale);
-            RelDataType decimalType =
-                builder.getTypeFactory().createSqlType(
-                    SqlTypeName.DECIMAL,
-                    scale + intervalType.getPrecision(),
-                    scale);
-            RexNode value = decodeValue(ensureType(decimalType, operand, true));
-            if (multiplier > 1) {
-                value = makeMultiply(value, makeExactLiteral(multiplier));
-            }
-            return encodeValue(value, toType);
         }
     }
 
