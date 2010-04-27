@@ -154,6 +154,14 @@ public class IntervalSqlType
     {
         return intervalQualifier.getStartPrecision();
     }
+
+    @Override
+    public int getScale()
+    {
+        // TODO Auto-generated method stub
+        return intervalQualifier.getFractionalSecondPrecision();
+    }
+
 }
 
 // End IntervalSqlType.java

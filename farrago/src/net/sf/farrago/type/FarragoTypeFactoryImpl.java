@@ -851,6 +851,12 @@ public class FarragoTypeFactoryImpl
                     EncodedSqlInterval.GET_END_UNIT_METHOD_NAME,
                     Literal.constantNull()));
         }
+        memberDecls.add(
+            generateGetter(
+                OJUtil.tnInt,
+                EncodedSqlInterval
+                    .GET_FRACTIONAL_SECOND_PRECISION_METHOD_NAME,
+                Literal.makeLiteral(qualifier.getFractionalSecondPrecision())));
 
         return newHolderOJClass(
             superclass,

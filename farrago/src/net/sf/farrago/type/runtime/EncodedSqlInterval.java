@@ -50,11 +50,17 @@ public abstract class EncodedSqlInterval
     // used for code generation
     public static final String GET_START_UNIT_METHOD_NAME = "getStartUnit";
     public static final String GET_END_UNIT_METHOD_NAME = "getEndUnit";
+    public static final String
+    GET_FRACTIONAL_SECOND_PRECISION_METHOD_NAME =
+        "getFractionalSecondPrecision";
 
     // Beware: NumberFormat classes are not guaranteed threadsafe.
     // Must use synchronization blocks around these
+    protected static final NumberFormat NF1 = new DecimalFormat("0");
     protected static final NumberFormat NF2 = new DecimalFormat("00");
     protected static final NumberFormat NF3 = new DecimalFormat("000");
+    protected static final NumberFormat[] NFS =
+        new NumberFormat[] {NF1, NF2, NF3};
 
     //~ Instance fields --------------------------------------------------------
 
@@ -203,6 +209,8 @@ public abstract class EncodedSqlInterval
 
     protected abstract SqlIntervalQualifier.TimeUnit getEndUnit();
 
+    protected abstract int getFractionalSecondPrecision();
+
     /**
      * Rounds this interval value down to a unit of time expressed using its
      * ordinal. Called by generated code.
@@ -251,16 +259,10 @@ public abstract class EncodedSqlInterval
 
     private static void appendSeconds(
         StringBuffer buf,
-        long seconds,
-        long fractions)
+        long seconds)
     {
         buf.append(':');
         buf.append(NF2.format(seconds));
-
-        if (fractions > 0) {
-            buf.append('.');
-            buf.append(NF3.format(fractions));
-        }
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -313,7 +315,7 @@ public abstract class EncodedSqlInterval
                 strbuf.append(years);
                 if (endUnit == SqlIntervalQualifier.TimeUnit.Month) {
                     strbuf.append('-');
-                    synchronized (NF2) {
+                    synchronized (NFS) {
                         strbuf.append(NF2.format(months));
                     }
                 }
@@ -427,7 +429,28 @@ public abstract class EncodedSqlInterval
                 "Conversion from string to day time interval");
         }
 
-        public String toString()
+        private void appendSecondFractions(
+            StringBuffer buf,
+            long fractions)
+        {
+            if (fractions == 0) {
+                return;
+            }
+            int precision = getFractionalSecondPrecision();
+            if (precision == 0) {
+                return;
+            }
+            for (int i = precision; i < 3; i++) {
+                fractions /= 10;
+            }
+            buf.append('.');
+            int scale = Math.min(
+                precision,
+                NFS.length);
+            buf.append(NFS[scale - 1].format(fractions));
+        }
+
+         public String toString()
         {
             long v = value;
             StringBuffer strbuf = new StringBuffer();
@@ -436,18 +459,11 @@ public abstract class EncodedSqlInterval
                 v = -v;
                 sign = '-';
             }
-            long days = v / MS_PER_DAY;
-            v = v % MS_PER_DAY;
-            long hours = v / MS_PER_HOUR;
-            v = v % MS_PER_HOUR;
-            long minutes = v / MS_PER_MINUTE;
-            v = v % MS_PER_MINUTE;
-            long seconds = v / MS_PER_SECOND;
-            v = v % MS_PER_SECOND;
-            long fractions = v;
-
             SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
             SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
+            if (endUnit == null) {
+                endUnit = startUnit;
+            }
             strbuf.append(sign);
 
             // Number formatter is not guaranteed threadsafe (though
@@ -455,61 +471,32 @@ public abstract class EncodedSqlInterval
             // and synchronize.
             //
             // Also, don't enforce precision format on leading fields
-            synchronized (NF2) {
-                if (startUnit == SqlIntervalQualifier.TimeUnit.Day) {
-                    strbuf.append(days);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Day))
+            synchronized (NFS) {
+                for (SqlIntervalQualifier.TimeUnit timeUnit
+                    : SqlIntervalQualifier.TimeUnit.values())
+                {
+                    if (timeUnit.compareTo(startUnit) >= 0
+                        && timeUnit.compareTo(endUnit) <= 0)
                     {
-                        appendHours(strbuf, hours);
-                        if (endUnit != SqlIntervalQualifier.TimeUnit.Hour) {
-                            appendMinutes(strbuf, minutes);
-                            if (endUnit
-                                != SqlIntervalQualifier.TimeUnit.Minute)
+                        long timeAmount = v / timeUnit.multiplier;
+                        v = v % timeUnit.multiplier;
+                        if (timeUnit == startUnit) {
+                            strbuf.append(timeAmount);
+                        } else {
+                            if (timeUnit == SqlIntervalQualifier.TimeUnit.Hour)
                             {
-                                appendSeconds(strbuf, seconds, fractions);
+                                strbuf.append(' ');
+                            } else {
+                                strbuf.append(':');
                             }
+                            strbuf.append(NF2.format(timeAmount));
                         }
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Hour)
-                {
-                    strbuf.append(hours);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Hour))
-                    {
-                        appendMinutes(strbuf, minutes);
-                        if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
-                            appendSeconds(strbuf, seconds, fractions);
-                        }
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Minute)
-                {
-                    strbuf.append(minutes);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Minute))
-                    {
-                        appendSeconds(strbuf, seconds, fractions);
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Second)
-                {
-                    strbuf.append(seconds);
-
-                    if (fractions > 0) {
-                        strbuf.append('.');
-                        strbuf.append(NF3.format(fractions));
                     }
                 }
-            } //synchronized(NF2)
-
+                if (endUnit == SqlIntervalQualifier.TimeUnit.Second) {
+                    appendSecondFractions(strbuf, v);
+                }
+            } //synchronized(NFS)
             return strbuf.toString();
         }
     }

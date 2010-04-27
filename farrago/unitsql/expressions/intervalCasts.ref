@@ -4,9 +4,12 @@
 > values cast(interval '1:02' minute to second as decimal(6,1));
 Error: From line 1, column 8 to line 1, column 61: Cast function cannot convert value of type INTERVAL MINUTE TO SECOND to type DECIMAL(6, 1) (state=,code=0)
 > 
-> -- Should succeed, but fails because interval constant folding is broken.
 > values cast(cast(interval '1:02.1' minute to second(1) as interval second(4,1)) as decimal(6,1));
-Error: java.lang.AssertionError: Internal error: invariant violated: error parsing day month interval 1:02.1 (state=,code=0)
++---------+
+| EXPR$0  |
++---------+
+| 62.1    |
++---------+
 > 
 > values cast(interval '1' second as bigint);
 +---------+
@@ -64,8 +67,12 @@ Error: java.lang.AssertionError: Internal error: invariant violated: error parsi
 | +1.100  |
 +---------+
 > 
-> -- Should succeed, but fails because interval constant folding is broken.
-> -- values cast(1.1 as interval second(1,1));
+> values cast(1.1 as interval second(1,1));
++---------+
+| EXPR$0  |
++---------+
+| +1.1    |
++---------+
 > 
 > values cast(1 as interval minute);
 +---------+

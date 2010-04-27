@@ -348,18 +348,16 @@ public class StandardConvertletTable
         if (call.operands[1] instanceof SqlIntervalQualifier) {
             SqlNode node = call.operands[0];
             if (node instanceof SqlIntervalLiteral) {
+                RexLiteral sourceInterval =
+                    (RexLiteral) cx.convertExpression(node);
+                long sourceValue =
+                    ((BigDecimal) sourceInterval.getValue()).longValue();
                 SqlIntervalQualifier intervalQualifier =
                     (SqlIntervalQualifier) call.operands[1];
-                SqlIntervalLiteral.IntervalValue numLiteral =
-                    (SqlIntervalLiteral.IntervalValue) ((SqlLiteral) node)
-                    .getValue();
-                int sign = (numLiteral.getSign() == -1) ? -1 : 1;
-                node =
-                    SqlLiteral.createInterval(
-                        sign,
-                        numLiteral.toString(),
-                        intervalQualifier,
-                        node.getParserPosition());
+                RexLiteral castedInterval =
+                    cx.getRexBuilder().makeIntervalLiteral(
+                        sourceValue, intervalQualifier);
+                return castToValidatedType(cx, call, castedInterval);
             }
             return castToValidatedType(cx, call, cx.convertExpression(node));
         }
