@@ -96,20 +96,22 @@ public class SqlIntervalQualifier
     public enum TimeUnit
         implements SqlLiteral.SqlSymbol
     {
-        Year(true, 12 /* months */),
-        Month(true, 1 /* months */),
-        Day(false, 86400000 /* millis = 24 * 3600000 */),
-        Hour(false, 3600000 /* millis */),
-        Minute(false, 60000 /* millis */),
-        Second(false, 1000 /* millis */);
+        Year(true, ' ', 12 /* months */),
+        Month(true, '-', 1 /* months */),
+        Day(false, '-', 86400000 /* millis = 24 * 3600000 */),
+        Hour(false, ' ', 3600000 /* millis */),
+        Minute(false, ':', 60000 /* millis */),
+        Second(false, ':', 1000 /* millis */);
 
         public final boolean yearMonth;
+        public final char separator;
         public final long multiplier;
         private static final TimeUnit [] CachedValues = values();
 
-        private TimeUnit(boolean yearMonth, long multiplier)
+        private TimeUnit(boolean yearMonth, char separator, long multiplier)
         {
             this.yearMonth = yearMonth;
+            this.separator = separator;
             this.multiplier = multiplier;
         }
 

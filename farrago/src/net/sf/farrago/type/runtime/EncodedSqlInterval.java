@@ -22,7 +22,6 @@
 package net.sf.farrago.type.runtime;
 
 import java.text.*;
-import java.util.Calendar;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
@@ -245,24 +244,70 @@ public abstract class EncodedSqlInterval
         throw Util.unexpected(timeUnit);
     }
 
-    private static void appendHours(StringBuffer buf, long hours)
-    {
-        buf.append(' ');
-        buf.append(NF2.format(hours));
-    }
-
-    private static void appendMinutes(StringBuffer buf, long minutes)
-    {
-        buf.append(':');
-        buf.append(NF2.format(minutes));
-    }
-
-    private static void appendSeconds(
+    private void appendSecondFractions(
         StringBuffer buf,
-        long seconds)
+        long fractions)
     {
-        buf.append(':');
-        buf.append(NF2.format(seconds));
+        if (fractions == 0) {
+            return;
+        }
+        int precision = getFractionalSecondPrecision();
+        if (precision == 0) {
+            return;
+        }
+        for (int i = precision; i < 3; i++) {
+            fractions /= 10;
+        }
+        buf.append('.');
+        int scale = Math.min(
+            precision,
+            NFS.length);
+        buf.append(NFS[scale - 1].format(fractions));
+    }
+
+     public String toString()
+    {
+        long v = value;
+        StringBuffer strbuf = new StringBuffer();
+        char sign = '+';
+        if (v < 0) {
+            v = -v;
+            sign = '-';
+        }
+        SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
+        SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
+        if (endUnit == null) {
+            endUnit = startUnit;
+        }
+        strbuf.append(sign);
+
+        // Number formatter is not guaranteed threadsafe (though
+        // Sun's implementation actually is).  Therefore, be cautious
+        // and synchronize.
+        //
+        // Also, don't enforce precision format on leading fields
+        synchronized (NFS) {
+            for (SqlIntervalQualifier.TimeUnit timeUnit
+                : SqlIntervalQualifier.TimeUnit.values())
+            {
+                if (timeUnit.compareTo(startUnit) >= 0
+                    && timeUnit.compareTo(endUnit) <= 0)
+                {
+                    long timeAmount = v / timeUnit.multiplier;
+                    v = v % timeUnit.multiplier;
+                    if (timeUnit == startUnit) {
+                        strbuf.append(timeAmount);
+                    } else {
+                        strbuf.append(timeUnit.separator);
+                        strbuf.append(NF2.format(timeAmount));
+                    }
+                }
+            }
+            if (endUnit == SqlIntervalQualifier.TimeUnit.Second) {
+                appendSecondFractions(strbuf, v);
+            }
+        } //synchronized(NFS)
+        return strbuf.toString();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -288,42 +333,6 @@ public abstract class EncodedSqlInterval
         {
             throw Util.needToImplement(
                 "Conversion from string to month year interval");
-        }
-
-        public String toString()
-        {
-            long v = value;
-            StringBuffer strbuf = new StringBuffer();
-            char sign = '+';
-            if (v < 0) {
-                v = -v;
-                sign = '-';
-            }
-            long years = v / MONTHS_PER_YEAR;
-            long months = v % MONTHS_PER_YEAR;
-
-            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
-            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
-
-            strbuf.append(sign);
-
-            // Number formatter is not guaranteed threadsafe (though
-            // Sun's implementation actually is).  Therefore, be cautious
-            // and synchronize
-
-            if (startUnit == SqlIntervalQualifier.TimeUnit.Year) {
-                strbuf.append(years);
-                if (endUnit == SqlIntervalQualifier.TimeUnit.Month) {
-                    strbuf.append('-');
-                    synchronized (NFS) {
-                        strbuf.append(NF2.format(months));
-                    }
-                }
-            } else {
-                strbuf.append(months);
-            }
-
-            return strbuf.toString();
         }
     }
 
@@ -427,77 +436,6 @@ public abstract class EncodedSqlInterval
         {
             throw Util.needToImplement(
                 "Conversion from string to day time interval");
-        }
-
-        private void appendSecondFractions(
-            StringBuffer buf,
-            long fractions)
-        {
-            if (fractions == 0) {
-                return;
-            }
-            int precision = getFractionalSecondPrecision();
-            if (precision == 0) {
-                return;
-            }
-            for (int i = precision; i < 3; i++) {
-                fractions /= 10;
-            }
-            buf.append('.');
-            int scale = Math.min(
-                precision,
-                NFS.length);
-            buf.append(NFS[scale - 1].format(fractions));
-        }
-
-         public String toString()
-        {
-            long v = value;
-            StringBuffer strbuf = new StringBuffer();
-            char sign = '+';
-            if (v < 0) {
-                v = -v;
-                sign = '-';
-            }
-            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
-            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
-            if (endUnit == null) {
-                endUnit = startUnit;
-            }
-            strbuf.append(sign);
-
-            // Number formatter is not guaranteed threadsafe (though
-            // Sun's implementation actually is).  Therefore, be cautious
-            // and synchronize.
-            //
-            // Also, don't enforce precision format on leading fields
-            synchronized (NFS) {
-                for (SqlIntervalQualifier.TimeUnit timeUnit
-                    : SqlIntervalQualifier.TimeUnit.values())
-                {
-                    if (timeUnit.compareTo(startUnit) >= 0
-                        && timeUnit.compareTo(endUnit) <= 0)
-                    {
-                        long timeAmount = v / timeUnit.multiplier;
-                        v = v % timeUnit.multiplier;
-                        if (timeUnit == startUnit) {
-                            strbuf.append(timeAmount);
-                        } else {
-                            if (timeUnit == SqlIntervalQualifier.TimeUnit.Hour)
-                            {
-                                strbuf.append(' ');
-                            } else {
-                                strbuf.append(':');
-                            }
-                            strbuf.append(NF2.format(timeAmount));
-                        }
-                    }
-                }
-                if (endUnit == SqlIntervalQualifier.TimeUnit.Second) {
-                    appendSecondFractions(strbuf, v);
-                }
-            } //synchronized(NFS)
-            return strbuf.toString();
         }
     }
 }
