@@ -452,6 +452,13 @@ ${farrago.test.jvmargs}
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
 
+  <path id="farrago.sqltest.classpath">
+    <pathelement location="${farrago.sqlline.classpath}"/>
+    <pathelement location="${ant.classpath}"/>
+  </path>
+  <property name="farrago.sqltest.classpath" refid="farrago.sqltest.classpath"/>
+
+
   <!-- classpath for running Jalopy -->
   <path id="farrago.jalopy.classpath">
     <pathelement path="${farrago.sqlline.classpath}"/>
@@ -814,19 +821,18 @@ ${farrago.test.jvmargs}
   <!-- Macro for running a single forked sqlline test -->
   <macrodef name="farrago.runSqlTest">
     <attribute name="file" default="unspecified"/>
+    <attribute name="sqltest.classpath" default="${farrago.sqltest.classpath}"/>
+    <attribute name="java.ext.dirs" default="${sqlline.dir}"/>
     <sequential>
       <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
         tempdir="${testlog.dir}" forkmode="perBatch" includeantruntime="no">
         <!-- <classpath refid="farrago.sqlline.classpath"/> -->
-        <classpath>
-            <pathelement path="${farrago.sqlline.classpath}" />
-            <pathelement path="${ant.classpath}" />
-        </classpath>
+        <classpath path="@{sqltest.classpath}"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="-Xmx1024m"/>
         <jvmarg line="-XX:MaxPermSize=160m" />
-        <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
+        <sysproperty key="java.ext.dirs" value="@{java.ext.dirs}"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>
         <formatter type="plain"/>
         <formatter type="xml"/> <!-- for integration builds -->
