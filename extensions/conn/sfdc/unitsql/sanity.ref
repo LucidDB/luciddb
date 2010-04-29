@@ -1,0 +1,188 @@
+> create schema sfdc;
+> set schema 'sfdc';
+> set path 'sfdc';
+> 
+> -------------------------
+> -- SFDC foreign server --
+> -------------------------
+> 
+> create server mysfdc_server
+> foreign data wrapper SALESFORCE
+> options (
+>   USER_NAME 'ngoodman@bayontechnologies.com',
+>   PASSWORD 'REMOVED'
+> );
+> 
+> -- test: browse connect functionality
+> select * from sys_boot.mgmt.browse_connect_foreign_wrappers
+> where foreign_wrapper_name = 'SALESFORCE' order by 2;
++-----------------------+----------------------------------------+
+| FOREIGN_WRAPPER_NAME  |       BROWSE_CONNECT_DESCRIPTION       |
++-----------------------+----------------------------------------+
+| SALESFORCE            | Salesforce.com Web Service Connection  |
++-----------------------+----------------------------------------+
+> 
+> -- query for available connection options
+> select * from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'SALESFORCE',
+>     cursor(
+>         select '' as option_name, '' as option_value
+>         from sys_boot.jdbc_metadata.empty_view)))
+> order by option_ordinal, option_choice_ordinal;
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |          OPTION_NAME           |                        OPTION_DESCRIPTION                         | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | USER_NAME                      | User name to login to Salesforce                                  | true                | -1                     |                      |
+| 1               | PASSWORD                       | Password to login to Salesforce                                   | true                | -1                     |                      |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | -1                     | 128                  |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | 0                      | 128                  |
+| 3               | ENDPOINT_URL                   | Web Service endpoint URL if not a default production environment  | false               | -1                     |                      |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+> 
+> -- query for available connection options, with specified set values
+> select * from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'SALESFORCE',
+>     cursor(
+>         values ('USER_NAME', 'username'),
+>                ('PASSWORD', 'passwd'))))
+> order by option_ordinal, option_choice_ordinal;
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |          OPTION_NAME           |                        OPTION_DESCRIPTION                         | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | USER_NAME                      | User name to login to Salesforce                                  | true                | -1                     | username             |
+| 1               | PASSWORD                       | Password to login to Salesforce                                   | true                | -1                     | passwd               |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | -1                     | 128                  |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | 0                      | 128                  |
+| 3               | ENDPOINT_URL                   | Web Service endpoint URL if not a default production environment  | false               | -1                     |                      |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+> 
+> -- query for available schemas
+> select * from table(sys_boot.mgmt.browse_foreign_schemas(
+>     'MYSFDC_SERVER'))
+> order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| SFDC         |              |
++--------------+--------------+
+> 
+> -------------
+> -- Queries --
+> -------------
+> 
+> -- negative tests
+> select * from mysfdc_server."Account";
+Error: From line 1, column 15 to line 1, column 37: Table 'MYSFDC_SERVER.Account' not found (state=,code=0)
+> select * from mysfdc_server."sfdc"."Account";
+Error: From line 1, column 15 to line 1, column 44: Table 'MYSFDC_SERVER.sfdc.Account' not found (state=,code=0)
+> 
+> -- positive tests
+> select "Name", "Id" from mysfdc_server.sfdc."Account" order by "Id";
++--------------------------------------+---------------------+
+|                 Name                 |         Id          |
++--------------------------------------+---------------------+
+| GenePoint                            | 001A0000005G8nRIAS  |
+| United Oil & Gas, UK                 | 001A0000005G8nSIAS  |
+| United Oil & Gas, Singapore          | 001A0000005G8nTIAS  |
+| Edge Communications                  | 001A0000005G8nUIAS  |
+| Burlington Textiles Corp of America  | 001A0000005G8nVIAS  |
+| Pyramid Construction Inc.            | 001A0000005G8nWIAS  |
+| Dickenson plc                        | 001A0000005G8nXIAS  |
+| Grand Hotels & Resorts Ltd           | 001A0000005G8nYIAS  |
+| Express Logistics and Transport      | 001A0000005G8nZIAS  |
+| University of Arizona                | 001A0000005G8naIAC  |
+| United Oil & Gas Corp.               | 001A0000005G8nbIAC  |
+| sForce                               | 001A0000005G8ncIAC  |
++--------------------------------------+---------------------+
+> 
+> select * from mysfdc_server.sfdc."Contact_LOV" order by "Field","Value";
++-------------+-------------------+
+|    Field    |       Value       |
++-------------+-------------------+
+| LeadSource  | Other             |
+| LeadSource  | Partner Referral  |
+| LeadSource  | Phone Inquiry     |
+| LeadSource  | Purchased List    |
+| LeadSource  | Web               |
+| Level__c    | Primary           |
+| Level__c    | Secondary         |
+| Level__c    | Tertiary          |
+| Salutation  | Dr.               |
+| Salutation  | Mr.               |
+| Salutation  | Mrs.              |
+| Salutation  | Ms.               |
+| Salutation  | Prof.             |
++-------------+-------------------+
+> 
+> IMPORT FOREIGN SCHEMA SFDC from server MYSFDC_SERVER into sfdc;
+> 
+> select "Id", "Name", "Type", "Phone", "Industry" from sfdc."Account" order by "Id";
++---------------------+--------------------------------------+---------------------+------------------+-----------------+
+|         Id          |                 Name                 |        Type         |      Phone       |    Industry     |
++---------------------+--------------------------------------+---------------------+------------------+-----------------+
+| 001A0000005G8nRIAS  | GenePoint                            | Customer - Channel  | (650) 867-3450   | Biotechnology   |
+| 001A0000005G8nSIAS  | United Oil & Gas, UK                 | Customer - Direct   | +44 191 4956203  | Energy          |
+| 001A0000005G8nTIAS  | United Oil & Gas, Singapore          | Customer - Direct   | (650) 450-8810   | Energy          |
+| 001A0000005G8nUIAS  | Edge Communications                  | Customer - Direct   | (512) 757-6000   | Electronics     |
+| 001A0000005G8nVIAS  | Burlington Textiles Corp of America  | Customer - Direct   | (336) 222-7000   | Apparel         |
+| 001A0000005G8nWIAS  | Pyramid Construction Inc.            | Customer - Channel  | (014) 427-4427   | Construction    |
+| 001A0000005G8nXIAS  | Dickenson plc                        | Customer - Channel  | (785) 241-6200   | Consulting      |
+| 001A0000005G8nYIAS  | Grand Hotels & Resorts Ltd           | Customer - Direct   | (312) 596-1000   | Hospitality     |
+| 001A0000005G8nZIAS  | Express Logistics and Transport      | Customer - Channel  | (503) 421-7800   | Transportation  |
+| 001A0000005G8naIAC  | University of Arizona                | Customer - Direct   | (520) 773-9050   | Education       |
+| 001A0000005G8nbIAC  | United Oil & Gas Corp.               | Customer - Direct   | (212) 842-5500   | Energy          |
+| 001A0000005G8ncIAC  | sForce                               |                     | (415) 901-7000   |                 |
++---------------------+--------------------------------------+---------------------+------------------+-----------------+
+> 
+> create schema local_sfdc;
+> set schema 'local_sfdc';
+> 
+> CREATE FOREIGN TABLE sfdc_implicit_table
+> server mysfdc_server
+> options (
+>   object 'Account'
+> );
+> select "Name", "BillingStreet", "AnnualRevenue", "NumberOfEmployees" from sfdc_implicit_table order by "Name", "BillingStreet", "AnnualRevenue", "NumberOfEmployees";
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+|                 Name                 |                                             BillingStreet                                              | AnnualRevenue  | NumberOfEmployees  |
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+| Burlington Textiles Corp of America  | 525 S. Lexington Ave                                                                                   | 3.5E8          | 9000               |
+| Dickenson plc                        | 1301 Hoch Drive                                                                                        | 5.0E7          | 120                |
+| Edge Communications                  | 312 Constitution Place
+Austin, TX 78767
+USA                                                            | 1.39E8         | 1000               |
+| Express Logistics and Transport      | 620 SW 5th Avenue Suite 400
+Portland, Oregon 97204
+United States                                       | 9.5E8          | 12300              |
+| GenePoint                            | 345 Shoreline Park
+Mountain View, CA 94043
+USA                                                         | 3.0E7          | 265                |
+| Grand Hotels & Resorts Ltd           | 2334 N. Michigan Avenue, Suite 1500
+Chicago, IL 60601, USA                                             | 5.0E8          | 5600               |
+| Pyramid Construction Inc.            | 2 Place Jussieu                                                                                        | 9.5E8          | 2680               |
+| United Oil & Gas Corp.               | 1301 Avenue of the Americas 
+New York, NY 10019
+USA                                                    | 5.6E9          | 145000             |
+| United Oil & Gas, Singapore          | 9 Tagore Lane
+Singapore, Singapore 787472
+Singapore                                                    |                | 3000               |
+| United Oil & Gas, UK                 | Kings Park, 17th Avenue, Team Valley Trading Estate,
+Gateshead, Tyne and Wear NE26 3HS
+United Kingdom  |                | 24000              |
+| University of Arizona                | 888 N Euclid 
+Hallis Center, Room 501
+Tucson, AZ 85721
+United States                                   |                | 39000              |
+| sForce                               | The Landmark @ One Market                                                                              |                |                    |
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+> 
+> -------------
+> -- CLEANUP --
+> -------------
+> drop server mysfdc_server cascade;
+> drop schema sfdc cascade;
+> drop schema local_sfdc cascade;
+> 
+> !quit
