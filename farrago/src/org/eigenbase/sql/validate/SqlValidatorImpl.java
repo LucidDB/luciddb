@@ -3166,16 +3166,25 @@ public class SqlValidatorImpl
      */
     protected void validateGroupClause(SqlSelect select)
     {
-        SqlNodeList group = select.getGroup();
-        if (group == null) {
+        SqlNodeList groupList = select.getGroup();
+        if (groupList == null) {
             return;
         }
-        validateNoAggs(group, "GROUP BY");
+        validateNoAggs(groupList, "GROUP BY");
         final SqlValidatorScope groupScope = getGroupScope(select);
-        inferUnknownTypes(unknownType, groupScope, group);
-        group.validate(this, groupScope);
+        inferUnknownTypes(unknownType, groupScope, groupList);
 
-        SqlNode agg = aggFinder.findAgg(group);
+        groupList.validate(this, groupScope);
+
+        // Derive the type of each GROUP BY item. We don't need the type, but
+        // it resolves functions, and that is necessary for deducing
+        // monotonicity.
+        for (SqlNode groupItem : groupList) {
+            final RelDataType type = deriveType(groupScope, groupItem);
+            setValidatedNodeTypeImpl(groupItem, type);
+        }
+
+        SqlNode agg = aggFinder.findAgg(groupList);
         if (agg != null) {
             throw newValidationError(
                 agg,
