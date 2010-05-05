@@ -583,10 +583,10 @@ RETURN /* 18: */;]]>
             <![CDATA[
 O c,11, s4;
 I s4;
-L bo, c,11, s4, bo, c,11, bo, c,11, s4, bo, s4, s4, bo;
+L bo, c,11, s4, bo, bo, c,11, c,11, s4, s4, bo, s4, bo;
 S bo;
-C s4, bo, bo, s4, c,4, s4, c,11, c,0, vc,5;
-V 10, 1, 0, 1, 0x7761656C /* wael */, 2, 0x7761656C7320636C6F6E65 /* waels clone */,  /* <NULL> */, 0x3232303034 /* 22004 */;
+C s4, bo, bo, s4, s4, c,4, c,11, c,0, vc,5;
+V 10, 1, 0, 1, 2, 0x7761656C /* wael */, 0x7761656C7320636C6F6E65 /* waels clone */,  /* <NULL> */, 0x3232303034 /* 22004 */;
 T;
 GT L0, I0, C0 /* 0: >($t0, $t21) */;
 JMPT @4, L0 /* 1: */;
@@ -595,25 +595,25 @@ RETURN /* 3: */;
 MOVE S0, C2 /* 4: */;
 ADD L2, C3, C3 /* 5: +($t9, $t9) */;
 EQ L3, L2, C3 /* 6: =($t10, $t9) */;
-JMPF @12, L3 /* 7: */;
-JMPN @12, L3 /* 8: */;
-CALL 'castA(L4, C4) /* 9: CAST($t12):CHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" */;
-MOVE L1, L4 /* 10: */;
-JMP @19 /* 11: */;
-EQ L5, L2, C5 /* 12: =($t10, $t13) */;
-JMPF @18, L5 /* 13: */;
-JMPN @18, L5 /* 14: */;
+EQ L4, L2, C4 /* 7: =($t10, $t13) */;
+JMPF @13, L3 /* 8: */;
+JMPN @13, L3 /* 9: */;
+CALL 'castA(L5, C5) /* 10: CAST($t12):CHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" */;
+MOVE L1, L5 /* 11: */;
+JMP @19 /* 12: */;
+JMPF @18, L4 /* 13: */;
+JMPN @18, L4 /* 14: */;
 CALL 'castA(L6, C6) /* 15: CAST($t15):CHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" */;
 MOVE L1, L6 /* 16: */;
 JMP @19 /* 17: */;
 MOVE L1, C7 /* 18: CASE($t11, $t12, $t14, $t15, $t17) */;
-EQ L8, C3, C3 /* 19: =($t9, $t9) */;
-JMPF @25, L8 /* 20: */;
-JMPN @25, L8 /* 21: */;
-ADD L9, L2, C5 /* 22: +($t10, $t13) */;
-MOVE L7, L9 /* 23: */;
+ADD L8, L2, C4 /* 19: +($t10, $t13) */;
+EQ L9, C3, C3 /* 20: =($t9, $t9) */;
+JMPF @25, L9 /* 21: */;
+JMPN @25, L9 /* 22: */;
+MOVE L7, L8 /* 23: */;
 JMP @27 /* 24: */;
-ADD L10, C5, C0 /* 25: +($t13, $t21) */;
+ADD L10, C4, C0 /* 25: +($t13, $t21) */;
 MOVE L7, L10 /* 26: CASE($t19, $t20, $t22) */;
 REF O0, L1 /* 27: */;
 ISNULL L11, L7 /* 28: */;
@@ -1570,19 +1570,19 @@ RETURN /* 3: */;]]>
             <![CDATA[
 O s4, s4, s4;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, s8, s8, s4;
-L s4, bo, s4, bo, s8, s8, s8, s8, s4, s4, bo, s8, s8, s4;
+L s4, bo, s4, bo, s8, s8, s8, s8, s4, s8, s8, s4;
 C s8, s8, s4, s8;
 V 2, 0,  /* <NULL> */,  /* <NULL> */;
 T;
 GE L1, I9, C0 /* 0: >=($t9, $t12) */;
-JMPF @11, L1 /* 1: */;
-JMPN @11, L1 /* 2: */;
-GT L3, I10, C1 /* 3: >($t10, $t14) */;
-JMPF @8, L3 /* 4: */;
-JMPN @8, L3 /* 5: */;
-MOVE L2, I11 /* 6: */;
-JMP @9 /* 7: */;
-MOVE L2, C2 /* 8: CASE($t15, $t11, $t17) */;
+GT L3, I10, C1 /* 1: >($t10, $t14) */;
+JMPF @6, L3 /* 2: */;
+JMPN @6, L3 /* 3: */;
+MOVE L2, I11 /* 4: */;
+JMP @7 /* 5: */;
+MOVE L2, C2 /* 6: CASE($t15, $t11, $t17) */;
+JMPF @11, L1 /* 7: */;
+JMPN @11, L1 /* 8: */;
 MOVE L0, L2 /* 9: */;
 JMP @12 /* 10: */;
 MOVE L0, C2 /* 11: CASE($t13, $t18, $t16) */;
@@ -1595,19 +1595,13 @@ MOVE L4, C3 /* 17: CASE($t13, $t10, $t16) */;
 CAST L6, L0 /* 18: CAST($t19):BIGINT */;
 DIV L7, L6, L4 /* 19: /($t19, $t20) */;
 CAST L8, L7 /* 20: CAST($t21):INTEGER */;
-GT L10, I10, C1 /* 21: >($t10, $t14) */;
-JMPF @26, L10 /* 22: */;
-JMPN @26, L10 /* 23: */;
-MOVE L9, I11 /* 24: */;
-JMP @27 /* 25: */;
-MOVE L9, C2 /* 26: CASE($t15, $t11, $t17) */;
-CAST L11, L9 /* 27: CAST($t18):BIGINT NOT NULL */;
-DIV L12, L11, I10 /* 28: /($t18, $t10) */;
-CAST L13, L12 /* 29: CAST($t23):INTEGER */;
-REF O0, L0 /* 30: */;
-REF O1, L8 /* 31: */;
-REF O2, L13 /* 32: */;
-RETURN /* 33: */;]]>
+CAST L9, L2 /* 21: CAST($t18):BIGINT NOT NULL */;
+DIV L10, L9, I10 /* 22: /($t18, $t10) */;
+CAST L11, L10 /* 23: CAST($t23):INTEGER */;
+REF O0, L0 /* 24: */;
+REF O1, L8 /* 25: */;
+REF O2, L11 /* 26: */;
+RETURN /* 27: */;]]>
         </Resource>
         <Resource name="expectedDropOptimized">
             <![CDATA[
@@ -1623,6 +1617,43 @@ RETURN /* 3: */;]]>
         </Resource>
         <Resource name="expectedDropMapping">
             <![CDATA[{0}]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseStatement">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4, s4, s4;
+I s4, s4;
+L s4, s4, bo, bo, s4, s4, bo;
+C s4, s4, s4, s4, s4, vc,5;
+V 3, 1000, 1, 2,  /* <NULL> */, 0x3232303034 /* 22004 */;
+T;
+ADD L1, I1, C0 /* 0: +($t7, $t11) */;
+LT L2, L1, C1 /* 1: <($t12, $t13) */;
+GT L3, I0, C2 /* 2: >($t0, $t9) */;
+JMPF @8, L3 /* 3: */;
+JMPN @8, L3 /* 4: */;
+CAST L4, C2 /* 5: CAST($t9):INTEGER */;
+MOVE L0, L4 /* 6: */;
+JMP @14 /* 7: */;
+JMPF @13, L2 /* 8: */;
+JMPN @13, L2 /* 9: */;
+CAST L5, C3 /* 10: CAST($t15):INTEGER */;
+MOVE L0, L5 /* 11: */;
+JMP @14 /* 12: */;
+MOVE L0, C4 /* 13: CASE($t10, $t9, $t14, $t15, $t17) */;
+ISNULL L6, I0 /* 14: */;
+JMPF @18, L6 /* 15: */;
+RAISE C5 /* 16: */;
+RETURN /* 17: */;
+REF O0, I0 /* 18: */;
+REF O1, L0 /* 19: */;
+ISNULL L6, L1 /* 20: */;
+JMPF @24, L6 /* 21: */;
+RAISE C5 /* 22: */;
+RETURN /* 23: */;
+REF O2, L1 /* 24: */;
+RETURN /* 25: */;]]>
         </Resource>
     </TestCase>
 </Root>

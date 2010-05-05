@@ -2174,6 +2174,17 @@ public class CalcRexImplementorTableImpl
             CalcReg resultOfCall = createResultRegister(translator, call);
             String endOfCase = translator.newLabel();
             String next;
+            // check if case operands have any recurring subexpressions.
+            // If it does, implement second operand(no short circuit).
+            // TODO: This change can be improved by implementing only recurring
+            // expressions instead of disabling the short circuit altogether. It
+            // can be further improved by determining deepest position in the
+            // expression tree to evaluate recurring subexpressions.
+            for (int i = 0; i < (call.operands.length - 1); i++) {
+                if (translator.hasRecurringSubExpressions(call.operands[i])) {
+                    translator.implementNode(call.operands[i]);
+                }
+            }
             boolean elseClauseOptimizedAway = false;
             for (int i = 0; i < (call.operands.length - 1); i += 2) {
                 next = translator.newLabel();

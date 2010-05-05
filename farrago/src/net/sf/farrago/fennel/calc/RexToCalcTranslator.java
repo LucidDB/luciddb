@@ -75,7 +75,7 @@ public class RexToCalcTranslator
      * Whether the code generator should short-circuit logical operators. The
      * default value is <em>false</em>.
      */
-    protected boolean generateShortCircuit = false;
+    protected boolean generateShortCircuit = true;
     protected int labelOrdinal = 0;
 
     /**
@@ -93,6 +93,13 @@ public class RexToCalcTranslator
      * Program being translated.
      */
     private RexProgram program;
+
+    /**
+     * A hash map of composite expressions (RexCall) and their recurrence count
+     * in the query
+     */
+    protected Map<String, Integer> recurrenceMap =
+        new HashMap<String, Integer>();
 
     /**
      * List of expressions which are currently being implemented.
@@ -479,6 +486,9 @@ public class RexToCalcTranslator
             }
         }
 
+        // Determine recurring common subexpressions.
+        deduceCommonSubExpressions();
+
         // Step 1: implement all the filtering logic
         if (conditionRef != null) {
             CalcReg filterResult = implementNode(conditionRef);
@@ -553,6 +563,18 @@ public class RexToCalcTranslator
 
         builder.addReturn();
         return builder.getProgram(null);
+    }
+
+    private void deduceCommonSubExpressions() {
+        final List<RexLocalRef> projectRefList = program.getProjectList();
+        RexNode conditionRef = program.getCondition();
+        RecurrenceMapBuilder mapBuilder = new RecurrenceMapBuilder(this);
+        if (conditionRef != null) {
+            conditionRef.accept(mapBuilder);
+        }
+        for (RexLocalRef projectRef : projectRefList) {
+            projectRef.accept(mapBuilder);
+        }
     }
 
     /**
@@ -952,6 +974,15 @@ public class RexToCalcTranslator
         }
         SqlOperator op = call.getOperator();
 
+        // check if second operand has any recurring subexpressions.
+        // If it does, implement second operand(no short circuit).
+        // TODO: This change can be improved by implementing only recurring sub
+        // expressions instead of disabling the short circuit altogether. It
+        // can be further improved by determining deepest position in the
+        // expression tree to evaluate recurring subexpressions.
+        if (hasRecurringSubExpressions(call.operands[1])) {
+            implementNode(call.operands[1]);
+        }
         if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
             //first operand of AND/OR
             CalcReg reg0 = implementNode(call.operands[0]);
@@ -960,6 +991,10 @@ public class RexToCalcTranslator
             //Check if we can make a short cut
             if (op.getKind().isA(SqlKind.And)) {
                 CalcProgramBuilder.jumpFalseInstruction.add(
+                    builder,
+                    builder.newLine(shortCut),
+                    reg0);
+                CalcProgramBuilder.jumpNullInstruction.add(
                     builder,
                     builder.newLine(shortCut),
                     reg0);
@@ -974,23 +1009,11 @@ public class RexToCalcTranslator
             assert result.getOpType()
                 == getCalcRegisterDescriptor(call).getType();
             CalcProgramBuilder.move.add(builder, result, reg1);
-
             String restOfInstructions = newLabel();
             builder.addLabelJump(restOfInstructions);
+
             builder.addLabel(shortCut);
-
-            if (op.getKind().isA(SqlKind.And)) {
-                CalcProgramBuilder.move.add(
-                    builder,
-                    result,
-                    builder.newBoolLiteral(false));
-            } else {
-                CalcProgramBuilder.move.add(
-                    builder,
-                    result,
-                    builder.newBoolLiteral(true));
-            }
-
+            CalcProgramBuilder.move.add(builder, result, reg0);
             setResult(call, result);
 
             //WARNING this assumes that more instructions will follow.
@@ -1001,6 +1024,30 @@ public class RexToCalcTranslator
             throw FarragoResource.instance().ProgramImplementationError.ex(
                 op.toString());
         }
+    }
+
+    // returns true, if the node has any descendents with recurrence count
+    // greater than 1. Currently checks this only for expressions of type
+    // RexCall.
+    public boolean hasRecurringSubExpressions(RexNode node) {
+        if (node instanceof RexCall) {
+            RexCall call = (RexCall) node;
+            for (int i = 0; i < call.operands.length - 1; i++) {
+                RexNode operand = call.operands[i];
+                if (hasRecurringSubExpressions(operand)) {
+                    return true;
+                }
+            }
+        } else if (node instanceof RexLocalRef) {
+            Integer recurrenceCount = recurrenceMap.get(getKey(node));
+            if (recurrenceCount != null && recurrenceCount > 1) {
+                return true;
+            }
+            int index = ((RexLocalRef)node).getIndex();
+            RexNode expr = program.getExprList().get(index);
+            return hasRecurringSubExpressions(expr);
+        }
+        return false;
     }
 
     private CalcReg implement(RexCall call)
@@ -1325,7 +1372,7 @@ public class RexToCalcTranslator
     /**
      * @param generateShortCircuit If true, tells the code generator to short
      * circuit logical operators<br>
-     * The default valude is <emp>false</emp>
+     * The default value is <emp>false</emp>
      */
     public void setGenerateShortCircuit(boolean generateShortCircuit)
     {
@@ -1547,6 +1594,50 @@ public class RexToCalcTranslator
         {
             // Matches RexToCalcTranslator.visitRangeRef()
             throw new RexToCalcTranslator.TranslationException();
+        }
+    }
+
+    /**
+     * Visitor which walks over a {@link RexNode row expression} and
+     * increments recurrence count for each local reference.
+     */
+    private class RecurrenceMapBuilder
+        extends RexVisitorImpl<Void>
+    {
+        private RexToCalcTranslator translator;
+
+        /**
+         * Creates a RecurrenceTester.
+         *
+         * @param translator Translator, which provides a table mapping
+         * operators to implementations.
+         */
+        RecurrenceMapBuilder(RexToCalcTranslator translator)
+        {
+            super(true);
+            this.translator = translator;
+        }
+
+        public Void visitLocalRef(RexLocalRef localRef)
+        {
+            int index = localRef.getIndex();
+            RexNode expr = translator.program.getExprList().get(index);
+            // dont worry about localRefs that refer to inputRef etc.
+            if (expr instanceof RexCall) {
+                String key = getKey(localRef);
+                Integer recurrenceCount = translator.recurrenceMap.get(key);
+                if (recurrenceCount == null) {
+                    recurrenceCount = 0;
+                }
+                recurrenceCount++;
+                translator.recurrenceMap.put(key, recurrenceCount);
+                if (recurrenceCount == 1) {
+                    // first visit to this localRef. Determine recurrence
+                    // counts for all descendants.
+                    return super.visitCall((RexCall)expr);
+                }
+            }
+            return super.visitLocalRef(localRef);
         }
     }
 }
