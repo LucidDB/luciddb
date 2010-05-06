@@ -93,7 +93,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > select count(distinct e.slacker and e.manager) from emps as e group by deptno
 > order by 1;
 'EXPR$0'
-'1'
+'0'
 '1'
 '1'
 > 
@@ -180,7 +180,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > group by d.name
 > order by 1,2,3;
 'NAME','EXPR$1','EXPR$2'
-'Marketing','2','1'
+'Marketing','2','0'
 'Sales','1','1'
 > 
 > 
@@ -485,7 +485,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > select count(distinct e.slacker and e.manager) from emps as e group by deptno
 > order by 1;
 'EXPR$0'
-'1'
+'0'
 '1'
 '1'
 > 
@@ -571,7 +571,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > group by d.name
 > order by 1,2,3;
 'NAME','EXPR$1','EXPR$2'
-'Marketing','2','1'
+'Marketing','2','0'
 'Sales','1','1'
 > 
 > select e.name, d.deptno, sum(e.age), count(distinct d.name) 

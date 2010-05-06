@@ -994,13 +994,15 @@ public class RexToCalcTranslator
                     builder,
                     builder.newLine(shortCut),
                     reg0);
-                CalcProgramBuilder.jumpNullInstruction.add(
-                    builder,
-                    builder.newLine(shortCut),
-                    reg0);
             } else {
                 builder.addLabelJumpTrue(shortCut, reg0);
             }
+
+            // if NULL result, no need to evaluate 2nd operand either.
+            CalcProgramBuilder.jumpNullInstruction.add(
+                builder,
+                builder.newLine(shortCut),
+                reg0);
 
             //second operand
             CalcReg reg1 = implementNode(call.operands[1]);
