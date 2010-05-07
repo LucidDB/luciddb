@@ -20,10 +20,16 @@
 
 package com.lucidera.luciddb.applib.util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
+import java.util.logging.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.trace.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import com.lucidera.luciddb.applib.resource.*;
 
 /**
  * 
@@ -36,11 +42,9 @@ import java.sql.ResultSet;
 public abstract class CreateTbFromSrcTbUdp
 {
 
-    public static String INTEGER_TYPE = "INT";
-    public static String CHAR_TYPE = "CHAR";
-    public static String BINARY_TYPE = "BINARY";
-    public static String DECIMAL_TYPE = "DEC";
-    public static String NUMERIC_TYPE = "NUMERIC";
+    private static final Logger tracer = FarragoTrace.getClassTracer(CreateTbFromSrcTbUdp.class);
+    private static final FarragoRepos repos = FarragoUdrRuntime.getSession()
+        .getRepos();
 
     /**
      * 
@@ -50,7 +54,6 @@ public abstract class CreateTbFromSrcTbUdp
      * @param additionalColsInfo
      * @throws Exception
      */
-
     public static void execute(
         String sourceTbName,
         String targetSchemaName,
@@ -58,122 +61,108 @@ public abstract class CreateTbFromSrcTbUdp
         String additionalColsInfo)
         throws Exception
     {
+        tracer.info("Input parameters: source table: [" + sourceTbName
+            + "] target Schema: [" + targetSchemaName + "] target table: ["
+            + targetTableName + "] additional cols: [" + additionalColsInfo
+            + "]");
+        //Input parameter check.      
+        if (sourceTbName == null || sourceTbName.length() == 0) {
+
+            throw ApplibResourceObject.get().InputIsRequired.ex("sourceTbName");
+        }
+        if (targetTableName == null || targetTableName.length() == 0) {
+
+            throw ApplibResourceObject.get().InputIsRequired.ex("targetTableName");
+        }
 
         ResultSet rs = null;
         PreparedStatement ps = null;
         Connection conn = null;
-
-        StringBuffer createTbSql = new StringBuffer();
-
         try {
-
             // set up a jdbc connection
             conn = DriverManager.getConnection("jdbc:default:connection");
 
             if (targetSchemaName == null) {
-
-                ps = conn.prepareStatement("select PARAM_VALUE from sys_root.user_session_parameters where param_name = 'schemaName'");
-                rs = ps.executeQuery();
-
-                while (rs.next()) {
-
-                    targetSchemaName = rs.getString(1);
-                }
-
-                ps = conn.prepareStatement("select count(1) from SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
-                ps.setString(1, targetSchemaName);
-                ps.setString(2, targetTableName);
-                rs = ps.executeQuery();
-
-                int row_cnt = 0;
-                while (rs.next()) {
-
-                    row_cnt = rs.getInt(1);
-                }
-                if (row_cnt > 0) {
-
-                    throw new Exception("The table[" + targetSchemaName + "."
-                        + targetTableName + "] is existing.");
-                }
-
+                targetSchemaName = FarragoUdrRuntime.getSession()
+                    .getSessionVariables().schemaName;
             }
-
-            StringBuffer sql = new StringBuffer();
-            sql.append("Select COLUMN_NAME,DATATYPE,\"PRECISION\",IS_NULLABLE ")
-                .append("From SYS_ROOT.DBA_COLUMNS ");
-            String[] ss = sourceTbName.trim().replaceAll("\"", "").split("\\.");
-
-            int size = ss.length;
-            switch (size) {
-
-            case 3:
-                sql.append("Where CATALOG_NAME= '" + ss[0]
-                    + "' And SCHEMA_NAME='" + ss[1] + "' And TABLE_NAME='"
-                    + ss[2] + "'");
-                break;
-            case 2:
-                sql.append("Where SCHEMA_NAME='" + ss[0] + "' And TABLE_NAME='"
-                    + ss[1] + "'");
-                break;
-            case 1:
-
-                String defaultSchema = "";
-                ps = conn.prepareStatement("select PARAM_VALUE from sys_root.user_session_parameters where param_name = 'schemaName'");
-                rs = ps.executeQuery();
-
-                while (rs.next()) {
-
-                    defaultSchema = rs.getString(1);
-                }
-                sql.append("Where SCHEMA_NAME='" + defaultSchema
-                    + "' And TABLE_NAME='" + ss[0] + "'");
-                break;
-            default:
-                throw new Exception("Source table or view[" + sourceTbName
-                    + "] is invalid.");
-            }
-            sql.append("Order By ORDINAL_POSITION");
-            ps = conn.prepareStatement(sql.toString());
+            // Check target table or view already exits.
+            ps = conn.prepareStatement("select count(1) from SYS_ROOT.DBA_TABLES where SCHEMA_NAME=? and TABLE_NAME=?");
+            ps.setString(1, targetSchemaName);
+            ps.setString(2, targetTableName);
             rs = ps.executeQuery();
-            createTbSql.append("Create Table \"" + targetSchemaName + "\".\""
-                + targetTableName + "\" ( ");
 
-            int row_count = 0;
-            while (rs.next()) {
-
-                String columnName = rs.getString(1);
-                String dataType = rs.getString(2);
-                int precision = rs.getInt(3);
-                boolean isNullable = rs.getBoolean(4);
-                createTbSql.append(
-                    createColumnSQL(columnName, dataType, precision, isNullable))
-                    .append(",");
-                row_count++;
+            int row_cnt = 0;
+            if (rs.next()) {
+                row_cnt = rs.getInt(1);
+            } else {
+                throw ApplibResourceObject.get().EmptyInput.ex();
             }
-            if (row_count == 0) {
-
-                throw new Exception("Source table or view[" + sourceTbName
-                    + "] is not existing in database.");
+            if (row_cnt > 0) {
+                throw ApplibResourceObject.get().TableOrViewAlreadyExists.ex(
+                    repos.getLocalizedObjectName(targetSchemaName),
+                    repos.getLocalizedObjectName(targetTableName));
             }
+
+            SqlParser sqlParser = new SqlParser(sourceTbName);
+            SqlIdentifier tableId = (SqlIdentifier) sqlParser.parseExpression();
+            String[] ss = tableId.names;
+
+            if (ss.length == 1) {
+                sourceTbName = SqlDialect.EIGENBASE.quoteIdentifier(FarragoUdrRuntime.getSession()
+                    .getSessionVariables().schemaName)
+                    + "." + sourceTbName;
+            }
+
+            StringBuilder select_stmt = new StringBuilder();
+            // thru select statement, get table info. such as column name, column type, precision, scale, etc.
+            select_stmt.append("select * from ").append(sourceTbName).append(
+                " where 1 = 2");
+            tracer.info("select statement: " + select_stmt.toString());
+            ps = conn.prepareStatement(select_stmt.toString());
+            ResultSetMetaData rsmd = ps.getMetaData();
+            int colNum = rsmd.getColumnCount();
+            StringBuilder ddl = new StringBuilder();
+
+            ddl.append("create table ").append(
+                SqlDialect.EIGENBASE.quoteIdentifier(targetSchemaName)).append(
+                ".").append(
+                SqlDialect.EIGENBASE.quoteIdentifier(targetTableName)).append(
+                " ( ");
+
+            int coltype;
+            for (int i = 1; i <= colNum; i++) {
+                ddl.append(" " + rsmd.getColumnLabel(i) + " "
+                    + rsmd.getColumnTypeName(i));
+
+                coltype = rsmd.getColumnType(i);
+                if ((coltype == -3) || (coltype == -2) || (coltype == 1)
+                    || (coltype == 12))
+                {
+                    // data type needs precision information
+                    // VARBINARY, BINARY, CHAR, VARCHAR 
+                    ddl.append("(" + rsmd.getPrecision(i) + ")");
+                } else if (coltype == 3) {
+                    // DECIMAL needs precision and scale information
+                    ddl.append("(" + rsmd.getPrecision(i) + ","
+                        + rsmd.getScale(i) + ")");
+                }
+                ddl.append(",");
+            }
+
             if (additionalColsInfo != null) {
 
-                createTbSql.append(additionalColsInfo);
+                ddl.append(additionalColsInfo);
 
             } else {
 
-                createTbSql.deleteCharAt((createTbSql.length() - 1));
+                ddl.deleteCharAt((ddl.length() - 1));
             }
 
-            createTbSql.append(" )");
-
-            ps = conn.prepareStatement(createTbSql.toString());
+            ddl.append(" )");
+            tracer.info("create table statement: " + ddl.toString());
+            ps = conn.prepareStatement(ddl.toString());
             ps.execute();
-
-        } catch (Exception ex) {
-
-            String msg = "[ErrorInfo]: " + ex.getMessage() + "\n"
-                + "[Create Table SQL:] " + createTbSql.toString();
-            throw new Exception(msg);
 
         } finally {
 
@@ -190,43 +179,6 @@ public abstract class CreateTbFromSrcTbUdp
                 conn.close();
             }
         }
-
-    }
-
-    private static String createColumnSQL(
-        String columnName,
-        String type,
-        int precision,
-        boolean isNullable)
-    {
-
-        StringBuffer ret = new StringBuffer();
-        String dataType = type.toUpperCase();
-
-        if (dataType.indexOf(CHAR_TYPE) != -1) {
-
-            ret.append(columnName + " " + type + "(" + precision + ")");
-
-        } else if ((dataType.indexOf(DECIMAL_TYPE) != -1)
-            || (dataType.indexOf(NUMERIC_TYPE) != -1))
-        {
-
-            ret.append(columnName + " " + type + "(" + precision + ")");
-
-        } else if (dataType.indexOf(BINARY_TYPE) != -1) {
-
-            ret.append(columnName + " " + type + "(" + precision + ")");
-
-        } else {
-
-            ret.append(columnName + " " + type);
-        }
-
-        if (!isNullable) {
-            ret.append(" not null");
-        }
-
-        return ret.toString();
 
     }
 
