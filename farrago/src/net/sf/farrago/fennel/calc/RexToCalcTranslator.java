@@ -998,19 +998,25 @@ public class RexToCalcTranslator
                 builder.addLabelJumpTrue(shortCut, reg0);
             }
 
-            // if NULL result, no need to evaluate 2nd operand either.
-            CalcProgramBuilder.jumpNullInstruction.add(
-                builder,
-                builder.newLine(shortCut),
-                reg0);
-
             //second operand
             CalcReg reg1 = implementNode(call.operands[1]);
             CalcReg result =
                 builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
             assert result.getOpType()
                 == getCalcRegisterDescriptor(call).getType();
+            // the first operand may be evaluated as NULL.
+            if (op.getKind().isA(SqlKind.And)) {
+                // return the result of first operand if second is 'true'
+                CalcProgramBuilder.jumpTrueInstruction.add(
+                    builder,
+                    builder.newLine(shortCut),
+                    reg1);
+            } else {
+                // return the result of first operand if the second is 'false'
+                builder.addLabelJumpFalse(shortCut, reg1);
+            }
             CalcProgramBuilder.move.add(builder, result, reg1);
+
             String restOfInstructions = newLabel();
             builder.addLabelJump(restOfInstructions);
 
