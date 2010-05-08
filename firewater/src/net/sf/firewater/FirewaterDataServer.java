@@ -210,6 +210,7 @@ public class FirewaterDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
+        planner.addRule(RemoveTrivialProjectRule.instance);
         // TODO jvs 13-May-2009:  move this to LucidDB planner instead.
         // Also, need special case for grouping on partitioning key
         // (then we can skip top-level agg).
@@ -229,6 +230,20 @@ public class FirewaterDataServer
             FirewaterReplicaJoinRule.instanceReplicaOnLeft);
         planner.addRule(
             FirewaterReplicaJoinRule.instanceReplicaOnRight);
+    }
+
+    // override MedJdbcDataServer
+    protected boolean isRemoteSqlValid(SqlNode sqlNode)
+    {
+        return true;
+    }
+
+    // override MedJdbcDataServer
+    public MedJdbcDataServer testQueryCombination(
+        MedJdbcDataServer other)
+    {
+        // TODO:  if other is something completely different, return null
+        return other;
     }
 
     public static FirewaterPartitioning getPartitioning(

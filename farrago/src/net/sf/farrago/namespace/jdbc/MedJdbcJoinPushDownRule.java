@@ -68,11 +68,16 @@ class MedJdbcJoinPushDownRule
             return;
         }
 
-        if (!leftRel.columnSet.directory.server.getServerMofId().equals(
-                rightRel.columnSet.directory.server.getServerMofId()))
-        {
-            // Can't push down unless both left and right inputs
-            // come from same server
+        SqlNode leftSelect = leftRel.getSql();
+        SqlNode rightSelect = rightRel.getSql();
+        MedJdbcDataServer combinedServer =
+            leftRel.server.testQueryCombination(rightRel.server);
+        if (combinedServer == null) {
+            // Try it the other way in case the servers are asymmetric
+            combinedServer =
+                rightRel.server.testQueryCombination(leftRel.server);
+        }
+        if (combinedServer == null) {
             return;
         }
 
@@ -121,7 +126,7 @@ class MedJdbcJoinPushDownRule
                 SqlStdOperatorTable.joinOperator.createCall(
                     SqlStdOperatorTable.asOperator.createCall(
                         SqlParserPos.ZERO,
-                        leftRel.getSql(),
+                        leftSelect,
                         new SqlIdentifier(LEFT_INPUT, SqlParserPos.ZERO)),
                     SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
                     SqlLiteral.createSymbol(
@@ -129,7 +134,7 @@ class MedJdbcJoinPushDownRule
                         SqlParserPos.ZERO),
                     SqlStdOperatorTable.asOperator.createCall(
                         SqlParserPos.ZERO,
-                        rightRel.getSql(),
+                        rightSelect,
                         new SqlIdentifier(RIGHT_INPUT, SqlParserPos.ZERO)),
                     SqlLiteral.createSymbol(
                         conditionType,
@@ -142,20 +147,19 @@ class MedJdbcJoinPushDownRule
                 null,
                 null,
                 SqlParserPos.ZERO);
-        MedJdbcNameDirectory dir = leftRel.columnSet.directory;
-        if (!dir.isRemoteSqlValid(selectWithJoin)) {
+        if (!combinedServer.isRemoteSqlValid(selectWithJoin)) {
             return;
         }
         RelNode rel =
             new MedJdbcQueryRel(
-                // REVIEW jvs 28-Jan-2010:  We arbitrarily pick
-                // leftRel.columnSet, but really, MedJdbcQueryRel
-                // shouldn't be associated with one ColumnSet at all
-                leftRel.columnSet,
+                combinedServer,
+                null,
                 leftRel.getCluster(),
                 joinRel.getRowType(),
-                leftRel.getConnection(),
-                leftRel.getDialect(),
+                (combinedServer == leftRel.server)
+                ? leftRel.getConnection() : rightRel.getConnection(),
+                (combinedServer == leftRel.server)
+                ? leftRel.getDialect() : rightRel.getDialect(),
                 selectWithJoin);
         call.transformTo(rel);
     }

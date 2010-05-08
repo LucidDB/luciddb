@@ -50,12 +50,14 @@ public class MedJdbcQueryRel
 {
     //~ Instance fields --------------------------------------------------------
 
+    MedJdbcDataServer server;
     MedJdbcColumnSet columnSet;
     Set<BitSet> uniqueKeys;
 
     //~ Constructors -----------------------------------------------------------
 
     public MedJdbcQueryRel(
+        MedJdbcDataServer server,
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,
@@ -63,10 +65,13 @@ public class MedJdbcQueryRel
         SqlDialect dialect,
         SqlSelect sql)
     {
-        this(columnSet, cluster, rowType, connection, dialect, sql, null);
+        this(
+            server, columnSet, cluster, rowType, connection, dialect,
+            sql, null);
     }
 
     public MedJdbcQueryRel(
+        MedJdbcDataServer server,
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,
@@ -82,6 +87,7 @@ public class MedJdbcQueryRel
             dialect,
             sql,
             new JdbcDataSource(""));
+        this.server = server;
         this.columnSet = columnSet;
         this.uniqueKeys = uniqueKeys;
     }
@@ -94,7 +100,7 @@ public class MedJdbcQueryRel
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
 
-        SqlString sql = columnSet.directory.normalizeQueryString(queryString);
+        SqlString sql = MedJdbcNameDirectory.normalizeQueryString(queryString);
 
         Expression allocExpression =
             new CastExpression(
@@ -104,7 +110,7 @@ public class MedJdbcQueryRel
                     "getDataServerRuntimeSupport",
                     new ExpressionList(
                         Literal.makeLiteral(
-                            columnSet.directory.server.getServerMofId()),
+                            server.getServerMofId()),
                         Literal.makeLiteral(sql.getSql()))));
         return allocExpression;
     }
@@ -114,7 +120,8 @@ public class MedJdbcQueryRel
     {
         MedJdbcQueryRel clone =
             new MedJdbcQueryRel(
-                columnSet,
+                getServer(),
+                getColumnSet(),
                 getCluster(),
                 getRowType(),
                 getConnection(),
@@ -126,11 +133,16 @@ public class MedJdbcQueryRel
     }
 
     /**
-     * @return the column set accessed by this query
-     * (FIXME jvs 21-Mar-2010:  this should be null when we have pushed
-     * down a multi-table construct such as join or union; we should
-     * be tracking the common name directory or server
-     * when the query spans multipl multiple column sets)
+     * @return the server accessed by this query
+     */
+    public MedJdbcDataServer getServer()
+    {
+        return server;
+    }
+
+    /**
+     * @return the column set accessed by this query, or null
+     * if it accesses more than one column set
      */
     public MedJdbcColumnSet getColumnSet()
     {
@@ -147,10 +159,7 @@ public class MedJdbcQueryRel
             omitServerMofId = true;
             break;
         }
-        if ((columnSet == null)
-            || (columnSet.getDirectory() == null)
-            || (columnSet.getDirectory().getServer() == null))
-        {
+        if (server == null) {
             omitServerMofId = true;
         }
         if (omitServerMofId) {
@@ -160,8 +169,7 @@ public class MedJdbcQueryRel
         // For plan digests, we need to include the server MOFID
         // so that two identical queries against different servers
         // do not get merged by the optimizer.
-        String serverMofId =
-            columnSet.getDirectory().getServer().getServerMofId();
+        String serverMofId = server.getServerMofId();
         pw.explain(
             this,
             new String[] { "foreignSql", "serverMofId" },

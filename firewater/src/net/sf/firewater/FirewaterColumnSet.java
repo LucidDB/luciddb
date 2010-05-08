@@ -85,6 +85,7 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
             // must be a better way.
             Collection<FemDataServer> servers =
                 repos.allOfType(FemDataServer.class);
+            boolean distributed = false;
             for (FemDataServer server : servers) {
                 String wrapperName = server.getWrapper().getName();
                 if (!wrapperName.startsWith("SYS_FIREWATER")) {
@@ -92,6 +93,9 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
                 }
                 if (wrapperName.contains("DISTRIBUTED")) {
                     continue;
+                }
+                if (!wrapperName.equals("SYS_FIREWATER_EMBEDDED_WRAPPER")) {
+                    distributed = true;
                 }
                 String catalogName =
                     FirewaterDdlHandler.getCatalogNameForServer(server);
@@ -101,8 +105,22 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
                     server,
                     catalogName);
             }
-            return new FirewaterReplicatedTableRel(
-                cluster, this, connection);
+            // TODO jvs 6-May-2010: need to get firewater_replica schema
+            // created automatically on all storage nodes
+            if (distributed) {
+                String [] replicaName = new String[3];
+                replicaName[0] = "FIREWATER_REPLICA";
+                replicaName[1] = getForeignName()[1];
+                replicaName[2] = getForeignName()[2];
+                return generateForeignSql(
+                    cluster,
+                    connection,
+                    replicaName,
+                    getDirectory().getServer());
+            } else {
+                return new FirewaterReplicatedTableRel(
+                    cluster, this, connection);
+            }
         }
 
         // TODO jvs 20-Mar-2010:  Defer this, and return
@@ -201,6 +219,7 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
                 getRowType());
         RelNode rel =
             new MedJdbcQueryRel(
+                jdbcDataServer,
                 columnSet,
                 cluster,
                 getRowType(),

@@ -125,7 +125,7 @@ public class FirewaterDdlHandler extends DdlHandler
                             executeRemoteSql(
                                 repos,
                                 sql,
-                                null,
+                                "FIREWATER_REPLICA",
                                 server);
                         } else if (!executedLocal) {
                             if (wrapperName.equals(
@@ -136,7 +136,7 @@ public class FirewaterDdlHandler extends DdlHandler
                                 executeRemoteSql(
                                     repos,
                                     sql,
-                                    "LOCAL_REPLICAS",
+                                    "FIREWATER_REPLICA",
                                     server);
                                 executedLocal = true;
                             }
@@ -344,15 +344,8 @@ public class FirewaterDdlHandler extends DdlHandler
 
     public static String getCatalogNameForServer(FemDataServer server)
     {
-        String wrapperName = server.getWrapper().getName();
-        if ((wrapperName.equals("SYS_FIREWATER_FAKEREMOTE_WRAPPER"))
-            || (wrapperName.equals("SYS_FIREWATER_EMBEDDED_WRAPPER")))
-        {
-            // TODO jvs 20-Mar-2010:  use symbolic name
-            return "LOCAL_REPLICAS";
-        } else {
-            return null;
-        }
+        // TODO jvs 20-Mar-2010:  use symbolic name
+        return "FIREWATER_REPLICA";
     }
 
     // implement FarragoSessionDdlHandler

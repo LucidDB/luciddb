@@ -123,6 +123,7 @@ public class MedJdbcColumnSet
         // TODO jvs 30-May-2009:  include unique key info
         rel =
             new MedJdbcQueryRel(
+                directory.server,
                 this,
                 cluster,
                 currRowType,

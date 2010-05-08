@@ -86,6 +86,9 @@ class MedJdbcPushDownRule
 
         // make sure we're starting from a plain
         // "select a, b, c from tbl"
+        if (queryRel.getColumnSet() == null) {
+            return;
+        }
         SqlSelect origSelect = queryRel.getSql();
         SqlNodeList origSelectList = origSelect.getSelectList();
         for (SqlNode selectItem : origSelectList.getList()) {
@@ -300,8 +303,7 @@ class MedJdbcPushDownRule
                 null,
                 SqlParserPos.ZERO);
 
-        MedJdbcNameDirectory dir = queryRel.columnSet.directory;
-        if (!dir.isRemoteSqlValid(selectWithFilter)) {
+        if (!queryRel.getServer().isRemoteSqlValid(selectWithFilter)) {
             return;
         }
 
@@ -315,7 +317,8 @@ class MedJdbcPushDownRule
         // TODO jvs 30-May-2009:  preserve unique key info where warranted
         RelNode rel =
             new MedJdbcQueryRel(
-                queryRel.columnSet,
+                queryRel.getServer(),
+                queryRel.getColumnSet(),
                 queryRel.getCluster(),
                 rt,
                 queryRel.getConnection(),
@@ -339,7 +342,7 @@ class MedJdbcPushDownRule
     private String getSourceFieldName(MedJdbcQueryRel queryRel, String name)
     {
         String fieldName = name;
-        if (!queryRel.columnSet.directory.server.lenient) {
+        if (!queryRel.getServer().lenient) {
             List<RelDataTypeField> fieldList =
                 queryRel.columnSet.origRowType.getFieldList();
             List<RelDataTypeField> srcFields =

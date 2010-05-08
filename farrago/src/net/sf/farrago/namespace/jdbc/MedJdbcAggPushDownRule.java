@@ -100,8 +100,7 @@ class MedJdbcAggPushDownRule
                 null,
                 null,
                 SqlParserPos.ZERO);
-        MedJdbcNameDirectory dir = queryRel.columnSet.directory;
-        if (!dir.isRemoteSqlValid(selectWithAgg)) {
+        if (!queryRel.getServer().isRemoteSqlValid(selectWithAgg)) {
             return;
         }
 
@@ -114,7 +113,8 @@ class MedJdbcAggPushDownRule
 
         RelNode rel =
             new MedJdbcQueryRel(
-                queryRel.columnSet,
+                queryRel.getServer(),
+                queryRel.getColumnSet(),
                 queryRel.getCluster(),
                 aggRel.getRowType(),
                 queryRel.getConnection(),
