@@ -472,16 +472,24 @@ public abstract class SqlOperatorTests
             "VARCHAR(30)",
             "2008-01-01 01:02:03");
 
-        // todo: cast of intervals to strings not supported
+        // todo: cast of intervals to strings not supported in fennel
         if (todo) {
             checkCastToString(
                 "interval '3-2' year to month",
                 "CHAR(5)",
                 "+3-02");
             checkCastToString(
+                "interval '32' month",
+                "CHAR(5)",
+                "+32");
+            checkCastToString(
                 "interval '1 2:3:4' day to second",
                 "CHAR(11)",
                 "+1 02:03:04");
+            checkCastToString(
+                "interval '1234.56' second(4,2)",
+                "CHAR(11)",
+                "+1234.56");
         }
 
         // boolean
@@ -755,6 +763,14 @@ public abstract class SqlOperatorTests
             "cast(-5.7 as interval day)",
             "-6",
             "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "cast(3456 as interval month(4))",
+            "+3456",
+            "INTERVAL MONTH(4) NOT NULL");
+        getTester().checkScalar(
+            "cast(-5723 as interval minute(4))",
+            "-5723",
+            "INTERVAL MINUTE(4) NOT NULL");
     }
 
     public void testCastWithRoundingToScalar()

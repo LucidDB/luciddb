@@ -276,6 +276,8 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.DATE);
         rule.add(SqlTypeName.TIME);
         rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
 
         // Boolean is castable from char and varchar
         rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BOOLEAN);

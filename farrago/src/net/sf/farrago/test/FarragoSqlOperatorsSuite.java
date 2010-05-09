@@ -380,7 +380,7 @@ public class FarragoSqlOperatorsSuite
             int count = md.getColumnCount();
             Assert.assertEquals(count, 1);
             String columnType = md.getColumnTypeName(1);
-            if (type.indexOf('(') > 0) {
+            if (type.indexOf('(') >= 0 && (columnType.indexOf('(') < 0)) {
                 columnType += "(" + md.getPrecision(1);
                 if (type.indexOf(',') >= 0) {
                     columnType += ", " + md.getScale(1);
