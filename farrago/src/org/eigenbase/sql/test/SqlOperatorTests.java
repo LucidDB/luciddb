@@ -34,6 +34,7 @@ import junit.framework.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.test.SqlTester.VmName;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.test.*;
@@ -473,14 +474,14 @@ public abstract class SqlOperatorTests
             "2008-01-01 01:02:03");
 
         // todo: cast of intervals to strings not supported in fennel
-        if (todo) {
+        if (!(getTester().isVm(VmName.FENNEL))) {
             checkCastToString(
                 "interval '3-2' year to month",
                 "CHAR(5)",
                 "+3-02");
             checkCastToString(
                 "interval '32' month",
-                "CHAR(5)",
+                "CHAR(3)",
                 "+32");
             checkCastToString(
                 "interval '1 2:3:4' day to second",
@@ -488,7 +489,7 @@ public abstract class SqlOperatorTests
                 "+1 02:03:04");
             checkCastToString(
                 "interval '1234.56' second(4,2)",
-                "CHAR(11)",
+                "CHAR(8)",
                 "+1234.56");
         }
 

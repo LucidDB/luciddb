@@ -36,6 +36,7 @@ import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
+
 /**
  * Implementation of {@link CalcRexImplementorTable}, containing implementations
  * for all standard functions.
@@ -988,6 +989,12 @@ public class CalcRexImplementorTableImpl
                     {
                         return false;
                     }
+                }
+                // casts from interval to string aren't yet in fennel.
+                if ((resultType.getFamily() == SqlTypeFamily.CHARACTER)
+                    && (SqlTypeUtil.isInterval(inputType)))
+                {
+                    return false;
                 }
             }
             return true;

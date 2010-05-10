@@ -400,6 +400,11 @@ public class FarragoSqlOperatorsSuite
             rte.setStackTrace(e.getStackTrace());
             return rte;
         }
+
+        public boolean isVm(VmName vmName)
+        {
+            return vm.getName().equals(vmName.name());
+        }
     }
 
     /**

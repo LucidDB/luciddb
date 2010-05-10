@@ -951,6 +951,11 @@ public class SqlValidatorTestCase
         {
             return "values (" + expression + ")";
         }
+
+        public boolean isVm(VmName vmName)
+        {
+            return false;
+        }
     }
 }
 
