@@ -718,6 +718,16 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cursor parameter {0} does not exist.</text>
 </exception>
 
+<exception id="421160" name="CannotDoDeploymentOnClass"
+        className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Url parameter {0} is a class. Cannot do deployment on a class.</text>
+</exception>
+
+<exception id ="421161" name="SqlStatementExecutionFailed"
+    className="java.sql.SQLWarning">
+<text>Sql statement execution failed:  [{0}]</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

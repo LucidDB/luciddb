@@ -24,7 +24,6 @@ import java.sql.*;
 import java.util.logging.*;
 
 import org.eigenbase.sql.*;
-
 import com.lucidera.luciddb.applib.resource.*;
 
 import net.sf.farrago.catalog.*;
@@ -43,8 +42,6 @@ import net.sf.farrago.trace.*;
 public abstract class CreateTbFromSelectStmtUdp
 {
     private static final Logger tracer = FarragoTrace.getClassTracer(CreateTbFromSelectStmtUdp.class);
-    private static final FarragoRepos repos = FarragoUdrRuntime.getSession()
-        .getRepos();
 
     /**
      * 
@@ -62,7 +59,7 @@ public abstract class CreateTbFromSelectStmtUdp
         boolean shouldLoad)
         throws Exception
     {
-
+        FarragoRepos repos = FarragoUdrRuntime.getSession().getRepos();
         String schema = targetSchemaName;
         String table = targetTableName;
 
@@ -118,17 +115,17 @@ public abstract class CreateTbFromSelectStmtUdp
             int colNum = rsmd.getColumnCount();
             int coltype;
             for (int i = 1; i <= colNum; i++) {
-                ddl.append(" " + rsmd.getColumnLabel(i) + " "
+                ddl.append(" " + rsmd.getColumnName(i) + " "
                     + rsmd.getColumnTypeName(i));
-
+                
                 coltype = rsmd.getColumnType(i);
-                if ((coltype == -3) || (coltype == -2) || (coltype == 1)
-                    || (coltype == 12))
+                if ((coltype == Types.VARBINARY) || (coltype == Types.BINARY) || (coltype == Types.CHAR)
+                    || (coltype == Types.VARCHAR))
                 {
                     // data type needs precision information
                     // VARBINARY, BINARY, CHAR, VARCHAR
                     ddl.append("(" + rsmd.getPrecision(i) + ")");
-                } else if (coltype == 3) {
+                } else if (coltype == Types.DECIMAL) {
                     // DECIMAL needs precision and scale information
                     ddl.append("(" + rsmd.getPrecision(i) + ","
                         + rsmd.getScale(i) + ")");

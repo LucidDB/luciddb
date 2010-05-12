@@ -28,6 +28,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.parser.*;
 import com.lucidera.luciddb.applib.resource.*;
 
@@ -43,9 +44,6 @@ public abstract class CreateTbFromSrcTbUdp
 {
 
     private static final Logger tracer = FarragoTrace.getClassTracer(CreateTbFromSrcTbUdp.class);
-    private static final FarragoRepos repos = FarragoUdrRuntime.getSession()
-        .getRepos();
-
     /**
      * 
      * @param sourceTbName
@@ -61,6 +59,7 @@ public abstract class CreateTbFromSrcTbUdp
         String additionalColsInfo)
         throws Exception
     {
+        FarragoRepos repos = FarragoUdrRuntime.getSession().getRepos();
         tracer.info("Input parameters: source table: [" + sourceTbName
             + "] target Schema: [" + targetSchemaName + "] target table: ["
             + targetTableName + "] additional cols: [" + additionalColsInfo
@@ -107,50 +106,76 @@ public abstract class CreateTbFromSrcTbUdp
             SqlParser sqlParser = new SqlParser(sourceTbName);
             SqlIdentifier tableId = (SqlIdentifier) sqlParser.parseExpression();
             String[] ss = tableId.names;
-
-            if (ss.length == 1) {
-                sourceTbName = SqlDialect.EIGENBASE.quoteIdentifier(FarragoUdrRuntime.getSession()
-                    .getSessionVariables().schemaName)
-                    + "." + sourceTbName;
+            
+            String catalog = "";
+            String schema = "";
+            String table = "";
+            
+            if (ss.length == 3) {
+                catalog = ss[0];
+                schema  = ss[1];
+                table = ss[2];
+            }else if (ss.length == 2){
+                catalog = FarragoUdrRuntime.getSession()
+                    .getSessionVariables().catalogName;
+                schema  =ss[0];
+                table = ss[1];               
+            }else if (ss.length == 1) {               
+                catalog = FarragoUdrRuntime.getSession()
+                    .getSessionVariables().catalogName;
+                schema = FarragoUdrRuntime.getSession()
+                    .getSessionVariables().schemaName;
+                table = ss[0];
             }
-
-            StringBuilder select_stmt = new StringBuilder();
-            // thru select statement, get table info. such as column name, column type, precision, scale, etc.
-            select_stmt.append("select * from ").append(sourceTbName).append(
-                " where 1 = 2");
-            tracer.info("select statement: " + select_stmt.toString());
-            ps = conn.prepareStatement(select_stmt.toString());
-            ResultSetMetaData rsmd = ps.getMetaData();
-            int colNum = rsmd.getColumnCount();
+            
             StringBuilder ddl = new StringBuilder();
-
             ddl.append("create table ").append(
                 SqlDialect.EIGENBASE.quoteIdentifier(targetSchemaName)).append(
                 ".").append(
                 SqlDialect.EIGENBASE.quoteIdentifier(targetTableName)).append(
                 " ( ");
+            StringBuilder select_stmt = new StringBuilder();
+            // Get columns info of souce table from DBA_COLUMNS.
+            select_stmt.append("select COLUMN_NAME, DATATYPE, \"PRECISION\", DEC_DIGITS, IS_NULLABLE, REMARKS ")
+            .append("from SYS_ROOT.DBA_COLUMNS ")
+            .append("where CATALOG_NAME=? and SCHEMA_NAME=? and TABLE_NAME =? ")
+            .append("order by ORDINAL_POSITION");
 
-            int coltype;
-            for (int i = 1; i <= colNum; i++) {
-                ddl.append(" " + rsmd.getColumnLabel(i) + " "
-                    + rsmd.getColumnTypeName(i));
-
-                coltype = rsmd.getColumnType(i);
-                if ((coltype == -3) || (coltype == -2) || (coltype == 1)
-                    || (coltype == 12))
+            ps = conn.prepareStatement(select_stmt.toString());
+            ps.setString(1, catalog);
+            ps.setString(2, schema);
+            ps.setString(3, table);
+            rs = ps.executeQuery();
+            
+            while(rs.next()){
+                
+                String column_name = rs.getString(1);
+                String data_type = rs.getString(2);
+                boolean is_nullable = rs.getBoolean(5);
+                ddl.append(" " + column_name + " "
+                    + data_type);
+                if( SqlTypeName.VARBINARY.getName().equals(data_type) ||
+                    SqlTypeName.BINARY.getName().equals(data_type) ||
+                    SqlTypeName.VARCHAR.getName().equals(data_type) ||
+                    SqlTypeName.CHAR.getName().equals(data_type)
+                )
+                      
                 {
-                    // data type needs precision information
-                    // VARBINARY, BINARY, CHAR, VARCHAR 
-                    ddl.append("(" + rsmd.getPrecision(i) + ")");
-                } else if (coltype == 3) {
-                    // DECIMAL needs precision and scale information
-                    ddl.append("(" + rsmd.getPrecision(i) + ","
-                        + rsmd.getScale(i) + ")");
+                    ddl.append("(" + rs.getInt(3) + ")");
+   
+                }else if(SqlTypeName.DECIMAL.getName().equals(data_type)){
+                    
+                    ddl.append("(" + rs.getInt(3) + ","
+                        + rs.getInt(4) + ")");
                 }
+                if(!is_nullable){
+                    ddl.append(" " + "not null");
+                }
+          
                 ddl.append(",");
             }
-
-            if (additionalColsInfo != null) {
+            
+             if (additionalColsInfo != null) {
 
                 ddl.append(additionalColsInfo);
 
@@ -158,6 +183,8 @@ public abstract class CreateTbFromSrcTbUdp
 
                 ddl.deleteCharAt((ddl.length() - 1));
             }
+            
+            
 
             ddl.append(" )");
             tracer.info("create table statement: " + ddl.toString());
