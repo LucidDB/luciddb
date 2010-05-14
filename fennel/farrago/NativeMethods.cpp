@@ -255,7 +255,13 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         CmdInterpreter::TxnHandle &txnHandle =
             CmdInterpreter::getTxnHandleFromLong(hTxn);
         // Provide runtime context for stream open(), which a scheduler may
-        // defer til after out java caller returns: hence the global ref.
+        // defer until after our java caller returns: hence the global ref.
+        if (streamGraphHandle.javaRuntimeContext) {
+            // TODO jvs 13-May-2010:  Use a shared pointer for this
+            // like we do with ErrorTarget, and track its JNI handle.
+            pEnv->DeleteGlobalRef(streamGraphHandle.javaRuntimeContext);
+            streamGraphHandle.javaRuntimeContext = NULL;
+        }
         streamGraphHandle.javaRuntimeContext =
             pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
@@ -304,6 +310,10 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
             }
             if (streamGraphHandle.pExecStreamGraph) {
                 streamGraphHandle.pExecStreamGraph->close();
+            }
+            if (streamGraphHandle.javaRuntimeContext) {
+                pEnv->DeleteGlobalRef(streamGraphHandle.javaRuntimeContext);
+                streamGraphHandle.javaRuntimeContext = NULL;
             }
             break;
         case net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT:

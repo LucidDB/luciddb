@@ -150,6 +150,9 @@ public:
         name = n;
     }
 
+    /**
+     * Forgets the current target if any.
+     */
     void disableTarget();
 };
 

@@ -550,6 +550,10 @@ void ExecStreamGraphImpl::closeImpl()
             sortedStreams.rend(),
             boost::bind(&ClosableObject::close,_1));
     }
+    std::for_each(
+        sortedStreams.begin(),
+        sortedStreams.end(),
+        boost::bind(&ErrorSource::disableTarget,_1));
     pDynamicParamManager->deleteAllParams();
     SharedExecStreamGovernor pGov = getResourceGovernor();
     if (pGov) {
@@ -561,6 +565,7 @@ void ExecStreamGraphImpl::closeImpl()
     if (pScratchSegment) {
         pScratchSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     }
+    pErrorTarget.reset();
 }
 
 SharedExecStream ExecStreamGraphImpl::getStream(ExecStreamId id)
