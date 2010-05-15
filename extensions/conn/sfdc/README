@@ -1,0 +1,12 @@
+SFDC Connector
+--------------
+
+Original Contributor to Eigenbase is LucidEra, Inc.
+
+Build Notes:
+ - Salesforce.com Partner WSDL partner_v99.wsdl is required.  Place it in the root
+   of extensions/conn/sfdc
+ - Make sure you have existing farragoenv.sh and fennelenv.sh sourced
+ - ant clean compile
+
+

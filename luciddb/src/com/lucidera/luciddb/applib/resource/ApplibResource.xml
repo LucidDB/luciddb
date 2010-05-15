@@ -337,6 +337,14 @@ Message: {3}</text>
 <text>Input contains more than one row</text>
 </exception>
 
+<exception id="900657" name="InputIsRequired">
+<text>Input [{0}] is required!</text>
+</exception>
+
+<exception id="900658" name="TableOrViewAlreadyExists">
+<text>The table or view [{0}.{1}] is existing in database!</text>
+</exception>
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->

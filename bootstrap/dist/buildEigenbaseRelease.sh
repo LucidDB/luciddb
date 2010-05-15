@@ -1,9 +1,9 @@
 #!/bin/bash
 # $Id$
 # Eigenbase master build script for creating release images
-# Copyright (C) 2005 The Eigenbase Project
-# Copyright (C) 2005 SQLstream, Inc.
-# Copyright (C) 2005 Dynamo BI Corporation
+# Copyright (C) 2005-2009 The Eigenbase Project
+# Copyright (C) 2005-2009 Disruptive Tech
+# Copyright (C) 2005-2009 LucidEra, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,13 +63,11 @@ if [ $cygwin = "true" ]; then
     ARCHIVE_SUFFIX=zip
 else
     ARCHIVE_SUFFIX=tar.bz2
-
-    if [ `uname` != "Darwin" ]; then
-        # Verify that chrpath is available
-        if [ ! -e /usr/bin/chrpath ]; then
-            echo "Error:  /usr/bin/chrpath is not installed"
-            exit -1
-        fi
+    
+    # Verify that chrpath is available
+    if [ ! -e /usr/bin/chrpath ]; then
+        echo "Error:  /usr/bin/chrpath is not installed"
+        exit -1
     fi
 fi
 

@@ -877,7 +877,8 @@ public abstract class FarragoTestCase
         protected boolean isBlessedWrapper(String name)
         {
             tracer.finer("checking name: " + name);
-            return name.startsWith("SYS_");
+            return name.startsWith("SYS_")
+                || name.equals("SALESFORCE");
         }
 
         /**
