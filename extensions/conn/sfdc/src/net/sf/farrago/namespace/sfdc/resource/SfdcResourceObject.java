@@ -1,6 +1,6 @@
 /*
 // $Id$
-// (C) Copyright 2006-2006 LucidEra, Inc.
+// (C) Copyright 2006-2006 DynamoBI Corporation
  */
 package net.sf.farrago.namespace.sfdc.resource;
 
