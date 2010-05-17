@@ -113,7 +113,7 @@
   <target name="wsdl2java">
     <wsdl2java all="true" debug="false" helpergen="true"
       output="${sfdc.dir}/src" verbose="false"
-      url="${sfdc.dir}/${wsdl}">
+      url="${wsdl}">
       <classpath path="${build.classpath}"/>
     </wsdl2java>
   </target>
