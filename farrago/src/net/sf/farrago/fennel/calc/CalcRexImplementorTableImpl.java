@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
-
 /**
  * Implementation of {@link CalcRexImplementorTable}, containing implementations
  * for all standard functions.
@@ -2181,19 +2180,15 @@ public class CalcRexImplementorTableImpl
             CalcReg resultOfCall = createResultRegister(translator, call);
             String endOfCase = translator.newLabel();
             String next;
-            // check if case operands have any recurring subexpressions.
-            // If it does, implement second operand(no short circuit).
-            // TODO: This change can be improved by implementing only recurring
-            // expressions instead of disabling the short circuit altogether. It
-            // can be further improved by determining deepest position in the
-            // expression tree to evaluate recurring subexpressions.
-            for (int i = 0; i < (call.operands.length - 1); i++) {
-                if (translator.hasRecurringSubExpressions(call.operands[i])) {
-                    translator.implementNode(call.operands[i]);
-                }
-            }
             boolean elseClauseOptimizedAway = false;
             for (int i = 0; i < (call.operands.length - 1); i += 2) {
+                if (i != 0) {
+                    // NEW SCOPE
+                    translator.newScope();
+                    // Implement any common subexpressions that the condition
+                    // references and we know we can 'safely' evaluate.
+                    translator.implementCommonSubExpressions(call.operands[i]);
+                }
                 next = translator.newLabel();
                 CalcReg compareResult =
                     translator.implementNode(call.operands[i]);
@@ -2246,6 +2241,11 @@ public class CalcRexImplementorTableImpl
             }
             translator.builder.addLabel(endOfCase); //this assumes that more
                                                     //instructions will follow
+            // pop scopes for all condition expressions except for first
+            // condition
+            for (int i = 2; i < (call.operands.length - 1); i += 2) {
+                translator.popScope();
+            }
             return resultOfCall;
         }
 
@@ -2256,6 +2256,7 @@ public class CalcRexImplementorTableImpl
             RexNode value)
         {
             translator.newScope();
+            translator.implementCommonSubExpressions(value);
             try {
                 RelDataType valueType = value.getType();
 

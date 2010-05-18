@@ -73,7 +73,7 @@ public class RexToCalcTranslator
 
     /**
      * Whether the code generator should short-circuit logical operators. The
-     * default value is <em>false</em>.
+     * default value is <em>true</em>.
      */
     protected boolean generateShortCircuit = true;
     protected int labelOrdinal = 0;
@@ -974,15 +974,6 @@ public class RexToCalcTranslator
         }
         SqlOperator op = call.getOperator();
 
-        // check if second operand has any recurring subexpressions.
-        // If it does, implement second operand(no short circuit).
-        // TODO: This change can be improved by implementing only recurring sub
-        // expressions instead of disabling the short circuit altogether. It
-        // can be further improved by determining deepest position in the
-        // expression tree to evaluate recurring subexpressions.
-        if (hasRecurringSubExpressions(call.operands[1])) {
-            implementNode(call.operands[1]);
-        }
         if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
             //first operand of AND/OR
             CalcReg reg0 = implementNode(call.operands[0]);
@@ -999,6 +990,11 @@ public class RexToCalcTranslator
             }
 
             //second operand
+            newScope();
+            // Implement any common subexpressions that the second operand
+            // references and we know we can 'safely' evaluate.
+            implementCommonSubExpressions(call.operands[1]);
+
             CalcReg reg1 = implementNode(call.operands[1]);
             CalcReg result =
                 builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
@@ -1022,11 +1018,15 @@ public class RexToCalcTranslator
 
             builder.addLabel(shortCut);
             CalcProgramBuilder.move.add(builder, result, reg0);
+
+            popScope();
+
             setResult(call, result);
 
             //WARNING this assumes that more instructions will follow.
             //Return is currently always at the end.
             builder.addLabel(restOfInstructions);
+
             return result;
         } else {
             throw FarragoResource.instance().ProgramImplementationError.ex(
@@ -1034,28 +1034,35 @@ public class RexToCalcTranslator
         }
     }
 
-    // returns true, if the node has any descendents with recurrence count
-    // greater than 1. Currently checks this only for expressions of type
-    // RexCall.
-    public boolean hasRecurringSubExpressions(RexNode node) {
+    // implements common subexpressions
+    public void implementCommonSubExpressions(RexNode node) {
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            for (int i = 0; i < call.operands.length - 1; i++) {
-                RexNode operand = call.operands[i];
-                if (hasRecurringSubExpressions(operand)) {
-                    return true;
+            SqlOperator op = call.getOperator();
+            if (op.getKind().isA(SqlKind.And)
+                || op.getKind().isA(SqlKind.Or)
+                || op.getKind().isA(SqlKind.Case))
+            {
+                implementCommonSubExpressions(call.operands[0]);
+            } else {
+                for (int i = 0; i < call.operands.length - 1; i++) {
+                    RexNode operand = call.operands[i];
+                    implementCommonSubExpressions(operand);
                 }
             }
         } else if (node instanceof RexLocalRef) {
             Integer recurrenceCount = recurrenceMap.get(getKey(node));
             if (recurrenceCount != null && recurrenceCount > 1) {
-                return true;
+                if (!containsResult(node)) {
+                    implementNode(node);
+                }
+                return;
             }
             int index = ((RexLocalRef)node).getIndex();
             RexNode expr = program.getExprList().get(index);
-            return hasRecurringSubExpressions(expr);
+            implementCommonSubExpressions(expr);
         }
-        return false;
+        return;
     }
 
     private CalcReg implement(RexCall call)
