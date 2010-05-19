@@ -1,0 +1,12 @@
+
+create or replace schema "@schema_name@";
+set schema '@schema_name@';
+
+create jar test_jar library '@file_url@' options(0);
+values @schema_name@.test_routine(255);
+select "name","url" from sys_fem.sql2003."Jar" order by "name";
+drop jar test_jar options(0) CASCADE;
+select "name","url" from sys_fem.sql2003."Jar" order by "name";
+values @schema_name@.test_routine(255);
+
+drop schema "@schema_name@" cascade;

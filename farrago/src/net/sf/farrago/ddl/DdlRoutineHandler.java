@@ -30,6 +30,8 @@ import java.sql.*;
 
 import java.util.*;
 
+import java.util.jar.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
@@ -41,6 +43,8 @@ import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -795,6 +799,153 @@ public class DdlRoutineHandler
                 res.ValidatorNonInstantiableType.ex(
                     repos.getLocalizedObjectName(typeDef)));
         }
+    }
+
+    public void executeCreation(FemJar jar)
+    {
+        String url = jar.getUrl().trim();
+        String expandedUrl = FarragoProperties.instance().expandProperties(url);
+        if (expandedUrl.startsWith(
+                        FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+        {
+            throw validator.newPositionalError(
+                jar,
+                res.CannotDoDeploymentOnClass.ex(
+                    repos.getLocalizedObjectName(jar)));
+        }
+        String jarName = getQualifiedJarName(jar);
+        String[] deploySQLs = getDeploySqlStatements(
+                              jarName, expandedUrl, "INSTALL");
+        if (deploySQLs != null) {
+            String _tmp = "";
+            try {
+                for (String sql : deploySQLs) {
+                    if (sql.trim().length() != 0) {
+                        _tmp = sql;
+                        executeSql(sql);
+                    }
+                }
+            } catch (SQLException ex) {
+                validator.getStmtValidator().getSession().getWarningQueue()
+                         .postWarning(
+                            FarragoResource.instance()
+                            .SqlStatementExecutionFailed.ex(_tmp));
+            }
+        }
+    }
+
+    public void executeDrop(FemJar jar)
+    {
+        String url = jar.getUrl().trim();
+        String expandedUrl = FarragoProperties.instance().expandProperties(url);
+        if (expandedUrl.startsWith(
+            FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+        {
+            throw validator.newPositionalError(
+                jar,
+                res.CannotDoDeploymentOnClass.ex(
+                    repos.getLocalizedObjectName(jar)));
+        }
+        // bypass mass delete API exception.
+        validator.enableMassDeletion(false);
+        String jarName = getQualifiedJarName(jar);
+        String[] deploySQLs = getDeploySqlStatements(
+            jarName, expandedUrl, "REMOVE");
+        if (deploySQLs != null) {
+            for (String sql : deploySQLs) {
+                if (sql.trim().length() != 0) {
+                    try {
+                        executeSql(sql);
+                    } catch (SQLException ex) {
+                        validator.getStmtValidator()
+                        .getSession().getWarningQueue().postWarning(
+                            FarragoResource
+                            .instance().SqlStatementExecutionFailed.ex(sql));
+                    }
+               }
+            }
+        }
+    }
+
+    private String getQualifiedJarName(FemJar jar)
+    {
+        SqlIdentifier jarId = FarragoCatalogUtil.getQualifiedName(jar);
+        SqlPrettyWriter pw =
+            new SqlPrettyWriter(
+                SqlDialect.create(
+                    validator.getStmtValidator().getSession()
+                             .getDatabaseMetaData()));
+        String fqjn = pw.format(jarId);
+        return fqjn;
+    }
+
+    private void executeSql(String sql)
+        throws SQLException
+    {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = validator.getStmtValidator()
+            .getSession().getConnectionSource().newConnection();
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    private String[] getDeploySqlStatements(
+        String jarName,
+        String jarUrl,
+        String operation)
+    {
+        String[] ret = null;
+        try {
+            URL url = new URL(jarUrl);
+            JarFile jf = new JarFile(url.getFile());
+            Manifest mf = jf.getManifest();
+            if (mf != null) {
+                Attributes ats = mf.getMainAttributes();
+                String deplyFiles = ats.getValue("DeployFileName");
+                String deployFlag = ats.getValue(
+                    "SQLJDeploymentDescriptor").trim();
+                if ("true".equalsIgnoreCase(deployFlag)) {
+                    JarEntry entry = jf.getJarEntry(deplyFiles);
+                    if (entry != null) {
+                        InputStream in = jf.getInputStream(entry);
+                        BufferedReader br = new BufferedReader(
+                            new InputStreamReader(in));
+                        String s = "";
+                        StringBuilder sb = new StringBuilder();
+                        boolean flag = false;
+                        // parse the line from deployment descriptor file.
+                        while ((s = br.readLine()) != null) {
+                            if (s.contains("\"BEGIN " + operation)) {
+                                flag = true;
+                            } else if (
+                                s.contains("END " + operation + "\"") && flag)
+                            {
+                                break;
+                            } else if (flag) {
+                                // "thisjar" replacement in the spec
+                                // (section 4.11.1)
+                                s = s.replaceAll("thisjar", jarName);
+                                sb.append(s);
+                                sb.append("\n");
+                            }
+                        }
+                        ret = sb.toString().split(";");
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+        return ret;
     }
 }
 

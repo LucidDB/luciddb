@@ -184,6 +184,7 @@ public class DdlValidator
     private FemAuthId currentUserAuthId;
 
     private boolean usePreviewDelete;
+    private boolean enableMassDeletion;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -202,7 +203,7 @@ public class DdlValidator
         if (getRepos().getEnkiMdrRepos().supportsPreviewRefDelete()) {
             usePreviewDelete = true;
         }
-
+        enableMassDeletion = true;
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
         schedulingMap = new LinkedHashMap<String, SchedulingDetail>();
@@ -705,8 +706,11 @@ public class DdlValidator
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        getRepos().getEnkiMdrRepos().delete(deletionList);
-
+        if (enableMassDeletion) {
+            getRepos().getEnkiMdrRepos().delete(deletionList);
+        } else {
+            delete(deletionList);
+        }
         // verify repository integrity post-delete
         for (
             Map.Entry<RefObject, ValidatedOp> mapEntry
@@ -719,7 +723,19 @@ public class DdlValidator
             }
         }
     }
-
+    public void enableMassDeletion(boolean enable)
+    {
+         enableMassDeletion = enable;
+    }
+    private void delete(Collection<RefObject> objects)
+    {
+        if (objects.isEmpty()) {
+            return;
+        }
+        for (RefObject object : objects) {
+           object.refDelete();
+        }
+    }
     private void checkJmiConstraints(RefObject obj)
     {
         JmiObjUtil.setMandatoryPrimitiveDefaults(obj);

@@ -348,6 +348,12 @@ public interface FarragoSessionDdlValidator
      */
     // implement FarragoSessionDdlValidator
     public boolean isReplace();
+
+    /**
+ *      * Pypass the mass deletion exeption in Enki.
+ *           * @param enabled
+ *                */
+    public void enableMassDeletion(boolean enabled);
 }
 
 // End FarragoSessionDdlValidator.java

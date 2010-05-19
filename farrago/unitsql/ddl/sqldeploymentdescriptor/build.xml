@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="sqldeploymentdesriptor" basedir="." default="gen-test-resources">
+  <dirname property="sdd.dir" file="${ant.file.sqldeploymentdesriptor}" />
+
+  <property name="class.dir" 
+    location="${sdd.dir}/../../.."/>
+  <fail unless="class.dir" />
+  <target name="gen-test-resources" depends="clean">
+
+  	<!-- genrate jar for testing.-->
+    <jar jarfile="${sdd.dir}/sddtest.jar">
+      <fileset dir="${class.dir}/classes">
+      	<include name="**/net/sf/farrago/test/FarragoTestUDR.class" />
+      </fileset>
+      <fileset dir="${sdd.dir}">
+          <include name="deploy.txt"/>
+       </fileset>
+      <manifest>
+        <attribute
+          name="DeployFileName"
+          value="deploy.txt" />
+        <attribute
+          name="SQLJDeploymentDescriptor"
+          value="TRUE" />
+      </manifest>
+
+    </jar>
+      <property file="run.properties"/>
+     <copy todir="${sdd.dir}/.." overwrite="true">
+        <fileset dir="${sdd.dir}" includes="*.tmpl"/>
+        <filterset id="dir.filter">
+          <filter token="schema_name" value="${schema_name}"/>
+          <filter token="file_url" value="${file_url}"/>
+        </filterset>
+        <globmapper from="*.tmpl" to="*"/>
+     </copy>  
+  </target>
+
+  <target name="clean">
+    <delete file="sddtest.jar"/>
+  	<delete file="${sdd.dir}/../sqldeploymentdesciptor.sql"/>
+  	<delete file="${sdd.dir}/../sqldeploymentdesciptor.ref"/>
+  </target>
+</project>
+
