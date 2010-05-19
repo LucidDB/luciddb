@@ -70,7 +70,12 @@ public class ResultSetTupleIter
         return result;
     }
 
-    private void instantiateResultSet() throws SQLException
+    /**
+     * Instantiates the result set from the result set provider, if it has not
+     * been instantiated already.  Typically this method is called on first
+     * fetch.
+     */
+    protected void instantiateResultSet() throws SQLException
     {
         if (resultSet == null) {
             resultSet = resultSetProvider.getResultSet();
