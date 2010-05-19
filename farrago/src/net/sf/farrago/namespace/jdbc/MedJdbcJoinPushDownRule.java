@@ -187,7 +187,7 @@ class MedJdbcJoinPushDownRule
                     } else {
                         sourceRel = rightRel;
                         iField -= leftRel.getRowType().getFieldCount();
-                        assert(iField < rightRel.getRowType().getFieldCount());
+                        assert iField < rightRel.getRowType().getFieldCount();
                         names[0] = RIGHT_INPUT;
                     }
                     names[1] = sourceRel.getRowType()
@@ -195,7 +195,6 @@ class MedJdbcJoinPushDownRule
                     return new SqlIdentifier(
                         names,
                         SqlParserPos.ZERO);
-
                 }
             };
 

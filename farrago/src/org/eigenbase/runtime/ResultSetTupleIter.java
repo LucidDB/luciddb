@@ -127,10 +127,9 @@ public class ResultSetTupleIter
     protected Object makeRow()
         throws SQLException
     {
-        assert(resultSet != null);
+        assert resultSet != null;
         return new Row(resultSet);
     }
-
 }
 
 // End ResultSetTupleIter.java

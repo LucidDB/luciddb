@@ -864,7 +864,7 @@ public abstract class FarragoManagementUDR
     /**
      * Simple server shutdown statement
      */
-    public static void shutdownServer (boolean killSessions)
+    public static void shutdownServer(boolean killSessions)
         throws Exception
     {
         if (!killSessions) {
