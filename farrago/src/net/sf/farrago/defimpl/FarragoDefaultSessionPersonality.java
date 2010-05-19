@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,8 +20,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.defimpl;
-
-import com.lucidera.farrago.fennel.*;
 
 import java.io.*;
 
@@ -172,7 +170,10 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoStreamFactoryProvider
     public void registerStreamFactories(long hStreamGraph)
     {
-        LucidEraJni.registerStreamFactory(hStreamGraph);
+        // we used to register C++ plugins for LucidEra and
+        // SQLstream here, but now they are part of the
+        // main fennel::ExecStreamFactory, so nothing to do
+        // for the default personality.
     }
 
     // implement FarragoSessionPersonality

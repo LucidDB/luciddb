@@ -27,8 +27,8 @@
 -Dnet.sf.farrago.home=${luciddb.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${project.trace.propfile}
--Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:com.lucidera.farrago.LucidDbSessionFactory
--Dnet.sf.farrago.test.jdbcDriverClass=com.lucidera.jdbc.LucidDbLocalDriver
+-Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:org.luciddb.session.LucidDbSessionFactory
+-Dnet.sf.farrago.test.jdbcDriverClass=org.luciddb.jdbc.LucidDbLocalDriver
 ${farrago.test.jvmargs}
 ">
 
@@ -235,10 +235,26 @@ ${farrago.test.jvmargs}
 
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
+    <xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
+      <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
+    </xslt>
+    <!-- If test is failed, let it exit(ie.,BUILD FAILED)-->
+    <length file="${luciddb.dir}/testlog/bh/bh.debug" property="bh.testres.filesize"/>
+      <if>
+        <equals arg1="${bh.testres.filesize}" arg2="0" />
+          <then>
+          </then>
+      <else>
+         <fail message="Some tests were failed."/>
+      </else>
+      </if>
   </target>
 
   <target name="gen-bh-report-all">
     <xslt basedir="." destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
+    <xslt basedir="." destdir="testlog/bh" style="bh-xml.xsl" includes="**/bh.xml">
+      <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
+    </xslt>
   </target>
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
@@ -409,7 +425,8 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-all.xml"
-      classpathref="test.classpath"/>
+      classpathref="test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
   </target>
 
@@ -432,8 +449,10 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test.xml"
-      classpathref="test.classpath"/>
+      classpathref="test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
+
   </target>
 
   <!-- ************** Emma ****************** 
@@ -447,7 +466,8 @@ ${farrago.test.jvmargs}
       dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test.xml"
-      classpathref="emma.test.classpath"/>
+      classpathref="emma.test.classpath"
+      fail.on.error="false"/>
     <antcall target="gen-bh-report"/>
   </target>
 
@@ -1159,6 +1179,13 @@ ${farrago.test.jvmargs}
       <property name="lu.product.version.point" 
         value="${product.version.point}"/>
     </ant>
+  
+  	<!-- Remove RmiJdbc stuff 
+	TODO: As soon as LDB-158 is resolved, we can remove this
+	-->
+  	<delete>
+  	    <fileset dir="${dist.dir}/${lucidera.release.spec}/lib" includes="RmiJdbc*"/>
+  	</delete>
 
     <delete dir="${dist.dir}/${lucidera.release.spec}/catalog" quiet="true"/>
     <mkdir dir="${dist.dir}/${lucidera.release.spec}/catalog"/>
@@ -1234,7 +1261,7 @@ ${farrago.test.jvmargs}
       tofile="${release.bin.dir}/${lucidDbServer}"/>
     <replace file="${release.bin.dir}/${lucidDbServer}">
         <replacefilter token="net.sf.farrago.server.FarragoVjdbcServer"
-        value="com.lucidera.farrago.LucidDbServer"/>
+        value="org.luciddb.session.LucidDbServer"/>
     </replace>
     <chmod file="${release.bin.dir}/${lucidDbServer}" perm="u+x" />
 
@@ -1242,7 +1269,7 @@ ${farrago.test.jvmargs}
         <replacefilter token="jdbc:farrago:" value="jdbc:luciddb:"/>
         <replacefilter
         token="net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver"
-        value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        value="org.luciddb.jdbc.LucidDbLocalDriver"/>
         <replacefilter token="guest" value="sa"/>
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2003-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 1999-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,22 +28,19 @@
 
 #include <set>
 
-// TODO jvs 25-Feb-2009:  update these for win64.  I had to use
-// the unsized ints to avoid compilation errors from mersenne_twister
-// in BernoulliRng.cpp.
 #ifdef __MSVC__
-typedef __int8 int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned __int8  uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
+#include <boost/cstdint.hpp>
+typedef boost::int8_t int8_t;
+typedef boost::int16_t int16_t;
+typedef boost::int32_t int32_t;
+typedef boost::int64_t int64_t;
+typedef boost::uint8_t uint8_t;
+typedef boost::uint16_t uint16_t;
+typedef boost::uint32_t uint32_t;
+typedef boost::uint64_t uint64_t;
 
 #define snprintf _snprintf
 #define strcasecmp strcmpi
-
 #endif
 
 FENNEL_BEGIN_NAMESPACE
@@ -121,6 +118,12 @@ public:
     {
         return 0xFFFFFFFFFFFFFFFFLL;
     }
+#ifdef __MSVC__
+    operator uint() const
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
+#endif
 };
 
 static const MaxU MAXU;
@@ -304,7 +307,11 @@ static const PageOwnerId ANON_PAGE_OWNER_ID = PageOwnerId(0xFFFFFFFFFFFFFFFFLL);
 /**
  * Sentinel value for an invalid SavepointId.
  */
+#ifdef __MSVC__
+static const SavepointId NULL_SVPT_ID = SavepointId(0xFFFFFFFFFFFFFFFFLL);
+#else
 static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
+#endif
 
 /**
  * Symbolic value indicating that some implicit value (typically the current

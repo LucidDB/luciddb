@@ -1,6 +1,8 @@
 > -- $Id$
 > -- Full vertical system testing of non function statements
 > 
+> !set numberformat #.######
+> 
 > -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
 > -- and another time to use java. The caller of this script is setting the flag so no need
 > -- to do it directly unless you need to do acrobatics.
@@ -15,13 +17,13 @@
 +--------------+
 | EXPONENTIAL  |
 +--------------+
-| 4.0          |
+| 4            |
 +--------------+
 > select -power(2.0,2.0) as exponential from sales.emps where empno=100 ;
 +--------------+
 | EXPONENTIAL  |
 +--------------+
-| -4.0         |
+| -4           |
 +--------------+
 > select mod(age,9) from sales.emps order by 1;
 +---------+
@@ -40,34 +42,34 @@
 | 0.25  |
 +-------+
 > select ln(2.71828) as res from sales.emps where empno=100;
-+--------------------+
-|        RES         |
-+--------------------+
-| 0.999999327347282  |
-+--------------------+
++-----------+
+|    RES    |
++-----------+
+| 0.999999  |
++-----------+
 > select log10(10.0) from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
-| 1.0     |
-| 1.0     |
-| 1.0     |
-| 1.0     |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
 +---------+
 > select log10(10) from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
-| 1.0     |
-| 1.0     |
-| 1.0     |
-| 1.0     |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
 +---------+
 > values log10(10*10.0);
 +---------+
 | EXPR$0  |
 +---------+
-| 2.0     |
+| 2       |
 +---------+
 > select (-empno) as res from sales.emps order by 1;
 +-------+
@@ -192,7 +194,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 340.0   |
+| 340     |
 +---------+
 > select nullif(name,'Wilma') from sales.emps order by 1;
 +---------+
@@ -277,26 +279,26 @@
 | 2    |
 +------+
 > select abs((-empno)*2.0) as res from sales.emps order by 1;
-+--------+
-|  RES   |
-+--------+
-| 200.0  |
-| 220.0  |
-| 220.0  |
-| 240.0  |
-+--------+
++------+
+| RES  |
++------+
+| 200  |
+| 220  |
+| 220  |
+| 240  |
++------+
 > 
 > values 1+1.0;
 +---------+
 | EXPR$0  |
 +---------+
-| 2.0     |
+| 2       |
 +---------+
 > values 1.0-1;
 +---------+
 | EXPR$0  |
 +---------+
-| 0.0     |
+| 0       |
 +---------+
 > values 10<=10.0;
 +---------+

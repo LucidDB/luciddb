@@ -43,7 +43,7 @@ Error: From line 1, column 9 to line 1, column 36: No match found for function s
 0: jdbc:luciddb:> VALUES (MOD(-5.0, 0));
 Error: Argument to function 'MOD' must have a scale of 0 (state=,code=0)
 0: jdbc:luciddb:> VALUES (SQRT(-1.0));
-Error: From line 1, column 9 to line 1, column 18: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+Error: Invalid argument(s) for 'POWER' function (state=,code=0)
 0: jdbc:luciddb:> VALUES (VALUERANGE(22.34323, 5.443));
 Error: From line 1, column 9 to line 1, column 35: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (CAST (1000000000000000000 AS DECIMAL ( 19, 0)) / CAST (.001  AS DECIMAL (10, 5)));

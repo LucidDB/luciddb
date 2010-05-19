@@ -1,6 +1,8 @@
 -- $Id$
 -- Full vertical system testing of non function statements
 
+!set numberformat #.######
+
 -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
 -- and another time to use java. The caller of this script is setting the flag so no need
 -- to do it directly unless you need to do acrobatics.

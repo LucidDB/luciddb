@@ -23,7 +23,7 @@ package com.lucidera.luciddb.test;
 import java.sql.*;
 import java.util.*;
 
-import com.lucidera.farrago.test.*;
+import org.luciddb.test.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.*;
@@ -65,7 +65,7 @@ public class LucidDbJdbcLabelTest
             farragoPropInstance.defaultSessionFactoryLibraryName;
         System.setProperty(
             sessionFactory.getPath(),
-            "class:com.lucidera.farrago.LucidDbSessionFactory");
+            "class:org.luciddb.session.LucidDbSessionFactory");
         String homeDirString = farragoPropInstance.homeDir.get(true);
         String catalogDir = homeDirString + "/../luciddb/catalog";
         farragoPropInstance.catalogDir.set(catalogDir);

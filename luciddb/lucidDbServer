@@ -4,4 +4,4 @@
 
 source ./defineLucidDbRuntime.sh
 
-java ${SERVER_JAVA_ARGS} com.lucidera.farrago.LucidDbServer
+java ${SERVER_JAVA_ARGS} org.luciddb.session.LucidDbServer

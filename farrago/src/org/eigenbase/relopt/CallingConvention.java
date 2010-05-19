@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -137,7 +137,8 @@ public class CallingConvention
 
     /**
      * The <code>RESULT_SET</code> calling convention means that the expression
-     * is a {@link java.sql.ResultSet JDBC result set}. When a result set is
+     * is a {@link java.sql.ResultSet JDBC result set} or {@link
+     * org.eigenbase.runtime.ResultSetProvider}. When a result set is
      * converted to another convention such as array or iterator, the default
      * object type is {@link org.eigenbase.runtime.Row}.
      */

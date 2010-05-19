@@ -1011,6 +1011,15 @@ language java
 modifies sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ReplicateMondrianUdp.execute';
 
+-- UDP for clearing Mondrian Schema Cache on Pentaho Server
+create or replace procedure applib.clear_pentaho_mondrian_cache(
+    base_server_url varchar(65535), 
+    username varchar(128), 
+    password varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ClearPentahoMondrianCacheUdp.execute';
+
 -- UDP for conditionally executing a SQL statement based on input set 
 create or replace procedure exec_sql_if_no_rows( 
 in evalSQL varchar(4096), 
@@ -1019,3 +1028,54 @@ language java
 parameter style java 
 reads sql data 
 external name  'applib.applibJar:com.lucidera.luciddb.applib.util.ExecSqlIfNoRows.execute'; 
+
+create or replace function APPLIB.WRITE_ROWS_TO_FILE(
+IN_CURSOR cursor, 
+URL varchar(255), 
+IS_COMPRESSED boolean)
+returns table(status int, message varchar(6000))
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.WriteRowsToFileUDX.execute';
+ 
+ 
+create or replace function APPLIB.READ_ROWS_FROM_FILE(
+IN_CURSOR cursor, 
+URL varchar(255), 
+IS_COMPRESSED boolean)
+returns table (IN_CURSOR.*)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.ReadRowsFromFileUDX.execute';
+
+create or replace function APPLIB.REMOTE_ROWS(IN_CURSOR cursor, PORT int, IS_COMPRESSED boolean)
+returns table (IN_CURSOR.*)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
+
+create or replace procedure create_table_from_source_table(
+in sourceTable varchar(65535),
+in schemaName varchar(255),
+in tableName varchar(255),
+in additonalColsInfo varchar(65535))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';
+
+create or replace procedure create_table_as(
+in schemaName varchar(255),
+in tableName varchar(255),
+in selectStmt varchar(65535),
+in shouldLoad boolean)
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSelectStmtUdp.execute';

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2010 The Eigenbase Project
-// Copyright (C) 2003-2010 SQLstream, Inc.
-// Copyright (C) 2005-2010 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -208,11 +208,11 @@ public class DdlValidator
         schedulingMap = new LinkedHashMap<String, SchedulingDetail>();
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
+        revalidateQueue = new LinkedHashSet<CwmModelElement>();
 
         parserContextMap = new HashMap<Object, SqlParserPos>();
         parserOffsetMap = new HashMap<RefObject, SqlParserPos>();
         sqlMap = new HashMap<RefObject, SqlNode>();
-        revalidateQueue = new HashSet<CwmModelElement>();
 
         // NOTE:  dropRules are populated implicitly as action handlers
         // are set up below.

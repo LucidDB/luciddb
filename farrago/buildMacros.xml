@@ -2,10 +2,10 @@
 <!--
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -836,7 +836,7 @@ ${farrago.test.jvmargs}
         </classpath>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
-        <jvmarg line="-Xmx768m"/>
+        <jvmarg line="-Xmx1024m"/>
         <jvmarg line="-XX:MaxPermSize=160m" />
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>

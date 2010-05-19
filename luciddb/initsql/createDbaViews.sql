@@ -923,3 +923,9 @@ create or replace procedure change_default_character_set_to_unicode()
 language java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.setUnicodeAsDefault';
+
+create or replace function get_current_sessionid()
+returns integer
+language java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.getCurrentSessionId';

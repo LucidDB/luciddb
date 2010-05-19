@@ -71,7 +71,7 @@ where schema_name='TT';
 
 -- dba_foreign_wrappers and dba_foreign_wrapper_options
 create foreign data wrapper dbatest_ff_jdbc
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+library 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 language java
 options ( random_opt1 'random_opt_value');
 

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2009-2009 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2009 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-PConstBuffer getData(RegisterRef<int>* id) {
+PConstBuffer getData(RegisterRef<int32_t>* id) {
     assert(!id->isNull());
     return id->getDynamicParamManager()->getParam(
         DynamicParamId(id->value())).getDatum().pData;
@@ -149,7 +149,7 @@ ExtDynamicVariableRegister(ExtendedInstructionTable* eit)
     params_u1.push_back(STANDARD_TYPE_INT_32);
     eit->add(
         "dynamicVariable", params_u1,
-        (ExtendedInstruction2<uint8_t, int>*) NULL,
+        (ExtendedInstruction2<uint8_t, int32_t>*) NULL,
         &dynamicVariable);
 
     vector<StandardTypeDescriptorOrdinal> params_s2;

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2006-2009 SQLstream, Inc.
-// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -98,6 +98,7 @@ public class FarragoVjdbcServer
         vjdbcConfig.addConnection(configFarrago);
 
         if (protocol == ListeningProtocol.HTTP) {
+            configureConnectionTimeout(vjdbcConfig);
             jettyEmbedding = new FarragoJettyEmbedding();
             jettyEmbedding.startServlet(vjdbcConfig, httpPort);
             return httpPort;
@@ -107,15 +108,7 @@ public class FarragoVjdbcServer
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);
         vjdbcConfig = VJdbcConfiguration.singleton();
-        if (connectionTimeoutMillis == -1) {
-            // -1 means never timeout, so set OCCT checking period to 0
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
-                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
-            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
-        } else {
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
-                connectionTimeoutMillis);
-        }
+        configureConnectionTimeout(vjdbcConfig);
 
         RmiConfiguration rmiConfig = new RmiConfiguration();
         vjdbcConfig.setRmiConfiguration(rmiConfig);
@@ -133,6 +126,19 @@ public class FarragoVjdbcServer
         locateRmiRegistry();
 
         return rmiRegistryPort;
+    }
+
+    private void configureConnectionTimeout(VJdbcConfiguration vjdbcConfig)
+    {
+        if (connectionTimeoutMillis == -1) {
+            // -1 means never timeout, so set OCCT checking period to 0
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
+        } else {
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                connectionTimeoutMillis);
+        }
     }
 
     protected void stopNetwork()

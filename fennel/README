@@ -1,4 +1,4 @@
-Fennel Source Release 0.9.2
+Fennel Source Release 0.9.3
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -41,7 +41,7 @@ http://issues.eigenbase.org
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2009 The Eigenbase Project and others
+Copyright (C) 1999 The Eigenbase Project and others
 
 This distribution of Fennel is licensed under the GNU General Public
 License; see file COPYING for details.
@@ -80,8 +80,15 @@ flatfile:  flatfile reader
 
 hashexe:  hash join/aggregation
 
+lcs:  LucidDB column store
+
+lbm:  LucidDB bitmap indexes
+
 test:  unit tests
+
+calctest:  unit tests for calculator
+
+ldbtest:  unit tests for lcs/lbm
 
 farrago:  JNI integration for the companion Farrago project
 
-lucidera:  column store and bitmap indexes contributed by LucidEra, Inc.

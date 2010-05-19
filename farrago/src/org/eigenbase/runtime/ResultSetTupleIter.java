@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,6 +34,7 @@ public class ResultSetTupleIter
 {
     //~ Instance fields --------------------------------------------------------
 
+    protected ResultSetProvider resultSetProvider;
     protected ResultSet resultSet;
     protected boolean endOfStream;
     protected boolean underflow;
@@ -41,12 +42,12 @@ public class ResultSetTupleIter
 
     //~ Constructors -----------------------------------------------------------
 
-    public ResultSetTupleIter(ResultSet resultSet)
+    public ResultSetTupleIter(ResultSetProvider resultSetProvider)
     {
         // NOTE jvs 4-Mar-2004:  I changed this to not call makeRow() from
         // this constructor, since subclasses aren't initialized yet.  Now
         // it follows the same pattern as CalcTupleIter.
-        this.resultSet = resultSet;
+        this.resultSetProvider = resultSetProvider;
         underflow = endOfStream = false;
     }
 
@@ -69,9 +70,17 @@ public class ResultSetTupleIter
         return result;
     }
 
+    private void instantiateResultSet() throws SQLException
+    {
+        if (resultSet == null) {
+            resultSet = resultSetProvider.getResultSet();
+        }
+    }
+
     protected Object getNextRow() throws TimeoutException
     {
         try {
+            instantiateResultSet();
             if (resultSet.next()) {
                 return makeRow();
             } else {
@@ -87,6 +96,7 @@ public class ResultSetTupleIter
     public void restart()
     {
         try {
+            instantiateResultSet();
             if (resultSet.first()) {
                 endOfStream = false;
                 row = makeRow();
@@ -112,6 +122,7 @@ public class ResultSetTupleIter
     protected Object makeRow()
         throws SQLException
     {
+        assert(resultSet != null);
         return new Row(resultSet);
     }
 

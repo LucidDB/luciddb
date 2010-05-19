@@ -1,6 +1,11 @@
 -- $Id$
 -- Test SQL/MED loopback link support
 
+create schema gloop;
+create table gloop.t1(v varchar(10) not null primary key);
+create user vogon identified by '' default schema gloop;
+grant select on gloop.t1 to vogon;
+
 -- create a server which will loop back to the default catalog (localdb)
 create server loopback_localdb
 foreign data wrapper sys_jdbc
@@ -17,6 +22,16 @@ options(
     url 'jdbc:farrago:',
     user_name 'sa',
     qualifying_catalog_name 'SYS_BOOT');
+
+-- create a server which will not loop back at all
+create server no_loopback
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver',
+    url 'jdbc:farrago:',
+    user_name 'VOGON',
+    schema_name 'BOGUS',
+    skip_type_check 'TRUE');
 
 -- test loopback queries
 
@@ -66,6 +81,28 @@ select * from x.bar;
 -- call sys_boot.mgmt.flush_code_cache();
 -- select * from x.bar;
 
+-- Next test is for making sure that for non-loopback links,
+-- we defer all execution until rows are actually fetched.  To
+-- avoid foreign SQL access at prepare time, we use
+-- SKIP_TYPE_CHECK=TRUE on the no_loopback server, and
+-- explicitly instantiate a foreign table.
+create foreign table x.pokemon(
+    v varchar(10))
+server no_loopback
+options(table_name 'T1');
+create view x.baz as
+select * from 
+(values ('three'), ('two'))
+union all
+select * from x.pokemon;
+-- break the view by yanking out the underlying table
+drop table gloop.t1;
+-- this should NOT produce an exception since we should never
+-- actually execute the underlying SQL for the x.pokemon reference
+!set rowlimit 1
+select * from x.baz;
+!set rowlimit 0
+
 -- verify loopback via EXPLAIN PLAN
 !set outputformat csv
 
@@ -84,3 +121,6 @@ loopback_localdb.sales.emps inner join loopback_localdb.sales.depts
 on emps.deptno=depts.deptno
 order by ename;
 
+-- verify that loopback is NOT used here
+explain plan for
+select * from x.baz;

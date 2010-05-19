@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -5416,7 +5416,7 @@ public class SqlValidatorTest
         // Group by
         checkFails(
             "select 1 from emp group by deptno order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
 
         // order by can contain aggregate expressions
         check(
@@ -5428,7 +5428,7 @@ public class SqlValidatorTest
 
         checkFails(
             "select sum(sal) from emp having count(*) > 3 order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
 
         check(
             "select sum(sal) from emp having count(*) > 3 order by sum(deptno)");
@@ -5437,11 +5437,11 @@ public class SqlValidatorTest
 
         checkFails(
             "select distinct deptno from emp group by deptno order by ^empno^",
-            "Expression 'EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
 
         checkFails(
             "select distinct deptno from emp group by deptno order by deptno, ^empno^",
-            "Expression 'EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
 
         check(
             "select distinct deptno from emp group by deptno order by deptno");
@@ -5472,19 +5472,19 @@ public class SqlValidatorTest
         checkFails(
             "select distinct cast(empno as bigint) "
             + "from emp order by ^empno^",
-            "Expression 'EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) "
             + "from emp order by ^emp.empno^",
-            "Expression 'EMP.EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp order by ^emp.empno^",
-            "Expression 'EMP.EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp as e order by ^e.empno^",
-            "Expression 'E.EMPNO' is not in the select clause");
+            "Expression 'E\\.EMPNO' is not in the select clause");
 
         // These tests are primarily intended to test cases where sorting by
         // an alias is allowed.  But for instances that don't support sorting
@@ -6101,10 +6101,10 @@ public class SqlValidatorTest
         // similar validation for SELECT DISTINCT and GROUP BY
         checkFails(
             "SELECT deptno FROM emp GROUP BY deptno ORDER BY deptno, ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
         checkFails(
             "SELECT DISTINCT deptno from emp ORDER BY deptno, ^empno^",
-            "Expression 'EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
         check("SELECT DISTINCT deptno from emp ORDER BY deptno + 2");
         if (false) { // Hersker 2008917: Julian will fix immediately after
                      // integration
@@ -6117,7 +6117,7 @@ public class SqlValidatorTest
         // GROUP BY is present.
         checkFails(
             "SELECT DISTINCT deptno FROM emp GROUP BY deptno, empno ORDER BY deptno, ^empno^",
-            "Expression 'EMPNO' is not in the select clause");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
 
         // redundant distinct; same query is in unitsql/optimizer/distinct.sql
         check(

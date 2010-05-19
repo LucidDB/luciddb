@@ -19,4 +19,9 @@ SQLLINE_JAVA_ARGS="sqlline.SqlLine"
 
 JAVA_EXEC=${JAVA_HOME}/bin/java
 
-export LD_LIBRARY_PATH=$MAIN_DIR/plugin:$MAIN_DIR/lib/fennel
+if [ `uname` = "Darwin" ]; then
+    export DYLD_LIBRARY_PATH=$MAIN_DIR/plugin:$MAIN_DIR/lib/fennel
+    JAVA_ARGS="$JAVA_ARGS -d32"
+else
+    export LD_LIBRARY_PATH=$MAIN_DIR/plugin:$MAIN_DIR/lib/fennel
+fi

@@ -20,6 +20,19 @@ else()
    set(TEST_LIBRARY_LINKAGE "SHARED")
 endif()
 
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+   set(ARCH_DEFINES "")
+else()
+   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+      set(ARCH_DEFINES "")
+   else()
+      # For later when we use 64-bit for Mac
+      # set(ARCH_DEFINES "-arch x86_64")
+      # set(CPU_BITS 64)
+      set(ARCH_DEFINES "")
+   endif()
+endif()
+
 set(GENERIC_DEFINES "-DHAVE_CONFIG_H -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1 -DBOOST_NO_HASH=1")
 
 if ("${OPT_FLAG}" STREQUAL "--with-optimization")
@@ -58,10 +71,10 @@ else()
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
-   set(CMAKE_CXX_FLAGS "${GENERIC_DEFINES} ${ENDIAN_DEFINES}=1 ${OPT_DEFINES} ${DEBUG_DEFINES} -D__MSVC__ -DBOOST_ALL_NO_LIB /EHsc")
+   set(CMAKE_CXX_FLAGS "${GENERIC_DEFINES} ${ENDIAN_DEFINES}=1 ${OPT_DEFINES} ${DEBUG_DEFINES} ${ARCH_DEFINES} -D__MSVC__ -DBOOST_ALL_NO_LIB /EHsc")
    set(JDK_PLATFORM win32)
 else()
-   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Wno-parentheses -Wno-missing-braces -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} -fPIC -DPIC")
+   set(CMAKE_CXX_FLAGS "-pipe -ftemplate-depth-64 -Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Wno-parentheses -Wno-missing-braces -Werror ${GENERIC_DEFINES} ${ENDIAN_DEFINES} ${OPT_DEFINES} ${DEBUG_DEFINES} ${ARCH_DEFINES} -fPIC -DPIC")
    if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
       set(JDK_PLATFORM linux)
    else()
@@ -289,29 +302,6 @@ else()
 endif()
 endmacro()
 
-macro(generate_subdir_obj_list subdir dir)
-  string(TOUPPER ${dir} DIR_UPPER)
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
-  if (CMAKE_CONFIGURATION_TYPES)
-    set(${DIR_UPPER}_OBJ_DIR
-      ${CMAKE_BINARY_DIR}/${subdir}/${dir}/${dir}.dir/${CMAKE_CFG_INTDIR}/)
-  else ()
-    set(${DIR_UPPER}_OBJ_DIR
-      ${CMAKE_BINARY_DIR}/${subdir}/${dir}${CMAKE_FILES_DIRECTORY}/${dir}.dir/)
-  endif ()
-  get_target_property(${DIR_UPPER}_SOURCES ${dir} SOURCES)
-  set(${DIR_UPPER}_OBJ_LIST ${${DIR_UPPER}_SOURCES})
-  add_suffix(${DIR_UPPER}_OBJ_LIST ${CMAKE_C_OUTPUT_EXTENSION})
-  add_prefix(${${DIR_UPPER}_OBJ_DIR} ${DIR_UPPER}_OBJ_LIST)
-  file(MAKE_DIRECTORY ${${DIR_UPPER}_OBJ_DIR})
-  foreach(file ${${DIR_UPPER}_OBJ_LIST})
-    execute_process(COMMAND ${CMAKE_COMMAND} -E touch ${file})
-  endforeach(file)
-else()
-  set(${DIR_UPPER}_LIB ${dir})
-endif()
-endmacro()
-
 add_subdirectory(common)
 generate_obj_list(common)
 
@@ -357,17 +347,22 @@ generate_obj_list(flatfile)
 add_subdirectory(sorter)
 generate_obj_list(sorter)
 
+add_subdirectory(lcs)
+generate_obj_list(lcs)
+
+add_subdirectory(lbm)
+generate_obj_list(lbm)
+
 add_subdirectory(util)
 
 add_subdirectory(libfennel)
 add_subdirectory(test)
 add_subdirectory(calctest)
+add_subdirectory(ldbtest)
 
 if (with_farrago)
 add_subdirectory(farrago)
 endif()
-
-add_subdirectory(lucidera)
 
 add_custom_target(checkPreambles build/checkPreambleFennel.sh)
 

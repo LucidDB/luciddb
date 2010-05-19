@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2009-2009 The Eigenbase Project
-// Copyright (C) 2009-2009 SQLstream, Inc.
-// Copyright (C) 2009-2009 LucidEra, Inc.
+// Copyright (C) 2009 The Eigenbase Project
+// Copyright (C) 2009 SQLstream, Inc.
+// Copyright (C) 2009 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -100,8 +100,7 @@ class MedJdbcAggPushDownRule
                 null,
                 null,
                 SqlParserPos.ZERO);
-        MedJdbcNameDirectory dir = queryRel.columnSet.directory;
-        if (!dir.isRemoteSqlValid(selectWithAgg)) {
+        if (!queryRel.getServer().isRemoteSqlValid(selectWithAgg)) {
             return;
         }
 
@@ -114,11 +113,12 @@ class MedJdbcAggPushDownRule
 
         RelNode rel =
             new MedJdbcQueryRel(
-                queryRel.columnSet,
+                queryRel.getServer(),
+                queryRel.getColumnSet(),
                 queryRel.getCluster(),
                 aggRel.getRowType(),
-                queryRel.connection,
-                queryRel.dialect,
+                queryRel.getConnection(),
+                queryRel.getDialect(),
                 selectWithAgg,
                 uniqueKeys);
         call.transformTo(rel);

@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # $Id$
 # Fennel is a library of data storage and processing components.
-# Copyright (C) 2009-2009 The Eigenbase Project
-# Copyright (C) 2009-2009 SQLstream, Inc.
-# Copyright (C) 2009-2009 LucidEra, Inc.
+# Copyright (C) 2009 The Eigenbase Project
+# Copyright (C) 2009 SQLstream, Inc.
+# Copyright (C) 2009 Dynamo BI Corporation
 
 # from fennel/tuple/StandardDescriptor.h:
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,6 +56,10 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.util.*;
 
 // TODO:  throw exception on unknown option?
@@ -143,6 +147,8 @@ public class MedJdbcDataServer
     public static final String PROP_VALIDATION_TIMING_WHILE_IDLE = "WHILE_IDLE";
     public static final String PROP_DISABLE_CONNECTION_POOL =
         "DISABLE_CONNECTION_POOL";
+    public static final String PROP_ASSUME_PUSHDOWN_VALID =
+        "ASSUME_PUSHDOWN_VALID";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -162,6 +168,7 @@ public class MedJdbcDataServer
     public static final String DEFAULT_VALIDATION_TIMING =
         PROP_VALIDATION_TIMING_ON_BORROW;
     public static final boolean DEFAULT_DISABLE_CONNECTION_POOL = false;
+    public static final boolean DEFAULT_ASSUME_PUSHDOWN_VALID = false;
 
     private static final Logger logger =
         FarragoTrace.getClassTracer(MedJdbcDataServer.class);
@@ -211,6 +218,7 @@ public class MedJdbcDataServer
     private boolean validateOnBorrow;
     private boolean validateOnReturn;
     private boolean validateWhileIdle;
+    private boolean assumePushdownValid;
     protected boolean useSchemaNameAsForeignQualifier;
     protected boolean lenient;
     protected boolean skipTypeCheck;
@@ -347,6 +355,12 @@ public class MedJdbcDataServer
                 props,
                 PROP_SKIP_TYPE_CHECK,
                 DEFAULT_SKIP_TYPE_CHECK);
+
+        assumePushdownValid =
+            getBooleanProperty(
+                props,
+                PROP_ASSUME_PUSHDOWN_VALID,
+                DEFAULT_ASSUME_PUSHDOWN_VALID);
 
         disabledPushdownPattern =
             Pattern.compile(
@@ -902,7 +916,7 @@ public class MedJdbcDataServer
             if (fetchSize != DEFAULT_FETCH_SIZE) {
                 stmt.setFetchSize(fetchSize);
             }
-            stmtAlloc.setResultSet(stmt.executeQuery(sql));
+            stmtAlloc.setSql(sql);
             stmt = null;
             return stmtAlloc;
         } finally {
@@ -1026,6 +1040,7 @@ public class MedJdbcDataServer
         pushdownRuleList.add(r3);
         pushdownRuleList.add(r4);
         pushdownRuleList.add(MedJdbcAggPushDownRule.instance);
+        pushdownRuleList.add(MedJdbcJoinPushDownRule.instance);
 
         // add the non-disabled pushdown rules
         for (RelOptRule rule : pushdownRuleList) {
@@ -1361,6 +1376,110 @@ public class MedJdbcDataServer
             }
         }
         return isQuote;
+    }
+
+    /**
+     * Tests whether a remote SQL query is valid by attempting
+     * to prepare it.  This is intended for use by pushdown rules
+     * constructing remote SQL from fragments of relational algebra.
+     *
+     * @param sqlNode SQL query to be tested
+     *
+     * @return true if statement is valid
+     */
+    protected boolean isRemoteSqlValid(SqlNode sqlNode)
+    {
+        if (assumePushdownValid) {
+            return true;
+        }
+        try {
+            SqlDialect dialect =
+                SqlDialect.create(getDatabaseMetaData());
+            SqlString sql = sqlNode.toSqlString(dialect);
+            sql = MedJdbcNameDirectory.normalizeQueryString(sql);
+
+            // test if sql can be executed against source
+            ResultSet rs = null;
+            PreparedStatement ps = null;
+            Statement testStatement = null;
+            try {
+                // Workaround for Oracle JDBC thin driver, where
+                // PreparedStatement.getMetaData does not actually get metadata
+                // before execution
+                if (dialect.getDatabaseProduct()
+                    == SqlDialect.DatabaseProduct.ORACLE)
+                {
+                    SqlBuilder buf = new SqlBuilder(dialect);
+                    buf.append(
+                        " DECLARE"
+                        + "   test_cursor integer;"
+                        + " BEGIN"
+                        + "   test_cursor := dbms_sql.open_cursor;"
+                        + "   dbms_sql.parse(test_cursor, ");
+                    buf.literal(dialect.quoteStringLiteral(sql.getSql()));
+                    buf.append(
+                        ", "
+                        + "   dbms_sql.native);"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + " EXCEPTION"
+                        + " WHEN OTHERS THEN"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + "   RAISE;"
+                        + " END;");
+                    testStatement = getConnection().createStatement();
+                    SqlString sqlTest = buf.toSqlString();
+                    rs = testStatement.executeQuery(sqlTest.getSql());
+                } else {
+                    ps = getConnection().prepareStatement(sql.getSql());
+                    if (ps != null) {
+                        if (ps.getMetaData() == null) {
+                            return false;
+                        }
+                    }
+                }
+            } catch (SQLException ex) {
+                return false;
+            } catch (RuntimeException ex) {
+                return false;
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (testStatement != null) {
+                        testStatement.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                } catch (SQLException sqe) {
+                }
+            }
+        } catch (SQLException ex) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Determines whether queries against this server can be combined
+     * with those against another server, and if so determines
+     * which server should execute the combined query.  The default
+     * implementation is based on comparing server MOFID's.
+     *
+     * @param other other server to test against
+     *
+     * @return combined server, or null if the two servers
+     * cannot be combined
+     */
+    public MedJdbcDataServer testQueryCombination(
+        MedJdbcDataServer other)
+    {
+        if (other.getServerMofId() == getServerMofId()) {
+            return this;
+        } else {
+            return null;
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------

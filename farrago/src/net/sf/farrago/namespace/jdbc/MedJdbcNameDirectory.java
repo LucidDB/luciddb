@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -355,8 +355,8 @@ public class MedJdbcNameDirectory
             mdRowType);
     }
 
-    protected SqlSelect
-        newSelectStarQuery(String[] qualifiedName, Properties tableProps)
+    protected SqlSelect newSelectStarQuery(
+        String[] qualifiedName, Properties tableProps)
         throws SQLException
     {
         return createSelectNode(
@@ -367,8 +367,8 @@ public class MedJdbcNameDirectory
             qualifiedName);
     }
 
-    protected SqlSelect
-        createSelectNode(SqlNodeList selectList, String[] foreignQualifiedName)
+    protected SqlSelect createSelectNode(
+        SqlNodeList selectList, String[] foreignQualifiedName)
         throws SQLException
     {
         SqlSelect select =
@@ -386,7 +386,7 @@ public class MedJdbcNameDirectory
     }
 
 
-    SqlString normalizeQueryString(SqlString sql)
+    static SqlString normalizeQueryString(SqlString sql)
     {
         // some drivers don't like multi-line SQL, so convert all
         // whitespace into plain spaces, and also mask Windows
@@ -970,86 +970,6 @@ public class MedJdbcNameDirectory
                     fieldList[i].getName());
             }
         }
-    }
-
-    /**
-     * Tests whether a remote SQL query is valid by attempting
-     * to prepare it.  This is intended for use by pushdown rules
-     * constructing remote SQL from fragments of relational algebra.
-     *
-     * @param sqlNode SQL query to be tested
-     *
-     * @return true if statement is valid
-     */
-    protected boolean isRemoteSqlValid(SqlNode sqlNode)
-    {
-        try {
-            SqlDialect dialect =
-                SqlDialect.create(server.getDatabaseMetaData());
-            SqlString sql = sqlNode.toSqlString(dialect);
-            sql = normalizeQueryString(sql);
-
-            // test if sql can be executed against source
-            ResultSet rs = null;
-            PreparedStatement ps = null;
-            Statement testStatement = null;
-            try {
-                // Workaround for Oracle JDBC thin driver, where
-                // PreparedStatement.getMetaData does not actually get metadata
-                // before execution
-                if (dialect.getDatabaseProduct()
-                    == SqlDialect.DatabaseProduct.ORACLE)
-                {
-                    SqlBuilder buf = new SqlBuilder(dialect);
-                    buf.append(
-                        " DECLARE"
-                        + "   test_cursor integer;"
-                        + " BEGIN"
-                        + "   test_cursor := dbms_sql.open_cursor;"
-                        + "   dbms_sql.parse(test_cursor, ");
-                    buf.literal(dialect.quoteStringLiteral(sql.getSql()));
-                    buf.append(
-                        ", "
-                        + "   dbms_sql.native);"
-                        + "   dbms_sql.close_cursor(test_cursor);"
-                        + " EXCEPTION"
-                        + " WHEN OTHERS THEN"
-                        + "   dbms_sql.close_cursor(test_cursor);"
-                        + "   RAISE;"
-                        + " END;");
-                    testStatement = server.getConnection().createStatement();
-                    SqlString sqlTest = buf.toSqlString();
-                    rs = testStatement.executeQuery(sqlTest.getSql());
-                } else {
-                    ps = server.getConnection().prepareStatement(sql.getSql());
-                    if (ps != null) {
-                        if (ps.getMetaData() == null) {
-                            return false;
-                        }
-                    }
-                }
-            } catch (SQLException ex) {
-                return false;
-            } catch (RuntimeException ex) {
-                return false;
-            } finally {
-                try {
-                    if (rs != null) {
-                        rs.close();
-                    }
-                    if (testStatement != null) {
-                        testStatement.close();
-                    }
-                    if (ps != null) {
-                        ps.close();
-                    }
-                } catch (SQLException sqe) {
-                }
-            }
-        } catch (SQLException ex) {
-            return false;
-        }
-        return true;
     }
 }
 

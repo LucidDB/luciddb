@@ -74,6 +74,7 @@
     <antcall target="clean-test"/>
     <delete file="run.properties"/>
     <ant dir="enforceRowConstraints" target="clean"/>
+    <ant dir="impexp" target="clean"/>	
   </target>
 
   <target name="clean-test">
@@ -82,6 +83,7 @@
       <fileset dir="${udx.dir}" includes="*.log"/>
     </delete>
     <ant dir="enforceRowConstraints" target="clean-test"/>
+    <ant dir="impexp" target="clean-test"/>
   </target>
 
 </project>

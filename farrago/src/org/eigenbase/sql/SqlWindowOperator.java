@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2004-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -296,7 +296,15 @@ public class SqlWindowOperator
             if (0 != orderList.size()) {
                 for (int i = 0; i < orderList.size(); i++) {
                     SqlNode orderItem = orderList.get(i);
-                    orderItem.validateExpr(validator, scope);
+                    boolean savedColumnReferenceExpansion =
+                        validator.getColumnReferenceExpansion();
+                    validator.setColumnReferenceExpansion(false);
+                    try {
+                        orderItem.validateExpr(validator, scope);
+                    } finally {
+                        validator.setColumnReferenceExpansion(
+                            savedColumnReferenceExpansion);
+                    }
                 }
             } else {
                 // list is empty so reset the base reference to null so

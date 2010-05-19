@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,14 +50,14 @@ public class MedJdbcQueryRel
 {
     //~ Instance fields --------------------------------------------------------
 
+    MedJdbcDataServer server;
     MedJdbcColumnSet columnSet;
-    RelOptConnection connection;
-    SqlDialect dialect;
     Set<BitSet> uniqueKeys;
 
     //~ Constructors -----------------------------------------------------------
 
     public MedJdbcQueryRel(
+        MedJdbcDataServer server,
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,
@@ -65,10 +65,13 @@ public class MedJdbcQueryRel
         SqlDialect dialect,
         SqlSelect sql)
     {
-        this(columnSet, cluster, rowType, connection, dialect, sql, null);
+        this(
+            server, columnSet, cluster, rowType, connection, dialect,
+            sql, null);
     }
 
     public MedJdbcQueryRel(
+        MedJdbcDataServer server,
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,
@@ -84,9 +87,8 @@ public class MedJdbcQueryRel
             dialect,
             sql,
             new JdbcDataSource(""));
+        this.server = server;
         this.columnSet = columnSet;
-        this.connection = connection;
-        this.dialect = dialect;
         this.uniqueKeys = uniqueKeys;
     }
 
@@ -98,7 +100,7 @@ public class MedJdbcQueryRel
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
 
-        SqlString sql = columnSet.directory.normalizeQueryString(queryString);
+        SqlString sql = MedJdbcNameDirectory.normalizeQueryString(queryString);
 
         Expression allocExpression =
             new CastExpression(
@@ -108,12 +110,9 @@ public class MedJdbcQueryRel
                     "getDataServerRuntimeSupport",
                     new ExpressionList(
                         Literal.makeLiteral(
-                            columnSet.directory.server.getServerMofId()),
+                            server.getServerMofId()),
                         Literal.makeLiteral(sql.getSql()))));
-        return new MethodCall(
-            allocExpression,
-            "getResultSet",
-            new ExpressionList());
+        return allocExpression;
     }
 
     // override JdbcQuery
@@ -121,16 +120,62 @@ public class MedJdbcQueryRel
     {
         MedJdbcQueryRel clone =
             new MedJdbcQueryRel(
-                columnSet,
+                getServer(),
+                getColumnSet(),
                 getCluster(),
                 getRowType(),
-                connection,
-                dialect,
+                getConnection(),
+                getDialect(),
                 getSql(),
                 uniqueKeys);
         clone.inheritTraitsFrom(this);
         return clone;
     }
+
+    /**
+     * @return the server accessed by this query
+     */
+    public MedJdbcDataServer getServer()
+    {
+        return server;
+    }
+
+    /**
+     * @return the column set accessed by this query, or null
+     * if it accesses more than one column set
+     */
+    public MedJdbcColumnSet getColumnSet()
+    {
+        return columnSet;
+    }
+
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
+    {
+        boolean omitServerMofId = false;
+        switch(pw.getDetailLevel()) {
+        case NO_ATTRIBUTES:
+        case EXPPLAN_ATTRIBUTES:
+            omitServerMofId = true;
+            break;
+        }
+        if (server == null) {
+            omitServerMofId = true;
+        }
+        if (omitServerMofId) {
+            super.explain(pw);
+            return;
+        }
+        // For plan digests, we need to include the server MOFID
+        // so that two identical queries against different servers
+        // do not get merged by the optimizer.
+        String serverMofId = server.getServerMofId();
+        pw.explain(
+            this,
+            new String[] { "foreignSql", "serverMofId" },
+            new Object[] { getForeignSql(), serverMofId });
+    }
+
 }
 
 // End MedJdbcQueryRel.java

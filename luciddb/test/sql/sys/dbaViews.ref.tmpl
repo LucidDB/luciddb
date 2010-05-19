@@ -117,18 +117,18 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_foreign_wrappers and dba_foreign_wrapper_options
 0: jdbc:luciddb:> create foreign data wrapper dbatest_ff_jdbc
-. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > library 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 . . . . . . . . > language java
 . . . . . . . . > options ( random_opt1 'random_opt_value');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select foreign_wrapper_name, library, "LANGUAGE"
 . . . . . . . . > from sys_root.dba_foreign_wrappers
 . . . . . . . . > where foreign_wrapper_name = 'DBATEST_FF_JDBC';
-+-----------------------+--------------------------------------------------------------------+-----------+
-| FOREIGN_WRAPPER_NAME  |                              LIBRARY                               | LANGUAGE  |
-+-----------------------+--------------------------------------------------------------------+-----------+
-| DBATEST_FF_JDBC       | class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper  | JAVA      |
-+-----------------------+--------------------------------------------------------------------+-----------+
++-----------------------+--------------------------------------------------------------+-----------+
+| FOREIGN_WRAPPER_NAME  |                           LIBRARY                            | LANGUAGE  |
++-----------------------+--------------------------------------------------------------+-----------+
+| DBATEST_FF_JDBC       | class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper  | JAVA      |
++-----------------------+--------------------------------------------------------------+-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select foreign_wrapper_name, option_name, option_value
 . . . . . . . . > from sys_root.dba_foreign_wrapper_options

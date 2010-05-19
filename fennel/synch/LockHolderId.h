@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2007-2009 The Eigenbase Project
-// Copyright (C) 2007-2009 SQLstream, Inc.
-// Copyright (C) 2007-2009 LucidEra, Inc.
+// Copyright (C) 2007 The Eigenbase Project
+// Copyright (C) 2007 SQLstream, Inc.
+// Copyright (C) 2007 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -91,7 +91,7 @@ inline void LockHolderId::assignFrom(TxnId txnId)
     if (txnId == IMPLICIT_TXN_ID) {
         // NOTE jvs 2-Jun-2007:  Not exactly posixly correct,
         // but it will probably do for most environments.
-        holderId = TxnId(uint(getCurrentThreadId()));
+        holderId = TxnId(getCurrentThreadId());
         holderType = TYPE_THREAD;
     } else {
         holderId = txnId;

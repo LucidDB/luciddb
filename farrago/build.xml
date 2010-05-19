@@ -2,10 +2,10 @@
 <!--
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -412,9 +412,6 @@ ${farrago.test.jvmargs}
         dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/resource" 
         includes="*.java"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
-      <!-- TODO jvs 22-Mar-2009:  get rid of this in a few months -->
-      <fileset dir="${farrago.src.dir}/com/lucidera/lurql/parser" 
-        includes="*.java"/>
     </delete>
   </target>
 
@@ -820,7 +817,7 @@ ${farrago.test.jvmargs}
 
   <target name="populateTestSchema" depends="determineInitSql">
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-      clonevm="yes" tempdir="${testlog.dir}" includeantruntime="no">
+      tempdir="${testlog.dir}" includeantruntime="no">
       <classpath>
          <pathelement path="${farrago.sqlline.classpath}" />
          <pathelement path="${ant.classpath}" />
@@ -1224,6 +1221,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <farrago.antFork target="forked_regressionWithoutBuild"
       classpathref="test.classpath">
       <jvmargs>
+        <jvmarg line="-Xmx768m"/>
+        <jvmarg line="-Xss1536k"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>

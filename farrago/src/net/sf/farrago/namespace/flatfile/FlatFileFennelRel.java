@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2009-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2009 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,7 +54,7 @@ public class FlatFileFennelRel
 
     // max length of text for a row when signalling an error
     // NOTE: keep this consistent with the Fennel file
-    //   fennel/lucidera/flatfile/FlatFileExecStreamImpl.cpp
+    //   fennel/flatfile/FlatFileExecStreamImpl.cpp
     public static final int MAX_ROW_ERROR_TEXT_WIDTH = 4000;
 
     //~ Instance fields --------------------------------------------------------

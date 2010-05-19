@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2003-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 1999-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -48,6 +48,9 @@ class TupleProjection;
 class StoredTypeDescriptorFactory;
 class SingleOutputExecStreamParams;
 class SortedAggExecStreamParams;
+class LcsRowScanBaseExecStreamParams;
+class LcsClusterAppendExecStreamParams;
+class LbmBitOpExecStreamParams;
 
 /**
  * ExecStreamFactory builds an ExecStreamEmbryo from the
@@ -131,8 +134,28 @@ protected:
     virtual void visit(ProxyFlatFileTupleStreamDef &streamDef);
     virtual void visit(ProxyLhxJoinStreamDef &streamDef);
     virtual void visit(ProxyLhxAggStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterReplaceStreamDef &streamDef);
+    virtual void visit(ProxyLcsRowScanStreamDef &streamDef);
+    virtual void visit(ProxyLbmGeneratorStreamDef &streamDef);
+    virtual void visit(ProxyLbmSplicerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSearchStreamDef &streamDef);
+    virtual void visit(ProxyLbmChopperStreamDef &streamDef);
+    virtual void visit(ProxyLbmUnionStreamDef &streamDef);
+    virtual void visit(ProxyLbmIntersectStreamDef &streamDef);
+    virtual void visit(ProxyLbmMinusStreamDef &streamDef);
+    virtual void visit(ProxyLbmNormalizerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSortedAggStreamDef &streamDef);
 
     void implementSortWithBTree(ProxySortingStreamDef &streamDef);
+    void readClusterScan(
+        ProxyLcsRowScanStreamDef &streamDef,
+        LcsRowScanBaseExecStreamParams &params);
+    void readClusterAppendParams(
+        ProxyLcsClusterAppendStreamDef &streamDef,
+        LcsClusterAppendExecStreamParams &params);
+    void readBitOpDynamicParams(
+        ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params);
 
 public:
     explicit ExecStreamFactory(

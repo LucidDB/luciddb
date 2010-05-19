@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2003-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 1999-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,23 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
+// REVIEW jvs 13-Mar-2010:  For some reason, these lcs/lbm includes
+// need to come before some of the others; otherwise, we get
+// errors about ambiguity with respect to boost::uint16_t on Windows.
+// I moved them up as a workaround.
+#include "fennel/lcs/LcsClusterAppendExecStream.h"
+#include "fennel/lcs/LcsClusterReplaceExecStream.h"
+#include "fennel/lcs/LcsRowScanExecStream.h"
+#include "fennel/lbm/LbmGeneratorExecStream.h"
+#include "fennel/lbm/LbmSplicerExecStream.h"
+#include "fennel/lbm/LbmSearchExecStream.h"
+#include "fennel/lbm/LbmChopperExecStream.h"
+#include "fennel/lbm/LbmUnionExecStream.h"
+#include "fennel/lbm/LbmIntersectExecStream.h"
+#include "fennel/lbm/LbmMinusExecStream.h"
+#include "fennel/lbm/LbmBitOpExecStream.h"
+#include "fennel/lbm/LbmNormalizerExecStream.h"
+#include "fennel/lbm/LbmSortedAggExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
@@ -675,6 +692,177 @@ void ExecStreamFactory::visit(ProxyLhxAggStreamDef &streamDef)
     embryo.init(new LhxAggExecStream(), params);
 }
 
+void ExecStreamFactory::visit(ProxyLcsClusterAppendStreamDef &streamDef)
+{
+    LcsClusterAppendExecStreamParams params;
+    readClusterAppendParams(streamDef, params);
+
+    embryo.init(
+        new LcsClusterAppendExecStream(),
+        params);
+}
+
+void ExecStreamFactory::visit(ProxyLcsClusterReplaceStreamDef &streamDef)
+{
+    LcsClusterReplaceExecStreamParams params;
+    readClusterAppendParams(streamDef, params);
+
+    embryo.init(
+        new LcsClusterReplaceExecStream(),
+        params);
+}
+
+void ExecStreamFactory::visit(ProxyLcsRowScanStreamDef &streamDef)
+{
+    LcsRowScanExecStreamParams params;
+
+    readTupleStreamParams(params, streamDef);
+    readClusterScan(streamDef, params);
+    CmdInterpreter::readTupleProjection(
+        params.outputProj,
+        streamDef.getOutputProj());
+    params.isFullScan = streamDef.isFullScan();
+    params.hasExtraFilter = streamDef.isHasExtraFilter();
+
+    params.samplingMode = streamDef.getSamplingMode();
+    params.samplingRate = streamDef.getSamplingRate();
+    params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
+    params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
+    params.samplingClumps =
+        LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
+    params.samplingRowCount = streamDef.getSamplingRowCount();
+
+    CmdInterpreter::readTupleProjection(
+        params.residualFilterCols,
+        streamDef.getResidualFilterColumns());
+    embryo.init(new LcsRowScanExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmGeneratorStreamDef &streamDef)
+{
+    LbmGeneratorExecStreamParams params;
+
+    readTupleStreamParams(params, streamDef);
+    readBTreeStreamParams(params, streamDef);
+
+    // LbmGeneratorExecStream requires a private ScratchSegment.
+    createPrivateScratchSegment(params);
+
+    readClusterScan(streamDef, params);
+    CmdInterpreter::readTupleProjection(
+        params.outputProj, streamDef.getOutputProj());
+    params.insertRowCountParamId =
+        readDynamicParamId(streamDef.getInsertRowCountParamId());
+    params.createIndex = streamDef.isCreateIndex();
+
+    embryo.init(new LbmGeneratorExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmSplicerStreamDef &streamDef)
+{
+    LbmSplicerExecStreamParams params;
+    readExecStreamParams(params, streamDef);
+    readTupleDescriptor(
+        params.outputTupleDesc,
+        streamDef.getOutputDesc());
+    SharedProxySplicerIndexAccessorDef pIndexAccessorDef =
+        streamDef.getIndexAccessor();
+    for (; pIndexAccessorDef; ++pIndexAccessorDef) {
+        BTreeExecStreamParams bTreeParams;
+        readBTreeParams(
+            bTreeParams,
+            *pIndexAccessorDef);
+        params.bTreeParams.push_back(bTreeParams);
+    }
+    params.insertRowCountParamId =
+        readDynamicParamId(streamDef.getInsertRowCountParamId());
+    params.writeRowCountParamId =
+        readDynamicParamId(streamDef.getWriteRowCountParamId());
+    params.createNewIndex = streamDef.isCreateNewIndex();
+    embryo.init(new LbmSplicerExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmSearchStreamDef &streamDef)
+{
+    LbmSearchExecStreamParams params;
+    initBTreePrefetchSearchParams(params, streamDef);
+
+    params.rowLimitParamId = readDynamicParamId(streamDef.getRowLimitParamId());
+
+    params.startRidParamId = readDynamicParamId(streamDef.getStartRidParamId());
+
+    embryo.init(new LbmSearchExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmChopperStreamDef &streamDef)
+{
+    LbmChopperExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    params.ridLimitParamId = readDynamicParamId(streamDef.getRidLimitParamId());
+    embryo.init(new LbmChopperExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmUnionStreamDef &streamDef)
+{
+    LbmUnionExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    // LbmUnionExecStream requires a private ScratchSegment.
+    createPrivateScratchSegment(params);
+
+    params.startRidParamId =
+        readDynamicParamId(streamDef.getConsumerSridParamId());
+
+    params.segmentLimitParamId =
+        readDynamicParamId(streamDef.getSegmentLimitParamId());
+
+    params.ridLimitParamId =
+        readDynamicParamId(streamDef.getRidLimitParamId());
+
+    params.maxRid = (LcsRid) 0;
+
+    embryo.init(new LbmUnionExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmIntersectStreamDef &streamDef)
+{
+    LbmIntersectExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    readBitOpDynamicParams(streamDef, params);
+
+    embryo.init(new LbmIntersectExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmMinusStreamDef &streamDef)
+{
+    LbmMinusExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    readBitOpDynamicParams(streamDef, params);
+
+    embryo.init(new LbmMinusExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmNormalizerStreamDef &streamDef)
+{
+    LbmNormalizerExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    TupleProjection keyProj;
+    for (int i = 0; i <  params.outputTupleDesc.size(); i++) {
+        keyProj.push_back(i);
+    }
+    params.keyProj = keyProj;
+
+    embryo.init(new LbmNormalizerExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLbmSortedAggStreamDef &streamDef)
+{
+    LbmSortedAggExecStreamParams params;
+    readAggStreamParams(params, streamDef);
+    embryo.init(new LbmSortedAggExecStream(), params);
+}
+
 void ExecStreamFactory::readColumnList(
     ProxyFlatFileTupleStreamDef &streamDef,
     std::vector<std::string> &names)
@@ -897,6 +1085,46 @@ void ExecStreamFactory::readAggStreamParams(
         params.aggInvocations.push_back(aggInvocation);
     }
     params.groupByKeyCount = streamDef.getGroupingPrefixSize();
+}
+
+void ExecStreamFactory::readClusterScan(
+    ProxyLcsRowScanStreamDef &streamDef,
+    LcsRowScanBaseExecStreamParams &params)
+{
+    SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
+    for (; pClusterScan; ++pClusterScan) {
+        LcsClusterScanDef clusterScanParam;
+        clusterScanParam.pCacheAccessor = params.pCacheAccessor;
+        readBTreeStreamParams(
+            clusterScanParam,
+            *pClusterScan);
+        readTupleDescriptor(
+            clusterScanParam.clusterTupleDesc,
+            pClusterScan->getClusterTupleDesc());
+        params.lcsClusterScanDefs.push_back(clusterScanParam);
+    }
+}
+
+void ExecStreamFactory::readClusterAppendParams(
+    ProxyLcsClusterAppendStreamDef &streamDef,
+    LcsClusterAppendExecStreamParams &params)
+{
+    readTupleStreamParams(params, streamDef);
+    readBTreeStreamParams(params, streamDef);
+
+    // LcsClusterAppendExecStream requires a private ScratchSegment.
+    createPrivateScratchSegment(params);
+
+    CmdInterpreter::readTupleProjection(
+        params.inputProj,
+        streamDef.getClusterColProj());
+}
+
+void ExecStreamFactory::readBitOpDynamicParams(
+    ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params)
+{
+    params.rowLimitParamId = readDynamicParamId(streamDef.getRowLimitParamId());
+    params.startRidParamId = readDynamicParamId(streamDef.getStartRidParamId());
 }
 
 ExecStreamSubFactory::~ExecStreamSubFactory()

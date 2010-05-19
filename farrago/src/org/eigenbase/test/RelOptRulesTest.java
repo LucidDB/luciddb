@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2009 The Eigenbase Project
-// Copyright (C) 2006-2009 SQLstream, Inc.
-// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -128,6 +128,24 @@ public class RelOptRulesTest
             PushProjectPastSetOpRule.instance,
             "select sal from "
             + "(select * from emp e1 union all select * from emp e2)");
+    }
+
+    public void testPushJoinThroughUnionOnLeft()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnLeft,
+            "select r1.sal from "
+            + "(select * from emp e1 union all select * from emp e2) r1, "
+            + "emp r2");
+    }
+
+    public void testPushJoinThroughUnionOnRight()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnRight,
+            "select r1.sal from "
+            + "emp r1, "
+            + "(select * from emp e1 union all select * from emp e2) r2");
     }
 }
 

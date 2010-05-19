@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -3791,6 +3791,15 @@ public class FarragoJdbcTest
         resultSet = stmt.executeQuery(select);
         assertTrue(resultSet.next());
         assertEquals(expected, resultSet.getString(1));
+    }
+
+    public void testExplainMetadata()
+        throws SQLException
+    {
+        String sql = "explain plan for values(0)";
+        resultSet = stmt.executeQuery(sql);
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        assertEquals("", metaData.getCatalogName(1));
     }
 
     //~ Inner Interfaces -------------------------------------------------------

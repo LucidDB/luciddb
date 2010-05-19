@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2002-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -246,13 +246,13 @@ public abstract class AbstractIterResultSet
         public String getCatalogName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public String getColumnClassName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public int getColumnCount()
@@ -333,7 +333,7 @@ public abstract class AbstractIterResultSet
         public String getSchemaName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isSearchable(int column)
@@ -351,7 +351,7 @@ public abstract class AbstractIterResultSet
         public String getTableName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isWritable(int column)

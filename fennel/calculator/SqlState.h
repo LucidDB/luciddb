@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2010-2010 The Eigenbase Project
-// Copyright (C) 2010-2010 SQLstream, Inc.
-// Copyright (C) 2010-2010 LucidEra, Inc.
+// Copyright (C) 2010 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2010 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Information about a particular error code.
  */
-class SqlStateInfo {
+class FENNEL_CALCULATOR_EXPORT SqlStateInfo {
 private:
     std::string _code;
 
@@ -48,7 +48,7 @@ public:
 /**
  * Enumeration of the SqlState values defined in the SQL:2008 standard.
  */
-class SqlState
+class FENNEL_CALCULATOR_EXPORT SqlState
 {
 public:
     static const SqlState &instance();

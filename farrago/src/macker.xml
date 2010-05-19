@@ -2,10 +2,10 @@
 <!-- 
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -30,6 +30,10 @@
       <include class="org.eigenbase.****" />
     </pattern>
 
+    <pattern name="luciddb">
+      <include class="org.luciddb.****" />
+    </pattern>
+
     <pattern name="util14" >
       <include class="org.eigenbase.util14.*" />
       <include class="org.eigenbase.util.property.*" />
@@ -39,8 +43,6 @@
 
     <pattern name="farrago">
       <include class="net.sf.farrago.****" />
-      <include class="com.disruptivetech.****" />
-      <include class="com.lucidera.****" />
     </pattern>
 
     <!-- farrago components -->
@@ -89,26 +91,9 @@
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
     <pattern name="namespace.flatfile" class="net.sf.farrago.namespace.flatfile.*" />
 
-    <pattern name="lu.jdbc" class="com.lucidera.jdbc.*"/>
-    <pattern name="lu.lcs" class="com.lucidera.lcs.*"/>
-    <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
-
-    <pattern name="lu.farrago" class="com.lucidera.farrago.*"/>
-    <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
-    <pattern name="lu.namespace.flatfile" class="com.lucidera.farrago.namespace.flatfile.*" />
-    <pattern name="lu.opt" class="com.lucidera.opt.*" />
-    <pattern name="lu.opt.test" class="com.lucidera.opt.test.*" />
-    <pattern name="lu.query" class="com.lucidera.query.*" />
-    <pattern name="lu.runtime" class="com.lucidera.runtime.*" />
-    <pattern name="lu.type" class="com.lucidera.type.*" />
-
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
     <pattern name="test" class="net.sf.farrago.test.**" />
-
-    <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
-
-    <pattern name="lu.test" class="com.lucidera.farrago.test.*" />
 
     <pattern name="plannerviz" class="net.sf.farrago.plannerviz.**" />
     
@@ -156,21 +141,8 @@
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
       <include pattern="namespace.flatfile"/>
-      <include pattern="lu.jdbc"/>
-      <include pattern="lu.lcs"/>
-      <include pattern="lu.lurql"/>
-      <include pattern="lu.farrago"/>
-      <include pattern="lu.fennel"/>
-      <include pattern="lu.namespace.flatfile"/>
-      <include pattern="lu.opt"/>
-      <include pattern="lu.opt.test"/>
-      <include pattern="lu.query"/>
-      <include pattern="lu.runtime"/>
-      <include pattern="lu.type"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
-      <include pattern="dt.test"/>
-      <include pattern="lu.test"/>
       <include pattern="plannerviz"/>
       <include pattern="syslib"/>
     </pattern>
@@ -854,132 +826,10 @@
       </deny>
     </access-rule>
 
-    <pattern name="lu.fennel.deps">
-      <include pattern="lu.fennel" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.fennel dependency violation</message>
-      <deny>
-        <from pattern="lu.fennel" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.fennel.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- FIXME jvs 29-July-2006:  eliminate circularity -->
-    <pattern name="lu.jdbc.deps">
-      <include pattern="lu.farrago" />
-      <include pattern="jdbc.engine.deps" />
-      <include pattern="jdbc.client.deps" />
-      <include pattern="lu.jdbc" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.jdbc dependency violation</message>
-      <deny>
-        <from pattern="lu.jdbc" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.jdbc.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.lcs.deps">
-      <include pattern="namespace.impl.deps" />
-      <include pattern="lu.farrago" />
-      <include pattern="lu.query" />
-      <include pattern="lu.lcs" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.lcs dependency violation</message>
-      <deny>
-        <from pattern="lu.lcs" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.lcs.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.lurql.deps">
-      <include pattern="lu.lurql" />
-      <include pattern="util" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.lurql dependency violation</message>
-      <deny>
-        <from pattern="lu.lurql" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.lurql.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.namespace.flatfile.deps">
-      <include pattern="namespace.flatfile.deps" />
-      <include pattern="lu.namespace.flatfile" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.namespace.flatfile dependency violation</message>
-      <deny>
-        <from pattern="lu.namespace.flatfile" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.namespace.flatfile.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.opt.deps">
-      <include pattern="lu.lcs.deps" />
-      <include pattern="namespace.flatfile.deps" />
-      <include pattern="fennel.rel.deps" />
-      <include pattern="lu.opt" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.opt dependency violation</message>
-      <deny>
-        <from pattern="lu.opt" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.opt.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.opt.test.deps">
-      <include pattern="lu.opt.deps" />
-      <include pattern="lu.opt.test" />
-      <include pattern="jdbc.engine" />
-      <include pattern="test" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.opt.test dependency violation</message>
-      <deny>
-        <from pattern="lu.opt.test" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.opt.test.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
     <pattern name="defimpl.deps">
       <include pattern="db.deps" />
       <include pattern="fennel.calc.deps" />
       <include pattern="fennel.rel.deps" />
-      <include pattern="lu.fennel.deps" />
-      <include pattern="lu.opt.deps" />
       <include pattern="defimpl" />
     </pattern>
 
@@ -990,49 +840,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="defimpl.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.farrago.deps">
-      <include pattern="lu.farrago" />
-      <include pattern="lu.lcs" />
-      <include pattern="lu.opt" />
-      <include pattern="lu.query" />
-      <include pattern="lu.runtime" />
-      <include pattern="lu.jdbc" />
-      <include pattern="lu.type" />
-      <include pattern="lu.fennel.deps" />
-      <include pattern="server" />
-      <include pattern="fennel.rel.deps" />
-      <include pattern="db.deps" />
-      <include pattern="defimpl" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.farrago dependency violation</message>
-      <deny>
-        <from pattern="lu.farrago" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.farrago.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- FIXME jvs 29-July-2006:  eliminate circularity -->
-    <pattern name="lu.query.deps">
-      <include pattern="lu.farrago.deps" />
-      <include pattern="lu.query" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.opt dependency violation</message>
-      <deny>
-        <from pattern="lu.query" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.query.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -1055,42 +862,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="test.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="dt.test.deps">
-      <include pattern="test.deps" />
-      <include pattern="fennel.calc.deps" />
-      <include pattern="fennel.rel.deps" />
-      <include pattern="dt.test" />
-      <include pattern="defimpl.deps" />
-    </pattern>
-
-    <access-rule>
-      <message>dt.test dependency violation</message>
-      <deny>
-        <from pattern="dt.test" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="dt.test.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.test.deps">
-      <include pattern="test.deps" />
-      <include pattern="lu.farrago.deps" />
-      <include pattern="lu.test" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.test dependency violation</message>
-      <deny>
-        <from pattern="lu.test" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.test.deps" />
         </allow>
       </deny>
     </access-rule>

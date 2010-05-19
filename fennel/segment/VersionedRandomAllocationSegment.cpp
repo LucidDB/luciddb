@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2009 The Eigenbase Project
-// Copyright (C) 2005-2009 SQLstream, Inc.
-// Copyright (C) 2005-2009 LucidEra, Inc.
-// Portions Copyright (C) 1999-2009 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -1477,6 +1477,6 @@ void VersionedRandomAllocationSegment::checkAbort(
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#14 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#15 $");
 
 // End VersionedRandomAllocationSegment.cpp

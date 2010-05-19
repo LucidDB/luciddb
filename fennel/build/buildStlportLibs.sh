@@ -22,6 +22,7 @@ then
 else
     if test "${TARGET_OS}" = "darwin"
     then
+       # echo "DEFS=-arch x86_64" > ${STLPORT_DIR}/build/Makefiles/config.mak
        echo "#define _STLP_NATIVE_INCLUDE_PATH /usr/include/c++/${GCC_VER}" > ${STLPORT_DIR}/stlport/stl/config/user_config.h
     fi
     make SHELL=/bin/bash -f gcc.mak ${TARGET_LIST}
