@@ -37,6 +37,7 @@ import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.plugin.*;
@@ -816,20 +817,24 @@ public class DdlRoutineHandler
         String jarName = getQualifiedJarName(jar);
         String[] deploySQLs = getDeploySqlStatements(
                               jarName, expandedUrl, "INSTALL");
+        FarragoSession session =
+            validator.getStmtValidator().getSession();
         if (deploySQLs != null) {
-            String _tmp = "";
+            String lastSql = "";
             try {
                 for (String sql : deploySQLs) {
                     if (sql.trim().length() != 0) {
-                        _tmp = sql;
-                        executeSql(sql);
+                        lastSql = sql;
+                        executeSql(session, sql);
                     }
                 }
             } catch (SQLException ex) {
-                validator.getStmtValidator().getSession().getWarningQueue()
-                         .postWarning(
-                            FarragoResource.instance()
-                            .SqlStatementExecutionFailed.ex(_tmp));
+                // REVIEW jvs 19-May-2010:  This does not match
+                // what we agreed on during design review.  Creation
+                // is supposed to fail fast rather than keep going.
+                session.getWarningQueue().postWarning(
+                    FarragoResource.instance().SqlStatementExecutionFailed.ex(
+                        lastSql));
             }
         }
     }
@@ -846,24 +851,44 @@ public class DdlRoutineHandler
                 res.CannotDoDeploymentOnClass.ex(
                     repos.getLocalizedObjectName(jar)));
         }
-        // bypass mass delete API exception.
+
+        // Disable mass deletion for this DROP so that it
+        // doesn't interfere with nested DDL transactions.
         validator.enableMassDeletion(false);
-        String jarName = getQualifiedJarName(jar);
-        String[] deploySQLs = getDeploySqlStatements(
-            jarName, expandedUrl, "REMOVE");
-        if (deploySQLs != null) {
-            for (String sql : deploySQLs) {
-                if (sql.trim().length() != 0) {
-                    try {
-                        executeSql(sql);
-                    } catch (SQLException ex) {
-                        validator.getStmtValidator()
-                        .getSession().getWarningQueue().postWarning(
-                            FarragoResource
-                            .instance().SqlStatementExecutionFailed.ex(sql));
+
+        // Also disable it for the nested transactions themselves.
+        FarragoSession session =
+            validator.getStmtValidator().getSession();
+        boolean savedMassDeletion =
+            session.getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
+        try {
+            session.getSessionVariables().setBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
+                false);
+            String jarName = getQualifiedJarName(jar);
+            String[] deploySQLs = getDeploySqlStatements(
+                jarName, expandedUrl, "REMOVE");
+
+            if (deploySQLs != null) {
+                for (String sql : deploySQLs) {
+                    if (sql.trim().length() != 0) {
+                        try {
+                            executeSql(session, sql);
+                        } catch (SQLException ex) {
+                            // REVIEW jvs 19-May-2010: How is the user supposed
+                            // to know what went wrong without ex's message?
+                            session.getWarningQueue().postWarning(
+                                FarragoResource.instance()
+                                .SqlStatementExecutionFailed.ex(sql));
+                        }
                     }
-               }
+                }
             }
+        } finally {
+            session.getSessionVariables().setBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
+                savedMassDeletion);
         }
     }
 
@@ -879,14 +904,13 @@ public class DdlRoutineHandler
         return fqjn;
     }
 
-    private void executeSql(String sql)
+    private void executeSql(FarragoSession session, String sql)
         throws SQLException
     {
         Connection conn = null;
         Statement stmt = null;
         try {
-            conn = validator.getStmtValidator()
-            .getSession().getConnectionSource().newConnection();
+            conn = session.getConnectionSource().newConnection();
             stmt = conn.createStatement();
             stmt.executeUpdate(sql);
         } finally {

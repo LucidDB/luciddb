@@ -31,6 +31,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -203,7 +204,9 @@ public class DdlValidator
         if (getRepos().getEnkiMdrRepos().supportsPreviewRefDelete()) {
             usePreviewDelete = true;
         }
-        enableMassDeletion = true;
+        enableMassDeletion =
+            getInvokingSession().getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
         schedulingMap = new LinkedHashMap<String, SchedulingDetail>();
@@ -723,17 +726,19 @@ public class DdlValidator
             }
         }
     }
+
     public void enableMassDeletion(boolean enable)
     {
          enableMassDeletion = enable;
     }
+
     private void delete(Collection<RefObject> objects)
     {
         if (objects.isEmpty()) {
             return;
         }
         for (RefObject object : objects) {
-           object.refDelete();
+            object.refDelete();
         }
     }
     private void checkJmiConstraints(RefObject obj)
