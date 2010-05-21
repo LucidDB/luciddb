@@ -205,7 +205,7 @@ fi
 
 # create farrago libs
 cd $DIST_DIR
-ant jar
+ant allJars 
 
 # copy farrago libs
 cd $FARRAGO_DIR
