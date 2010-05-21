@@ -53,17 +53,21 @@
     <mkdir dir="${release.dir}"/>
   </target>
 
-  <target name="allJars" depends="clean,jar,jdbcClientOnlyJar,jdbcJar,jdbcEngineOnlyJar" >
-
+  <target name="allJars" depends="cleanJars,jar,jdbcClientOnlyJar,jdbcJar,jdbcEngineOnlyJar" >
   </target>
 
-  <target name="clean">
+  <!-- Cleans up everything --> 
+  <target name="clean" depends="cleanJars">
+    <delete dir="${release.dir}" quiet="true"/>
+  </target>
+
+  <!-- Cleans just jars -->
+  <target name="cleanJars">
     <delete file="${dist.jar.file}" quiet="true"/>
     <delete file="${dist.jar.jdbc.file}" quiet="true"/>
     <delete file="${dist.jar.jdbc.client.file}" quiet="true"/>
     <delete file="${dist.jar.jdbc.engine.file}" quiet="true"/>
     <delete file="${dist.jar.jdbc.engine.file}" quiet="true"/>
-    <delete dir="${release.dir}" quiet="true"/>
   </target>
 
   <target name="jar">
