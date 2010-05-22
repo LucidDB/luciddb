@@ -350,9 +350,11 @@ public interface FarragoSessionDdlValidator
     public boolean isReplace();
 
     /**
- *      * Pypass the mass deletion exeption in Enki.
- *           * @param enabled
- *                */
+     * Controls whether Enki's mass deletion optimization is used
+     * for this DDL transaction.
+     *
+     * @param enabled whether to enable the optimization
+     */
     public void enableMassDeletion(boolean enabled);
 }
 
