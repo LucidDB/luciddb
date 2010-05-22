@@ -2649,16 +2649,12 @@ public class SqlValidatorImpl
                 // literal
                 validateIntervalQualifier(intervalQualifier);
                 String intervalStr = interval.getIntervalLiteral();
-                int [] values =
-                    intervalQualifier.evaluateIntervalLiteral(intervalStr);
-                if (values == null) {
-                    throw newValidationError(
-                        literal,
-                        EigenbaseResource.instance().UnsupportedIntervalLiteral
-                        .ex(
-                            "'" + interval.toString() + "'",
-                            "INTERVAL "
-                            + interval.getIntervalQualifier().toString()));
+                try {
+                    int [] values =
+                        intervalQualifier.evaluateIntervalLiteral(intervalStr);
+                    Util.discard(values);
+                } catch (SqlValidatorException e) {
+                    throw newValidationError(literal, e);
                 }
             }
             break;

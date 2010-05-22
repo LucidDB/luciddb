@@ -33,6 +33,7 @@ import java.util.logging.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -166,11 +167,14 @@ public final class SqlParserUtil
         Util.permAssert(
             !intervalQualifier.isYearMonth(),
             "interval must be day time");
-        int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
-        Util.permAssert(
-            ret != null,
-            "error parsing day month interval " + literal);
-
+        int [] ret;
+        try {
+            ret = intervalQualifier.evaluateIntervalLiteral(literal);
+            assert ret != null;
+        } catch (SqlValidatorException e) {
+            throw Util.newInternal(
+                e, "while parsing day-to-second interval " + literal);
+        }
         long l = 0;
         long [] conv = new long[5];
         conv[4] = 1; // millisecond
@@ -207,10 +211,14 @@ public final class SqlParserUtil
         Util.permAssert(
             intervalQualifier.isYearMonth(),
             "interval must be year month");
-        int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
-        Util.permAssert(
-            ret != null,
-            "error parsing year month interval " + literal);
+        int [] ret;
+        try {
+            ret = intervalQualifier.evaluateIntervalLiteral(literal);
+            assert ret != null;
+        } catch (SqlValidatorException e) {
+            throw Util.newInternal(
+                e, "error parsing year-to-month interval " + literal);
+        }
 
         long l = 0;
         long [] conv = new long[2];

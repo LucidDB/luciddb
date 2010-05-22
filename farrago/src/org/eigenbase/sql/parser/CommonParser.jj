@@ -2731,50 +2731,50 @@ SqlIntervalQualifier IntervalQualifier() :
         [
             LOOKAHEAD(2) <TO> <MONTH>
             {
-                end = SqlIntervalQualifier.TimeUnit.Month;
+                end = SqlIntervalQualifier.TimeUnit.MONTH;
             }
         ]
-        { start = SqlIntervalQualifier.TimeUnit.Year; }
+        { start = SqlIntervalQualifier.TimeUnit.YEAR; }
         |
         <MONTH> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
-        { start = SqlIntervalQualifier.TimeUnit.Month; }
+        { start = SqlIntervalQualifier.TimeUnit.MONTH; }
         |
         <DAY> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
-                <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
-                | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
-                | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+                <HOUR> { end = SqlIntervalQualifier.TimeUnit.HOUR; }
+                | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.MINUTE; }
+                | <SECOND> { end = SqlIntervalQualifier.TimeUnit.SECOND; }
                 [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
-        { start = SqlIntervalQualifier.TimeUnit.Day; }
+        { start = SqlIntervalQualifier.TimeUnit.DAY; }
         |
         <HOUR> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
-                <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
-                | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+                <MINUTE> { end = SqlIntervalQualifier.TimeUnit.MINUTE; }
+                | <SECOND> { end = SqlIntervalQualifier.TimeUnit.SECOND; }
                 [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
-        { start = SqlIntervalQualifier.TimeUnit.Hour; }
+        { start = SqlIntervalQualifier.TimeUnit.HOUR; }
         |
         <MINUTE> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
-                <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+                <SECOND> { end = SqlIntervalQualifier.TimeUnit.SECOND; }
                 [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
-        { start = SqlIntervalQualifier.TimeUnit.Minute; }
+        { start = SqlIntervalQualifier.TimeUnit.MINUTE; }
         |
         <SECOND>
         [   <LPAREN> startPrec = UnsignedIntLiteral()
             [ <COMMA> secondFracPrec = UnsignedIntLiteral() ]
             <RPAREN>
         ]
-        { start = SqlIntervalQualifier.TimeUnit.Second; }
+        { start = SqlIntervalQualifier.TimeUnit.SECOND; }
     )
     {
         return new SqlIntervalQualifier(start,
@@ -2790,27 +2790,27 @@ SqlIntervalQualifier.TimeUnit TimeUnit() :
 {
     <YEAR>
     {
-        return SqlIntervalQualifier.TimeUnit.Year;
+        return SqlIntervalQualifier.TimeUnit.YEAR;
     }
     | <MONTH>
     {
-        return SqlIntervalQualifier.TimeUnit.Month;
+        return SqlIntervalQualifier.TimeUnit.MONTH;
     }
     | <DAY>
     {
-        return SqlIntervalQualifier.TimeUnit.Day;
+        return SqlIntervalQualifier.TimeUnit.DAY;
     }
     | <HOUR>
     {
-        return SqlIntervalQualifier.TimeUnit.Hour;
+        return SqlIntervalQualifier.TimeUnit.HOUR;
     }
     | <MINUTE>
     {
-        return SqlIntervalQualifier.TimeUnit.Minute;
+        return SqlIntervalQualifier.TimeUnit.MINUTE;
     }
     |   <SECOND>
     {
-        return SqlIntervalQualifier.TimeUnit.Second;
+        return SqlIntervalQualifier.TimeUnit.SECOND;
     }
 }
 

@@ -53,6 +53,24 @@ public class Pair<T1, T2>
         this.right = right;
     }
 
+    /**
+     * Creates a Pair of appropriate type.
+     *
+     * <p>This is a shorthand that allows you to omit implicit types. For
+     * example, you can write:
+     * <blockquote>return Pair.of(s, n);</blockquote>
+     * instead of
+     * <blockquote>return new Pair&lt;String, Integer&gt;(s, n);</blockquote>
+     *
+     * @param left left value
+     * @param right right value
+     * @return A Pair
+     */
+    public static <T1, T2> Pair<T1, T2> of(T1 left, T2 right)
+    {
+        return new Pair<T1, T2>(left, right);
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     public boolean equals(Object obj)

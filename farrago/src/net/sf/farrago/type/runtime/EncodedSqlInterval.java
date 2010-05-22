@@ -303,7 +303,7 @@ public abstract class EncodedSqlInterval
                     }
                 }
             }
-            if (endUnit == SqlIntervalQualifier.TimeUnit.Second) {
+            if (endUnit == SqlIntervalQualifier.TimeUnit.SECOND) {
                 appendSecondFractions(strbuf, v);
             }
         } //synchronized(NFS)
@@ -375,16 +375,16 @@ public abstract class EncodedSqlInterval
                 return;
             }
             switch (timeUnit) {
-            case Day:
+            case DAY:
                 value = value / MS_PER_DAY * MS_PER_DAY;
                 break;
-            case Hour:
+            case HOUR:
                 value = value / MS_PER_HOUR * MS_PER_HOUR;
                 break;
-            case Minute:
+            case MINUTE:
                value = value / MS_PER_MINUTE * MS_PER_MINUTE;
                break;
-            case Second:
+            case SECOND:
                 value = value / MS_PER_SECOND * MS_PER_SECOND;
                 break;
             default:
@@ -411,18 +411,18 @@ public abstract class EncodedSqlInterval
                 return;
             }
             switch (timeUnit) {
-            case Day:
+            case DAY:
                 value = (value + (MS_PER_DAY - 1)) / MS_PER_DAY * MS_PER_DAY;
                 break;
-            case Hour:
+            case HOUR:
                 value = (value + (MS_PER_HOUR - 1)) / MS_PER_HOUR * MS_PER_HOUR;
                 break;
-            case Minute:
+            case MINUTE:
                value =
                    (value + (MS_PER_MINUTE - 1)) / MS_PER_MINUTE
                    * MS_PER_MINUTE;
                break;
-            case Second:
+            case SECOND:
                 value =
                     (value + (MS_PER_SECOND - 1)) / MS_PER_SECOND
                     * MS_PER_SECOND;

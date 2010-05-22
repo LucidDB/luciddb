@@ -456,7 +456,7 @@ public class RexBuilder
             endUnit = intervalType.getIntervalQualifier().getStartUnit();
         }
         int scale = 0;
-        if (endUnit == TimeUnit.Second) {
+        if (endUnit == TimeUnit.SECOND) {
             scale = Math.min(
                 intervalType.getIntervalQualifier()
                 .getFractionalSecondPrecision(), 3);
@@ -488,7 +488,7 @@ public class RexBuilder
             endUnit = intervalType.getIntervalQualifier().getStartUnit();
         }
         int scale = 0;
-        if (endUnit == TimeUnit.Second) {
+        if (endUnit == TimeUnit.SECOND) {
             scale = Math.min(
                 intervalType.getIntervalQualifier()
                 .getFractionalSecondPrecision(), 3);

@@ -488,23 +488,23 @@ public class StandardConvertletTable
         long val = unit.multiplier;
         RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
         switch (unit) {
-        case Day:
+        case DAY:
             val = 0;
             break;
-        case Hour:
-            val = SqlIntervalQualifier.TimeUnit.Day.multiplier;
+        case HOUR:
+            val = SqlIntervalQualifier.TimeUnit.DAY.multiplier;
             break;
-        case Minute:
-            val = SqlIntervalQualifier.TimeUnit.Hour.multiplier;
+        case MINUTE:
+            val = SqlIntervalQualifier.TimeUnit.HOUR.multiplier;
             break;
-        case Second:
-            val = SqlIntervalQualifier.TimeUnit.Minute.multiplier;
+        case SECOND:
+            val = SqlIntervalQualifier.TimeUnit.MINUTE.multiplier;
             break;
-        case Year:
+        case YEAR:
             val = 0;
             break;
-        case Month:
-            val = SqlIntervalQualifier.TimeUnit.Year.multiplier;
+        case MONTH:
+            val = SqlIntervalQualifier.TimeUnit.YEAR.multiplier;
             break;
         default:
             throw Util.unexpected(unit);
