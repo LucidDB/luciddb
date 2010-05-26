@@ -26,21 +26,10 @@
       </manifest>
 
     </jar>
-    <property file="run.properties"/>
-    <copy todir="${sdd.dir}/.." overwrite="true">
-      <fileset dir="${sdd.dir}" includes="*.tmpl"/>
-      <filterset id="dir.filter">
-        <filter token="schema_name" value="${schema_name}"/>
-        <filter token="file_url" value="${file_url}"/>
-      </filterset>
-      <globmapper from="*.tmpl" to="*"/>
-    </copy>  
   </target>
 
   <target name="clean">
     <delete file="sddtest.jar"/>
-    <delete file="${sdd.dir}/../sqldeploymentdesciptor.sql"/>
-    <delete file="${sdd.dir}/../sqldeploymentdesciptor.ref"/>
   </target>
 </project>
 
