@@ -66,6 +66,11 @@ import org.eigenbase.util.*;
 public class DdlRoutineHandler
     extends DdlHandler
 {
+    public static final int NOT_DEPLOYED = 0;
+    public static final int DEPLOYMENT_PENDING = 1;
+    public static final int DEPLOYED = 2;
+    public static final int DEPLOYED_PARTIAL = 3;
+    public static final int UNDEPLOYMENT_PENDING = 4;
     //~ Constructors -----------------------------------------------------------
 
     public DdlRoutineHandler(FarragoSessionDdlValidator validator)
@@ -804,6 +809,7 @@ public class DdlRoutineHandler
 
     public void executeCreation(FemJar jar)
     {
+        jar.setDeploymentState(DEPLOYMENT_PENDING);
         String url = jar.getUrl().trim();
         String expandedUrl = FarragoProperties.instance().expandProperties(url);
         if (expandedUrl.startsWith(
@@ -819,6 +825,10 @@ public class DdlRoutineHandler
                               jarName, expandedUrl, "INSTALL");
         FarragoSession session =
             validator.getStmtValidator().getSession();
+        session.getSessionVariables().set(
+            FarragoDefaultSessionPersonality.SQLJ_THISJAR,
+            jarName);
+        boolean deployed_partial = false;
         if (deploySQLs != null) {
             String lastSql = "";
             try {
@@ -829,6 +839,7 @@ public class DdlRoutineHandler
                     }
                 }
             } catch (SQLException ex) {
+                deployed_partial = true;
                 // REVIEW jvs 19-May-2010:  This does not match
                 // what we agreed on during design review.  Creation
                 // is supposed to fail fast rather than keep going.
@@ -836,11 +847,17 @@ public class DdlRoutineHandler
                     FarragoResource.instance().SqlStatementExecutionFailed.ex(
                         lastSql));
             }
+            if (deployed_partial) {
+                jar.setDeploymentState(DEPLOYED_PARTIAL);
+            } else {
+                jar.setDeploymentState(DEPLOYED);
+            }
         }
     }
 
     public void executeDrop(FemJar jar)
     {
+        jar.setDeploymentState(UNDEPLOYMENT_PENDING);
         String url = jar.getUrl().trim();
         String expandedUrl = FarragoProperties.instance().expandProperties(url);
         if (expandedUrl.startsWith(
@@ -869,7 +886,7 @@ public class DdlRoutineHandler
             String jarName = getQualifiedJarName(jar);
             String[] deploySQLs = getDeploySqlStatements(
                 jarName, expandedUrl, "REMOVE");
-
+            boolean deployed_partial = false;
             if (deploySQLs != null) {
                 for (String sql : deploySQLs) {
                     if (sql.trim().length() != 0) {
@@ -883,6 +900,11 @@ public class DdlRoutineHandler
                                 .SqlStatementExecutionFailed.ex(sql));
                         }
                     }
+                }
+                if (deployed_partial) {
+                    jar.setDeploymentState(DEPLOYED_PARTIAL);
+                } else {
+                    jar.setDeploymentState(DEPLOYED);
                 }
             }
         } finally {
@@ -956,9 +978,6 @@ public class DdlRoutineHandler
                             {
                                 break;
                             } else if (flag) {
-                                // "thisjar" replacement in the spec
-                                // (section 4.11.1)
-                                s = s.replaceAll("thisjar", jarName);
                                 sb.append(s);
                                 sb.append("\n");
                             }

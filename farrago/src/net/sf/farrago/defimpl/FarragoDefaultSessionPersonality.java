@@ -123,9 +123,14 @@ public class FarragoDefaultSessionPersonality
     /**
      * Whether to use Enki's mass deletion optimization.
      */
+
     public static final String USE_ENKI_MASS_DELETION = "useEnkiMassDeletion";
     public static final String USE_ENKI_MASS_DELETION_DEFAULT = "true";
-
+    /**
+     * "thisjar" replacement in the spec(section 4.11.1).
+     */
+    public static final String SQLJ_THISJAR = "thisjar";
+    public static final String SQLJ_THISJAR_DEFAULT = "";
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoDatabase database;
@@ -159,6 +164,7 @@ public class FarragoDefaultSessionPersonality
         paramValidator.registerBoolParam(
             USE_ENKI_MASS_DELETION,
             false);
+        paramValidator.registerStringParam(SQLJ_THISJAR, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -472,6 +478,7 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             USE_ENKI_MASS_DELETION,
             USE_ENKI_MASS_DELETION_DEFAULT);
+        variables.setDefault(SQLJ_THISJAR, SQLJ_THISJAR_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
