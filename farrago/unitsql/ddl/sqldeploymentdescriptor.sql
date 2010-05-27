@@ -12,8 +12,6 @@ values SS.test_routine(255);
 create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(0);
 create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(0);
 
-create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar1' options(0);
-
 drop jar test_jar1 options(0) CASCADE;
 drop jar test_jar options(0) CASCADE;
 
