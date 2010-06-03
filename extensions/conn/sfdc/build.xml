@@ -143,12 +143,18 @@
         <attribute
           name="DataWrapperClassName"
           value="net.sf.farrago.namespace.sfdc.SfdcDataWrapper" />
+        <section name="deploy.txt">
+        <attribute
+          name="SQLJDeploymentDescriptor"
+          value="TRUE" />
+	</section>
       </manifest>
       <fileset dir="${classes.dir}"
         includes="com/sforce/**,net/sf/farrago/namespace/sfdc/**"
         excludes="net/sf/farrago/namespace/sfdc/Export*"/>
       <fileset dir="${open.dir}/farrago/classes"
         includes="org/eigenbase/util/EigenbaseException.class"/>
+      <fileset file="${sfdc.dir}/src/deploy.txt"/>
     </jar>
   </target>
 
@@ -159,6 +165,11 @@
         <attribute
           name="DataWrapperClassName"
           value="net.sf.farrago.namespace.sfdc.SfdcDataWrapper" />
+        <section name="deploy.txt">
+        <attribute
+          name="SQLJDeploymentDescriptor"
+          value="TRUE" />
+	</section>
       </manifest>
 	<zipfileset src="${sfdc.plugin.dir}/MedSfdc.jar"/>
     <zipfileset src="${thirdparty.dir}/commons-codec/commons-codec-1.3.jar"/>
