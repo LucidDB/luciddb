@@ -134,6 +134,7 @@
       destdir="${classes.dir}"
       classpath="${build.classpath}">
       <include name="**/*.java" />
+      <exclude name="**/*Test.java" />
     </javac>
   </target>
 
@@ -231,6 +232,18 @@
     </wsdl2java>
   </target>
 
+  <target name="test-compile" depends="test-wsdl2java">
+    <mkdir dir="${classes.dir}"/>
+    <javac
+      debug="on"
+      deprecation="off"
+      srcdir="${sfdc.dir}"
+      destdir="${classes.dir}"
+      classpath="${build.classpath}">
+      <include name="**/*.java" />
+    </javac>
+  </target>
+
   <target name="gen-all-sql">
     <copy todir="${sfdcgensql.dir}" overwrite="true" filtering="true">
       <fileset dir="${sfdcunitsql.dir}">
@@ -243,7 +256,8 @@
     </copy>
   </target>
 
-  <target name="test" depends="test-wsdl2java,gen-all-sql">
+  <target name="test" depends="test-compile,gen-all-sql">
+    <mkdir dir="${sfdc.testlog.dir}"/>
     <antcall target="test-delete"/>
     <antcall target="test-basic"/>
     <antcall target="test-views"/>
@@ -261,9 +275,9 @@
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="tests" value="testCreateDelete,testCreateRows"/>
-      <sysproperty key="SFDC_TEST_HOME" value="${sfdcgensql.dir}"/>
-      <sysproperty key="username" value="${username_test}"/>
-      <sysproperty key="password" value="${password_test}"/>
+      <env key="SFDC_TEST_HOME" value="${sfdcgensql.dir}"/>
+      <env key="username" value="${username_test}"/>
+      <env key="password" value="${password_test}"/>
       <formatter type="plain"/>
       <formatter type="xml"/>
       <test todir="${sfdc.testlog.dir}" name="net.sf.farrago.namespace.sfdc.test.CreateAndDeleteTest" />
@@ -271,7 +285,7 @@
   </target>
 
   <target name="edit-sql" depends="create-test">
-    <replace dir="${basedir}" replacefilterfile="tmp.map"
+    <replace dir="${basedir}" replacefilterfile="${sfdcgensql.dir}/tmp.map"
       includes="**/deletes.sql,**/deletes.ref"/>
     <delete file="${sfdcgensql.dir}/tmp.map" quiet="true"/>
     <delete file="${sfdcgensql.dir}/exporttmp.map" quiet="true"/>
