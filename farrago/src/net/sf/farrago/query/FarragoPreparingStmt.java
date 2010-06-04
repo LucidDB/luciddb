@@ -545,6 +545,12 @@ public class FarragoPreparingStmt
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
             RelDataType rowType = preparedExecution.getPhysicalRowType();
+            if (fieldOrigins == null
+                || rowType.getFieldCount() != fieldOrigins.size())
+            {
+                fieldOrigins =
+                    Collections.nCopies(rowType.getFieldCount(), null);
+            }
             RelDataType dynamicParamRowType = getParamRowType();
 
             String streamName = null;
@@ -605,12 +611,22 @@ public class FarragoPreparingStmt
                 } catch (ClassNotFoundException ex) {
                     throw Util.newInternal(ex);
                 }
+                final RelDataType preparedRowType =
+                    (originalRowType == null) ? rowType : originalRowType;
+                if (fieldOrigins == null
+                    || preparedRowType.getFieldCount() != fieldOrigins.size())
+                {
+                    fieldOrigins =
+                        Collections.nCopies(
+                            preparedRowType.getFieldCount(), null);
+                }
                 executableStmt =
                     new FarragoExecutableJavaStmt(
                         packageDir,
                         rowClass,
                         javaCompiler.getClassLoader(),
-                        (originalRowType == null) ? rowType : originalRowType,
+                        preparedRowType,
+                        fieldOrigins,
                         dynamicParamRowType,
                         preparedExecution.getMethod(),
                         getTransformDefs(),
@@ -626,6 +642,7 @@ public class FarragoPreparingStmt
                 executableStmt =
                     new FarragoExecutableFennelStmt(
                         rowType,
+                        fieldOrigins,
                         dynamicParamRowType,
                         xmiFennelPlan,
                         streamName,

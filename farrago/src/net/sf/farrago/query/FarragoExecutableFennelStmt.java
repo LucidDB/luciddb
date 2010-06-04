@@ -33,7 +33,6 @@ import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
@@ -58,6 +57,7 @@ class FarragoExecutableFennelStmt
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataType rowType;
+    protected final List<List<String>> fieldOrigins;
     protected final String xmiFennelPlan;
     private final Map<String, String> referencedObjectTimestampMap;
     private final String streamName;
@@ -67,6 +67,7 @@ class FarragoExecutableFennelStmt
 
     FarragoExecutableFennelStmt(
         RelDataType preparedRowType,
+        List<List<String>> fieldOrigins,
         RelDataType dynamicParamRowType,
         String xmiFennelPlan,
         String streamName,
@@ -78,12 +79,16 @@ class FarragoExecutableFennelStmt
     {
         super(dynamicParamRowType, isDml, tableModOp, tableAccessMap);
 
+        this.fieldOrigins = fieldOrigins;
         this.xmiFennelPlan = xmiFennelPlan;
         this.streamName = streamName;
         this.referencedObjectTimestampMap = referencedObjectTimestampMap;
         this.resultSetTypeMap = typeMap;
+        this.rowType = preparedRowType;
 
-        rowType = preparedRowType;
+        assert fieldOrigins == null
+           || fieldOrigins.size() == rowType.getFieldCount()
+            : fieldOrigins + "; " + rowType;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,6 +97,12 @@ class FarragoExecutableFennelStmt
     public RelDataType getRowType()
     {
         return rowType;
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public List<List<String>> getFieldOrigins()
+    {
+        return fieldOrigins;
     }
 
     // implement FarragoSessionExecutableStmt
@@ -143,8 +154,8 @@ class FarragoExecutableFennelStmt
                 new FennelOnlyResultSet(
                     tupleIter,
                     rowType,
-                    runtimeContext,
-                    new FarragoResultSetMetaData(rowType));
+                    fieldOrigins,
+                    runtimeContext);
 
             // Finally, it's safe to open all streams.
             runtimeContext.openStreams();

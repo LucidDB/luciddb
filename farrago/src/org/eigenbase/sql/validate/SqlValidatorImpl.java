@@ -3979,6 +3979,66 @@ public class SqlValidatorImpl
         return false;
     }
 
+    public List<List<String>> getFieldOrigins(SqlNode sqlQuery)
+    {
+        if (sqlQuery instanceof SqlExplain) {
+            return Collections.emptyList();
+        }
+        final RelDataType rowType = getValidatedNodeType(sqlQuery);
+        final int fieldCount = rowType.getFieldCount();
+        if (!sqlQuery.isA(SqlKind.Query)) {
+            return Collections.nCopies(fieldCount, null);
+        }
+        final ArrayList<List<String>> list = new ArrayList<List<String>>();
+        for (int i = 0; i < fieldCount; i++) {
+            List<String> origin = getFieldOrigin(sqlQuery, i);
+            assert origin == null || origin.size() >= 4 : origin;
+            list.add(origin);
+        }
+        return list;
+    }
+
+    private List<String> getFieldOrigin(SqlNode sqlQuery, int i)
+    {
+        if (sqlQuery instanceof SqlSelect) {
+            SqlSelect sqlSelect = (SqlSelect) sqlQuery;
+            final SelectScope scope = getRawSelectScope(sqlSelect);
+            final List<SqlNode> selectList = scope.getExpandedSelectList();
+            SqlNode selectItem = selectList.get(i);
+            if (SqlUtil.isCallTo(
+                selectItem, SqlStdOperatorTable.asOperator))
+            {
+                selectItem = ((SqlCall) selectItem).getOperands()[0];
+            }
+            if (selectItem instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) selectItem;
+                SqlValidatorNamespace namespace = null;
+                List<String> origin = new ArrayList<String>();
+                for (String name : id.names) {
+                    if (namespace == null) {
+                        namespace = scope.resolve(name, null, null);
+                        final SqlValidatorTable table = namespace.getTable();
+                        if (table != null) {
+                            origin.addAll(
+                                Arrays.asList(table.getQualifiedName()));
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        namespace = namespace.lookupChild(name);
+                        if (namespace != null) {
+                            origin.add(name);
+                        } else {
+                            return null;
+                        }
+                    }
+                }
+                return origin;
+            }
+        }
+        return null;
+    }
+
     public void validateColumnListParams(
         SqlFunction function,
         RelDataType [] argTypes,

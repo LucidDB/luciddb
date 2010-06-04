@@ -23,6 +23,7 @@
 package net.sf.farrago.type;
 
 import java.sql.*;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 
@@ -47,7 +48,9 @@ public class FarragoParameterMetaData
      */
     public FarragoParameterMetaData(RelDataType rowType)
     {
-        super(rowType);
+        super(
+            rowType,
+            Collections.<List<String>>nCopies(rowType.getFieldCount(), null));
     }
 
     //~ Methods ----------------------------------------------------------------

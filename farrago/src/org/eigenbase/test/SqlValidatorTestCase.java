@@ -24,6 +24,7 @@ package org.eigenbase.test;
 
 import java.nio.charset.*;
 
+import java.util.List;
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -520,6 +521,16 @@ public class SqlValidatorTestCase
             String expected);
 
         /**
+         * Given a SQL query, returns a list of the origins of each result
+         * field.
+         *
+         * @param sql SQL query
+         * @param fieldOriginList Field origin list, e.g.
+         *   "{(CATALOG.SALES.EMP.EMPNO, null)}"
+         */
+        void checkFieldOrigin(String sql, String fieldOriginList);
+
+        /**
          * Checks that a query gets rewritten to an expected form.
          *
          * @param validator validator to use; null for default
@@ -701,6 +712,33 @@ public class SqlValidatorTestCase
             RelDataType actualType = getColumnType(sql);
             String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
+        }
+
+        public void checkFieldOrigin(String sql, String fieldOriginList)
+        {
+            SqlValidator validator = getValidator();
+            SqlNode n = parseAndValidate(validator, sql);
+            final List<List<String>> list = validator.getFieldOrigins(n);
+            final StringBuilder buf = new StringBuilder("{");
+            int i = 0;
+            for (List<String> strings : list) {
+                if (i++ > 0) {
+                    buf.append(", ");
+                }
+                if (strings == null) {
+                    buf.append("null");
+                } else {
+                    int j = 0;
+                    for (String s : strings) {
+                        if (j++ > 0) {
+                            buf.append('.');
+                        }
+                        buf.append(s);
+                    }
+                }
+            }
+            buf.append("}");
+            assertEquals(fieldOriginList, buf.toString());
         }
 
         public void checkResultType(String sql, String expected)

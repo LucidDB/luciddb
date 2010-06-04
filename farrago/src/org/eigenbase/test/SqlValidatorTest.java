@@ -6329,7 +6329,7 @@ public class SqlValidatorTest
             "select * from dept",
             "SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`"
             + NL
-            + "FROM `SALES`.`DEPT` AS `DEPT`");
+            + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
     }
 
     public void testRewriteWithColumnReferenceExpansion()
@@ -6347,7 +6347,7 @@ public class SqlValidatorTest
             + " having sum(deptno) > 3 order by name",
             TestUtil.fold(
                 "SELECT `DEPT`.`NAME`\n"
-                + "FROM `SALES`.`DEPT` AS `DEPT`\n"
+                + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`\n"
                 + "WHERE `DEPT`.`NAME` = 'Moonracer'\n"
                 + "GROUP BY `DEPT`.`NAME`\n"
                 + "HAVING SUM(`DEPT`.`DEPTNO`) > 3\n"
@@ -6371,7 +6371,7 @@ public class SqlValidatorTest
             TestUtil.fold(
                 "SELECT `EXPR$0`.`NAME`\n"
                 + "FROM (SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`\n"
-                + "FROM `SALES`.`DEPT` AS `DEPT`) AS `EXPR$0`\n"
+                + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`) AS `EXPR$0`\n"
                 + "WHERE `EXPR$0`.`NAME` = 'Moonracer'\n"
                 + "GROUP BY `EXPR$0`.`NAME`\n"
                 + "HAVING SUM(`EXPR$0`.`DEPTNO`) > 3\n"
@@ -6388,7 +6388,7 @@ public class SqlValidatorTest
                 "select coalesce(deptno, empno) from emp",
                 TestUtil.fold(
                     "SELECT COALESCE(`EMP`.`DEPTNO`, `EMP`.`EMPNO`)\n"
-                    + "FROM `SALES`.`EMP` AS `EMP`"));
+                    + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`"));
         } else {
             tester.checkRewrite(
                 validator,
@@ -6409,7 +6409,7 @@ public class SqlValidatorTest
                 "select coalesce(deptno, empno) from emp",
                 TestUtil.fold(
                     "SELECT CASE WHEN `EMP`.`DEPTNO` IS NOT NULL THEN `EMP`.`DEPTNO` ELSE `EMP`.`EMPNO` END\n"
-                    + "FROM `SALES`.`EMP` AS `EMP`"));
+                    + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`"));
         } else {
             tester.checkRewrite(
                 validator,
@@ -6468,6 +6468,32 @@ public class SqlValidatorTest
         checkFails(
             "values(^count(1)^)",
             "Call to xxx is invalid\\. Direct calls to aggregate functions not allowed in ROW definitions\\.");
+    }
+
+    public void testFieldOrigin()
+    {
+        tester.checkFieldOrigin(
+            "select * from emp join dept on true",
+            "{CATALOG.SALES.EMP.EMPNO,"
+            + " CATALOG.SALES.EMP.ENAME,"
+            + " CATALOG.SALES.EMP.JOB,"
+            + " CATALOG.SALES.EMP.MGR,"
+            + " CATALOG.SALES.EMP.HIREDATE,"
+            + " CATALOG.SALES.EMP.SAL,"
+            + " CATALOG.SALES.EMP.COMM,"
+            + " CATALOG.SALES.EMP.DEPTNO,"
+            + " CATALOG.SALES.EMP.SLACKER,"
+            + " CATALOG.SALES.DEPT.DEPTNO,"
+            + " CATALOG.SALES.DEPT.NAME}");
+
+        tester.checkFieldOrigin(
+            "select distinct emp.empno, hiredate, 1 as one,\n"
+            + " emp.empno * 2 as twiceEmpno\n"
+            + "from emp join dept on true",
+            "{CATALOG.SALES.EMP.EMPNO,"
+            + " CATALOG.SALES.EMP.HIREDATE,"
+            + " null,"
+            + " null}");
     }
 
     public void testNew()

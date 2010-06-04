@@ -77,6 +77,7 @@ class FarragoExecutableJavaStmt
         Class rowClass,
         ClassLoader stmtClassLoader,
         RelDataType preparedRowType,
+        List<List<String>> fieldOrigins,
         RelDataType dynamicParamRowType,
         Method stmtMethod,
         List<FarragoTransformDef> transformDefs,
@@ -91,6 +92,7 @@ class FarragoExecutableJavaStmt
     {
         super(
             preparedRowType,
+            fieldOrigins,
             dynamicParamRowType,
             xmiFennelPlan,
             null,
@@ -140,7 +142,9 @@ class FarragoExecutableJavaStmt
                     iter,
                     rowClass,
                     rowType,
-                    runtimeContext);
+                    fieldOrigins,
+                    runtimeContext,
+                    null);
 
             // instantiate and initialize all generated FarragoTransforms.
             for (FarragoTransformDef tdef : transformDefs) {

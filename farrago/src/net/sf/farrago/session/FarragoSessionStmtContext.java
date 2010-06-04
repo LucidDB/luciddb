@@ -117,6 +117,19 @@ public interface FarragoSessionStmtContext
     public RelDataType getPreparedRowType();
 
     /**
+     * Returns a description of how each field in the row type maps to a
+     * catalog, schema, table and column in the schema.
+     *
+     * <p>The returned list has one element for each field in the row type. Each
+     * element is a list of four elements (catalog, schema, table, column), or
+     * may be null if the column is an expression.
+     *
+     * @return Description of how each field in the row type maps to a schema
+     * object
+     */
+    List<List<String>> getPreparedFieldOrigins();
+
+    /**
      * @return the input parameter row type for the currently prepared statement
      */
     public RelDataType getPreparedParamType();

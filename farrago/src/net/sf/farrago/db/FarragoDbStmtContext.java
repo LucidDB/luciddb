@@ -200,6 +200,15 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public List<List<String>> getPreparedFieldOrigins()
+    {
+        synchronized (session) {
+            assert (isPrepared());
+            return executableStmt.getFieldOrigins();
+        }
+    }
+
+    // implement FarragoSessionStmtContext
     public RelDataType getPreparedParamType()
     {
         synchronized (session) {

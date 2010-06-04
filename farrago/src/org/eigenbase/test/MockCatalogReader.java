@@ -43,6 +43,7 @@ public class MockCatalogReader
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    protected static final String defaultCatalog = "CATALOG";
     protected static final String defaultSchema = "SALES";
 
     //~ Instance fields --------------------------------------------------------
@@ -201,15 +202,21 @@ public class MockCatalogReader
 
     public SqlValidatorTable getTable(final String [] names)
     {
-        if (names.length == 1) {
+        switch (names.length) {
+        case 1:
             // assume table in SALES schema (the original default)
             // if it's not supplied, because SqlValidatorTest is effectively
             // using SALES as its default schema.
-            return tables.get(Arrays.asList(defaultSchema, names[0]));
-        } else if (names.length == 2) {
+            return tables.get(
+                Arrays.asList(defaultCatalog, defaultSchema, names[0]));
+        case 2:
+            return tables.get(
+                Arrays.asList(defaultCatalog, names[0], names[1]));
+        case 3:
             return tables.get(Arrays.asList(names));
+        default:
+            return null;
         }
-        return null;
     }
 
     public RelDataType getNamedType(SqlIdentifier typeName)
@@ -276,6 +283,11 @@ public class MockCatalogReader
         {
             tableNames.add(name);
         }
+
+        public String getCatalogName()
+        {
+            return defaultCatalog;
+        }
     }
 
     /**
@@ -292,7 +304,10 @@ public class MockCatalogReader
 
         public MockTable(MockSchema schema, String name)
         {
-            this.names = new String[] { schema.name, name };
+            this.names =
+                new String[] {
+                    schema.getCatalogName(), schema.name, name
+                };
             schema.addTable(name);
         }
 
