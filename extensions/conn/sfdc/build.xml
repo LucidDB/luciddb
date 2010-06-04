@@ -54,8 +54,9 @@
 
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
-  <!-- directory for unit test SQL scripts -->
+  <!-- directories for unit test SQL scripts -->
   <property name="sfdcunitsql.dir" location="${sfdc.dir}/unitsql"/>
+  <property name="sfdcgensql.dir" location="${sfdcunitsql.dir}/gen"/>
 
   <!-- ===================================================== -->
   <!-- Classpaths                                            -->
@@ -209,12 +210,109 @@
   <target name="deploy" depends="dist">
   </target>
 
-  <target name="test-sanity">
+
+
+  <!-- ===================================================== -->
+  <!-- Test targets                                          -->
+  <!-- ===================================================== -->
+
+  <target name="sanity" depends="test-wsdl2java,gen-all-sql">
     <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
-    <farrago.runSqlTest file="${sfdcunitsql.dir}/sanity.sql"
+    <farrago.runSqlTest file="${sfdcgensql.dir}/sanity.sql"
       sqltest.classpath="${test.classpath}"
       java.ext.dirs="${sfdcjavaext.dirs}" />
   </target>
+
+  <target name="test-wsdl2java">
+    <wsdl2java all="true" debug="false" helpergen="true"
+      output="${sfdc.dir}/src" verbose="false"
+      url="${enterprise.wsdl}">
+      <classpath path="${build.classpath}"/>
+    </wsdl2java>
+  </target>
+
+  <target name="gen-all-sql">
+    <copy todir="${sfdcgensql.dir}" overwrite="true" filtering="true">
+      <fileset dir="${sfdcunitsql.dir}">
+        <include name="**/*.tmpl"/>
+      </fileset>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="build.properties"/>
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="test" depends="test-wsdl2java,gen-all-sql">
+    <antcall target="test-delete"/>
+    <antcall target="test-basic"/>
+    <antcall target="test-views"/>
+    <antcall target="test-pushdown"/>
+    <antcall target="test-pushproj"/>
+  </target>
+
+  <target name="create-test">
+    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+      clonevm="yes" tempdir="${sfdc.testlog.dir}" includeantruntime="no">
+      <classpath>
+         <pathelement path="${test.classpath}" />
+         <pathelement path="${ant.classpath}" />
+      </classpath>
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoSqlLineProps;"/>
+      <sysproperty key="tests" value="testCreateDelete,testCreateRows"/>
+      <sysproperty key="SFDC_TEST_HOME" value="${sfdcgensql.dir}"/>
+      <sysproperty key="username" value="${username_test}"/>
+      <sysproperty key="password" value="${password_test}"/>
+      <formatter type="plain"/>
+      <formatter type="xml"/>
+      <test todir="${sfdc.testlog.dir}" name="net.sf.farrago.namespace.sfdc.test.CreateAndDeleteTest" />
+    </junit>
+  </target>
+
+  <target name="edit-sql" depends="create-test">
+    <replace dir="${basedir}" replacefilterfile="tmp.map"
+      includes="**/deletes.sql,**/deletes.ref"/>
+    <delete file="${sfdcgensql.dir}/tmp.map" quiet="true"/>
+    <delete file="${sfdcgensql.dir}/exporttmp.map" quiet="true"/>
+  </target>
+
+  <target name="test-delete" depends="edit-sql">
+    <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
+    <farrago.runSqlTest file="${sfdcgensql.dir}/deletes.sql"
+      sqltest.classpath="${test.classpath}"
+      java.ext.dirs="${sfdcjavaext.dirs}" />
+  </target>
+
+  <target name="test-basic">
+    <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
+    <farrago.runSqlTest file="${sfdcgensql.dir}/basic.sql"
+      sqltest.classpath="${test.classpath}"
+      java.ext.dirs="${sfdcjavaext.dirs}" />
+  </target>
+
+  <target name="test-views">
+    <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
+    <farrago.runSqlTest file="${sfdcgensql.dir}/views.sql"
+      sqltest.classpath="${test.classpath}"
+      java.ext.dirs="${sfdcjavaext.dirs}" />
+  </target>
+
+  <target name="test-pushdown">
+    <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
+    <farrago.runSqlTest file="${sfdcgensql.dir}/pushdown.sql"
+      sqltest.classpath="${test.classpath}"
+      java.ext.dirs="${sfdcjavaext.dirs}" />
+  </target>
+
+  <target name="test-pushproj">
+    <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
+    <farrago.runSqlTest file="${sfdcgensql.dir}/push-projection.sql"
+      sqltest.classpath="${test.classpath}"
+      java.ext.dirs="${sfdcjavaext.dirs}" />
+  </target>
+
+
 
   <!-- ===================================================== -->
   <!-- ResGen targets                                        -->
@@ -327,6 +425,7 @@
   <!-- ===================================================== -->
 
   <target name="clean">
+    <antcall target="clean-test"/>
     <delete dir="${classes.dir}" quiet="true"/>
     <delete dir="${sfdc.dir}/conf" quiet="true"/>
     <delete dir="${sfdc.dir}/src/com" quiet="true"/>
@@ -339,6 +438,10 @@
         <include name="**/SfdcResource_en_US.java"/>
       </fileset>
     </delete>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${sfdcgensql.dir}"/>
   </target>
 
   <!--

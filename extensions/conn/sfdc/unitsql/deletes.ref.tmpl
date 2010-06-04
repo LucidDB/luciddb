@@ -1,0 +1,66 @@
+> -------------------------
+> -- SFDC foreign server --
+> -------------------------
+> 
+> create server mysfdc_server
+> foreign data wrapper SALESFORCE
+> options (
+>   USER_NAME '@username_test@',
+>   PASSWORD '@password_test@'
+> );
+> 
+> -------------
+> -- Queries --
+> -------------
+> 
+> select count(*) from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'@S_TIME@' and TIMESTAMP'@E_TIME@';
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select count("Id") from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'@S_TIME@' and TIMESTAMP'@E_TIME@';
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> -- assuming all Ids will start with a '0'
+> select count("Id") from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'@S_TIME@' and TIMESTAMP'@E_TIME@' AND "Id" > '0';
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select count("Id") from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'@S_TIME@' and TIMESTAMP'@E_TIME@' AND "Id" > '99';
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> --
+> -- negative
+> --
+> 
+> -- not a range
+> select * from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" = TIMESTAMP'2006-03-12 00:00:00';
+Error: Must provide a starting and ending TIMESTAMP range (state=,code=0)
+> 
+> -- latter not setting a timestamp range
+> select * from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'2005-01-01 00:00:00' and TIMESTAMP'2010-01-01 00:00:00' OR "Id" > '01';
+Error: Must provide a starting and ending TIMESTAMP range (state=,code=0)
+> 
+> -- starting timestamp too old
+> select * from mysfdc_server.sfdc."Account_deleted" where "DeleteStamp" between TIMESTAMP'1999-10-10 00:00:00' and TIMESTAMP'2020-01-01 00:00:00';
+Error: Start date Sat Oct 09 17:00:00 PDT 1999 must be within the last thirty days (state=,code=0)
+> 
+> -------------
+> -- CLEANUP --
+> -------------
+> drop server mysfdc_server cascade;
+> 
+> !quit

@@ -1,0 +1,597 @@
+> create schema sfdc;
+> set schema 'sfdc';
+> set path 'sfdc';
+> 
+> -------------------------
+> -- SFDC foreign server --
+> -------------------------
+> 
+> create server mysfdc_server
+> foreign data wrapper SALESFORCE
+> options (
+>   USER_NAME '@username@',
+>   PASSWORD '@password@'
+> );
+> 
+> -- test: browse connect functionality
+> select * from sys_boot.mgmt.browse_connect_foreign_wrappers
+> where foreign_wrapper_name = 'SALESFORCE' order by 2;
++-----------------------+----------------------------------------+
+| FOREIGN_WRAPPER_NAME  |       BROWSE_CONNECT_DESCRIPTION       |
++-----------------------+----------------------------------------+
+| SALESFORCE            | Salesforce.com Web Service Connection  |
++-----------------------+----------------------------------------+
+> 
+> -- query for available connection options
+> select * from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'SALESFORCE',
+>     cursor(
+>         select '' as option_name, '' as option_value
+>         from sys_boot.jdbc_metadata.empty_view)))
+> order by option_ordinal, option_choice_ordinal;
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |          OPTION_NAME           |                        OPTION_DESCRIPTION                         | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | USER_NAME                      | User name to login to Salesforce                                  | true                | -1                     |                      |
+| 1               | PASSWORD                       | Password to login to Salesforce                                   | true                | -1                     |                      |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | -1                     | 128                  |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | 0                      | 128                  |
+| 3               | ENDPOINT_URL                   | Web Service endpoint URL if not a default production environment  | false               | -1                     |                      |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+> 
+> -- query for available connection options, with specified set values
+> select * from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'SALESFORCE',
+>     cursor(
+>         values ('USER_NAME', 'username'),
+>                ('PASSWORD', 'passwd'))))
+> order by option_ordinal, option_choice_ordinal;
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |          OPTION_NAME           |                        OPTION_DESCRIPTION                         | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | USER_NAME                      | User name to login to Salesforce                                  | true                | -1                     | username             |
+| 1               | PASSWORD                       | Password to login to Salesforce                                   | true                | -1                     | passwd               |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | -1                     | 128                  |
+| 2               | VARCHAR_FIELD_EXTRA_PRECISION  | Extra precision to add to all Salesforce VARCHAR fields           | true                | 0                      | 128                  |
+| 3               | ENDPOINT_URL                   | Web Service endpoint URL if not a default production environment  | false               | -1                     |                      |
++-----------------+--------------------------------+-------------------------------------------------------------------+---------------------+------------------------+----------------------+
+> 
+> -- query for available schemas
+> select * from table(sys_boot.mgmt.browse_foreign_schemas(
+>     'MYSFDC_SERVER'))
+> order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| SFDC         |              |
++--------------+--------------+
+> 
+> -------------
+> -- Queries --
+> -------------
+> 
+> -- negative tests
+> select * from mysfdc_server."Account";
+Error: From line 1, column 15 to line 1, column 37: Table 'MYSFDC_SERVER.Account' not found (state=,code=0)
+> select * from mysfdc_server."sfdc"."Account";
+Error: From line 1, column 15 to line 1, column 44: Table 'MYSFDC_SERVER.sfdc.Account' not found (state=,code=0)
+> IMPORT FOREIGN SCHEMA asdf from server MYSFDC_SERVER into sfdc;
+Error: Unknown foreign schema "ASDF" (state=,code=0)
+> 
+> CREATE FOREIGN TABLE asdf
+> server mysfdc_server
+> options (
+>   OBJECT 'blah'
+> );
+Error: Invalid SFDC Object blah (state=,code=0)
+> 
+> -- positive tests
+> select "Name" from mysfdc_server.sfdc."Account" order by "Name";
++--------------------------------------+
+|                 Name                 |
++--------------------------------------+
+| Burlington Textiles Corp of America  |
+| Dickenson plc                        |
+| Edge Communications                  |
+| Express Logistics and Transport      |
+| GenePoint                            |
+| Grand Hotels & Resorts Ltd           |
+| Pyramid Construction Inc.            |
+| United Oil & Gas Corp.               |
+| United Oil & Gas, Singapore          |
+| United Oil & Gas, UK                 |
+| University of Arizona                |
+| sForce                               |
++--------------------------------------+
+> 
+> select * from mysfdc_server.sfdc."Contact_LOV" order by "Field","Value";
++-------------+-------------------+
+|    Field    |       Value       |
++-------------+-------------------+
+| LeadSource  | Other             |
+| LeadSource  | Partner Referral  |
+| LeadSource  | Phone Inquiry     |
+| LeadSource  | Purchased List    |
+| LeadSource  | Web               |
+| Level__c    | Primary           |
+| Level__c    | Secondary         |
+| Level__c    | Tertiary          |
+| Salutation  | Dr.               |
+| Salutation  | Mr.               |
+| Salutation  | Mrs.              |
+| Salutation  | Ms.               |
+| Salutation  | Prof.             |
++-------------+-------------------+
+> 
+> IMPORT FOREIGN SCHEMA SFDC from server MYSFDC_SERVER into sfdc;
+> 
+> select "Name", "Type", "Phone", "Industry" from sfdc."Account" order by "Name";
++--------------------------------------+---------------------+------------------+-----------------+
+|                 Name                 |        Type         |      Phone       |    Industry     |
++--------------------------------------+---------------------+------------------+-----------------+
+| Burlington Textiles Corp of America  | Customer - Direct   | (336) 222-7000   | Apparel         |
+| Dickenson plc                        | Customer - Channel  | (785) 241-6200   | Consulting      |
+| Edge Communications                  | Customer - Direct   | (512) 757-6000   | Electronics     |
+| Express Logistics and Transport      | Customer - Channel  | (503) 421-7800   | Transportation  |
+| GenePoint                            | Customer - Channel  | (650) 867-3450   | Biotechnology   |
+| Grand Hotels & Resorts Ltd           | Customer - Direct   | (312) 596-1000   | Hospitality     |
+| Pyramid Construction Inc.            | Customer - Channel  | (014) 427-4427   | Construction    |
+| United Oil & Gas Corp.               | Customer - Direct   | (212) 842-5500   | Energy          |
+| United Oil & Gas, Singapore          | Customer - Direct   | (650) 450-8810   | Energy          |
+| United Oil & Gas, UK                 | Customer - Direct   | +44 191 4956203  | Energy          |
+| University of Arizona                | Customer - Direct   | (520) 773-9050   | Education       |
+| sForce                               |                     | (415) 901-7000   |                 |
++--------------------------------------+---------------------+------------------+-----------------+
+> 
+> !columns "Account_LOV"
++------------+--------------+--------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  |  TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+--------------+--------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | SFDC         | Account_LOV  | Field        | 12         | VARCHAR    | 153          | 0           |             |                 | 1         |          |             | 0              | 0                 | 153                | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account_LOV  | Value        | 12         | VARCHAR    | 384          | 0           |             |                 | 1         |          |             | 0              | 0                 | 384                | 2                 | YES          |                |               |              |                   |
++------------+--------------+--------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+> 
+> select * from sfdc."Account_LOV" order by "Field","Value";
++-----------------------+-----------------------------+
+|         Field         |            Value            |
++-----------------------+-----------------------------+
+| Active__c             | No                          |
+| Active__c             | Yes                         |
+| CustomerPriority__c   | High                        |
+| CustomerPriority__c   | Low                         |
+| CustomerPriority__c   | Medium                      |
+| Industry              | Agriculture                 |
+| Industry              | Apparel                     |
+| Industry              | Banking                     |
+| Industry              | Biotechnology               |
+| Industry              | Chemicals                   |
+| Industry              | Communications              |
+| Industry              | Construction                |
+| Industry              | Consulting                  |
+| Industry              | Education                   |
+| Industry              | Electronics                 |
+| Industry              | Energy                      |
+| Industry              | Engineering                 |
+| Industry              | Entertainment               |
+| Industry              | Environmental               |
+| Industry              | Finance                     |
+| Industry              | Food & Beverage             |
+| Industry              | Government                  |
+| Industry              | Healthcare                  |
+| Industry              | Hospitality                 |
+| Industry              | Insurance                   |
+| Industry              | Machinery                   |
+| Industry              | Manufacturing               |
+| Industry              | Media                       |
+| Industry              | Not For Profit              |
+| Industry              | Other                       |
+| Industry              | Recreation                  |
+| Industry              | Retail                      |
+| Industry              | Shipping                    |
+| Industry              | Technology                  |
+| Industry              | Telecommunications          |
+| Industry              | Transportation              |
+| Industry              | Utilities                   |
+| Ownership             | Other                       |
+| Ownership             | Private                     |
+| Ownership             | Public                      |
+| Ownership             | Subsidiary                  |
+| Rating                | Cold                        |
+| Rating                | Hot                         |
+| Rating                | Warm                        |
+| SLA__c                | Bronze                      |
+| SLA__c                | Gold                        |
+| SLA__c                | Platinum                    |
+| SLA__c                | Silver                      |
+| Type                  | Channel Partner / Reseller  |
+| Type                  | Customer - Channel          |
+| Type                  | Customer - Direct           |
+| Type                  | Installation Partner        |
+| Type                  | Other                       |
+| Type                  | Prospect                    |
+| Type                  | Technology Partner          |
+| UpsellOpportunity__c  | Maybe                       |
+| UpsellOpportunity__c  | No                          |
+| UpsellOpportunity__c  | Yes                         |
++-----------------------+-----------------------------+
+> 
+> create schema local_sfdc;
+> set schema 'local_sfdc';
+> 
+> CREATE FOREIGN TABLE sfdc_implicit_table
+> server mysfdc_server
+> options (
+>   object 'Account'
+> );
+> select "Name", "BillingStreet", "AnnualRevenue", "NumberOfEmployees" from sfdc_implicit_table order by "Name", "BillingStreet", "AnnualRevenue", "NumberOfEmployees";
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+|                 Name                 |                                             BillingStreet                                              | AnnualRevenue  | NumberOfEmployees  |
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+| Burlington Textiles Corp of America  | 525 S. Lexington Ave                                                                                   | 3.5E8          | 9000               |
+| Dickenson plc                        | 1301 Hoch Drive                                                                                        | 5.0E7          | 120                |
+| Edge Communications                  | 312 Constitution Place
+Austin, TX 78767
+USA                                                            | 1.39E8         | 1000               |
+| Express Logistics and Transport      | 620 SW 5th Avenue Suite 400
+Portland, Oregon 97204
+United States                                       | 9.5E8          | 12300              |
+| GenePoint                            | 345 Shoreline Park
+Mountain View, CA 94043
+USA                                                         | 3.0E7          | 265                |
+| Grand Hotels & Resorts Ltd           | 2334 N. Michigan Avenue, Suite 1500
+Chicago, IL 60601, USA                                             | 5.0E8          | 5600               |
+| Pyramid Construction Inc.            | 2 Place Jussieu                                                                                        | 9.5E8          | 2680               |
+| United Oil & Gas Corp.               | 1301 Avenue of the Americas 
+New York, NY 10019
+USA                                                    | 5.6E9          | 145000             |
+| United Oil & Gas, Singapore          | 9 Tagore Lane
+Singapore, Singapore 787472
+Singapore                                                    |                | 3000               |
+| United Oil & Gas, UK                 | Kings Park, 17th Avenue, Team Valley Trading Estate,
+Gateshead, Tyne and Wear NE26 3HS
+United Kingdom  |                | 24000              |
+| University of Arizona                | 888 N Euclid 
+Hallis Center, Room 501
+Tucson, AZ 85721
+United States                                   |                | 39000              |
+| sForce                               | The Landmark @ One Market                                                                              |                |                    |
++--------------------------------------+--------------------------------------------------------------------------------------------------------+----------------+--------------------+
+> 
+> CREATE FOREIGN TABLE sfdc_explicit_table (
+>   "Id" varchar(17),
+>   "Name" varchar(25),
+>   "Type" varchar(25),
+>   "ParentId" varchar(25),
+>   "BillingStreet" varchar(100),
+>   "THIS_COLUMN_DOES_NOT_EXIST__c" varchar(1),
+>   "Sic" varchar(50),
+>   "NumberofLocations__c" float,
+>   "THIS_COLUMN_DOES_NOT_EXIST_2__c" boolean
+> )
+> server mysfdc_server
+> options (
+>   object 'Account'
+> );
+> 
+> select "THIS_COLUMN_DOES_NOT_EXIST_2__c","NumberofLocations__c","THIS_COLUMN_DOES_NOT_EXIST__c" from sfdc_explicit_table order by "NumberofLocations__c";
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Id' has datatype 'VARCHAR(146)' in external data source; it will be cast to datatype 'VARCHAR(17)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Name' has datatype 'VARCHAR(383)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Type' has datatype 'VARCHAR(168)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'ParentId' has datatype 'VARCHAR(146)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'BillingStreet' has datatype 'VARCHAR(383)' in external data source; it will be cast to datatype 'VARCHAR(100)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'THIS_COLUMN_DOES_NOT_EXIST__c' does not exist in external data source. It will be filled in with nulls. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Sic' has datatype 'VARCHAR(148)' in external data source; it will be cast to datatype 'VARCHAR(50)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'THIS_COLUMN_DOES_NOT_EXIST_2__c' does not exist in external data source. It will be filled in with nulls. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'UpsellOpportunity__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Phone' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'TickerSymbol' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLAExpirationDate__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'OwnerId' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastModifiedDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingState' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'AnnualRevenue' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingState' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastActivityDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'NumberOfEmployees' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingPostalCode' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLASerialNumber__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SystemModstamp' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingCity' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Description' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingCountry' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Site' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingCountry' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastModifiedById' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Website' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingStreet' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'AccountNumber' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Fax' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLA__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Active__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CustomerPriority__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'MasterRecordId' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingCity' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Rating' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CreatedById' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CreatedDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'IsDeleted' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingPostalCode' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Ownership' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Industry' added in external data source. (state=,code=0)
++----------------------------------+-----------------------+--------------------------------+
+| THIS_COLUMN_DOES_NOT_EXIST_2__c  | NumberofLocations__c  | THIS_COLUMN_DOES_NOT_EXIST__c  |
++----------------------------------+-----------------------+--------------------------------+
+|                                  |                       |                                |
+|                                  | 1.0                   |                                |
+|                                  | 2.0                   |                                |
+|                                  | 2.0                   |                                |
+|                                  | 3.0                   |                                |
+|                                  | 6.0                   |                                |
+|                                  | 6.0                   |                                |
+|                                  | 17.0                  |                                |
+|                                  | 34.0                  |                                |
+|                                  | 57.0                  |                                |
+|                                  | 150.0                 |                                |
+|                                  | 955.0                 |                                |
++----------------------------------+-----------------------+--------------------------------+
+> 
+> -- test "DEFAULT" schema name
+> select count(*) from mysfdc_server."DEFAULT"."Account";
++---------+
+| EXPR$0  |
++---------+
+| 12      |
++---------+
+> 
+> -- this should fail
+> select count(*) from mysfdc_server.""."Account";
+Error: From line 1, column 22 to line 1, column 47: Table 'MYSFDC_SERVER..Account' not found (state=,code=0)
+> 
+> --------------------------------
+> -- VARCHAR_FIELD_EXTRA_PRECISION
+> --------------------------------
+> create server mysfdc_server2
+> foreign data wrapper SALESFORCE
+> options (
+>   USER_NAME '@username@',
+>   PASSWORD '@password@',
+>   VARCHAR_FIELD_EXTRA_PRECISION '10'
+> );
+> 
+> create schema x;
+> 
+> IMPORT FOREIGN SCHEMA SFDC from server MYSFDC_SERVER2 into x;
+> 
+> !columns "Account"
++------------+--------------+-------------+-----------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |      COLUMN_NAME      | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+--------------+-------------+-----------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | SFDC         | Account     | Id                    | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | IsDeleted             | 12         | VARCHAR    | 5            | 0           |             |                 | 1         |          |             | 0              | 0                 | 5                  | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | MasterRecordId        | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Name                  | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Type                  | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ParentId              | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | BillingStreet         | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | BillingCity           | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | BillingState          | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | BillingPostalCode     | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 10                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | BillingCountry        | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 11                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ShippingStreet        | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 12                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ShippingCity          | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 13                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ShippingState         | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 14                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ShippingPostalCode    | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 15                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | ShippingCountry       | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 16                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Phone                 | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 17                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Fax                   | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 18                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | AccountNumber         | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 19                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Website               | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 20                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Sic                   | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 21                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Industry              | 12         | VARCHAR    | 208          | 0           |             |                 | 1         |          |             | 0              | 0                 | 208                | 22                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | AnnualRevenue         | 8          | DOUBLE     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 23                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | NumberOfEmployees     | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 24                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Ownership             | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 25                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | TickerSymbol          | 12         | VARCHAR    | 148          | 0           |             |                 | 1         |          |             | 0              | 0                 | 148                | 26                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Description           | 12         | VARCHAR    | 384          | 0           |             |                 | 1         |          |             | 0              | 0                 | 384                | 27                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Rating                | 12         | VARCHAR    | 168          | 0           |             |                 | 1         |          |             | 0              | 0                 | 168                | 28                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Site                  | 12         | VARCHAR    | 208          | 0           |             |                 | 1         |          |             | 0              | 0                 | 208                | 29                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | OwnerId               | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 30                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | CreatedDate           | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 31                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | CreatedById           | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 32                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | LastModifiedDate      | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 33                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | LastModifiedById      | 12         | VARCHAR    | 146          | 0           |             |                 | 1         |          |             | 0              | 0                 | 146                | 34                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | SystemModstamp        | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 35                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | LastActivityDate      | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 36                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | CustomerPriority__c   | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 37                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | SLA__c                | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 38                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | Active__c             | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 39                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | NumberofLocations__c  | 8          | DOUBLE     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 40                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | UpsellOpportunity__c  | 12         | VARCHAR    | 383          | 0           |             |                 | 1         |          |             | 0              | 0                 | 383                | 41                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | SLASerialNumber__c    | 12         | VARCHAR    | 138          | 0           |             |                 | 1         |          |             | 0              | 0                 | 138                | 42                | YES          |                |               |              |                   |
+| LOCALDB    | SFDC         | Account     | SLAExpirationDate__c  | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 43                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Id                    | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | IsDeleted             | 12         | VARCHAR    | 5            | 0           |             |                 | 1         |          |             | 0              | 0                 | 5                  | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | MasterRecordId        | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Name                  | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Type                  | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ParentId              | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | BillingStreet         | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | BillingCity           | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | BillingState          | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | BillingPostalCode     | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 10                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | BillingCountry        | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 11                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ShippingStreet        | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 12                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ShippingCity          | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 13                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ShippingState         | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 14                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ShippingPostalCode    | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 15                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | ShippingCountry       | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 16                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Phone                 | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 17                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Fax                   | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 18                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | AccountNumber         | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 19                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Website               | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 20                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Sic                   | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 21                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Industry              | 12         | VARCHAR    | 90           | 0           |             |                 | 1         |          |             | 0              | 0                 | 90                 | 22                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | AnnualRevenue         | 8          | DOUBLE     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 23                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | NumberOfEmployees     | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 24                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Ownership             | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 25                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | TickerSymbol          | 12         | VARCHAR    | 30           | 0           |             |                 | 1         |          |             | 0              | 0                 | 30                 | 26                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Description           | 12         | VARCHAR    | 266          | 0           |             |                 | 1         |          |             | 0              | 0                 | 266                | 27                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Rating                | 12         | VARCHAR    | 50           | 0           |             |                 | 1         |          |             | 0              | 0                 | 50                 | 28                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Site                  | 12         | VARCHAR    | 90           | 0           |             |                 | 1         |          |             | 0              | 0                 | 90                 | 29                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | OwnerId               | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 30                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | CreatedDate           | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 31                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | CreatedById           | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 32                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | LastModifiedDate      | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 33                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | LastModifiedById      | 12         | VARCHAR    | 28           | 0           |             |                 | 1         |          |             | 0              | 0                 | 28                 | 34                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | SystemModstamp        | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 35                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | LastActivityDate      | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 36                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | CustomerPriority__c   | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 37                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | SLA__c                | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 38                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | Active__c             | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 39                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | NumberofLocations__c  | 8          | DOUBLE     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 40                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | UpsellOpportunity__c  | 12         | VARCHAR    | 265          | 0           |             |                 | 1         |          |             | 0              | 0                 | 265                | 41                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | SLASerialNumber__c    | 12         | VARCHAR    | 20           | 0           |             |                 | 1         |          |             | 0              | 0                 | 20                 | 42                | YES          |                |               |              |                   |
+| LOCALDB    | X            | Account     | SLAExpirationDate__c  | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 43                | YES          |                |               |              |                   |
++------------+--------------+-------------+-----------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+> 
+> -----------------------
+> -- Aggregate Queries --
+> -----------------------
+> 
+> SELECT "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_ID",
+>     "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_CODE",
+>     "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_NAME",
+>     _ISO-8859-1'SFDC' AS "SOURCE_ID"
+> FROM "SFDC"."OpportunityStage" AS "OPPORTUNITYSTAGE"
+> GROUP BY "OPPORTUNITYSTAGE"."ForecastCategory",
+>     "OPPORTUNITYSTAGE"."ForecastCategory",
+>     "OPPORTUNITYSTAGE"."ForecastCategory",
+>     "OPPORTUNITYSTAGE"."ForecastCategory"
+> ORDER BY 1,2,3;
++------------------+--------------------+--------------------+------------+
+| OPTY_FCSTCAT_ID  | OPTY_FCSTCAT_CODE  | OPTY_FCSTCAT_NAME  | SOURCE_ID  |
++------------------+--------------------+--------------------+------------+
+| Closed           | Closed             | Closed             | SFDC       |
+| Omitted          | Omitted            | Omitted            | SFDC       |
+| Pipeline         | Pipeline           | Pipeline           | SFDC       |
++------------------+--------------------+--------------------+------------+
+> 
+> SELECT _ISO-8859-1'SFDC' AS "SOURCE_ID",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_ID",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_CODE",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_NAME"
+> FROM "SFDC"."Opportunity" AS "OPPORTUNITY"
+> WHERE "OPPORTUNITY"."LeadSource" IS NOT NULL
+> GROUP BY "OPPORTUNITY"."LeadSource"
+> ORDER BY 1,2,3;
++------------+--------------------+---------------------+---------------------+
+| SOURCE_ID  |  OPTY_LEAD_SRC_ID  | OPTY_LEAD_SRC_CODE  | OPTY_LEAD_SRC_NAME  |
++------------+--------------------+---------------------+---------------------+
+| SFDC       | Employee Referral  | Employee Referral   | Employee Referral   |
+| SFDC       | External Referral  | External Referral   | External Referral   |
+| SFDC       | Partner            | Partner             | Partner             |
+| SFDC       | Phone Inquiry      | Phone Inquiry       | Phone Inquiry       |
+| SFDC       | Public Relations   | Public Relations    | Public Relations    |
+| SFDC       | Purchased List     | Purchased List      | Purchased List      |
+| SFDC       | Trade Show         | Trade Show          | Trade Show          |
+| SFDC       | Web                | Web                 | Web                 |
+| SFDC       | Word of mouth      | Word of mouth       | Word of mouth       |
++------------+--------------------+---------------------+---------------------+
+> 
+> 
+> -- deleted columns; leniency test
+> CREATE or REPLACE FOREIGN TABLE sfdc_explicit_table (
+>   "Id" double,
+>   "Name" varchar(25),
+>   "Type" varchar(25),
+>   "ParentId" varchar(25),
+>   "BillingStreet" varchar(100),
+>   "THIS_COLUMN_DOES_NOT_EXIST__c" varchar(1),
+>   "Sic" varchar(50),
+>   "NumberofLocations__c" float,
+>   "THIS_COLUMN_DOES_NOT_EXIST_2__c" boolean
+> )
+> server mysfdc_server
+> options (
+>   object 'Account'
+> );
+> 
+> select "THIS_COLUMN_DOES_NOT_EXIST_2__c","NumberofLocations__c","THIS_COLUMN_DOES_NOT_EXIST__c" from sfdc_explicit_table order by "NumberofLocations__c";
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Id' has datatype 'VARCHAR(146)' in external data source; it will be cast to datatype 'DOUBLE'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Name' has datatype 'VARCHAR(383)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Type' has datatype 'VARCHAR(168)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'ParentId' has datatype 'VARCHAR(146)' in external data source; it will be cast to datatype 'VARCHAR(25)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'BillingStreet' has datatype 'VARCHAR(383)' in external data source; it will be cast to datatype 'VARCHAR(100)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'THIS_COLUMN_DOES_NOT_EXIST__c' does not exist in external data source. It will be filled in with nulls. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'Sic' has datatype 'VARCHAR(148)' in external data source; it will be cast to datatype 'VARCHAR(50)'. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' field 'THIS_COLUMN_DOES_NOT_EXIST_2__c' does not exist in external data source. It will be filled in with nulls. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'UpsellOpportunity__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Phone' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'TickerSymbol' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLAExpirationDate__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'OwnerId' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastModifiedDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingState' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'AnnualRevenue' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingState' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastActivityDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'NumberOfEmployees' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingPostalCode' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLASerialNumber__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SystemModstamp' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingCity' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Description' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingCountry' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Site' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingCountry' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'LastModifiedById' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Website' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingStreet' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'AccountNumber' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Fax' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'SLA__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Active__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CustomerPriority__c' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'MasterRecordId' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'BillingCity' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Rating' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CreatedById' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'CreatedDate' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'IsDeleted' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'ShippingPostalCode' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Ownership' added in external data source. (state=,code=0)
+Warning: 'SFDC_EXPLICIT_TABLE' has field 'Industry' added in external data source. (state=,code=0)
++----------------------------------+-----------------------+--------------------------------+
+| THIS_COLUMN_DOES_NOT_EXIST_2__c  | NumberofLocations__c  | THIS_COLUMN_DOES_NOT_EXIST__c  |
++----------------------------------+-----------------------+--------------------------------+
+|                                  |                       |                                |
+|                                  | 1.0                   |                                |
+|                                  | 2.0                   |                                |
+|                                  | 2.0                   |                                |
+|                                  | 3.0                   |                                |
+|                                  | 6.0                   |                                |
+|                                  | 6.0                   |                                |
+|                                  | 17.0                  |                                |
+|                                  | 34.0                  |                                |
+|                                  | 57.0                  |                                |
+|                                  | 150.0                 |                                |
+|                                  | 955.0                 |                                |
++----------------------------------+-----------------------+--------------------------------+
+> 
+> -- only for LucidDB; see http://pub.eigenbase.org/wiki/LucidDbErrorHandling
+> -- alter session set "logDir" = 'testlog';
+> -- alter session set "errorMax" = '500';
+> -- select "Id","THIS_COLUMN_DOES_NOT_EXIST_2__c","NumberofLocations__c","THIS_COLUMN_DOES_NOT_EXIST__c" from sfdc_explicit_table order by "Id";
+> 
+> 
+> -------------
+> -- CLEANUP --
+> -------------
+> drop server mysfdc_server cascade;
+> drop schema sfdc cascade;
+> drop schema local_sfdc cascade;
+> drop schema x cascade;
+> 
+> !quit

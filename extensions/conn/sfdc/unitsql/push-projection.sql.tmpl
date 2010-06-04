@@ -1,0 +1,163 @@
+-- see [[jira:LER-6750]]
+
+!v
+
+create schema sfdc;
+set schema 'sfdc';
+set path 'sfdc';
+
+-------------------------
+-- SFDC foreign server --
+-------------------------
+
+create or replace server mysfdc_server
+foreign data wrapper SALESFORCE
+options (
+  USER_NAME '@username@',
+  PASSWORD '@password@'
+);
+
+----------------------
+-- deletion queries --
+----------------------
+
+-- 1) VLS_SFDC_0711_OPPORTUNITY_PK:
+
+EXPLAIN PLAN FOR
+SELECT
+    "OPPORTUNITY_PK"."Name" AS "OPPORTUNITY_NAME"
+FROM mysfdc_server."SFDC"."Opportunity" AS "OPPORTUNITY_PK"
+WHERE 
+"OPPORTUNITY_PK"."HasOpportunityLineItem" = 'false'
+    AND "OPPORTUNITY_PK"."LastModifiedDate" >= TIMESTAMP'2007-01-01 01:01:01'
+order by 1;
+
+
+SELECT
+    "OPPORTUNITY_PK"."Name" AS "OPPORTUNITY_NAME"
+FROM mysfdc_server."SFDC"."Opportunity" AS "OPPORTUNITY_PK"
+WHERE 
+"OPPORTUNITY_PK"."HasOpportunityLineItem" = 'false'
+    AND "OPPORTUNITY_PK"."LastModifiedDate" >= TIMESTAMP'2007-01-01 01:01:01'
+order by 1;
+
+
+-- 2) VLS_SFDC_0711_OPTY_PROD_PK:
+
+EXPLAIN PLAN FOR
+SELECT
+    "OPTY_PROD_PK"."Description" AS "OPPORTUNITY_DESCRIPTION",
+    "OPTY_PROD_PK"."Quantity" AS "OPTY_PROD_QTY"
+FROM  mysfdc_server."SFDC"."OpportunityLineItem" AS "OPTY_PROD_PK"
+WHERE "OPTY_PROD_PK"."LastModifiedDate" >= TIMESTAMP'2007-01-01 01:01:01';
+
+
+SELECT
+    "OPTY_PROD_PK"."Description" AS "OPPORTUNITY_DESCRIPTION", 
+    "OPTY_PROD_PK"."Quantity" AS "OPTY_PROD_QTY"
+FROM  mysfdc_server."SFDC"."OpportunityLineItem" AS "OPTY_PROD_PK"
+WHERE "OPTY_PROD_PK"."LastModifiedDate" >= TIMESTAMP'2007-01-01 01:01:01';
+
+-- alias
+
+EXPLAIN PLAN FOR
+SELECT
+   "Name" as "xxx"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+"HasOpportunityLineItem" = 'false'
+order by 1;
+
+
+SELECT
+   "Name" as "xxx"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+"HasOpportunityLineItem" = 'false'
+order by 1;
+
+
+-- casts
+EXPLAIN PLAN FOR
+SELECT 
+   CAST("Description" AS VARCHAR(5) CHARACTER SET "ISO-8859-1") AS "Description",
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") AS "Some Name"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE
+   "Name" > 'T';
+
+
+SELECT 
+   CAST("Description" AS VARCHAR(5) CHARACTER SET "ISO-8859-1") AS "Description",
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") AS "Some Name"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE
+   "Name" > 'T';
+
+
+-- filter expressions; should still be able to push down projection
+EXPLAIN PLAN FOR
+SELECT 
+   CAST("Description" AS VARCHAR(5) CHARACTER SET "ISO-8859-1") AS "Description",
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") AS "Some Name"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") > 'T';
+
+
+SELECT 
+   CAST("Description" AS VARCHAR(5) CHARACTER SET "ISO-8859-1") AS "Description",
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") AS "Some Name"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE
+   CAST("Name" as VARCHAR(2) CHARACTER SET "ISO-8859-1") > 'T';
+
+-- is [not] null
+EXPLAIN PLAN FOR
+SELECT
+   "Name", "Type"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+   "Type" is null and "Name" > 'K'
+order by 1;
+
+SELECT
+   "Name", "Type"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+   "Type" is null and "Name" > 'K'
+order by 1;
+
+EXPLAIN PLAN FOR
+SELECT
+   "Status" AS "LE_KEY_STATUS"
+FROM mysfdc_server."SFDC"."CampaignMember"
+WHERE 
+   "LeadId" IS NOT NULL;
+
+SELECT
+   "Status" AS "LE_KEY_STATUS"
+FROM mysfdc_server."SFDC"."CampaignMember"
+WHERE 
+   "LeadId" IS NOT NULL;
+
+EXPLAIN PLAN FOR
+SELECT
+   "Name", "Type"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+   "Type" is not null and "Name" > 'K'
+order by 1;
+
+SELECT
+   "Name", "Type"
+FROM mysfdc_server."SFDC"."Opportunity"
+WHERE 
+   "Type" is not null and "Name" > 'K'
+order by 1;
+
+-------------
+-- CLEANUP --
+-------------
+drop server mysfdc_server cascade;
+drop schema sfdc cascade;

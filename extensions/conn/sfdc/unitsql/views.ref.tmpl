@@ -1,0 +1,379 @@
+> --
+> -- LER-617 : create complex views on top of SFDC objects
+> --
+> 
+> -------------------------
+> -- SFDC foreign server --
+> -------------------------
+> 
+> create server SFDC_SALES_LEDEV_LINK
+> foreign data wrapper SALESFORCE
+> options (
+>   USER_NAME '@username@',
+>   PASSWORD '@password@'
+> );
+> 
+> 
+> create schema "OPTY_SFDC_ADAPTERS" ;
+> 
+> -- (1)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_LOCATIONS_SRC"
+> ("ADDRESS_NUMBER","CITY_CODE","STATE_CODE","AUTO_ROUTING_CODE","COUNTRY_CODE","LOC_TYPE","LOCATION_ID","SOURCE_ID")
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+>     "USER"."Street" AS "ADDRESS_NUMBER",
+>     "USER"."City" AS "CITY_CODE",
+>     "USER"."State" AS "STATE_CODE",
+>     "USER"."PostalCode" AS "AUTO_ROUTING_CODE",
+>     "USER"."Country" AS "COUNTRY_CODE",
+>     'EmployeeLocations' AS "LOC_TYPE",
+>     "USER"."Street" || "USER"."City" || "USER"."State" || "USER"."PostalCode" || "USER"."Country" || 'EmployeeLocations' AS "LOCATION_ID",
+>     'SFDC' AS "SOURCE_ID"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."User" AS "USER"
+> WHERE
+>     ("USER"."Street" IS NOT NULL)
+> ;
+> 
+> SELECT * FROM  "OPTY_SFDC_ADAPTERS"."V_OPTY_LOCATIONS_SRC";
++-----------------+------------+-------------+--------------------+---------------+-----------+--------------+------------+
+| ADDRESS_NUMBER  | CITY_CODE  | STATE_CODE  | AUTO_ROUTING_CODE  | COUNTRY_CODE  | LOC_TYPE  | LOCATION_ID  | SOURCE_ID  |
++-----------------+------------+-------------+--------------------+---------------+-----------+--------------+------------+
++-----------------+------------+-------------+--------------------+---------------+-----------+--------------+------------+
+> 
+> -- (2)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_SALESREPS_SRC"
+> ("SALES_REP_NUM","SALES_REP_LNAME","SALES_REP_FNAME","SALES_REP_CNAME","DEPARTMENT_NAME","JOB_TITLE","PHONE_NUMBER","FAX_NUMBER","EMAIL_ADDRESS","STATUS","CREATED_ON_DATE","UPDATED_ON_DATE","SOURCE_ID","SALES_REP_ID","LE_DOMAIN","LE_SUB_DOMAIN","HIRE_DATE","EMPLOYEE_NUMBER","SALES_REGION","ADDRESS_1","ADDRESS_2","CITY","STATE","COUNTRY","ZIPCODE")
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+>     "USER"."Username" AS "SALES_REP_NUM",
+>     "USER"."LastName" AS "SALES_REP_LNAME",
+>     "USER"."FirstName" AS "SALES_REP_FNAME",
+>     "USER"."FirstName" || "USER"."LastName" AS "SALES_REP_CNAME",
+>     "USER"."Department" AS "DEPARTMENT_NAME",
+>     "USER"."Title" AS "JOB_TITLE",
+>     "USER"."Phone" AS "PHONE_NUMBER",
+>     "USER"."Fax" AS "FAX_NUMBER",
+>     "USER"."Email" AS "EMAIL_ADDRESS",
+>     CASE WHEN LOWER("USER"."IsActive") = 'true' THEN 'Active' ELSE 'InActive' END AS "STATUS",
+>     "USER"."CreatedDate" AS "CREATED_ON_DATE",
+>     "USER"."LastModifiedDate" AS "UPDATED_ON_DATE",
+>     'SFDC' AS "SOURCE_ID",
+>     "USER"."Id" AS "SALES_REP_ID",
+>     cast (NULL as varchar(256)) AS "LE_DOMAIN",
+>     cast (NULL as varchar(256)) AS "LE_SUB_DOMAIN",
+>     cast (NULL as DATE) AS "HIRE_DATE",
+>     cast (NULL as varchar(256)) AS "EMPLOYEE_NUMBER",
+>     "USER"."Division" AS "SALES_REGION",
+>     "USER"."Street" AS "ADDRESS_1",
+>     cast (NULL as varchar(256)) AS "ADDRESS_2",
+>     "USER"."City" AS "CITY",
+>     "USER"."State" AS "STATE",
+>     "USER"."Country" AS "COUNTRY",
+>     "USER"."PostalCode" AS "ZIPCODE"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."User" AS "USER"
+> ;
+> 
+> -- 2010-06-01 schoi: per-user account specific
+> -- SELECT * FROM "OPTY_SFDC_ADAPTERS"."V_OPTY_SALESREPS_SRC";
+> 
+> -- (3)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_LEADSRC_SRC"
+> ("SOURCE_ID","OPTY_LEAD_SRC_ID","OPTY_LEAD_SRC_CODE","OPTY_LEAD_SRC_NAME")
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+>     'SFDC' AS "SOURCE_ID",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_ID",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_CODE",
+>     "OPPORTUNITY"."LeadSource" AS "OPTY_LEAD_SRC_NAME"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."Opportunity" AS "OPPORTUNITY"
+> WHERE
+>     ("OPPORTUNITY"."LeadSource" is not null)
+> GROUP BY
+>     "OPPORTUNITY"."LeadSource"
+> ;
+> 
+> SELECT * from "OPTY_SFDC_ADAPTERS"."V_OPTY_LEADSRC_SRC" ORDER BY 1,2,3;
++------------+--------------------+---------------------+---------------------+
+| SOURCE_ID  |  OPTY_LEAD_SRC_ID  | OPTY_LEAD_SRC_CODE  | OPTY_LEAD_SRC_NAME  |
++------------+--------------------+---------------------+---------------------+
+| SFDC       | Employee Referral  | Employee Referral   | Employee Referral   |
+| SFDC       | External Referral  | External Referral   | External Referral   |
+| SFDC       | Partner            | Partner             | Partner             |
+| SFDC       | Phone Inquiry      | Phone Inquiry       | Phone Inquiry       |
+| SFDC       | Public Relations   | Public Relations    | Public Relations    |
+| SFDC       | Purchased List     | Purchased List      | Purchased List      |
+| SFDC       | Trade Show         | Trade Show          | Trade Show          |
+| SFDC       | Web                | Web                 | Web                 |
+| SFDC       | Word of mouth      | Word of mouth       | Word of mouth       |
++------------+--------------------+---------------------+---------------------+
+> 
+> 
+> -- (4)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_OPPORTUNITY_SRC"
+> (
+> -- "OPPORTUNITY_ID",
+>  "OPPORTUNITY_NAME",
+>  "OPPORTUNITY_DESC",
+> -- "FCST_CAT_ID",
+>  "CAMPAIGN_ID",
+>  "OPTY_TYPE_ID",
+>  "OPTY_STAGE_ID",
+>  "LEAD_SRC_ID",
+>  "OPTY_STATUS_ID",
+> -- "OWNER_ID",
+>  "OPTY_DOC_AMT",
+>  "OPTY_GRP_AMT",
+>  "EXP_REV_DOC_AMT",
+>  "EXP_REV_GRP_AMT",
+>  "PROBABILITY_ID",
+> -- "PROSPECT_ID",
+>  "CUSTOMER_ID",
+>  "CUST_ACCT_ID",
+> -- "OPTY_START_DATE",
+> -- "OPTY_CLOSE_DATE",
+> -- "EXP_CLOSE_DATE",
+>  "PROD_CNT",
+> -- "SALES_REP_ID",
+> -- "SRC_CREATED_ON_DATE",
+> -- "SRC_UPDATED_ON_DATE",
+>  "LE_DOMAIN",
+>  "LE_SUB_DOMAIN",
+>  "SOURCE_ID"
+> )
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+> --    "OPPORTUNITY"."Id" AS "OPPORTUNITY_ID",
+>     "OPPORTUNITY"."Name" AS "OPPORTUNITY_NAME",
+>     SUBSTRING("OPPORTUNITY"."Description",1,254) AS "OPPORTUNITY_DESC",
+> --    "OPPORTUNITY"."ForecastCategory" AS "FCST_CAT_ID",
+>     cast (NULL as varchar(256)) AS "CAMPAIGN_ID",
+>     cast (NULL as varchar(256)) AS "OPTY_TYPE_ID",
+>     "OPPORTUNITY"."StageName" AS "OPTY_STAGE_ID",
+>     "OPPORTUNITY"."LeadSource" AS "LEAD_SRC_ID",
+>     CASE WHEN LOWER("OPPORTUNITY"."IsClosed") = 'true' THEN 'Closed' ELSE 'Open' END AS "OPTY_STATUS_ID",
+> --    "OPPORTUNITY"."OwnerId" AS "OWNER_ID",
+>     "OPPORTUNITY"."Amount" AS "OPTY_DOC_AMT",
+>     "OPPORTUNITY"."Amount" AS "OPTY_GRP_AMT",
+>     "OPPORTUNITY"."Amount" AS "EXP_REV_DOC_AMT",
+>     "OPPORTUNITY"."Amount" AS "EXP_REV_GRP_AMT",
+> -- TRUNC( "OPPORTUNITY"."Probability") AS "PROBABILITY_ID",
+>     "OPPORTUNITY"."Probability" AS "PROBABILITY_ID",
+> --    "OPPORTUNITY"."AccountId" AS "PROSPECT_ID",
+> --    "OPPORTUNITY"."SalesRegion__c" AS "SALES_GEO_ID",
+>     cast (NULL as varchar(256)) AS "CUSTOMER_ID",
+>     cast (NULL as varchar(256)) AS "CUST_ACCT_ID",
+> --    "OPPORTUNITY"."CreatedDate" AS "OPTY_START_DATE",
+> --    "OPPORTUNITY"."CloseDate" AS "OPTY_CLOSE_DATE",
+> --    "OPPORTUNITY"."CloseDate" AS "EXP_CLOSE_DATE",
+>     cast (NULL as varchar(256)) AS "PROD_CNT",
+> --    "OPPORTUNITY"."OwnerId" AS "SALES_REP_ID",
+> --    "OPPORTUNITY"."CreatedDate" AS "SRC_CREATED_ON_DATE",
+> --    "OPPORTUNITY"."LastModifiedDate" AS "SRC_UPDATED_ON_DATE",
+>     cast (NULL as varchar(256)) AS "LE_DOMAIN",
+>     cast (NULL as varchar(256)) AS "LE_SUB_DOMAIN",
+>     'SFDC' AS "SOURCE_ID"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."Opportunity" AS "OPPORTUNITY"
+> ;
+> 
+> SELECT * FROM "OPTY_SFDC_ADAPTERS"."V_OPTY_OPPORTUNITY_SRC" ORDER BY 1,2,3;
++----------------------------------------------+-------------------+--------------+---------------+-----------------------+--------------------+-----------------+---------------+---------------+------------------+------------------+-----------------+--------------+---------------+-----------+------------+----------------+------------+
+|               OPPORTUNITY_NAME               | OPPORTUNITY_DESC  | CAMPAIGN_ID  | OPTY_TYPE_ID  |     OPTY_STAGE_ID     |    LEAD_SRC_ID     | OPTY_STATUS_ID  | OPTY_DOC_AMT  | OPTY_GRP_AMT  | EXP_REV_DOC_AMT  | EXP_REV_GRP_AMT  | PROBABILITY_ID  | CUSTOMER_ID  | CUST_ACCT_ID  | PROD_CNT  | LE_DOMAIN  | LE_SUB_DOMAIN  | SOURCE_ID  |
++----------------------------------------------+-------------------+--------------+---------------+-----------------------+--------------------+-----------------+---------------+---------------+------------------+------------------+-----------------+--------------+---------------+-----------+------------+----------------+------------+
+| Burlington Textiles Weaving Plant Generator  |                   |              |               | Closed Won            | Web                | Closed          | 235000.0      | 235000.0      | 235000.0         | 235000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| Dickenson Mobile Generators                  |                   |              |               | Qualification         | Purchased List     | Open            | 15000.0       | 15000.0       | 15000.0          | 15000.0          | 10.0            |              |               |           |            |                | SFDC       |
+| Edge Emergency Generator                     |                   |              |               | Closed Won            | Word of mouth      | Closed          | 75000.0       | 75000.0       | 75000.0          | 75000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| Edge Emergency Generator                     |                   |              |               | Id. Decision Makers   |                    | Open            | 35000.0       | 35000.0       | 35000.0          | 35000.0          | 60.0            |              |               |           |            |                | SFDC       |
+| Edge Installation                            |                   |              |               | Closed Won            | Word of mouth      | Closed          | 50000.0       | 50000.0       | 50000.0          | 50000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| Edge SLA                                     |                   |              |               | Closed Won            | Word of mouth      | Closed          | 60000.0       | 60000.0       | 60000.0          | 60000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| Express Logistics Portable Truck Generators  |                   |              |               | Value Proposition     | External Referral  | Open            | 80000.0       | 80000.0       | 80000.0          | 80000.0          | 50.0            |              |               |           |            |                | SFDC       |
+| Express Logistics SLA                        |                   |              |               | Perception Analysis   | External Referral  | Open            | 120000.0      | 120000.0      | 120000.0         | 120000.0         | 70.0            |              |               |           |            |                | SFDC       |
+| Express Logistics Standby Generator          |                   |              |               | Closed Won            | Trade Show         | Closed          | 220000.0      | 220000.0      | 220000.0         | 220000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| GenePoint Lab Generators                     |                   |              |               | Id. Decision Makers   |                    | Open            | 60000.0       | 60000.0       | 60000.0          | 60000.0          | 60.0            |              |               |           |            |                | SFDC       |
+| GenePoint SLA                                |                   |              |               | Closed Won            | Partner            | Closed          | 30000.0       | 30000.0       | 30000.0          | 30000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| GenePoint Standby Generator                  |                   |              |               | Closed Won            | Partner            | Closed          | 85000.0       | 85000.0       | 85000.0          | 85000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| Grand Hotels Emergency Generators            |                   |              |               | Closed Won            | External Referral  | Closed          | 210000.0      | 210000.0      | 210000.0         | 210000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| Grand Hotels Generator Installations         |                   |              |               | Closed Won            | External Referral  | Closed          | 350000.0      | 350000.0      | 350000.0         | 350000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| Grand Hotels Guest Portable Generators       |                   |              |               | Value Proposition     | Employee Referral  | Open            | 250000.0      | 250000.0      | 250000.0         | 250000.0         | 50.0            |              |               |           |            |                | SFDC       |
+| Grand Hotels Kitchen Generator               |                   |              |               | Id. Decision Makers   |                    | Open            | 15000.0       | 15000.0       | 15000.0          | 15000.0          | 60.0            |              |               |           |            |                | SFDC       |
+| Grand Hotels SLA                             |                   |              |               | Closed Won            | External Referral  | Closed          | 90000.0       | 90000.0       | 90000.0          | 90000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| Pyramid Emergency Generators                 |                   |              |               | Prospecting           | Phone Inquiry      | Open            | 100000.0      | 100000.0      | 100000.0         | 100000.0         | 10.0            |              |               |           |            |                | SFDC       |
+| United Oil Emergency Generators              |                   |              |               | Closed Won            | External Referral  | Closed          | 440000.0      | 440000.0      | 440000.0         | 440000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| United Oil Installations                     |                   |              |               | Closed Won            | External Referral  | Closed          | 235000.0      | 235000.0      | 235000.0         | 235000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| United Oil Installations                     |                   |              |               | Closed Won            | Partner            | Closed          | 270000.0      | 270000.0      | 270000.0         | 270000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| United Oil Installations                     |                   |              |               | Negotiation/Review    |                    | Open            | 270000.0      | 270000.0      | 270000.0         | 270000.0         | 90.0            |              |               |           |            |                | SFDC       |
+| United Oil Office Portable Generators        |                   |              |               | Negotiation/Review    |                    | Open            | 125000.0      | 125000.0      | 125000.0         | 125000.0         | 90.0            |              |               |           |            |                | SFDC       |
+| United Oil Plant Standby Generators          |                   |              |               | Needs Analysis        |                    | Open            | 675000.0      | 675000.0      | 675000.0         | 675000.0         | 20.0            |              |               |           |            |                | SFDC       |
+| United Oil Refinery Generators               |                   |              |               | Closed Won            | Partner            | Closed          | 915000.0      | 915000.0      | 915000.0         | 915000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| United Oil Refinery Generators               |                   |              |               | Proposal/Price Quote  |                    | Open            | 270000.0      | 270000.0      | 270000.0         | 270000.0         | 75.0            |              |               |           |            |                | SFDC       |
+| United Oil SLA                               |                   |              |               | Closed Won            | Partner            | Closed          | 120000.0      | 120000.0      | 120000.0         | 120000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| United Oil Standby Generators                |                   |              |               | Closed Won            | External Referral  | Closed          | 120000.0      | 120000.0      | 120000.0         | 120000.0         | 100.0           |              |               |           |            |                | SFDC       |
+| University of AZ Installations               |                   |              |               | Proposal/Price Quote  | Employee Referral  | Open            | 100000.0      | 100000.0      | 100000.0         | 100000.0         | 75.0            |              |               |           |            |                | SFDC       |
+| University of AZ Portable Generators         |                   |              |               | Closed Won            | Public Relations   | Closed          | 50000.0       | 50000.0       | 50000.0          | 50000.0          | 100.0           |              |               |           |            |                | SFDC       |
+| University of AZ SLA                         |                   |              |               | Closed Won            | Public Relations   | Closed          | 90000.0       | 90000.0       | 90000.0          | 90000.0          | 100.0           |              |               |           |            |                | SFDC       |
++----------------------------------------------+-------------------+--------------+---------------+-----------------------+--------------------+-----------------+---------------+---------------+------------------+------------------+-----------------+--------------+---------------+-----------+------------+----------------+------------+
+> 
+> -- (5)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_PROSPECTS_SRC"
+> (
+> -- "PROSPECT_ID",
+>  "PROSPECT_NAME",
+>  "PROSPECT_STATUS",
+>  "SIC_CODE",
+>  "SIC_NAME",
+>  "INDUSTRY_VERTICAL",
+>  "PROSPECT_REVENUE",
+>  "NUM_EMPLOYEES",
+> -- "SRC_CREATED_ON_DATE",
+> -- "SRC_UPDATED_ON_DATE",
+>  "PROSPECT_NUM",
+>  "PROSPECT_TYPE_CODE",
+>  "PROSPECT_TYPE_NAME",
+>  "LEGAL_STRUCT_CODE",
+>  "LEGAL_STRUCT_NAME"
+> )
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+> --    "ACCOUNT"."Id" AS "PROSPECT_ID",
+>     "ACCOUNT"."Name" AS "PROSPECT_NAME",
+>     "ACCOUNT"."Type" AS "PROSPECT_STATUS",
+>     "ACCOUNT"."Sic" AS "SIC_CODE",
+>     "ACCOUNT"."Sic" AS "SIC_NAME",
+>     "ACCOUNT"."Industry" AS "INDUSTRY_VERTICAL",
+>     "ACCOUNT"."AnnualRevenue" AS "PROSPECT_REVENUE",
+>     "ACCOUNT"."NumberOfEmployees" AS "NUM_EMPLOYEES",
+> --    "ACCOUNT"."CreatedDate" AS "SRC_CREATED_ON_DATE",
+> --    "ACCOUNT"."LastModifiedDate" AS "SRC_UPDATED_ON_DATE",
+>     CASE WHEN "ACCOUNT"."AccountNumber" IS NULL THEN "ACCOUNT"."Name" ELSE "ACCOUNT"."AccountNumber" END AS "PROSPECT_NUM",
+>     "ACCOUNT"."Rating" AS "PROSPECT_TYPE_CODE",
+>     "ACCOUNT"."Rating" AS "PROSPECT_TYPE_NAME",
+>     "ACCOUNT"."Ownership" AS "LEGAL_STRUCT_CODE",
+>     "ACCOUNT"."Ownership" AS "LEGAL_STRUCT_NAME"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."Account" AS "ACCOUNT";
+> 
+> SELECT * FROM "OPTY_SFDC_ADAPTERS"."V_OPTY_PROSPECTS_SRC" ORDER BY 1,2,3;
++--------------------------------------+---------------------+-----------+-----------+--------------------+-------------------+----------------+---------------+---------------------+---------------------+--------------------+--------------------+
+|            PROSPECT_NAME             |   PROSPECT_STATUS   | SIC_CODE  | SIC_NAME  | INDUSTRY_VERTICAL  | PROSPECT_REVENUE  | NUM_EMPLOYEES  | PROSPECT_NUM  | PROSPECT_TYPE_CODE  | PROSPECT_TYPE_NAME  | LEGAL_STRUCT_CODE  | LEGAL_STRUCT_NAME  |
++--------------------------------------+---------------------+-----------+-----------+--------------------+-------------------+----------------+---------------+---------------------+---------------------+--------------------+--------------------+
+| Burlington Textiles Corp of America  | Customer - Direct   | 546732    | 546732    | Apparel            | 3.5E8             | 9000           | CD656092      | Warm                | Warm                | Public             | Public             |
+| Dickenson plc                        | Customer - Channel  | 6752      | 6752      | Consulting         | 5.0E7             | 120            | CC634267      |                     |                     | Private            | Private            |
+| Edge Communications                  | Customer - Direct   | 6576      | 6576      | Electronics        | 1.39E8            | 1000           | CD451796      | Hot                 | Hot                 | Public             | Public             |
+| Express Logistics and Transport      | Customer - Channel  | 8742      | 8742      | Transportation     | 9.5E8             | 12300          | CC947211      | Cold                | Cold                | Public             | Public             |
+| GenePoint                            | Customer - Channel  | 3712      | 3712      | Biotechnology      | 3.0E7             | 265            | CC978213      | Cold                | Cold                | Private            | Private            |
+| Grand Hotels & Resorts Ltd           | Customer - Direct   | 2268      | 2268      | Hospitality        | 5.0E8             | 5600           | CD439877      | Warm                | Warm                | Public             | Public             |
+| Pyramid Construction Inc.            | Customer - Channel  | 4253      | 4253      | Construction       | 9.5E8             | 2680           | CC213425      |                     |                     | Public             | Public             |
+| United Oil & Gas Corp.               | Customer - Direct   | 4437      | 4437      | Energy             | 5.6E9             | 145000         | CD355118      | Hot                 | Hot                 | Public             | Public             |
+| United Oil & Gas, Singapore          | Customer - Direct   | 4437      | 4437      | Energy             |                   | 3000           | CD355120-B    |                     |                     | Public             | Public             |
+| United Oil & Gas, UK                 | Customer - Direct   | 4437      | 4437      | Energy             |                   | 24000          | CD355119-A    |                     |                     | Public             | Public             |
+| University of Arizona                | Customer - Direct   | 7321      | 7321      | Education          |                   | 39000          | CD736025      | Warm                | Warm                | Other              | Other              |
+| sForce                               |                     |           |           |                    |                   |                | sForce        |                     |                     |                    |                    |
++--------------------------------------+---------------------+-----------+-----------+--------------------+-------------------+----------------+---------------+---------------------+---------------------+--------------------+--------------------+
+> 
+> -- (6)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_FCSTCAT_SRC"
+> (
+>  "OPTY_FCSTCAT_ID",
+>  "OPTY_FCSTCAT_CODE",
+>  "OPTY_FCSTCAT_NAME",
+>  "SOURCE_ID"
+> -- "SRC_CREATED_ON_DATE",
+> -- "SRC_UPDATED_ON_DATE"
+> )
+>  DESCRIPTION 'Deployed by application repository'
+>  AS
+> SELECT
+>     "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_ID",
+>     "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_CODE",
+>     "OPPORTUNITYSTAGE"."ForecastCategory" AS "OPTY_FCSTCAT_NAME",
+>     'SFDC' AS "SOURCE_ID"
+> --    MIN("OPPORTUNITYSTAGE"."CreatedDate") AS "SRC_CREATED_ON_DATE",
+> --    MAX("OPPORTUNITYSTAGE"."LastModifiedDate") AS "SRC_UPDATED_ON_DATE"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."OpportunityStage" AS "OPPORTUNITYSTAGE"
+> GROUP BY
+>     "OPPORTUNITYSTAGE"."ForecastCategory",
+>     "OPPORTUNITYSTAGE"."ForecastCategory",
+> --    "OPPORTUNITYSTAGE"."ForecastCategory",
+>     "OPPORTUNITYSTAGE"."ForecastCategory"
+> ;
+> 
+> SELECT * FROM "OPTY_SFDC_ADAPTERS"."V_OPTY_FCSTCAT_SRC" ORDER BY 1;
++------------------+--------------------+--------------------+------------+
+| OPTY_FCSTCAT_ID  | OPTY_FCSTCAT_CODE  | OPTY_FCSTCAT_NAME  | SOURCE_ID  |
++------------------+--------------------+--------------------+------------+
+| Closed           | Closed             | Closed             | SFDC       |
+| Omitted          | Omitted            | Omitted            | SFDC       |
+| Pipeline         | Pipeline           | Pipeline           | SFDC       |
++------------------+--------------------+--------------------+------------+
+> 
+> -- (7)
+> 
+> CREATE VIEW "OPTY_SFDC_ADAPTERS"."V_OPTY_STAGES_SRC"
+> (
+> -- "OPTY_STAGE_ID",
+>  "OPTY_STAGE_CODE",
+>  "OPTY_STAGE_NAME",
+>  "OPTY_STG_SUB_CAT_CODE",
+>  "OPTY_STG_SUB_CAT_NAME",
+>  "OPTY_STAGE_CAT_CODE",
+>  "OPTY_STAGE_CAT_NAME",
+>  "SOURCE_ID"
+> -- "SRC_CREATED_ON_DATE",
+> -- "SRC_UPDATED_ON_DATE"
+> )
+>  DESCRIPTION 'Source view on Opportunity Stages'
+>  AS
+> SELECT
+> --    "OPPORTUNITYSTAGE"."Id" AS "OPTY_STAGE_ID",
+>     SUBSTRING("OPPORTUNITYSTAGE"."MasterLabel",1,30) AS "OPTY_STAGE_CODE",
+>     "OPPORTUNITYSTAGE"."MasterLabel" AS "OPTY_STAGE_NAME",
+>     CASE WHEN "OPPORTUNITYSTAGE"."IsActive" = 'true' THEN 'Active' Else 'InActive' END AS "OPTY_STG_SUB_CAT_CODE",
+>     CASE WHEN "OPPORTUNITYSTAGE"."IsActive" = 'true' THEN 'Active' Else 'InActive' END AS "OPTY_STG_SUB_CAT_NAME",
+>     CASE WHEN "OPPORTUNITYSTAGE"."IsClosed" = 'true' THEN 'Closed' ELSE 'Open' END AS "OPTY_STAGE_CAT_CODE",
+>     CASE WHEN "OPPORTUNITYSTAGE"."IsClosed" = 'true' THEN 'Closed' ELSE 'Open' END AS "OPTY_STAGE_CAT_NAME",
+>     'SFDC' AS "SOURCE_ID"
+> --     "OPPORTUNITYSTAGE"."CreatedDate" AS "SRC_CREATED_ON_DATE",
+> --     "OPPORTUNITYSTAGE"."LastModifiedDate" AS "SRC_UPDATED_ON_DATE"
+> FROM
+>     "SFDC_SALES_LEDEV_LINK".SFDC."OpportunityStage" AS "OPPORTUNITYSTAGE"
+> ;
+> 
+> SELECT * FROM "OPTY_SFDC_ADAPTERS"."V_OPTY_STAGES_SRC" ORDER BY 1,2,3;
++-----------------------+-----------------------+------------------------+------------------------+----------------------+----------------------+------------+
+|    OPTY_STAGE_CODE    |    OPTY_STAGE_NAME    | OPTY_STG_SUB_CAT_CODE  | OPTY_STG_SUB_CAT_NAME  | OPTY_STAGE_CAT_CODE  | OPTY_STAGE_CAT_NAME  | SOURCE_ID  |
++-----------------------+-----------------------+------------------------+------------------------+----------------------+----------------------+------------+
+| Closed Lost           | Closed Lost           | Active                 | Active                 | Closed               | Closed               | SFDC       |
+| Closed Won            | Closed Won            | Active                 | Active                 | Closed               | Closed               | SFDC       |
+| Id. Decision Makers   | Id. Decision Makers   | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Needs Analysis        | Needs Analysis        | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Negotiation/Review    | Negotiation/Review    | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Perception Analysis   | Perception Analysis   | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Proposal/Price Quote  | Proposal/Price Quote  | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Prospecting           | Prospecting           | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Qualification         | Qualification         | Active                 | Active                 | Open                 | Open                 | SFDC       |
+| Value Proposition     | Value Proposition     | Active                 | Active                 | Open                 | Open                 | SFDC       |
++-----------------------+-----------------------+------------------------+------------------------+----------------------+----------------------+------------+
+> 
+> 
+> -------------
+> -- CLEANUP --
+> -------------
+> drop server SFDC_SALES_LEDEV_LINK cascade;
+> drop schema "OPTY_SFDC_ADAPTERS" cascade;
+> 
+> !quit
