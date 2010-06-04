@@ -366,7 +366,7 @@ public class FarragoDbStmtContext
         }
 
         if (session.shutdownRequested()) {
-            session.closeAllocation();
+            session.kill();
             FarragoDatabase db = ((FarragoDbSession) session).getDatabase();
             db.shutdown();
             session.setShutdownRequest(false);

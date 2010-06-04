@@ -856,25 +856,42 @@ public abstract class FarragoManagementUDR
         }
     }
 
+    /**
+     * @return the ID for the current session
+     */
     public static long getCurrentSessionId()
     {
         return FarragoUdrRuntime.getSession().getSessionInfo().getId();
     }
 
     /**
-     * Simple server shutdown statement
+     * Shuts down the DBMS engine (and optionally the JVM).
      */
-    public static void shutdownServer (boolean killSessions)
+    public static void shutdownDatabase(
+        boolean killSessions, long jvmShutdownDelayInMillis)
         throws Exception
     {
+        FarragoDbSession dbSession =
+            (FarragoDbSession) FarragoUdrRuntime.getSession();
         if (!killSessions) {
-            // TODO: nag 25-feb-2010 Ground References should come from where?
-            if (!FarragoDbSingleton.shutdownConditional(1)) {
-                throw new Exception(
-                        "Shutdown failed because of oustanding sessions, use true for killSessions");
+            FarragoDatabase db = dbSession.getDatabase();
+            List<FarragoSession> activeSessions = db.getSessions();
+            if (activeSessions.size() > 1) {
+                throw FarragoResource.instance()
+                    .ShutdownPreventedBySessions.ex();
             }
-        } else {
-            FarragoDbSingleton.shutdown();
+        }
+        dbSession.setShutdownRequest(true);
+        if (jvmShutdownDelayInMillis != -1) {
+            Timer timer = new Timer();
+            TimerTask task = new TimerTask()
+                {
+                    public void run()
+                    {
+                        System.exit(0);
+                    }
+                };
+            timer.schedule(task, jvmShutdownDelayInMillis);
         }
     }
 

@@ -453,5 +453,7 @@ have already been defined (state=,code=0)
 > -- NOTE:  this will shut down the system, so don't add any commands
 > -- after it
 > alter system replace catalog;
+Error: Session closed (state=,code=0)
+Error: Session closed (state=,code=0)
 > 
 > !quit
