@@ -216,7 +216,7 @@
   <!-- Test targets                                          -->
   <!-- ===================================================== -->
 
-  <target name="sanity" depends="test-wsdl2java,gen-all-sql">
+  <target name="sanity" depends="gen-all-sql">
     <property name="testlog.dir" location="${sfdc.testlog.dir}"/>
     <farrago.runSqlTest file="${sfdcgensql.dir}/sanity.sql"
       sqltest.classpath="${test.classpath}"
