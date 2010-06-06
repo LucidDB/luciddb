@@ -924,6 +924,13 @@
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.setUnicodeAsDefault';
 > 
+> create or replace procedure shutdown_database(
+>     in kill_sessions boolean, in jvm_shutdown_delay_millis bigint)
+> language java
+> parameter style java
+> no sql
+> external name 'class net.sf.farrago.syslib.FarragoManagementUDR.shutdownDatabase';
+> 
 > create or replace function get_current_sessionid()
 > returns integer
 > language java
