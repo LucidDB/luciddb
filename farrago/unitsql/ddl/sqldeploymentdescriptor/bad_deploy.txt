@@ -5,14 +5,14 @@ create or replace function test_routine(i int)
 returns varchar(128)
 language java
 no sql
-external name 
-'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+external name
+'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexSting(java.lang.Integer)';
 
 END INSTALL",
 
   "BEGIN REMOVE
 
-DROP FUNCTION test_routine CASCADE;
+DROP FUNCTION test_rotine ;
 
 END REMOVE"
 }

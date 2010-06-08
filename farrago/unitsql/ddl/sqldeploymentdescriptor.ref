@@ -1,7 +1,8 @@
 > create or replace schema "SS";
 > set schema 'SS';
 > 
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(0);
+> --normal case
+> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
 > values SS.test_routine(255);
 +---------+
 | EXPR$0  |
@@ -14,24 +15,40 @@
 +-----------+-----------------------------------------------------------------------+------------------+
 | TEST_JAR  | file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar  | 2                |
 +-----------+-----------------------------------------------------------------------+------------------+
-> drop jar test_jar options(0) CASCADE;
+> drop jar test_jar options(1) CASCADE;
 > select "name","url","deploymentState" from sys_fem.sql2003."Jar" where "name"='TEST_JAR' order by "name";
 +-------+------+------------------+
 | name  | url  | deploymentState  |
 +-------+------+------------------+
 +-------+------+------------------+
 > values SS.test_routine(255);
-Error: From line 1, column 11 to line 1, column 27: No match found for function signature TEST_ROUTINE(<NUMERIC>) (state=,code=0)
+Error: DDL validation error: Reference to unknown jar "TEST_JAR" (state=,code=0)
+> 
+> --the deployment descriptor statements need to be executed with the default schema set to the schema containing the jar 
+> create or replace schema "TT";
+> create jar "TT".test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
+> values "TT".test_routine(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+> drop jar "TT".test_jar options(1) CASCADE;
+> drop schema "TT" cascade;
 > 
 > --failure cases
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(0);
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(0);
+> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
+> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
 Error: DDL validation error near line 1, column 12: Target schema "LOCALDB"."SS" already contains jar "TEST_JAR" with same name (state=,code=0)
 > 
-> drop jar test_jar1 options(0) CASCADE;
+> drop jar test_jar1 options(1) CASCADE;
 Error: DDL validation error near line 1, column 31: Reference to unknown jar "TEST_JAR1" (state=,code=0)
-> drop jar test_jar options(0) CASCADE;
+> drop jar test_jar options(1) CASCADE;
+> 
+> --bad sql deployment descriptor.
+> 
 > 
 > drop schema "SS" cascade;
+> 
 > 
 > !quit

@@ -17,19 +17,34 @@
         <include name="deploy.txt"/>
       </fileset>
       <manifest>
-        <attribute
-          name="DeployFileName"
-          value="deploy.txt" />
-        <attribute
-          name="SQLJDeploymentDescriptor"
-          value="TRUE" />
+        <section name="deploy.txt"> 
+          <attribute 
+             name="SQLJDeploymentDescriptor" 
+             value="TRUE" />
+        </section>
       </manifest>
-
+    </jar>
+    <!-- genrate jar for testing.-->
+    <jar jarfile="${sdd.dir}/bad-sddtest.jar">
+      <fileset dir="${class.dir}/classes">
+        <include name="**/net/sf/farrago/test/FarragoTestUDR.class" />
+      </fileset>
+      <fileset dir="${sdd.dir}">
+        <include name="bad_deploy.txt"/>
+      </fileset>
+      <manifest>
+        <section name="bad_deploy.txt">
+          <attribute
+             name="SQLJDeploymentDescriptor"
+             value="TRUE" />
+        </section>
+      </manifest>
     </jar>
   </target>
 
   <target name="clean">
     <delete file="sddtest.jar"/>
+    <delete file="bad-sddtest.jar"/>
   </target>
 </project>
 

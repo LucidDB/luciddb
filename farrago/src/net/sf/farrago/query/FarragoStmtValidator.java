@@ -684,7 +684,7 @@ public class FarragoStmtValidator
     // implement FarragoSessionStmtValidator
     public FemJar findJarFromLiteralName(String jarName)
     {
-        // TODO jvs 19-Jan-2005: support "thisjar" in deployment
+        // support "thisjar" in deployment
         // descriptors
         if (FarragoDefaultSessionPersonality.SQLJ_THISJAR.equals(jarName)) {
             jarName = session.getSessionVariables().get(

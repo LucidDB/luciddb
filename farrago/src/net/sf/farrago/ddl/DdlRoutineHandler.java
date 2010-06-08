@@ -53,7 +53,7 @@ import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-
+import org.eigenbase.sql.parser.*;
 
 /**
  * DdlRoutineHandler defines DDL handler methods for user-defined routines and
@@ -806,58 +806,8 @@ public class DdlRoutineHandler
                     repos.getLocalizedObjectName(typeDef)));
         }
     }
-
     public void executeCreation(FemJar jar)
     {
-        jar.setDeploymentState(DEPLOYMENT_PENDING);
-        String url = jar.getUrl().trim();
-        String expandedUrl = FarragoProperties.instance().expandProperties(url);
-        if (expandedUrl.startsWith(
-                        FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
-        {
-            throw validator.newPositionalError(
-                jar,
-                res.CannotDoDeploymentOnClass.ex(
-                    repos.getLocalizedObjectName(jar)));
-        }
-        String jarName = getQualifiedJarName(jar);
-        String[] deploySQLs = getDeploySqlStatements(
-                              jarName, expandedUrl, "INSTALL");
-        FarragoSession session =
-            validator.getStmtValidator().getSession();
-        session.getSessionVariables().set(
-            FarragoDefaultSessionPersonality.SQLJ_THISJAR,
-            jarName);
-        boolean deployed_partial = false;
-        if (deploySQLs != null) {
-            String lastSql = "";
-            try {
-                for (String sql : deploySQLs) {
-                    if (sql.trim().length() != 0) {
-                        lastSql = sql;
-                        executeSql(session, sql);
-                    }
-                }
-            } catch (SQLException ex) {
-                deployed_partial = true;
-                // REVIEW jvs 19-May-2010:  This does not match
-                // what we agreed on during design review.  Creation
-                // is supposed to fail fast rather than keep going.
-                session.getWarningQueue().postWarning(
-                    FarragoResource.instance().SqlStatementExecutionFailed.ex(
-                        lastSql));
-            }
-            if (deployed_partial) {
-                jar.setDeploymentState(DEPLOYED_PARTIAL);
-            } else {
-                jar.setDeploymentState(DEPLOYED);
-            }
-        }
-    }
-
-    public void executeDrop(FemJar jar)
-    {
-        jar.setDeploymentState(UNDEPLOYMENT_PENDING);
         String url = jar.getUrl().trim();
         String expandedUrl = FarragoProperties.instance().expandProperties(url);
         if (expandedUrl.startsWith(
@@ -865,46 +815,83 @@ public class DdlRoutineHandler
         {
             throw validator.newPositionalError(
                 jar,
-                res.CannotDoDeploymentOnClass.ex(
-                    repos.getLocalizedObjectName(jar)));
+                res.CannotDoDeploymentOnClass
+                   . ex(repos.getLocalizedObjectName(jar)));
         }
 
+        if (jar.getDeploymentState() != DEPLOYMENT_PENDING) {
+            return;
+        }
+        String jarName = getQualifiedJarName(jar);
+        String jarSchema = getJarSchema(jarName);
+
+        FarragoSession session = validator.getStmtValidator().getSession();
+        session.getSessionVariables().set(
+            FarragoDefaultSessionPersonality.SQLJ_THISJAR,
+            jarName);
+        List<String> deployFiles = getAlldeployFiles(expandedUrl);
+        if (deployFiles.size() > 0) {
+            for (String deployFile : deployFiles) {
+                List<String> deploySQLs = getDeploySqlStatements(
+                    expandedUrl,
+                    deployFile,
+                    "INSTALL");
+                if (deploySQLs.size() > 0) {
+                    int deployStatement = executeDeployDescriptor(
+                        session,
+                        jarSchema,
+                        deploySQLs,
+                        deployFile);
+                    jar.setDeploymentState(deployStatement);
+                }
+            }
+        }
+    }
+
+    public void executeDrop(FemJar jar)
+    {
+        String url = jar.getUrl().trim();
+        String expandedUrl = FarragoProperties.instance().expandProperties(url);
+        if (expandedUrl
+                  .startsWith(FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+        {
+            throw validator.newPositionalError(
+                jar,
+                res.CannotDoDeploymentOnClass
+                   .ex(repos.getLocalizedObjectName(jar)));
+        }
+        if (jar.getDeploymentState() != UNDEPLOYMENT_PENDING) {
+            return;
+        }
         // Disable mass deletion for this DROP so that it
         // doesn't interfere with nested DDL transactions.
         validator.enableMassDeletion(false);
-
-        // Also disable it for the nested transactions themselves.
-        FarragoSession session =
-            validator.getStmtValidator().getSession();
-        boolean savedMassDeletion =
-            session.getSessionVariables().getBoolean(
-                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
+        //  Also disable it for the nested transactions themselves.
+        FarragoSession session = validator.getStmtValidator().getSession();
+        boolean savedMassDeletion = session.getSessionVariables().getBoolean(
+            FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
+        String jarName = getQualifiedJarName(jar);
+        String jarSchema = getJarSchema(jarName);
         try {
             session.getSessionVariables().setBoolean(
                 FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
                 false);
-            String jarName = getQualifiedJarName(jar);
-            String[] deploySQLs = getDeploySqlStatements(
-                jarName, expandedUrl, "REMOVE");
+            List<String> deployFiles = getAlldeployFiles(expandedUrl);
             boolean deployed_partial = false;
-            if (deploySQLs != null) {
-                for (String sql : deploySQLs) {
-                    if (sql.trim().length() != 0) {
-                        try {
-                            executeSql(session, sql);
-                        } catch (SQLException ex) {
-                            // REVIEW jvs 19-May-2010: How is the user supposed
-                            // to know what went wrong without ex's message?
-                            session.getWarningQueue().postWarning(
-                                FarragoResource.instance()
-                                .SqlStatementExecutionFailed.ex(sql));
-                        }
+            if (deployFiles.size() > 0) {
+                for (String deployFile : deployFiles) {
+                    List<String> deploySQLs = getDeploySqlStatements(
+                        expandedUrl,
+                        deployFile,
+                        "REMOVE");
+                    if (deploySQLs.size() > 0) {
+                        int deployStatement = executeDeployDescriptor(
+                            session,
+                            jarSchema,
+                            deploySQLs,
+                            deployFile);
+                        jar.setDeploymentState(deployStatement);
                     }
-                }
-                if (deployed_partial) {
-                    jar.setDeploymentState(DEPLOYED_PARTIAL);
-                } else {
-                    jar.setDeploymentState(DEPLOYED);
                 }
             }
         } finally {
@@ -917,79 +904,162 @@ public class DdlRoutineHandler
     private String getQualifiedJarName(FemJar jar)
     {
         SqlIdentifier jarId = FarragoCatalogUtil.getQualifiedName(jar);
-        SqlPrettyWriter pw =
-            new SqlPrettyWriter(
-                SqlDialect.create(
-                    validator.getStmtValidator().getSession()
-                             .getDatabaseMetaData()));
+        SqlPrettyWriter pw = new SqlPrettyWriter(
+            SqlDialect.create(
+                validator.getStmtValidator()
+                .getSession()
+                .getDatabaseMetaData()));
         String fqjn = pw.format(jarId);
         return fqjn;
     }
 
-    private void executeSql(FarragoSession session, String sql)
-        throws SQLException
+    private String getJarSchema(String qualifiedJarName)
     {
+        String schema = "";
+        try {
+            SqlParser sqlParser = new SqlParser(qualifiedJarName);
+            SqlIdentifier tableId = (SqlIdentifier) sqlParser.parseExpression();
+            String[] ss = tableId.names;
+            schema = ss[1];
+        } catch (Exception ex) {
+        }
+        return schema;
+    }
+
+    private int executeDeployDescriptor(
+        FarragoSession session,
+        String defaultSchema,
+        List<String> sqls,
+        String deployFile)
+
+    {
+        int deployStatement = DEPLOYMENT_PENDING;
         Connection conn = null;
         Statement stmt = null;
+        boolean flag = false;
+        String setDefualtSchema = "set schema '" + defaultSchema + "'";
         try {
             conn = session.getConnectionSource().newConnection();
             stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-        } finally {
-            if (stmt != null) {
-                stmt.close();
+            stmt.executeUpdate(setDefualtSchema);
+            String lastSql = "";
+            for (String sql : sqls) {
+                lastSql = sql;
+                try {
+                    stmt.executeUpdate(sql);
+                } catch (SQLException ex) {
+                    flag = true;
+                    session.getWarningQueue()
+                        .postWarning(
+                            FarragoResource.instance()
+                              .SqlStatementExecutionFailed.ex(
+                                lastSql,
+                                ex.getMessage()));
+                }
             }
-            if (conn != null) {
-                conn.close();
+        } catch (Exception ex) {
+            flag = true;
+            session.getWarningQueue().postWarning(
+                FarragoResource.instance().SqlStatementExecutionFailed.ex(
+                    setDefualtSchema,
+                    ex.getMessage()));
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                flag = true;
+                session.getWarningQueue().postWarning(
+                    FarragoResource.instance().SqlStatementExecutionFailed.ex(
+                        "No SQL",
+                        ex.getMessage()));
             }
         }
+        deployStatement = (flag) ? DEPLOYED_PARTIAL : DEPLOYED;
+        return deployStatement;
     }
 
-    private String[] getDeploySqlStatements(
-        String jarName,
-        String jarUrl,
-        String operation)
+    private List<String> getAlldeployFiles(String jarUrl)
     {
-        String[] ret = null;
+        List<String> retValue = new ArrayList<String>();
         try {
-            URL url = new URL(jarUrl);
-            JarFile jf = new JarFile(url.getFile());
-            Manifest mf = jf.getManifest();
-            if (mf != null) {
-                Attributes ats = mf.getMainAttributes();
-                String deplyFiles = ats.getValue("DeployFileName");
-                String deployFlag = ats.getValue(
-                    "SQLJDeploymentDescriptor").trim();
-                if ("true".equalsIgnoreCase(deployFlag)) {
-                    JarEntry entry = jf.getJarEntry(deplyFiles);
-                    if (entry != null) {
-                        InputStream in = jf.getInputStream(entry);
-                        BufferedReader br = new BufferedReader(
-                            new InputStreamReader(in));
-                        String s = "";
-                        StringBuilder sb = new StringBuilder();
-                        boolean flag = false;
-                        // parse the line from deployment descriptor file.
-                        while ((s = br.readLine()) != null) {
-                            if (s.contains("\"BEGIN " + operation)) {
-                                flag = true;
-                            } else if (
-                                s.contains("END " + operation + "\"") && flag)
-                            {
-                                break;
-                            } else if (flag) {
-                                sb.append(s);
-                                sb.append("\n");
-                            }
+            JarFile jarfile = getJarFile(jarUrl);
+            Manifest manifest = jarfile.getManifest();
+            if (manifest != null) {
+                Map map = manifest.getEntries();
+                for (Iterator it = map.keySet().iterator(); it.hasNext();) {
+                    String entryName = (String) it.next();
+                    Attributes attrs = (Attributes) map.get(entryName);
+                    for (Iterator it2 =
+                                    attrs.keySet().iterator(); it2.hasNext();)
+                    {
+                        Attributes.Name attrName = (Attributes.Name) it2.next();
+                        String attrValue = attrs.getValue(attrName);
+                        if ("SQLJDeploymentDescriptor".equals(
+                            attrName.toString())
+                            && "TRUE".equals(attrValue))
+                        {
+                            retValue.add(entryName);
                         }
-                        ret = sb.toString().split(";");
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return ret;
+        return retValue;
     }
+
+    private List<String> getDeploySqlStatements(
+        String jarUrl,
+        String deployFile,
+        String operation)
+    {
+        List<String> retValue = new ArrayList<String>();
+        try {
+            JarFile jarfile = getJarFile(jarUrl);
+            JarEntry entry = jarfile.getJarEntry(deployFile);
+            if (entry != null) {
+                InputStream in = jarfile.getInputStream(entry);
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(in));
+                StringBuilder text = new StringBuilder();
+                boolean flag = false;
+                while (br.ready()) {
+                    String line = br.readLine();
+                    if (line.trim().endsWith("\"BEGIN INSTALL")) {
+                        flag = true;
+                    } else if (line.trim().startsWith("END INSTALL\"")) {
+                        break;
+                    } else if (flag) {
+                        text.append(line);
+                        text.append("\n");
+                    }
+                }
+                String[] sqlArray = text.toString().split(";");
+                for (String sql : sqlArray) {
+                    if (sql.trim().length() > 0) {
+                        retValue.add(sql);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+        }
+        return retValue;
+    }
+
+    private JarFile getJarFile(String jarUrl)
+        throws MalformedURLException, IOException
+    {
+        URL url = new URL(jarUrl);
+        JarFile jf = new JarFile(url.getFile());
+        return jf;
+    }
+
 }
 
 // End DdlRoutineHandler.java
