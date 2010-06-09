@@ -1470,7 +1470,13 @@ CwmModelElement JarDrop() :
     {
         FemJar jar = farragoParser.getStmtValidator().findSchemaObject(
             qualifiedJarName, FemJar.class);
-        jar.setDeploymentState(deploymentState.intValue(true));
+        int deploy = deploymentState.intValue(true);
+        if (deploy == 0) {
+        	jar.setDeploymentState(deploy);
+        } else {
+            // set deploymentState to UNDEPLOYMENT_PENDING
+        	jar.setDeploymentState(4);
+        }
         return jar;
     }
 }
@@ -2372,7 +2378,13 @@ FemJar JarDefinition() :
     <OPTIONS> <LPAREN>
     deploymentState = NumericLiteral() <RPAREN>
     {
-        jar.setDeploymentState(deploymentState.intValue(true));
+        int deploy = deploymentState.intValue(true);
+        if (deploy  == 0) {
+           jar.setDeploymentState(deploy);        
+        } else {
+           // set deploymentState to DEPLOYMENT_PENDING
+           jar.setDeploymentState(1); 
+        }
         return jar;
     }
 }
