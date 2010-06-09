@@ -9,7 +9,7 @@ if not exist "%MAIN_DIR%\bin\classpath.bat" goto need_install
 
 call "%MAIN_DIR%\bin\classpath.bat"
 
-set JAVA_ARGS=-Xms256m -Xmx256m -cp %LCP% -Dnet.sf.farrago.home="%MAIN_DIR%" -Djava.util.logging.config.file="%MAIN_DIR%\trace\Trace.properties"
+set JAVA_ARGS=-Xms256m -Xmx256m -XX:MaxPermSize=128m -cp %LCP% -Dnet.sf.farrago.home="%MAIN_DIR%" -Djava.util.logging.config.file="%MAIN_DIR%\trace\Trace.properties"
 
 set SQLLINE_JAVA_ARGS=sqlline.SqlLine
 
