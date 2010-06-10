@@ -87,27 +87,34 @@ public abstract class SqlNode
     }
 
     /**
-     * Returns whether this node is a particular kind.
-     *
-     * @param kind a {@link org.eigenbase.sql.SqlKind} value
-     */
-    public boolean isA(SqlKind kind)
-    {
-        // REVIEW jvs 6-Feb-2005:  either this should be
-        // getKind().isA(kind), or this method should be renamed to
-        // avoid confusion
-        return getKind() == kind;
-    }
-
-    /**
      * Returns the type of node this is, or {@link
-     * org.eigenbase.sql.SqlKind#Other} if it's nothing special.
+     * org.eigenbase.sql.SqlKind#OTHER} if it's nothing special.
+     *
+     * @see #isA
      *
      * @return a {@link SqlKind} value, never null
      */
     public SqlKind getKind()
     {
-        return SqlKind.Other;
+        return SqlKind.OTHER;
+    }
+
+    /**
+     * Returns whether this node is a member of an aggregate category.
+     *
+     * <p>For example, {@code node.isA(SqlKind.QUERY)} returns {@code true}
+     * if the node is a SELECT, INSERT, UPDATE etc.
+     *
+     * <p>This method is shorthand: {@code node.isA(category)} is always
+     * equivalent to {@code node.getKind().belongsTo(category)}.
+     *
+     * @param category Category
+     *
+     * @return Whether this node belongs to the given category.
+     */
+    public final boolean isA(Set<SqlKind> category)
+    {
+        return getKind().belongsTo(category);
     }
 
     public static SqlNode [] cloneArray(SqlNode [] nodes)

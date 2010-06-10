@@ -45,7 +45,7 @@ public class SqlOrderByOperator
     public SqlOrderByOperator()
     {
         // NOTE:  make precedence lower then SELECT to avoid extra parens
-        super("ORDER BY", SqlKind.OrderBy, 0);
+        super("ORDER BY", SqlKind.ORDER_BY, 0);
     }
 
     //~ Methods ----------------------------------------------------------------

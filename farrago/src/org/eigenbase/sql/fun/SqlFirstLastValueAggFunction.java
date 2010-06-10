@@ -47,7 +47,7 @@ public class SqlFirstLastValueAggFunction
     {
         super(
             (firstFlag) ? "FIRST_VALUE" : "LAST_VALUE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny,

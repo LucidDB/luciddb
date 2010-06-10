@@ -126,7 +126,7 @@ public class SqlIdentifier
 
     public SqlKind getKind()
     {
-        return SqlKind.Identifier;
+        return SqlKind.IDENTIFIER;
     }
 
     public SqlNode clone(SqlParserPos pos)

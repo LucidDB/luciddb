@@ -578,7 +578,7 @@ public final class SqlParserUtil
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer("Attempting to reduce " + list);
         }
-        final SqlNode node = toTreeEx(list, 0, 0, SqlKind.Other);
+        final SqlNode node = toTreeEx(list, 0, 0, SqlKind.OTHER);
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("Reduced " + node);
         }
@@ -596,7 +596,7 @@ public final class SqlParserUtil
      * use value 1.
      * @param minPrec Minimum precedence to consider. If the method encounters
      * an operator of lower precedence, it doesn't reduce any further.
-     * @param stopperKind If not {@link SqlKind#Other}, stop reading the list if
+     * @param stopperKind If not {@link SqlKind#OTHER}, stop reading the list if
      * we encounter a token of this kind.
      *
      * @return the root node of the tree which the list condenses into
@@ -620,7 +620,7 @@ outer:
                 SqlOperator previous;
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
                 SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
-                if ((stopperKind != SqlKind.Other)
+                if ((stopperKind != SqlKind.OTHER)
                     && (current.getKind() == stopperKind))
                 {
                     break outer;
@@ -648,7 +648,7 @@ outer:
                         next = ((ToTreeListItem) list.get(i + 2)).op;
                         nextLeft = next.getLeftPrec();
                         if ((next.getKind() == stopperKind)
-                            && (stopperKind != SqlKind.Other))
+                            && (stopperKind != SqlKind.OTHER))
                         {
                             // Suppose we're looking at 'AND' in
                             //    a BETWEEN b OR c AND d
@@ -756,7 +756,7 @@ outer:
                             if (listItem instanceof ToTreeListItem) {
                                 next = ((ToTreeListItem) listItem).op;
                                 nextLeft = next.getLeftPrec();
-                                if ((stopperKind != SqlKind.Other)
+                                if ((stopperKind != SqlKind.OTHER)
                                     && (next.getKind() == stopperKind))
                                 {
                                     break outer;

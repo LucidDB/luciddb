@@ -46,7 +46,7 @@ public class SqlPositionFunction
     {
         super(
             "POSITION",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableInteger,
             null,
             SqlTypeStrategies.otcStringSameX2,

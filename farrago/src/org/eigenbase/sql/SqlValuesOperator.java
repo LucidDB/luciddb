@@ -34,7 +34,7 @@ public class SqlValuesOperator
 
     public SqlValuesOperator()
     {
-        super("VALUES", SqlKind.Values);
+        super("VALUES", SqlKind.VALUES);
     }
 
     //~ Methods ----------------------------------------------------------------

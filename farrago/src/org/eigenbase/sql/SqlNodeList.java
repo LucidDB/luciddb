@@ -145,11 +145,11 @@ public class SqlNodeList
     void andOrList(SqlWriter writer, SqlKind sepKind)
     {
         SqlBinaryOperator sepOp =
-            (sepKind == SqlKind.And) ? SqlStdOperatorTable.andOperator
+            (sepKind == SqlKind.AND) ? SqlStdOperatorTable.andOperator
             : SqlStdOperatorTable.orOperator;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
-            writer.sep(sepKind.getName(), false);
+            writer.sep(sepKind.name(), false);
 
             // The precedence pulling on the LHS of a node is the
             // right-precedence of the separator operator, except at the start
@@ -166,11 +166,11 @@ public class SqlNodeList
     void _andOrList(SqlWriter writer, SqlKind sepKind)
     {
         SqlBinaryOperator sepOp =
-            (sepKind == SqlKind.And) ? SqlStdOperatorTable.andOperator
+            (sepKind == SqlKind.AND) ? SqlStdOperatorTable.andOperator
             : SqlStdOperatorTable.orOperator;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
-            writer.sep(sepKind.getName(), false);
+            writer.sep(sepKind.name(), false);
             int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
             int rprec = (i == (list.size() - 1)) ? 0 : sepOp.getLeftPrec();
             node.unparse(writer, lprec, rprec);

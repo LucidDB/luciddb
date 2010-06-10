@@ -65,7 +65,7 @@ public class MockSqlOperatorTable
         opTab.addOperator(
             new SqlFunction(
                 "RAMP",
-                SqlKind.Function,
+                SqlKind.OTHER_FUNCTION,
                 null,
                 null,
                 SqlTypeStrategies.otcNumeric,
@@ -86,7 +86,7 @@ public class MockSqlOperatorTable
         opTab.addOperator(
             new SqlFunction(
                 "DEDUP",
-                SqlKind.Function,
+                SqlKind.OTHER_FUNCTION,
                 null,
                 null,
                 SqlTypeStrategies.otcVariadic,

@@ -136,7 +136,7 @@ public class SqlCaseOperator
     {
         super(
             "CASE",
-            SqlKind.Case,
+            SqlKind.CASE,
             MaxPrec,
             true,
             null,

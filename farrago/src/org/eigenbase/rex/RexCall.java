@@ -24,6 +24,7 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -94,79 +95,79 @@ public class RexCall
      */
     static RexKind sqlKindToRexKind(SqlKind kind)
     {
-        switch (kind.getOrdinal()) {
-        case SqlKind.EqualsORDINAL:
+        switch (kind) {
+        case EQUALS:
             return RexKind.Equals;
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             return RexKind.Identifier;
-        case SqlKind.LiteralORDINAL:
+        case LITERAL:
             return RexKind.Literal;
-        case SqlKind.DynamicParamORDINAL:
+        case DYNAMIC_PARAM:
             return RexKind.DynamicParam;
-        case SqlKind.TimesORDINAL:
+        case TIMES:
             return RexKind.Times;
-        case SqlKind.DivideORDINAL:
+        case DIVIDE:
             return RexKind.Divide;
-        case SqlKind.PlusORDINAL:
+        case PLUS:
             return RexKind.Plus;
-        case SqlKind.MinusORDINAL:
+        case MINUS:
             return RexKind.Minus;
-        case SqlKind.LessThanORDINAL:
+        case LESS_THAN:
             return RexKind.LessThan;
-        case SqlKind.GreaterThanORDINAL:
+        case GREATER_THAN:
             return RexKind.GreaterThan;
-        case SqlKind.LessThanOrEqualORDINAL:
+        case LESS_THAN_OR_EQUAL:
             return RexKind.LessThanOrEqual;
-        case SqlKind.GreaterThanOrEqualORDINAL:
+        case GREATER_THAN_OR_EQUAL:
             return RexKind.GreaterThanOrEqual;
-        case SqlKind.NotEqualsORDINAL:
+        case NOT_EQUALS:
             return RexKind.NotEquals;
-        case SqlKind.OrORDINAL:
+        case OR:
             return RexKind.Or;
-        case SqlKind.AndORDINAL:
+        case AND:
             return RexKind.And;
-        case SqlKind.NotORDINAL:
+        case NOT:
             return RexKind.Not;
-        case SqlKind.IsTrueORDINAL:
+        case IS_TRUE:
             return RexKind.IsTrue;
-        case SqlKind.IsFalseORDINAL:
+        case IS_FALSE:
             return RexKind.IsFalse;
-        case SqlKind.IsNullORDINAL:
+        case IS_NULL:
             return RexKind.IsNull;
-        case SqlKind.IsUnknownORDINAL:
+        case IS_UNKNOWN:
             return RexKind.IsNull;
-        case SqlKind.PlusPrefixORDINAL:
+        case PLUS_PREFIX:
             return RexKind.Plus;
-        case SqlKind.MinusPrefixORDINAL:
+        case MINUS_PREFIX:
             return RexKind.MinusPrefix;
-        case SqlKind.ValuesORDINAL:
+        case VALUES:
             return RexKind.Values;
-        case SqlKind.RowORDINAL:
+        case ROW:
             return RexKind.Row;
-        case SqlKind.CastORDINAL:
+        case CAST:
             return RexKind.Cast;
-        case SqlKind.TrimORDINAL:
+        case TRIM:
             return RexKind.Trim;
-        case SqlKind.FunctionORDINAL:
+        case OTHER_FUNCTION:
             return RexKind.Other;
-        case SqlKind.CaseORDINAL:
+        case CASE:
             return RexKind.Other;
-        case SqlKind.OtherORDINAL:
+        case OTHER:
             return RexKind.Other;
-        case SqlKind.LikeORDINAL:
+        case LIKE:
             return RexKind.Like;
-        case SqlKind.SimilarORDINAL:
+        case SIMILAR:
             return RexKind.Similar;
-        case SqlKind.MultisetQueryConstructorORDINAL:
+        case MULTISET_QUERY_CONSTRUCTOR:
             return RexKind.MultisetQueryConstructor;
-        case SqlKind.NewSpecificationORDINAL:
+        case NEW_SPECIFICATION:
             return RexKind.NewSpecification;
-        case SqlKind.ReinterpretORDINAL:
+        case REINTERPRET:
             return RexKind.Reinterpret;
-        case SqlKind.ColumnListConstructorORDINAL:
+        case COLUMN_LIST:
             return RexKind.Row;
         default:
-            throw kind.unexpected();
+            throw Util.unexpected(kind);
         }
     }
 

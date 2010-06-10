@@ -41,7 +41,7 @@ public class SqlCurrentDateFunction
     {
         super(
             "CURRENT_DATE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiDate,
             null,
             SqlTypeStrategies.otcNiladic,

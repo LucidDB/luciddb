@@ -45,7 +45,7 @@ public class SqlRowOperator
     {
         super(
             "ROW",
-            SqlKind.Row,
+            SqlKind.ROW,
             MaxPrec,
             false,
             null,

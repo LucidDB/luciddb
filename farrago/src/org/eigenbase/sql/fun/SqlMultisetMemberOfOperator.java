@@ -46,7 +46,7 @@ public class SqlMultisetMemberOfOperator
         //TODO check if precedence is correct
         super(
             "MEMBER OF",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,

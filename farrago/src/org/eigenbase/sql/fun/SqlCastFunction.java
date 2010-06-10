@@ -57,7 +57,7 @@ public class SqlCastFunction
     {
         super(
             "CAST",
-            SqlKind.Cast,
+            SqlKind.CAST,
             null,
             SqlTypeStrategies.otiFirstKnown,
             null,

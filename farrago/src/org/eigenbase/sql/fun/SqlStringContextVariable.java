@@ -41,7 +41,7 @@ public class SqlStringContextVariable
     {
         super(
             name,
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiVarchar2000,
             null,
             SqlTypeStrategies.otcNiladic,

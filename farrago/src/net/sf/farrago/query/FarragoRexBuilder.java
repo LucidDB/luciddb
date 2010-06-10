@@ -79,7 +79,7 @@ public class FarragoRexBuilder
         SqlOperator op,
         RexNode ... exprs)
     {
-        if (op.getKind().isA(SqlKind.Comparison)) {
+        if (op.getKind().belongsTo(SqlKind.COMPARISON)) {
             return makeComparison(op, exprs);
         } else if (op instanceof FarragoUserDefinedRoutine) {
             return makeUdfInvocation(op, exprs);

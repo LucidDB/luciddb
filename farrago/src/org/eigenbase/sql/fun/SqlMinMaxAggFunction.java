@@ -26,10 +26,8 @@ import openjava.mop.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -80,7 +78,7 @@ public class SqlMinMaxAggFunction
     {
         super(
             isMin ? "MIN" : "MAX",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcComparableOrdered,

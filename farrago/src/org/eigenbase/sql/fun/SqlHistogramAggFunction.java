@@ -52,7 +52,7 @@ public class SqlHistogramAggFunction
     {
         super(
             "$HISTOGRAM",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
 
             //            SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.rtiHistogram,

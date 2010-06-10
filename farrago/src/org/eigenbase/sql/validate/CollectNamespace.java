@@ -24,6 +24,7 @@ package org.eigenbase.sql.validate;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -78,8 +79,8 @@ public class CollectNamespace
         final RelDataType type =
             child.getOperator().deriveType(validator, scope, child);
 
-        switch (child.getKind().getOrdinal()) {
-        case SqlKind.MultisetValueConstructorORDINAL:
+        switch (child.getKind()) {
+        case MULTISET_VALUE_CONSTRUCTOR:
 
             // "MULTISET [<expr>, ...]" needs to be wrapped in a record if
             // <expr> has a scalar type.
@@ -103,15 +104,16 @@ public class CollectNamespace
                     isNullable);
             }
 
-        case SqlKind.MultisetQueryConstructorORDINAL:
+        case MULTISET_QUERY_CONSTRUCTOR:
 
             // "MULTISET(<query>)" is already a record.
             assert (type instanceof MultisetSqlType)
                 && ((MultisetSqlType) type).getComponentType().isStruct()
                 : type;
             return type;
+
         default:
-            throw child.getKind().unexpected();
+            throw Util.unexpected(child.getKind());
         }
     }
 

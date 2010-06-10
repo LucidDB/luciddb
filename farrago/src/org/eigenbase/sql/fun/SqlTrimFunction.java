@@ -74,7 +74,7 @@ public class SqlTrimFunction
     {
         super(
             "TRIM",
-            SqlKind.Trim,
+            SqlKind.TRIM,
             new SqlTypeTransformCascade(
                 SqlTypeStrategies.rtiThirdArgType,
                 SqlTypeTransforms.toNullable,

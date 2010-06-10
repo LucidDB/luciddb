@@ -431,7 +431,7 @@ public class SqlJdbcFunctionCall
     {
         super(
             "{fn " + name + "}",
-            SqlKind.JdbcFn,
+            SqlKind.JDBC_FN,
             null,
             null,
             SqlTypeStrategies.otcVariadic,

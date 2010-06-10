@@ -972,15 +972,16 @@ public class RexToCalcTranslator
                 "Shouldn't call this function directly;"
                 + " use implementNode(RexNode) instead");
         }
-        SqlOperator op = call.getOperator();
+        final SqlOperator op = call.getOperator();
 
-        if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
+        final SqlKind opKind = op.getKind();
+        if (opKind == SqlKind.AND || (opKind == SqlKind.OR)) {
             //first operand of AND/OR
             CalcReg reg0 = implementNode(call.operands[0]);
             String shortCut = newLabel();
 
             //Check if we can make a short cut
-            if (op.getKind().isA(SqlKind.And)) {
+            if (opKind == SqlKind.AND) {
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     builder,
                     builder.newLine(shortCut),
@@ -1001,7 +1002,7 @@ public class RexToCalcTranslator
             assert result.getOpType()
                 == getCalcRegisterDescriptor(call).getType();
             // the first operand may be evaluated as NULL.
-            if (op.getKind().isA(SqlKind.And)) {
+            if (opKind == SqlKind.AND) {
                 // return the result of first operand if second is 'true'
                 CalcProgramBuilder.jumpTrueInstruction.add(
                     builder,
@@ -1038,17 +1039,18 @@ public class RexToCalcTranslator
     public void implementCommonSubExpressions(RexNode node) {
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            SqlOperator op = call.getOperator();
-            if (op.getKind().isA(SqlKind.And)
-                || op.getKind().isA(SqlKind.Or)
-                || op.getKind().isA(SqlKind.Case))
-            {
+            switch (call.getOperator().getKind()) {
+            case AND:
+            case OR:
+            case CASE:
                 implementCommonSubExpressions(call.operands[0]);
-            } else {
+                break;
+            default:
                 for (int i = 0; i < call.operands.length - 1; i++) {
                     RexNode operand = call.operands[i];
                     implementCommonSubExpressions(operand);
                 }
+                break;
             }
         } else if (node instanceof RexLocalRef) {
             Integer recurrenceCount = recurrenceMap.get(getKey(node));
@@ -1076,9 +1078,10 @@ public class RexToCalcTranslator
         SqlOperator op = call.getOperator();
 
         // Check if and/or/xor should short circuit.
+        final SqlKind kind = op.getKind();
         if (generateShortCircuit
-            && (op.getKind().isA(SqlKind.And)
-                || op.getKind().isA(SqlKind.Or)))
+            && (kind == SqlKind.AND
+                || kind == SqlKind.OR))
         {
             return implementShortCircuit(call);
         }
@@ -1139,21 +1142,27 @@ public class RexToCalcTranslator
             CalcReg [] regs = {
                 resultOfCall, strCmpResult, zero
             };
-            if (op.getKind().isA(SqlKind.Equals)) {
+            switch (kind) {
+            case EQUALS:
                 CalcProgramBuilder.boolNativeEqual.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.NotEquals)) {
+                break;
+            case NOT_EQUALS:
                 CalcProgramBuilder.boolNativeNotEqual.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.GreaterThan)) {
+                break;
+            case GREATER_THAN:
                 CalcProgramBuilder.boolNativeGreaterThan.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.LessThan)) {
+                break;
+            case LESS_THAN:
                 CalcProgramBuilder.boolNativeLessThan.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.GreaterThanOrEqual)) {
+                break;
+            case GREATER_THAN_OR_EQUAL:
                 CalcProgramBuilder.boolNativeGreaterOrEqualThan.add(
-                    builder,
-                    regs);
-            } else if (op.getKind().isA(SqlKind.LessThanOrEqual)) {
+                    builder, regs);
+                break;
+            case LESS_THAN_OR_EQUAL:
                 CalcProgramBuilder.boolNativeLessOrEqualThan.add(builder, regs);
-            } else {
+                break;
+            default:
                 throw Util.newInternal("Unknown op " + op);
             }
             setResult(call, resultOfCall);
@@ -1209,22 +1218,22 @@ public class RexToCalcTranslator
 
     private boolean isStrCmp(RexCall call)
     {
-        SqlOperator op = call.getOperator();
-        if (op.getKind().isA(SqlKind.Equals)
-            || op.getKind().isA(SqlKind.NotEquals)
-            || op.getKind().isA(SqlKind.GreaterThan)
-            || op.getKind().isA(SqlKind.LessThan)
-            || op.getKind().isA(SqlKind.GreaterThanOrEqual)
-            || op.getKind().isA(SqlKind.LessThanOrEqual))
-        {
+        switch (call.getOperator().getKind()) {
+        case EQUALS:
+        case NOT_EQUALS:
+        case GREATER_THAN:
+        case LESS_THAN:
+        case GREATER_THAN_OR_EQUAL:
+        case LESS_THAN_OR_EQUAL:
             RelDataType t0 = call.operands[0].getType();
             RelDataType t1 = call.operands[1].getType();
-
-            return (SqlTypeUtil.inCharFamily(t0)
-                && SqlTypeUtil.inCharFamily(t1))
-                || (isOctetString(t0) && isOctetString(t1));
+            return SqlTypeUtil.inCharFamily(t0)
+                   && SqlTypeUtil.inCharFamily(t1)
+                   || isOctetString(t0)
+                      && isOctetString(t1);
+        default:
+            return false;
         }
-        return false;
     }
 
     private static boolean isOctetString(RelDataType t)

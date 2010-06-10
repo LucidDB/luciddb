@@ -40,7 +40,7 @@ public class SqlUnnestOperator
     {
         super(
             "UNNEST",
-            SqlKind.Unnest,
+            SqlKind.UNNEST,
             200,
             true,
             null,

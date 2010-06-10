@@ -52,7 +52,7 @@ public class SqlOverlapsOperator
     {
         super(
             "OVERLAPS",
-            SqlKind.Overlaps,
+            SqlKind.OVERLAPS,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,

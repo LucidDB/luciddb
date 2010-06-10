@@ -47,7 +47,7 @@ public class SqlSingleValueAggFunction
     {
         super(
             "SINGLE_VALUE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcAny,

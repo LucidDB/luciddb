@@ -143,7 +143,7 @@ class AggChecker
             // This call matches an expression in the GROUP BY clause.
             return null;
         }
-        if (call.isA(SqlKind.Query)) {
+        if (call.isA(SqlKind.QUERY)) {
             // Allow queries for now, even though they may contain
             // references to forbidden columns.
             return null;

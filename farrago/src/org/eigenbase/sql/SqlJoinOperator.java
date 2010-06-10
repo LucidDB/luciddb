@@ -113,7 +113,7 @@ public class SqlJoinOperator
 
     public SqlJoinOperator()
     {
-        super("JOIN", SqlKind.Join, 16, true, null, null, null);
+        super("JOIN", SqlKind.JOIN, 16, true, null, null, null);
     }
 
     //~ Methods ----------------------------------------------------------------

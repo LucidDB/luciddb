@@ -47,7 +47,7 @@ public class SqlCoalesceFunction
         // strategies are used.
         super(
             "COALESCE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiLeastRestrictive,
             null,
             SqlTypeStrategies.otcSameVariadic,

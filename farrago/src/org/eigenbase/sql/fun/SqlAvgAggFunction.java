@@ -61,7 +61,7 @@ public class SqlAvgAggFunction
     {
         super(
             subtype.name(),
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcNumeric,

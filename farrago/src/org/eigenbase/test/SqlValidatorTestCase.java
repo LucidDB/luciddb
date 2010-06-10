@@ -751,13 +751,13 @@ public class SqlValidatorTestCase
         public void checkIntervalConv(String sql, String expected)
         {
             SqlValidator validator = getValidator();
-            SqlNode n = parseAndValidate(validator, sql);
+            final SqlSelect n = (SqlSelect) parseAndValidate(validator, sql);
 
             SqlNode node = null;
-            for (int i = 0; i < ((SqlSelect) n).getOperands().length; i++) {
-                node = ((SqlSelect) n).getOperands()[i];
+            for (int i = 0; i < n.getOperands().length; i++) {
+                node = n.getOperands()[i];
                 if (node instanceof SqlCall) {
-                    if (node.isA(SqlKind.As)) {
+                    if (node.getKind() == SqlKind.AS) {
                         node = ((SqlCall) node).operands[0];
                     }
                     node =

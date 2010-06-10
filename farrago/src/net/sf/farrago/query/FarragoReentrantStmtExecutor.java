@@ -119,7 +119,7 @@ public abstract class FarragoReentrantStmtExecutor
 
         getStmtContext().prepare(
             plan,
-            SqlKind.Select,
+            SqlKind.SELECT,
             true,
             getPreparingStmt());
         getStmtContext().execute();

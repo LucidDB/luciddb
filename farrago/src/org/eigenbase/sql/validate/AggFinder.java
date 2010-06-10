@@ -79,11 +79,11 @@ class AggFinder
         if (call.getOperator().isAggregator()) {
             throw new Util.FoundOne(call);
         }
-        if (call.isA(SqlKind.Query)) {
+        if (call.isA(SqlKind.QUERY)) {
             // don't traverse into queries
             return null;
         }
-        if (call.isA(SqlKind.Over)) {
+        if (call.getKind() == SqlKind.OVER) {
             if (over) {
                 throw new Util.FoundOne(call);
             } else {

@@ -21,8 +21,6 @@
 */
 package org.luciddb.session;
 
-import org.luciddb.session.*;
-
 import java.util.*;
 
 import org.eigenbase.sql.*;
@@ -49,7 +47,7 @@ public class LucidDbOperatorTable
     public static final SqlFunction lcsRidFunc =
         new SqlFunction(
             "LCS_RID",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiAlwaysNullableBigint,
             null,
             SqlTypeStrategies.otcAny,

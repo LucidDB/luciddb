@@ -261,7 +261,7 @@ public abstract class OJPreparingStmt
             getSqlToRelConverter(validator, connection);
 
         SqlExplain sqlExplain = null;
-        if (sqlQuery.isA(SqlKind.Explain)) {
+        if (sqlQuery.getKind() == SqlKind.EXPLAIN) {
             // dig out the underlying SQL statement
             sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
@@ -340,7 +340,7 @@ public abstract class OJPreparingStmt
         // (e.g. UPDATE -> MERGE).  For anything else (e.g. CALL -> SELECT),
         // use original kind.
         SqlKind kind;
-        if (sqlQuery.getKind().isA(SqlKind.Dml)) {
+        if (sqlQuery.isA(SqlKind.DML)) {
             kind = sqlQuery.getKind();
         } else {
             kind = sqlNodeOriginal.getKind();
@@ -434,7 +434,7 @@ public abstract class OJPreparingStmt
         BoundMethod boundMethod;
         ParseTree parseTree;
         RelDataType resultType = rootRel.getRowType();
-        boolean isDml = sqlKind.isA(SqlKind.Dml);
+        boolean isDml = sqlKind.belongsTo(SqlKind.DML);
         if (containsJava) {
             javaCompiler = createCompiler();
             JavaRelImplementor relImplementor =
@@ -498,15 +498,16 @@ public abstract class OJPreparingStmt
         if (!isDml) {
             return null;
         }
-        if (sqlKind == SqlKind.Insert) {
+        switch (sqlKind) {
+        case INSERT:
             return TableModificationRel.Operation.INSERT;
-        } else if (sqlKind == SqlKind.Delete) {
+        case DELETE:
             return TableModificationRel.Operation.DELETE;
-        } else if (sqlKind == SqlKind.Merge) {
+        case MERGE:
             return TableModificationRel.Operation.MERGE;
-        } else if (sqlKind == SqlKind.Update) {
+        case UPDATE:
             return TableModificationRel.Operation.UPDATE;
-        } else {
+        default:
             return null;
         }
     }

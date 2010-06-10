@@ -48,7 +48,7 @@ public class SqlOverlayFunction
     {
         super(
             "OVERLAY",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
             null,
             otcCustom,

@@ -91,7 +91,7 @@ public class FarragoReentrantSubquery
             rootContext.setSaveFirstTxnCsn();
         }
         if (!isExists) {
-            assert (subq.getKind() == SqlKind.ScalarQuery);
+            assert subq.getKind() == SqlKind.SCALAR_QUERY;
         }
         this.subq = subq;
         this.parentConverter = parentConverter;

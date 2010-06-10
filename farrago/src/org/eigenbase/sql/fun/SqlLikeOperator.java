@@ -182,20 +182,20 @@ public class SqlLikeOperator
                 list,
                 opOrdinal + 1,
                 getRightPrec(),
-                SqlKind.Escape);
+                SqlKind.ESCAPE);
         SqlNode exp2 = null;
         if ((opOrdinal + 2) < list.size()) {
             final Object o = list.get(opOrdinal + 2);
             if (o instanceof SqlParserUtil.ToTreeListItem) {
                 final SqlOperator op2 =
                     ((SqlParserUtil.ToTreeListItem) o).getOperator();
-                if (op2.getKind() == SqlKind.Escape) {
+                if (op2.getKind() == SqlKind.ESCAPE) {
                     exp2 =
                         SqlParserUtil.toTreeEx(
                             list,
                             opOrdinal + 3,
                             getRightPrec(),
-                            SqlKind.Escape);
+                            SqlKind.ESCAPE);
                 }
             }
         }

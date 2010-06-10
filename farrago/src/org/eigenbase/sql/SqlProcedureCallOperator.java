@@ -43,7 +43,7 @@ public class SqlProcedureCallOperator
 
     public SqlProcedureCallOperator()
     {
-        super("CALL", SqlKind.ProcedureCall, 0, null, null, null);
+        super("CALL", SqlKind.PROCEDURE_CALL, 0, null, null, null);
     }
 
     //~ Methods ----------------------------------------------------------------

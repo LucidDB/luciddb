@@ -1717,7 +1717,7 @@ public class RelDecorrelator
                 boolean isSpecialCast = false;
                 if (operator instanceof SqlFunction) {
                     SqlFunction function = (SqlFunction) operator;
-                    if (function.getKind() == SqlKind.Cast) {
+                    if (function.getKind() == SqlKind.CAST) {
                         if (call.operands.length < 2) {
                             isSpecialCast = true;
                         }

@@ -1006,7 +1006,7 @@ public class FarragoDatabase
         boolean cacheStatements =
             stmt.getSession().getSessionVariables().getBoolean(
                 FarragoDefaultSessionPersonality.CACHE_STATEMENTS);
-        if (sqlNode.isA(SqlKind.Explain) || (cacheStatements == false)) {
+        if (sqlNode.getKind() == SqlKind.EXPLAIN || !cacheStatements) {
             FarragoSessionExecutableStmt executableStmt =
                 stmt.prepare(sqlNode, sqlNode);
             owner.addAllocation(executableStmt);

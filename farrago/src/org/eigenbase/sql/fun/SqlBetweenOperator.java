@@ -125,7 +125,7 @@ public class SqlBetweenOperator
     {
         super(
             negated ? notBetweenNames : betweenNames,
-            SqlKind.Between,
+            SqlKind.BETWEEN,
             30,
             null,
             null,
@@ -246,7 +246,7 @@ public class SqlBetweenOperator
         final SqlParserPos pos =
             ((SqlNode) list.get(opOrdinal + 1)).getParserPosition();
         SqlNode exp1 =
-            SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
+            SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.AND);
         if ((opOrdinal + 2) >= list.size()) {
             SqlParserPos lastPos =
                 ((SqlNode) list.get(list.size() - 1)).getParserPosition();
@@ -265,7 +265,7 @@ public class SqlBetweenOperator
                 EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind()
-            != SqlKind.And)
+            != SqlKind.AND)
         {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
             throw SqlUtil.newContextException(
@@ -286,7 +286,7 @@ public class SqlBetweenOperator
                 list,
                 opOrdinal + 3,
                 getRightPrec(),
-                SqlKind.Other);
+                SqlKind.OTHER);
 
         // Create the call.
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);

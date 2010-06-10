@@ -54,7 +54,7 @@ public class SqlCountAggFunction
     {
         super(
             "COUNT",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiBigint,
             null,
             SqlTypeStrategies.otcAny,

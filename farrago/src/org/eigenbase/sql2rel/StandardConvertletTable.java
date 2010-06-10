@@ -344,7 +344,7 @@ public class StandardConvertletTable
         SqlCall call)
     {
         RelDataTypeFactory typeFactory = cx.getTypeFactory();
-        assert SqlKind.Cast.equals(call.getOperator().getKind());
+        assert call.getKind() == SqlKind.CAST;
         if (call.operands[1] instanceof SqlIntervalQualifier) {
             SqlNode node = call.operands[0];
             if (node instanceof SqlIntervalLiteral) {

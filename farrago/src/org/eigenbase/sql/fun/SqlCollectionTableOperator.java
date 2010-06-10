@@ -54,7 +54,7 @@ public class SqlCollectionTableOperator
     {
         super(
             name,
-            SqlKind.CollectionTable,
+            SqlKind.COLLECTION_TABLE,
             200,
             true,
             SqlTypeStrategies.rtiFirstArgType,

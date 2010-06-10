@@ -51,7 +51,7 @@ public class SqlSubstringFunction
     {
         super(
             "SUBSTRING",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableVaryingFirstArgType,
             null,
             null,

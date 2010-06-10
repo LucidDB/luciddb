@@ -353,7 +353,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
     [
         // use the syntactic type of the expression we just parsed
         // to decide whether ORDER BY makes sense
-        orderBy = OrderBy(e.isA(SqlKind.Query))
+        orderBy = OrderBy(e.isA(SqlKind.QUERY))
         {
             pos = getPos();
             e = SqlStdOperatorTable.orderByOperator.createCall(pos, e, orderBy);
@@ -1385,8 +1385,8 @@ SqlNode TableRef() :
             {
                 final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100L);
                 BigDecimal rate = samplePercentage.bigDecimalValue();
-                if (rate.compareTo(BigDecimal.ZERO) < 0 ||
-                    rate.compareTo(ONE_HUNDRED) > 0)
+                if (rate.compareTo(BigDecimal.ZERO) < 0
+                    || rate.compareTo(ONE_HUNDRED) > 0)
                 {
                     throw new ParseException(
                         EigenbaseResource.instance().InvalidSampleSize.str());
@@ -1911,7 +1911,7 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
     }
     (
         {
-            if (!e.isA(SqlKind.Query)) {
+            if (!e.isA(SqlKind.QUERY)) {
                 // whoops, expression we just parsed wasn't a query,
                 // but we're about to see something like UNION, so
                 // force an exception retroactively
@@ -2031,7 +2031,7 @@ List Expression2(ExprContext exprContext) :
                     // special case for stuff like IN (s1 UNION s2)
                     if (nodeList.size() == 1) {
                         SqlNode item = nodeList.get(0);
-                        if (item.isA(SqlKind.Query)) {
+                        if (item.isA(SqlKind.QUERY)) {
                             list.add(item);
                         } else {
                             list.add(nodeList);
@@ -2165,8 +2165,8 @@ SqlNode Expression3(ExprContext exprContext) :
     <ROW> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN>
     {
         pos = getPos();
-        if (exprContext != ExprContext.ACCEPT_ALL &&
-            exprContext != ExprContext.ACCEPT_CURSOR)
+        if (exprContext != ExprContext.ACCEPT_ALL
+            && exprContext != ExprContext.ACCEPT_CURSOR)
         {
             throw SqlUtil.newContextException(
                 pos,
@@ -2227,12 +2227,12 @@ SqlNode Expression3(ExprContext exprContext) :
         (
             e = IntervalQualifier()
             {
-                if ((list1.size() == 1) &&
-                    list1.get(0) instanceof SqlCall)
+                if ((list1.size() == 1)
+                    && list1.get(0) instanceof SqlCall)
                 {
                     final SqlCall call = (SqlCall) list1.get(0);
-                    if (call.isA(SqlKind.Minus) &&
-                        (call.operands.length == 2))
+                    if (call.getKind() == SqlKind.MINUS
+                        && (call.operands.length == 2))
                     {
                         List list3 = startList(call.operands[0]);
                         list3.add(call.operands[1]);
@@ -3204,8 +3204,8 @@ SqlNode CursorExpression(ExprContext exprContext) :
     <CURSOR>
     {
         pos = getPos();
-        if (exprContext != ExprContext.ACCEPT_ALL &&
-            exprContext != ExprContext.ACCEPT_CURSOR)
+        if (exprContext != ExprContext.ACCEPT_ALL
+            && exprContext != ExprContext.ACCEPT_CURSOR)
         {
             throw SqlUtil.newContextException(
                 pos,
