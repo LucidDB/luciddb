@@ -1305,10 +1305,6 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
   </target>
-  <target name="testDeployDescriptor">
-    <farrago.runSqlTest
-      file="${farrago.dir}/unitsql/ddl/sqldeploymentdescriptor.sql"/>
-  </target>
   <!-- For MQL, don't run the connected.sql test since it 
        requires an Internet connection -->
   <target name="testMqlPlugin">

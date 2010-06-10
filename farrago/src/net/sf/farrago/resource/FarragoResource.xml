@@ -723,9 +723,8 @@ column type family is {1} but default value type family is {2}</text>
 <text>Url parameter {0} is a class. Cannot do deployment on a class.</text>
 </exception>
 
-<exception id ="421161" name="SqlStatementExecutionFailed"
-    className="java.sql.SQLWarning">
-<text>Sql statement execution failed:  [{0}]</text>
+<exception id ="421161" name="DeploymentActionFailed">
+<text>Failed while executing deployment action for {0}:  [{1}]</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -1316,6 +1315,14 @@ Messages: {1}</text>
 
 <exception id="490080" name="PluginManifestMissing">
 <text>Plugin jar ''{0}'' manifest lacks attribute ''{1}''</text>
+</exception>
+
+<exception id="490090" name="PluginManifestSqljInvalid">
+<text>Invalid SQL/J manifest for jar URL {0}</text>
+</exception>
+
+<exception id="490090" name="PluginDeploymentFileInvalid">
+<text>Invalid SQL/J deployment file {0} in jar URL {1}</text>
 </exception>
 
 <!-- ====================================================================== -->

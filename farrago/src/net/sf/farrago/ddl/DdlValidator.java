@@ -149,6 +149,13 @@ public class DdlValidator
     private Set<RefObject> deleteQueue;
 
     /**
+     * Set of MOFID's for objects for which the RESTRICT check needs
+     * to be deferred until after drop triggers (e.g.
+     * for the undeployment actions in DROP JAR) have been executed.
+     */
+    private Set<String> deferredRestrictMofIds;
+
+    /**
      * Thread binding to prevent cross-talk.
      */
     private Thread activeThread;
@@ -213,6 +220,7 @@ public class DdlValidator
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
         revalidateQueue = new LinkedHashSet<CwmModelElement>();
+        deferredRestrictMofIds = new LinkedHashSet<String>();
 
         parserContextMap = new HashMap<Object, SqlParserPos>();
         parserOffsetMap = new HashMap<RefObject, SqlParserPos>();
@@ -683,6 +691,17 @@ public class DdlValidator
                 invokeHandler(element, "executeModification");
             } else {
                 assert (false);
+            }
+        }
+
+        // Process deferred RESTRICT
+        for (String mofId : deferredRestrictMofIds) {
+            RefBaseObject obj = getRepos().getEnkiMdrRepos().getByMofId(mofId);
+            if (obj != null) {
+                // Object did not get deleted by a trigger.
+                throw FarragoResource.instance().ValidatorDropRestrict.ex(
+                    getRepos().getLocalizedObjectName(
+                        ddlStmt.getModelElement()));
             }
         }
 
@@ -1343,6 +1362,13 @@ public class DdlValidator
         }
         if (!isDropRestrict()) {
             deleteQueue.add(otherEnd);
+            return;
+        }
+
+        if (ddlStmt.getModelElement() instanceof FemJar) {
+            // Special case for jars:  defer the restrict check until
+            // after we have executed the undeployment actions.
+            deferredRestrictMofIds.add(otherEnd.refMofId());
             return;
         }
 

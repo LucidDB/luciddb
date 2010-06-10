@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="sqldeploymentdesriptor" basedir="." default="gen-test-resources">
-  <dirname property="sdd.dir" file="${ant.file.sqldeploymentdesriptor}" />
+<project name="sqldeploymentdescriptor" basedir="." 
+  default="gen-test-resources">
+  <dirname property="sdd.dir" file="${ant.file.sqldeploymentdescriptor}" />
 
   <property name="class.dir" 
     location="${sdd.dir}/../../.."/>
@@ -24,7 +25,7 @@
         </section>
       </manifest>
     </jar>
-    <!-- genrate jar for testing.-->
+    <!-- generate jar for testing.-->
     <jar jarfile="${sdd.dir}/bad-sddtest.jar">
       <fileset dir="${class.dir}/classes">
         <include name="**/net/sf/farrago/test/FarragoTestUDR.class" />

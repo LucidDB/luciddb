@@ -1,1 +1,0 @@
--- Test SQLJ Using a Deployment Descriptor.

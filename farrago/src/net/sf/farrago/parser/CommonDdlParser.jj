@@ -1472,10 +1472,10 @@ CwmModelElement JarDrop() :
             qualifiedJarName, FemJar.class);
         int deploy = deploymentState.intValue(true);
         if (deploy == 0) {
-        	jar.setDeploymentState(deploy);
+            jar.setDeploymentState(deploy);
         } else {
             // set deploymentState to UNDEPLOYMENT_PENDING
-        	jar.setDeploymentState(4);
+            jar.setDeploymentState(4);
         }
         return jar;
     }
@@ -2379,11 +2379,11 @@ FemJar JarDefinition() :
     deploymentState = NumericLiteral() <RPAREN>
     {
         int deploy = deploymentState.intValue(true);
-        if (deploy  == 0) {
-           jar.setDeploymentState(deploy);        
+        if (deploy == 0) {
+            jar.setDeploymentState(deploy);
         } else {
-           // set deploymentState to DEPLOYMENT_PENDING
-           jar.setDeploymentState(1); 
+            // set deploymentState to DEPLOYMENT_PENDING
+            jar.setDeploymentState(1);
         }
         return jar;
     }

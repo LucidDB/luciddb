@@ -1,32 +1,114 @@
-> create or replace schema "SS";
+> create schema "SS";
 > set schema 'SS';
 > 
-> --normal case
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
+> -- normal case
+> create jar test_jar 
+> library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' 
+> options(1);
 > values SS.test_routine(255);
 +---------+
 | EXPR$0  |
 +---------+
 | ff      |
 +---------+
-> select "name","url","deploymentState" from sys_fem.sql2003."Jar" where "name"='TEST_JAR' order by "name";
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='TEST_JAR' order by "name";
 +-----------+-----------------------------------------------------------------------+------------------+
 |   name    |                                  url                                  | deploymentState  |
 +-----------+-----------------------------------------------------------------------+------------------+
 | TEST_JAR  | file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar  | 2                |
 +-----------+-----------------------------------------------------------------------+------------------+
 > drop jar test_jar options(1) CASCADE;
-> select "name","url","deploymentState" from sys_fem.sql2003."Jar" where "name"='TEST_JAR' order by "name";
+> 
+> -- both jar and routine should be gone
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='TEST_JAR' order by "name";
 +-------+------+------------------+
 | name  | url  | deploymentState  |
 +-------+------+------------------+
 +-------+------+------------------+
 > values SS.test_routine(255);
-Error: DDL validation error: Reference to unknown jar "TEST_JAR" (state=,code=0)
+Error: From line 1, column 11 to line 1, column 27: No match found for function signature TEST_ROUTINE(<NUMERIC>) (state=,code=0)
 > 
-> --the deployment descriptor statements need to be executed with the default schema set to the schema containing the jar 
-> create or replace schema "TT";
-> create jar "TT".test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
+> -- repeat using equivalent sqlj routines
+> call sqlj.install_jar(
+> 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar',
+> 'test_jar', 1);
+> values SS.test_routine(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='TEST_JAR' order by "name";
++-----------+-----------------------------------------------------------------------+------------------+
+|   name    |                                  url                                  | deploymentState  |
++-----------+-----------------------------------------------------------------------+------------------+
+| TEST_JAR  | file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar  | 2                |
++-----------+-----------------------------------------------------------------------+------------------+
+> -- this should fail due to implicit RESTRICT
+> call sqlj.remove_jar('test_jar', 0);
+Error: Dropping jar "SS"."TEST_JAR" requires CASCADE because other objects still reference it (state=,code=0)
+> -- but this should work
+> call sqlj.remove_jar('test_jar', 1);
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='TEST_JAR' order by "name";
++-------+------+------------------+
+| name  | url  | deploymentState  |
++-------+------+------------------+
++-------+------+------------------+
+> values SS.test_routine(255);
+Error: From line 1, column 11 to line 1, column 27: No match found for function signature TEST_ROUTINE(<NUMERIC>) (state=,code=0)
+> 
+> 
+> -- this time, do not run deployment action, so routine should not exist
+> create jar test_jar 
+> library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' 
+> options(0);
+> values SS.test_routine(255);
+Error: From line 1, column 11 to line 1, column 27: No match found for function signature TEST_ROUTINE(<NUMERIC>) (state=,code=0)
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='TEST_JAR' order by "name";
++-----------+-----------------------------------------------------------------------+------------------+
+|   name    |                                  url                                  | deploymentState  |
++-----------+-----------------------------------------------------------------------+------------------+
+| TEST_JAR  | file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar  | 0                |
++-----------+-----------------------------------------------------------------------+------------------+
+> drop jar test_jar options(0) CASCADE;
+> 
+> -- this time, run deployment action, but do not run undeployment action;
+> -- in the middle, replace test_routine with a new one so that we can make
+> -- sure the CASCADE doesn't drop it either
+> create jar test_jar 
+> library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' 
+> options(1);
+> values SS.test_routine(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+> drop function test_routine;
+> create function test_routine(i int)
+> returns varchar(128)
+> contains sql
+> return cast(i*2 as varchar(128));
+> drop jar test_jar options(0) CASCADE;
+> values SS.test_routine(255);
++---------+
+| EXPR$0  |
++---------+
+| 510     |
++---------+
+> drop function test_routine;
+> 
+> -- the deployment descriptor statements need to be executed 
+> -- with the default schema set to the schema containing the jar 
+> create schema "TT";
+> create jar "TT".test_jar 
+> library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' 
+> options(1);
 > values "TT".test_routine(255);
 +---------+
 | EXPR$0  |
@@ -34,21 +116,36 @@ Error: DDL validation error: Reference to unknown jar "TEST_JAR" (state=,code=0)
 | ff      |
 +---------+
 > drop jar "TT".test_jar options(1) CASCADE;
-> drop schema "TT" cascade;
 > 
-> --failure cases
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
-> create jar test_jar library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/sddtest.jar' options(1);
-Error: DDL validation error near line 1, column 12: Target schema "LOCALDB"."SS" already contains jar "TEST_JAR" with same name (state=,code=0)
+> -- negative case:  bad sql deployment descriptor,
+> -- so jar should not be created
+> !set shownestederrs true
 > 
-> drop jar test_jar1 options(1) CASCADE;
-Error: DDL validation error near line 1, column 31: Reference to unknown jar "TEST_JAR1" (state=,code=0)
-> drop jar test_jar options(1) CASCADE;
+> create jar bad_jar 
+> library 'file:${FARRAGO_HOME}/unitsql/ddl/sqldeploymentdescriptor/bad-sddtest.jar' 
+> options(1);
+Error: DDL validation error near line 3, column 19: Unknown external Java method "net.sf.farrago.test.FarragoTestUDR.toHexSting(java.lang.Integer)" referenced by routine "SS"."BAD_ROUTINE" (state=,code=0)
+Error: Failed while executing deployment action for jar "SS"."BAD_JAR":  [
+
+create or replace function bad_routine(i int)
+returns varchar(128)
+language java
+no sql
+external name
+'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexSting(java.lang.Integer)'] (state=,code=0)
 > 
-> --bad sql deployment descriptor.
+> select "name","url","deploymentState" from sys_fem.sql2003."Jar" 
+> where "name"='BAD_JAR' order by "name";
++-------+------+------------------+
+| name  | url  | deploymentState  |
++-------+------+------------------+
++-------+------+------------------+
 > 
-> 
-> drop schema "SS" cascade;
-> 
+> -- both should fail since first function creation should have been 
+> -- rolled back too
+> values ss.bad_routine(255);
+Error: From line 1, column 11 to line 1, column 26: No match found for function signature BAD_ROUTINE(<NUMERIC>) (state=,code=0)
+> values ss.good_routine(255);
+Error: From line 1, column 11 to line 1, column 27: No match found for function signature GOOD_ROUTINE(<NUMERIC>) (state=,code=0)
 > 
 > !quit
