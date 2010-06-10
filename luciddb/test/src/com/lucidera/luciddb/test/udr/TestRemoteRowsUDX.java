@@ -160,16 +160,8 @@ public class TestRemoteRowsUDX
         header.add(format);
         objOut.writeObject(header);
         
-        objOut.reset();
-        objOut.flush();
-
-        List<Object> list = new ArrayList<Object>();
-        list.add(111);
-        list.add("Test1");
-        list.add(true);
-        objOut.writeObject(list);
         objOut.close();
-       client.close(); 
+        client.close(); 
         runner.join();
         
         ps.close();
@@ -218,7 +210,7 @@ public class TestRemoteRowsUDX
         objOut.reset();
         objOut.flush();
 
-        list = new ArrayList<Object>();
+        List<Object> list = new ArrayList<Object>();
         list.add("Test1"); // wrong type.
         list.add(111); // wrong type.
         list.add(true);
