@@ -206,7 +206,7 @@ public class FirewaterDataServer
         return false;
     }
 
-    // implement FarragoMedDataServer
+    // override MedJdbcDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
@@ -225,11 +225,15 @@ public class FirewaterDataServer
         planner.addRule(
             ReduceAggregatesRule.instance);
         planner.addRule(
+            PushProjectPastSetOpRule.instance);
+        planner.addRule(
             FirewaterArbitraryReplicaRule.instance);
         planner.addRule(
             FirewaterReplicaJoinRule.instanceReplicaOnLeft);
         planner.addRule(
             FirewaterReplicaJoinRule.instanceReplicaOnRight);
+        planner.addRule(MedJdbcProjectionPushDownRule.instance);
+        planner.addRule(MedJdbcFilterPushDownRule.instance);
     }
 
     // override MedJdbcDataServer
