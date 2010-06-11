@@ -39,7 +39,7 @@ import java.util.*;
  * @author John Sichi
  * @version $Id$
  */
-class MedJdbcJoinPushDownRule
+public class MedJdbcJoinPushDownRule
     extends RelOptRule
 {
     public static final MedJdbcJoinPushDownRule instance =
@@ -169,9 +169,6 @@ class MedJdbcJoinPushDownRule
         final MedJdbcQueryRel leftRel,
         final MedJdbcQueryRel rightRel)
     {
-        if (!(rexJoinCond instanceof RexCall)) {
-            return null;
-        }
         RexToSqlNodeConverter exprConverter =
             new RexToSqlNodeConverterImpl(
                 new RexSqlStandardConvertletTable())
@@ -200,11 +197,7 @@ class MedJdbcJoinPushDownRule
             };
 
         // Apply standard conversions.
-        try {
-            return exprConverter.convertCall((RexCall) rexJoinCond);
-        } catch (Exception e) {
-            return null;
-        }
+        return exprConverter.convertNode(rexJoinCond);
     }
 }
 
