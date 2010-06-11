@@ -36,7 +36,7 @@ import java.util.*;
  * @author John Sichi
  * @version $Id$
  */
-class MedJdbcAggPushDownRule
+public class MedJdbcAggPushDownRule
     extends RelOptRule
 {
     public static final MedJdbcAggPushDownRule instance =

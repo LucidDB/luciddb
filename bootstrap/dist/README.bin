@@ -1,62 +1,56 @@
-Eigenbase Binary Release 0.5.0
+Eigenbase Binary Release 0.9.3
 
 ----------------------------------------------------------------------
 HOME PAGE
-
-For information about the project, please see
 
 http://www.eigenbase.org
 
 ----------------------------------------------------------------------
 INSTALLATION
 
-From the install directory, run install.sh on Linux or install.bat on Windows.
+From the install directory, run install.sh on Linux/MacOS or install.bat on
+Windows.
+
+Source releases are also available.
+
+http://www.eigenbase.org/download.html
 
 ----------------------------------------------------------------------
 RUNNING
 
 From the bin directory, run farragoServer to start the server.  
-Two JDBC client programs are provided:
+A JDBC client program is provided:
 
 - run sqllineClient from a new shell for command-line access; enter
 !help for a list of commands (!tables gives a list of available tables
 to query)
 
-- run iSQLViewer from a new shell for GUI access; connect by
-choosing "FarragoServer" from the Service menu; wait until the
-status bar shows "Connected to FarragoServer"
-
 A standalone Farrago JDBC client jar is not yet available, so to
 connect to the server from another JDBC client program, the program
-will need to load both lib/farrago.jar and lib/RmiJdbc.jar.  For JDBC
+will need to load lib/farrago.jar and lib/vjdbc.jar.  For JDBC
 driver class name, use
-net.sf.farrago.jdbc.client.FarragoJdbcClientDriver.  For JDBC URL, use
-jdbc:farrago:rmi://localhost (or actual server name for a remote
+net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver.  For JDBC URL, use
+jdbc:farrago:http://localhost (or actual server name for a remote
 connection).
 
 ------------------------------------------------------------
 RELEASE NOTES
 
-This initial binary release is intended for use by anyone who wants to
-test out the Eigenbase platform without having to build anything.
-Because the project is still under incubation, it is not suitable for
-any production use.  Instead, we encourage users to explore the
-platform and test out possibilities for integration with other
-projects.
+This binary release is intended for use by anyone who wants to test
+out the Eigenbase platform or one of its sub-projects without having
+to build anything.  We encourage users to explore the platform and
+test out possibilities for integration with other projects.
+
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2005 The Eigenbase Project and others
+Copyright (C) 1999 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General Public
 License; see file COPYING for details.  To obtain the source code
 from which this distribution was built, please visit 
 http://www.eigenbase.org/download.html.
-
-------------------------------------------------------------
-ACKNOWLEDGEMENTS
-
-The project is hosted on Sourceforge
-
-http://sourceforge.net/projects/eigenbase

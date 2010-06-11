@@ -1,0 +1,982 @@
+> -- $Id$
+> -- Tests for Firewater query optimization of the Star Schema Benchmark
+> 
+> create or replace server fakeremote_server
+> foreign data wrapper sys_firewater_fakeremote_wrapper
+> options (user_name 'sa');
+> 
+> create partition qp1 on (fakeremote_server);
+> 
+> create partition qp2 on (fakeremote_server);
+> 
+> create schema ssb;
+> set schema 'ssb';
+> 
+> create table customer(
+> c_custkey     integer primary key,
+> c_name        varchar(25) not null,
+> c_address     varchar(40) not null,
+> c_city        varchar(10) not null,
+> c_nation      varchar(15) not null,
+> c_region      varchar(12) not null,
+> c_phone       varchar(15) not null,
+> c_mktsegment  varchar(10) not null)
+> options (partitioning 'NONE');
+> 
+> create table dates(
+> d_datekey          integer primary key,
+> d_date             varchar(18) not null,
+> d_dayofweek        varchar(8) not null,
+> d_month            varchar(9) not null,
+> d_year             integer not null,
+> d_yearmonthnum     integer,
+> d_yearmonth        varchar(7) not null,
+> d_daynuminweek     integer,
+> d_daynuminmonth    integer,
+> d_daynuminyear     integer,
+> d_monthnuminyear   integer,
+> d_weeknuminyear    integer,
+> d_sellingseason    varchar(12) not null,
+> d_lastdayinweekfl  integer,
+> d_lastdayinmonthfl integer,
+> d_holidayfl        integer,
+> d_weekdayfl        integer)
+> options (partitioning 'NONE');
+> 
+> create table part(
+> p_partkey     integer primary key,
+> p_name        varchar(22) not null,
+> p_mfgr        varchar(6) not null,
+> p_category    varchar(7) not null,
+> p_brand       varchar(9) not null,
+> p_color       varchar(11) not null,
+> p_type        varchar(25) not null,
+> p_size        integer not null,
+> p_container   varchar(10) not null)
+> options (partitioning 'NONE');
+> 
+> create table supplier(
+> s_suppkey     integer primary key,
+> s_name        varchar(25) not null,
+> s_address     varchar(25) not null,
+> s_city        varchar(10) not null,
+> s_nation      varchar(15) not null,
+> s_region      varchar(12) not null,
+> s_phone       varchar(15) not null)
+> options (partitioning 'NONE');
+> 
+> create table lineorder(
+> lo_orderkey       integer,
+> lo_linenumber     integer,
+> lo_custkey        integer not null,
+> lo_partkey        integer not null,
+> lo_suppkey        integer not null,
+> lo_orderdate      integer not null,
+> lo_orderpriotity  varchar(15) not null,
+> lo_shippriotity   integer,
+> lo_quantity       integer,
+> lo_extendedprice  integer,
+> lo_ordtotalprice  integer,
+> lo_discount       integer,
+> lo_revenue        integer,
+> lo_supplycost     integer,
+> lo_tax            integer,
+> lo_commitdate     integer not null,
+> lo_shipmode       varchar(10) not null,
+> primary key(lo_orderkey, lo_linenumber))
+> options (partitioning 'HASH');
+> 
+> !set outputformat csv
+> 
+> -- 1.sql
+> explain plan for
+> select 
+>     sum(lo_extendedprice*lo_discount) as revenue
+> from 
+>      lineorder, dates
+> where 
+>     lo_orderdate = d_datekey
+>     and d_year = 1993
+>     and lo_discount between 1 and 3
+>     and lo_quantity < 25;
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], REVENUE=[SUM($0)])'
+'    FennelMergeRel'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP1"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 1 AND ("LO_DISCOUNT" <= 3 AND "LO_QUANTITY" < 25)) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1993) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP2"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 1 AND ("LO_DISCOUNT" <= 3 AND "LO_QUANTITY" < 25)) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1993) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+> 
+> -- 2.sql
+> explain plan for
+> select 
+>     sum(lo_extendedprice*lo_discount) as revenue
+> from 
+>     lineorder, dates
+> where 
+>     lo_orderdate = d_datekey
+>     and d_yearmonthnum = 199401
+>     and lo_discount between 4 and 6
+>     and lo_quantity between 26 and 35;
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], REVENUE=[SUM($0)])'
+'    FennelMergeRel'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP1"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 4 AND ("LO_DISCOUNT" <= 6 AND ("LO_QUANTITY" >= 26 AND "LO_QUANTITY" <= 35))) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEARMONTHNUM" = 199401) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP2"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 4 AND ("LO_DISCOUNT" <= 6 AND ("LO_QUANTITY" >= 26 AND "LO_QUANTITY" <= 35))) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEARMONTHNUM" = 199401) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+> 
+> -- 3.sql
+> explain plan for
+> select 
+>     sum(lo_extendedprice*lo_discount) as revenue
+> from 
+>     lineorder, dates
+> where 
+>     lo_orderdate = d_datekey
+>     and d_weeknuminyear = 6
+>     and d_year = 1994
+>     and lo_discount between 5 and 7
+>     and lo_quantity between 26 and 35;
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], REVENUE=[SUM($0)])'
+'    FennelMergeRel'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP1"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 5 AND ("LO_DISCOUNT" <= 7 AND ("LO_QUANTITY" >= 26 AND "LO_QUANTITY" <= 35))) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_WEEKNUMINYEAR" = 6 AND "D_YEAR" = 1994) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+'      IteratorToFennelConverter'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT SUM("$f0")'
+'FROM (SELECT "LO_EXTENDEDPRICE" * "LO_DISCOUNT" AS "$f0"'
+'FROM (SELECT "LO_EXTENDEDPRICE" AS "LO_EXTENDEDPRICE", "LO_DISCOUNT" AS "LO_DISCOUNT"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE", "LO_EXTENDEDPRICE", "LO_DISCOUNT"'
+'FROM "QP2"."SSB"."LINEORDER"'
+'WHERE "LO_DISCOUNT" >= 5 AND ("LO_DISCOUNT" <= 7 AND ("LO_QUANTITY" >= 26 AND "LO_QUANTITY" <= 35))) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_WEEKNUMINYEAR" = 6 AND "D_YEAR" = 1994) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))])'
+> 
+> -- 4.sql
+> explain plan for
+> select 
+>     sum(lo_revenue), d_year, p_brand
+> from 
+>     lineorder, dates, part, supplier
+> where 
+>     lo_orderdate = d_datekey
+>     and lo_partkey = p_partkey
+>     and lo_suppkey = s_suppkey
+>     and p_category = 'MFGR#12'
+>     and s_region = 'AMERICA'
+> group by 
+>     d_year, p_brand
+> order by 
+>     d_year, p_brand;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1, 2]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL D_YEAR, VARCHAR(9) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL P_BRAND) NOT NULL])'
+'      LhxAggRel(groupCount=[2], EXPR$0=[SUM($2)])'
+'        FennelMergeRel'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_CATEGORY" = 'MFGR#12') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_CATEGORY" = 'MFGR#12') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+> 
+> -- 5.sql
+> explain plan for
+> select 
+>     sum(lo_revenue), d_year, p_brand
+> from 
+>     lineorder, dates, part, supplier
+> where 
+>     lo_orderdate = d_datekey
+>     and lo_partkey = p_partkey
+>     and lo_suppkey = s_suppkey
+>     and p_brand between 'MFGR#2221' and 'MFGR#2228'
+>     and s_region = 'ASIA'
+> group by 
+>     d_year, p_brand
+> order by 
+>     d_year, p_brand;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1, 2]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL D_YEAR, VARCHAR(9) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL P_BRAND) NOT NULL])'
+'      LhxAggRel(groupCount=[2], EXPR$0=[SUM($2)])'
+'        FennelMergeRel'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_BRAND" >= 'MFGR#2221' AND "P_BRAND" <= 'MFGR#2228') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_BRAND" >= 'MFGR#2221' AND "P_BRAND" <= 'MFGR#2228') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+> 
+> -- 6.sql
+> explain plan for
+> select 
+>     sum(lo_revenue), d_year, p_brand
+> from 
+>     lineorder, dates, part, supplier
+> where 
+>     lo_orderdate = d_datekey
+>     and lo_partkey = p_partkey
+>     and lo_suppkey = s_suppkey
+>     and p_brand = 'MFGR#2239'
+>     and s_region = 'EUROPE'
+> group by 
+>     d_year, p_brand
+> order by 
+>     d_year, p_brand;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1, 2]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL D_YEAR, VARCHAR(9) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL P_BRAND) NOT NULL])'
+'      LhxAggRel(groupCount=[2], EXPR$0=[SUM($2)])'
+'        FennelMergeRel'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'EUROPE') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_BRAND" = 'MFGR#2239') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+'          IteratorToFennelConverter'
+'            ResultSetToFarragoIteratorConverter'
+'              MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "P_BRAND", SUM("LO_REVENUE")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'EUROPE') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_BRAND" = 'MFGR#2239') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")))'
+'GROUP BY "D_YEAR", "P_BRAND"])'
+> 
+> --7.sql
+> explain plan for
+> select 
+>     c_nation, s_nation, d_year,
+>     sum(lo_revenue) as revenue
+> from 
+>     customer, lineorder, supplier, dates
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_orderdate = d_datekey
+>     and c_region = 'ASIA'
+>     and s_region = 'ASIA'
+>     and d_year >= 1992 and d_year <= 1997
+> group by 
+>     c_nation, s_nation, d_year
+> order by 
+>     d_year asc, revenue desc;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[2, 3 Descending]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], REVENUE=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_NATION", "S_NATION", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_NATION" AS "C_NATION", "S_NATION" AS "S_NATION", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION", "D_YEAR" AS "D_YEAR", "S_NATION" AS "S_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_NATION", "S_NATION", "D_YEAR"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_NATION", "S_NATION", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_NATION" AS "C_NATION", "S_NATION" AS "S_NATION", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION", "D_YEAR" AS "D_YEAR", "S_NATION" AS "S_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_NATION" AS "C_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'ASIA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_NATION", "S_NATION", "D_YEAR"])'
+> 
+> -- 8.sql
+> explain plan for
+> select 
+>     c_city, s_city, d_year, sum(lo_revenue) as revenue
+> from 
+>     customer, lineorder, supplier, dates
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_orderdate = d_datekey
+>     and c_nation = 'UNITED STATES'
+>     and s_nation = 'UNITED STATES'
+>     and d_year >= 1992 and d_year <= 1997
+> group by 
+>     c_city, s_city, d_year
+> order by 
+>     d_year asc, revenue desc;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[2, 3 Descending]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], REVENUE=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+> 
+> -- 9.sql
+> explain plan for
+> select 
+>     c_city, s_city, d_year, sum(lo_revenue) as revenue
+> from 
+>     customer, lineorder, supplier, dates
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_orderdate = d_datekey
+>     and (c_city='UNITED KI1' or c_city='UNITED KI5')
+>     and (s_city='UNITED KI1' or s_city='UNITED KI5')
+>     and d_year >= 1992 and d_year <= 1997
+> group by 
+>     c_city, s_city, d_year
+> order by 
+>     d_year asc, revenue desc;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[2, 3 Descending]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], REVENUE=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_CITY" = 'UNITED KI1' OR "C_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_CITY" = 'UNITED KI1' OR "S_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_CITY" = 'UNITED KI1' OR "C_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" >= 1992 AND "D_YEAR" <= 1997) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_CITY" = 'UNITED KI1' OR "S_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+> 
+> -- 10.sql
+> explain plan for
+> select 
+>     c_city, s_city, d_year, sum(lo_revenue) as revenue
+> from 
+>     customer, lineorder, supplier, dates
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_orderdate = d_datekey
+>     and (c_city='UNITED KI1' or c_city='UNITED KI5')
+>     and (s_city='UNITED KI1' or s_city='UNITED KI5')
+>     and d_yearmonth = 'Dec1997'
+> group by 
+>     c_city, s_city, d_year
+> order by 
+>     d_year asc, revenue desc;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[2, 3 Descending]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], REVENUE=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_CITY" = 'UNITED KI1' OR "C_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEARMONTH" = 'Dec1997') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_CITY" = 'UNITED KI1' OR "S_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "C_CITY", "S_CITY", "D_YEAR", SUM("LO_REVENUE")'
+'FROM (SELECT "C_CITY" AS "C_CITY", "S_CITY" AS "S_CITY", "D_YEAR" AS "D_YEAR", "LO_REVENUE" AS "LO_REVENUE"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "C_CITY" AS "C_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_CITY" = 'UNITED KI1' OR "C_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEARMONTH" = 'Dec1997') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_CITY" = 'UNITED KI1' OR "S_CITY" = 'UNITED KI5') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "C_CITY", "S_CITY", "D_YEAR"])'
+> 
+> -- 11.sql
+> explain plan for
+> select 
+>     d_year, c_nation,
+>     sum(lo_revenue - lo_supplycost) as profit
+> from 
+>     dates, customer, supplier, part, lineorder
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_partkey = p_partkey
+>     and lo_orderdate = d_datekey
+>     and c_region = 'AMERICA'
+>     and s_region = 'AMERICA'
+>     and (p_mfgr = 'MFGR#1' or p_mfgr = 'MFGR#2')
+> group by 
+>     d_year, c_nation
+> order by 
+>     d_year, c_nation;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[2], PROFIT=[SUM($2)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "C_NATION", SUM("$f2")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "C_NATION" AS "C_NATION", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f2"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "C_NATION" AS "C_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_MFGR" = 'MFGR#1' OR "P_MFGR" = 'MFGR#2') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")))'
+'GROUP BY "D_YEAR", "C_NATION"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "C_NATION", SUM("$f2")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "C_NATION" AS "C_NATION", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f2"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "C_NATION" AS "C_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY" AS "LO_CUSTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_MFGR" = 'MFGR#1' OR "P_MFGR" = 'MFGR#2') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY", "C_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")))'
+'GROUP BY "D_YEAR", "C_NATION"])'
+> 
+> -- 12.sql
+> explain plan for
+> select 
+>     d_year, s_nation, p_category,
+>     sum(lo_revenue - lo_supplycost) as profit
+> from 
+>     dates, customer, supplier, part, lineorder
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_partkey = p_partkey
+>     and lo_orderdate = d_datekey
+>     and c_region = 'AMERICA'
+>     and s_region = 'AMERICA'
+>     and (d_year = 1997 or d_year = 1998)
+>     and (p_mfgr = 'MFGR#1' or p_mfgr = 'MFGR#2')
+> group by 
+>     d_year, s_nation, p_category
+> order by 
+>     d_year, s_nation, p_category;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], PROFIT=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "S_NATION", "P_CATEGORY", SUM("$f3")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "S_NATION" AS "S_NATION", "P_CATEGORY" AS "P_CATEGORY", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f3"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_CATEGORY" AS "P_CATEGORY", "S_NATION" AS "S_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_CATEGORY" AS "P_CATEGORY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1997 OR "D_YEAR" = 1998) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_CATEGORY"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_MFGR" = 'MFGR#1' OR "P_MFGR" = 'MFGR#2') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "D_YEAR", "S_NATION", "P_CATEGORY"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "S_NATION", "P_CATEGORY", SUM("$f3")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "S_NATION" AS "S_NATION", "P_CATEGORY" AS "P_CATEGORY", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f3"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_CATEGORY" AS "P_CATEGORY", "S_NATION" AS "S_NATION"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_CATEGORY" AS "P_CATEGORY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER"'
+'WHERE "C_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1997 OR "D_YEAR" = 1998) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_CATEGORY"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_MFGR" = 'MFGR#1' OR "P_MFGR" = 'MFGR#2') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_NATION"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_REGION" = 'AMERICA') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "D_YEAR", "S_NATION", "P_CATEGORY"])'
+> 
+> -- 13.sql
+> explain plan for
+> select 
+>     d_year, s_city, p_brand,
+>     sum(lo_revenue - lo_supplycost) as profit
+> from 
+>     dates, customer, supplier, part, lineorder
+> where 
+>     lo_custkey = c_custkey
+>     and lo_suppkey = s_suppkey
+>     and lo_partkey = p_partkey
+>     and lo_orderdate = d_datekey
+>     and s_nation = 'UNITED STATES'
+>     and (d_year = 1997 or d_year = 1998)
+>     and p_category = 'MFGR#14'
+> group by 
+>     d_year, s_city, p_brand
+> order by 
+>     d_year, s_city, p_brand;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[3], PROFIT=[SUM($3)])'
+'      FennelMergeRel'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "S_CITY", "P_BRAND", SUM("$f3")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY", "P_BRAND" AS "P_BRAND", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f3"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP1"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1997 OR "D_YEAR" = 1998) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_CATEGORY" = 'MFGR#14') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "D_YEAR", "S_CITY", "P_BRAND"])'
+'        IteratorToFennelConverter'
+'          ResultSetToFarragoIteratorConverter'
+'            MedJdbcQueryRel(foreignSql=[SELECT "D_YEAR", "S_CITY", "P_BRAND", SUM("$f3")'
+'FROM (SELECT "D_YEAR" AS "D_YEAR", "S_CITY" AS "S_CITY", "P_BRAND" AS "P_BRAND", "LO_REVENUE" - "LO_SUPPLYCOST" AS "$f3"'
+'FROM (SELECT "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND", "S_CITY" AS "S_CITY"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR", "P_BRAND" AS "P_BRAND"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST", "D_YEAR" AS "D_YEAR"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_PARTKEY" AS "LO_PARTKEY", "LO_SUPPKEY" AS "LO_SUPPKEY", "LO_ORDERDATE" AS "LO_ORDERDATE", "LO_REVENUE" AS "LO_REVENUE", "LO_SUPPLYCOST" AS "LO_SUPPLYCOST"'
+'FROM (SELECT *'
+'FROM (SELECT "LO_CUSTKEY", "LO_PARTKEY", "LO_SUPPKEY", "LO_ORDERDATE", "LO_REVENUE", "LO_SUPPLYCOST"'
+'FROM "QP2"."SSB"."LINEORDER") AS "LEFT_INPUT",'
+'(SELECT "C_CUSTKEY"'
+'FROM "FIREWATER_REPLICA"."SSB"."CUSTOMER") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_CUSTKEY" = "RIGHT_INPUT"."C_CUSTKEY")) AS "LEFT_INPUT",'
+'(SELECT "D_DATEKEY", "D_YEAR"'
+'FROM "FIREWATER_REPLICA"."SSB"."DATES"'
+'WHERE "D_YEAR" = 1997 OR "D_YEAR" = 1998) AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_ORDERDATE" = "RIGHT_INPUT"."D_DATEKEY")) AS "LEFT_INPUT",'
+'(SELECT "P_PARTKEY", "P_BRAND"'
+'FROM "FIREWATER_REPLICA"."SSB"."PART"'
+'WHERE "P_CATEGORY" = 'MFGR#14') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_PARTKEY" = "RIGHT_INPUT"."P_PARTKEY")) AS "LEFT_INPUT",'
+'(SELECT "S_SUPPKEY", "S_CITY"'
+'FROM "FIREWATER_REPLICA"."SSB"."SUPPLIER"'
+'WHERE "S_NATION" = 'UNITED STATES') AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."LO_SUPPKEY" = "RIGHT_INPUT"."S_SUPPKEY")))'
+'GROUP BY "D_YEAR", "S_CITY", "P_BRAND"])'
+> 
+> !quit

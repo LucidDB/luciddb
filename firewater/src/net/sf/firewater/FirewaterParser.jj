@@ -1,0 +1,340 @@
+/*
+// $Id$
+// Firewater is a scaleout column store DBMS.
+// Copyright (C) 2009-2009 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+options {
+    STATIC = false;
+    UNICODE_INPUT = true;
+    IGNORE_CASE = true;
+}
+
+PARSER_BEGIN(FirewaterParser)
+
+package net.sf.firewater.parserimpl;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.parser.*;
+import net.sf.farrago.util.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util14.DateTimeUtil;
+import java.math.*;
+import java.util.*;
+import javax.jmi.reflect.*;
+import java.sql.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fwm.*;
+import net.sf.farrago.fwm.distributed.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.resource.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.cwm.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
+
+import net.sf.firewater.*;
+
+import org.eigenbase.enki.mdr.*;
+
+/**
+ * Farrago parser implementation extended with Firewater syntax.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class FirewaterParser extends FarragoAbstractParserImpl
+{
+    private static Metadata metadata;
+
+    public SqlParserPos getCurrentPosition()
+    {
+        return new SqlParserPos(
+            token.beginLine,
+            token.beginColumn);
+    }
+
+    public SqlParseException normalizeException(Throwable ex)
+    {
+        try {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
+            return convertException(ex);
+        } catch (ParseException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public Metadata getMetadata()
+    {
+        synchronized (FirewaterParser.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new FirewaterParser(new java.io.StringReader("")));
+            }
+            return metadata;
+        }
+    }
+
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
+    }
+
+    FwmPackage getFwmPackage()
+    {
+        return FirewaterSessionFactory.getFwmPackage(getRepos());
+    }
+}
+
+PARSER_END(FirewaterParser)
+
+
+/*****************************************
+ * Syntactical Descriptions              *
+ *****************************************/
+
+/**
+ * Allows parser to be extended with new types of table references.  The
+ * default implementation of this production is empty.
+ */
+SqlNode ExtendedTableRef() :
+{
+}
+{
+    UnusedExtension()
+    {
+        return null;
+    }
+}
+
+/**
+ * Allows an OVER clause following a table expression as an extension to
+ * standard SQL syntax. The default implementation of this production is empty.
+ */
+SqlNode TableOverOpt() :
+{
+}
+{
+    { return null; }
+}
+
+/*
+ * Parses dialect-specific keywords immediately following the SELECT keyword.
+ */
+void SqlSelectKeywords(List keywords) :
+{}
+{
+    E()
+}
+
+/*
+ * Parses dialect-specific keywords immediately following the INSERT keyword.
+ */
+void SqlInsertKeywords(List keywords) :
+{}
+{
+    E()
+}
+
+String NonReservedKeyWord() :
+{
+    String kw;
+}
+{
+    (
+        kw = CommonNonReservedKeyWord()
+        {
+            return kw;
+        }
+        |
+        kw = DdlNonReservedKeyWord()
+        {
+            return kw;
+        }
+        |
+        kw = FirewaterNonReservedKeyWord()
+        {
+            return kw;
+        }
+    )
+}
+
+String FirewaterNonReservedKeyWord() :
+{
+}
+{
+    (
+        <NODE> | <STORAGE>
+    )
+    {
+        return getToken(0).image.toUpperCase();
+    }
+}
+
+CwmModelElement ExtensionModelSchemaObjDefinition() :
+{
+}
+{
+    (
+        LOOKAHEAD({false}) <NULL>
+    )
+    {
+        return null;
+    }
+}
+
+CwmModelElement ExtensionModelDefinition() :
+{
+    CwmModelElement modelElement;
+}
+{
+    (
+        modelElement = PartitionDefinition()
+    )
+    {
+        return modelElement;
+    }
+}
+
+FwmPartition PartitionDefinition() :
+{
+    FwmPartition partition;
+    FemDataServer node;
+    SqlIdentifier name, nodeName;
+}
+{
+    <PARTITION>
+    {
+        partition = getFwmPackage().getDistributed()
+        .getFwmPartition().createFwmPartition();
+    }
+    name = SimpleIdentifier()
+    {
+        partition.setName(name.getSimple());
+        partition.setNamespace(
+            getRepos().getCatalog(
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
+    }
+    <ON> <LPAREN> nodeName = SimpleIdentifier() <RPAREN>
+    {
+        node = farragoParser.getStmtValidator().findDataServer(nodeName);
+    }
+    {
+        FwmPartitionReplica replica = getFwmPackage().getDistributed()
+        .getFwmPartitionReplica().createFwmPartitionReplica();
+        replica.setName(name.getSimple());
+        replica.setNode(node);
+        partition.getReplica().add(replica);
+    }
+    OptionalStorageOptions(partition)
+    OptionalDescription(partition)
+    {
+        return partition;
+    }
+}
+
+CwmModelElement ExtensionModelDrop() :
+{
+    CwmModelElement modelElement;
+}
+{
+    (
+        modelElement = PartitionDrop()
+    )
+    {
+        return modelElement;
+    }
+}
+
+FwmPartition PartitionDrop() :
+{
+    SqlIdentifier name;
+    FwmPartition partition;
+}
+{
+    <PARTITION> name = SimpleIdentifier()
+    {
+        partition = farragoParser.getStmtValidator().findUnqualifiedObject(
+            name,
+            FwmPartition.class);
+    }
+    {
+        return partition;
+    }
+}
+
+DdlStmt ExtensionModelAlter() :
+{
+}
+{
+    (
+        LOOKAHEAD({false}) <NULL>
+    )
+    {
+        return null;
+    }
+}
+
+TOKEN :
+{
+    < NODE: "NODE" >
+    | < STORAGE: "STORAGE" >
+}
+
+/*
+* Parse Floor/Ceil function parameters
+*/
+SqlNode FloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
+{
+    SqlNode node;
+}
+{
+    node = StandardFloorCeilOptions( pos, floorFlag)
+    {
+        return node;
+    }
+}
+
+SqlNode ExtendedBuiltinFunctionCall() :
+{
+}
+{
+    UnusedExtension()
+    {
+        return null;
+    }
+}
+
+// End FirewaterParser.jj

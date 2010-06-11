@@ -32,11 +32,21 @@ public interface RexToSqlNodeConverter
     //~ Methods ----------------------------------------------------------------
 
     /**
+     * Converts a {@link RexNode} to a {@link SqlNode} expression,
+     * typically by dispatching to one of the other interface methods.
+     *
+     * @param node RexNode to translate
+     *
+     * @return SqlNode, or null if no translation was available
+     */
+    SqlNode convertNode(RexNode node);
+
+    /**
      * Converts a {@link RexCall} to a {@link SqlNode} expression.
      *
      * @param call RexCall to translate
      *
-     * @return SqlNode
+     * @return SqlNode, or null if no translation was available
      */
     SqlNode convertCall(RexCall call);
 
@@ -45,7 +55,7 @@ public interface RexToSqlNodeConverter
      *
      * @param literal RexLiteral to translate
      *
-     * @return SqlNode
+     * @return SqlNode, or null if no translation was available
      */
     SqlNode convertLiteral(RexLiteral literal);
 
@@ -54,7 +64,7 @@ public interface RexToSqlNodeConverter
      *
      * @param ref RexInputRef to translate
      *
-     * @return SqlNode
+     * @return SqlNode, or null if no translation was available
      */
     SqlNode convertInputRef(RexInputRef ref);
 }

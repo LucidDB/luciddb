@@ -383,7 +383,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
-    <pathelement location="${janino.dir}/lib/janino.jar"/>
+    <pathelement location="${janino.dir}/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
