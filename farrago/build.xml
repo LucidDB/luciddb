@@ -1163,6 +1163,7 @@ ${farrago.test.jvmargs}
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="buildJdbcPlugin"/>
+    <antcall target="gen-test-resources"/>
   </target>
 
   <target name="test-only">
@@ -1177,7 +1178,29 @@ ${farrago.test.jvmargs}
     <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
-    <antcall target="checkJavadoc"/>
+  </target>
+
+  <target name="gen-test-resources"> 
+    <property name="target.name" value="gen-test-resources"/>
+    <property name="open.dir" location="${farrago.dir}/.."/>
+  	<fail unless="open.dir" />
+    <foreach param="target.file" target="call-subdir-target" inheritAll="true">
+      <path>
+        <fileset dir="${unitsql.dir}">
+          <include name="**/build.xml"/>
+        </fileset>
+      </path>
+    </foreach>
+  </target>
+	
+  <target name="call-subdir-target">
+    <echo>
+      This is the target.file: ${target.file}
+    </echo>
+    <dirname property="target.dir" file="${target.file}" />
+    <ant dir="${target.dir}" antfile="${target.file}" target="${target.name}" inheritAll="false">
+        <property name="open.dir" location="${open.dir}"/>
+    </ant>
   </target>
 
   <target name="checkTrace">
@@ -1282,7 +1305,6 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
   </target>
-
   <!-- For MQL, don't run the connected.sql test since it 
        requires an Internet connection -->
   <target name="testMqlPlugin">

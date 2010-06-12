@@ -49,10 +49,6 @@ public abstract class DdlSqlj
         int deploy)
         throws SQLException
     {
-        if (deploy != 0) {
-            // TODO jvs 18-Jan-2005
-            throw Util.needToImplement("deploy");
-        }
         url = url.trim();
         jar = jar.trim();
         SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
@@ -94,10 +90,7 @@ public abstract class DdlSqlj
         throws SQLException
     {
         jar = jar.trim();
-        if (undeploy != 0) {
-            // TODO jvs 18-Jan-2005
-            throw Util.needToImplement("deploy");
-        }
+
         SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
         sql.append("DROP JAR ");
         // REVIEW: see comments in install_jar regarding possible

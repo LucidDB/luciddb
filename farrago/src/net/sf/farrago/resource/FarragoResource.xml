@@ -718,6 +718,15 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cursor parameter {0} does not exist.</text>
 </exception>
 
+<exception id="421160" name="CannotDoDeploymentOnClass"
+        className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Url parameter {0} is a class. Cannot do deployment on a class.</text>
+</exception>
+
+<exception id ="421161" name="DeploymentActionFailed">
+<text>Failed while executing deployment action for {0}:  [{1}]</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -1306,6 +1315,30 @@ Messages: {1}</text>
 
 <exception id="490080" name="PluginManifestMissing">
 <text>Plugin jar ''{0}'' manifest lacks attribute ''{1}''</text>
+</exception>
+
+<exception id="490090" name="PluginManifestSqljInvalid">
+<text>Invalid SQL/J manifest for jar URL {0}</text>
+</exception>
+
+<exception id="490091" name="PluginDeploymentFileInvalid">
+<text>Invalid SQL/J deployment file {0} in jar URL {1}</text>
+</exception>
+
+<exception id="490092" name="PluginDeploymentFileUnterminated">
+<text>Reached end of deployment descriptor file without proper semicolon termination for last statement</text>
+</exception>
+
+<exception id="490093" name="PluginDeploymentFileDuplicate">
+<text>Duplicate {0} action group in deployment descriptor file</text>
+</exception>
+
+<exception id="490094" name="PluginDeploymentImplementorMismatch">
+<text>Mismatched implementor block identifiers BEGIN {0} and END {1}</text>
+</exception>
+
+<exception id="490095" name="PluginDeploymentImplementorUnbalanced">
+<text>Missing END for implementor block {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

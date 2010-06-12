@@ -37,13 +37,37 @@
     name="release.spec" 
     value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
 
+
   <!-- Directories and filenames for distribution jar file. -->
   <property name="dist.dir" location="${farrago.dir}/dist"/>
   <property name="dist.plugin.dir" location="${dist.dir}/plugin"/>
   <property name="dist.jar.file" location="${dist.dir}/farrago.jar"/>
+  <property name="dist.jar.jdbc.file" location="${dist.dir}/farrago-jdbc.jar"/>
+  <property name="dist.jar.jdbc.client.file" location="${dist.dir}/farrago-jdbc-client.jar"/>
+  <property name="dist.jar.jdbc.engine.file" location="${dist.dir}/farrago-jdbc-engine.jar"/>
+
+
+  <property name="release.dir" location="${dist.dir}/tmp/${release.spec}"/>
 
   <target name="createReleaseDir">
-    <mkdir dir="${dist.dir}/tmp/${release.spec}"/>
+    <mkdir dir="${release.dir}"/>
+  </target>
+
+  <target name="allJars" depends="cleanJars,jar,jdbcClientOnlyJar,jdbcJar,jdbcEngineOnlyJar" >
+  </target>
+
+  <!-- Cleans up everything --> 
+  <target name="clean" depends="cleanJars">
+    <delete dir="${release.dir}" quiet="true"/>
+  </target>
+
+  <!-- Cleans just jars -->
+  <target name="cleanJars">
+    <delete file="${dist.jar.file}" quiet="true"/>
+    <delete file="${dist.jar.jdbc.file}" quiet="true"/>
+    <delete file="${dist.jar.jdbc.client.file}" quiet="true"/>
+    <delete file="${dist.jar.jdbc.engine.file}" quiet="true"/>
+    <delete file="${dist.jar.jdbc.engine.file}" quiet="true"/>
   </target>
 
   <target name="jar">
@@ -86,7 +110,57 @@
       <lib dir="${thirdparty.dir}/vjdbc/lib" excludes="j2ee_api.jar,junit.jar"/>
     </war>
   </target>
-
+  <target name="jdbcClientOnlyJar">
+    <jar destfile="${dist.jar.jdbc.client.file}" update="true" compress="true" filesetmanifest="skip">
+      <fileset dir="${farrago.classes.dir}">
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+  <target name="jdbcJar">
+    <jar destfile="${dist.jar.jdbc.file}" update="true" compress="true" filesetmanifest="skip">
+      <fileset dir="${farrago.classes.dir}">
+	<include name="net/sf/farrago/jdbc/**/*.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+  <target name="jdbcEngineOnlyJar">
+    <jar destfile="${dist.jar.jdbc.engine.file}" update="true" compress="true" filesetmanifest="skip">
+      <fileset dir="${farrago.classes.dir}">
+	<include name="net/sf/farrago/jdbc/engine/*.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+      
   <!-- TODO jvs 26-June-2005:  this isn't used yet -->
   <target name="createPlannervizRelease">
     <copy 

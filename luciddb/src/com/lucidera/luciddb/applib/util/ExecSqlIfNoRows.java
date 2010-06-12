@@ -24,9 +24,8 @@ import org.eigenbase.util.StackWriter;
 import java.sql.*;
 import java.io.*;
 
-
 /**
- * Executes a SQL statement if the evaluation SQL statement is empty
+ * Executes a SQL statement if the evaluation SQL statement is empty.
  * 
  * @param evalSql SQL to execute.  evalSQL must return a resultSet.
  * If rowcount > 0 the execSql is then executed.
@@ -49,15 +48,11 @@ public abstract class ExecSqlIfNoRows {
         Statement stmt;
         ResultSet rs;
         Connection conn = null;
-        StringWriter sw;
-        StackWriter stackw;
-        PrintWriter pw;
-        
+
         // set up a jdbc connection
         conn = DriverManager.getConnection("jdbc:default:connection");
         stmt = conn.createStatement();
-        
-        
+
         // Execute the SQL statement provided
         ps = conn.prepareStatement(evalSQL);
         rs = ps.executeQuery();
@@ -65,10 +60,9 @@ public abstract class ExecSqlIfNoRows {
         if (rs.next()) {
             return;
         }
-           
+
         // Execute the SQL
         stmt.execute(execSQL);
-
     }
 }
 

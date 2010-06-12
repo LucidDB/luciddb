@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2007-2007 LucidEra, Inc.
 // Copyright (C) 2007-2007 The Eigenbase Project
 //

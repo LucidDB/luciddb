@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="sqldeploymentdescriptor" basedir="." 
+  default="gen-test-resources">
+  <dirname property="sdd.dir" file="${ant.file.sqldeploymentdescriptor}" />
+
+  <property name="class.dir" 
+    location="${sdd.dir}/../../.."/>
+  <fail unless="class.dir" />
+  <target name="gen-test-resources" depends="clean">
+
+    <!-- genrate jar for testing.-->
+    <jar jarfile="${sdd.dir}/sddtest.jar">
+      <fileset dir="${class.dir}/classes">
+      	<include name="**/net/sf/farrago/test/FarragoTestUDR.class" />
+      </fileset>
+      <fileset dir="${sdd.dir}">
+        <include name="deploy.txt"/>
+      </fileset>
+      <manifest>
+        <section name="deploy.txt"> 
+          <attribute 
+             name="SQLJDeploymentDescriptor" 
+             value="TRUE" />
+        </section>
+      </manifest>
+    </jar>
+    <!-- generate jar for testing.-->
+    <jar jarfile="${sdd.dir}/bad-sddtest.jar">
+      <fileset dir="${class.dir}/classes">
+        <include name="**/net/sf/farrago/test/FarragoTestUDR.class" />
+      </fileset>
+      <fileset dir="${sdd.dir}">
+        <include name="bad_deploy.txt"/>
+      </fileset>
+      <manifest>
+        <section name="bad_deploy.txt">
+          <attribute
+             name="SQLJDeploymentDescriptor"
+             value="TRUE" />
+        </section>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="clean">
+    <delete file="sddtest.jar"/>
+    <delete file="bad-sddtest.jar"/>
+  </target>
+</project>
+

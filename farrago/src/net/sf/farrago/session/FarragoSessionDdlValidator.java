@@ -348,6 +348,14 @@ public interface FarragoSessionDdlValidator
      */
     // implement FarragoSessionDdlValidator
     public boolean isReplace();
+
+    /**
+     * Controls whether Enki's mass deletion optimization is used
+     * for this DDL transaction.
+     *
+     * @param enabled whether to enable the optimization
+     */
+    public void enableMassDeletion(boolean enabled);
 }
 
 // End FarragoSessionDdlValidator.java
