@@ -23,6 +23,7 @@
 package net.sf.farrago.parser;
 
 import java.io.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
@@ -77,6 +78,12 @@ public abstract class FarragoAbstractParserImpl
      * @return result of parsing an SQL expression
      */
     public abstract SqlNode SqlExpressionEof()
+        throws Exception;
+
+    /**
+     * @return result of parsing a deployment descriptor file
+     */
+    public abstract Map<String, List<String>> DeploymentDescriptorEof()
         throws Exception;
 
     /**

@@ -51,6 +51,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 import org.eigenbase.sql.parser.*;
@@ -880,7 +881,8 @@ public class DdlRoutineHandler
                 FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
                 false);
             List<String> deployFiles = getAllDeployFiles(expandedUrl);
-            boolean deployed_partial = false;
+            // Undeployment goes in reverse order of files
+            Collections.reverse(deployFiles);
             if (deployFiles.size() > 0) {
                 for (String deployFile : deployFiles) {
                     List<String> deploySQLs = getDeploySqlStatements(
@@ -939,7 +941,10 @@ public class DdlRoutineHandler
     {
         Connection conn = null;
         Statement stmt = null;
-        String setDefaultSchema = "set schema '" + defaultSchema + "'";
+        SqlBuilder sb = new SqlBuilder(SqlDialect.EIGENBASE);
+        sb.append("SET SCHEMA ");
+        sb.literal(sb.getDialect().quoteIdentifier(defaultSchema));
+        String setDefaultSchema = sb.getSql();
         String lastSql = "";
         try {
             conn = session.getConnectionSource().newConnection();
@@ -999,42 +1004,28 @@ public class DdlRoutineHandler
         String deployFile,
         String operation)
     {
-        List<String> retValue = new ArrayList<String>();
+        JarFile jarfile = null;
         try {
-            JarFile jarfile = getJarFile(jarUrl);
+            jarfile = getJarFile(jarUrl);
             JarEntry entry = jarfile.getJarEntry(deployFile);
             if (entry != null) {
                 InputStream in = jarfile.getInputStream(entry);
                 BufferedReader br = new BufferedReader(
                     new InputStreamReader(in));
-                StringBuilder text = new StringBuilder();
-                boolean flag = false;
-                while (br.ready()) {
-                    String line = br.readLine();
-                    String trimmed = line.trim();
-                    if (trimmed.endsWith("\"BEGIN " + operation)) {
-                        flag = true;
-                    } else if (trimmed.startsWith("END " + operation + "\"")) {
-                        break;
-                    } else if (flag) {
-                        text.append(line);
-                        text.append("\n");
-                    }
-                }
-                String[] sqlArray = text.toString().split(";");
-                for (String sql : sqlArray) {
-                    if (sql.trim().length() > 0) {
-                        retValue.add(sql);
-                    }
-                }
+                String src = Util.readAllAsString(br);
+                Map<String, List<String>> map =
+                    validator.getParser().parseDeploymentDescriptor(src);
+                return map.get(operation);
             }
         } catch (Exception ex) {
             throw FarragoResource.instance().PluginDeploymentFileInvalid.ex(
                 deployFile,
                 jarUrl,
                 ex);
+        } finally {
+            Util.squelchJar(jarfile);
         }
-        return retValue;
+        return new ArrayList<String>();
     }
 
     private JarFile getJarFile(String jarUrl)

@@ -22,6 +22,9 @@
 */
 package net.sf.farrago.session;
 
+import java.io.*;
+import java.util.*;
+
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
@@ -57,6 +60,16 @@ public interface FarragoSessionParser
         FarragoSessionDdlValidator ddlValidator,
         String sql,
         boolean expectStatement);
+
+    /**
+     * Parses a SQL/J deployment descriptor file.
+     *
+     * @param src contents of descriptor file
+     *
+     * @return map from action (INSTALL and/or REMOVE) to
+     * list of corresponding SQL statements
+     */
+    public Map<String, List<String>> parseDeploymentDescriptor(String src);
 
     /**
      * @return the current position, or null if done parsing

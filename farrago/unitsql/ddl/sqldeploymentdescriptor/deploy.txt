@@ -1,18 +1,52 @@
 SQLActions[ ] = {
   "BEGIN INSTALL
 
-create or replace function test_routine(i int)
+create function test_routine(i int)
 returns varchar(128)
 language java
 no sql
 external name 
 'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 
+BEGIN eigenbase
+
+create  function test_routine_eigenbase(i int)
+returns varchar(128)
+language java
+no sql
+external name 
+'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)'
+
+END eigenbase;
+
+BEGIN postgresql
+
+create function test_routine_postgresql(i int)
+returns varchar(128)
+language java
+no sql
+external name 
+'thisjar:net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)'
+
+END postgresql;
+
 END INSTALL",
 
   "BEGIN REMOVE
 
 DROP FUNCTION test_routine CASCADE;
+
+BEGIN eigenbase
+
+DROP FUNCTION test_routine_eigenbase CASCADE
+
+END eigenbase;
+
+BEGIN postgresql
+
+DROP FUNCTION test_routine_postgresql CASCADE
+
+END postgresql;
 
 END REMOVE"
 }

@@ -109,7 +109,8 @@ String QuotedString() :
 }
 
 /**
- * Parses an SQL statement followed by the end-of-file symbol.
+ * Parses a SQL statement (query, DML, or DDL) followed by the end-of-file
+ * symbol.
  *
  * @return top-level CWM object affected for DDL statement, or top-level SqlNode
  * for DML or query statement
@@ -132,23 +133,33 @@ Object FarragoSqlStmtEof() :
             {
                 FarragoReposTxnContext reposTxnContext =
                     farragoParser.getStmtValidator().getReposTxnContext();
-
                 if (!reposTxnContext.isReadTxnInProgress()) {
                     reposTxnContext.beginLockedTxn(true);
                 }
             }
             obj = SqlStmtEof()
             |
-            obj = PsmBody()
+            obj = PsmBody() <EOF>
         )
     )
-    <EOF>
     {
         return obj;
     }
 }
 
 DdlStmt DdlStmtEof() :
+{
+    DdlStmt ddlStmt;
+}
+{
+    ddlStmt = DdlStmt()
+    <EOF>
+    {
+        return ddlStmt;
+    }
+}
+
+DdlStmt DdlStmt() :
 {
     CwmModelElement modelElement;
     DdlStmt ddlStmt;
@@ -385,7 +396,6 @@ DdlStmt DdlStmtEof() :
         }
         ddlStmt = AnalyzeStmt()
     )
-    <EOF>
     {
         return ddlStmt;
     }
@@ -3108,6 +3118,125 @@ DdlStmt AnalyzeStmt() :
     }
 }
 
+Map<String, List<String>> DeploymentDescriptorEof() :
+{
+    Map<String, List<String>> map = new HashMap<String, List<String>>();
+}
+{
+    <SQLACTIONS> <LBRACKET> <RBRACKET> <EQ> <LBRACE>
+    [
+        <DOUBLE_QUOTE> DeploymentActionGroup(map) <DOUBLE_QUOTE>
+        [
+            <COMMA>
+            <DOUBLE_QUOTE> DeploymentActionGroup(map) <DOUBLE_QUOTE>
+        ]
+    ]
+    <RBRACE>
+    <EOF>
+    {
+        return map;
+    }
+}
+
+void DeploymentActionGroup(Map<String, List<String>> map) :
+{
+}
+{
+    LOOKAHEAD(2) DeploymentInstallAction(map) | DeploymentRemoveAction(map)
+}
+
+JAVACODE
+void CollectDeploymentAction(List<String> list, String implementor)
+{
+    Token t;
+    SqlParserPos textStart = getEndPos();
+    SqlParserPos textStop;
+    SqlParserPos lastEnd = null;
+    String implementorEnd = null;
+    for (;;) {
+        textStop = getEndPos();
+        t = getNextToken();
+        if (t.kind == EOF) {
+            throw FarragoResource.instance().
+                PluginDeploymentFileUnterminated.ex();
+        }
+        if (t.kind == SEMICOLON) {
+            break;
+        }
+        if ((lastEnd != null) && (implementorEnd == null)) {
+            implementorEnd = t.image;
+        }
+        if (t.kind == END) {
+            lastEnd = textStop;
+        }
+    }
+    if (implementor != null) {
+        if ((lastEnd == null) || (implementorEnd == null)) {
+            throw FarragoResource.instance().
+            PluginDeploymentImplementorUnbalanced.ex(implementor);
+        }
+        if (!implementor.equalsIgnoreCase(implementorEnd)) {
+            throw FarragoResource.instance().
+            PluginDeploymentImplementorMismatch.ex(
+                implementor, implementorEnd);
+        }
+        // TODO jvs 11-Jun-2010:  parameterize list of accepted implementors,
+        // e.g. luciddb, sqlstream, etc
+        if (!"eigenbase".equalsIgnoreCase(implementor)) {
+            return;
+        }
+        textStop = lastEnd;
+    }
+    String sql = farragoParser.getSubstring(textStart, textStop);
+    list.add(sql);
+}
+
+JAVACODE
+void addDeploymentList(
+    Map<String, List<String>> map, String action, List<String> list)
+{
+    if (map.containsKey(action)) {
+        throw FarragoResource.instance().
+        PluginDeploymentFileDuplicate.ex(action);
+    }
+    map.put(action, list);
+}
+
+void DeploymentInstallAction(Map<String, List<String>> map) :
+{
+    List<String> list = new ArrayList<String>();
+}
+{
+    <BEGIN> <INSTALL> DeploymentList(list) <INSTALL>
+    {
+        addDeploymentList(map, "INSTALL", list);
+    }
+}
+
+void DeploymentRemoveAction(Map<String, List<String>> map) :
+{
+    List<String> list = new ArrayList<String>();
+}
+{
+    <BEGIN> <REMOVE> DeploymentList(list) <REMOVE>
+    {
+        addDeploymentList(map, "REMOVE", list);
+    }
+}
+
+void DeploymentList(List<String> list) :
+{
+    String implementorStart, implementorEnd;
+}
+{
+    <END>
+    |
+    <BEGIN> implementorStart = Identifier()
+    CollectDeploymentAction(list, implementorStart)
+    DeploymentList(list)
+    |
+    CollectDeploymentAction(list, null) DeploymentList(list)
+}
 
 /* KEYWORDS:  anything in this list is a reserved word unless it appears
    in the NonReservedKeyWord() production. */
@@ -3123,12 +3252,15 @@ TOKEN :
     | < ESTIMATE: "ESTIMATE" >
     | < IDENTIFIED: "IDENTIFIED" >
     | < INDEX: "INDEX" >
+    | < INSTALL: "INSTALL" >
     | < JAR: "JAR" >
     | < PERCENT: "PERCENT" >
     | < REBUILD: "REBUILD" >
+    | < REMOVE: "REMOVE" >
     | < RENAME: "RENAME" >
     | < REPLACE: "REPLACE" >
     | < SAMPLE: "SAMPLE" >
+    | < SQLACTIONS: "SQLACTIONS" >
     | < STATISTICS: "STATISTICS">
     | < TRUNCATE: "TRUNCATE" >
 }
@@ -3159,12 +3291,15 @@ String DdlNonReservedKeyWord() :
         | <ESTIMATE>
         | <IDENTIFIED>
         | <INDEX>
+        | <INSTALL>
         | <JAR>
         | <PERCENT>
         | <REBUILD>
+        | <REMOVE>
         | <RENAME>
         | <REPLACE>
         | <SAMPLE>
+        | <SQLACTIONS>
         | <STATISTICS>
     )
     {

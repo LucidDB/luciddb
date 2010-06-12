@@ -1321,8 +1321,24 @@ Messages: {1}</text>
 <text>Invalid SQL/J manifest for jar URL {0}</text>
 </exception>
 
-<exception id="490090" name="PluginDeploymentFileInvalid">
+<exception id="490091" name="PluginDeploymentFileInvalid">
 <text>Invalid SQL/J deployment file {0} in jar URL {1}</text>
+</exception>
+
+<exception id="490092" name="PluginDeploymentFileUnterminated">
+<text>Reached end of deployment descriptor file without proper semicolon termination for last statement</text>
+</exception>
+
+<exception id="490093" name="PluginDeploymentFileDuplicate">
+<text>Duplicate {0} action group in deployment descriptor file</text>
+</exception>
+
+<exception id="490094" name="PluginDeploymentImplementorMismatch">
+<text>Mismatched implementor block identifiers BEGIN {0} and END {1}</text>
+</exception>
+
+<exception id="490095" name="PluginDeploymentImplementorUnbalanced">
+<text>Missing END for implementor block {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
