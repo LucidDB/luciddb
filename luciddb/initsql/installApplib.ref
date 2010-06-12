@@ -1022,8 +1022,8 @@
 > 
 > -- UDP for conditionally executing a SQL statement based on input set 
 > create or replace procedure exec_sql_if_no_rows( 
-> in evalSQL varchar(4096), 
-> in execSQL varchar(4096)) 
+> in evalSQL varchar(65535),
+> in execSQL varchar(65535))
 > language java 
 > parameter style java 
 > reads sql data 
@@ -1031,7 +1031,7 @@
 > 
 > create or replace function APPLIB.WRITE_ROWS_TO_FILE(
 > IN_CURSOR cursor, 
-> URL varchar(255), 
+> URL varchar(65535), 
 > IS_COMPRESSED boolean)
 > returns table(status int, message varchar(6000))
 > language java
@@ -1040,10 +1040,9 @@
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.WriteRowsToFileUDX.execute';
 >  
->  
 > create or replace function APPLIB.READ_ROWS_FROM_FILE(
 > IN_CURSOR cursor, 
-> URL varchar(255), 
+> URL varchar(65535), 
 > IS_COMPRESSED boolean)
 > returns table (IN_CURSOR.*)
 > language java
@@ -1061,9 +1060,9 @@
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
 > 
 > create or replace procedure create_table_from_source_table(
-> in sourceTable varchar(65535),
-> in schemaName varchar(255),
-> in tableName varchar(255),
+> in sourceTable varchar(1024),
+> in schemaName varchar(128),
+> in tableName varchar(128),
 > in additonalColsInfo varchar(65535))
 > language java
 > parameter style java
@@ -1071,8 +1070,8 @@
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';
 > 
 > create or replace procedure create_table_as(
-> in schemaName varchar(255),
-> in tableName varchar(255),
+> in schemaName varchar(128),
+> in tableName varchar(128),
 > in selectStmt varchar(65535),
 > in shouldLoad boolean)
 > language java
