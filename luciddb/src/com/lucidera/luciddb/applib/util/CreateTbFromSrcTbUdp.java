@@ -39,7 +39,6 @@ import com.lucidera.luciddb.applib.resource.*;
  * @author Ray Zhang
  * @since Mar-16-2010
  */
-
 public abstract class CreateTbFromSrcTbUdp
 {
 
@@ -147,66 +146,50 @@ public abstract class CreateTbFromSrcTbUdp
             ps.setString(3, table);
             rs = ps.executeQuery();
             
-            while(rs.next()){
-                
+            while (rs.next()){
                 String column_name = rs.getString(1);
                 String data_type = rs.getString(2);
                 boolean is_nullable = rs.getBoolean(5);
                 ddl.append(" " + column_name + " "
                     + data_type);
-                if( SqlTypeName.VARBINARY.getName().equals(data_type) ||
+                if (SqlTypeName.VARBINARY.getName().equals(data_type) ||
                     SqlTypeName.BINARY.getName().equals(data_type) ||
                     SqlTypeName.VARCHAR.getName().equals(data_type) ||
-                    SqlTypeName.CHAR.getName().equals(data_type)
-                )
-                      
+                    SqlTypeName.CHAR.getName().equals(data_type))
                 {
                     ddl.append("(" + rs.getInt(3) + ")");
-   
-                }else if(SqlTypeName.DECIMAL.getName().equals(data_type)){
-                    
+                } else if(SqlTypeName.DECIMAL.getName().equals(data_type)) {
                     ddl.append("(" + rs.getInt(3) + ","
                         + rs.getInt(4) + ")");
                 }
-                if(!is_nullable){
+                if (!is_nullable){
                     ddl.append(" " + "not null");
                 }
-          
                 ddl.append(",");
             }
             
              if (additionalColsInfo != null) {
-
                 ddl.append(additionalColsInfo);
-
             } else {
-
                 ddl.deleteCharAt((ddl.length() - 1));
             }
-            
-            
 
             ddl.append(" )");
             tracer.info("create table statement: " + ddl.toString());
             ps = conn.prepareStatement(ddl.toString());
             ps.execute();
-
         } finally {
-
             if (rs != null) {
-
                 rs.close();
             }
             if (ps != null) {
-
                 ps.close();
             }
             if (conn != null) {
-
                 conn.close();
             }
         }
-
     }
-
 }
+
+// End CreateTbFromSrcTbUdp.java

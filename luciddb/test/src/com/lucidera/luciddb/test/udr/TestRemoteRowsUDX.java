@@ -63,12 +63,15 @@ public class TestRemoteRowsUDX
     public void setUp()
         throws Exception
     {
+        // TODO jvs 12-Jun-2010:  factor out common test harness code
+        // from wherever this was copied from.
+        
         // Set the properties so the LucidDB session factory and LucidDB data
         // files are used.  The LucidDB data files need to be used; otherwise,
         // we won't use versioned data segment pages.
         //
         // REVIEW zfong 7/11/08 - Is there a better way of doing this?
-       FarragoProperties farragoPropInstance = FarragoProperties.instance();
+        FarragoProperties farragoPropInstance = FarragoProperties.instance();
         StringProperty sessionFactory =
             farragoPropInstance.defaultSessionFactoryLibraryName;
         System.setProperty(
@@ -217,7 +220,7 @@ public class TestRemoteRowsUDX
         
         objOut.writeObject(list);
         objOut.close();
-       client.close(); 
+        client.close(); 
         runner.join();
         
         ps.close();
@@ -274,7 +277,7 @@ public class TestRemoteRowsUDX
         
         objOut.writeObject(list);
         objOut.close();
-       client.close(); 
+        client.close(); 
         runner.join();
         
         ps.close();

@@ -38,7 +38,6 @@ import net.sf.farrago.trace.*;
  * @author Ray Zhang
  * @since Mar-18-2010
  */
-
 public abstract class CreateTbFromSelectStmtUdp
 {
     private static final Logger tracer = FarragoTrace.getClassTracer(CreateTbFromSelectStmtUdp.class);
@@ -51,7 +50,6 @@ public abstract class CreateTbFromSelectStmtUdp
      * @param additionalColsInfo
      * @throws Exception
      */
-
     public static void execute(
         String targetSchemaName,
         String targetTableName,
@@ -69,7 +67,6 @@ public abstract class CreateTbFromSelectStmtUdp
             throw ApplibResourceObject.get().InputIsRequired.ex("targetTableName");
         }
         if ((selectStmt == null || selectStmt.trim().length() == 0)) {
-
             throw ApplibResourceObject.get().InputIsRequired.ex("selectStmt");
         }
 
@@ -78,7 +75,6 @@ public abstract class CreateTbFromSelectStmtUdp
         Connection conn = null;
 
         try {
-
             // set up a jdbc connection
             conn = DriverManager.getConnection("jdbc:default:connection");
             // If schema is not specified, the udp will select the schema of the
@@ -152,21 +148,17 @@ public abstract class CreateTbFromSelectStmtUdp
                 ps.execute();
             }
         } finally {
-
             if (rs != null) {
-
                 rs.close();
             }
             if (ps != null) {
-
                 ps.close();
             }
             if (conn != null) {
-
                 conn.close();
             }
         }
-
     }
-
 }
+
+// End CreateTbFromSelectStmtUdp.java
