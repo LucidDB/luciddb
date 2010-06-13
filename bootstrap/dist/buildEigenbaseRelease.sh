@@ -112,6 +112,11 @@ echo 'build.mode=release' > farrago/customBuild.properties
 echo 'release.properties.source=${luciddb.dir}/src/FarragoRelease.properties' \
     >> farrago/customBuild.properties
 
+# Kludge for forcing 32-bit runtime on MacOS
+if [ `uname` = "Darwin" ]; then
+    echo 'assertions.jvmarg=-ea -esa -d32' >> farrago/customBuild.properties
+fi
+
 if [ $cygwin = "false" ]; then
 
 # Build full source release first before projects get polluted by builds
