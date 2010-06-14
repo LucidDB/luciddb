@@ -103,6 +103,10 @@ TMP_DIR=$DIST_DIR/tmp
 rm -rf $TMP_DIR
 mkdir $TMP_DIR
 
+# FRG-402 Setup ant if not already present
+cd $FARRAGO_DIR
+. ./farragoenv.sh $THIRDPARTY_DIR
+
 # get help from ant to figure out where to build release image
 cd $DIST_DIR
 ant createReleaseDir
