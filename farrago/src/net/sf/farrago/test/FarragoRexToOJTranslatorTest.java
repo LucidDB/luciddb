@@ -35,17 +35,31 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.test.DiffRepository;
-import org.eigenbase.util.TestUtil;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.*;
 
 
 /**
  * FarragoRexToOJTranslatorTest contains unit tests for the translation code in
- * {@link net.sf.farrago.ojrex}. Each test case takes a single SQL row
- * expression string as input, performs code generation, and then diffs the
- * generated Java code snippet against an expected .ref file under directory
- * farrago/testlog/FarragoRexToOJTranslatorTest.
+ * {@link net.sf.farrago.ojrex}.
+ *
+ * <p>Tests are of two forms:<ul>
+ *
+ * <li>Tests that call {@link #checkTranslation(String)} take a single SQL row
+ * expression string as input, perform code generation, and then diffs the
+ * generated Java code snippet against an expected output in
+ * {@code FarragoRexToOJTranslatorTest.ref.xml}.</li>
+ *
+ * <li>Tests that call {@link #checkQueryTranslation(String)} take a whole
+ * query and generate a whole Java class. These tests can focus on the nuances
+ * of common-subexpression elimination, for instance, when it is safe to reuse
+ * the value of an expression computed for the WHERE clause in a SELECT
+ * expression.</li>
+ *
+ * </ul>
  *
  * @author John V. Sichi
  * @version $Id$
@@ -53,14 +67,16 @@ import org.eigenbase.util.TestUtil;
 public class FarragoRexToOJTranslatorTest
     extends FarragoSqlToRelTestBase
 {
+    private boolean full;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FarragoRexToOJTranslatorTest object.
+     * Creates a FarragoRexToOJTranslatorTest.
      *
-     * @param testName .
+     * @param testName Test case name
      *
-     * @throws Exception .
+     * @throws Exception on error
      */
     public FarragoRexToOJTranslatorTest(String testName)
         throws Exception
@@ -106,6 +122,24 @@ public class FarragoRexToOJTranslatorTest
             "SELECT " + rowExpression + " FROM " + tableExpression;
         final String query2 = getDiffRepos().expand("query", query);
         final String explainQuery = "EXPLAIN PLAN FOR " + query2;
+        full = false;
+
+        checkQuery(explainQuery);
+    }
+
+    /**
+     * Tests the translation of a whole query.
+     *
+     * @param query SELECT statement
+     * @throws Exception
+     */
+    protected void checkQueryTranslation(
+        String query)
+        throws Exception
+    {
+        final String query2 = getDiffRepos().expand("query", query);
+        final String explainQuery = "EXPLAIN PLAN FOR " + query2;
+        full = true;
 
         checkQuery(explainQuery);
     }
@@ -118,6 +152,46 @@ public class FarragoRexToOJTranslatorTest
         assert (topRel instanceof IterCalcRel) : topRel.getClass().getName();
         IterCalcRel calcRel = (IterCalcRel) topRel;
 
+        String actual;
+        if (full) {
+            actual = getJavaSourceForQuery(stmt, calcRel);
+        } else {
+            actual = getJavaSourceForRowExpr(stmt, calcRel);
+        }
+
+        // OJ formats 'finally' wrong.
+        actual = actual.replaceAll(" finally \n\\{", " finally {\n");
+        actual = actual.replaceAll(" finally \r\n\\{", " finally {\r\n");
+
+        // OJ has a nasty habit of creating multiple blank lines. Strip 'em out.
+        int size;
+        do {
+            size = actual.length();
+            actual = actual.replaceAll("\n *\n", "\n");
+            actual = actual.replaceAll("\r\n *\r\n", "\r\n");
+        } while (actual.length() < size);
+
+        // Convert
+        //    }, "FtrsIndexScanRel.#15:364", 26, null ) ){
+        // to
+        //    }, "FtrsIndexScanRel.#xx:xxx", xx, null ) ){
+        actual = actual.replaceAll(
+            "\"(FtrsIndexScanRel|AspenOldToIteratorConverter).#[0-9]+:[0-9]+\", [0-9]+,",
+            "\"$1.#x:x\", x,");
+        actual = actual.replaceAll("stmt[0-9]+", "stmtx");
+
+        // and diff it against what we expect
+        final DiffRepository diffRepos = getDiffRepos();
+        diffRepos.assertEquals(
+            "expectedProgram",
+            "${expectedProgram}",
+            TestUtil.NL + actual);
+    }
+
+    private String getJavaSourceForRowExpr(
+        FarragoPreparingStmt stmt,
+        IterCalcRel calcRel)
+    {
         // grab the RexNode corresponding to our select item
         final RexProgram program = calcRel.getProgram();
         final RexLocalRef ref = program.getProjectList().get(0);
@@ -130,7 +204,6 @@ public class FarragoRexToOJTranslatorTest
                 stmt,
                 sqlToRelConverter.getRexBuilder());
 
-        // perform the codegen
         StatementList stmtList = new StatementList();
         MemberDeclarationList memberList = new MemberDeclarationList();
         final RexToOJTranslator translator =
@@ -157,14 +230,31 @@ public class FarragoRexToOJTranslatorTest
         }
         printWriter.println("return " + translatedExp + ";");
         printWriter.close();
-        String actual = sw.toString();
+        return sw.toString();
+    }
 
-        // and diff it against what we expect
-        final DiffRepository diffRepos = getDiffRepos();
-        diffRepos.assertEquals(
-            "expectedProgram",
-            "${expectedProgram}",
-            TestUtil.NL + actual);
+    private String getJavaSourceForQuery(
+        FarragoPreparingStmt stmt,
+        IterCalcRel calcRel)
+    {
+        // Create a handler so that we can be told the java source code.
+        final String[] source = { null };
+        EigenbaseTrace.getDynamicHandler().set(
+            new Util.Function2<Void, File, String>()
+            {
+                public Void apply(File p0, String p1)
+                {
+                    source[0] = p1;
+                    return null;
+                }
+            }
+        );
+        // Note: Calling preImplement followed by implement just happens to
+        // work. If the preparation process or FarragoPreparingStmt needs to
+        // change, go ahead; just change this code to something else that works.
+        stmt.preImplement();
+        stmt.implement(calcRel, SqlKind.SELECT, false);
+        return source[0];
     }
 
     protected void initPlanner(FarragoPreparingStmt stmt)
@@ -255,6 +345,12 @@ public class FarragoRexToOJTranslatorTest
     {
         // NOTE:  choose one nullable and one not null
         checkTranslation("empno / age");
+    }
+
+    public void testDivideNullable()
+        throws Exception
+    {
+        checkTranslation("1e1 / cast(null as float)");
     }
 
     public void testPrimitivePrefixMinus()
@@ -570,6 +666,90 @@ public class FarragoRexToOJTranslatorTest
         checkTranslation("case slacker when true then 1 end");
     }
 
+    public void testCommonReusePreviousWhen()
+        throws Exception
+    {
+        // At the second occurrence of 'empid * 2', the first occurrence has
+        // definitely been evaluated, so it is safe to re-use it.
+        checkTranslation(
+            "case\n"
+            + "  when empid > 50 then 1\n"
+            + "  when empid * 2 > 50 then 2\n"
+            + "  when empid + 3 > 50 then 3\n"
+            + "  when 1 + empid * 2 > 40 then 4\n"
+            + "  else 5\n"
+            + "end");
+    }
+
+    public void testCommonReusePrevious()
+        throws Exception
+    {
+        // At the second occurrence of 'empid * 2', the first occurrence has
+        // definitely been evaluated, so it is safe to re-use it.
+        checkTranslation(
+            "(empid * 2)\n"
+            + "+\n"
+            + "case\n"
+            + "  when empid > 50 then 1\n"
+            + "  when empid * 2 > 50 then 2\n"
+            + "  else 5\n"
+            + "end");
+    }
+
+    public void testCommonCannotReusePrevious()
+        throws Exception
+    {
+        // At the second occurrence of 'empid * 2', the first occurrence may
+        // or may not have been evaluated, so it is not safe to re-use it.
+        // The third occurrence can re-use the second.
+        checkTranslation(
+            "case\n"
+            + "  when empid > 50 then empid * 2\n"
+            + "  else 100\n"
+            + "end\n"
+            + "+\n"
+            + "case\n"
+            + "  when empid > 50 then 1\n"
+            + "  when empid * 2 > 50 then 2\n"
+            + "  else empid * 2\n"
+            + "end");
+    }
+
+    public void testCommonReusePreviousFirstWhen()
+        throws Exception
+    {
+        // At the second occurrence of 'empid * 2', the first occurrence has
+        // definitely been evaluated, because it was in the first WHEN clause of
+        // a CASE, so it is not safe to re-use it.
+        // The third occurrence can re-use the second.
+        checkTranslation(
+            "case\n"
+            + "  when empid * 2 > 50 then 2\n"
+            + "  else 100\n"
+            + "end\n"
+            + "+\n"
+            + "case\n"
+            + "  when empid > 50 then 1\n"
+            + "  when empid * 2 > 50 then 2\n"
+            + "  else empid * 2\n"
+            + "end");
+    }
+
+    public void testCommonCannotReuseThen()
+        throws Exception
+    {
+        // At the second and third occurrences of 'empid * 2', the first
+        // occurrence has definitely not been evaluated. The fourth and fifth
+        // can re-use the third.
+        checkTranslation(
+            "case\n"
+            + "  when empid > 50 then empid * 2\n"
+            + "  when empid > 70 then 1 + empid * 2\n"
+            + "  when empid * 2 > 70 then 2 + empid * 2\n"
+            + "  else 3 + empid * 2\n"
+            + "end");
+    }
+
     public void testSubstringNullableLength()
         throws Exception
     {
@@ -772,6 +952,46 @@ public class FarragoRexToOJTranslatorTest
         throws Exception
     {
         checkTranslation("City similar to Name escape 'n'");
+    }
+
+    public void testQuery()
+        throws Exception
+    {
+        // Check the translation to make sure that:
+        // 'deptno + 4' from WHERE clause is re-used in B and D;
+        // 'empid * 3' from A is reused in D;
+        // 'deptno * 7' from C is NOT reused in D (it's not computed on all
+        //    paths).
+        //
+        // Since 'deptno * 7' is always used, it would be better if we always
+        // computed it. But we don't currently.
+        checkQueryTranslation(
+            "select empid * 3 * 2 as a,\n"
+            + " deptno + 4 + 6 as b,\n"
+            + " case when 1 = 1 then deptno * 7 else 0 end as c,\n"
+            + " deptno + 4 + empid * 3 + 1 + deptno * 7 as d\n"
+            + "from sales.emps\n"
+            + "where deptno + 4 > 10");
+    }
+
+    public void testQueryOr()
+        throws Exception
+    {
+        // Check that:
+        // 'deptno + 1' is re-used later in WHERE and also in A
+        // 'empno + 2' is NOT re-used in B
+        // '100 / (deptno + 1)' is not evaluated if 'deptno + 1 = 0' has
+        //   previously evaluated true
+        //
+        // Some bad things we're living with:
+        // * 'oj_var6.value / 10.0d' occurs mulitple times;
+        // * the sqrt ('oj_var7 = pow ...') occurs unconditionally.
+        checkQueryTranslation(
+            "select deptno + 1 as a,\n"
+            + " empno + 2 as b\n"
+            + "from sales.emps\n"
+            + "where deptno + 1 < 0\n"
+            + " or 100 / (deptno + 1) < 5 / sqrt(deptno + 1)");
     }
 }
 

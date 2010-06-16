@@ -8,14 +8,12 @@
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = ID$0$EMPNO == ID$1$AGE.value;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -38,14 +36,12 @@ return ID$0$EMPNO == ID$1$EMPID;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = ID$0$EMPNO < ID$1$AGE.value;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -58,14 +54,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = ID$0$EMPNO > ID$1$AGE.value;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -78,14 +72,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (ID$0$EMPNO + ID$1$AGE.value);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -98,14 +90,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (ID$0$EMPNO - ID$1$AGE.value);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -118,14 +108,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (ID$0$EMPNO * ID$1$AGE.value);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -138,14 +126,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (ID$0$EMPNO / ID$1$AGE.value);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -158,14 +144,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$0$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (-ID$0$AGE.value);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -178,14 +162,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$0$SLACKER.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (ID$1$MANAGER ? 1 : 0) > (ID$0$SLACKER.value ? 1 : 0);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -198,10 +180,7 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
-
 oj_var0.setNull( true );
 if (oj_var0.isNull()) {
     oj_var1.setNull( true );
@@ -209,7 +188,6 @@ if (oj_var0.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = (byte) (-oj_var0.value);
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -222,13 +200,8 @@ return oj_var1;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableShort oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableShort();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableShort oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableShort();
-
 oj_var0.setNull( true );
 oj_var1.setNull( true );
 if (oj_var0.isNull() || oj_var1.isNull()) {
@@ -237,7 +210,6 @@ if (oj_var0.isNull() || oj_var1.isNull()) {
     oj_var2.setNull( false );
     oj_var2.value = (short) (oj_var0.value + oj_var1.value);
 }
-
 return oj_var2;
 ]]>
         </Resource>
@@ -250,14 +222,12 @@ return oj_var2;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$1$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, ID$1$CITY ) == 0;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -270,14 +240,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$1$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, ID$1$CITY ) < 0;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -290,14 +258,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$0$SLACKER.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = !ID$0$SLACKER.value;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -310,9 +276,7 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 oj_var0.assignFromOr3VL( ID$0$SLACKER.isNull(), ID$0$SLACKER.value, false, ID$1$MANAGER );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -325,13 +289,8 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$3$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -345,7 +304,6 @@ if (ID$2$CITY.isNull()) {
     oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$2$CITY ) == 0;
 }
 oj_var2.assignFromOr3VL( oj_var0.isNull(), oj_var0.value, oj_var1.isNull(), oj_var1.value );
-
 return oj_var2;
 ]]>
         </Resource>
@@ -358,9 +316,7 @@ return oj_var2;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 oj_var0.assignFromAnd3VL( ID$0$SLACKER.isNull(), ID$0$SLACKER.value, false, ID$1$MANAGER );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -373,13 +329,8 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 if (ID$3$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -393,7 +344,6 @@ if (ID$2$CITY.isNull()) {
     oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$2$CITY ) == 0;
 }
 oj_var2.assignFromAnd3VL( oj_var0.isNull(), oj_var0.value, oj_var1.isNull(), oj_var1.value );
-
 return oj_var2;
 ]]>
         </Resource>
@@ -496,10 +446,8 @@ return true;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_USER() );
 oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -512,10 +460,8 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_USER() );
 oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -528,10 +474,8 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_SESSION_USER() );
 oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -544,10 +488,8 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_SYSTEM_USER() );
 oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -560,9 +502,7 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_DATE() );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -575,9 +515,7 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIME() );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -590,14 +528,10 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 oj_var1.assignFrom( connection.getContextVariable_CURRENT_DATE() );
 oj_var0.setCurrentDate( oj_var1 );
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIMESTAMP() );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -610,10 +544,8 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_PATH() );
 oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -626,16 +558,9 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-
 net.sf.farrago.session.FarragoSessionUdrContext oj_var2 = new net.sf.farrago.session.FarragoSessionUdrContext( "decryptPublicKey:1", null );
-
-
 ExecutableStmt.Oj_inner_1 oj_var5 = new ExecutableStmt.Oj_inner_1();
-
-
 ExecutableStmt.Oj_inner_1 oj_var6 = new ExecutableStmt.Oj_inner_1();
-
 oj_var0.assignFrom( ID$0$PUBLIC__KEY );
 connection.pushRoutineInvocation( oj_var2, false );
 java.lang.String oj_var4;
@@ -643,14 +568,12 @@ try {
     oj_var4 = net.sf.farrago.test.FarragoTestUDR.decryptPublicKey( (byte[]) oj_var0.getNullableData() );
 } catch ( java.lang.Throwable oj_var3 ) {
     throw connection.handleRoutineInvocationException( oj_var3, "decryptPublicKey" );
-} finally 
-{
+} finally {
     connection.popRoutineInvocation();
 }
 oj_var5.assignFrom( oj_var4 );
 oj_var5.enforceBytePrecision( 25, false, (byte) ' ' );
 oj_var6.assignFrom( oj_var5 );
-
 return oj_var6;
 ]]>
         </Resource>
@@ -663,16 +586,9 @@ return oj_var6;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-
 private ExecutableStmt.Oj_inner_1 oj_var1;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var3 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
 oj_var0.assignFrom( ID$0$GENDER );
 if (oj_var1 == null) {
     oj_var1 = new ExecutableStmt.Oj_inner_1();
@@ -686,7 +602,6 @@ if (oj_var0.isNull()) {
 }
 oj_var3.isNull = false;
 oj_var3.value = (boolean) (!(!oj_var2.isNull() && !oj_var2.value));
-
 return oj_var3;
 ]]>
         </Resource>
@@ -699,17 +614,13 @@ return oj_var3;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "supercalifragilistiexpialodocious" );
 }
 oj_var1.assignFrom( oj_var0 );
 oj_var1.enforceBytePrecision( 10, false, (byte) ' ' );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -722,16 +633,12 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "boo" );
 }
 oj_var1.assignFrom( oj_var0 );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -744,17 +651,13 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( new byte[]{ 0, 17, 34, 51, 68, 85, 102, 119, -120, -103, -86, -69 } );
 }
 oj_var1.assignFrom( oj_var0 );
 oj_var1.enforceBytePrecision( 10, false, (byte) 0 );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -767,17 +670,13 @@ return oj_var1;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
-
-
 ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.setNull( true );
 oj_var1.setNull( oj_var0.isNull() );
 if (!oj_var0.isNull()) {
     oj_var1.cast( oj_var0.value, 30 );
     oj_var1.enforceBytePrecision( 30, false, (byte) ' ' );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -790,16 +689,9 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 private ExecutableStmt.Oj_inner_1 oj_var1;
-
-
 private ExecutableStmt.Oj_inner_2 oj_var2;
-
-
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
-
 if (ID$0$MANAGER == true) {
     if (oj_var0 == null) {
         oj_var0 = new ExecutableStmt.Oj_inner_0();
@@ -823,7 +715,6 @@ if (ID$0$MANAGER == true) {
         oj_var3.assignFrom( oj_var2 );
     }
 }
-
 return oj_var3;
 ]]>
         </Resource>
@@ -836,13 +727,8 @@ return oj_var3;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
-
 ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
-
 if (ID$0$DEPTNO == 10) {
     if (oj_var0 == null) {
         oj_var0 = new ExecutableStmt.Oj_inner_0();
@@ -853,7 +739,6 @@ if (ID$0$DEPTNO == 10) {
     oj_var1.setNull( true );
     oj_var2.assignFrom( oj_var1 );
 }
-
 return oj_var2;
 ]]>
         </Resource>
@@ -866,22 +751,11 @@ return oj_var2;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 private ExecutableStmt.Oj_inner_0 oj_var1;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 private ExecutableStmt.Oj_inner_1 oj_var3;
-
-
 ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
-
-
 ExecutableStmt.Oj_inner_2 oj_var5 = new ExecutableStmt.Oj_inner_2();
-
 if (ID$0$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -913,7 +787,6 @@ if (!oj_var0.isNull() && oj_var0.getBit()) {
         oj_var5.assignFrom( oj_var4 );
     }
 }
-
 return oj_var5;
 ]]>
         </Resource>
@@ -926,19 +799,10 @@ return oj_var5;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 private ExecutableStmt.Oj_inner_1 oj_var2;
-
-
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
-
-
 ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "M" );
@@ -959,7 +823,6 @@ if (!oj_var1.isNull() && oj_var1.getBit()) {
     oj_var3.setNull( true );
     oj_var4.assignFrom( oj_var3 );
 }
-
 return oj_var4;
 ]]>
         </Resource>
@@ -976,7 +839,6 @@ if (ID$0$EMPNO == 120) {
 } else {
     oj_var0 = 2;
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -989,22 +851,11 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 private ExecutableStmt.Oj_inner_0 oj_var1;
-
-
 private ExecutableStmt.Oj_inner_1 oj_var2;
-
-
 private ExecutableStmt.Oj_inner_0 oj_var3;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var4 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var5 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "Fred" );
@@ -1046,7 +897,6 @@ if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NA
         }
     }
 }
-
 return oj_var5;
 ]]>
         </Resource>
@@ -1071,7 +921,6 @@ if (ID$0$DEPTNO == 10) {
         }
     }
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1084,13 +933,8 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$0$SLACKER.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -1107,7 +951,6 @@ if (!oj_var0.isNull() && oj_var0.getBit()) {
         oj_var2.value = (int) oj_var1.value;
     }
 }
-
 return oj_var2;
 ]]>
         </Resource>
@@ -1120,10 +963,7 @@ return oj_var2;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
-
 ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$1$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -1136,7 +976,6 @@ if (ID$0$CITY.isNull() || oj_var0.isNull()) {
     oj_var1.assignFrom( ID$0$CITY );
     oj_var1.substring( 2, oj_var0.value, true );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1149,10 +988,7 @@ return oj_var1;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
-
 ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$2$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
@@ -1165,7 +1001,6 @@ if (ID$0$CITY.isNull() || oj_var0.isNull()) {
     oj_var1.assignFrom( ID$0$CITY );
     oj_var1.substring( oj_var0.value, ID$1$EMPID, true );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1178,14 +1013,12 @@ return oj_var1;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.assignFrom( ID$0$CITY );
     oj_var0.substring( 3, 0, false );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1198,14 +1031,12 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.assignFrom( ID$0$CITY );
     oj_var0.substring( -1, 4, true );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1218,14 +1049,12 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.assignFrom( ID$0$CITY );
     oj_var0.substring( 0, 4, true );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1238,14 +1067,12 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.assignFrom( ID$0$CITY );
     oj_var0.substring( 1, (int) (ID$1$EMPID - 2), true );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1258,10 +1085,8 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.assignFrom( ID$0$NAME );
 oj_var0.substring( 2, ID$1$EMPID, true );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1274,9 +1099,7 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 oj_var0.concat( ID$0$NAME, ID$0$NAME );
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1289,13 +1112,11 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$1$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.concat( ID$1$CITY, ID$0$NAME );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1308,13 +1129,11 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull() || ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.concat( ID$0$CITY, ID$0$CITY );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1327,10 +1146,7 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "MIDDLE" );
@@ -1340,7 +1156,6 @@ if (ID$0$CITY.isNull()) {
 } else {
     oj_var1.overlay( ID$0$CITY, oj_var0, 2, 0, false );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1353,10 +1168,7 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "MIDDLE" );
@@ -1366,7 +1178,6 @@ if (ID$0$CITY.isNull()) {
 } else {
     oj_var1.overlay( ID$0$CITY, oj_var0, 2, 3, true );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1379,16 +1190,12 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "MIDDLE" );
 }
 oj_var1.overlay( ID$0$NAME, oj_var0, 2, 3, true );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1401,13 +1208,11 @@ return oj_var1;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$1$CITY.isNull() || ID$2$AGE.isNull() || ID$2$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.overlay( ID$1$CITY, ID$0$NAME, ID$2$AGE.value, ID$2$AGE.value, true );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1420,13 +1225,11 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$1$CITY.isNull() || ID$0$GENDER.isNull() || ID$2$AGE.isNull() || ID$2$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.overlay( ID$1$CITY, ID$0$GENDER, ID$2$AGE.value, ID$2$AGE.value, true );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1443,7 +1246,6 @@ if (2 == 0 && ID$0$EMPID < 0 || 2 < 0 && ID$0$EMPID != java.lang.Math.floor( ID$
 } else {
     oj_var0 = java.lang.Math.pow( 2, ID$0$EMPID );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1456,14 +1258,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$0$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = (int) (ID$0$AGE.value % 3);
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1476,10 +1276,7 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "S" );
@@ -1489,7 +1286,6 @@ if (ID$0$CITY.isNull()) {
 } else {
     oj_var1.trim( 0, oj_var0, ID$0$CITY );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1502,16 +1298,12 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "W" );
 }
 oj_var1.trim( 1, oj_var0, ID$0$NAME );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1524,16 +1316,12 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "c" );
 }
 oj_var1.trim( 2, oj_var0, ID$0$NAME );
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1546,13 +1334,11 @@ return oj_var1;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.upper( ID$0$CITY );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1565,13 +1351,11 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.lower( ID$0$CITY );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1584,13 +1368,11 @@ return oj_var0;
             <![CDATA[
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.initcap( ID$0$CITY );
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1603,14 +1385,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = ID$0$CITY.length();
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1623,14 +1403,12 @@ return oj_var0;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (ID$0$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
     oj_var0.value = ID$0$CITY.length();
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1643,10 +1421,7 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "Fran" );
@@ -1657,7 +1432,6 @@ if (ID$0$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = ID$0$CITY.position( oj_var0 );
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1670,16 +1444,9 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var2 = null;
-
-
 java.util.regex.Matcher oj_var3 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "San%" );
@@ -1694,7 +1461,6 @@ if (ID$0$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = oj_var3.matches();
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1707,13 +1473,8 @@ return oj_var1;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var1 = null;
-
-
 java.util.regex.Matcher oj_var2 = null;
-
 java.lang.String oj_var3;
 if (ID$1$CITY.isNull()) {
     oj_var0.setNull( true );
@@ -1724,7 +1485,6 @@ if (ID$1$CITY.isNull()) {
     oj_var0.setNull( false );
     oj_var0.value = oj_var2.matches();
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1737,19 +1497,10 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 private ExecutableStmt.Oj_inner_1 oj_var1;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var3 = null;
-
-
 java.util.regex.Matcher oj_var4 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "San%" );
@@ -1768,7 +1519,6 @@ if (ID$0$CITY.isNull()) {
     oj_var2.setNull( false );
     oj_var2.value = oj_var4.matches();
 }
-
 return oj_var2;
 ]]>
         </Resource>
@@ -1781,16 +1531,9 @@ return oj_var2;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var2 = null;
-
-
 java.util.regex.Matcher oj_var3 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "n" );
@@ -1805,7 +1548,6 @@ if (ID$1$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = oj_var3.matches();
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1818,16 +1560,9 @@ return oj_var1;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var2 = null;
-
-
 java.util.regex.Matcher oj_var3 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "[S][[:ALPHA:]]n%" );
@@ -1842,7 +1577,6 @@ if (ID$0$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = oj_var3.matches();
 }
-
 return oj_var1;
 ]]>
         </Resource>
@@ -1855,13 +1589,8 @@ return oj_var1;
             <![CDATA[
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var1 = null;
-
-
 java.util.regex.Matcher oj_var2 = null;
-
 java.lang.String oj_var3;
 if (ID$1$CITY.isNull()) {
     oj_var0.setNull( true );
@@ -1872,7 +1601,6 @@ if (ID$1$CITY.isNull()) {
     oj_var0.setNull( false );
     oj_var0.value = oj_var2.matches();
 }
-
 return oj_var0;
 ]]>
         </Resource>
@@ -1885,19 +1613,10 @@ return oj_var0;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 private ExecutableStmt.Oj_inner_1 oj_var1;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var3 = null;
-
-
 java.util.regex.Matcher oj_var4 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "San%" );
@@ -1916,7 +1635,6 @@ if (ID$0$CITY.isNull()) {
     oj_var2.setNull( false );
     oj_var2.value = oj_var4.matches();
 }
-
 return oj_var2;
 ]]>
         </Resource>
@@ -1929,16 +1647,9 @@ return oj_var2;
             <![CDATA[
 
 private ExecutableStmt.Oj_inner_0 oj_var0;
-
-
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-
 java.util.regex.Pattern oj_var2 = null;
-
-
 java.util.regex.Matcher oj_var3 = null;
-
 if (oj_var0 == null) {
     oj_var0 = new ExecutableStmt.Oj_inner_0();
     oj_var0.assignFrom( "n" );
@@ -1953,7 +1664,390 @@ if (ID$1$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = oj_var3.matches();
 }
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCommonReusePreviousWhen">
+        <Resource name="query">
+            <![CDATA[SELECT case
+  when empid > 50 then 1
+  when empid * 2 > 50 then 2
+  when empid + 3 > 50 then 3
+  when 1 + empid * 2 > 40 then 4
+  else 5
+end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var1;
+if (ID$0$EMPID > 50) {
+    oj_var1 = 1;
+} else {
+    int oj_var0 = (int) (ID$0$EMPID * 2);
+    if (oj_var0 > 50) {
+        oj_var1 = 2;
+    } else {
+        if ((int) (ID$0$EMPID + 3) > 50) {
+            oj_var1 = 3;
+        } else {
+            if ((int) (1 + oj_var0) > 40) {
+                oj_var1 = 4;
+            } else {
+                oj_var1 = 5;
+            }
+        }
+    }
+}
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCommonReusePrevious">
+        <Resource name="query">
+            <![CDATA[SELECT (empid * 2)
++
+case
+  when empid > 50 then 1
+  when empid * 2 > 50 then 2
+  else 5
+end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var0 = (int) (ID$0$EMPID * 2);
+int oj_var1;
+if (ID$0$EMPID > 50) {
+    oj_var1 = 1;
+} else {
+    if (oj_var0 > 50) {
+        oj_var1 = 2;
+    } else {
+        oj_var1 = 5;
+    }
+}
+return (int) (oj_var0 + oj_var1);
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCommonCannotReusePrevious">
+        <Resource name="query">
+            <![CDATA[SELECT case
+  when empid > 50 then empid * 2
+  else 100
+end
++
+case
+  when empid > 50 then 1
+  when empid * 2 > 50 then 2
+  else empid * 2
+end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+boolean oj_var0 = ID$0$EMPID > 50;
+int oj_var2;
+if (oj_var0) {
+    int oj_var1 = (int) (ID$0$EMPID * 2);
+    oj_var2 = oj_var1;
+} else {
+    oj_var2 = 100;
+}
+int oj_var4;
+if (oj_var0) {
+    oj_var4 = 1;
+} else {
+    int oj_var3 = (int) (ID$0$EMPID * 2);
+    if (oj_var3 > 50) {
+        oj_var4 = 2;
+    } else {
+        oj_var4 = oj_var3;
+    }
+}
+return (int) (oj_var2 + oj_var4);
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCommonReusePreviousFirstWhen">
+        <Resource name="query">
+            <![CDATA[SELECT case
+  when empid * 2 > 50 then 2
+  else 100
+end
++
+case
+  when empid > 50 then 1
+  when empid * 2 > 50 then 2
+  else empid * 2
+end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var0 = (int) (ID$0$EMPID * 2);
+boolean oj_var1 = oj_var0 > 50;
+int oj_var2;
+if (oj_var1) {
+    oj_var2 = 2;
+} else {
+    oj_var2 = 100;
+}
+int oj_var3;
+if (ID$0$EMPID > 50) {
+    oj_var3 = 1;
+} else {
+    if (oj_var1) {
+        oj_var3 = 2;
+    } else {
+        oj_var3 = oj_var0;
+    }
+}
+return (int) (oj_var2 + oj_var3);
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCommonCannotReuseThen">
+        <Resource name="query">
+            <![CDATA[SELECT case
+  when empid > 50 then empid * 2
+  when empid > 70 then 1 + empid * 2
+  when empid * 2 > 70 then 2 + empid * 2
+  else 3 + empid * 2
+end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var3;
+if (ID$0$EMPID > 50) {
+    int oj_var0 = (int) (ID$0$EMPID * 2);
+    oj_var3 = oj_var0;
+} else {
+    if (ID$0$EMPID > 70) {
+        int oj_var1 = (int) (ID$0$EMPID * 2);
+        oj_var3 = (int) (1 + oj_var1);
+    } else {
+        int oj_var2 = (int) (ID$0$EMPID * 2);
+        if (oj_var2 > 70) {
+            oj_var3 = (int) (2 + oj_var2);
+        } else {
+            oj_var3 = (int) (3 + oj_var2);
+        }
+    }
+}
+return oj_var3;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testQuery">
+        <Resource name="query">
+            <![CDATA[select empid * 3 * 2 as a,
+ deptno + 4 + 6 as b,
+ case when 1 = 1 then deptno * 7 else 0 end as c,
+ deptno + 4 + empid * 3 + 1 + deptno * 7 as d
+from sales.emps
+where deptno + 4 > 10]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+/*
+ * This code was generated by ojc.
+ */
+// EXPLAIN PLAN INCLUDING ATTRIBUTES WITH IMPLEMENTATION FOR
+// SELECT `EMPID` * 3 * 2 AS `A`, `DEPTNO` + 4 + 6 AS `B`, CASE WHEN 1 = 1 THEN `DEPTNO` * 7 ELSE 0 END AS `C`, `DEPTNO` + 4 + `EMPID` * 3 + 1 + `DEPTNO` * 7 AS `D`
+// FROM `SALES`.`EMPS`
+// WHERE `DEPTNO` + 4 > 10
+package net.sf.farrago.dynamic.stmtx;
+public class ExecutableStmt
+{
+    public static class Ojp_0 extends net.sf.farrago.type.runtime.FarragoSyntheticObject
+    {
+        public int ID$0$DEPTNO;
+        public int ID$1$EMPID;
+        public Ojp_0()
+        {
+        }
+    }
+    public static class Ojp_1 extends net.sf.farrago.type.runtime.FarragoSyntheticObject
+    {
+        public int ID$0$A;
+        public int ID$1$B;
+        public int ID$2$C;
+        public int ID$3$D;
+        public Ojp_1()
+        {
+        }
+    }
+    public static java.lang.Object execute( net.sf.farrago.runtime.FarragoRuntimeContext connection_p )
+        throws java.sql.SQLException
+    {
+        final net.sf.farrago.runtime.FarragoRuntimeContext connection = connection_p;
+        return new org.eigenbase.runtime.CalcTupleIter( connection.newFennelTupleIter( new net.sf.farrago.runtime.FennelTupleReader(){
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0 oj_var0 = new net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0();
+            public java.lang.Object unmarshalTuple( java.nio.ByteBuffer byteBuffer, byte[] byteArray, java.nio.ByteBuffer sliceBuffer )
+            {
+                int oj_var1 = byteBuffer.position();
+                oj_var0.ID$0$DEPTNO = sliceBuffer.getInt( 0 );
+                oj_var0.ID$1$EMPID = sliceBuffer.getInt( 4 );
+                sliceBuffer.position( 8 );
+                return oj_var0;
+            }
+        }, "FtrsIndexScanRel.#x:x", x, null ) ){
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0 oj_var2;
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_1 oj_var3 = new net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_1();
+            public java.lang.Object fetchNext()
+            {
+                while (true) {
+                    java.lang.Object oj_var4 = inputIterator.fetchNext();
+                    if (oj_var4 instanceof org.eigenbase.runtime.TupleIter.NoDataReason) {
+                        return oj_var4;
+                    }
+                    oj_var2 = (net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0) oj_var4;
+                    int oj_var5 = (int) (oj_var2.ID$0$DEPTNO + 4);
+                    if (oj_var5 > 10) {
+                        int oj_var6 = (int) (oj_var2.ID$1$EMPID * 3);
+                        oj_var3.ID$0$A = (int) (oj_var6 * 2);
+                        oj_var3.ID$1$B = (int) (oj_var5 + 6);
+                        int oj_var8;
+                        if (1 == 1) {
+                            int oj_var7 = (int) (oj_var2.ID$0$DEPTNO * 7);
+                            oj_var8 = oj_var7;
+                        } else {
+                            oj_var8 = 0;
+                        }
+                        oj_var3.ID$2$C = oj_var8;
+                        int oj_var9 = (int) (oj_var2.ID$0$DEPTNO * 7);
+                        oj_var3.ID$3$D = (int) ((int) ((int) (oj_var5 + oj_var6) + 1) + oj_var9);
+                        return oj_var3;
+                    }
+                }
+            }
+        };
+    }
+}
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testQueryOr">
+        <Resource name="query">
+            <![CDATA[select deptno + 1 as a,
+ empno + 2 as b
+from sales.emps
+where deptno + 1 < 0
+ or 100 / (deptno + 1) < 5 / sqrt(deptno + 1)]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+/*
+ * This code was generated by ojc.
+ */
+// EXPLAIN PLAN INCLUDING ATTRIBUTES WITH IMPLEMENTATION FOR
+// SELECT `DEPTNO` + 1 AS `A`, `EMPNO` + 2 AS `B`
+// FROM `SALES`.`EMPS`
+// WHERE `DEPTNO` + 1 < 0 OR 100 / (`DEPTNO` + 1) < 5 / SQRT(`DEPTNO` + 1)
+package net.sf.farrago.dynamic.stmtx;
+public class ExecutableStmt
+{
+    public static class Ojp_0 extends net.sf.farrago.type.runtime.FarragoSyntheticObject
+    {
+        public int ID$0$EMPNO;
+        public int ID$1$DEPTNO;
+        public Ojp_0()
+        {
+        }
+    }
+    public static class Ojp_1 extends net.sf.farrago.type.runtime.FarragoSyntheticObject
+    {
+        public int ID$0$A;
+        public int ID$1$B;
+        public Ojp_1()
+        {
+        }
+    }
+    public static class Oj_inner_0 extends net.sf.farrago.type.runtime.EncodedSqlDecimal
+    {
+        protected int getPrecision()
+        {
+            return 2;
+        }
+        protected int getScale()
+        {
+            return 1;
+        }
+    }
+    public static java.lang.Object execute( net.sf.farrago.runtime.FarragoRuntimeContext connection_p )
+        throws java.sql.SQLException
+    {
+        final net.sf.farrago.runtime.FarragoRuntimeContext connection = connection_p;
+        return new org.eigenbase.runtime.CalcTupleIter( connection.newFennelTupleIter( new net.sf.farrago.runtime.FennelTupleReader(){
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0 oj_var0 = new net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0();
+            public java.lang.Object unmarshalTuple( java.nio.ByteBuffer byteBuffer, byte[] byteArray, java.nio.ByteBuffer sliceBuffer )
+            {
+                int oj_var1 = byteBuffer.position();
+                oj_var0.ID$0$EMPNO = sliceBuffer.getInt( 0 );
+                oj_var0.ID$1$DEPTNO = sliceBuffer.getInt( 4 );
+                sliceBuffer.position( 8 );
+                return oj_var0;
+            }
+        }, "FtrsIndexScanRel.#x:x", x, null ) ){
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Oj_inner_0 oj_var6;
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0 oj_var2;
+            private net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_1 oj_var3 = new net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_1();
+            public java.lang.Object fetchNext()
+            {
+                while (true) {
+                    java.lang.Object oj_var4 = inputIterator.fetchNext();
+                    if (oj_var4 instanceof org.eigenbase.runtime.TupleIter.NoDataReason) {
+                        return oj_var4;
+                    }
+                    oj_var2 = (net.sf.farrago.dynamic.stmtx.ExecutableStmt.Ojp_0) oj_var4;
+                    int oj_var5 = (int) (oj_var2.ID$1$DEPTNO + 1);
+                    if (oj_var6 == null) {
+                        oj_var6 = new net.sf.farrago.dynamic.stmtx.ExecutableStmt.Oj_inner_0();
+                        oj_var6.assignFrom( 5l );
+                    }
+                    if (Double.isInfinite( (double) ((double) oj_var6.value / 10.0d) )) {
+                        throw net.sf.farrago.resource.FarragoResource.instance().Overflow.ex();
+                    }
+                    double oj_var7;
+                    if (oj_var5 == 0 && (double) ((double) oj_var6.value / 10.0d) < 0 || oj_var5 < 0 && (double) ((double) oj_var6.value / 10.0d) != java.lang.Math.floor( (double) ((double) oj_var6.value / 10.0d) )) {
+                        throw net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument.ex( "POWER" );
+                    } else {
+                        oj_var7 = java.lang.Math.pow( oj_var5, (double) ((double) oj_var6.value / 10.0d) );
+                    }
+                    if (Double.isInfinite( (double) (5 / oj_var7) )) {
+                        throw net.sf.farrago.resource.FarragoResource.instance().Overflow.ex();
+                    }
+                    if (oj_var5 < 0 || (int) (100 / oj_var5) < (double) (5 / oj_var7)) {
+                        oj_var3.ID$0$A = oj_var5;
+                        oj_var3.ID$1$B = (int) (oj_var2.ID$0$EMPNO + 2);
+                        return oj_var3;
+                    }
+                }
+            }
+        };
+    }
+}
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testDivideNullable">
+        <Resource name="query">
+            <![CDATA[SELECT 1e1 / cast(null as float) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
 
+net.sf.farrago.type.runtime.NullablePrimitive.NullableDouble oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableDouble();
+net.sf.farrago.type.runtime.NullablePrimitive.NullableDouble oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableDouble();
+oj_var0.setNull( true );
+if (oj_var0.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = (double) (10.0d / oj_var0.value);
+    if (Double.isInfinite( oj_var1.value )) {
+        throw net.sf.farrago.resource.FarragoResource.instance().Overflow.ex();
+    }
+}
 return oj_var1;
 ]]>
         </Resource>

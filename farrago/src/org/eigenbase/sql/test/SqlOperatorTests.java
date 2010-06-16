@@ -24,6 +24,7 @@ package org.eigenbase.sql.test;
 
 import java.math.*;
 
+import java.sql.*;
 import java.text.*;
 
 import java.util.*;
@@ -221,6 +222,12 @@ public abstract class SqlOperatorTests
     private static final SqlTester.VmName VM_EXPAND = SqlTester.VmName.EXPAND;
     protected static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT");
     protected static final TimeZone defaultTimeZone = TimeZone.getDefault();
+
+    private static final Pattern invalidArgForPower = Pattern.compile(
+        "(?s).*Invalid argument\\(s\\) for 'POWER' function.*");
+
+    private static final Pattern code2201f = Pattern.compile(
+        "(?s).*could not calculate results for the following row.*PC=5 Code=2201F.*");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -1698,6 +1705,20 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("true and (not false)", Boolean.TRUE);
     }
 
+    public void testAndOperatorLazy()
+    {
+        getTester().setFor(SqlStdOperatorTable.andOperator);
+
+        // lazy eval returns FALSE;
+        // eager eval executes RHS of AND and throws;
+        // both are valid
+        getTester().check(
+            "values 1 > 2 and sqrt(-4) = -2",
+            AbstractSqlTester.BooleanTypeChecker,
+            new ValueOrExceptionResultChecker(
+                Boolean.FALSE, invalidArgForPower, code2201f));
+    }
+
     public void testConcatOperator()
     {
         getTester().setFor(SqlStdOperatorTable.concatOperator);
@@ -2514,6 +2535,43 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("false or false", Boolean.FALSE);
         getTester().checkBoolean("true or cast(null as boolean)", Boolean.TRUE);
         getTester().checkNull("false or cast(null as boolean)");
+    }
+
+    public void testOrOperatorLazy()
+    {
+        getTester().setFor(SqlStdOperatorTable.orOperator);
+
+        // need to evaluate 2nd argument if first evaluates to null, therefore
+        // get error
+        getTester().check(
+            "values 1 < cast(null as integer) or sqrt(-4) = -2",
+            AbstractSqlTester.BooleanTypeChecker,
+            new ValueOrExceptionResultChecker(
+                null, invalidArgForPower, code2201f));
+
+        // Do not need to evaluate 2nd argument if first evaluates to true.
+        // In eager evaluation, get error;
+        // lazy evaluation returns true;
+        // both are valid.
+        getTester().check(
+            "values 1 < 2 or sqrt(-4) = -2",
+            AbstractSqlTester.BooleanTypeChecker,
+            new ValueOrExceptionResultChecker(
+                Boolean.TRUE, invalidArgForPower, code2201f));
+
+        // NULL OR FALSE --> NULL
+        // In eager evaluation, get error;
+        // lazy evaluation returns NULL;
+        // both are valid.
+        getTester().check(
+            "values 1 < cast(null as integer) or sqrt(4) = -2",
+            AbstractSqlTester.BooleanTypeChecker,
+            new ValueOrExceptionResultChecker(
+                null, invalidArgForPower, code2201f));
+
+        // NULL OR TRUE --> TRUE
+        getTester().checkBoolean(
+            "1 < cast(null as integer) or sqrt(4) = 2", Boolean.TRUE);
     }
 
     public void testPlusOperator()
@@ -4665,6 +4723,85 @@ public abstract class SqlOperatorTests
     }
 
     // TODO: Test other stuff
+
+    /**
+     * Result checker that considers a test to have succeeded if it throws an
+     * exception that matches one of a list of patterns.
+     */
+    private static class ExceptionResultChecker
+        implements SqlTester.ResultChecker
+    {
+        private final Pattern[] patterns;
+
+        public ExceptionResultChecker(Pattern... patterns)
+        {
+            this.patterns = patterns;
+        }
+
+        public void checkResult(ResultSet result) throws Exception
+        {
+            Throwable thrown = null;
+            try {
+                result.next();
+                fail("expected exception");
+            } catch (SQLException e) {
+                thrown = e;
+            }
+            final String stack = Util.getStackTrace(thrown);
+            for (Pattern pattern : patterns) {
+                if (pattern.matcher(stack).matches()) {
+                    return;
+                }
+            }
+            fail("Stack did not match any pattern; " + stack);
+        }
+    }
+
+    /**
+     * Result checker that considers a test to have succeeded if it returns a
+     * particular value or throws an exception that matches one of a list of
+     * patterns.
+     *
+     * <p>Sounds peculiar, but is necessary when eager and lazy behaviors are
+     * both valid.
+     */
+    private static class ValueOrExceptionResultChecker
+        implements SqlTester.ResultChecker
+    {
+        private final Object expected;
+        private final Pattern[] patterns;
+
+        public ValueOrExceptionResultChecker(
+            Object expected, Pattern... patterns)
+        {
+            this.expected = expected;
+            this.patterns = patterns;
+        }
+
+        public void checkResult(ResultSet result) throws Exception
+        {
+            Throwable thrown = null;
+            try {
+                if (!result.next()) {
+                    // empty result is OK
+                    return;
+                }
+                final Object actual = result.getObject(1);
+                assertEquals(expected, actual);
+            } catch (SQLException e) {
+                thrown = e;
+            }
+            if (thrown != null) {
+                final String stack = Util.getStackTrace(thrown);
+                for (Pattern pattern : patterns) {
+                    if (pattern.matcher(stack).matches()) {
+                        return;
+                    }
+                }
+                fail("Stack did not match any pattern; " + stack);
+            }
+        }
+    }
 }
 
 // End SqlOperatorTests.java

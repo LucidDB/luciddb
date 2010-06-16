@@ -928,11 +928,22 @@ public class SqlValidatorTestCase
             check(sql, AbstractSqlTester.AnyTypeChecker, null, 0);
         }
 
-        public void check(
+        public final void check(
             String query,
             TypeChecker typeChecker,
             Object result,
             double delta)
+        {
+            check(
+                query,
+                typeChecker,
+                AbstractSqlTester.createChecker(result, delta));
+        }
+
+        public void check(
+            String query,
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
         {
             // This implementation does NOT check the result!
             // (It can't because we're pure Java.)

@@ -27,6 +27,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 
+import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.test.*;
 
 
@@ -90,13 +91,7 @@ public abstract class ResultSetTestCase
     protected void compareResultSet(Set<String> refSet)
         throws Exception
     {
-        Set<String> actualSet = new HashSet<String>();
-        while (resultSet.next()) {
-            String s = resultSet.getString(1);
-            actualSet.add(s);
-        }
-        resultSet.close();
-        assertEquals(refSet, actualSet);
+        AbstractSqlTester.compareResultSet(resultSet, refSet);
     }
 
     /**
@@ -108,18 +103,7 @@ public abstract class ResultSetTestCase
     protected void compareResultSetWithPattern(Pattern pattern)
         throws Exception
     {
-        if (!resultSet.next()) {
-            fail("Query returned 0 rows, expected 1");
-        }
-        String actual = resultSet.getString(1);
-        if (resultSet.next()) {
-            fail("Query returned 2 or more rows, expected 1");
-        }
-        if (!pattern.matcher(actual).matches()) {
-            fail(
-                "Query returned '" + actual + "', expected '"
-                + pattern.pattern() + "'");
-        }
+        AbstractSqlTester.compareResultSetWithPattern(resultSet, pattern);
     }
 
     /**
@@ -134,19 +118,7 @@ public abstract class ResultSetTestCase
         double delta)
         throws Exception
     {
-        if (!resultSet.next()) {
-            fail("Query returned 0 rows, expected 1");
-        }
-        double actual = resultSet.getDouble(1);
-        if (resultSet.next()) {
-            fail("Query returned 2 or more rows, expected 1");
-        }
-        if ((actual < (expected - delta)) || (actual > (expected + delta))) {
-            fail(
-                "Query returned " + actual
-                + ", expected " + expected
-                + ((delta == 0) ? "" : ("+/-" + delta)));
-        }
+        AbstractSqlTester.compareResultSetWithDelta(resultSet, expected, delta);
     }
 
     /**
@@ -160,13 +132,7 @@ public abstract class ResultSetTestCase
     protected void compareResultList(List<String> refList)
         throws Exception
     {
-        List<String> actualSet = new ArrayList<String>();
-        while (resultSet.next()) {
-            String s = resultSet.getString(1);
-            actualSet.add(s);
-        }
-        resultSet.close();
-        assertEquals(refList, actualSet);
+        AbstractSqlTester.compareResultList(resultSet, refList);
     }
 
     /**
@@ -179,44 +145,7 @@ public abstract class ResultSetTestCase
     protected void compareResultLists(List<String> ... refLists)
         throws Exception
     {
-        int numExpectedColumns = refLists.length;
-
-        assertTrue(numExpectedColumns > 0);
-
-        assertTrue(
-            resultSet.getMetaData().getColumnCount() >= numExpectedColumns);
-
-        int numExpectedRows = -1;
-
-        List<List<String>> actualLists = new ArrayList<List<String>>();
-        for (int i = 0; i < numExpectedColumns; i++) {
-            actualLists.add(new ArrayList<String>());
-
-            if (i == 0) {
-                numExpectedRows = refLists[i].size();
-            } else {
-                assertEquals(
-                    "num rows differ across ref lists",
-                    numExpectedRows,
-                    refLists[i].size());
-            }
-        }
-
-        while (resultSet.next()) {
-            for (int i = 0; i < numExpectedColumns; i++) {
-                String s = resultSet.getString(i + 1);
-
-                actualLists.get(i).add(s);
-            }
-        }
-        resultSet.close();
-
-        for (int i = 0; i < numExpectedColumns; i++) {
-            assertEquals(
-                "column mismatch in column " + (i + 1),
-                refLists[i],
-                actualLists.get(i));
-        }
+        AbstractSqlTester.compareResultLists(resultSet, refLists);
     }
 }
 

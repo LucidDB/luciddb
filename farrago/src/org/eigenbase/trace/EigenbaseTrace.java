@@ -22,6 +22,7 @@
 */
 package org.eigenbase.trace;
 
+import java.io.File;
 import java.util.logging.*;
 
 import org.eigenbase.oj.rel.*;
@@ -29,6 +30,7 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.runtime.*;
+import org.eigenbase.util.Util;
 import org.eigenbase.util.property.*;
 
 
@@ -66,6 +68,17 @@ public abstract class EigenbaseTrace
      * Level#FINE} or higher).
      */
     public static final Logger parserTracer = getParserTracer();
+
+    private static final ThreadLocal<Util.Function2<Void, File, String>>
+        DYNAMIC_HANDLER =
+        new ThreadLocal<Util.Function2<Void, File, String>>()
+        {
+            @Override
+            protected Util.Function2<Void, File, String> initialValue()
+            {
+                return Util.Functions.ignore2();
+            }
+        };
 
     //~ Methods ----------------------------------------------------------------
 
@@ -170,6 +183,17 @@ public abstract class EigenbaseTrace
     public static Logger getCompoundIteratorTracer()
     {
         return Logger.getLogger(CompoundIterator.class.getName());
+    }
+
+    /**
+     * Thread-local handler that is called with dynamically generated Java code.
+     * It exists for unit-testing.
+     * The handler is never null; the default handler does nothing.
+     */
+    public static ThreadLocal<Util.Function2<Void, File, String>>
+    getDynamicHandler()
+    {
+        return DYNAMIC_HANDLER;
     }
 }
 

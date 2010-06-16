@@ -133,7 +133,9 @@ Object FarragoSqlStmtEof() :
                 FarragoReposTxnContext reposTxnContext =
                     farragoParser.getStmtValidator().getReposTxnContext();
 
-                if (!reposTxnContext.isReadTxnInProgress()) {
+                if (reposTxnContext != null
+                    && !reposTxnContext.isReadTxnInProgress())
+                {
                     reposTxnContext.beginLockedTxn(true);
                 }
             }

@@ -25,6 +25,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.defimpl.FarragoDefaultSessionPersonality;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -34,7 +35,6 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -74,7 +74,7 @@ public abstract class FarragoSqlToRelTestBase
     }
 
     protected void addRulesAndCheckQuery(
-        String explainQuery,
+        final String explainQuery,
         List<RelOptRule> rules)
         throws Exception
     {
@@ -83,6 +83,8 @@ public abstract class FarragoSqlToRelTestBase
             (FarragoJdbcEngineConnection) connection;
         FarragoDbSession session =
             (FarragoDbSession) farragoConnection.getSession();
+        final FarragoDefaultSessionPersonality personality =
+            (FarragoDefaultSessionPersonality) session.getPersonality();
 
         // guarantee release of any resources we allocate on the way
         FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
@@ -100,21 +102,12 @@ public abstract class FarragoSqlToRelTestBase
 
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =
-                new FarragoStmtValidator(
-                    repos,
-                    session.getDatabase().getFennelDbHandle(),
-                    session,
-                    objCache,
-                    objCache,
-                    session.getSessionIndexMap(),
-                    session.getDatabase().getDdlLockManager());
+                session.newStmtValidator(
+                    objCache, objCache);
             allocations.addAllocation(stmtValidator);
             FarragoPreparingStmt stmt =
-                new FarragoPreparingStmt(
-                    null,
-                    stmtValidator,
-                    explainQuery);
-            stmt.enablePartialImplementation();
+                (FarragoPreparingStmt) personality.newPreparingStmtForTesting(
+                    explainQuery, stmtValidator);
 
             initPlanner(stmt);
 
@@ -126,8 +119,11 @@ public abstract class FarragoSqlToRelTestBase
             }
 
             // parse the EXPLAIN PLAN statement
-            SqlParser sqlParser = new SqlParser(explainQuery);
-            SqlNode sqlNode = sqlParser.parseStmt();
+            final FarragoSessionParser parser =
+                session.getPersonality().newParser(session);
+            SqlNode sqlNode =
+                (SqlNode) parser.parseSqlText(
+                    stmtValidator, null, explainQuery, true);
 
             // prepare it
             PreparedExplanation explanation =
