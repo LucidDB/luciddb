@@ -49,6 +49,7 @@ class StoredTypeDescriptorFactory;
 class SingleOutputExecStreamParams;
 class SortedAggExecStreamParams;
 class LcsRowScanBaseExecStreamParams;
+class LcsRowScanExecStreamParams;
 class LcsClusterAppendExecStreamParams;
 class LbmBitOpExecStreamParams;
 
@@ -137,6 +138,7 @@ protected:
     virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef);
     virtual void visit(ProxyLcsClusterReplaceStreamDef &streamDef);
     virtual void visit(ProxyLcsRowScanStreamDef &streamDef);
+    virtual void visit(ProxyLcsAggStreamDef &streamDef);
     virtual void visit(ProxyLbmGeneratorStreamDef &streamDef);
     virtual void visit(ProxyLbmSplicerStreamDef &streamDef);
     virtual void visit(ProxyLbmSearchStreamDef &streamDef);
@@ -243,6 +245,10 @@ public:
     void readBarrierDynamicParams(
         BarrierExecStreamParams &,
         ProxyBarrierStreamDef &);
+
+    void readLcsRowScanStreamParams(
+        LcsRowScanExecStreamParams &,
+        ProxyLcsRowScanStreamDef &);
 
     void readColumnList(
         ProxyFlatFileTupleStreamDef &streamDef,

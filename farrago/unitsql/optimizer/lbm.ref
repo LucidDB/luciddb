@@ -483,11 +483,9 @@
 > select count(*) from multimulti where a1 = 11 and b1 = 12;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
-'        FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
-'        FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])'
+'  LcsRowAggRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
+'    FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 11 and b1 = 12;
 +---------+
@@ -501,11 +499,9 @@
 > select count(*) from multimulti where a1 = 21 and a2 = 24;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
-'        FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])'
-'        FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])'
+'  LcsRowAggRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
+'    FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 21 and a2 = 24;
 +---------+
@@ -519,11 +515,9 @@
 > select count(*) from multimulti where a1 = 31 and a3 = 37;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
-'        FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
-'        FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])'
+'  LcsRowAggRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
+'    FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 31 and a3 = 37;
 +---------+
@@ -930,11 +924,9 @@ Warning: Statement execution encountered recoverable exceptions; errors: 9; warn
 > explain plan for select count(*) from vc2 where a is null;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, VC2]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$VC2$A]])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, VC2]], index=[I_VC2], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'          FennelValuesRel(tuples=[[{ '[', null, ']', null }]])'
+'  LcsRowAggRel(table=[[LOCALDB, LBM, VC2]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$VC2$A]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, VC2]], index=[I_VC2], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', null, ']', null }]])'
 > !set outputformat table
 > select count(*) from vc2 where a is null;
 +---------+
