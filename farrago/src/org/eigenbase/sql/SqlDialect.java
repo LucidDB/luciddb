@@ -43,7 +43,8 @@ public class SqlDialect
      * database-specific like quoting identifiers, don't rely on this dialect to
      * do what you want.
      */
-    public static SqlDialect DUMMY;
+    public static final SqlDialect DUMMY =
+        DatabaseProduct.UNKNOWN.getDialect();
 
     /**
      * A dialect useful for generating SQL which can be parsed by the
@@ -51,7 +52,8 @@ public class SqlDialect
      * want a dialect that knows the full capabilities of the database, create
      * one from a connection.
      */
-    public static SqlDialect EIGENBASE;
+    public static final SqlDialect EIGENBASE =
+        DatabaseProduct.LUCIDDB.getDialect();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -447,16 +449,14 @@ public class SqlDialect
          */
         UNKNOWN("Unknown", "`");
 
-        private final SqlDialect dialect;
+        private SqlDialect dialect = null;
+        private String databaseProductName;
+        private String quoteString;
 
         DatabaseProduct(String databaseProductName, String quoteString)
         {
-            dialect = new SqlDialect(this, databaseProductName, quoteString);
-            if ("Unknown".equals(databaseProductName)) {
-                DUMMY = dialect;
-            } else if ("LucidDB".equals(databaseProductName)) {
-                EIGENBASE = dialect;
-            }
+            this.databaseProductName = databaseProductName;
+            this.quoteString = quoteString;
         }
 
         /**
@@ -472,6 +472,10 @@ public class SqlDialect
          */
         public SqlDialect getDialect()
         {
+            if (dialect == null) {
+                dialect =
+                    new SqlDialect(this, databaseProductName, quoteString);
+            }
             return dialect;
         }
     }
