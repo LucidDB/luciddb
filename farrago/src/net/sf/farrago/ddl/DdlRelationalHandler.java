@@ -366,7 +366,9 @@ public class DdlRelationalHandler
             throw res.ValidatorInvalidViewDynamicParam.ex();
         }
 
-        if (analyzedSql.hasTopLevelOrderBy) {
+        if (analyzedSql.hasTopLevelOrderBy
+                && !analyzedSql.allowTopLevelOrderBy)
+        {
             throw res.ValidatorInvalidViewOrderBy.ex();
         }
 

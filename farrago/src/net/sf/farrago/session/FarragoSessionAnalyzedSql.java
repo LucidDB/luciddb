@@ -104,6 +104,8 @@ public class FarragoSessionAnalyzedSql
      */
     public double rowCount;
 
+    public boolean allowTopLevelOrderBy = false;
+
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSessionAnalyzedSql()
