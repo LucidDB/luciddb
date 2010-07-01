@@ -2362,6 +2362,17 @@ public class SqlParserTest
             + "FROM `EMP`" + NL
             + "WINDOW `W` AS (ROWS 2 PRECEDING)");
 
+        // Chained string literals are valid syntax. They are unlikely to be
+        // semantically valid, because intervals are usually numeric or
+        // datetime.
+        check(
+            "select count(*) over w from emp window w as (\n"
+            + "  rows 'foo' 'bar'\n"
+            + "       'baz' preceding)",
+            "SELECT (COUNT(*) OVER `W`)\n"
+            + "FROM `EMP`\n"
+            + "WINDOW `W` AS (ROWS 'foobarbaz' PRECEDING)");
+
         // Partition clause out of place. Found after ORDER BY
         checkFails(
             "select count(z) over w as foo " + NL

@@ -762,11 +762,11 @@ FemUser UserDefinition() :
         user.setName(userName.getSimple());
     }
     [
-        <AUTHORIZATION> plaintextLiteral = StringLiteral(false)
+        <AUTHORIZATION> plaintextLiteral = StringLiteral()
         {
             // ignore; this clause is deprecated
         }
-        | <IDENTIFIED> <BY> plaintextLiteral = StringLiteral(false)
+        | <IDENTIFIED> <BY> plaintextLiteral = StringLiteral()
         {
             String plaintext = SqlLiteral.stringValue(plaintextLiteral);
             if (!plaintext.equals("")) {
@@ -1510,30 +1510,32 @@ void CascadeOption() :
 DdlStmt SystemParamAssignment() :
 {
     SqlIdentifier paramName;
-    SqlLiteral paramValue;
+    SqlNode paramValue;
 }
 {
     paramName = SimpleIdentifier()
     <EQ>
     paramValue = SystemParamValue()
     {
+        SqlLiteral literal = SqlLiteral.unchain(paramValue);
         return new DdlSetSystemParamStmt(
-            paramName.getSimple(),paramValue);
+            paramName.getSimple(), literal);
     }
 }
 
 DdlStmt SessionParamAssignment() :
 {
     SqlIdentifier paramName;
-    SqlLiteral paramValue;
+    SqlNode paramValue;
 }
 {
     paramName = SimpleIdentifier()
     <EQ>
     paramValue = SystemParamValue()
     {
+        SqlLiteral literal = SqlLiteral.unchain(paramValue);
         return new DdlSetSessionParamStmt(
-            paramName.getSimple(),paramValue);
+            paramName.getSimple(), literal);
     }
 }
 
@@ -1685,14 +1687,14 @@ DdlStmt AlterIdentityColumnStmt(CwmColumn column) :
     }
 }
 
-SqlLiteral SystemParamValue() :
+SqlNode SystemParamValue() :
 {
-    SqlLiteral paramValue;
+    SqlNode paramValue;
     SqlParserPos pos = null;
 }
 {
     (
-        paramValue = StrictLiteral()
+        paramValue = Literal()
         | <MAX>
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
@@ -1754,7 +1756,7 @@ FemDataWrapper DataWrapperDefinition() :
 {
     FemDataWrapper wrapper;
     SqlIdentifier wrapperName;
-    String libraryFile;
+    SqlNode libraryFile;
     boolean isForeign;
 }
 {
@@ -1768,9 +1770,9 @@ FemDataWrapper DataWrapperDefinition() :
                 FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
         wrapper.setForeign(isForeign);
     }
-    <LIBRARY> libraryFile = QuotedString()
+    <LIBRARY> libraryFile = StringLiteral()
     {
-        wrapper.setLibraryFile(libraryFile);
+        wrapper.setLibraryFile(SqlLiteral.stringValue(libraryFile));
     }
     <LANGUAGE> <JAVA>
     {
@@ -1816,8 +1818,8 @@ FemDataServer DataServerDefinition() :
     FemDataServer server;
     FemDataWrapper wrapper;
     SqlIdentifier serverName;
-    String serverType;
-    String serverVersion;
+    SqlNode serverType;
+    SqlNode serverVersion;
 }
 {
     <SERVER> serverName = SimpleIdentifier()
@@ -1829,15 +1831,15 @@ FemDataServer DataServerDefinition() :
                 FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
     }
     [
-        <TYPE> serverType = QuotedString()
+        <TYPE> serverType = StringLiteral()
         {
-            server.setType(serverType);
+            server.setType(SqlLiteral.stringValue(serverType));
         }
     ]
     [
-        <VERSION> serverVersion = QuotedString()
+        <VERSION> serverVersion = StringLiteral()
         {
-            server.setVersion(serverVersion);
+            server.setVersion(SqlLiteral.stringValue(serverVersion));
         }
     ]
     wrapper = DataWrapperReference()
@@ -2354,7 +2356,7 @@ FemJar JarDefinition() :
 {
     FemJar jar;
     SqlIdentifier qualifiedName;
-    String url;
+    SqlNode url;
     SqlLiteral deploymentState;
 }
 {
@@ -2367,9 +2369,9 @@ FemJar JarDefinition() :
         farragoParser.getDdlValidator().setSchemaObjectName(
             jar,qualifiedName);
     }
-    <LIBRARY> url = QuotedString()
+    <LIBRARY> url = StringLiteral()
     {
-        jar.setUrl(url);
+        jar.setUrl(SqlLiteral.stringValue(url));
     }
     <OPTIONS> <LPAREN>
     deploymentState = NumericLiteral() <RPAREN>
@@ -2697,7 +2699,7 @@ void OptionalDescription(FemAnnotatedElement element) :
 }
 {
     [
-        <DESCRIPTION> description = StringLiteral(false)
+        <DESCRIPTION> description = StringLiteral()
         {
             element.setDescription(SqlLiteral.stringValue(description));
         }
@@ -2780,15 +2782,15 @@ void OptionalStorageOptions(FemElementWithStorageOptions element) :
 void StorageOption(FemElementWithStorageOptions element) :
 {
     SqlIdentifier name;
-    String value;
+    SqlNode literal;
 }
 {
     name = SimpleIdentifier()
-    value = QuotedString()
+    literal = StringLiteral()
     {
         FemStorageOption option = getRepos().newFemStorageOption();
         option.setName(name.getSimple());
-        option.setValue(value);
+        option.setValue(SqlLiteral.stringValue(literal));
         element.getStorageOptions().add(option);
     }
 }
@@ -2799,7 +2801,7 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
     SqlIdentifier localSchemaName;
     boolean exclude = false;
     List roster = null;
-    String pattern = null;
+    SqlNode pattern = null;
     FemDataServer server;
 }
 {
@@ -2813,19 +2815,21 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
         (
             <LPAREN> roster = SimpleIdentifierCommaList() <RPAREN>
             |
-            <TABLE_NAME> <LIKE> pattern = QuotedString()
+            <TABLE_NAME> <LIKE> pattern = StringLiteral()
         )
     ]
     <FROM> server = DataServerReference()
     <INTO> localSchemaName = CompoundIdentifier2()
     {
+        final String patternString =
+            pattern == null ? null : SqlLiteral.stringValue(pattern);
         return new DdlImportForeignSchemaStmt(
             farragoParser.getStmtValidator().findSchema(localSchemaName),
             server,
             foreignSchemaName,
             exclude,
             roster,
-            pattern);
+            patternString);
     }
 }
 
