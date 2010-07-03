@@ -13,7 +13,7 @@
 > --------------
 > 
 > create or replace jar sys_boot.farrago.sfdcJar
-> library 'file:${FARRAGO_HOME}/plugin/MedSfdc.jar'
+> library 'file:plugin/MedSfdc.jar'
 > options(0);
 > 
 > ---------------------------------------
@@ -55,7 +55,7 @@
 > -----------------------
 > 
 > create or replace foreign data wrapper SALESFORCE
-> library '${FARRAGO_HOME}/plugin/MedSfdc.jar'
+> library 'plugin/MedSfdc.jar'
 > language java
 > options(
 >   browse_connect_description 'Salesforce.com Web Service Connection'

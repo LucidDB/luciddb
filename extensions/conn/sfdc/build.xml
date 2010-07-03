@@ -63,8 +63,10 @@
   <!-- ===================================================== -->
 
   <path id="build.classpath">
-    <pathelement path="${thirdparty.dir}/commons-codec/commons-codec-1.3.jar"/>
-    <pathelement path="${thirdparty.dir}/commons-httpclient/commons-httpclient-3.0.jar"/>
+    <pathelement 
+      path="${thirdparty.dir}/vjdbc/lib/commons-codec-1.3.jar"/>
+    <pathelement 
+      path="${thirdparty.dir}/vjdbc/lib/commons-httpclient-3.0.1.jar"/>
     <pathelement path="${thirdparty.dir}/javamail-1.3.1/activation.jar"/>
     <pathelement path="${thirdparty.dir}/javamail-1.3.1/mail.jar"/>
     <pathelement path="${thirdparty.dir}/axis/lib/axis.jar"/>
@@ -188,7 +190,6 @@
 
   <target name="installSfdcPlugin" depends="jarSfdcPlugin">
     <mkdir dir="${sfdc.testlog.dir}"/>
-    <copy file="${sfdc.plugin.dir}/MedSfdc.jar" todir="${open.dir}/farrago/plugin/" />
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
       clonevm="yes" tempdir="${sfdc.testlog.dir}" includeantruntime="no">
       <classpath>

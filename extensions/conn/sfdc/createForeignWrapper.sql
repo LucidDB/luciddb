@@ -13,7 +13,6 @@ set path 'sys_boot.farrago';
 --------------
 
 create or replace jar sys_boot.farrago.sfdcJar
---library 'file:${FARRAGO_HOME}/plugin/MedSfdc.jar'
 library 'file:plugin/MedSfdc.jar'
 options(0);
 
@@ -56,7 +55,6 @@ external name 'sys_boot.farrago.sfdcJar:net.sf.farrago.namespace.sfdc.SfdcUdx.ge
 -----------------------
 
 create or replace foreign data wrapper SALESFORCE
---library '${FARRAGO_HOME}/plugin/MedSfdc.jar'
 library 'plugin/MedSfdc.jar'
 language java
 options(
