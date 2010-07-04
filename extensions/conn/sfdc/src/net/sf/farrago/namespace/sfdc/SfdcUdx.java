@@ -90,14 +90,14 @@ public abstract class SfdcUdx
             if (qr.isDone()) {
                 if (qr.getRecords() != null) {
                     log.info(
-                        SfdcResourceObject.get().RetrievedAllRecordsMsg.str(
+                        SfdcResource.instance().RetrievedAllRecordsMsg.str(
                             Integer.toString(qr.getRecords().length),
                             objName));
                 }
             } else {
                 if (qr.getRecords() != null) {
                     log.info(
-                        SfdcResourceObject.get().RetrievingRecordsMsg.str(
+                        SfdcResource.instance().RetrievingRecordsMsg.str(
                             Integer.toString(qr.getRecords().length),
                             objName));
                 }
@@ -262,7 +262,7 @@ public abstract class SfdcUdx
                         if (qr.isDone()) {
                             if (qr.getRecords() != null) {
                                 log.info(
-                                    SfdcResourceObject.get()
+                                    SfdcResource.instance()
                                     .RetrievedAllRecordsMsg.str(
                                         Integer.toString(
                                             qr.getRecords().length),
@@ -271,7 +271,7 @@ public abstract class SfdcUdx
                         } else {
                             if (qr.getRecords() != null) {
                                 log.info(
-                                    SfdcResourceObject.get()
+                                    SfdcResource.instance()
                                     .RetrievingRecordsMsg.str(
                                         Integer.toString(
                                             qr.getRecords().length),
@@ -289,7 +289,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 ae.getFaultString(),
                 chainedEx);
         } catch (RemoteException re) {
@@ -300,7 +300,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 re.getMessage(),
                 chainedEx);
         }
@@ -320,7 +320,7 @@ public abstract class SfdcUdx
         if (((start == null) || start.equals(""))
             || ((end == null) || end.equals("")))
         {
-            throw SfdcResourceObject.get().InvalidRangeException.ex();
+            throw SfdcResource.instance().InvalidRangeException.ex();
         }
 
         Calendar startTime;
@@ -350,16 +350,16 @@ public abstract class SfdcUdx
             endTime.setTime(ed);
         } catch (Exception ex) {
             ex.printStackTrace();
-            throw SfdcResourceObject.get().InvalidTimeException.ex(
+            throw SfdcResource.instance().InvalidTimeException.ex(
                 ex.getMessage());
         }
         if (thirtyDaysAgo.compareTo(startTime) > 0) {
-            throw SfdcResourceObject.get().InvalidStartTimeException.ex(
+            throw SfdcResource.instance().InvalidStartTimeException.ex(
                 startTime.getTime().toString());
         }
 
         if (startTime.compareTo(endTime) > 0) {
-            throw SfdcResourceObject.get().InvalidEndTimeException.ex(
+            throw SfdcResource.instance().InvalidEndTimeException.ex(
                 endTime.getTime().toString(),
                 startTime.getTime().toString());
         }
@@ -377,11 +377,11 @@ public abstract class SfdcUdx
             {
                 // check if data replication is allowed on object
                 if (!describeSObjectResult.isReplicateable()) {
-                    throw SfdcResourceObject.get().ReplicationException.ex(
+                    throw SfdcResource.instance().ReplicationException.ex(
                         objectName);
                 }
             } else {
-                throw SfdcResourceObject.get().InvalidObjectException.ex(
+                throw SfdcResource.instance().InvalidObjectException.ex(
                     objectName);
             }
             GetDeletedResult gdr =
@@ -422,7 +422,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 ae.getFaultString(),
                 chainedEx);
         } catch (RemoteException re) {
@@ -433,7 +433,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 re.getMessage(),
                 chainedEx);
         }
@@ -483,7 +483,7 @@ public abstract class SfdcUdx
                     }
                 }
             } else {
-                throw SfdcResourceObject.get().InvalidObjectException.ex(
+                throw SfdcResource.instance().InvalidObjectException.ex(
                     objectName);
             }
         } catch (AxisFault ae) {
@@ -494,7 +494,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 ae.getFaultString(),
                 chainedEx);
         } catch (RemoteException re) {
@@ -505,7 +505,7 @@ public abstract class SfdcUdx
                     460150);
             Exception chainedEx =
                 FarragoResource.instance().RetryableFailure.ex(retryExcn);
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 re.getMessage(),
                 chainedEx);
         }

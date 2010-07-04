@@ -183,7 +183,7 @@ public class Export
             try {
                 binding = (SoapBindingStub) new ServiceLocatorGzip().getSoap();
             } catch (ServiceException se) {
-                throw SfdcResourceObject.get().SfdcBinding_ServiceException.ex(
+                throw SfdcResource.instance().SfdcBinding_ServiceException.ex(
                     se.getMessage());
             }
         } else {
@@ -192,7 +192,7 @@ public class Export
                 binding =
                     (SoapBindingStub) new SforceServiceLocator().getSoap();
             } catch (ServiceException se) {
-                throw SfdcResourceObject.get().SfdcBinding_ServiceException.ex(
+                throw SfdcResource.instance().SfdcBinding_ServiceException.ex(
                     se.getMessage());
             }
         }
@@ -204,13 +204,13 @@ public class Export
         try {
             loginResult = binding.login(user, pass);
         } catch (LoginFault lf) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(
+            throw SfdcResource.instance().SfdcLoginFault.ex(
                 lf.getExceptionMessage());
         } catch (UnexpectedErrorFault uef) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(
+            throw SfdcResource.instance().SfdcLoginFault.ex(
                 uef.getExceptionMessage());
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(re.getMessage());
+            throw SfdcResource.instance().SfdcLoginFault.ex(re.getMessage());
         }
 
         // set the session header for subsequent call authentication
@@ -393,14 +393,14 @@ public class Export
                 }
             } catch (RemoteException re) {
                 System.out.println(
-                    SfdcResourceObject.get().ObjectQueryExceptionMsg.str(
+                    SfdcResource.instance().ObjectQueryExceptionMsg.str(
                         objNames[i],
                         re.getMessage()));
                 try {
                     csvOut.close();
                 } catch (IOException ie) {
                     System.out.println(
-                        SfdcResourceObject.get().IOExceptionMsg.str(
+                        SfdcResource.instance().IOExceptionMsg.str(
                             ie.getMessage()));
                 }
                 csvFile.delete();
@@ -409,7 +409,7 @@ public class Export
                         bcpOut.close();
                     } catch (IOException ie) {
                         System.out.println(
-                            SfdcResourceObject.get().IOExceptionMsg.str(
+                            SfdcResource.instance().IOExceptionMsg.str(
                                 ie.getMessage()));
                     }
                     bcpFile.delete();
@@ -417,7 +417,7 @@ public class Export
                 continue;
             } catch (IOException ie) {
                 System.out.println(
-                    SfdcResourceObject.get().IOExceptionMsg.str(
+                    SfdcResource.instance().IOExceptionMsg.str(
                         ie.getMessage()));
                 continue;
             } finally {
@@ -428,7 +428,7 @@ public class Export
                     }
                 } catch (IOException ie) {
                     System.out.println(
-                        SfdcResourceObject.get().IOExceptionMsg.str(
+                        SfdcResource.instance().IOExceptionMsg.str(
                             ie.getMessage()));
                 }
             }
@@ -596,13 +596,13 @@ public class Export
                 }
             } catch (RemoteException ex) {
                 System.out.println(
-                    SfdcResourceObject.get().ObjectQueryExceptionMsg.str(
+                    SfdcResource.instance().ObjectQueryExceptionMsg.str(
                         objNames[i],
                         ex.getMessage()));
                 exit();
             } catch (IOException ie) {
                 System.out.println(
-                    SfdcResourceObject.get().IOExceptionMsg.str(
+                    SfdcResource.instance().IOExceptionMsg.str(
                         ie.getMessage()));
                 exit();
             } finally {
@@ -610,7 +610,7 @@ public class Export
                     updateW.close();
                 } catch (IOException ie) {
                     System.out.println(
-                        SfdcResourceObject.get().IOExceptionMsg.str(
+                        SfdcResource.instance().IOExceptionMsg.str(
                             ie.getMessage()));
                 }
             }
@@ -671,19 +671,19 @@ public class Export
                 }
             } catch (RemoteException ex) {
                 System.out.println(
-                    SfdcResourceObject.get().ObjectQueryExceptionMsg.str(
+                    SfdcResource.instance().ObjectQueryExceptionMsg.str(
                         objNames[i],
                         ex.getMessage()));
             } catch (IOException ie) {
                 System.out.println(
-                    SfdcResourceObject.get().IOExceptionMsg.str(
+                    SfdcResource.instance().IOExceptionMsg.str(
                         ie.getMessage()));
             } finally {
                 try {
                     deleteW.close();
                 } catch (IOException ie) {
                     System.out.println(
-                        SfdcResourceObject.get().IOExceptionMsg.str(
+                        SfdcResource.instance().IOExceptionMsg.str(
                             ie.getMessage()));
                 }
             }
@@ -706,7 +706,7 @@ public class Export
             }
         } catch (RemoteException re) {
             System.out.println(
-                SfdcResourceObject.get().AllObjectQueryExceptionMsg.str(
+                SfdcResource.instance().AllObjectQueryExceptionMsg.str(
                     re.getMessage()));
         }
         return "Account";

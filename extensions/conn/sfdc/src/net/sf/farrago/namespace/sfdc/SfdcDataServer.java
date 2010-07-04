@@ -359,11 +359,11 @@ class SfdcDataServer
                         (SoapBindingStub) new ServiceLocatorGzip().getSoap();
                 }
             } catch (ServiceException se) {
-                throw SfdcResourceObject.get().SfdcBinding_ServiceException.ex(
+                throw SfdcResource.instance().SfdcBinding_ServiceException.ex(
                     se.getMessage());
             } catch (Exception ex) {
                 log.error("Error logging into SFDC", ex);
-                throw SfdcResourceObject.get().SfdcLoginFault.ex(ex.toString());
+                throw SfdcResource.instance().SfdcLoginFault.ex(ex.toString());
             }
         }
 
@@ -389,18 +389,18 @@ class SfdcDataServer
             // .getNamespaceURI(), "CallOptions", co);
 
             loginResult = this.binding.login(user, pass);
-            log.info(SfdcResourceObject.get().LoggedInMsg.str());
+            log.info(SfdcResource.instance().LoggedInMsg.str());
         } catch (LoginFault lf) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(
+            throw SfdcResource.instance().SfdcLoginFault.ex(
                 lf.getExceptionMessage());
         } catch (UnexpectedErrorFault uef) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(
+            throw SfdcResource.instance().SfdcLoginFault.ex(
                 uef.getExceptionMessage());
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(re.toString());
+            throw SfdcResource.instance().SfdcLoginFault.ex(re.toString());
         } catch (Exception ex) {
             log.error("Error logging into SFDC", ex);
-            throw SfdcResourceObject.get().SfdcLoginFault.ex(ex.toString());
+            throw SfdcResource.instance().SfdcLoginFault.ex(ex.toString());
         }
 
         // set the session header for subsequent call authentication
@@ -447,14 +447,14 @@ class SfdcDataServer
                     }
                 }
             } else {
-                throw SfdcResourceObject.get().InvalidObjectException.ex(
+                throw SfdcResource.instance().InvalidObjectException.ex(
                     objectName);
             }
         } catch (InvalidSObjectFault io) {
-            throw SfdcResourceObject.get().InvalidObjectException.ex(
+            throw SfdcResource.instance().InvalidObjectException.ex(
                 objectName);
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().QueryException.ex(
+            throw SfdcResource.instance().QueryException.ex(
                 objectName,
                 re.toString());
         }
@@ -498,14 +498,14 @@ class SfdcDataServer
                     }
                 }
             } else {
-                throw SfdcResourceObject.get().InvalidObjectException.ex(
+                throw SfdcResource.instance().InvalidObjectException.ex(
                     objectName);
             }
         } catch (InvalidSObjectFault io) {
-            throw SfdcResourceObject.get().InvalidObjectException.ex(
+            throw SfdcResource.instance().InvalidObjectException.ex(
                 objectName);
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().QueryException.ex(
+            throw SfdcResource.instance().QueryException.ex(
                 objectName,
                 re.toString());
         }
@@ -571,15 +571,15 @@ class SfdcDataServer
                                 typeFactory);
                     }
                 } else {
-                    throw SfdcResourceObject.get().InvalidObjectException.ex(
+                    throw SfdcResource.instance().InvalidObjectException.ex(
                         objectName);
                 }
             }
         } catch (InvalidSObjectFault io) {
-            throw SfdcResourceObject.get().InvalidObjectException.ex(
+            throw SfdcResource.instance().InvalidObjectException.ex(
                 objectName);
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().QueryException.ex(
+            throw SfdcResource.instance().QueryException.ex(
                 objectName,
                 re.toString());
         }

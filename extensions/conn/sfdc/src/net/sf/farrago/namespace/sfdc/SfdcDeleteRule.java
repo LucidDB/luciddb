@@ -109,7 +109,7 @@ class SfdcDeleteRule
                 != -1)
             {
                 if (!sargBindingList.get(i).getExpr().evaluate().isRange()) {
-                    throw SfdcResourceObject.get().InvalidRangeException.ex();
+                    throw SfdcResource.instance().InvalidRangeException.ex();
                 }
                 SargIntervalSequence seq =
                     sargBindingList.get(i).getExpr().evaluate();
@@ -147,7 +147,7 @@ class SfdcDeleteRule
                         this.endTime = end;
                     }
                 } catch (Exception ex) {
-                    throw SfdcResourceObject.get().InvalidRangeException.ex();
+                    throw SfdcResource.instance().InvalidRangeException.ex();
                 }
 
                 // remove timestamp

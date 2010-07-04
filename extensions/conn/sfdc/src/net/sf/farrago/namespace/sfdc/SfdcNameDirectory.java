@@ -189,7 +189,7 @@ class SfdcNameDirectory
                 }
             }
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 re.getMessage());
         }
         return true;
@@ -277,17 +277,17 @@ class SfdcNameDirectory
                     } else {
                         if (types[i].getName().endsWith("__c")) {
                             log.info(
-                                SfdcResourceObject.get().ObjectExtractErrorMsg
+                                SfdcResource.instance().ObjectExtractErrorMsg
                                 .str(types[i].getName()));
                         } else {
-                            throw SfdcResourceObject.get()
+                            throw SfdcResource.instance()
                             .InvalidObjectException.ex(types[i].getName());
                         }
                     }
                 }
             }
         } catch (RemoteException re) {
-            throw SfdcResourceObject.get().BindingCallException.ex(
+            throw SfdcResource.instance().BindingCallException.ex(
                 re.getMessage());
         }
         return true;

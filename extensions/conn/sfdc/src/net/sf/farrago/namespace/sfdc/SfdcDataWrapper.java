@@ -81,7 +81,7 @@ public class SfdcDataWrapper
 
         MedPropertyInfoMap infoMap =
             new MedPropertyInfoMap(
-                SfdcResourceObject.get(),
+                SfdcResource.instance(),
                 "MedSfdc",
                 serverProps);
         infoMap.addPropInfo(SfdcDataServer.PROP_USER_NAME, true);
