@@ -199,7 +199,7 @@
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
-        value="createForeignWrapper.sql" />
+        value="initsql/createForeignWrapper.sql" />
       <formatter type="plain"/>
       <formatter type="xml"/>
       <test todir="${sfdc.testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />
