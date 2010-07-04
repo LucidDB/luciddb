@@ -77,7 +77,7 @@ public class CreateAndDeleteTest extends TestCase
             sh);
 
         Calendar cal = binding.getServerTimestamp().getTimestamp();
-        int month = (cal.get(Calendar.MONTH)+1) % 13;
+        int month = (cal.get(Calendar.MONTH) + 1) % 13;
         String startTime =
             cal.get(Calendar.YEAR) + "-"
             + month + "-"
@@ -93,7 +93,7 @@ public class CreateAndDeleteTest extends TestCase
         // sleep for 1+ minutes to guarantee a time difference
         Thread.sleep(100000);
         cal = binding.getServerTimestamp().getTimestamp();
-        month = (cal.get(Calendar.MONTH)+1) % 13;
+        month = (cal.get(Calendar.MONTH) + 1) % 13;
         String endTime =
             cal.get(Calendar.YEAR) + "-"
             + month + "-"
@@ -136,7 +136,7 @@ public class CreateAndDeleteTest extends TestCase
 
         // Gets last export time
         Calendar cal = binding.getServerTimestamp().getTimestamp();
-        int month = (cal.get(Calendar.MONTH)+1) % 13;
+        int month = (cal.get(Calendar.MONTH) + 1) % 13;
         String startTime =
             cal.get(Calendar.YEAR) + "-"
             + month + "-"
@@ -180,7 +180,7 @@ public class CreateAndDeleteTest extends TestCase
         String platformHome = System.getenv("SFDC_TEST_HOME");
         char sep = File.separatorChar;
         String filePath = "";
-        File file = new File(platformHome, filePath+"ids");
+        File file = new File(platformHome, filePath + "ids");
         if (file.exists()) {
             // accounts from previous runs may exist, cleanup
             testDeleteRows();
@@ -188,11 +188,11 @@ public class CreateAndDeleteTest extends TestCase
         FileWriter writer = new FileWriter(file, false);
 
         // Handle the results
-        for (int i=0; i<saveResults.length; i++) {
+        for (int i = 0; i < saveResults.length; i++) {
             // Determine whether create succeeded or had errors
             if (saveResults[i].isSuccess()) {
                 // save ids to a file
-                writer.write(saveResults[i].getId()+"\n");
+                writer.write(saveResults[i].getId() + "\n");
             } else {
                 // Cleans up and handles the errors
                 file.delete();
@@ -204,7 +204,7 @@ public class CreateAndDeleteTest extends TestCase
         writer.close();
 
         // writes last export time and username/password to file
-        file = new File(platformHome, filePath+"exporttmp.map");
+        file = new File(platformHome, filePath + "exporttmp.map");
         writer = new FileWriter(file, false);
         writer.write("@E_TIME@=" + startTime + "\r\n");
         writer.write("@username@=" + username + "\r\n");
@@ -236,8 +236,8 @@ public class CreateAndDeleteTest extends TestCase
         String platformHome = System.getenv("SFDC_TEST_HOME");
         char sep = File.separatorChar;
         String filePath = "";
-        File file = new File(platformHome, filePath+"ids");
-        assert(file.exists());
+        File file = new File(platformHome, filePath + "ids");
+        assert (file.exists());
         FileReader reader = new FileReader(file);
 
         // Gets the ids for the rows to delete
@@ -252,27 +252,25 @@ public class CreateAndDeleteTest extends TestCase
                 }
             }
             ids[i] = idBuffer.toString();
-            idBuffer.delete(0,idBuffer.length());
+            idBuffer.delete(0, idBuffer.length());
         }
 
         DeleteResult[] deleteResults = binding.delete(ids);
 
         boolean hasDeleteErrors = false;
         // Process the results
-        for (int i=0;i<deleteResults.length;i++) {
+        for (int i = 0; i < deleteResults.length; i++) {
             DeleteResult deleteResult = deleteResults[i];
             // Determine whether delete succeeded or had errors
             if (deleteResult.isSuccess()) {
                 // Get the id of the deleted record
                 deleteResult.getId();
-            }
-            else {
+            } else {
                 // Handle the errors
                 // don't fail test if we can't cleanup accounts
                 System.out.println("Error deleting Account");
+                // REVIEW jvs 3-Jul-2010:  why not fail fast?
                 hasDeleteErrors = true;
-//                 throw new junit.framework.AssertionFailedError(
-//                     "Error deleting objects");
             }
         }
 
@@ -320,13 +318,12 @@ public class CreateAndDeleteTest extends TestCase
         SaveResult[] saveResults = binding.create(sObjects);
 
         // Handle the results
-        for (int i=0; i<saveResults.length; i++) {
+        for (int i = 0; i < saveResults.length; i++) {
             // Determine whether create succeeded or had errors
             if (saveResults[i].isSuccess()) {
                 // No errors, so we will retrieve the id created for this index
                 ids[i] = saveResults[i].getId();
-            }
-            else {
+            } else {
                 // Handle the errors
                 throw new junit.framework.AssertionFailedError(
                     "Error creating objects");
@@ -340,14 +337,13 @@ public class CreateAndDeleteTest extends TestCase
     {
         DeleteResult[] deleteResults = binding.delete(ids);
         // Process the results
-        for (int i=0;i<deleteResults.length;i++) {
+        for (int i = 0; i < deleteResults.length; i++) {
             DeleteResult deleteResult = deleteResults[i];
             // Determine whether delete succeeded or had errors
             if (deleteResult.isSuccess()) {
                 // Get the id of the deleted record
                 deleteResult.getId();
-            }
-            else {
+            } else {
                 // Handle the errors
                 throw new junit.framework.AssertionFailedError(
                     "Error deleting objects");
