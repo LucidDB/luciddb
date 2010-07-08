@@ -671,7 +671,7 @@ public class FennelWindowRel
         public Partition lookupOrCreatePartition(Integer [] partitionKeys)
         {
             for (Partition partition : partitionList) {
-                if (Util.equal(partition.partitionKeys, partitionKeys)) {
+                if (Arrays.equals(partition.partitionKeys, partitionKeys)) {
                     return partition;
                 }
             }
@@ -714,7 +714,7 @@ public class FennelWindowRel
         {
             if (obj instanceof Partition) {
                 Partition that = (Partition) obj;
-                if (Util.equal(this.partitionKeys, that.partitionKeys)) {
+                if (Arrays.equals(this.partitionKeys, that.partitionKeys)) {
                     return true;
                 }
             }

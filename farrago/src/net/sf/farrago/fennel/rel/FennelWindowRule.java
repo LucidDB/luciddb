@@ -22,7 +22,6 @@
 package net.sf.farrago.fennel.rel;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 import net.sf.farrago.query.*;
 
@@ -587,7 +586,7 @@ public abstract class FennelWindowRule
             if ((physical == window.physical)
                 && Util.equal(lowerBound, window.lowerBound)
                 && Util.equal(upperBound, window.upperBound)
-                && Util.equal(orderKeys, window.orderKeys))
+                && Arrays.equals(orderKeys, window.orderKeys))
             {
                 return window;
             }

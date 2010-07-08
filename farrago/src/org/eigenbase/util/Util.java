@@ -194,61 +194,18 @@ public class Util
         Object s0,
         Object s1)
     {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
+        if (s0 == s1) {
+            return true;
+        } else if (s0 == null) {
             return false;
         } else {
             return s0.equals(s1);
         }
     }
 
-    /**
-     * Returns whether two arrays are equal or are both null.
-     */
-    public static final boolean equal(
-        Object [] s0,
-        Object [] s1)
-    {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
-            return false;
-        } else if (s0.length != s1.length) {
-            return false;
-        } else {
-            for (int i = 0; i < s0.length; i++) {
-                Object o0 = s0[i];
-                Object o1 = s1[i];
-                if (!equal(o0, o1)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     public static StatementList clone(StatementList e)
     {
         return (StatementList) e.makeCopy();
-    }
-
-    public static String [] clone(String [] a)
-    {
-        String [] a2 = new String[a.length];
-        for (int i = 0; i < a.length; i++) {
-            a2[i] = a[i];
-        }
-        return a2;
-    }
-
-    public static int [] clone(int [] a)
-    {
-        int [] b = new int[a.length];
-        for (int i = 0; i < a.length; i++) {
-            b[i] = a[i];
-        }
-        return b;
     }
 
     /**
@@ -587,11 +544,6 @@ public class Util
         return sb.toString();
     }
 
-    //      static final boolean isBlank(String s)
-    //      {
-    //          return s == null || s.equals("");
-    //      }
-
     /**
      * Creates a file-protocol URL for the given file.
      */
@@ -738,36 +690,6 @@ public class Util
             list.add(iter.next());
         }
         return list;
-    }
-
-    /**
-     * @deprecated use {@link Vector#toArray} on Java2
-     */
-    public static Object [] toArray(Vector v)
-    {
-        Object [] objects = new Object[v.size()];
-        v.copyInto(objects);
-        return objects;
-    }
-
-    /**
-     * Equivalent to {@link Vector#toArray(Object[])}.
-     */
-    public static Object [] toArray(
-        Vector v,
-        Object [] a)
-    {
-        int elementCount = v.size();
-        if (a.length < elementCount) {
-            a = (Object []) Array.newInstance(
-                a.getClass().getComponentType(),
-                elementCount);
-        }
-        v.copyInto(a);
-        if (a.length > elementCount) {
-            a[elementCount] = null;
-        }
-        return a;
     }
 
     static boolean isStatic(java.lang.reflect.Member member)
@@ -1105,61 +1027,6 @@ public class Util
             ((RestartableIterator) iterator).restart();
         } else {
             throw new UnsupportedOperationException("restart");
-        }
-    }
-
-    /**
-     * Searches recursively for a {@link SqlIdentifier}.
-     *
-     * @param node in which to look in
-     *
-     * @return null if no Identifier was found.
-     */
-    public static SqlNodeDescriptor findIdentifier(SqlNode node)
-    {
-        BacktrackVisitor<Void> visitor =
-            new BacktrackVisitor<Void>() {
-                public Void visit(SqlIdentifier id)
-                {
-                    throw new FoundOne(id);
-                }
-            };
-        try {
-            node.accept(visitor);
-        } catch (FoundOne e) {
-            return new SqlNodeDescriptor(
-                (SqlNode) e.getNode(),
-                visitor.getCurrentParent(),
-                visitor.getCurrentOffset());
-        }
-        return null;
-    }
-
-    /**
-     * Generates a unique name
-     *
-     * @param names Array of existing names
-     * @param length Number of existing names
-     * @param s Suggested name
-     *
-     * @return Name which does not match any of the names in the first <code>
-     * length</code> positions of the <code>names</code> array.
-     */
-    public static String uniqueFieldName(
-        String [] names,
-        int length,
-        String s)
-    {
-        if (!contains(names, length, s)) {
-            return s;
-        }
-        int n = length;
-        while (true) {
-            s = "EXPR_" + n;
-            if (!contains(names, length, s)) {
-                return s;
-            }
-            ++n;
         }
     }
 
@@ -2182,111 +2049,6 @@ public class Util
         public Object getNode()
         {
             return node;
-        }
-    }
-
-    /**
-     * Describes a node, its parent and if and where in the parent a node lives.
-     * If parent is null, the offset value is not valid.
-     */
-    public static class SqlNodeDescriptor
-    {
-        private final SqlNode node;
-        private final SqlNode parent;
-        private final Integer parentOffset;
-
-        public SqlNodeDescriptor(
-            SqlNode node,
-            SqlNode parent,
-            Integer parentOffset)
-        {
-            assert ((null == parent) || (parent instanceof SqlCall)
-                || (parent instanceof SqlNodeList));
-            this.node = node;
-            this.parent = parent;
-            this.parentOffset = parentOffset;
-        }
-
-        public SqlNode getNode()
-        {
-            return node;
-        }
-
-        public SqlNode getParent()
-        {
-            return parent;
-        }
-
-        public Integer getParentOffset()
-        {
-            return parentOffset;
-        }
-    }
-
-    private static class BacktrackVisitor<R>
-        extends SqlBasicVisitor<R>
-    {
-        /**
-         * Used to keep track of the current SqlNode parent of a visiting node.
-         * A value of null mean no parent. NOTE: In case of extending
-         * SqlBasicVisitor, remember that parent value might not be set
-         * depending on if and how visit(SqlCall) and visit(SqlNodeList) is
-         * implemented.
-         */
-        protected SqlNode currentParent = null;
-
-        /**
-         * Only valid if currentParrent is a SqlCall or SqlNodeList Describes
-         * the offset within the parent
-         */
-        protected int currentOffset;
-
-        public SqlNode getCurrentParent()
-        {
-            return currentParent;
-        }
-
-        public Integer getCurrentOffset()
-        {
-            return currentOffset;
-        }
-
-        public R visit(SqlNodeList nodeList)
-        {
-            R result = null;
-            for (int i = 0; i < nodeList.size(); i++) {
-                currentParent = nodeList;
-                currentOffset = i;
-                SqlNode node = nodeList.get(i);
-                result = node.accept(this);
-            }
-            currentParent = null;
-            return result;
-        }
-
-        public R visit(final SqlCall call)
-        {
-            ArgHandler<R> argHandler =
-                new ArgHandler<R>() {
-                    public R result()
-                    {
-                        return null;
-                    }
-
-                    public R visitChild(
-                        SqlVisitor<R> visitor,
-                        SqlNode expr,
-                        int i,
-                        SqlNode operand)
-                    {
-                        currentParent = call;
-                        currentOffset = i;
-                        return operand.accept(BacktrackVisitor.this);
-                    }
-                };
-            call.getOperator().acceptCall(this, call, false, argHandler);
-            currentParent = null;
-            return argHandler.result();
         }
     }
 
