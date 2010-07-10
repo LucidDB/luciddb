@@ -1074,3 +1074,83 @@ external name
 create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin 
 library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory' 
 options(0);
+
+create or replace schema udx;
+set schema 'udx';
+set path 'udx';
+
+CREATE or replace FUNCTION getPluginPropertyInfo(
+    mofId varchar(65535),
+    libraryName varchar(65535),
+    options varchar(65535),
+    wrapperProperties varchar(65535),
+    locale varchar(65535))
+    returns table(
+        name varchar(65535),
+        avalue varchar(65535),
+        description varchar(65535),
+        choices varchar(65535),
+        required boolean) 
+    language java parameter style system defined java no sql
+    external name 'class com.sqlstream.plugin.FarragoMedInfo.getPluginPropertyInfo';
+
+CREATE or replace FUNCTION getServerPropertyInfo(
+    mofId varchar(65535),
+    libraryName varchar(65535),
+    options varchar(65535),
+    wrapperProperties varchar(65535),
+    serverProperties varchar(65535),
+    locale varchar(65535)) 
+    returns table(
+        name varchar(65535),
+        avalue varchar(65535),
+        description varchar(65535),
+        choices varchar(65535),
+        required boolean) 
+    external name 'class com.sqlstream.plugin.FarragoMedInfo.getServerPropertyInfo';
+
+CREATE or replace FUNCTION getColumnSetPropertyInfo(
+    mofId varchar(65535),
+    libraryName varchar(65535),
+    options varchar(65535),
+    wrapperProperties varchar(65535),
+    serverProperties varchar(65535),
+    tableProperties varchar(65535),
+    locale varchar(65535)) 
+    returns table(
+        name varchar(65535),
+        avalue varchar(65535),
+        description varchar(65535),
+        choices varchar(65535),
+        required boolean) 
+    external name 'class com.sqlstream.plugin.FarragoMedInfo.getColumnSetPropertyInfo';
+
+CREATE or replace FUNCTION getColumnPropertyInfo(
+    mofId varchar(65535),
+    libraryName varchar(65535),
+    options varchar(65535),
+    wrapperProperties varchar(65535),
+    serverProperties varchar(65535),
+    tableProperties varchar(65535),
+    columnProperties varchar(65535),
+    locale varchar(65535))
+    returns table(
+        name varchar(65535),
+        avalue varchar(65535),
+        description varchar(65535),
+        choices varchar(65535),
+        required boolean) 
+    external name 'class com.sqlstream.plugin.FarragoMedInfo.getColumnPropertyInfo';
+
+CREATE or replace FUNCTION isForeign(
+    mofId varchar(65535),
+    libraryName varchar(65535),
+    options varchar(65535),
+    locale varchar(65535)) 
+    returns table(
+        name varchar(65535),
+        avalue varchar(65535),
+        description varchar(65535),
+        choices varchar(65535),
+        required boolean) 
+    external name 'class com.sqlstream.plugin.FarragoMedInfo.isForeign';
