@@ -1075,10 +1075,6 @@ create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin
 library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory' 
 options(0);
 
-create or replace schema udx;
-set schema 'udx';
-set path 'udx';
-
 CREATE or replace FUNCTION getPluginPropertyInfo(
     mofId varchar(65535),
     libraryName varchar(65535),
