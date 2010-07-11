@@ -1103,7 +1103,7 @@ CREATE or replace FUNCTION getServerPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
-    external name 'class com.sqlstream.plugin.FarragoMedInfo.getServerPropertyInfo';
+    external name 'class net.sf.farrago.syslib.FarragoMedInfo.getServerPropertyInfo';
 
 CREATE or replace FUNCTION getColumnSetPropertyInfo(
     mofId varchar(65535),
@@ -1119,7 +1119,7 @@ CREATE or replace FUNCTION getColumnSetPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
-    external name 'class com.sqlstream.plugin.FarragoMedInfo.getColumnSetPropertyInfo';
+    external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnSetPropertyInfo';
 
 CREATE or replace FUNCTION getColumnPropertyInfo(
     mofId varchar(65535),
@@ -1136,7 +1136,7 @@ CREATE or replace FUNCTION getColumnPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
-    external name 'class com.sqlstream.plugin.FarragoMedInfo.getColumnPropertyInfo';
+    external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnPropertyInfo';
 
 CREATE or replace FUNCTION isForeign(
     mofId varchar(65535),
@@ -1149,4 +1149,4 @@ CREATE or replace FUNCTION isForeign(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
-    external name 'class com.sqlstream.plugin.FarragoMedInfo.isForeign';
+    external name 'class net.sf.farrago.syslib.FarragoMedInfo.isForeign';
