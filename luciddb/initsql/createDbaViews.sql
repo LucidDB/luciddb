@@ -70,6 +70,7 @@ create or replace view dba_columns as
     column_size as "PRECISION",
     dec_digits,
     sys_root.convert_nullable_int_to_boolean(nullable) as is_nullable,
+    default_value,
     remarks,
     cast(ci."mofId" as varchar(128)) as mof_id,
     cast(ci."lineageId" as varchar(128)) as lineage_id
