@@ -1088,7 +1088,7 @@ CREATE or replace FUNCTION getPluginPropertyInfo(
         choices varchar(65535),
         required boolean) 
     language java parameter style system defined java no sql
-    external name 'class com.sqlstream.plugin.FarragoMedInfo.getPluginPropertyInfo';
+    external name 'class net.sf.farrago.syslib.FarragoMedInfo.getPluginPropertyInfo';
 
 CREATE or replace FUNCTION getServerPropertyInfo(
     mofId varchar(65535),
@@ -1103,6 +1103,7 @@ CREATE or replace FUNCTION getServerPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
+    language java parameter style system defined java no sql
     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getServerPropertyInfo';
 
 CREATE or replace FUNCTION getColumnSetPropertyInfo(
@@ -1119,6 +1120,7 @@ CREATE or replace FUNCTION getColumnSetPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
+    language java parameter style system defined java no sql
     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnSetPropertyInfo';
 
 CREATE or replace FUNCTION getColumnPropertyInfo(
@@ -1136,6 +1138,7 @@ CREATE or replace FUNCTION getColumnPropertyInfo(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
+    language java parameter style system defined java no sql
     external name 'class net.sf.farrago.syslib.FarragoMedInfo.getColumnPropertyInfo';
 
 CREATE or replace FUNCTION isForeign(
@@ -1149,4 +1152,5 @@ CREATE or replace FUNCTION isForeign(
         description varchar(65535),
         choices varchar(65535),
         required boolean) 
+    language java parameter style system defined java no sql
     external name 'class net.sf.farrago.syslib.FarragoMedInfo.isForeign';
