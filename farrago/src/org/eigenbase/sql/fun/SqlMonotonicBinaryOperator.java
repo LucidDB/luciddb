@@ -141,17 +141,13 @@ public class SqlMonotonicBinaryOperator
         }
 
         // strictly asc + strictly asc --> strictly asc
+        //   e.g. 2 * orderid + 3 * orderid
+        //     is strictly increasing if orderid is strictly increasing
         // asc + asc --> asc
+        //   e.g. 2 * orderid + 3 * orderid
+        //     is increasing if orderid is increasing
         // asc + desc --> not monotonic
-        assertMonotonicity(
-            "2 * orderid + 3 * orderid",
-            SqlMonotonicity.StrictlyIncreasing);
-        assertMonotonicity(
-            "2 * orderid + (-3 * orderid)",
-            SqlMonotonicity.NotMonotonic);
-        assertMonotonicity(
-            "2 * orderid + 3 * orderid",
-            SqlMonotonicity.StrictlyIncreasing);
+        //   e.g. 2 * orderid + (-3 * orderid) is not monotonic
 
         if (getName().equals("+")) {
             if (mono0 == mono1) {
@@ -176,14 +172,6 @@ public class SqlMonotonicBinaryOperator
         }
 
         return super.getMonotonicity(call, scope);
-    }
-
-    private void assertMonotonicity(
-        String s,
-        SqlMonotonicity monotonicity)
-    {
-        //To change body of created methods use File | Settings | File
-        //Templates.
     }
 }
 

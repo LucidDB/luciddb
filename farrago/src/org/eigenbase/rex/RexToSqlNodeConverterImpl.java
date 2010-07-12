@@ -51,6 +51,20 @@ public class RexToSqlNodeConverterImpl
 
     //~ Methods ----------------------------------------------------------------
 
+    // implement RexToSqlNodeConverter
+    public SqlNode convertNode(RexNode node)
+    {
+        if (node instanceof RexLiteral) {
+            return convertLiteral((RexLiteral) node);
+        } else if (node instanceof RexInputRef) {
+            return convertInputRef((RexInputRef) node);
+        } else if (node instanceof RexCall) {
+            return convertCall((RexCall) node);
+        }
+        return null;
+    }
+
+    // implement RexToSqlNodeConverter
     public SqlNode convertCall(RexCall call)
     {
         final RexSqlConvertlet convertlet = convertletTable.get(call);
@@ -58,10 +72,10 @@ public class RexToSqlNodeConverterImpl
             return convertlet.convertCall(this, call);
         }
 
-        // No convertlet was suitable.
-        throw Util.needToImplement(call);
+        return null;
     }
 
+    // implement RexToSqlNodeConverter
     public SqlNode convertLiteral(RexLiteral literal)
     {
         // Numeric
@@ -117,12 +131,14 @@ public class RexToSqlNodeConverterImpl
                 (Boolean) literal.getValue(),
                 SqlParserPos.ZERO);
         }
-        throw Util.unexpected(literal.getTypeName());
+
+        return null;
     }
 
+    // implement RexToSqlNodeConverter
     public SqlNode convertInputRef(RexInputRef ref)
     {
-        throw Util.needToImplement(ref);
+        return null;
     }
 }
 

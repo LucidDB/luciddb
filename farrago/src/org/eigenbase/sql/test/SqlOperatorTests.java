@@ -34,6 +34,7 @@ import junit.framework.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.test.SqlTester.VmName;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.test.*;
@@ -472,16 +473,24 @@ public abstract class SqlOperatorTests
             "VARCHAR(30)",
             "2008-01-01 01:02:03");
 
-        // todo: cast of intervals to strings not supported
-        if (todo) {
+        // todo: cast of intervals to strings not supported in fennel
+        if (!(getTester().isVm(VmName.FENNEL))) {
             checkCastToString(
                 "interval '3-2' year to month",
                 "CHAR(5)",
                 "+3-02");
             checkCastToString(
+                "interval '32' month",
+                "CHAR(3)",
+                "+32");
+            checkCastToString(
                 "interval '1 2:3:4' day to second",
                 "CHAR(11)",
                 "+1 02:03:04");
+            checkCastToString(
+                "interval '1234.56' second(4,2)",
+                "CHAR(8)",
+                "+1234.56");
         }
 
         // boolean
@@ -644,6 +653,125 @@ public abstract class SqlOperatorTests
             "cast('654342432412312' as bigint)",
             "BIGINT NOT NULL",
             "654342432412312");
+
+        // interval to decimal
+        getTester().checkScalarExact(
+            "cast(INTERVAL '1.29' second(1,2) as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "1.3");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '1.25' second as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "1.3");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-1.29' second as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "-1.3");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-1.25' second as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "-1.3");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-1.21' second as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "-1.2");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' minute as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "5.0");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' hour as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "5.0");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' day as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "5.0");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' month as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "5.0");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' year as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "5.0");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-5' day as decimal(2,1))",
+            "DECIMAL(2, 1) NOT NULL",
+            "-5.0");
+
+        // Interval to bigint
+        getTester().checkScalarExact(
+            "cast(INTERVAL '1.25' second as bigint)",
+            "BIGINT NOT NULL",
+            "1");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-1.29' second(1,2) as bigint)",
+            "BIGINT NOT NULL",
+            "-1");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' day as bigint)",
+            "BIGINT NOT NULL",
+            "5");
+
+        // Interval to integer
+        getTester().checkScalarExact(
+            "cast(INTERVAL '1.25' second as integer)",
+            "INTEGER NOT NULL",
+            "1");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '-1.29' second(1,2) as integer)",
+            "INTEGER NOT NULL",
+            "-1");
+        getTester().checkScalarExact(
+            "cast(INTERVAL '5' day as integer)",
+            "INTEGER NOT NULL",
+            "5");
+    }
+
+    public void testCastToInterval()
+    {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
+        getTester().checkScalar(
+            "cast(5 as interval second)",
+            "+5",
+            "INTERVAL SECOND NOT NULL");
+        getTester().checkScalar(
+            "cast(5 as interval minute)",
+            "+5",
+            "INTERVAL MINUTE NOT NULL");
+        getTester().checkScalar(
+            "cast(5 as interval hour)",
+            "+5",
+            "INTERVAL HOUR NOT NULL");
+        getTester().checkScalar(
+            "cast(5 as interval day)",
+            "+5",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "cast(5 as interval month)",
+            "+5",
+            "INTERVAL MONTH NOT NULL");
+        getTester().checkScalar(
+            "cast(5 as interval year)",
+            "+5",
+            "INTERVAL YEAR NOT NULL");
+        getTester().checkScalar(
+            "cast(5.7 as interval day)",
+            "+6",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "cast(-5.7 as interval day)",
+            "-6",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "cast(3456 as interval month(4))",
+            "+3456",
+            "INTERVAL MONTH(4) NOT NULL");
+        getTester().checkScalar(
+            "cast(-5723 as interval minute(4))",
+            "-5723",
+            "INTERVAL MINUTE(4) NOT NULL");
     }
 
     public void testCastWithRoundingToScalar()

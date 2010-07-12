@@ -321,41 +321,86 @@ public abstract class FarragoAbstractServer
         return pw;
     }
 
+    protected enum ConsoleCommandResult {
+        UNKNOWN_COMMAND, SERVER_QUIT, SERVER_CONTINUE
+    }
+
+    /**
+     * Handles a console command.
+     * @param cmd command-line typed at the console.
+     * @return command result.
+     */
+    protected ConsoleCommandResult doConsoleCommand(String cmd)
+    {
+        if (cmd.equals("!quit")) {
+            boolean stopped = stopSoft();
+            return stopped ? ConsoleCommandResult.SERVER_QUIT
+                           : ConsoleCommandResult.SERVER_CONTINUE;
+        } else if (cmd.equals("!kill")) {
+            stopHard();
+            return ConsoleCommandResult.SERVER_QUIT;
+        } else {
+            return ConsoleCommandResult.UNKNOWN_COMMAND;
+        }
+    }
+
     /**
      * Implements console interaction from stdin after the server has
      * successfully started.
      */
     public void runConsole()
     {
+        Thread shutdownHook = null;
+        if (shouldRegisterShutdownHook()) {
+            shutdownHook = new FarragoServerShutdownHook();
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        }
+
         FarragoResource res = FarragoResource.instance();
 
-        // TODO:  install signal handlers also
         InputStreamReader inReader = new InputStreamReader(System.in);
         LineNumberReader lineReader = new LineNumberReader(inReader);
+        cmdloop:
         for (;;) {
             String cmd;
             try {
                 cmd = lineReader.readLine();
             } catch (IOException ex) {
-                break;
+                break cmdloop;
             }
             if (cmd == null) {
                 // interpret end-of-stream as meaning we are supposed to
                 // run forever as a daemon
                 return;
             }
-            if (cmd.equals("!quit")) {
-                if (stopSoft()) {
-                    break;
-                }
-            } else if (cmd.equals("!kill")) {
-                stopHard();
-                break;
-            } else {
+            switch (doConsoleCommand(cmd)) {
+            case UNKNOWN_COMMAND:
                 pw.println(res.ServerBadCommand.str(cmd));
+                // fall through
+            case SERVER_CONTINUE:
+                continue cmdloop;
+            case SERVER_QUIT:
+                break cmdloop;
             }
         }
+        if (shutdownHook != null) {
+            // We already took care of shutdown ourselves
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
         System.exit(0);
+    }
+
+    protected boolean shouldRegisterShutdownHook()
+    {
+        return true;
+    }
+
+    private class FarragoServerShutdownHook extends Thread
+    {
+        public void run()
+        {
+            stopHard();
+        }
     }
 }
 

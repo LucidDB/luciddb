@@ -55,22 +55,22 @@ public class SqlStdOperatorTable
     // INTERSECT -> *
     // which explains the different precedence values
     public static final SqlSetOperator unionOperator =
-        new SqlSetOperator("UNION", SqlKind.Union, 14, false);
+        new SqlSetOperator("UNION", SqlKind.UNION, 14, false);
 
     public static final SqlSetOperator unionAllOperator =
-        new SqlSetOperator("UNION ALL", SqlKind.Union, 14, true);
+        new SqlSetOperator("UNION ALL", SqlKind.UNION, 14, true);
 
     public static final SqlSetOperator exceptOperator =
-        new SqlSetOperator("EXCEPT", SqlKind.Except, 14, false);
+        new SqlSetOperator("EXCEPT", SqlKind.EXCEPT, 14, false);
 
     public static final SqlSetOperator exceptAllOperator =
-        new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 14, true);
+        new SqlSetOperator("EXCEPT ALL", SqlKind.EXCEPT, 14, true);
 
     public static final SqlSetOperator intersectOperator =
-        new SqlSetOperator("INTERSECT", SqlKind.Intersect, 18, false);
+        new SqlSetOperator("INTERSECT", SqlKind.INTERSECT, 18, false);
 
     public static final SqlSetOperator intersectAllOperator =
-        new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 18, true);
+        new SqlSetOperator("INTERSECT ALL", SqlKind.INTERSECT, 18, true);
 
     /**
      * The "MULTISET UNION" operator.
@@ -118,7 +118,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator andOperator =
         new SqlBinaryOperator(
             "AND",
-            SqlKind.And,
+            SqlKind.AND,
             28,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -137,7 +137,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator(
             "||",
-            SqlKind.Other,
+            SqlKind.OTHER,
             60,
             true,
             SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
@@ -150,7 +150,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator(
             "/",
-            SqlKind.Divide,
+            SqlKind.DIVIDE,
             60,
             true,
             SqlTypeStrategies.rtiNullableQuotient,
@@ -167,7 +167,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator divideIntegerOperator =
         new SqlBinaryOperator(
             "/INT",
-            SqlKind.Divide,
+            SqlKind.DIVIDE,
             60,
             true,
             SqlTypeStrategies.rtiNullableIntegerQuotient,
@@ -180,7 +180,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator dotOperator =
         new SqlBinaryOperator(
             ".",
-            SqlKind.Dot,
+            SqlKind.DOT,
             80,
             true,
             null,
@@ -193,7 +193,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator equalsOperator =
         new SqlBinaryOperator(
             "=",
-            SqlKind.Equals,
+            SqlKind.EQUALS,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -206,7 +206,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator greaterThanOperator =
         new SqlBinaryOperator(
             ">",
-            SqlKind.GreaterThan,
+            SqlKind.GREATER_THAN,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -219,7 +219,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator isDistinctFromOperator =
         new SqlBinaryOperator(
             "IS DISTINCT FROM",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             true,
             SqlTypeStrategies.rtiBoolean,
@@ -233,7 +233,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator isNotDistinctFromOperator =
         new SqlBinaryOperator(
             "IS NOT DISTINCT FROM",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             true,
             SqlTypeStrategies.rtiBoolean,
@@ -249,7 +249,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator isDifferentFromOperator =
         new SqlBinaryOperator(
             "$IS_DIFFERENT_FROM",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             true,
             SqlTypeStrategies.rtiBoolean,
@@ -262,7 +262,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator greaterThanOrEqualOperator =
         new SqlBinaryOperator(
             ">=",
-            SqlKind.GreaterThanOrEqual,
+            SqlKind.GREATER_THAN_OR_EQUAL,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -288,7 +288,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator lessThanOperator =
         new SqlBinaryOperator(
             "<",
-            SqlKind.LessThan,
+            SqlKind.LESS_THAN,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -301,7 +301,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator lessThanOrEqualOperator =
         new SqlBinaryOperator(
             "<=",
-            SqlKind.LessThanOrEqual,
+            SqlKind.LESS_THAN_OR_EQUAL,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -317,7 +317,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator minusOperator =
         new SqlMonotonicBinaryOperator(
             "-",
-            SqlKind.Minus,
+            SqlKind.MINUS,
             40,
             true,
 
@@ -332,7 +332,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator multiplyOperator =
         new SqlMonotonicBinaryOperator(
             "*",
-            SqlKind.Times,
+            SqlKind.TIMES,
             60,
             true,
             SqlTypeStrategies.rtiNullableProduct,
@@ -345,7 +345,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator notEqualsOperator =
         new SqlBinaryOperator(
             "<>",
-            SqlKind.NotEquals,
+            SqlKind.NOT_EQUALS,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -358,7 +358,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator orOperator =
         new SqlBinaryOperator(
             "OR",
-            SqlKind.Or,
+            SqlKind.OR,
             26,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -371,7 +371,7 @@ public class SqlStdOperatorTable
     public static final SqlBinaryOperator plusOperator =
         new SqlMonotonicBinaryOperator(
             "+",
-            SqlKind.Plus,
+            SqlKind.PLUS,
             40,
             true,
             SqlTypeStrategies.rtiNullableSum,
@@ -403,7 +403,7 @@ public class SqlStdOperatorTable
         //TODO check if precedence is correct
         new SqlBinaryOperator(
             "SUBMULTISET OF",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -416,7 +416,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator descendingOperator =
         new SqlPostfixOperator(
             "DESC",
-            SqlKind.Descending,
+            SqlKind.DESCENDING,
             20,
             null,
             SqlTypeStrategies.otiReturnType,
@@ -425,7 +425,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isNotNullOperator =
         new SqlPostfixOperator(
             "IS NOT NULL",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -434,7 +434,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isNullOperator =
         new SqlPostfixOperator(
             "IS NULL",
-            SqlKind.IsNull,
+            SqlKind.IS_NULL,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -443,7 +443,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isNotTrueOperator =
         new SqlPostfixOperator(
             "IS NOT TRUE",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -452,7 +452,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isTrueOperator =
         new SqlPostfixOperator(
             "IS TRUE",
-            SqlKind.IsTrue,
+            SqlKind.IS_TRUE,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -461,7 +461,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isNotFalseOperator =
         new SqlPostfixOperator(
             "IS NOT FALSE",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -470,7 +470,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isFalseOperator =
         new SqlPostfixOperator(
             "IS FALSE",
-            SqlKind.IsFalse,
+            SqlKind.IS_FALSE,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -479,7 +479,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isNotUnknownOperator =
         new SqlPostfixOperator(
             "IS NOT UNKNOWN",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -488,7 +488,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isUnknownOperator =
         new SqlPostfixOperator(
             "IS UNKNOWN",
-            SqlKind.IsNull,
+            SqlKind.IS_NULL,
             30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -497,7 +497,7 @@ public class SqlStdOperatorTable
     public static final SqlPostfixOperator isASetOperator =
         new SqlPostfixOperator(
             "IS A SET",
-            SqlKind.Other,
+            SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
             null,
@@ -509,7 +509,7 @@ public class SqlStdOperatorTable
     public static final SqlPrefixOperator existsOperator =
         new SqlPrefixOperator(
             "EXISTS",
-            SqlKind.Exists,
+            SqlKind.EXISTS,
             40,
             SqlTypeStrategies.rtiBoolean,
             null,
@@ -524,7 +524,7 @@ public class SqlStdOperatorTable
     public static final SqlPrefixOperator notOperator =
         new SqlPrefixOperator(
             "NOT",
-            SqlKind.Not,
+            SqlKind.NOT,
             30,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
@@ -539,7 +539,7 @@ public class SqlStdOperatorTable
     public static final SqlPrefixOperator prefixMinusOperator =
         new SqlPrefixOperator(
             "-",
-            SqlKind.MinusPrefix,
+            SqlKind.MINUS_PREFIX,
             80,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
@@ -554,7 +554,7 @@ public class SqlStdOperatorTable
     public static final SqlPrefixOperator prefixPlusOperator =
         new SqlPrefixOperator(
             "+",
-            SqlKind.PlusPrefix,
+            SqlKind.PLUS_PREFIX,
             80,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
@@ -568,7 +568,7 @@ public class SqlStdOperatorTable
     public static final SqlPrefixOperator explicitTableOperator =
         new SqlPrefixOperator(
             "TABLE",
-            SqlKind.ExplicitTable,
+            SqlKind.EXPLICIT_TABLE,
             2,
             null,
             null,
@@ -671,7 +671,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction histogramMinFunction =
         new SqlFunction(
             "$HISTOGRAM_MIN",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcNumericOrString,
@@ -683,7 +683,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction histogramMaxFunction =
         new SqlFunction(
             "$HISTOGRAM_MAX",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcNumericOrString,
@@ -695,7 +695,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction histogramFirstValueFunction =
         new SqlFunction(
             "$HISTOGRAM_FIRST_VALUE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcNumericOrString,
@@ -707,7 +707,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction histogramLastValueFunction =
         new SqlFunction(
             "$HISTOGRAM_LAST_VALUE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcNumericOrString,
@@ -805,7 +805,7 @@ public class SqlStdOperatorTable
     public static final SqlSpecialOperator lateralOperator =
         new SqlFunctionalOperator(
             "LATERAL",
-            SqlKind.Lateral,
+            SqlKind.LATERAL,
             200,
             true,
             SqlTypeStrategies.rtiFirstArgType,
@@ -858,23 +858,23 @@ public class SqlStdOperatorTable
             true);
 
     public static final SqlSpecialOperator notLikeOperator =
-        new SqlLikeOperator("NOT LIKE", SqlKind.Like, true);
+        new SqlLikeOperator("NOT LIKE", SqlKind.LIKE, true);
 
     public static final SqlSpecialOperator likeOperator =
-        new SqlLikeOperator("LIKE", SqlKind.Like, false);
+        new SqlLikeOperator("LIKE", SqlKind.LIKE, false);
 
     public static final SqlSpecialOperator notSimilarOperator =
-        new SqlLikeOperator("NOT SIMILAR TO", SqlKind.Similar, true);
+        new SqlLikeOperator("NOT SIMILAR TO", SqlKind.SIMILAR, true);
 
     public static final SqlSpecialOperator similarOperator =
-        new SqlLikeOperator("SIMILAR TO", SqlKind.Similar, false);
+        new SqlLikeOperator("SIMILAR TO", SqlKind.SIMILAR, false);
 
     /**
      * Internal operator used to represent the ESCAPE clause of a LIKE or
      * SIMILAR TO expression.
      */
     public static final SqlSpecialOperator escapeOperator =
-        new SqlSpecialOperator("Escape", SqlKind.Escape, 30);
+        new SqlSpecialOperator("Escape", SqlKind.ESCAPE, 30);
 
     /**
      * The standard SELECT operator.
@@ -887,19 +887,19 @@ public class SqlStdOperatorTable
     public static final SqlJoinOperator joinOperator = new SqlJoinOperator();
 
     public static final SqlSpecialOperator insertOperator =
-        new SqlSpecialOperator("INSERT", SqlKind.Insert);
+        new SqlSpecialOperator("INSERT", SqlKind.INSERT);
 
     public static final SqlSpecialOperator deleteOperator =
-        new SqlSpecialOperator("DELETE", SqlKind.Delete);
+        new SqlSpecialOperator("DELETE", SqlKind.DELETE);
 
     public static final SqlSpecialOperator updateOperator =
-        new SqlSpecialOperator("UPDATE", SqlKind.Update);
+        new SqlSpecialOperator("UPDATE", SqlKind.UPDATE);
 
     public static final SqlSpecialOperator mergeOperator =
-        new SqlSpecialOperator("MERGE", SqlKind.Merge);
+        new SqlSpecialOperator("MERGE", SqlKind.MERGE);
 
     public static final SqlSpecialOperator explainOperator =
-        new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
+        new SqlSpecialOperator("EXPLAIN", SqlKind.EXPLAIN);
 
     public static final SqlOrderByOperator orderByOperator =
         new SqlOrderByOperator();
@@ -941,7 +941,7 @@ public class SqlStdOperatorTable
      * true or not.
      */
     public static final SqlSpecialOperator reinterpretOperator =
-        new SqlSpecialOperator("Reinterpret", SqlKind.Reinterpret) {
+        new SqlSpecialOperator("Reinterpret", SqlKind.REINTERPRET) {
             public SqlOperandCountRange getOperandCountRange()
             {
                 return SqlOperandCountRange.OneOrTwo;
@@ -981,7 +981,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction charLengthFunc =
         new SqlFunction(
             "CHAR_LENGTH",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableInteger,
             null,
             SqlTypeStrategies.otcCharString,
@@ -990,7 +990,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction characterLengthFunc =
         new SqlFunction(
             "CHARACTER_LENGTH",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableInteger,
             null,
             SqlTypeStrategies.otcCharString,
@@ -999,7 +999,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction upperFunc =
         new SqlFunction(
             "UPPER",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcCharString,
@@ -1008,7 +1008,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction lowerFunc =
         new SqlFunction(
             "LOWER",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcCharString,
@@ -1017,7 +1017,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction initcapFunc =
         new SqlFunction(
             "INITCAP",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableFirstArgType,
             null,
             SqlTypeStrategies.otcCharString,
@@ -1032,7 +1032,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction powerFunc =
         new SqlFunction(
             "POWER",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumericX2,
@@ -1041,7 +1041,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction sqrtFunc =
         new SqlFunction(
             "SQRT",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumeric,
@@ -1053,7 +1053,7 @@ public class SqlStdOperatorTable
         // SQL2003 Part2 Section 6.27, Syntax Rules 9
         new SqlFunction(
             "MOD",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableSecondArgType,
             null,
             SqlTypeStrategies.otcExactNumericX2,
@@ -1062,7 +1062,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction lnFunc =
         new SqlFunction(
             "LN",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumeric,
@@ -1071,7 +1071,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction log10Func =
         new SqlFunction(
             "LOG10",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumeric,
@@ -1080,7 +1080,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction absFunc =
         new SqlFunction(
             "ABS",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcNumericOrInterval,
@@ -1089,7 +1089,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction expFunc =
         new SqlFunction(
             "EXP",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableDouble,
             null,
             SqlTypeStrategies.otcNumeric,
@@ -1108,7 +1108,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction floorFunc =
         new SqlMonotonicUnaryFunction(
             "FLOOR",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeOrExactNoScale,
             null,
             SqlTypeStrategies.otcNumericOrInterval,
@@ -1120,7 +1120,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction ceilFunc =
         new SqlMonotonicUnaryFunction(
             "CEIL",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeOrExactNoScale,
             null,
             SqlTypeStrategies.otcNumericOrInterval,
@@ -1211,7 +1211,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction inFennelFunc =
         new SqlMonotonicUnaryFunction(
             "IN_FENNEL",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny,
@@ -1257,7 +1257,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction elementFunc =
         new SqlFunction(
             "ELEMENT",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableMultisetElementType,
             null,
             SqlTypeStrategies.otcMultiset,
@@ -1281,7 +1281,7 @@ public class SqlStdOperatorTable
     public static final SqlInternalOperator sliceOp =
         new SqlInternalOperator(
             "$SLICE",
-            SqlKind.Other,
+            SqlKind.OTHER,
             0,
             false,
             SqlTypeStrategies.rtiMultisetFirstColumnMultiset,
@@ -1307,7 +1307,7 @@ public class SqlStdOperatorTable
     public static final SqlInternalOperator elementSlicefunc =
         new SqlInternalOperator(
             "$ELEMENT_SLICE",
-            SqlKind.Other,
+            SqlKind.OTHER,
             0,
             false,
             SqlTypeStrategies.rtiMultisetRecordMultiset,
@@ -1337,7 +1337,7 @@ public class SqlStdOperatorTable
     public static final SqlInternalOperator scalarQueryOperator =
         new SqlInternalOperator(
             "$SCALAR_QUERY",
-            SqlKind.ScalarQuery,
+            SqlKind.SCALAR_QUERY,
             0,
             false,
             SqlTypeStrategies.rtiRecordToScalarType,
@@ -1369,7 +1369,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction cardinalityFunc =
         new SqlFunction(
             "CARDINALITY",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableInteger,
             null,
             SqlTypeStrategies.otcMultiset,
@@ -1381,7 +1381,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction collectFunc =
         new SqlFunction(
             "COLLECT",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny,
@@ -1393,7 +1393,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction fusionFunc =
         new SqlFunction(
             "FUSION",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcMultiset,
@@ -1405,7 +1405,7 @@ public class SqlStdOperatorTable
     public static final SqlFunction nextValueFunc =
         new SqlFunction(
             "NEXT_VALUE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiBigint,
             null,
             SqlTypeStrategies.otcCharString,
@@ -1439,7 +1439,7 @@ public class SqlStdOperatorTable
     public static final SqlSpecialOperator sampleFunction =
         new SqlSpecialOperator(
             "TABLESAMPLE",
-            SqlKind.TableSample,
+            SqlKind.TABLESAMPLE,
             20,
             true,
             SqlTypeStrategies.rtiFirstArgType,

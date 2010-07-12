@@ -43,7 +43,7 @@ public class SqlNewOperator
 
     public SqlNewOperator()
     {
-        super("NEW", SqlKind.NewSpecification, 0, null, null, null);
+        super("NEW", SqlKind.NEW_SPECIFICATION, 0, null, null, null);
     }
 
     //~ Methods ----------------------------------------------------------------

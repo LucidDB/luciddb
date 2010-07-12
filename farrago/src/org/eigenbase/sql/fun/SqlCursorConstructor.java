@@ -43,7 +43,7 @@ public class SqlCursorConstructor
     {
         super(
             "CURSOR",
-            SqlKind.CursorConstructor,
+            SqlKind.CURSOR,
             MaxPrec,
             false,
             SqlTypeStrategies.rtiCursor,

@@ -153,7 +153,7 @@ public class MedJdbcQueryRel
     public void explain(RelOptPlanWriter pw)
     {
         boolean omitServerMofId = false;
-        switch(pw.getDetailLevel()) {
+        switch (pw.getDetailLevel()) {
         case NO_ATTRIBUTES:
         case EXPPLAN_ATTRIBUTES:
             omitServerMofId = true;

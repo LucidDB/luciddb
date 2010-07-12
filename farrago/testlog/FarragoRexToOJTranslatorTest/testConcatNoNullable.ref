@@ -1,6 +1,0 @@
-
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-oj_var0.concat( ID$0$NAME, ID$0$NAME );
-
-return oj_var0;

@@ -43,7 +43,7 @@ public class SqlCeilFunction
     {
         super(
             "CEIL",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcNumeric,

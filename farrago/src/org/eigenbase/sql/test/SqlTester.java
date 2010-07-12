@@ -244,6 +244,15 @@ public interface SqlTester
         VmName ... unimplementedVmNames);
 
     /**
+     * Checks to see if this tester is for the given VmName. Return false if
+     * no vm associated with this tester.
+     *
+     * @param vmName VmName to check for.
+     * @return whether or not this tester is for the given VmName.
+     */
+    boolean isVm(VmName vmName);
+
+    /**
      * Checks that an aggregate expression returns the expected result.
      *
      * <p>For example, <code>checkAgg("AVG(DISTINCT x)", new String[] {"2", "3",

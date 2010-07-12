@@ -231,25 +231,33 @@ public class SqlTypeAssignmentRules
             SqlTypeName.VARCHAR,
             copy(rule));
 
-        // Bigint is castable from intervals
-        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BIGINT);
-        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
-        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
+        // Exact Numerics are castable from intervals
+        for (SqlTypeName exactType : SqlTypeName.exactTypes) {
+            rule = (HashSet<SqlTypeName>) coerceRules.get(exactType);
+            rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+            rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
+        }
 
-        // intervals is castable from Bigint and Integer
+        // intervals are castable from Exact Numeric
         rule =
             (HashSet<SqlTypeName>) coerceRules.get(
                 SqlTypeName.INTERVAL_DAY_TIME);
-        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
         rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
         rule.add(SqlTypeName.VARCHAR);
 
-        // intervals is castable from Bigint and Integer
+        // intervals  castable from Exact Numeric
         rule =
             (HashSet<SqlTypeName>) coerceRules.get(
                 SqlTypeName.INTERVAL_YEAR_MONTH);
-        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
         rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
         rule.add(SqlTypeName.VARCHAR);
 
         // varchar is castable from Boolean, Date, time, timestamp, numbers and
@@ -268,6 +276,8 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.DATE);
         rule.add(SqlTypeName.TIME);
         rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
 
         // Boolean is castable from char and varchar
         rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BOOLEAN);

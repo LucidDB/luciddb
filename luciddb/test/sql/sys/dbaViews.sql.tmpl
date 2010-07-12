@@ -130,7 +130,7 @@ where foreign_server_name='DBATEST_FF_SERVER'
 order by 1,2;
 
 -- dba_tables, dba_views, dba_stored_tables
-create table dbavtest.table1(col1 int, col2 int);
+create table dbavtest.table1(col1 int, col2 int default 3);
 
 create view dbavtest.empview as 
 select * from dbavtest.emps;
@@ -156,7 +156,7 @@ order by 1;
 
 -- dba_columns
 select catalog_name, table_name, column_name, ordinal_position, datatype,
-  "PRECISION", dec_digits, is_nullable
+  "PRECISION", dec_digits, is_nullable, default_value
 from sys_root.dba_columns
 where schema_name='DBAVTEST'
 order by 2,4;

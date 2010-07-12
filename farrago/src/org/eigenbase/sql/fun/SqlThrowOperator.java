@@ -50,7 +50,7 @@ public class SqlThrowOperator
     {
         super(
             "$throw",
-            SqlKind.Other,
+            SqlKind.OTHER,
             2,
             true,
             SqlTypeStrategies.rtiBoolean,

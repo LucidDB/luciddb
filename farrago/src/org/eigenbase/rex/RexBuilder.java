@@ -31,6 +31,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -201,6 +202,8 @@ public class RexBuilder
         SqlOperator op,
         RexNode ... exprs)
     {
+        // TODO jvs 12-Jun-2010:  Find a better place for this;
+        // it surely does not belong here.
         if (op == SqlStdOperatorTable.andOperator
             && exprs.length == 2
             && exprs[0].equals(exprs[1]))
@@ -435,8 +438,130 @@ public class RexBuilder
         RelDataType type,
         RexNode exp)
     {
+        if (SqlTypeUtil.isInterval(type)
+            && SqlTypeUtil.isExactNumeric(exp.getType()))
+        {
+            return makeCastExactToInterval(type, exp);
+        } else if (SqlTypeUtil.isExactNumeric(type)
+            && SqlTypeUtil.isInterval(exp.getType()))
+        {
+            return makeCastIntervalToExact(type, exp);
+        }
         return makeAbstractCast(type, exp);
     }
+
+    private RexNode makeCastIntervalToExact(RelDataType toType, RexNode exp)
+    {
+        IntervalSqlType intervalType = (IntervalSqlType) exp.getType();
+        TimeUnit endUnit = intervalType.getIntervalQualifier().getEndUnit();
+        if (endUnit == null) {
+            endUnit = intervalType.getIntervalQualifier().getStartUnit();
+        }
+        int scale = 0;
+        if (endUnit == TimeUnit.SECOND) {
+            scale = Math.min(
+                intervalType.getIntervalQualifier()
+                .getFractionalSecondPrecision(), 3);
+        }
+        BigDecimal multiplier = BigDecimal.valueOf(endUnit.multiplier)
+            .divide(BigDecimal.TEN.pow(scale));
+        RexNode value = decodeIntervalOrDecimal(exp);
+        if (multiplier.longValue() != 1) {
+            value = makeCall(
+                SqlStdOperatorTable.divideIntegerOperator,
+                value, makeBigintLiteral(multiplier));
+        }
+        if (scale > 0) {
+            RelDataType decimalType =
+                getTypeFactory().createSqlType(
+                    SqlTypeName.DECIMAL,
+                    scale + intervalType.getPrecision(),
+                    scale);
+            value = encodeIntervalOrDecimal(value, decimalType, false);
+        }
+        return ensureType(toType, value, false);
+    }
+
+    private RexNode makeCastExactToInterval(RelDataType toType, RexNode exp)
+    {
+        IntervalSqlType intervalType = (IntervalSqlType) toType;
+        TimeUnit endUnit = intervalType.getIntervalQualifier().getEndUnit();
+        if (endUnit == null) {
+            endUnit = intervalType.getIntervalQualifier().getStartUnit();
+        }
+        int scale = 0;
+        if (endUnit == TimeUnit.SECOND) {
+            scale = Math.min(
+                intervalType.getIntervalQualifier()
+                .getFractionalSecondPrecision(), 3);
+        }
+        BigDecimal multiplier = BigDecimal.valueOf(endUnit.multiplier)
+            .divide(BigDecimal.TEN.pow(scale));
+        RelDataType decimalType =
+            getTypeFactory().createSqlType(
+                SqlTypeName.DECIMAL,
+                scale + intervalType.getPrecision(),
+                scale);
+        RexNode value = decodeIntervalOrDecimal(
+            ensureType(decimalType, exp, true));
+        if (multiplier.longValue() != 1) {
+            value = makeCall(
+                SqlStdOperatorTable.multiplyOperator,
+                value, makeExactLiteral(multiplier));
+        }
+        return encodeIntervalOrDecimal(value, toType, false);
+    }
+
+/**
+ * Casts a decimal's integer representation to a decimal node. If the
+ * expression is not the expected integer type, then it is casted first.
+ *
+ * <p>An overflow check may be requested to ensure the internal value
+ * does not exceed the maximum value of the decimal type.
+ *
+ * @param value integer representation of decimal
+ * @param type type integer will be reinterpreted as
+ * @param checkOverflow indicates whether an overflow check is required
+ * when reinterpreting this particular value as the decimal type. A
+ * check usually not required for arithmetic, but is often required for
+ * rounding and explicit casts.
+ *
+ * @return the integer reinterpreted as an opaque decimal type
+ */
+public RexNode encodeIntervalOrDecimal(
+    RexNode value,
+    RelDataType type,
+    boolean checkOverflow)
+{
+    RelDataType bigintType =
+        typeFactory.createSqlType(
+            SqlTypeName.BIGINT);
+    RexNode cast = ensureType(bigintType, value, true);
+    return makeReinterpretCast(
+        type,
+        cast,
+        makeLiteral(checkOverflow));
+}
+
+/**
+ * Retrieves an interval or decimal node's integer representation
+ *
+ * @param node the interval or decimal value as an opaque type
+ *
+ * @return an integer representation of the decimal value
+ */
+public RexNode decodeIntervalOrDecimal(RexNode node)
+{
+    assert (SqlTypeUtil.isDecimal(node.getType())
+        || SqlTypeUtil.isInterval(node.getType()));
+    RelDataType bigintType =
+        typeFactory.createSqlType(
+            SqlTypeName.BIGINT);
+    return makeReinterpretCast(
+        matchNullability(bigintType, node),
+        node,
+        makeLiteral(false));
+}
 
     /**
      * Creates a call to the CAST operator.
@@ -540,7 +665,7 @@ public class RexBuilder
     }
 
     /**
-     * Creates a referenence to a given field of the input record.
+     * Creates a reference to a given field of the input record.
      *
      * @param type Type of field
      * @param i Ordinal of field
@@ -747,6 +872,50 @@ public class RexBuilder
                     s.length()),
                 SqlTypeName.CHAR);
         }
+    }
+
+    /**
+     * Ensures expression is interpreted as a specified type. The returned
+     * expression may be wrapped with a cast.
+     *
+     * @param type desired type
+     * @param node expression
+     * @param matchNullability whether to correct nullability of specified
+     * type to match the expression; this usually should be true, except for
+     * explicit casts which can override default nullability
+     *
+     * @return a casted expression or the original expression
+     */
+    public RexNode ensureType(
+        RelDataType type,
+        RexNode node,
+        boolean matchNullability)
+    {
+        RelDataType targetType = type;
+        if (matchNullability) {
+            targetType = matchNullability(type, node);
+        }
+        if (node.getType() != targetType) {
+            return makeCast(targetType, node);
+        }
+        return node;
+    }
+
+    /**
+     * Ensure's type's nullability matches a value's nullability
+     */
+    public RelDataType matchNullability(
+        RelDataType type,
+        RexNode value)
+    {
+        boolean typeNullability = type.isNullable();
+        boolean valueNullability = value.getType().isNullable();
+        if (typeNullability != valueNullability) {
+            return getTypeFactory().createTypeWithNullability(
+                type,
+                valueNullability);
+        }
+        return type;
     }
 
     /**

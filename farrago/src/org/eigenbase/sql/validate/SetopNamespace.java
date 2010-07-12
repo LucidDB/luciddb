@@ -68,13 +68,13 @@ public class SetopNamespace
 
     public RelDataType validateImpl()
     {
-        switch (call.getKind().getOrdinal()) {
-        case SqlKind.UnionORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.ExceptORDINAL:
+        switch (call.getKind()) {
+        case UNION:
+        case INTERSECT:
+        case EXCEPT:
             final SqlValidatorScope scope = validator.scopes.get(call);
             for (SqlNode operand : call.operands) {
-                if (!operand.getKind().isA(SqlKind.Query)) {
+                if (!(operand.isA(SqlKind.QUERY))) {
                     throw validator.newValidationError(
                         operand,
                         EigenbaseResource.instance().NeedQueryOp.ex(

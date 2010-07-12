@@ -194,7 +194,7 @@ public class LucidDbSqlValidator
         SqlValidatorScope scope)
     {
         // allow a dummy cast on the source expression
-        if (sourceExpr.isA(SqlKind.Cast)) {
+        if (sourceExpr.getKind() == SqlKind.CAST) {
             SqlCall cast = (SqlCall) sourceExpr;
             RelDataType castType = getValidatedNodeType(sourceExpr);
             RelDataType sourceType =
@@ -213,7 +213,7 @@ public class LucidDbSqlValidator
         }
 
         // check if the update expression is a simple identifier
-        if (sourceExpr.getKind() != SqlKind.Identifier) {
+        if (sourceExpr.getKind() != SqlKind.IDENTIFIER) {
             return false;
         }
 
@@ -346,10 +346,10 @@ public class LucidDbSqlValidator
          */
         private boolean checkOperands(SqlNode op1, SqlNode op2)
         {
-            if (op1.getKind() == SqlKind.Identifier) {
+            if (op1.getKind() == SqlKind.IDENTIFIER) {
                 SqlIdentifier col1 = (SqlIdentifier) expand(op1, scope);
                 if (col1.equalsDeep(targetCol, false)) {
-                    if (op2.getKind() == SqlKind.Identifier) {
+                    if (op2.getKind() == SqlKind.IDENTIFIER) {
                         SqlIdentifier col2 = (SqlIdentifier) expand(op2, scope);
                         if (col2.equalsDeep(sourceCol, false)) {
                             found = true;

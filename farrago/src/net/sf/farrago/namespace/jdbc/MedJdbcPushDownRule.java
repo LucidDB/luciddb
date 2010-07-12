@@ -175,20 +175,8 @@ class MedJdbcPushDownRule
         final FilterRel filterRel = filter;
         SqlNode filterNode = null;
         if (!projectOnly) {
-            // REVIEW: SWZ: 2008-08-29: Doesn't handle the case where the
-            // filter is simply a boolean value:
-            // select * from sales.emps where slacker
-            // (slacker = true or where slacker is true work fine, though)
-            // In my example, the cast to RexCell fails. (Logged as FRG-339.)
-            if (!(filter.getCondition() instanceof RexCall)) {
-                return;
-            }
-
-            // push down filter
-            RexCall filterCall = (RexCall) filter.getCondition();
-
-            // convert the RexCall to SqlNode
-            // using RexToSqlNodeConverter
+            // push down filter, converting the RexCall to SqlNode using
+            // RexToSqlNodeConverter
             RexToSqlNodeConverter exprConverter =
                 new RexToSqlNodeConverterImpl(
                     new RexSqlStandardConvertletTable())
@@ -206,9 +194,9 @@ class MedJdbcPushDownRule
                 };
 
             // Apply standard conversions.
-            try {
-                filterNode = exprConverter.convertCall(filterCall);
-            } catch (Exception e) {
+            filterNode = exprConverter.convertNode(filter.getCondition());
+            if (filterNode == null) {
+                // could not convert
                 return;
             }
         }

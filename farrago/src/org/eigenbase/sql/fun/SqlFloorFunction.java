@@ -43,7 +43,7 @@ public class SqlFloorFunction
     {
         super(
             "FLOOR",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcNumeric,

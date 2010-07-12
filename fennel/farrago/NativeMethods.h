@@ -107,7 +107,7 @@ JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamResta
  * Signature: (JZ)V
  */
 JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamSetRunnable
-(JNIEnv *, jclass, jlong, jboolean);
+  (JNIEnv *, jclass, jlong, jboolean);
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage

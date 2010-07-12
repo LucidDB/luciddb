@@ -389,6 +389,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Illegal interval literal format {0} for {1}</text>
 </exception>
 
+<exception id="120422" name="IntervalFieldExceedsPrecision" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Interval field value {0,number} exceeds precision of {1} field</text>
+</exception>
+
 <exception id="120425" name="CompoundOrderByProhibitsRange" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>RANGE clause cannot be used with compound ORDER BY clause</text>
 </exception>

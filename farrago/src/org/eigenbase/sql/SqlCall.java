@@ -72,11 +72,6 @@ public class SqlCall
 
     //~ Methods ----------------------------------------------------------------
 
-    public boolean isA(SqlKind kind)
-    {
-        return operator.getKind().isA(kind);
-    }
-
     public SqlKind getKind()
     {
         return operator.getKind();
@@ -129,7 +124,7 @@ public class SqlCall
     {
         if ((leftPrec > operator.getLeftPrec())
             || ((operator.getRightPrec() <= rightPrec) && (rightPrec != 0))
-            || (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression)))
+            || (writer.isAlwaysUseParentheses() && isA(SqlKind.EXPRESSION)))
         {
             final SqlWriter.Frame frame = writer.startList("(", ")");
             operator.unparse(writer, operands, 0, 0);

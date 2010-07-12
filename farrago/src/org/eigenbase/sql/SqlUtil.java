@@ -58,12 +58,12 @@ public abstract class SqlUtil
             return node2;
         }
         ArrayList<SqlNode> list = new ArrayList<SqlNode>();
-        if (node1.isA(SqlKind.And)) {
+        if (node1.getKind() == SqlKind.AND) {
             list.addAll(Arrays.asList(((SqlCall) node1).operands));
         } else {
             list.add(node1);
         }
-        if (node2.isA(SqlKind.And)) {
+        if (node2.getKind() == SqlKind.AND) {
             list.addAll(Arrays.asList(((SqlCall) node2).operands));
         } else {
             list.add(node2);
@@ -95,8 +95,8 @@ public abstract class SqlUtil
         SqlNode node,
         ArrayList<SqlNode> list)
     {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.JoinORDINAL:
+        switch (node.getKind()) {
+        case JOIN:
             SqlJoin join = (SqlJoin) node;
             flatten(
                 join.getLeft(),
@@ -105,7 +105,7 @@ public abstract class SqlUtil
                 join.getRight(),
                 list);
             return;
-        case SqlKind.AsORDINAL:
+        case AS:
             SqlCall call = (SqlCall) node;
             flatten(call.operands[0], list);
             return;
@@ -157,7 +157,7 @@ public abstract class SqlUtil
             }
         }
         if (allowCast) {
-            if (node.isA(SqlKind.Cast)) {
+            if (node.getKind() == SqlKind.CAST) {
                 SqlCall call = (SqlCall) node;
                 if (isNullLiteral(call.operands[0], false)) {
                     // node is "CAST(NULL as type)"
@@ -177,7 +177,7 @@ public abstract class SqlUtil
     public static boolean isNull(SqlNode node)
     {
         return isNullLiteral(node, false)
-            || ((node.getKind() == SqlKind.Cast)
+            || ((node.getKind() == SqlKind.CAST)
                 && isNull(((SqlCall) node).operands[0]));
     }
 
@@ -215,7 +215,7 @@ public abstract class SqlUtil
         Util.pre(node != null, "node != null");
         if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            return call.isA(SqlKind.LiteralChain);
+            return call.getKind() == SqlKind.LITERAL_CHAIN;
         } else {
             return false;
         }
@@ -557,14 +557,15 @@ public abstract class SqlUtil
      */
     public static SqlNode getSelectListItem(SqlNode query, int i)
     {
-        if (query instanceof SqlSelect) {
+        switch (query.getKind()) {
+        case SELECT:
             SqlSelect select = (SqlSelect) query;
             SqlNode from = select.getFrom();
-            if (from.isA(SqlKind.As)) {
+            if (from.getKind() == SqlKind.AS) {
                 SqlCall as = (SqlCall) from;
                 from = as.operands[0];
             }
-            if (from.isA(SqlKind.Values)) {
+            if (from.getKind() == SqlKind.VALUES) {
                 // They wrote "VALUES (x, y)", but the validator has
                 // converted this into "SELECT * FROM VALUES (x, y)".
                 return getSelectListItem(from, i);
@@ -578,17 +579,18 @@ public abstract class SqlUtil
                 i = 0;
             }
             return fields.get(i);
-        } else if (query.isA(SqlKind.Values)) {
+
+        case VALUES:
             SqlCall call = (SqlCall) query;
             Util.permAssert(
                 call.operands.length > 0,
                 "VALUES must have at least one operand");
             final SqlCall row = (SqlCall) call.operands[0];
             Util.permAssert(
-                row.operands.length > i,
-                "VALUES has too few columns");
+                row.operands.length > i, "VALUES has too few columns");
             return row.operands[i];
-        } else {
+
+        default:
             // Unexpected type of query.
             throw Util.needToImplement(query);
         }

@@ -24,10 +24,12 @@ package net.sf.farrago.runtime;
 
 import java.sql.*;
 
+import java.util.List;
 import java.util.logging.*;
 
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.FarragoResultSetMetaData;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -51,21 +53,24 @@ public class FennelOnlyResultSet
      *
      * @param tupleIter underlying iterator
      * @param rowType type info for rows produced
+     * @param fieldOrigins Origin of each field as a column of a catalog object
      * @param runtimeContext runtime context for this execution
-     * @param metaData metadata representing the result set
      */
     public FennelOnlyResultSet(
         TupleIter tupleIter,
         RelDataType rowType,
-        FarragoSessionRuntimeContext runtimeContext,
-        ResultSetMetaData metaData)
+        List<List<String>> fieldOrigins,
+        FarragoSessionRuntimeContext runtimeContext)
     {
         super(
             tupleIter,
             null,
             rowType,
+            fieldOrigins,
             runtimeContext,
-            new FennelColumnGetter(metaData, rowType));
+            new FennelColumnGetter(
+                new FarragoResultSetMetaData(rowType, fieldOrigins),
+                rowType));
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());
         }

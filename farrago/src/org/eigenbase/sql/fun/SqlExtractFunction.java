@@ -46,7 +46,7 @@ public class SqlExtractFunction
     {
         super(
             "EXTRACT",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableBigint,
             null,
             SqlTypeStrategies.otcIntervalSameX2,

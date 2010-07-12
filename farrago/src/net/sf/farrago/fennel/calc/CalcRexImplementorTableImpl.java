@@ -989,6 +989,12 @@ public class CalcRexImplementorTableImpl
                         return false;
                     }
                 }
+                // casts from interval to string aren't yet in fennel.
+                if ((resultType.getFamily() == SqlTypeFamily.CHARACTER)
+                    && (SqlTypeUtil.isInterval(inputType)))
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -2176,6 +2182,13 @@ public class CalcRexImplementorTableImpl
             String next;
             boolean elseClauseOptimizedAway = false;
             for (int i = 0; i < (call.operands.length - 1); i += 2) {
+                if (i != 0) {
+                    // NEW SCOPE
+                    translator.newScope();
+                    // Implement any common subexpressions that the condition
+                    // references and we know we can 'safely' evaluate.
+                    translator.implementCommonSubExpressions(call.operands[i]);
+                }
                 next = translator.newLabel();
                 CalcReg compareResult =
                     translator.implementNode(call.operands[i]);
@@ -2228,6 +2241,11 @@ public class CalcRexImplementorTableImpl
             }
             translator.builder.addLabel(endOfCase); //this assumes that more
                                                     //instructions will follow
+            // pop scopes for all condition expressions except for first
+            // condition
+            for (int i = 2; i < (call.operands.length - 1); i += 2) {
+                translator.popScope();
+            }
             return resultOfCall;
         }
 
@@ -2238,6 +2256,7 @@ public class CalcRexImplementorTableImpl
             RexNode value)
         {
             translator.newScope();
+            translator.implementCommonSubExpressions(value);
             try {
                 RelDataType valueType = value.getType();
 
@@ -2274,7 +2293,7 @@ public class CalcRexImplementorTableImpl
      * <p>The prefix plus operator uses this implementor, because "+ x" is
      * always the same as "x".
      */
-    private static class IdentityImplementor
+    public static class IdentityImplementor
         implements CalcRexImplementor
     {
         public CalcReg implement(

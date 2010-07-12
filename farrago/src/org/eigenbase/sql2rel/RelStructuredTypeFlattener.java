@@ -863,11 +863,11 @@ public class RelStructuredTypeFlattener
                 new ArrayList<String>());
             int n = flattenedExps.size() / 2;
             boolean negate = false;
-            if (op.getKind().isA(SqlKind.NotEquals)) {
+            if (op.getKind() == SqlKind.NOT_EQUALS) {
                 negate = true;
                 op = SqlStdOperatorTable.equalsOperator;
             }
-            if ((n > 1) && !op.getKind().isA(SqlKind.Equals)) {
+            if ((n > 1) && op.getKind() != SqlKind.EQUALS) {
                 throw Util.needToImplement(
                     "inequality comparison for row types");
             }

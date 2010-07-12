@@ -55,7 +55,7 @@ public class SqlLiteralChainOperator
     {
         super(
             "$LiteralChain",
-            SqlKind.LiteralChain,
+            SqlKind.LITERAL_CHAIN,
             80,
             true,
 

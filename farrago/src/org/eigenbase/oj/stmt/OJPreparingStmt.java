@@ -26,8 +26,7 @@ import java.io.*;
 
 import java.lang.reflect.*;
 
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.*;
 import java.util.logging.*;
 
 import openjava.mop.*;
@@ -65,7 +64,7 @@ public abstract class OJPreparingStmt
 
     //~ Instance fields --------------------------------------------------------
 
-    private String queryString = null;
+    protected String queryString = null;
     protected Environment env;
 
     /**
@@ -82,6 +81,8 @@ public abstract class OJPreparingStmt
      * True if the statement contains java RelNodes
      */
     protected boolean containsJava;
+
+    protected java.util.List<java.util.List<String>> fieldOrigins;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -260,7 +261,7 @@ public abstract class OJPreparingStmt
             getSqlToRelConverter(validator, connection);
 
         SqlExplain sqlExplain = null;
-        if (sqlQuery.isA(SqlKind.Explain)) {
+        if (sqlQuery.getKind() == SqlKind.EXPLAIN) {
             // dig out the underlying SQL statement
             sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
@@ -274,7 +275,9 @@ public abstract class OJPreparingStmt
             timingTracer.traceTime("end sql2rel");
         }
 
-        RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
+        final RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
+        fieldOrigins = validator.getFieldOrigins(sqlQuery);
+        assert fieldOrigins.size() == resultType.getFieldCount();
 
         // Display logical plans before view expansion, plugging in physical
         // storage and decorrelation
@@ -337,7 +340,7 @@ public abstract class OJPreparingStmt
         // (e.g. UPDATE -> MERGE).  For anything else (e.g. CALL -> SELECT),
         // use original kind.
         SqlKind kind;
-        if (sqlQuery.getKind().isA(SqlKind.Dml)) {
+        if (sqlQuery.isA(SqlKind.DML)) {
             kind = sqlQuery.getKind();
         } else {
             kind = sqlNodeOriginal.getKind();
@@ -419,7 +422,6 @@ public abstract class OJPreparingStmt
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
      * @param args argument list of the generated result.
-     *
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
@@ -427,12 +429,12 @@ public abstract class OJPreparingStmt
         RelNode rootRel,
         SqlKind sqlKind,
         ClassDeclaration decl,
-        Argument [] args)
+        Argument[] args)
     {
         BoundMethod boundMethod;
         ParseTree parseTree;
         RelDataType resultType = rootRel.getRowType();
-        boolean isDml = sqlKind.isA(SqlKind.Dml);
+        boolean isDml = sqlKind.belongsTo(SqlKind.DML);
         if (containsJava) {
             javaCompiler = createCompiler();
             JavaRelImplementor relImplementor =
@@ -496,15 +498,16 @@ public abstract class OJPreparingStmt
         if (!isDml) {
             return null;
         }
-        if (sqlKind == SqlKind.Insert) {
+        switch (sqlKind) {
+        case INSERT:
             return TableModificationRel.Operation.INSERT;
-        } else if (sqlKind == SqlKind.Delete) {
+        case DELETE:
             return TableModificationRel.Operation.DELETE;
-        } else if (sqlKind == SqlKind.Merge) {
+        case MERGE:
             return TableModificationRel.Operation.MERGE;
-        } else if (sqlKind == SqlKind.Update) {
+        case UPDATE:
             return TableModificationRel.Operation.UPDATE;
-        } else {
+        default:
             return null;
         }
     }
@@ -513,7 +516,7 @@ public abstract class OJPreparingStmt
      * Prepares a statement for execution, starting from a relational expression
      * (ie a logical or a physical query plan).
      *
-     * @param rowType
+     * @param rowType Row type
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind for the relational expression: only
      * SqlKind.Explain and SqlKind.Dml are special cases.

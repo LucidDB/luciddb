@@ -1,9 +1,9 @@
 #!/bin/bash
 # $Id$
 # Eigenbase master build script for creating release images
-# Copyright (C) 2005-2009 The Eigenbase Project
-# Copyright (C) 2005-2009 Disruptive Tech
-# Copyright (C) 2005-2009 LucidEra, Inc.
+# Copyright (C) 2005 The Eigenbase Project
+# Copyright (C) 2005 SQLstream, Inc.
+# Copyright (C) 2005 Dynamo BI Corporation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,11 +63,13 @@ if [ $cygwin = "true" ]; then
     ARCHIVE_SUFFIX=zip
 else
     ARCHIVE_SUFFIX=tar.bz2
-    
-    # Verify that chrpath is available
-    if [ ! -e /usr/bin/chrpath ]; then
-        echo "Error:  /usr/bin/chrpath is not installed"
-        exit -1
+
+    if [ `uname` != "Darwin" ]; then
+        # Verify that chrpath is available
+        if [ ! -e /usr/bin/chrpath ]; then
+            echo "Error:  /usr/bin/chrpath is not installed"
+            exit -1
+        fi
     fi
 fi
 
@@ -109,6 +111,11 @@ echo 'build.mode=release' > farrago/customBuild.properties
 # Append setting to pick up custom LucidDB release properties
 echo 'release.properties.source=${luciddb.dir}/src/FarragoRelease.properties' \
     >> farrago/customBuild.properties
+
+# Kludge for forcing 32-bit runtime on MacOS
+if [ `uname` = "Darwin" ]; then
+    echo 'assertions.jvmarg=-ea -esa -d32' >> farrago/customBuild.properties
+fi
 
 if [ $cygwin = "false" ]; then
 

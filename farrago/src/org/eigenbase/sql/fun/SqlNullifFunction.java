@@ -47,7 +47,7 @@ public class SqlNullifFunction
         // strategies are used.
         super(
             "NULLIF",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcComparableUnorderedX2,

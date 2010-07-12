@@ -62,7 +62,7 @@ public class SqlDynamicParam
 
     public SqlKind getKind()
     {
-        return SqlKind.DynamicParam;
+        return SqlKind.DYNAMIC_PARAM;
     }
 
     public int getIndex()

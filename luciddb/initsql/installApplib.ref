@@ -338,7 +338,7 @@
 > deterministic
 > contains sql
 > return (
->   d + cast(cast(n as bigint)*24*60*60*1000 as interval day(10))
+>   d + cast(cast(n as bigint) as interval day(10))
 > );
 > 
 > -- adds n number of days to a timestamp
@@ -348,7 +348,7 @@
 > deterministic
 > contains sql
 > return (
->   ts + cast(cast(n as bigint)*24*60*60*1000 as interval day(10))
+>   ts + cast(cast(n as bigint) as interval day(10))
 > );
 > 
 > -- adds n number of hours to a timestamp
@@ -358,7 +358,7 @@
 > deterministic
 > contains sql
 > return (
->   ts + cast(cast(n as bigint)*60*60*1000 as interval day(10) to hour));
+>   ts + cast(cast(n as bigint) as interval hour(10)));
 > 
 > -- returns the difference in units of days between two dates
 > create or replace function applib.days_diff(d1 date, d2 date)
@@ -1022,8 +1022,8 @@
 > 
 > -- UDP for conditionally executing a SQL statement based on input set 
 > create or replace procedure exec_sql_if_no_rows( 
-> in evalSQL varchar(4096), 
-> in execSQL varchar(4096)) 
+> in evalSQL varchar(65535),
+> in execSQL varchar(65535))
 > language java 
 > parameter style java 
 > reads sql data 
@@ -1031,7 +1031,7 @@
 > 
 > create or replace function APPLIB.WRITE_ROWS_TO_FILE(
 > IN_CURSOR cursor, 
-> URL varchar(255), 
+> URL varchar(65535), 
 > IS_COMPRESSED boolean)
 > returns table(status int, message varchar(6000))
 > language java
@@ -1040,10 +1040,9 @@
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.WriteRowsToFileUDX.execute';
 >  
->  
 > create or replace function APPLIB.READ_ROWS_FROM_FILE(
 > IN_CURSOR cursor, 
-> URL varchar(255), 
+> URL varchar(65535), 
 > IS_COMPRESSED boolean)
 > returns table (IN_CURSOR.*)
 > language java
@@ -1061,9 +1060,9 @@
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
 > 
 > create or replace procedure create_table_from_source_table(
-> in sourceTable varchar(65535),
-> in schemaName varchar(255),
-> in tableName varchar(255),
+> in sourceTable varchar(1024),
+> in schemaName varchar(128),
+> in tableName varchar(128),
 > in additonalColsInfo varchar(65535))
 > language java
 > parameter style java
@@ -1071,8 +1070,8 @@
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';
 > 
 > create or replace procedure create_table_as(
-> in schemaName varchar(255),
-> in tableName varchar(255),
+> in schemaName varchar(128),
+> in tableName varchar(128),
 > in selectStmt varchar(65535),
 > in shouldLoad boolean)
 > language java

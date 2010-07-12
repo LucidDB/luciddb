@@ -37,6 +37,7 @@ LcsRowScanExecStream::LcsRowScanExecStream()
     ridRunIter(&ridRuns)
 {
     ridRuns.resize(4000);
+    isCountAgg = false;
 }
 
 void LcsRowScanExecStream::prepareResidualFilters(
@@ -194,6 +195,11 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
             isSamplingRepeatable = false;
         }
     }
+}
+
+void LcsRowScanExecStream::setCountAgg()
+{
+    isCountAgg = true;
 }
 
 void LcsRowScanExecStream::open(bool restart)
@@ -455,8 +461,9 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
                     // rid not found, so just consume the rid and
                     // continue
-                    if (rc == false)
+                    if (rc == false) {
                         break;
+                    }
 
                     assert(rid >= pScan->getRangeStartRid()
                            && rid < pScan->getRangeEndRid());
@@ -495,10 +502,12 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         // produce tuple
-        projOutputTupleData.projectFrom(outputTupleData, outputProj);
-        if (tupleFound) {
-            if (!pOutAccessor->produceTuple(projOutputTupleData)) {
-                return EXECRC_BUF_OVERFLOW;
+        if (!isCountAgg) {
+            projOutputTupleData.projectFrom(outputTupleData, outputProj);
+            if (tupleFound) {
+                if (!pOutAccessor->produceTuple(projOutputTupleData)) {
+                    return EXECRC_BUF_OVERFLOW;
+                }
             }
         }
         producePending = false;
@@ -708,6 +717,15 @@ void LcsRowScanExecStream::buildOutputProj(
     }
 }
 
+RecordNum LcsRowScanExecStream::getRowCount() const
+{
+    return nRidsRead;
+}
+
+TupleData &LcsRowScanExecStream::getProjOutputTupleData()
+{
+    return projOutputTupleData;
+}
 
 FENNEL_END_CPPFILE("$Id$");
 

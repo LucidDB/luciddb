@@ -53,7 +53,7 @@ public class SqlOverOperator
     {
         super(
             "OVER",
-            SqlKind.Over,
+            SqlKind.OVER,
             20,
             true,
             SqlTypeStrategies.rtiFirstArgType,

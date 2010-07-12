@@ -53,6 +53,7 @@ public class LcsRowScanRel
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
      * @param resCols residual filter columns
+     * @param inputSelectivity estimate of input selectivity
      */
     public LcsRowScanRel(
         RelOptCluster cluster,

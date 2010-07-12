@@ -14,9 +14,9 @@ external name 'class net.sf.farrago.test.FarragoTestUDR.noiseWithCancel';
 -- Test cancel during external sort (FNL-48).  At least we hope it's
 -- during external sort; it's hard to guarantee.  The UDX produces
 -- a million rows and then schedules a timer to cancel the rest of the
--- execution after 5 seconds.
+-- execution after 3 seconds.
 select * 
-from table(cancel_test.noise_with_cancel(1000000, 0, 4000)) order by 1;
+from table(cancel_test.noise_with_cancel(2000000, 0, 3000)) order by 1;
 
 -- Likewise for hash partitioning (LDB-122).
 -- But wait less time since there's no sort to sop up time.

@@ -24,6 +24,7 @@ package net.sf.farrago.runtime;
 
 import java.sql.*;
 
+import java.util.*;
 import java.util.logging.*;
 
 import net.sf.farrago.jdbc.*;
@@ -56,10 +57,20 @@ public class FarragoTupleIterResultSet
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionRuntimeContext runtimeContext;
-    private RelDataType rowType;
+    private final RelDataType rowType;
+    private final List<List<String>> fieldOrigins;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a new FarragoTupleIterResultSet object. (Called from generated
+     * code.)
+     *
+     * @param tupleIter underlying iterator
+     * @param clazz Class for objects which iterator will produce
+     * @param rowType type info for rows produced
+     * @param runtimeContext runtime context for this execution
+     */
     public FarragoTupleIterResultSet(
         TupleIter tupleIter,
         Class<?> clazz,
@@ -70,6 +81,7 @@ public class FarragoTupleIterResultSet
             tupleIter,
             clazz,
             rowType,
+            Collections.<List<String>>nCopies(rowType.getFieldCount(), null),
             runtimeContext,
             new SyntheticColumnGetter(clazz));
     }
@@ -80,6 +92,7 @@ public class FarragoTupleIterResultSet
      * @param tupleIter underlying iterator
      * @param clazz Class for objects which iterator will produce
      * @param rowType type info for rows produced
+     * @param fieldOrigins Origin of each field in a column of a catalog object
      * @param runtimeContext runtime context for this execution
      * @param columnGetter object used to read individual columns from the the
      * underlying iterator
@@ -88,11 +101,24 @@ public class FarragoTupleIterResultSet
         TupleIter tupleIter,
         Class<?> clazz,
         RelDataType rowType,
+        List<List<String>> fieldOrigins,
         FarragoSessionRuntimeContext runtimeContext,
         ColumnGetter columnGetter)
     {
-        super(tupleIter, columnGetter);
+        super(
+            tupleIter,
+            columnGetter == null
+            ? new SyntheticColumnGetter(clazz)
+            : columnGetter);
+        assert rowType != null;
         this.rowType = rowType;
+        if (fieldOrigins == null) {
+            this.fieldOrigins =
+                Collections.nCopies(rowType.getFieldCount(), null);
+        } else {
+            assert fieldOrigins.size() == rowType.getFieldCount();
+            this.fieldOrigins = fieldOrigins;
+        }
         this.runtimeContext = runtimeContext;
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());
@@ -180,7 +206,7 @@ public class FarragoTupleIterResultSet
     public ResultSetMetaData getMetaData()
         throws SQLException
     {
-        return new FarragoResultSetMetaData(rowType);
+        return new FarragoResultSetMetaData(rowType, fieldOrigins);
     }
 
     // implement ResultSet

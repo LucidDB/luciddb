@@ -151,6 +151,16 @@ public class Rex2CalcPlanTest
         tester.check(sql, false, false);
     }
 
+    public void testCaseStatement()
+    {
+        String sql = "SELECT empno, CASE WHEN empno > 1 THEN 1"
+                     + " WHEN deptno + 3 < 1000 THEN 2"
+                     + " END AS res, "
+                     + " deptno + 3 AS deptNoPlus3"
+                     + " FROM emp";
+        tester.check(sql, false, false);
+    }
+
     public void testSimplyEqualsFilterShortCircuit()
     {
         String sql = "select empno from emp where empno=123";

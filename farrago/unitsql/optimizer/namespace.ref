@@ -288,6 +288,14 @@
   <result D="40"/>
 </resultset>
 > 
+> -- FRG-339
+> select count(*)
+> from hsqldb_demo.sales.bitflip
+> where b1;
+<resultset>
+  <result EXPR$0="1"/>
+</resultset>
+> 
 > -- now explain plans for above queries
 > !set outputformat csv
 > 
@@ -568,6 +576,20 @@
 'FROM "SALES"."DEPT") AS "LEFT_INPUT"'
 'LEFT JOIN (SELECT *'
 'FROM "SALES"."EMP") AS "RIGHT_INPUT" ON "LEFT_INPUT"."DEPTNO" = "RIGHT_INPUT"."DEPTNO"])'
+> 
+> explain plan for
+> select count(*)
+> from hsqldb_demo.sales.bitflip
+> where b1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        ResultSetToFarragoIteratorConverter'
+'          MedJdbcQueryRel(foreignSql=[SELECT "B1"'
+'FROM "SALES"."BITFLIP"'
+'WHERE "B1"])'
 > 
 > -- join on pseudocolumn (FRG-69)
 > 

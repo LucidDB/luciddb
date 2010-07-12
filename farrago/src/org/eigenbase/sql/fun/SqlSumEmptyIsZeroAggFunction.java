@@ -51,7 +51,7 @@ public class SqlSumEmptyIsZeroAggFunction
     {
         super(
             "$SUM0",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcNumeric,

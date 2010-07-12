@@ -121,7 +121,7 @@ public class JdbcQuery
                     SqlParserPos.ZERO);
         } else {
             Util.pre(
-                sql.isA(SqlKind.Select),
+                sql.getKind() == SqlKind.SELECT,
                 "sql == null || sql.isA(SqlNode.Kind.Select)");
         }
         this.sql = sql;

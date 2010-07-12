@@ -219,6 +219,9 @@ typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
 class ProxyLbmUnionStreamDef;
 typedef JniProxyIter<ProxyLbmUnionStreamDef> SharedProxyLbmUnionStreamDef;
 
+class ProxyLcsAggStreamDef;
+typedef JniProxyIter<ProxyLcsAggStreamDef> SharedProxyLcsAggStreamDef;
+
 class ProxyLcsClusterAppendStreamDef;
 typedef JniProxyIter<ProxyLcsClusterAppendStreamDef> SharedProxyLcsClusterAppendStreamDef;
 
@@ -1129,6 +1132,12 @@ int32_t getSegmentLimitParamId();
 static jmethodID meth_getSegmentLimitParamId;
 };
 
+class FENNEL_FARRAGO_EXPORT ProxyLcsAggStreamDef
+: virtual public JniProxy, virtual public ProxyLcsRowScanStreamDef
+{
+public:
+};
+
 class FENNEL_FARRAGO_EXPORT ProxyLcsClusterAppendStreamDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
@@ -1431,6 +1440,8 @@ std::string getAddProgram();
 static jmethodID meth_getAddProgram;
 SharedProxyTupleDescriptor getBucketDesc();
 static jmethodID meth_getBucketDesc;
+SharedProxyTupleProjection getDropProgramKeyList();
+static jmethodID meth_getDropProgramKeyList;
 std::string getDropProgram();
 static jmethodID meth_getDropProgram;
 std::string getInitializeProgram();
@@ -1604,6 +1615,8 @@ virtual void visit(ProxyLbmSortedAggStreamDef &)
 virtual void visit(ProxyLbmSplicerStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmUnionStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLcsAggStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsClusterAppendStreamDef &)
 { unhandledVisit(); }

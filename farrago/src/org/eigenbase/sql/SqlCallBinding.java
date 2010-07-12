@@ -111,7 +111,7 @@ public class SqlCallBinding
             return sqlLiteral.intValue(true);
         } else if (node instanceof SqlCall) {
             final SqlCall c = (SqlCall) node;
-            if (c.isA(SqlKind.MinusPrefix)) {
+            if (c.getKind() == SqlKind.MINUS_PREFIX) {
                 SqlNode child = c.operands[0];
                 if (child instanceof SqlLiteral) {
                     return -((SqlLiteral) child).intValue(true);

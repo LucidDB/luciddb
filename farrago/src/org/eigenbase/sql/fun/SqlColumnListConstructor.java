@@ -41,7 +41,7 @@ public class SqlColumnListConstructor
     {
         super(
             "COLUMN_LIST",
-            SqlKind.ColumnListConstructor,
+            SqlKind.COLUMN_LIST,
             MaxPrec,
             false,
             SqlTypeStrategies.rtiColumnList,

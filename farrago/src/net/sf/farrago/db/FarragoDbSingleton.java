@@ -326,7 +326,7 @@ public abstract class FarragoDbSingleton
     }
 
     /**
-     * @return true if the single currently exists
+     * @return true if the singleton currently exists
      */
     public static boolean isReferenced()
     {

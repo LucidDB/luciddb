@@ -589,12 +589,17 @@ public class LucidDbSessionPersonality
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
 
+        builder.addRuleInstance(LcsRemoveDummyAggInputRule.instance);
+
         // Bitmap aggregation is favored
         if (enableIndexOnlyScans) {
-            builder.addRuleInstance(LcsRemoveDummyAggInputRule.instance);
             builder.addRuleInstance(LcsIndexAggRule.instanceRowScan);
             builder.addRuleInstance(LcsIndexAggRule.instanceNormalizer);
         }
+
+        // Do this after index-only rules, since index-only aggregation
+        // is likely to be more efficient
+        builder.addRuleInstance(LcsRowAggRule.instance);
 
         // Add deletion index scans as input into row scans.  This set of
         // rules need to be applied only after *ALL* inputs into the row

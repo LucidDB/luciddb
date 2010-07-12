@@ -48,7 +48,7 @@ public class SqlRankFunction
     {
         super(
             name,
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiInteger,
             null,
             SqlTypeStrategies.otcNiladic,

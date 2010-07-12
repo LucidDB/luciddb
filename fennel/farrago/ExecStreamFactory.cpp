@@ -30,6 +30,7 @@
 #include "fennel/lcs/LcsClusterAppendExecStream.h"
 #include "fennel/lcs/LcsClusterReplaceExecStream.h"
 #include "fennel/lcs/LcsRowScanExecStream.h"
+#include "fennel/lcs/LcsCountAggExecStream.h"
 #include "fennel/lbm/LbmGeneratorExecStream.h"
 #include "fennel/lbm/LbmSplicerExecStream.h"
 #include "fennel/lbm/LbmSearchExecStream.h"
@@ -174,6 +175,31 @@ void ExecStreamFactory::readBarrierDynamicParams(
         DynamicParamId p = (DynamicParamId) dynamicParam->getParameterId();
         params.parameterIds.push_back(p);
     }
+}
+
+void ExecStreamFactory::readLcsRowScanStreamParams(
+    LcsRowScanExecStreamParams &params,
+    ProxyLcsRowScanStreamDef &streamDef)
+{
+    readTupleStreamParams(params, streamDef);
+    readClusterScan(streamDef, params);
+    CmdInterpreter::readTupleProjection(
+        params.outputProj,
+        streamDef.getOutputProj());
+    params.isFullScan = streamDef.isFullScan();
+    params.hasExtraFilter = streamDef.isHasExtraFilter();
+
+    params.samplingMode = streamDef.getSamplingMode();
+    params.samplingRate = streamDef.getSamplingRate();
+    params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
+    params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
+    params.samplingClumps =
+        LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
+    params.samplingRowCount = streamDef.getSamplingRowCount();
+
+    CmdInterpreter::readTupleProjection(
+        params.residualFilterCols,
+        streamDef.getResidualFilterColumns());
 }
 
 void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
@@ -715,27 +741,15 @@ void ExecStreamFactory::visit(ProxyLcsClusterReplaceStreamDef &streamDef)
 void ExecStreamFactory::visit(ProxyLcsRowScanStreamDef &streamDef)
 {
     LcsRowScanExecStreamParams params;
-
-    readTupleStreamParams(params, streamDef);
-    readClusterScan(streamDef, params);
-    CmdInterpreter::readTupleProjection(
-        params.outputProj,
-        streamDef.getOutputProj());
-    params.isFullScan = streamDef.isFullScan();
-    params.hasExtraFilter = streamDef.isHasExtraFilter();
-
-    params.samplingMode = streamDef.getSamplingMode();
-    params.samplingRate = streamDef.getSamplingRate();
-    params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
-    params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
-    params.samplingClumps =
-        LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
-    params.samplingRowCount = streamDef.getSamplingRowCount();
-
-    CmdInterpreter::readTupleProjection(
-        params.residualFilterCols,
-        streamDef.getResidualFilterColumns());
+    readLcsRowScanStreamParams(params, streamDef);
     embryo.init(new LcsRowScanExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyLcsAggStreamDef &streamDef)
+{
+    LcsCountAggExecStreamParams params;
+    readLcsRowScanStreamParams(params, streamDef);
+    embryo.init(new LcsCountAggExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyLbmGeneratorStreamDef &streamDef)

@@ -57,8 +57,8 @@ class NativeRuntimeContext
 
     //~ Instance fields --------------------------------------------------------
 
-    private FarragoRuntimeContext context;
-    private Map<String, StreamDescriptor> streamMap;
+    private final FarragoRuntimeContext context;
+    private final Map<String, StreamDescriptor> streamMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -69,7 +69,7 @@ class NativeRuntimeContext
     public NativeRuntimeContext(FarragoRuntimeContext context)
     {
         this.context = context;
-        streamMap = new HashMap<String, StreamDescriptor>();
+        this.streamMap = new HashMap<String, StreamDescriptor>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -102,7 +102,7 @@ class NativeRuntimeContext
 
     /**
      * StreamDescriptor represents a unique Fennel error source. Each instance
-     * has it's own error tag and record format.
+     * has its own error tag and record format.
      */
     private class StreamDescriptor
     {
@@ -143,7 +143,9 @@ class NativeRuntimeContext
             tupleData = new FennelTupleData(tupleDesc);
             tupleAccessor = new FennelTupleAccessor(true);
             tupleAccessor.compute(tupleDesc);
-            metadata = new FarragoResultSetMetaData(rowType);
+            final List<List<String>> fieldOrigins =
+                Collections.nCopies(rowType.getFieldCount(), null);
+            metadata = new FarragoResultSetMetaData(rowType, fieldOrigins);
             columnNames = SqlTypeUtil.getFieldNames(rowType);
             columnValues = new Object[columnNames.length];
         }

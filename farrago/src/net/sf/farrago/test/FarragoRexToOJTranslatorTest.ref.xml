@@ -1,0 +1,1961 @@
+<?xml version="1.0" ?>
+<Root>
+    <TestCase name="testPrimitiveEquals">
+        <Resource name="query">
+            <![CDATA[SELECT empno = age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$EMPNO == ID$1$AGE.value;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveEqualsNotNull">
+        <Resource name="query">
+            <![CDATA[SELECT empno = empid FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return ID$0$EMPNO == ID$1$EMPID;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveLess">
+        <Resource name="query">
+            <![CDATA[SELECT empno < age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$EMPNO < ID$1$AGE.value;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveGreater">
+        <Resource name="query">
+            <![CDATA[SELECT empno > age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$EMPNO > ID$1$AGE.value;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitivePlus">
+        <Resource name="query">
+            <![CDATA[SELECT empno + age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$0$EMPNO + ID$1$AGE.value);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveMinus">
+        <Resource name="query">
+            <![CDATA[SELECT empno - age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$0$EMPNO - ID$1$AGE.value);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveTimes">
+        <Resource name="query">
+            <![CDATA[SELECT empno * age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$0$EMPNO * ID$1$AGE.value);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveDivide">
+        <Resource name="query">
+            <![CDATA[SELECT empno / age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$0$EMPNO / ID$1$AGE.value);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitivePrefixMinus">
+        <Resource name="query">
+            <![CDATA[SELECT -age FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$0$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (-ID$0$AGE.value);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrimitiveGreaterBoolean">
+        <Resource name="query">
+            <![CDATA[SELECT manager > slacker FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$0$SLACKER.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (ID$1$MANAGER ? 1 : 0) > (ID$0$SLACKER.value ? 1 : 0);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPrefixMinusCastNullTinyint">
+        <Resource name="query">
+            <![CDATA[SELECT -cast(null as tinyint) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
+
+oj_var0.setNull( true );
+if (oj_var0.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = (byte) (-oj_var0.value);
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPlusCastNullSmallint">
+        <Resource name="query">
+            <![CDATA[SELECT cast(null as tinyint) + cast (null as smallint) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableShort oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableShort();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableShort oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableShort();
+
+oj_var0.setNull( true );
+oj_var1.setNull( true );
+if (oj_var0.isNull() || oj_var1.isNull()) {
+    oj_var2.setNull( true );
+} else {
+    oj_var2.setNull( false );
+    oj_var2.value = (short) (oj_var0.value + oj_var1.value);
+}
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testVarcharEquals">
+        <Resource name="query">
+            <![CDATA[SELECT name = city FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$1$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, ID$1$CITY ) == 0;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testVarcharLess">
+        <Resource name="query">
+            <![CDATA[SELECT name < city FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$1$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, ID$1$CITY ) < 0;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanNot">
+        <Resource name="query">
+            <![CDATA[SELECT not slacker FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$0$SLACKER.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = !ID$0$SLACKER.value;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanOr">
+        <Resource name="query">
+            <![CDATA[SELECT slacker or manager FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+oj_var0.assignFromOr3VL( ID$0$SLACKER.isNull(), ID$0$SLACKER.value, false, ID$1$MANAGER );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanOrNullable">
+        <Resource name="query">
+            <![CDATA[SELECT (empno < age) or (name = city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$3$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$EMPNO < ID$3$AGE.value;
+}
+if (ID$2$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$2$CITY ) == 0;
+}
+oj_var2.assignFromOr3VL( oj_var0.isNull(), oj_var0.value, oj_var1.isNull(), oj_var1.value );
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanAnd">
+        <Resource name="query">
+            <![CDATA[SELECT slacker and manager FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+oj_var0.assignFromAnd3VL( ID$0$SLACKER.isNull(), ID$0$SLACKER.value, false, ID$1$MANAGER );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanConjunction">
+        <Resource name="query">
+            <![CDATA[SELECT (empno < age) and (name = city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$3$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$EMPNO < ID$3$AGE.value;
+}
+if (ID$2$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$2$CITY ) == 0;
+}
+oj_var2.assignFromAnd3VL( oj_var0.isNull(), oj_var0.value, oj_var1.isNull(), oj_var1.value );
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanConjunctionNotNull">
+        <Resource name="query">
+            <![CDATA[SELECT (empno = empid) and (empno = deptno) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return ID$0$EMPNO == ID$2$EMPID && ID$0$EMPNO == ID$1$DEPTNO;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNullableIsTrue">
+        <Resource name="query">
+            <![CDATA[SELECT slacker is true FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return !ID$0$SLACKER.isNull() && ID$0$SLACKER.value;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNullableIsFalse">
+        <Resource name="query">
+            <![CDATA[SELECT slacker is false FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return !ID$0$SLACKER.isNull() && !ID$0$SLACKER.value;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNotNullIsTrue">
+        <Resource name="query">
+            <![CDATA[SELECT manager is true FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return ID$0$MANAGER;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNotNullIsFalse">
+        <Resource name="query">
+            <![CDATA[SELECT manager is false FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return !ID$0$MANAGER;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNullableIsNull">
+        <Resource name="query">
+            <![CDATA[SELECT age is null FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return ID$0$AGE.isNull();
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNullableIsNotNull">
+        <Resource name="query">
+            <![CDATA[SELECT age is not null FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return !ID$0$AGE.isNull();
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNotNullIsNull">
+        <Resource name="query">
+            <![CDATA[SELECT empno is null FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return false;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNotNullIsNotNull">
+        <Resource name="query">
+            <![CDATA[SELECT empno is not null FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+return true;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUser">
+        <Resource name="query">
+            <![CDATA[SELECT user FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_USER() );
+oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCurrentUser">
+        <Resource name="query">
+            <![CDATA[SELECT current_user FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_USER() );
+oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSessionUser">
+        <Resource name="query">
+            <![CDATA[SELECT session_user FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_SESSION_USER() );
+oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSystemUser">
+        <Resource name="query">
+            <![CDATA[SELECT system_user FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_SYSTEM_USER() );
+oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCurrentDate">
+        <Resource name="query">
+            <![CDATA[SELECT current_date FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_DATE() );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCurrentTime">
+        <Resource name="query">
+            <![CDATA[SELECT current_time FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIME() );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCurrentTimestamp">
+        <Resource name="query">
+            <![CDATA[SELECT current_timestamp FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+oj_var1.assignFrom( connection.getContextVariable_CURRENT_DATE() );
+oj_var0.setCurrentDate( oj_var1 );
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIMESTAMP() );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCurrentPath">
+        <Resource name="query">
+            <![CDATA[SELECT current_path FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_PATH() );
+oj_var0.enforceBytePrecision( 2000, false, (byte) ' ' );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJavaUdfInvocation">
+        <Resource name="query">
+            <![CDATA[SELECT sales.decrypt_public_key(public_key) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+net.sf.farrago.session.FarragoSessionUdrContext oj_var2 = new net.sf.farrago.session.FarragoSessionUdrContext( "decryptPublicKey:1", null );
+
+
+ExecutableStmt.Oj_inner_1 oj_var5 = new ExecutableStmt.Oj_inner_1();
+
+
+ExecutableStmt.Oj_inner_1 oj_var6 = new ExecutableStmt.Oj_inner_1();
+
+oj_var0.assignFrom( ID$0$PUBLIC__KEY );
+connection.pushRoutineInvocation( oj_var2, false );
+java.lang.String oj_var4;
+try {
+    oj_var4 = net.sf.farrago.test.FarragoTestUDR.decryptPublicKey( (byte[]) oj_var0.getNullableData() );
+} catch ( java.lang.Throwable oj_var3 ) {
+    throw connection.handleRoutineInvocationException( oj_var3, "decryptPublicKey" );
+} finally 
+{
+    connection.popRoutineInvocation();
+}
+oj_var5.assignFrom( oj_var4 );
+oj_var5.enforceBytePrecision( 25, false, (byte) ' ' );
+oj_var6.assignFrom( oj_var5 );
+
+return oj_var6;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSqlUdfInvocation">
+        <Resource name="query">
+            <![CDATA[SELECT sales.maybe_female(gender) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+private ExecutableStmt.Oj_inner_1 oj_var1;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var3 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+oj_var0.assignFrom( ID$0$GENDER );
+if (oj_var1 == null) {
+    oj_var1 = new ExecutableStmt.Oj_inner_1();
+    oj_var1.assignFrom( "F" );
+}
+if (oj_var0.isNull()) {
+    oj_var2.setNull( true );
+} else {
+    oj_var2.setNull( false );
+    oj_var2.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( oj_var0, oj_var1 ) == 0;
+}
+oj_var3.isNull = false;
+oj_var3.value = (boolean) (!(!oj_var2.isNull() && !oj_var2.value));
+
+return oj_var3;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastToVarcharImplicitTruncate">
+        <Resource name="query">
+            <![CDATA[SELECT cast('supercalifragilistiexpialodocious' as varchar(10)) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "supercalifragilistiexpialodocious" );
+}
+oj_var1.assignFrom( oj_var0 );
+oj_var1.enforceBytePrecision( 10, false, (byte) ' ' );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastToVarchar">
+        <Resource name="query">
+            <![CDATA[SELECT cast('boo' as varchar(10)) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "boo" );
+}
+oj_var1.assignFrom( oj_var0 );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastToVarbinaryImplicitTruncate">
+        <Resource name="query">
+            <![CDATA[SELECT cast(x'00112233445566778899AABB' as varbinary(10)) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( new byte[]{ 0, 17, 34, 51, 68, 85, 102, 119, -120, -103, -86, -69 } );
+}
+oj_var1.assignFrom( oj_var0 );
+oj_var1.enforceBytePrecision( 10, false, (byte) 0 );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastIntToVarchar">
+        <Resource name="query">
+            <![CDATA[SELECT cast(cast(null as tinyint) as varchar(30)) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableByte oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableByte();
+
+
+ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.setNull( true );
+oj_var1.setNull( oj_var0.isNull() );
+if (!oj_var0.isNull()) {
+    oj_var1.cast( oj_var0.value, 30 );
+    oj_var1.enforceBytePrecision( 30, false, (byte) ' ' );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNotNullableCondWithElse">
+        <Resource name="query">
+            <![CDATA[SELECT case manager when true then 'Yes' when false then 'No' else 'Other' end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+private ExecutableStmt.Oj_inner_1 oj_var1;
+
+
+private ExecutableStmt.Oj_inner_2 oj_var2;
+
+
+ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
+
+if (ID$0$MANAGER == true) {
+    if (oj_var0 == null) {
+        oj_var0 = new ExecutableStmt.Oj_inner_0();
+        oj_var0.assignFrom( "Yes" );
+    }
+    oj_var3.assignFrom( oj_var0 );
+    oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
+} else {
+    if (ID$0$MANAGER == false) {
+        if (oj_var1 == null) {
+            oj_var1 = new ExecutableStmt.Oj_inner_1();
+            oj_var1.assignFrom( "No" );
+        }
+        oj_var3.assignFrom( oj_var1 );
+        oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
+    } else {
+        if (oj_var2 == null) {
+            oj_var2 = new ExecutableStmt.Oj_inner_2();
+            oj_var2.assignFrom( "Other" );
+        }
+        oj_var3.assignFrom( oj_var2 );
+    }
+}
+
+return oj_var3;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNotNullableCondWithoutElse">
+        <Resource name="query">
+            <![CDATA[SELECT case deptno when 10 then 'Yes' end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+
+ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
+
+if (ID$0$DEPTNO == 10) {
+    if (oj_var0 == null) {
+        oj_var0 = new ExecutableStmt.Oj_inner_0();
+        oj_var0.assignFrom( "Yes" );
+    }
+    oj_var2.assignFrom( oj_var0 );
+} else {
+    oj_var1.setNull( true );
+    oj_var2.assignFrom( oj_var1 );
+}
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNullableCondWithElse">
+        <Resource name="query">
+            <![CDATA[SELECT case age when 50 then 'fifty' when 25 then 'twenty-five' end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+private ExecutableStmt.Oj_inner_0 oj_var1;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+private ExecutableStmt.Oj_inner_1 oj_var3;
+
+
+ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
+
+
+ExecutableStmt.Oj_inner_2 oj_var5 = new ExecutableStmt.Oj_inner_2();
+
+if (ID$0$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$AGE.value == 50;
+}
+if (!oj_var0.isNull() && oj_var0.getBit()) {
+    if (oj_var1 == null) {
+        oj_var1 = new ExecutableStmt.Oj_inner_0();
+        oj_var1.assignFrom( "fifty" );
+    }
+    oj_var5.assignFrom( oj_var1 );
+    oj_var5.enforceBytePrecision( 11, true, (byte) ' ' );
+} else {
+    if (ID$0$AGE.isNull()) {
+        oj_var2.setNull( true );
+    } else {
+        oj_var2.setNull( false );
+        oj_var2.value = ID$0$AGE.value == 25;
+    }
+    if (!oj_var2.isNull() && oj_var2.getBit()) {
+        if (oj_var3 == null) {
+            oj_var3 = new ExecutableStmt.Oj_inner_1();
+            oj_var3.assignFrom( "twenty-five" );
+        }
+        oj_var5.assignFrom( oj_var3 );
+    } else {
+        oj_var4.setNull( true );
+        oj_var5.assignFrom( oj_var4 );
+    }
+}
+
+return oj_var5;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNullableCondWithoutElse">
+        <Resource name="query">
+            <![CDATA[SELECT case gender when 'M' then 'Yes' end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+private ExecutableStmt.Oj_inner_1 oj_var2;
+
+
+ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
+
+
+ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "M" );
+}
+if (ID$0$GENDER.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$GENDER, oj_var0 ) == 0;
+}
+if (!oj_var1.isNull() && oj_var1.getBit()) {
+    if (oj_var2 == null) {
+        oj_var2 = new ExecutableStmt.Oj_inner_1();
+        oj_var2.assignFrom( "Yes" );
+    }
+    oj_var4.assignFrom( oj_var2 );
+} else {
+    oj_var3.setNull( true );
+    oj_var4.assignFrom( oj_var3 );
+}
+
+return oj_var4;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNotNullableCondWithElsePrimitive">
+        <Resource name="query">
+            <![CDATA[SELECT case empno when 120 then 1 else 2 end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var0;
+if (ID$0$EMPNO == 120) {
+    oj_var0 = 1;
+} else {
+    oj_var0 = 2;
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNotNullableCondWithoutElsePrimitive">
+        <Resource name="query">
+            <![CDATA[SELECT case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+private ExecutableStmt.Oj_inner_0 oj_var1;
+
+
+private ExecutableStmt.Oj_inner_1 oj_var2;
+
+
+private ExecutableStmt.Oj_inner_0 oj_var3;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var4 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var5 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "Fred" );
+}
+if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, oj_var0 ) == 0) {
+    oj_var5.isNull = false;
+    oj_var5.value = (int) 1;
+} else {
+    if (oj_var1 == null) {
+        oj_var1 = new ExecutableStmt.Oj_inner_0();
+        oj_var1.assignFrom( "Eric" );
+    }
+    if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, oj_var1 ) == 0) {
+        oj_var5.isNull = false;
+        oj_var5.value = (int) 2;
+    } else {
+        if (oj_var2 == null) {
+            oj_var2 = new ExecutableStmt.Oj_inner_1();
+            oj_var2.assignFrom( "Wilma" );
+        }
+        if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, oj_var2 ) == 0) {
+            oj_var5.isNull = false;
+            oj_var5.value = (int) 3;
+        } else {
+            if (oj_var3 == null) {
+                oj_var3 = new ExecutableStmt.Oj_inner_0();
+                oj_var3.assignFrom( "John" );
+            }
+            if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NAME, oj_var3 ) == 0) {
+                oj_var5.isNull = false;
+                oj_var5.value = (int) 4;
+            } else {
+                oj_var4.setNull( true );
+                oj_var5.isNull = oj_var4.isNull;
+                if (!oj_var5.isNull) {
+                    oj_var5.value = (int) oj_var4.value;
+                }
+            }
+        }
+    }
+}
+
+return oj_var5;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNullableCondWithElsePrimitive">
+        <Resource name="query">
+            <![CDATA[SELECT case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+int oj_var0;
+if (ID$0$DEPTNO == 10) {
+    oj_var0 = 1;
+} else {
+    if (ID$0$DEPTNO == 20) {
+        oj_var0 = 2;
+    } else {
+        if (ID$0$DEPTNO == 40) {
+            oj_var0 = 3;
+        } else {
+            oj_var0 = 4;
+        }
+    }
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseNullableCondWithoutElsePrimitive">
+        <Resource name="query">
+            <![CDATA[SELECT case slacker when true then 1 end FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$0$SLACKER.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$SLACKER.value == true;
+}
+if (!oj_var0.isNull() && oj_var0.getBit()) {
+    oj_var2.isNull = false;
+    oj_var2.value = (int) 1;
+} else {
+    oj_var1.setNull( true );
+    oj_var2.isNull = oj_var1.isNull;
+    if (!oj_var2.isNull) {
+        oj_var2.value = (int) oj_var1.value;
+    }
+}
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringNullableLength">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city,  2, age/10) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+
+ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$1$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$1$AGE.value / 10);
+}
+if (ID$0$CITY.isNull() || oj_var0.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.assignFrom( ID$0$CITY );
+    oj_var1.substring( 2, oj_var0.value, true );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringNullablePosition">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city,  age/20, empid) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+
+ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$2$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$2$AGE.value / 20);
+}
+if (ID$0$CITY.isNull() || oj_var0.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.assignFrom( ID$0$CITY );
+    oj_var1.substring( oj_var0.value, ID$1$EMPID, true );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringNoLength">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city, 3) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.assignFrom( ID$0$CITY );
+    oj_var0.substring( 3, 0, false );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringPositionLessThanZero">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city, -1, 4) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.assignFrom( ID$0$CITY );
+    oj_var0.substring( -1, 4, true );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringPositionZero">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city, 0, 4) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.assignFrom( ID$0$CITY );
+    oj_var0.substring( 0, 4, true );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringNegativeLength">
+        <Resource name="query">
+            <![CDATA[SELECT substring(city, 1, empid - 2) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.assignFrom( ID$0$CITY );
+    oj_var0.substring( 1, (int) (ID$1$EMPID - 2), true );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSubstringNothingNullable">
+        <Resource name="query">
+            <![CDATA[SELECT substring(name, 2, empid) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( ID$0$NAME );
+oj_var0.substring( 2, ID$1$EMPID, true );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testConcatNoNullable">
+        <Resource name="query">
+            <![CDATA[SELECT name||name FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.concat( ID$0$NAME, ID$0$NAME );
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testConcatWithOneNullable">
+        <Resource name="query">
+            <![CDATA[SELECT city||name FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$1$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.concat( ID$1$CITY, ID$0$NAME );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testConcatBothNullable">
+        <Resource name="query">
+            <![CDATA[SELECT city||city FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull() || ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.concat( ID$0$CITY, ID$0$CITY );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlayNoLength">
+        <Resource name="query">
+            <![CDATA[SELECT overlay(city placing 'MIDDLE' from 2) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "MIDDLE" );
+}
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.overlay( ID$0$CITY, oj_var0, 2, 0, false );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlayNullable">
+        <Resource name="query">
+            <![CDATA[SELECT overlay(city placing 'MIDDLE' from 2 for 3) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "MIDDLE" );
+}
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.overlay( ID$0$CITY, oj_var0, 2, 3, true );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlayNoNullable">
+        <Resource name="query">
+            <![CDATA[SELECT overlay(name placing 'MIDDLE' from 2 for 3) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "MIDDLE" );
+}
+oj_var1.overlay( ID$0$NAME, oj_var0, 2, 3, true );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlayThreeNullable">
+        <Resource name="query">
+            <![CDATA[SELECT overlay(city placing name from age for age) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$1$CITY.isNull() || ID$2$AGE.isNull() || ID$2$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.overlay( ID$1$CITY, ID$0$NAME, ID$2$AGE.value, ID$2$AGE.value, true );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlayAllNullable">
+        <Resource name="query">
+            <![CDATA[SELECT overlay(city placing gender from age for age) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$1$CITY.isNull() || ID$0$GENDER.isNull() || ID$2$AGE.isNull() || ID$2$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.overlay( ID$1$CITY, ID$0$GENDER, ID$2$AGE.value, ID$2$AGE.value, true );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPower">
+        <Resource name="query">
+            <![CDATA[SELECT power(2, empid) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+double oj_var0;
+if (2 == 0 && ID$0$EMPID < 0 || 2 < 0 && ID$0$EMPID != java.lang.Math.floor( ID$0$EMPID )) {
+    throw net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument.ex( "POWER" );
+} else {
+    oj_var0 = java.lang.Math.pow( 2, ID$0$EMPID );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testMod">
+        <Resource name="query">
+            <![CDATA[SELECT mod(age, 3) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$0$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$0$AGE.value % 3);
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testTrimBoth">
+        <Resource name="query">
+            <![CDATA[SELECT trim(both 'S' from city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "S" );
+}
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.trim( 0, oj_var0, ID$0$CITY );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testTrimLeading">
+        <Resource name="query">
+            <![CDATA[SELECT trim(leading 'W' from name) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "W" );
+}
+oj_var1.trim( 1, oj_var0, ID$0$NAME );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testTrimTrailing">
+        <Resource name="query">
+            <![CDATA[SELECT trim(trailing 'c' from name) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "c" );
+}
+oj_var1.trim( 2, oj_var0, ID$0$NAME );
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUpper">
+        <Resource name="query">
+            <![CDATA[SELECT upper(city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.upper( ID$0$CITY );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLower">
+        <Resource name="query">
+            <![CDATA[SELECT Lower(city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.lower( ID$0$CITY );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInitcap">
+        <Resource name="query">
+            <![CDATA[SELECT initcap(city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.initcap( ID$0$CITY );
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharLength">
+        <Resource name="query">
+            <![CDATA[SELECT char_length(city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$CITY.length();
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharacterLength">
+        <Resource name="query">
+            <![CDATA[SELECT character_length(city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$0$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$0$CITY.length();
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPosition">
+        <Resource name="query">
+            <![CDATA[SELECT position('Fran' in city) FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "Fran" );
+}
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.setNull( false );
+    oj_var1.value = ID$0$CITY.position( oj_var0 );
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLikeLiteral">
+        <Resource name="query">
+            <![CDATA[SELECT City like 'San%' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var2 = null;
+
+
+java.util.regex.Matcher oj_var3 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "San%" );
+}
+java.lang.String oj_var4;
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var4 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexLike( oj_var0.toString(), null );
+    oj_var2 = java.util.regex.Pattern.compile( oj_var4 );
+    oj_var3 = oj_var2.matcher( ID$0$CITY );
+    oj_var1.setNull( false );
+    oj_var1.value = oj_var3.matches();
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLikeRuntime">
+        <Resource name="query">
+            <![CDATA[SELECT City like Name FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var1 = null;
+
+
+java.util.regex.Matcher oj_var2 = null;
+
+java.lang.String oj_var3;
+if (ID$1$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var3 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexLike( ID$0$NAME.toString(), null );
+    oj_var1 = java.util.regex.Pattern.compile( oj_var3 );
+    oj_var2 = oj_var1.matcher( ID$1$CITY );
+    oj_var0.setNull( false );
+    oj_var0.value = oj_var2.matches();
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLikeLiteralWithEscape">
+        <Resource name="query">
+            <![CDATA[SELECT City like 'San%' escape 'n' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+private ExecutableStmt.Oj_inner_1 oj_var1;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var3 = null;
+
+
+java.util.regex.Matcher oj_var4 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "San%" );
+}
+if (oj_var1 == null) {
+    oj_var1 = new ExecutableStmt.Oj_inner_1();
+    oj_var1.assignFrom( "n" );
+}
+java.lang.String oj_var5;
+if (ID$0$CITY.isNull()) {
+    oj_var2.setNull( true );
+} else {
+    oj_var5 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexLike( oj_var0.toString(), oj_var1 );
+    oj_var3 = java.util.regex.Pattern.compile( oj_var5 );
+    oj_var4 = oj_var3.matcher( ID$0$CITY );
+    oj_var2.setNull( false );
+    oj_var2.value = oj_var4.matches();
+}
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLikeRuntimeWithEscape">
+        <Resource name="query">
+            <![CDATA[SELECT City like Name escape 'n' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var2 = null;
+
+
+java.util.regex.Matcher oj_var3 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "n" );
+}
+java.lang.String oj_var4;
+if (ID$1$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var4 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexLike( ID$0$NAME.toString(), oj_var0 );
+    oj_var2 = java.util.regex.Pattern.compile( oj_var4 );
+    oj_var3 = oj_var2.matcher( ID$1$CITY );
+    oj_var1.setNull( false );
+    oj_var1.value = oj_var3.matches();
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimilarLiteral">
+        <Resource name="query">
+            <![CDATA[SELECT City similar to '[S][[:ALPHA:]]n%' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var2 = null;
+
+
+java.util.regex.Matcher oj_var3 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "[S][[:ALPHA:]]n%" );
+}
+java.lang.String oj_var4;
+if (ID$0$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var4 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexSimilar( oj_var0.toString(), null );
+    oj_var2 = java.util.regex.Pattern.compile( oj_var4 );
+    oj_var3 = oj_var2.matcher( ID$0$CITY );
+    oj_var1.setNull( false );
+    oj_var1.value = oj_var3.matches();
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimilarRuntime">
+        <Resource name="query">
+            <![CDATA[SELECT City similar to Name FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var1 = null;
+
+
+java.util.regex.Matcher oj_var2 = null;
+
+java.lang.String oj_var3;
+if (ID$1$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var3 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexSimilar( ID$0$NAME.toString(), null );
+    oj_var1 = java.util.regex.Pattern.compile( oj_var3 );
+    oj_var2 = oj_var1.matcher( ID$1$CITY );
+    oj_var0.setNull( false );
+    oj_var0.value = oj_var2.matches();
+}
+
+return oj_var0;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimilarLiteralWithEscape">
+        <Resource name="query">
+            <![CDATA[SELECT City similar to 'San%' escape 'n' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+private ExecutableStmt.Oj_inner_1 oj_var1;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var3 = null;
+
+
+java.util.regex.Matcher oj_var4 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "San%" );
+}
+if (oj_var1 == null) {
+    oj_var1 = new ExecutableStmt.Oj_inner_1();
+    oj_var1.assignFrom( "n" );
+}
+java.lang.String oj_var5;
+if (ID$0$CITY.isNull()) {
+    oj_var2.setNull( true );
+} else {
+    oj_var5 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexSimilar( oj_var0.toString(), oj_var1 );
+    oj_var3 = java.util.regex.Pattern.compile( oj_var5 );
+    oj_var4 = oj_var3.matcher( ID$0$CITY );
+    oj_var2.setNull( false );
+    oj_var2.value = oj_var4.matches();
+}
+
+return oj_var2;
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimilarRuntimeWithEscape">
+        <Resource name="query">
+            <![CDATA[SELECT City similar to Name escape 'n' FROM SALES.EMPS]]>
+        </Resource>
+        <Resource name="expectedProgram">
+            <![CDATA[
+
+private ExecutableStmt.Oj_inner_0 oj_var0;
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var2 = null;
+
+
+java.util.regex.Matcher oj_var3 = null;
+
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "n" );
+}
+java.lang.String oj_var4;
+if (ID$1$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var4 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexSimilar( ID$0$NAME.toString(), oj_var0 );
+    oj_var2 = java.util.regex.Pattern.compile( oj_var4 );
+    oj_var3 = oj_var2.matcher( ID$1$CITY );
+    oj_var1.setNull( false );
+    oj_var1.value = oj_var3.matches();
+}
+
+return oj_var1;
+]]>
+        </Resource>
+    </TestCase>
+</Root>

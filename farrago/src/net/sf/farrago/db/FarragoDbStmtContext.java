@@ -200,6 +200,15 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public List<List<String>> getPreparedFieldOrigins()
+    {
+        synchronized (session) {
+            assert (isPrepared());
+            return executableStmt.getFieldOrigins();
+        }
+    }
+
+    // implement FarragoSessionStmtContext
     public RelDataType getPreparedParamType()
     {
         synchronized (session) {
@@ -366,7 +375,7 @@ public class FarragoDbStmtContext
         }
 
         if (session.shutdownRequested()) {
-            session.closeAllocation();
+            session.kill();
             FarragoDatabase db = ((FarragoDbSession) session).getDatabase();
             db.shutdown();
             session.setShutdownRequest(false);

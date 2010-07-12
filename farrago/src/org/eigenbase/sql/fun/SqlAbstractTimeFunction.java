@@ -55,7 +55,7 @@ public class SqlAbstractTimeFunction
     {
         super(
             name,
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             null,
             null,
             otcCustom,

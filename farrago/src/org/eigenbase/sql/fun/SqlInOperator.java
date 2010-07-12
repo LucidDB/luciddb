@@ -60,7 +60,7 @@ public class SqlInOperator
     {
         super(
             isNotIn ? "NOT IN" : "IN",
-            SqlKind.In,
+            SqlKind.IN,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,

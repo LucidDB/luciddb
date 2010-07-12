@@ -142,15 +142,15 @@ public class SqlToOpenjavaConverter
         SqlNode node)
     {
         final SqlNode [] operands;
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
+        switch (node.getKind()) {
+        case AS:
             operands = ((SqlCall) node).getOperands();
             return new AliasedExpression(
                 convertExpression(scope, operands[0]),
                 operands[1].toString());
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             return convertIdentifier(scope, (SqlIdentifier) node);
-        case SqlKind.LiteralORDINAL:
+        case LITERAL:
             return convertLiteral((SqlLiteral) node);
         default:
             if (node instanceof SqlCall) {
@@ -190,13 +190,13 @@ public class SqlToOpenjavaConverter
         SqlNode from,
         boolean inAs)
     {
-        switch (from.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
+        switch (from.getKind()) {
+        case AS:
             final SqlNode [] operands = ((SqlCall) from).getOperands();
             return new AliasedExpression(
                 convertFrom(scope, operands[0], true),
                 operands[1].toString());
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             Expression e = new Variable(OJStatement.connectionVariable);
             final SqlIdentifier id = (SqlIdentifier) from;
             String schemaName = null;
@@ -210,7 +210,7 @@ public class SqlToOpenjavaConverter
                 throw Util.newInternal("improperly qualified id:  " + id);
             }
             return new TableReference(e, schemaName, tableName);
-        case SqlKind.JoinORDINAL:
+        case JOIN:
             final SqlJoin join = (SqlJoin) from;
             SqlNode left = join.getLeft();
             SqlNode right = join.getRight();
@@ -262,12 +262,12 @@ public class SqlToOpenjavaConverter
                 return new JoinExpression(leftExp, rightExp,
                     convertedJoinType, conditionExp);
             }
-        case SqlKind.SelectORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.ExceptORDINAL:
-        case SqlKind.UnionORDINAL:
+        case SELECT:
+        case INTERSECT:
+        case EXCEPT:
+        case UNION:
             return convertQueryRecursive(from);
-        case SqlKind.ValuesORDINAL:
+        case VALUES:
             return convertValues(scope, (SqlCall) from, inAs);
         default:
             throw Util.newInternal("not a join operator " + from);
@@ -364,18 +364,18 @@ public class SqlToOpenjavaConverter
             final SqlCall call = (SqlCall) query;
             int op;
             final SqlKind kind = call.getKind();
-            switch (kind.getOrdinal()) {
-            case SqlKind.UnionORDINAL:
+            switch (kind) {
+            case UNION:
                 op = BinaryExpression.UNION;
                 break;
-            case SqlKind.IntersectORDINAL:
+            case INTERSECT:
                 op = BinaryExpression.INTERSECT;
                 break;
-            case SqlKind.ExceptORDINAL:
+            case EXCEPT:
                 op = BinaryExpression.EXCEPT;
                 break;
             default:
-                throw kind.unexpected();
+                throw Util.unexpected(kind);
             }
             final SqlNode [] operands = call.getOperands();
             final Expression left = convertQueryRecursive(operands[0]);

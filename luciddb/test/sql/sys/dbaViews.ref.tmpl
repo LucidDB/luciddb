@@ -214,7 +214,7 @@
 +---------------------+--------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_tables, dba_views, dba_stored_tables
-0: jdbc:luciddb:> create table dbavtest.table1(col1 int, col2 int);
+0: jdbc:luciddb:> create table dbavtest.table1(col1 int, col2 int default 3);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view dbavtest.empview as 
 . . . . . . . . > select * from dbavtest.emps;
@@ -263,36 +263,36 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_columns
 0: jdbc:luciddb:> select catalog_name, table_name, column_name, ordinal_position, datatype,
-. . . . . . . . >   "PRECISION", dec_digits, is_nullable
+. . . . . . . . >   "PRECISION", dec_digits, is_nullable, default_value
 . . . . . . . . > from sys_root.dba_columns
 . . . . . . . . > where schema_name='DBAVTEST'
 . . . . . . . . > order by 2,4;
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
-| CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
-| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |
-| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
-| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
-| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |
-| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         |
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
+| CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  | DEFAULT_VALUE  |
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
+| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |                |
+| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |                |
+| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         | 3              |
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_unclustered_indexes
 0: jdbc:luciddb:> create table dbavtest.table2(col1 int, col2 int, col3 int, col4 int, col5 int,

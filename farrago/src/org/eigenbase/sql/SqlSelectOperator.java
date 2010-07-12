@@ -56,7 +56,7 @@ public class SqlSelectOperator
     {
         super(
             "SELECT",
-            SqlKind.Select,
+            SqlKind.SELECT,
             2,
             true,
             SqlTypeStrategies.rtiScope,
@@ -189,18 +189,18 @@ public class SqlSelectOperator
                 SqlNode node = whereClause;
 
                 // decide whether to split on ORs or ANDs
-                SqlKind whereSepKind = SqlKind.And;
+                SqlKind whereSepKind = SqlKind.AND;
                 if ((node instanceof SqlCall)
-                    && ((SqlCall) node).getKind().isA(SqlKind.Or))
+                    && ((SqlCall) node).getKind() == SqlKind.OR)
                 {
-                    whereSepKind = SqlKind.Or;
+                    whereSepKind = SqlKind.OR;
                 }
 
                 // unroll whereClause
                 ArrayList<SqlNode> list = new ArrayList<SqlNode>(0);
                 while (
                     (node instanceof SqlCall)
-                    && (((SqlCall) node).getKind().isA(whereSepKind)))
+                    && (((SqlCall) node).getKind() == whereSepKind))
                 {
                     list.add(0, ((SqlCall) node).getOperands()[1]);
                     node = ((SqlCall) node).getOperands()[0];

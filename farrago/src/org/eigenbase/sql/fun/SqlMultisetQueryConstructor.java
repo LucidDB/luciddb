@@ -47,7 +47,7 @@ public class SqlMultisetQueryConstructor
     {
         super(
             "MULTISET",
-            SqlKind.MultisetQueryConstructor,
+            SqlKind.MULTISET_QUERY_CONSTRUCTOR,
             MaxPrec,
             false,
             SqlTypeStrategies.rtiFirstArgType,

@@ -238,14 +238,14 @@ ${farrago.test.jvmargs}
     <xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
       <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
     </xslt>
-    <!-- If test is failed, let it exit(ie.,BUILD FAILED)-->
+    <!-- If test is failed, let it exit (i.e., BUILD FAILED) -->
     <length file="${luciddb.dir}/testlog/bh/bh.debug" property="bh.testres.filesize"/>
       <if>
         <equals arg1="${bh.testres.filesize}" arg2="0" />
           <then>
           </then>
       <else>
-         <fail message="Some tests were failed."/>
+         <fail message="Some tests failed."/>
       </else>
       </if>
   </target>
@@ -742,9 +742,7 @@ ${farrago.test.jvmargs}
         <include
           name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
         <include
-          name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
-        <include
-          name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
+          name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
         <include
           name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
         <include

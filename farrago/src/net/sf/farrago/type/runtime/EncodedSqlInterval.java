@@ -22,7 +22,6 @@
 package net.sf.farrago.type.runtime;
 
 import java.text.*;
-import java.util.Calendar;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
@@ -50,11 +49,17 @@ public abstract class EncodedSqlInterval
     // used for code generation
     public static final String GET_START_UNIT_METHOD_NAME = "getStartUnit";
     public static final String GET_END_UNIT_METHOD_NAME = "getEndUnit";
+    public static final String
+    GET_FRACTIONAL_SECOND_PRECISION_METHOD_NAME =
+        "getFractionalSecondPrecision";
 
     // Beware: NumberFormat classes are not guaranteed threadsafe.
     // Must use synchronization blocks around these
+    protected static final NumberFormat NF1 = new DecimalFormat("0");
     protected static final NumberFormat NF2 = new DecimalFormat("00");
     protected static final NumberFormat NF3 = new DecimalFormat("000");
+    protected static final NumberFormat[] NFS =
+        new NumberFormat[] {NF1, NF2, NF3};
 
     //~ Instance fields --------------------------------------------------------
 
@@ -136,10 +141,74 @@ public abstract class EncodedSqlInterval
         return toString();
     }
 
+    /**
+     * Encodes a long value as an EncodedSqlInterval, with an optional overflow
+     * check.
+     *
+     * @param value value to be encoded as an EncodedSqlInterval
+     * @param overflowCheck whether to check for overflow
+     */
+    public void reinterpret(long value, boolean overflowCheck)
+    {
+        // For now ignore overflow
+        assignFrom(value);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval without an overflow check.
+     *
+     * @param value value to be encoded as an EncodedSqlDecimal
+     */
+    public void reinterpret(long value)
+    {
+        reinterpret(value, false);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval, with an optional overflow
+     * check.
+     *
+     * @param primitive value to be encoded as an EncodedSqlInterval
+     * @param overflowCheck whether to check for overflow
+     */
+    public void reinterpret(
+        NullablePrimitive.NullableLong primitive,
+        boolean overflowCheck)
+    {
+        if (primitive.isNull()) {
+            setNull(true);
+            return;
+        }
+        reinterpret(primitive.value, overflowCheck);
+    }
+
+    /**
+     * Encodes a long value as an EncodedSqlInterval without an overflow check.
+     *
+     * @param primitive value to be encoded as an EncodedSqlInterval
+     */
+    public void reinterpret(NullablePrimitive.NullableLong primitive)
+    {
+        reinterpret(primitive, false);
+    }
+
+    /**
+     * Assigns the internal value of this decimal to a long variable
+     *
+     * @param target the variable to be assigned
+     */
+    public void assignTo(NullablePrimitive.NullableLong target)
+    {
+        target.setNull(isNull());
+        target.value = this.value;
+    }
+
     // Implemented by code generation
     protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
 
     protected abstract SqlIntervalQualifier.TimeUnit getEndUnit();
+
+    protected abstract int getFractionalSecondPrecision();
 
     /**
      * Rounds this interval value down to a unit of time expressed using its
@@ -175,30 +244,70 @@ public abstract class EncodedSqlInterval
         throw Util.unexpected(timeUnit);
     }
 
-    private static void appendHours(StringBuffer buf, long hours)
-    {
-        buf.append(' ');
-        buf.append(NF2.format(hours));
-    }
-
-    private static void appendMinutes(StringBuffer buf, long minutes)
-    {
-        buf.append(':');
-        buf.append(NF2.format(minutes));
-    }
-
-    private static void appendSeconds(
+    private void appendSecondFractions(
         StringBuffer buf,
-        long seconds,
         long fractions)
     {
-        buf.append(':');
-        buf.append(NF2.format(seconds));
-
-        if (fractions > 0) {
-            buf.append('.');
-            buf.append(NF3.format(fractions));
+        if (fractions == 0) {
+            return;
         }
+        int precision = getFractionalSecondPrecision();
+        if (precision == 0) {
+            return;
+        }
+        for (int i = precision; i < 3; i++) {
+            fractions /= 10;
+        }
+        buf.append('.');
+        int scale = Math.min(
+            precision,
+            NFS.length);
+        buf.append(NFS[scale - 1].format(fractions));
+    }
+
+     public String toString()
+    {
+        long v = value;
+        StringBuffer strbuf = new StringBuffer();
+        char sign = '+';
+        if (v < 0) {
+            v = -v;
+            sign = '-';
+        }
+        SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
+        SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
+        if (endUnit == null) {
+            endUnit = startUnit;
+        }
+        strbuf.append(sign);
+
+        // Number formatter is not guaranteed threadsafe (though
+        // Sun's implementation actually is).  Therefore, be cautious
+        // and synchronize.
+        //
+        // Also, don't enforce precision format on leading fields
+        synchronized (NFS) {
+            for (SqlIntervalQualifier.TimeUnit timeUnit
+                : SqlIntervalQualifier.TimeUnit.values())
+            {
+                if (timeUnit.compareTo(startUnit) >= 0
+                    && timeUnit.compareTo(endUnit) <= 0)
+                {
+                    long timeAmount = v / timeUnit.multiplier;
+                    v = v % timeUnit.multiplier;
+                    if (timeUnit == startUnit) {
+                        strbuf.append(timeAmount);
+                    } else {
+                        strbuf.append(timeUnit.separator);
+                        strbuf.append(NF2.format(timeAmount));
+                    }
+                }
+            }
+            if (endUnit == SqlIntervalQualifier.TimeUnit.SECOND) {
+                appendSecondFractions(strbuf, v);
+            }
+        } //synchronized(NFS)
+        return strbuf.toString();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -224,42 +333,6 @@ public abstract class EncodedSqlInterval
         {
             throw Util.needToImplement(
                 "Conversion from string to month year interval");
-        }
-
-        public String toString()
-        {
-            long v = value;
-            StringBuffer strbuf = new StringBuffer();
-            char sign = '+';
-            if (v < 0) {
-                v = -v;
-                sign = '-';
-            }
-            long years = v / MONTHS_PER_YEAR;
-            long months = v % MONTHS_PER_YEAR;
-
-            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
-            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
-
-            strbuf.append(sign);
-
-            // Number formatter is not guaranteed threadsafe (though
-            // Sun's implementation actually is).  Therefore, be cautious
-            // and synchronize
-
-            if (startUnit == SqlIntervalQualifier.TimeUnit.Year) {
-                strbuf.append(years);
-                if (endUnit == SqlIntervalQualifier.TimeUnit.Month) {
-                    strbuf.append('-');
-                    synchronized (NF2) {
-                        strbuf.append(NF2.format(months));
-                    }
-                }
-            } else {
-                strbuf.append(months);
-            }
-
-            return strbuf.toString();
         }
     }
 
@@ -302,16 +375,16 @@ public abstract class EncodedSqlInterval
                 return;
             }
             switch (timeUnit) {
-            case Day:
+            case DAY:
                 value = value / MS_PER_DAY * MS_PER_DAY;
                 break;
-            case Hour:
+            case HOUR:
                 value = value / MS_PER_HOUR * MS_PER_HOUR;
                 break;
-            case Minute:
+            case MINUTE:
                value = value / MS_PER_MINUTE * MS_PER_MINUTE;
                break;
-            case Second:
+            case SECOND:
                 value = value / MS_PER_SECOND * MS_PER_SECOND;
                 break;
             default:
@@ -338,18 +411,18 @@ public abstract class EncodedSqlInterval
                 return;
             }
             switch (timeUnit) {
-            case Day:
+            case DAY:
                 value = (value + (MS_PER_DAY - 1)) / MS_PER_DAY * MS_PER_DAY;
                 break;
-            case Hour:
+            case HOUR:
                 value = (value + (MS_PER_HOUR - 1)) / MS_PER_HOUR * MS_PER_HOUR;
                 break;
-            case Minute:
+            case MINUTE:
                value =
                    (value + (MS_PER_MINUTE - 1)) / MS_PER_MINUTE
                    * MS_PER_MINUTE;
                break;
-            case Second:
+            case SECOND:
                 value =
                     (value + (MS_PER_SECOND - 1)) / MS_PER_SECOND
                     * MS_PER_SECOND;
@@ -363,92 +436,6 @@ public abstract class EncodedSqlInterval
         {
             throw Util.needToImplement(
                 "Conversion from string to day time interval");
-        }
-
-        public String toString()
-        {
-            long v = value;
-            StringBuffer strbuf = new StringBuffer();
-            char sign = '+';
-            if (v < 0) {
-                v = -v;
-                sign = '-';
-            }
-            long days = v / MS_PER_DAY;
-            v = v % MS_PER_DAY;
-            long hours = v / MS_PER_HOUR;
-            v = v % MS_PER_HOUR;
-            long minutes = v / MS_PER_MINUTE;
-            v = v % MS_PER_MINUTE;
-            long seconds = v / MS_PER_SECOND;
-            v = v % MS_PER_SECOND;
-            long fractions = v;
-
-            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
-            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
-            strbuf.append(sign);
-
-            // Number formatter is not guaranteed threadsafe (though
-            // Sun's implementation actually is).  Therefore, be cautious
-            // and synchronize.
-            //
-            // Also, don't enforce precision format on leading fields
-            synchronized (NF2) {
-                if (startUnit == SqlIntervalQualifier.TimeUnit.Day) {
-                    strbuf.append(days);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Day))
-                    {
-                        appendHours(strbuf, hours);
-                        if (endUnit != SqlIntervalQualifier.TimeUnit.Hour) {
-                            appendMinutes(strbuf, minutes);
-                            if (endUnit
-                                != SqlIntervalQualifier.TimeUnit.Minute)
-                            {
-                                appendSeconds(strbuf, seconds, fractions);
-                            }
-                        }
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Hour)
-                {
-                    strbuf.append(hours);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Hour))
-                    {
-                        appendMinutes(strbuf, minutes);
-                        if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
-                            appendSeconds(strbuf, seconds, fractions);
-                        }
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Minute)
-                {
-                    strbuf.append(minutes);
-
-                    if ((endUnit != null)
-                        && (endUnit != SqlIntervalQualifier.TimeUnit.Minute))
-                    {
-                        appendSeconds(strbuf, seconds, fractions);
-                    }
-                } else if (
-                    getStartUnit()
-                    == SqlIntervalQualifier.TimeUnit.Second)
-                {
-                    strbuf.append(seconds);
-
-                    if (fractions > 0) {
-                        strbuf.append('.');
-                        strbuf.append(NF3.format(fractions));
-                    }
-                }
-            } //synchronized(NF2)
-
-            return strbuf.toString();
         }
     }
 }

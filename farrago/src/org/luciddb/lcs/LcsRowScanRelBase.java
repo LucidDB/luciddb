@@ -103,6 +103,7 @@ public abstract class LcsRowScanRelBase
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
      * @param resCols residual filter columns (0-length array if none)
+     * @param inputSelectivity estimate of input selectivity
      */
     public LcsRowScanRelBase(
         RelOptCluster cluster,
@@ -469,6 +470,11 @@ public abstract class LcsRowScanRelBase
         return lcsTable;
     }
 
+    public LcsTable getLcsTable()
+    {
+        return lcsTable;
+    }
+
     public RelOptConnection getConnection()
     {
         return connection;
@@ -498,6 +504,11 @@ public abstract class LcsRowScanRelBase
     public boolean hasResidualFilters()
     {
         return (residualColumns.length > 0);
+    }
+
+    public Integer [] getResidualColumns()
+    {
+        return residualColumns;
     }
 
     public List<FemLocalIndex> getClusteredIndexes()

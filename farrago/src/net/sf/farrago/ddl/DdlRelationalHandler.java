@@ -655,7 +655,7 @@ public class DdlRelationalHandler
                     getPreparingStmt().getRelOptCluster());
             getStmtContext().prepare(
                 indexBuildPlan,
-                SqlKind.Insert,
+                SqlKind.INSERT,
                 true,
                 getPreparingStmt());
             getStmtContext().execute();

@@ -43,7 +43,7 @@
       <test name="remoteRowsTest">
         <junit testclass="com.lucidera.luciddb.test.udr.TestRemoteRowsUDX"
             methodnames="testRemoteRowsUDX"/>
-      </test>      
+      </test>
 
       <cleanup-hook>
         <test-suite name="cleanup">

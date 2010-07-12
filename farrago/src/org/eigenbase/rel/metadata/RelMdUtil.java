@@ -48,7 +48,7 @@ public class RelMdUtil
     public static final SqlFunction artificialSelectivityFunc =
         new SqlFunction(
             "ARTIFICIAL_SELECTIVITY",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiBoolean, // returns boolean since we'll AND it
             null,
             SqlTypeStrategies.otcNumeric, // takes a numeric param

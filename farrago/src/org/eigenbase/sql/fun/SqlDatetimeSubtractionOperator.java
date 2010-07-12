@@ -46,7 +46,7 @@ public class SqlDatetimeSubtractionOperator
     {
         super(
             "-",
-            SqlKind.Minus,
+            SqlKind.MINUS,
             40,
             true,
             SqlTypeStrategies.rtiNullableThirdArgType,

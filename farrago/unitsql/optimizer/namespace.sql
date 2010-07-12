@@ -161,6 +161,11 @@ select deptno as d
 from hsqldb_demo.sales.dept
 order by d;
 
+-- FRG-339
+select count(*)
+from hsqldb_demo.sales.bitflip
+where b1;
+
 -- now explain plans for above queries
 !set outputformat csv
 
@@ -307,6 +312,11 @@ explain plan for
 select *
 from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
 on dept.deptno=emp.deptno;
+
+explain plan for
+select count(*)
+from hsqldb_demo.sales.bitflip
+where b1;
 
 -- join on pseudocolumn (FRG-69)
 

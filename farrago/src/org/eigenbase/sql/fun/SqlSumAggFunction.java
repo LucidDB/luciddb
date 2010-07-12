@@ -51,7 +51,7 @@ public class SqlSumAggFunction
     {
         super(
             "SUM",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcNumeric,

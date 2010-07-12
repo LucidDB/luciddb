@@ -374,7 +374,7 @@ public abstract class SqlOperator
             return false;
         }
         SqlOperator other = (SqlOperator) obj;
-        return name.equals(other.name) && kind.equals(other.kind);
+        return name.equals(other.name) && kind == other.kind;
     }
 
     public boolean isName(String testName)
@@ -385,7 +385,7 @@ public abstract class SqlOperator
     // override Object
     public int hashCode()
     {
-        return (kind.getOrdinal() * 31) + name.hashCode();
+        return kind.hashCode() + name.hashCode();
     }
 
     /**

@@ -196,7 +196,6 @@ create or replace view table_types_view as
 ;
 grant select on table_types_view to public;
 
--- TODO: get column_def by left-outer-join to get default value
 -- TODO: get source_data_type for distinct types
 -- TODO: get predefined numericPrecision and numericPrecisionRadix
 -- REVIEW: length/precision/scale/radix
@@ -218,13 +217,18 @@ create or replace view columns_view_internal as
         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
         c."description" as remarks,
         c."mofId",
-        c."lineageId"
+        c."lineageId",
+        nullif(e."body",'NULL') as default_value
     from 
         tables_view_internal t 
     inner join 
         sys_fem."SQL2003"."AbstractColumn" c 
     on 
-        t."mofId" = c."owner";
+        t."mofId" = c."owner"
+    left outer join
+        sys_cwm."Core"."Expression" e
+    on 
+        e."mofId" = c."initialValue";
 
 create or replace view columns_view as
     select 
@@ -240,7 +244,7 @@ create or replace view columns_view as
         cast(null as integer) as num_prec_radix,
         c.nullable,
         null_remarks() as remarks,
-        null_remarks() as column_def,
+        c.default_value as column_def,
         0 as sql_data_type,
         0 as sql_datetime_sub,
         c.char_octet_length,

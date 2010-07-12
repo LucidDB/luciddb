@@ -694,20 +694,19 @@ public interface SqlValidator
      */
     boolean isSystemField(RelDataTypeField field);
 
-    //~ Inner Classes ----------------------------------------------------------
-
     /**
-     * @deprecated This class is for backwards-compatibility with the previous
-     * incarnation of SqlConformance.
+     * Returns a description of how each field in the row type maps to a
+     * catalog, schema, table and column in the schema.
+     *
+     * <p>The returned list is never null, and has one element for each field
+     * in the row type. Each element is a list of four elements (catalog,
+     * schema, table, column), or may be null if the column is an expression.
+     *
+     * @param sqlQuery Query
+     * @return Description of how each field in the row type maps to a schema
+     *     object
      */
-    public static class Compatible
-    {
-        /**
-         * @deprecated This symbol is for backwards-compatibility with the
-         * previous incarnation of SqlConformance.
-         */
-        public static final SqlConformance Default = SqlConformance.Default;
-    }
+    List<List<String>> getFieldOrigins(SqlNode sqlQuery);
 }
 
 // End SqlValidator.java

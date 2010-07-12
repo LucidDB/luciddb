@@ -40,7 +40,7 @@ public interface RexSqlConvertlet
      * @param converter to use in translating
      * @param call RexCall to translate
      *
-     * @return SqlNode
+     * @return SqlNode, or null if translation was unavailable
      */
     SqlNode convertCall(
         RexToSqlNodeConverter converter,

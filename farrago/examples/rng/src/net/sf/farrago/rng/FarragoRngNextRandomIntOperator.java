@@ -44,7 +44,7 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
     {
         super(
             "NEXT_RANDOM_INT",
-            SqlKind.Other,
+            SqlKind.OTHER,
             SqlTypeStrategies.rtiInteger,
             null,
             new FamilyOperandTypeChecker(

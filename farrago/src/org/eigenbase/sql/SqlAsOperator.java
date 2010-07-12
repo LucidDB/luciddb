@@ -46,7 +46,7 @@ public class SqlAsOperator
     {
         super(
             "AS",
-            SqlKind.As,
+            SqlKind.AS,
             20,
             true,
             SqlTypeStrategies.rtiFirstArgType,

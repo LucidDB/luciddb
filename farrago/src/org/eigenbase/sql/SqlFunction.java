@@ -109,7 +109,7 @@ public class SqlFunction
     {
         super(
             sqlIdentifier.names[sqlIdentifier.names.length - 1],
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             100,
             100,
             returnTypeInference,
@@ -251,7 +251,7 @@ public class SqlFunction
                 // types, set the nodeType to a ColumnList type but defer
                 // validating the arguments of the row constructor until we know
                 // for sure that the row argument maps to a ColumnList type
-                if ((operands[i].getKind() == SqlKind.Row)
+                if (operands[i].getKind() == SqlKind.ROW
                     && convertRowArgToColumnList)
                 {
                     containsRowArg = true;
@@ -289,9 +289,9 @@ public class SqlFunction
                 {
                     // remove the already validated node types corresponding to
                     // row arguments before revalidating
-                    for (int i = 0; i < operands.length; ++i) {
-                        if (operands[i].getKind() == SqlKind.Row) {
-                            validator.removeValidatedNodeType(operands[i]);
+                    for (SqlNode operand : operands) {
+                        if (operand.getKind() == SqlKind.ROW) {
+                            validator.removeValidatedNodeType(operand);
                         }
                     }
                     return deriveType(validator, scope, call, false);

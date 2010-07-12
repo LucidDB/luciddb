@@ -47,7 +47,7 @@ public class SqlMultisetValueConstructor
     {
         super(
             "MULTISET",
-            SqlKind.MultisetValueConstructor,
+            SqlKind.MULTISET_VALUE_CONSTRUCTOR,
             MaxPrec,
             false,
             SqlTypeStrategies.rtiFirstArgType,

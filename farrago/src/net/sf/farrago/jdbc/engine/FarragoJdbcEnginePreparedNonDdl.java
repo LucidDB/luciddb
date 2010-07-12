@@ -122,7 +122,8 @@ public class FarragoJdbcEnginePreparedNonDdl
         }
         try {
             return new FarragoResultSetMetaData(
-                stmtContext.getPreparedRowType());
+                stmtContext.getPreparedRowType(),
+                stmtContext.getPreparedFieldOrigins());
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }

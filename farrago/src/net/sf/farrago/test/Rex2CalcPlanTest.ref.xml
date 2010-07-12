@@ -1625,4 +1625,42 @@ RETURN /* 3: */;]]>
             <![CDATA[{0}]]>
         </Resource>
     </TestCase>
+    <TestCase name="testCaseStatement">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4, s4, s4;
+I s4, s4, s4;
+L s4, bo, s4, s4, bo, s4, s4, bo;
+C s4, s4, s4, s4, s4, vc,5;
+V 1, 3, 1000, 2,  /* <NULL> */, 0x3232303034 /* 22004 */;
+T;
+GT L1, I0, C0 /* 0: >($t0, $t9) */;
+JMPF @6, L1 /* 1: */;
+JMPN @6, L1 /* 2: */;
+CAST L2, C0 /* 3: CAST($t9):INTEGER */;
+MOVE L0, L2 /* 4: */;
+JMP @14 /* 5: */;
+ADD L3, I1, C1 /* 6: +($t7, $t11) */;
+LT L4, L3, C2 /* 7: <($t12, $t13) */;
+JMPF @13, L4 /* 8: */;
+JMPN @13, L4 /* 9: */;
+CAST L5, C3 /* 10: CAST($t15):INTEGER */;
+MOVE L0, L5 /* 11: */;
+JMP @14 /* 12: */;
+MOVE L0, C4 /* 13: CASE($t10, $t9, $t14, $t15, $t17) */;
+ADD L6, I2, C1 /* 14: +($t7, $t11) */;
+ISNULL L7, I0 /* 15: */;
+JMPF @19, L7 /* 16: */;
+RAISE C5 /* 17: */;
+RETURN /* 18: */;
+REF O0, I0 /* 19: */;
+REF O1, L0 /* 20: */;
+ISNULL L7, L6 /* 21: */;
+JMPF @25, L7 /* 22: */;
+RAISE C5 /* 23: */;
+RETURN /* 24: */;
+REF O2, L6 /* 25: */;
+RETURN /* 26: */;]]>
+        </Resource>
+    </TestCase>
 </Root>

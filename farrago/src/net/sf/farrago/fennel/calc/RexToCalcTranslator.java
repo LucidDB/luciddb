@@ -73,9 +73,9 @@ public class RexToCalcTranslator
 
     /**
      * Whether the code generator should short-circuit logical operators. The
-     * default value is <em>false</em>.
+     * default value is <em>true</em>.
      */
-    protected boolean generateShortCircuit = false;
+    protected boolean generateShortCircuit = true;
     protected int labelOrdinal = 0;
 
     /**
@@ -93,6 +93,13 @@ public class RexToCalcTranslator
      * Program being translated.
      */
     private RexProgram program;
+
+    /**
+     * A hash map of composite expressions (RexCall) and their recurrence count
+     * in the query
+     */
+    protected Map<String, Integer> recurrenceMap =
+        new HashMap<String, Integer>();
 
     /**
      * List of expressions which are currently being implemented.
@@ -479,6 +486,9 @@ public class RexToCalcTranslator
             }
         }
 
+        // Determine recurring common subexpressions.
+        deduceCommonSubExpressions();
+
         // Step 1: implement all the filtering logic
         if (conditionRef != null) {
             CalcReg filterResult = implementNode(conditionRef);
@@ -553,6 +563,18 @@ public class RexToCalcTranslator
 
         builder.addReturn();
         return builder.getProgram(null);
+    }
+
+    private void deduceCommonSubExpressions() {
+        final List<RexLocalRef> projectRefList = program.getProjectList();
+        RexNode conditionRef = program.getCondition();
+        RecurrenceMapBuilder mapBuilder = new RecurrenceMapBuilder(this);
+        if (conditionRef != null) {
+            conditionRef.accept(mapBuilder);
+        }
+        for (RexLocalRef projectRef : projectRefList) {
+            projectRef.accept(mapBuilder);
+        }
     }
 
     /**
@@ -950,15 +972,16 @@ public class RexToCalcTranslator
                 "Shouldn't call this function directly;"
                 + " use implementNode(RexNode) instead");
         }
-        SqlOperator op = call.getOperator();
+        final SqlOperator op = call.getOperator();
 
-        if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
+        final SqlKind opKind = op.getKind();
+        if (opKind == SqlKind.AND || (opKind == SqlKind.OR)) {
             //first operand of AND/OR
             CalcReg reg0 = implementNode(call.operands[0]);
             String shortCut = newLabel();
 
             //Check if we can make a short cut
-            if (op.getKind().isA(SqlKind.And)) {
+            if (opKind == SqlKind.AND) {
                 CalcProgramBuilder.jumpFalseInstruction.add(
                     builder,
                     builder.newLine(shortCut),
@@ -968,39 +991,80 @@ public class RexToCalcTranslator
             }
 
             //second operand
+            newScope();
+            // Implement any common subexpressions that the second operand
+            // references and we know we can 'safely' evaluate.
+            implementCommonSubExpressions(call.operands[1]);
+
             CalcReg reg1 = implementNode(call.operands[1]);
             CalcReg result =
                 builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
             assert result.getOpType()
                 == getCalcRegisterDescriptor(call).getType();
+            // the first operand may be evaluated as NULL.
+            if (opKind == SqlKind.AND) {
+                // return the result of first operand if second is 'true'
+                CalcProgramBuilder.jumpTrueInstruction.add(
+                    builder,
+                    builder.newLine(shortCut),
+                    reg1);
+            } else {
+                // return the result of first operand if the second is 'false'
+                builder.addLabelJumpFalse(shortCut, reg1);
+            }
             CalcProgramBuilder.move.add(builder, result, reg1);
 
             String restOfInstructions = newLabel();
             builder.addLabelJump(restOfInstructions);
-            builder.addLabel(shortCut);
 
-            if (op.getKind().isA(SqlKind.And)) {
-                CalcProgramBuilder.move.add(
-                    builder,
-                    result,
-                    builder.newBoolLiteral(false));
-            } else {
-                CalcProgramBuilder.move.add(
-                    builder,
-                    result,
-                    builder.newBoolLiteral(true));
-            }
+            builder.addLabel(shortCut);
+            CalcProgramBuilder.move.add(builder, result, reg0);
+
+            popScope();
 
             setResult(call, result);
 
             //WARNING this assumes that more instructions will follow.
             //Return is currently always at the end.
             builder.addLabel(restOfInstructions);
+
             return result;
         } else {
             throw FarragoResource.instance().ProgramImplementationError.ex(
                 op.toString());
         }
+    }
+
+    // implements common subexpressions
+    public void implementCommonSubExpressions(RexNode node) {
+        if (node instanceof RexCall) {
+            RexCall call = (RexCall) node;
+            switch (call.getOperator().getKind()) {
+            case AND:
+            case OR:
+            case CASE:
+                implementCommonSubExpressions(call.operands[0]);
+                break;
+            default:
+                for (int i = 0; i < call.operands.length - 1; i++) {
+                    RexNode operand = call.operands[i];
+                    implementCommonSubExpressions(operand);
+                }
+                break;
+            }
+        } else if (node instanceof RexLocalRef) {
+            Integer recurrenceCount = recurrenceMap.get(getKey(node));
+            if (recurrenceCount != null && recurrenceCount > 1) {
+                if (!containsResult(node)) {
+                    implementNode(node);
+                }
+                return;
+            }
+            int index = ((RexLocalRef)node).getIndex();
+            RexNode expr = program.getExprList().get(index);
+            implementCommonSubExpressions(expr);
+        }
+        return;
     }
 
     private CalcReg implement(RexCall call)
@@ -1014,9 +1078,10 @@ public class RexToCalcTranslator
         SqlOperator op = call.getOperator();
 
         // Check if and/or/xor should short circuit.
+        final SqlKind kind = op.getKind();
         if (generateShortCircuit
-            && (op.getKind().isA(SqlKind.And)
-                || op.getKind().isA(SqlKind.Or)))
+            && (kind == SqlKind.AND
+                || kind == SqlKind.OR))
         {
             return implementShortCircuit(call);
         }
@@ -1077,21 +1142,27 @@ public class RexToCalcTranslator
             CalcReg [] regs = {
                 resultOfCall, strCmpResult, zero
             };
-            if (op.getKind().isA(SqlKind.Equals)) {
+            switch (kind) {
+            case EQUALS:
                 CalcProgramBuilder.boolNativeEqual.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.NotEquals)) {
+                break;
+            case NOT_EQUALS:
                 CalcProgramBuilder.boolNativeNotEqual.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.GreaterThan)) {
+                break;
+            case GREATER_THAN:
                 CalcProgramBuilder.boolNativeGreaterThan.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.LessThan)) {
+                break;
+            case LESS_THAN:
                 CalcProgramBuilder.boolNativeLessThan.add(builder, regs);
-            } else if (op.getKind().isA(SqlKind.GreaterThanOrEqual)) {
+                break;
+            case GREATER_THAN_OR_EQUAL:
                 CalcProgramBuilder.boolNativeGreaterOrEqualThan.add(
-                    builder,
-                    regs);
-            } else if (op.getKind().isA(SqlKind.LessThanOrEqual)) {
+                    builder, regs);
+                break;
+            case LESS_THAN_OR_EQUAL:
                 CalcProgramBuilder.boolNativeLessOrEqualThan.add(builder, regs);
-            } else {
+                break;
+            default:
                 throw Util.newInternal("Unknown op " + op);
             }
             setResult(call, resultOfCall);
@@ -1147,22 +1218,22 @@ public class RexToCalcTranslator
 
     private boolean isStrCmp(RexCall call)
     {
-        SqlOperator op = call.getOperator();
-        if (op.getKind().isA(SqlKind.Equals)
-            || op.getKind().isA(SqlKind.NotEquals)
-            || op.getKind().isA(SqlKind.GreaterThan)
-            || op.getKind().isA(SqlKind.LessThan)
-            || op.getKind().isA(SqlKind.GreaterThanOrEqual)
-            || op.getKind().isA(SqlKind.LessThanOrEqual))
-        {
+        switch (call.getOperator().getKind()) {
+        case EQUALS:
+        case NOT_EQUALS:
+        case GREATER_THAN:
+        case LESS_THAN:
+        case GREATER_THAN_OR_EQUAL:
+        case LESS_THAN_OR_EQUAL:
             RelDataType t0 = call.operands[0].getType();
             RelDataType t1 = call.operands[1].getType();
-
-            return (SqlTypeUtil.inCharFamily(t0)
-                && SqlTypeUtil.inCharFamily(t1))
-                || (isOctetString(t0) && isOctetString(t1));
+            return SqlTypeUtil.inCharFamily(t0)
+                   && SqlTypeUtil.inCharFamily(t1)
+                   || isOctetString(t0)
+                      && isOctetString(t1);
+        default:
+            return false;
         }
-        return false;
     }
 
     private static boolean isOctetString(RelDataType t)
@@ -1325,7 +1396,7 @@ public class RexToCalcTranslator
     /**
      * @param generateShortCircuit If true, tells the code generator to short
      * circuit logical operators<br>
-     * The default valude is <emp>false</emp>
+     * The default value is <emp>false</emp>
      */
     public void setGenerateShortCircuit(boolean generateShortCircuit)
     {
@@ -1547,6 +1618,50 @@ public class RexToCalcTranslator
         {
             // Matches RexToCalcTranslator.visitRangeRef()
             throw new RexToCalcTranslator.TranslationException();
+        }
+    }
+
+    /**
+     * Visitor which walks over a {@link RexNode row expression} and
+     * increments recurrence count for each local reference.
+     */
+    private class RecurrenceMapBuilder
+        extends RexVisitorImpl<Void>
+    {
+        private RexToCalcTranslator translator;
+
+        /**
+         * Creates a RecurrenceTester.
+         *
+         * @param translator Translator, which provides a table mapping
+         * operators to implementations.
+         */
+        RecurrenceMapBuilder(RexToCalcTranslator translator)
+        {
+            super(true);
+            this.translator = translator;
+        }
+
+        public Void visitLocalRef(RexLocalRef localRef)
+        {
+            int index = localRef.getIndex();
+            RexNode expr = translator.program.getExprList().get(index);
+            // dont worry about localRefs that refer to inputRef etc.
+            if (expr instanceof RexCall) {
+                String key = getKey(localRef);
+                Integer recurrenceCount = translator.recurrenceMap.get(key);
+                if (recurrenceCount == null) {
+                    recurrenceCount = 0;
+                }
+                recurrenceCount++;
+                translator.recurrenceMap.put(key, recurrenceCount);
+                if (recurrenceCount == 1) {
+                    // first visit to this localRef. Determine recurrence
+                    // counts for all descendants.
+                    return super.visitCall((RexCall)expr);
+                }
+            }
+            return super.visitLocalRef(localRef);
         }
     }
 }

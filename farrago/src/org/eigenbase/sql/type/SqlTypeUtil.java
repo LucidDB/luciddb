@@ -873,6 +873,17 @@ public abstract class SqlTypeUtil
             }
             return canCastFrom(c1, c2, coerce);
         }
+        if ((isInterval(fromType) && isExactNumeric(toType))
+            || (isInterval(toType) && isExactNumeric(fromType)))
+        {
+            IntervalSqlType intervalType =
+                (IntervalSqlType) (isInterval(fromType) ? fromType : toType);
+            if (!intervalType.getIntervalQualifier().isSingleDatetimeField()) {
+                // Casts between intervals and exact numerics must involve
+                // intervals with a single datetime field.
+                return false;
+            }
+        }
         SqlTypeName tn1 = toType.getSqlTypeName();
         SqlTypeName tn2 = fromType.getSqlTypeName();
         if ((tn1 == null) || (tn2 == null)) {

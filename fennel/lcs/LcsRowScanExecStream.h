@@ -190,6 +190,11 @@ class FENNEL_LCS_EXPORT LcsRowScanExecStream
     bool isFullScan;
 
     /**
+     * true if only returning row count
+     */
+    bool isCountAgg;
+
+    /**
      * true if there's extra range list filter(as the last input)
      */
     bool hasExtraFilter;
@@ -331,8 +336,24 @@ class FENNEL_LCS_EXPORT LcsRowScanExecStream
      */
     ExecStreamResult fillRidRunBuffer();
 
+protected:
+    /**
+     * Turn on count aggregation mode.
+     */
+    void setCountAgg();
+
+    /**
+     * @return number of rows matching all filters so far
+     */
+    RecordNum getRowCount() const;
+
+    /**
+     * @return final output tuple
+     */
+    TupleData &getProjOutputTupleData();
+
 public:
-    LcsRowScanExecStream();
+    explicit LcsRowScanExecStream();
     virtual void prepare(LcsRowScanExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);

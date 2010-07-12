@@ -218,7 +218,7 @@ public class FarragoAutoCalcRulesTest
         SqlFunction jplusFunc =
             new SqlFunction(
                 "JPLUS",
-                SqlKind.Function,
+                SqlKind.OTHER_FUNCTION,
                 SqlTypeStrategies.rtiLeastRestrictive,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
@@ -232,7 +232,7 @@ public class FarragoAutoCalcRulesTest
         SqlFunction jrowFunc =
             new SqlFunction(
                 "JROW",
-                SqlKind.Function,
+                SqlKind.OTHER_FUNCTION,
                 null,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
@@ -295,7 +295,7 @@ public class FarragoAutoCalcRulesTest
         SqlFunction cppFunc =
             new SqlFunction(
                 "CPLUS",
-                SqlKind.Function,
+                SqlKind.OTHER_FUNCTION,
                 SqlTypeStrategies.rtiLeastRestrictive,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,

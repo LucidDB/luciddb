@@ -285,6 +285,9 @@ public abstract class FarragoTestCase
         if (connection == null) {
             return;
         }
+        if (connection.isClosed()) {
+            return;
+        }
         if (connection.getMetaData().supportsTransactions()) {
             connection.rollback();
         }

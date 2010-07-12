@@ -24,6 +24,7 @@ package org.eigenbase.test;
 
 import java.nio.charset.*;
 
+import java.util.List;
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -520,6 +521,16 @@ public class SqlValidatorTestCase
             String expected);
 
         /**
+         * Given a SQL query, returns a list of the origins of each result
+         * field.
+         *
+         * @param sql SQL query
+         * @param fieldOriginList Field origin list, e.g.
+         *   "{(CATALOG.SALES.EMP.EMPNO, null)}"
+         */
+        void checkFieldOrigin(String sql, String fieldOriginList);
+
+        /**
          * Checks that a query gets rewritten to an expected form.
          *
          * @param validator validator to use; null for default
@@ -703,6 +714,33 @@ public class SqlValidatorTestCase
             assertEquals(expected, actual);
         }
 
+        public void checkFieldOrigin(String sql, String fieldOriginList)
+        {
+            SqlValidator validator = getValidator();
+            SqlNode n = parseAndValidate(validator, sql);
+            final List<List<String>> list = validator.getFieldOrigins(n);
+            final StringBuilder buf = new StringBuilder("{");
+            int i = 0;
+            for (List<String> strings : list) {
+                if (i++ > 0) {
+                    buf.append(", ");
+                }
+                if (strings == null) {
+                    buf.append("null");
+                } else {
+                    int j = 0;
+                    for (String s : strings) {
+                        if (j++ > 0) {
+                            buf.append('.');
+                        }
+                        buf.append(s);
+                    }
+                }
+            }
+            buf.append("}");
+            assertEquals(fieldOriginList, buf.toString());
+        }
+
         public void checkResultType(String sql, String expected)
         {
             RelDataType actualType = getResultType(sql);
@@ -713,13 +751,13 @@ public class SqlValidatorTestCase
         public void checkIntervalConv(String sql, String expected)
         {
             SqlValidator validator = getValidator();
-            SqlNode n = parseAndValidate(validator, sql);
+            final SqlSelect n = (SqlSelect) parseAndValidate(validator, sql);
 
             SqlNode node = null;
-            for (int i = 0; i < ((SqlSelect) n).getOperands().length; i++) {
-                node = ((SqlSelect) n).getOperands()[i];
+            for (int i = 0; i < n.getOperands().length; i++) {
+                node = n.getOperands()[i];
                 if (node instanceof SqlCall) {
-                    if (node.isA(SqlKind.As)) {
+                    if (node.getKind() == SqlKind.AS) {
                         node = ((SqlCall) node).operands[0];
                     }
                     node =
@@ -950,6 +988,11 @@ public class SqlValidatorTestCase
         private static String buildQuery(String expression)
         {
             return "values (" + expression + ")";
+        }
+
+        public boolean isVm(VmName vmName)
+        {
+            return false;
         }
     }
 }

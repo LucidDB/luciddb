@@ -278,6 +278,17 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
+     * Assigns the internal value of this decimal to a long variable
+     *
+     * @param target the variable to be assigned
+     */
+    public void assignTo(NullablePrimitive.NullableLong target)
+    {
+        target.setNull(isNull());
+        target.value = value.internalTime;
+    }
+
+    /**
      * Attempts to parse the string, throwing an understandable exception if an
      * error was detected.
      */
@@ -418,17 +429,17 @@ public abstract class SqlDateTimeWithoutTZ
         Calendar cal = getTempCal();
         switch (timeUnit) {
         // Fall through
-        case Year:
+        case YEAR:
             cal.set(Calendar.MONTH, 0);
-        case Month:
+        case MONTH:
             cal.set(Calendar.DAY_OF_MONTH, 1);
-        case Day:
+        case DAY:
             cal.set(Calendar.HOUR_OF_DAY, 0);
-        case Hour:
+        case HOUR:
             cal.set(Calendar.MINUTE, 0);
-        case Minute:
+        case MINUTE:
             cal.set(Calendar.SECOND, 0);
-        case Second:
+        case SECOND:
             cal.set(Calendar.MILLISECOND, 0);
             break;
         default:
@@ -465,32 +476,32 @@ public abstract class SqlDateTimeWithoutTZ
         boolean incNeeded = false;
         switch (timeUnit) {
         // Fall through
-        case Year:
+        case YEAR:
             if (cal.get(Calendar.MONTH) > 0) {
                 cal.set(Calendar.MONTH, 0);
                 incNeeded = true;
             }
-        case Month:
+        case MONTH:
             if (cal.get(Calendar.DAY_OF_MONTH) > 1) {
                 cal.set(Calendar.DAY_OF_MONTH, 1);
                 incNeeded = true;
             }
-        case Day:
+        case DAY:
             if (cal.get(Calendar.HOUR_OF_DAY) > 0) {
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 incNeeded = true;
             }
-        case Hour:
+        case HOUR:
             if (cal.get(Calendar.MINUTE) > 0) {
                 cal.set(Calendar.MINUTE, 0);
                 incNeeded = true;
             }
-        case Minute:
+        case MINUTE:
             if (cal.get(Calendar.SECOND) > 0) {
                 cal.set(Calendar.SECOND, 0);
                 incNeeded = true;
             }
-        case Second:
+        case SECOND:
             if (cal.get(Calendar.MILLISECOND) > 0) {
                 cal.set(Calendar.MILLISECOND, 0);
                 incNeeded = true;
@@ -502,22 +513,22 @@ public abstract class SqlDateTimeWithoutTZ
 
         if (incNeeded) {
             switch (timeUnit) {
-            case Year:
+            case YEAR:
                 cal.add(Calendar.YEAR, 1);
                 break;
-            case Month:
+            case MONTH:
                 cal.add(Calendar.MONTH, 1);
                 break;
-            case Day:
+            case DAY:
                 cal.add(Calendar.DAY_OF_MONTH, 1);
                 break;
-            case Hour:
+            case HOUR:
                 cal.add(Calendar.HOUR_OF_DAY, 1);
                 break;
-            case Minute:
+            case MINUTE:
                 cal.add(Calendar.MINUTE, 1);
                 break;
-            case Second:
+            case SECOND:
                 cal.add(Calendar.SECOND, 1);
                 break;
             default:

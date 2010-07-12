@@ -23,6 +23,7 @@
 package net.sf.farrago.query;
 
 import java.sql.*;
+import java.util.List;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -69,6 +70,12 @@ class FarragoExecutableExplainStmt
     public RelDataType getRowType()
     {
         // TODO:  make a proper type descriptor (and use it for execute also)
+        throw new UnsupportedOperationException();
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public List<List<String>> getFieldOrigins()
+    {
         throw new UnsupportedOperationException();
     }
 

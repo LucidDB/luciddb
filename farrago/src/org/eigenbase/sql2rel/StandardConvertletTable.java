@@ -344,22 +344,20 @@ public class StandardConvertletTable
         SqlCall call)
     {
         RelDataTypeFactory typeFactory = cx.getTypeFactory();
-        assert SqlKind.Cast.equals(call.getOperator().getKind());
+        assert call.getKind() == SqlKind.CAST;
         if (call.operands[1] instanceof SqlIntervalQualifier) {
             SqlNode node = call.operands[0];
             if (node instanceof SqlIntervalLiteral) {
+                RexLiteral sourceInterval =
+                    (RexLiteral) cx.convertExpression(node);
+                long sourceValue =
+                    ((BigDecimal) sourceInterval.getValue()).longValue();
                 SqlIntervalQualifier intervalQualifier =
                     (SqlIntervalQualifier) call.operands[1];
-                SqlIntervalLiteral.IntervalValue numLiteral =
-                    (SqlIntervalLiteral.IntervalValue) ((SqlLiteral) node)
-                    .getValue();
-                int sign = (numLiteral.getSign() == -1) ? -1 : 1;
-                node =
-                    SqlLiteral.createInterval(
-                        sign,
-                        numLiteral.toString(),
-                        intervalQualifier,
-                        node.getParserPosition());
+                RexLiteral castedInterval =
+                    cx.getRexBuilder().makeIntervalLiteral(
+                        sourceValue, intervalQualifier);
+                return castToValidatedType(cx, call, castedInterval);
             }
             return castToValidatedType(cx, call, cx.convertExpression(node));
         }
@@ -426,7 +424,8 @@ public class StandardConvertletTable
 
             RexNode pad =
                 rexBuilder.makeExactLiteral(BigDecimal.valueOf(val - 1));
-            RexNode cast = rexBuilder.makeCast(rexInterval.getType(), pad);
+            RexNode cast = rexBuilder.makeReinterpretCast(
+                rexInterval.getType(), pad, rexBuilder.makeLiteral(false));
             SqlOperator op =
                 floor ? SqlStdOperatorTable.minusOperator
                 : SqlStdOperatorTable.plusOperator;
@@ -481,30 +480,31 @@ public class StandardConvertletTable
             cx.getTypeFactory().createTypeWithNullability(
                 resType,
                 exprs[1].getType().isNullable());
-        RexNode cast = rexBuilder.makeCast(resType, exprs[1]);
+        RexNode cast = rexBuilder.makeReinterpretCast(
+            resType, exprs[1], rexBuilder.makeLiteral(false));
 
         SqlIntervalQualifier.TimeUnit unit =
             ((SqlIntervalQualifier) operands[0]).getStartUnit();
         long val = unit.multiplier;
         RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
         switch (unit) {
-        case Day:
+        case DAY:
             val = 0;
             break;
-        case Hour:
-            val = SqlIntervalQualifier.TimeUnit.Day.multiplier;
+        case HOUR:
+            val = SqlIntervalQualifier.TimeUnit.DAY.multiplier;
             break;
-        case Minute:
-            val = SqlIntervalQualifier.TimeUnit.Hour.multiplier;
+        case MINUTE:
+            val = SqlIntervalQualifier.TimeUnit.HOUR.multiplier;
             break;
-        case Second:
-            val = SqlIntervalQualifier.TimeUnit.Minute.multiplier;
+        case SECOND:
+            val = SqlIntervalQualifier.TimeUnit.MINUTE.multiplier;
             break;
-        case Year:
+        case YEAR:
             val = 0;
             break;
-        case Month:
-            val = SqlIntervalQualifier.TimeUnit.Year.multiplier;
+        case MONTH:
+            val = SqlIntervalQualifier.TimeUnit.YEAR.multiplier;
             break;
         default:
             throw Util.unexpected(unit);
@@ -569,7 +569,10 @@ public class StandardConvertletTable
                 casts);
         final RelDataType resType =
             cx.getValidator().getValidatedNodeType(call);
-        final RexNode res = rexBuilder.makeCast(resType, minus);
+        final RexNode res = rexBuilder.makeReinterpretCast(
+            resType,
+            minus,
+            rexBuilder.makeLiteral(false));
         return res;
     }
 

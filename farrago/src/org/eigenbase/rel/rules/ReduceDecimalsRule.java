@@ -567,10 +567,7 @@ public class ReduceDecimalsRule
         protected RexNode decodeValue(RexNode decimalNode)
         {
             assert (SqlTypeUtil.isDecimal(decimalNode.getType()));
-            return builder.makeReinterpretCast(
-                matchNullability(int8, decimalNode),
-                decimalNode,
-                builder.makeLiteral(false));
+            return builder.decodeIntervalOrDecimal(decimalNode);
         }
 
         /**
@@ -628,11 +625,8 @@ public class ReduceDecimalsRule
             RelDataType decimalType,
             boolean checkOverflow)
         {
-            RexNode cast = ensureType(int8, value);
-            return builder.makeReinterpretCast(
-                decimalType,
-                cast,
-                builder.makeLiteral(checkOverflow));
+            return builder.encodeIntervalOrDecimal(
+                value, decimalType, checkOverflow);
         }
 
         /**
@@ -669,31 +663,7 @@ public class ReduceDecimalsRule
             RexNode node,
             boolean matchNullability)
         {
-            RelDataType targetType = type;
-            if (matchNullability) {
-                targetType = matchNullability(type, node);
-            }
-            if (node.getType() != targetType) {
-                return builder.makeCast(targetType, node);
-            }
-            return node;
-        }
-
-        /**
-         * Ensure's type's nullability matches a value's nullability
-         */
-        protected RelDataType matchNullability(
-            RelDataType type,
-            RexNode value)
-        {
-            boolean typeNullability = type.isNullable();
-            boolean valueNullability = value.getType().isNullable();
-            if (typeNullability != valueNullability) {
-                return builder.getTypeFactory().createTypeWithNullability(
-                    type,
-                    valueNullability);
-            }
-            return type;
+            return builder.ensureType(type, node, matchNullability);
         }
 
         protected RexNode makeCase(

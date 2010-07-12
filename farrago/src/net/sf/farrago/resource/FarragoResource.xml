@@ -1242,7 +1242,7 @@ Messages: {1}</text>
 </message>
 
 <message id="480060" name="ServerSessionsExist">
-<text>Server sessions are still running; enter !kill to force shutdown</text>
+<text>Server sessions are still running; enter !kill or Control-C to force shutdown</text>
 </message>
 
 <message id="480070" name="ServerProductName">
@@ -1719,6 +1719,10 @@ Messages: {1}</text>
 <exception id="520050" name="ChangeToUnicodeFailed">
 <text>Cannot change default character set to Unicode because local tables
 have already been defined</text>
+</exception>
+
+<exception id="520060" name="ShutdownPreventedBySessions">
+<text>Cannot shut down because other sessions remain</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

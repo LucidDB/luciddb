@@ -23,6 +23,7 @@
 package net.sf.farrago.type;
 
 import java.sql.*;
+import java.util.List;
 
 import org.eigenbase.reltype.*;
 
@@ -44,10 +45,13 @@ public class FarragoResultSetMetaData
      * Creates a new FarragoResultSetMetaData object.
      *
      * @param rowType type info to return
+     * @param fieldOrigins Origin of each field in column of catalog object
      */
-    public FarragoResultSetMetaData(RelDataType rowType)
+    public FarragoResultSetMetaData(
+        RelDataType rowType,
+        List<List<String>> fieldOrigins)
     {
-        super(rowType);
+        super(rowType, fieldOrigins);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -98,13 +102,20 @@ public class FarragoResultSetMetaData
     public String getColumnLabel(int column)
         throws SQLException
     {
-        return getColumnName(column);
+        return getFieldName(column);
     }
 
     // implement ResultSetMetaData
     public String getColumnName(int column)
         throws SQLException
     {
+        if (false) {
+            // To adhere to the JDBC spec, this method should return the
+            // name of the column this field is based on, or "" if it is based
+            // on an expression. But client apps such as sqlline expect
+            // otherwise.
+            return getFieldColumnName(column);
+        }
         return getFieldName(column);
     }
 

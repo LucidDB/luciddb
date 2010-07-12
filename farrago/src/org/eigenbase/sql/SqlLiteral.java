@@ -233,7 +233,7 @@ public class SqlLiteral
 
     public SqlKind getKind()
     {
-        return SqlKind.Literal;
+        return SqlKind.LITERAL;
     }
 
     /**

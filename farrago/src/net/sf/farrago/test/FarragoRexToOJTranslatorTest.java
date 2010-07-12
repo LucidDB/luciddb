@@ -36,6 +36,8 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql2rel.*;
+import org.eigenbase.test.DiffRepository;
+import org.eigenbase.util.TestUtil;
 
 
 /**
@@ -81,6 +83,11 @@ public class FarragoRexToOJTranslatorTest
         return true;
     }
 
+    protected DiffRepository getDiffRepos()
+    {
+        return DiffRepository.lookup(FarragoRexToOJTranslatorTest.class);
+    }
+
     /**
      * Tests translation of a single row expression.
      *
@@ -95,9 +102,10 @@ public class FarragoRexToOJTranslatorTest
         String tableExpression)
         throws Exception
     {
-        String explainQuery =
-            "EXPLAIN PLAN FOR SELECT " + rowExpression + " FROM "
-            + tableExpression;
+        final String query =
+            "SELECT " + rowExpression + " FROM " + tableExpression;
+        final String query2 = getDiffRepos().expand("query", query);
+        final String explainQuery = "EXPLAIN PLAN FOR " + query2;
 
         checkQuery(explainQuery);
     }
@@ -139,8 +147,8 @@ public class FarragoRexToOJTranslatorTest
         }
 
         // dump the generated code
-        Writer writer = openTestLog();
-        PrintWriter printWriter = new PrintWriter(writer);
+        final StringWriter sw = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(sw);
         if (!memberList.isEmpty()) {
             printWriter.println(memberList);
         }
@@ -149,9 +157,14 @@ public class FarragoRexToOJTranslatorTest
         }
         printWriter.println("return " + translatedExp + ";");
         printWriter.close();
+        String actual = sw.toString();
 
         // and diff it against what we expect
-        diffTestLog();
+        final DiffRepository diffRepos = getDiffRepos();
+        diffRepos.assertEquals(
+            "expectedProgram",
+            "${expectedProgram}",
+            TestUtil.NL + actual);
     }
 
     protected void initPlanner(FarragoPreparingStmt stmt)

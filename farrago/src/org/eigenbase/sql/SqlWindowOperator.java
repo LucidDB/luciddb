@@ -65,7 +65,7 @@ public class SqlWindowOperator
     static final SqlPostfixOperator followingOperator =
         new SqlPostfixOperator(
             "FOLLOWING",
-            SqlKind.Following,
+            SqlKind.FOLLOWING,
             20,
             null,
             null,
@@ -77,7 +77,7 @@ public class SqlWindowOperator
     static final SqlPostfixOperator precedingOperator =
         new SqlPostfixOperator(
             "PRECEDING",
-            SqlKind.Preceding,
+            SqlKind.PRECEDING,
             20,
             null,
             null,
@@ -111,7 +111,7 @@ public class SqlWindowOperator
 
     public SqlWindowOperator()
     {
-        super("WINDOW", SqlKind.Window, 2, true, null, null, null);
+        super("WINDOW", SqlKind.WINDOW, 2, true, null, null, null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -145,7 +145,7 @@ public class SqlWindowOperator
         // bound.
         if ((upperBound == null)
             && (lowerBound != null)
-            && lowerBound.getKind().equals(SqlKind.Following))
+            && lowerBound.getKind() == SqlKind.FOLLOWING)
         {
             upperBound = lowerBound;
             lowerBound = null;
@@ -417,16 +417,16 @@ public class SqlWindowOperator
             return;
         }
         bound.validate(validator, scope);
-        switch (bound.getKind().getOrdinal()) {
-        case SqlKind.LiteralORDINAL:
+        switch (bound.getKind()) {
+        case LITERAL:
 
             // is there really anything to validate here? this covers
             // "CURRENT_ROW","unbounded preceding" & "unbounded following"
             break;
 
-        case SqlKind.OtherORDINAL:
-        case SqlKind.FollowingORDINAL:
-        case SqlKind.PrecedingORDINAL:
+        case OTHER:
+        case FOLLOWING:
+        case PRECEDING:
             assert (bound instanceof SqlCall);
             final SqlNode boundVal = ((SqlCall) bound).getOperands()[0];
 
@@ -515,7 +515,7 @@ public class SqlWindowOperator
         SqlOperator lowerOp = null;
         SqlOperator upperOp = null;
         if (null != lowerBound) {
-            if (lowerBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
+            if (lowerBound.getKind() == SqlKind.LITERAL) {
                 lowerLitType = ((SqlLiteral) lowerBound).getValue();
                 if (Bound.UNBOUNDED_FOLLOWING == lowerLitType) {
                     throw validator.newValidationError(
@@ -527,7 +527,7 @@ public class SqlWindowOperator
             }
         }
         if (null != upperBound) {
-            if (upperBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
+            if (upperBound.getKind() == SqlKind.LITERAL) {
                 upperLitType = ((SqlLiteral) upperBound).getValue();
                 if (Bound.UNBOUNDED_PRECEDING == upperLitType) {
                     throw validator.newValidationError(

@@ -320,7 +320,7 @@ public class SqlToRelConverter
 
     private void checkConvertedType(SqlNode query, RelNode result)
     {
-        if (!query.getKind().isA(SqlKind.Dml)) {
+        if (!query.isA(SqlKind.DML)) {
             // Verify that conversion from SQL to relational algebra did
             // not perturb any type information.  (We can't do this if the
             // SQL statement is something like an INSERT which has no
@@ -871,17 +871,17 @@ public class SqlToRelConverter
             return;
         }
         RelNode converted;
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.CursorConstructorORDINAL:
+        switch (node.getKind()) {
+        case CURSOR:
             convertCursor(bb, (SqlCall) node);
             return;
-        case SqlKind.MultisetQueryConstructorORDINAL:
-        case SqlKind.MultisetValueConstructorORDINAL:
+        case MULTISET_QUERY_CONSTRUCTOR:
+        case MULTISET_VALUE_CONSTRUCTOR:
             converted = convertMultisets(
                 new SqlNode[] { node },
                 bb);
             break;
-        case SqlKind.InORDINAL:
+        case IN:
             call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
 
@@ -975,7 +975,7 @@ public class SqlToRelConverter
                 joinType = JoinRelType.INNER;
             }
             break;
-        case SqlKind.ExistsORDINAL:
+        case EXISTS:
             // "select from emp where exists (select a from T)"
             //
             // is converted to the following if the subquery is correlated:
@@ -993,7 +993,7 @@ public class SqlToRelConverter
             }
             joinType = JoinRelType.LEFT;
             break;
-        case SqlKind.ScalarQueryORDINAL:
+        case SCALAR_QUERY:
 
             // Convert the subquery.  If it's non-correlated, convert it
             // to a constant expression.
@@ -1006,7 +1006,7 @@ public class SqlToRelConverter
             converted = convertToSingleValueSubq(select, converted);
             joinType = JoinRelType.LEFT;
             break;
-        case SqlKind.SelectORDINAL:
+        case SELECT:
 
             // This is used when converting multiset queries:
             //
@@ -1225,9 +1225,7 @@ public class SqlToRelConverter
                         rightInputOffset + i)));
         }
 
-        RexNode joinCond = RexUtil.andRexNodeList(rexBuilder, joinConditions);
-
-        return joinCond;
+        return RexUtil.andRexNodeList(rexBuilder, joinConditions);
     }
 
     /**
@@ -1451,7 +1449,7 @@ public class SqlToRelConverter
 
     private boolean isRowConstructor(SqlNode node)
     {
-        if (!node.isA(SqlKind.Row)) {
+        if (!(node.getKind() == SqlKind.ROW)) {
             return false;
         }
         SqlCall call = (SqlCall) node;
@@ -1473,26 +1471,25 @@ public class SqlToRelConverter
         SqlNode node,
         boolean registerOnlyScalarSubqueries)
     {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.ExistsORDINAL:
-        case SqlKind.SelectORDINAL:
-        case SqlKind.MultisetQueryConstructorORDINAL:
-        case SqlKind.MultisetValueConstructorORDINAL:
-        case SqlKind.CursorConstructorORDINAL:
-        case SqlKind.ScalarQueryORDINAL:
+        final SqlKind kind = node.getKind();
+        switch (kind) {
+        case EXISTS:
+        case SELECT:
+        case MULTISET_QUERY_CONSTRUCTOR:
+        case MULTISET_VALUE_CONSTRUCTOR:
+        case CURSOR:
+        case SCALAR_QUERY:
             if (!registerOnlyScalarSubqueries
-                || (node.getKind().getOrdinal() == SqlKind.ScalarQueryORDINAL))
+                || (kind == SqlKind.SCALAR_QUERY))
             {
                 bb.registerSubquery(node);
             }
             return;
         default:
-            boolean inOrdinal =
-                node.getKind().getOrdinal() == SqlKind.InORDINAL;
             if (node instanceof SqlCall) {
                 SqlOperator operator = ((SqlCall) node).getOperator();
-                if ((operator.getKind() == SqlKind.Or)
-                    || (operator.getKind() == SqlKind.Not))
+                if (kind == SqlKind.OR
+                    || kind == SqlKind.NOT)
                 {
                     // It's always correct to outer join subquery with
                     // containing query; however, when predicates involve Or
@@ -1507,7 +1504,7 @@ public class SqlToRelConverter
                         findSubqueries(
                             bb,
                             operand,
-                            inOrdinal || registerOnlyScalarSubqueries);
+                            kind == SqlKind.IN || registerOnlyScalarSubqueries);
                     }
                 }
             } else if (node instanceof SqlNodeList) {
@@ -1517,7 +1514,7 @@ public class SqlToRelConverter
                     findSubqueries(
                         bb,
                         child,
-                        inOrdinal || registerOnlyScalarSubqueries);
+                        kind == SqlKind.IN || registerOnlyScalarSubqueries);
                 }
             }
 
@@ -1525,7 +1522,7 @@ public class SqlToRelConverter
             // expression, register the IN expression itself.  We need to
             // register the scalar subqueries first so they can be converted
             // before the IN expression is converted.
-            if (inOrdinal) {
+            if (kind == SqlKind.IN) {
                 bb.registerSubquery(node);
             }
         }
@@ -1657,13 +1654,13 @@ public class SqlToRelConverter
     {
         SqlCall call;
         final SqlNode [] operands;
-        switch (from.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
+        switch (from.getKind()) {
+        case AS:
             operands = ((SqlCall) from).getOperands();
             convertFrom(bb, operands[0]);
             return;
 
-        case SqlKind.TableSampleORDINAL:
+        case TABLESAMPLE:
             operands = ((SqlCall) from).getOperands();
             SqlSampleSpec sampleSpec = SqlLiteral.sampleValue(operands[1]);
             if (sampleSpec instanceof SqlSampleSpec.SqlSubstitutionSampleSpec) {
@@ -1690,7 +1687,7 @@ public class SqlToRelConverter
             }
             return;
 
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             final SqlValidatorNamespace fromNamespace =
                 validator.getNamespace(from);
             final String datasetName =
@@ -1714,7 +1711,7 @@ public class SqlToRelConverter
             }
             return;
 
-        case SqlKind.JoinORDINAL:
+        case JOIN:
             final SqlJoin join = (SqlJoin) from;
             final Blackboard fromBlackboard =
                 createBlackboard(validator.getJoinScope(from), null);
@@ -1758,19 +1755,19 @@ public class SqlToRelConverter
             bb.setRoot(joinRel, false);
             return;
 
-        case SqlKind.SelectORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.ExceptORDINAL:
-        case SqlKind.UnionORDINAL:
+        case SELECT:
+        case INTERSECT:
+        case EXCEPT:
+        case UNION:
             final RelNode rel = convertQueryRecursive(from, false);
             bb.setRoot(rel, true);
             return;
 
-        case SqlKind.ValuesORDINAL:
+        case VALUES:
             convertValues(bb, (SqlCall) from);
             return;
 
-        case SqlKind.UnnestORDINAL:
+        case UNNEST:
             call = (SqlCall) ((SqlCall) from).operands[0];
             replaceSubqueries(bb, call);
             RexNode [] exprs = { bb.convertExpression(call) };
@@ -1788,7 +1785,7 @@ public class SqlToRelConverter
             bb.setRoot(uncollectRel, true);
             return;
 
-        case SqlKind.CollectionTableORDINAL:
+        case COLLECTION_TABLE:
             call = (SqlCall) from;
 
             // Dig out real call; TABLE() wrapper is just syntactic.
@@ -2524,7 +2521,7 @@ public class SqlToRelConverter
             int ordinal = -1;
             for (SqlNode selectItem : selectScope.getExpandedSelectList()) {
                 ++ordinal;
-                if (selectItem.getKind() == SqlKind.As) {
+                if (selectItem.getKind() == SqlKind.AS) {
                     selectItem = ((SqlCall) selectItem).operands[0];
                 }
                 if (converted.equalsDeep(selectItem, false)) {
@@ -2598,24 +2595,22 @@ public class SqlToRelConverter
      */
     protected RelNode convertQueryRecursive(SqlNode query, boolean top)
     {
-        if (query instanceof SqlSelect) {
+        switch (query.getKind()) {
+        case SELECT:
             return convertSelect((SqlSelect) query);
-        } else if (query.isA(SqlKind.Insert)) {
-            final SqlInsert call = (SqlInsert) query;
-            return convertInsert(call);
-        } else if (query.isA(SqlKind.Delete)) {
-            final SqlDelete call = (SqlDelete) query;
-            return convertDelete(call);
-        } else if (query.isA(SqlKind.Update)) {
-            final SqlUpdate call = (SqlUpdate) query;
-            return convertUpdate(call);
-        } else if (query.isA(SqlKind.Merge)) {
-            final SqlMerge call = (SqlMerge) query;
-            return convertMerge(call);
-        } else if (query instanceof SqlCall) {
-            final SqlCall call = (SqlCall) query;
-            return convertSetOp(call);
-        } else {
+        case INSERT:
+            return convertInsert((SqlInsert) query);
+        case DELETE:
+            return convertDelete((SqlDelete) query);
+        case UPDATE:
+            return convertUpdate((SqlUpdate) query);
+        case MERGE:
+            return convertMerge((SqlMerge) query);
+        case UNION:
+        case INTERSECT:
+        case EXCEPT:
+            return convertSetOp((SqlCall) query);
+        default:
             throw Util.newInternal("not a query: " + query);
         }
     }
@@ -2636,15 +2631,14 @@ public class SqlToRelConverter
         if (call.getOperator() instanceof SqlSetOperator) {
             all = ((SqlSetOperator) (call.getOperator())).isAll();
         }
-        final int kind = call.getKind().getOrdinal();
-        switch (kind) {
-        case SqlKind.UnionORDINAL:
+        switch (call.getKind()) {
+        case UNION:
             return new UnionRel(
                 cluster,
                 new RelNode[] { left, right },
                 all);
-        case SqlKind.IntersectORDINAL:
 
+        case INTERSECT:
             // TODO:  all
             if (!all) {
                 return new IntersectRel(
@@ -2655,8 +2649,8 @@ public class SqlToRelConverter
                 throw Util.newInternal(
                     "set operator INTERSECT ALL not suported");
             }
-        case SqlKind.ExceptORDINAL:
 
+        case EXCEPT:
             // TODO:  all
             if (!all) {
                 return new MinusRel(
@@ -2667,10 +2661,9 @@ public class SqlToRelConverter
                 throw Util.newInternal(
                     "set operator EXCEPT ALL not suported");
             }
+
         default:
-            throw Util.newInternal(
-                "not a set operator "
-                + SqlKind.enumeration.getName(kind));
+            throw Util.unexpected(call.getKind());
         }
     }
 
@@ -3903,21 +3896,22 @@ public class SqlToRelConverter
 
             // Sub-queries and OVER expressions are not like ordinary
             // expressions.
-            switch (expr.getKind().getOrdinal()) {
-            case SqlKind.CursorConstructorORDINAL:
-            case SqlKind.SelectORDINAL:
-            case SqlKind.ExistsORDINAL:
-            case SqlKind.ScalarQueryORDINAL:
+            final SqlKind kind = expr.getKind();
+            switch (kind) {
+            case CURSOR:
+            case SELECT:
+            case EXISTS:
+            case SCALAR_QUERY:
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
 
-                if (expr.getKind() == SqlKind.CursorConstructor) {
+                if (kind == SqlKind.CURSOR) {
                     // cursor reference is pre-baked
                     return rex;
                 }
-                if (((expr.getKind() == SqlKind.ScalarQuery)
-                        || (expr.getKind() == SqlKind.Exists))
+                if (((kind == SqlKind.SCALAR_QUERY)
+                        || (kind == SqlKind.EXISTS))
                     && isConvertedSubq(rex))
                 {
                     // scalar subquery or EXISTS has been converted to a
@@ -3938,7 +3932,7 @@ public class SqlToRelConverter
                 // the null-generating side of the join. For EXISTS, add an
                 // "IS TRUE" check so that the result is "BOOLEAN NOT NULL".
                 if (fieldAccess.getType().isNullable()) {
-                    if (expr.getKind() == SqlKind.Exists) {
+                    if (kind == SqlKind.EXISTS) {
                         needTruthTest = true;
                     }
                 }
@@ -3950,7 +3944,8 @@ public class SqlToRelConverter
                             fieldAccess);
                 }
                 return fieldAccess;
-            case SqlKind.InORDINAL:
+
+            case IN:
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
@@ -4010,8 +4005,10 @@ public class SqlToRelConverter
                     rexNode = rexBuilder.makeLiteral(true);
                 }
                 return rexNode;
-            case SqlKind.OverORDINAL:
+
+            case OVER:
                 return convertOver(this, expr);
+
             default:
                 // fall through
             }

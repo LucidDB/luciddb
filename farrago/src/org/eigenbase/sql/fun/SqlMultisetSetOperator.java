@@ -51,7 +51,7 @@ public class SqlMultisetSetOperator
     {
         super(
             name,
-            SqlKind.Other,
+            SqlKind.OTHER,
             prec,
             true,
             SqlTypeStrategies.rtiNullableMultiset,

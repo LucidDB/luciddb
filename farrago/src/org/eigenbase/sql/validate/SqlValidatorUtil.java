@@ -197,19 +197,16 @@ public class SqlValidatorUtil
      */
     public static String getAlias(SqlNode node, int ordinal)
     {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
-
+        switch (node.getKind()) {
+        case AS:
             // E.g. "1 + 2 as foo" --> "foo"
             return ((SqlCall) node).getOperands()[1].toString();
 
-        case SqlKind.OverORDINAL:
-
+        case OVER:
             // E.g. "bids over w" --> "bids"
             return getAlias(((SqlCall) node).getOperands()[0], ordinal);
 
-        case SqlKind.IdentifierORDINAL:
-
+        case IDENTIFIER:
             // E.g. "foo.bar" --> "bar"
             final String [] names = ((SqlIdentifier) node).names;
             return names[names.length - 1];
