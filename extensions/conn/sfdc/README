@@ -3,15 +3,6 @@ SFDC Connector
 
 Original Contributor to Eigenbase is LucidEra, Inc.
 
-Build Notes:
- - Due to licensing restrictions on the Salesforce.com WSDL we have omitted
-   the WSDL from Eigenbase source code control.
- - Create a "build.properties" (there is a template) and fill in your information
- - For building, you have to set the property wsdl= the URL of your partner 
- - Make sure you have existing farragoenv.sh and fennelenv.sh sourced
- - ant clean compile
+For more information, see
 
-Two Targets:
- - MedSfdc.jar - contains ONLY the SQL/MED for Salesforce
- - MedSfdcComplete.jar - contains everything in MedSfdc.jar and all dependencies
-   (such as commons-codec, axis, etc).  A convenience for CREATE JAR use.
+http://pub.eigenbase.org/wiki/FarragoMedSalesforcePlugin

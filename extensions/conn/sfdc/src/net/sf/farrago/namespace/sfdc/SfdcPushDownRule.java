@@ -435,16 +435,16 @@ class SfdcPushDownRule
     private boolean valid(Object kind)
     {
         if (kind instanceof SqlKind) {
-            if (kind.equals(SqlKind.Equals)
-                || kind.equals(SqlKind.NotEquals)
-                || kind.equals(SqlKind.LessThan)
-                || kind.equals(SqlKind.LessThanOrEqual)
-                || kind.equals(SqlKind.GreaterThan)
-                || kind.equals(SqlKind.GreaterThanOrEqual)
-                || kind.equals(SqlKind.Like)
-                || kind.equals(SqlKind.And)
-                || kind.equals(SqlKind.Or)
-                || kind.equals(SqlKind.Not))
+            if (kind.equals(SqlKind.EQUALS)
+                || kind.equals(SqlKind.NOT_EQUALS)
+                || kind.equals(SqlKind.LESS_THAN)
+                || kind.equals(SqlKind.LESS_THAN_OR_EQUAL)
+                || kind.equals(SqlKind.GREATER_THAN)
+                || kind.equals(SqlKind.GREATER_THAN_OR_EQUAL)
+                || kind.equals(SqlKind.LIKE)
+                || kind.equals(SqlKind.AND)
+                || kind.equals(SqlKind.OR)
+                || kind.equals(SqlKind.NOT))
             {
                 return true;
             }

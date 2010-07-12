@@ -175,16 +175,14 @@
           value="TRUE" />
 	</section>
       </manifest>
-	<zipfileset src="${sfdc.plugin.dir}/MedSfdc.jar"/>
-    <zipfileset src="${thirdparty.dir}/commons-codec/commons-codec-1.3.jar"/>
-    <zipfileset src="${thirdparty.dir}/commons-httpclient/commons-httpclient-3.0.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/axis.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/axis-ant.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/jaxrpc.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/saaj.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/commons-logging-1.0.4.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/commons-discovery-0.2.jar"/>
-    <zipfileset src="${thirdparty.dir}/axis/lib/wsdl4j-1.5.1.jar"/>
+      <zipfileset src="${sfdc.plugin.dir}/MedSfdc.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/axis.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/axis-ant.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/jaxrpc.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/saaj.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/commons-logging-1.0.4.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/commons-discovery-0.2.jar"/>
+      <zipfileset src="${thirdparty.dir}/axis/lib/wsdl4j-1.5.1.jar"/>
     </jar>
   </target>
 
