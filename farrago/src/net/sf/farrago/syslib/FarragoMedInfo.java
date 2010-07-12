@@ -1,3 +1,24 @@
+/*
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2010 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2010 Dynamo BI Corporation
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 package net.sf.farrago.syslib;
 
 import java.io.*;
@@ -179,7 +200,7 @@ public static void getPluginPropertyInfo(
             libraryNameArg,
             options);
         try {
-            boolean  isForeign = dataWrapper.isForeign ();
+            boolean  isForeign = dataWrapper.isForeign();
             resultInserter.setBoolean(ISFOREIGN, isForeign);
             resultInserter.executeUpdate();
             // TODO Can we skip the result update when there is an exception?
@@ -193,13 +214,13 @@ public static void getPluginPropertyInfo(
      * @param exception The exception to get the stack trace for.
      * @return A String version of the stack trace of the exception
      * parameter. */
-     static public String getExceptionStackTraceAsString(Throwable exception)
-     {
-         StringWriter stringWriter = new StringWriter();
-         PrintWriter printWriter = new PrintWriter(stringWriter);
-         exception.printStackTrace(printWriter);
-         return stringWriter.toString();
-     }
+    static public String getExceptionStackTraceAsString(Throwable exception)
+    {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        exception.printStackTrace(printWriter);
+        return stringWriter.toString();
+    }
 
 
     /** Get a FarragoMedDataWrapper based on the data passed in.
@@ -300,7 +321,7 @@ public static void getPluginPropertyInfo(
             Properties  choices = new Properties();
             if (oneProperty.choices != null) {
                 for (String oneChoice : oneProperty.choices) {
-                    choices.put (oneChoice, oneChoice);
+                    choices.put(oneChoice, oneChoice);
                 }
             }
             resultInserter.setString(CHOICES, putPropertiesToString(choices));
@@ -310,3 +331,4 @@ public static void getPluginPropertyInfo(
     }
 }
 
+// End FarragoMedInfo.java
