@@ -53,7 +53,7 @@ public class FarragoMedInfo {
      * @param resultInserter Where the result rows are placed.
      * @throws SQLException Thrown on repo access failure.
      */
-public static void getPluginPropertyInfo(
+    public static void getPluginPropertyInfo(
         String mofId,
         String libraryName,
         String optionsArg,
