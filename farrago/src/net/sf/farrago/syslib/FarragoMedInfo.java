@@ -31,6 +31,8 @@ import net.sf.farrago.runtime.FarragoUdrRuntime;
 import net.sf.farrago.util.FarragoObjectCache;
 
 
+/** A class to get certain Farrago Med property values.  The UDX functions
+ * in initsql cause these functions to be invoked. */
 public class FarragoMedInfo {
     public static final int  NAME = 1;
     public static final int  AVALUE = 2;
@@ -41,11 +43,21 @@ public class FarragoMedInfo {
     protected static FarragoDataWrapperCache  dataWrapperCache = null;
 
 
+    /**
+     * Get the plugin property info for the mofId, library combo passed in.
+     * @param mofId The mofId to get property info for.
+     * @param libraryName The library to get property info for.
+     * @param optionsArg The options to pass to the data wrapper.
+     * @param wrapperPropertiesString The wrapper props to request.
+     * @param localeArg What locale to get properties for.
+     * @param resultInserter Where the result rows are placed.
+     * @throws SQLException Thrown on repo access failure.
+     */
 public static void getPluginPropertyInfo(
-        String mofIdArg,
-        String libraryNameArg,
+        String mofId,
+        String libraryName,
         String optionsArg,
-        String wrapperPropertiesArg,
+        String wrapperPropertiesString,
         String localeArg,
         PreparedStatement resultInserter)
         throws SQLException
@@ -54,10 +66,10 @@ public static void getPluginPropertyInfo(
             getPropertiesFromString(optionsArg));
         Locale  locale = toLocale(localeArg);
         Properties  wrapperProperties = getPropertiesFromString(
-            wrapperPropertiesArg);
+            wrapperPropertiesString);
         FarragoMedDataWrapper  dataWrapper = getWrapper(
-            mofIdArg,
-            libraryNameArg,
+            mofId,
+            libraryName,
             options);
         DriverPropertyInfo[]  driverPropertyInfo;
         try {
@@ -71,12 +83,23 @@ public static void getPluginPropertyInfo(
     }
 
 
+    /**
+     * Get the server property info for the mofId, library combo passed in.
+     * @param mofId The mofId to get property info for.
+     * @param libraryName The library to get property info for.
+     * @param optionsArg The options to pass to the data wrapper.
+     * @param wrapperPropertiesString The wrapper props to request.
+     * @param serverPropertiesString The server props to request.
+     * @param localeArg What locale to get properties for.
+     * @param resultInserter Where the result rows are placed.
+     * @throws SQLException Thrown on repo access failure.
+     */
     public static void getServerPropertyInfo(
-        String mofIdArg,
-        String libraryNameArg,
+        String mofId,
+        String libraryName,
         String optionsArg,
-        String wrapperPropertiesArg,
-        String serverPropertiesArg,
+        String wrapperPropertiesString,
+        String serverPropertiesString,
         String localeArg,
         PreparedStatement resultInserter)
         throws SQLException
@@ -85,13 +108,13 @@ public static void getPluginPropertyInfo(
             getPropertiesFromString(optionsArg));
         Locale  locale = toLocale(localeArg);
         Properties  wrapperProperties = getPropertiesFromString(
-            wrapperPropertiesArg);
+            wrapperPropertiesString);
         FarragoMedDataWrapper  dataWrapper = getWrapper(
-            mofIdArg,
-            libraryNameArg,
+            mofId,
+            libraryName,
             options);
         Properties  serverProperties = getPropertiesFromString(
-            serverPropertiesArg);
+            serverPropertiesString);
         DriverPropertyInfo[] driverPropertyInfo;
         try {
             driverPropertyInfo = dataWrapper.getServerPropertyInfo(
@@ -105,30 +128,42 @@ public static void getPluginPropertyInfo(
     }
 
 
+    /**
+     * Get the column set property info for the mofId, library combo passed in.
+     * @param mofId The mofId to get property info for.
+     * @param libraryName The library to get property info for.
+     * @param optionsString The options to pass to the data wrapper.
+     * @param wrapperPropertiesString The wrapper props to request.
+     * @param serverPropertiesString The table props to request.
+     * @param tablePropertiesString The table props to request.
+     * @param localeArg What locale to get properties for.
+     * @param resultInserter Where the result rows are placed.
+     * @throws SQLException Thrown on repo access failure.
+     */
     public static void getColumnSetPropertyInfo(
-        String mofIdArg,
-        String libraryNameArg,
-        String optionsArg,
-        String wrapperPropertiesArg,
-        String serverPropertiesArg,
-        String tablePropertiesArg,
+        String mofId,
+        String libraryName,
+        String optionsString,
+        String wrapperPropertiesString,
+        String serverPropertiesString,
+        String tablePropertiesString,
         String localeArg,
         PreparedStatement resultInserter)
         throws SQLException
     {
         Properties  options = new Properties(
-                getPropertiesFromString(optionsArg));
+                getPropertiesFromString(optionsString));
         Locale  locale = toLocale(localeArg);
         Properties  wrapperProperties = getPropertiesFromString(
-            wrapperPropertiesArg);
+            wrapperPropertiesString);
         FarragoMedDataWrapper  dataWrapper = getWrapper(
-            mofIdArg,
-            libraryNameArg,
+            mofId,
+            libraryName,
             options);
         Properties  serverProperties = getPropertiesFromString(
-            serverPropertiesArg);
+            serverPropertiesString);
         Properties  tableProperties = getPropertiesFromString(
-            tablePropertiesArg);
+            tablePropertiesString);
         DriverPropertyInfo[] driverPropertyInfo;
         try {
             driverPropertyInfo = dataWrapper.getColumnSetPropertyInfo(
@@ -143,33 +178,46 @@ public static void getPluginPropertyInfo(
     }
 
 
+    /**
+     * Get the column property info for the mofId, library combo passed in.
+     * @param mofId The mofId to get property info for.
+     * @param libraryName The library to get property info for.
+     * @param optionsString The options to pass to the data wrapper.
+     * @param wrapperPropertiesString The wrapper props to request.
+     * @param serverPropertiesString The table props to request.
+     * @param tablePropertiesString The table props to request.
+     * @param columnPropertiesString The column props to request.
+     * @param localeArg What locale to get properties for.
+     * @param resultInserter Where the result rows are placed.
+     * @throws SQLException Thrown on repo access failure.
+     */
     public static void getColumnPropertyInfo(
-        String mofIdArg,
-        String libraryNameArg,
-        String optionsArg,
-        String wrapperPropertiesArg,
-        String serverPropertiesArg,
-        String tablePropertiesArg,
-        String columnPropertiesArg,
+        String mofId,
+        String libraryName,
+        String optionsString,
+        String wrapperPropertiesString,
+        String serverPropertiesString,
+        String tablePropertiesString,
+        String columnPropertiesString,
         String localeArg,
         PreparedStatement resultInserter)
         throws SQLException
     {
         Properties  options = new Properties(
-            getPropertiesFromString(optionsArg));
+            getPropertiesFromString(optionsString));
         Locale  locale = toLocale(localeArg);
         Properties  wrapperProperties = getPropertiesFromString(
-            wrapperPropertiesArg);
+            wrapperPropertiesString);
         FarragoMedDataWrapper  dataWrapper = getWrapper(
-            mofIdArg,
-            libraryNameArg,
+            mofId,
+            libraryName,
             options);
         Properties  serverProperties = getPropertiesFromString(
-            serverPropertiesArg);
+            serverPropertiesString);
         Properties  tableProperties = getPropertiesFromString(
-            tablePropertiesArg);
+            tablePropertiesString);
         Properties  columnProperties = getPropertiesFromString(
-            columnPropertiesArg);
+            columnPropertiesString);
         DriverPropertyInfo[] driverPropertyInfo;
         try {
             driverPropertyInfo = dataWrapper.getColumnPropertyInfo(
@@ -185,19 +233,28 @@ public static void getPluginPropertyInfo(
     }
 
 
+    /**
+     * Is the library object foreign?
+     * @param mofId The id to check.
+     * @param libraryName The library to check.
+     * @param optionsString The options to pass to the data wrapper.
+     * @param localeString What locale to check for.
+     * @param resultInserter Where the result rows are placed.
+     * @throws SQLException Thrown on repo access failure.
+     */
     public static void isForeign(
-        String mofIdArg,
-        String libraryNameArg,
-        String optionsArg,
-        String localeArg, // TODO Should this be removed?
+        String mofId,
+        String libraryName,
+        String optionsString,
+        String localeString, // TODO Should this be removed?
         PreparedStatement resultInserter)
         throws SQLException
     {
         Properties  options = new Properties(
-            getPropertiesFromString(optionsArg));
+            getPropertiesFromString(optionsString));
         FarragoMedDataWrapper  dataWrapper = getWrapper(
-            mofIdArg,
-            libraryNameArg,
+            mofId,
+            libraryName,
             options);
         try {
             boolean  isForeign = dataWrapper.isForeign();
@@ -214,7 +271,7 @@ public static void getPluginPropertyInfo(
      * @param exception The exception to get the stack trace for.
      * @return A String version of the stack trace of the exception
      * parameter. */
-    static public String getExceptionStackTraceAsString(Throwable exception)
+    public static String getExceptionStackTraceAsString(Throwable exception)
     {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -224,14 +281,14 @@ public static void getPluginPropertyInfo(
 
 
     /** Get a FarragoMedDataWrapper based on the data passed in.
-     * @param mofIdArg The Meta object ID of the wrapper to get.
-     * @param libraryNameArg The library name of the wrapper to get.
-     * @param optionsArg The options to pass to the wrapper.
+     * @param mofId The Meta object ID of the wrapper to get.
+     * @param libraryName The library name of the wrapper to get.
+     * @param options The options to pass to the wrapper.
      * @return The FarragoMedDataWrapper that matches the args passed in. */
     public static FarragoMedDataWrapper getWrapper(
-        String mofIdArg,
-        String libraryNameArg,
-        Properties optionsArg)
+        String mofId,
+        String libraryName,
+        Properties options)
     {
         closeWrapperCache();
         FarragoDbSession  session =
@@ -245,12 +302,13 @@ public static void getPluginPropertyInfo(
             db.getFennelDbHandle(),
             null);
         return dataWrapperCache.loadWrapper(
-            mofIdArg,
-            libraryNameArg,
-            optionsArg);
+            mofId,
+            libraryName,
+            options);
     }
 
 
+    /** Close the wrapper cache. */
     public static void closeWrapperCache()
     {
         if (dataWrapperCache != null) {
@@ -288,7 +346,9 @@ public static void getPluginPropertyInfo(
       @param properties A standard Java Property set that will be converted to
       a String (formatted as described above).
       @return A String containing the contents of the passed Property set. */
-    public static String putPropertiesToString(Properties properties) {
+    public static String putPropertiesToString(
+        Properties properties)
+    {
         String  result = new String();
         for (Object key : Collections.list(properties.keys())) {
             result += key + "\t" + properties.get(key) + "\n";
@@ -300,7 +360,8 @@ public static void getPluginPropertyInfo(
     /** Convert a String version of a Locale to an SQL Locale.
      * @param localeString The locale String to convert.
      * @return The Locale based on the String passed in. */
-    public static Locale toLocale(String localeString) {
+    public static Locale toLocale(String localeString)
+    {
         return new Locale(localeString);
     }
 
