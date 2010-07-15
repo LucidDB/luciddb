@@ -379,9 +379,21 @@ public class FarragoDdlGenerator
         }
         sb.append(")");
         sb.append(NL);
-        for (CwmParameter aReturn : returns) {
-            add((FemRoutineParameter) aReturn, routineType, sb);
+        final List<CwmColumn> columns =
+            Util.filter(routine.getFeature(), CwmColumn.class);
+        if (!columns.isEmpty()) {
+            // UDXs claim to have a boring return type of INTEGER (see comment
+            // "jvs 8-Jan-2006:  should be MULTISET of ROW(x, y, z)" in
+            // CommonDdlParser.jj) but the details of the returned columns are
+            // in the features.
+            sb.append("RETURNS TABLE");
+            addColumns(sb, columns);
             sb.append(NL);
+        } else {
+            for (CwmParameter aReturn : returns) {
+                add((FemRoutineParameter) aReturn, routineType, sb);
+                sb.append(NL);
+            }
         }
 
         if (method) {
@@ -825,71 +837,70 @@ public class FarragoDdlGenerator
     {
         // TODO jvs 8-Jul-2007:  UNIQUE constraints
 
-        boolean isLast = false;
         List<String> pk = imposedPrimaryKey;
 
         if (columns.size() > 0) {
             sb.append(" (");
             sb.append(NL);
-            final Iterator<CwmColumn> columnIter = columns.iterator();
-            while (columnIter.hasNext()) {
-                CwmColumn col = columnIter.next();
+            int n = 0;
+            for (CwmColumn column : columns) {
+                if (n++ > 0) {
+                    sb.append(",");
+                    sb.append(NL);
+                }
 
                 if (imposedPrimaryKey == null) {
-                    if (col instanceof FemStoredColumn) {
-                        if (hasPrimaryKeyConstraint((FemStoredColumn) col)) {
+                    if (column instanceof FemStoredColumn) {
+                        if (hasPrimaryKeyConstraint((FemStoredColumn) column)) {
                             if (pk == null) {
                                 pk = new ArrayList<String>();
                             }
-                            pk.add(col.getName());
+                            pk.add(column.getName());
                         }
                     }
                 }
 
-                isLast = !columnIter.hasNext() && (pk == null);
+                sb.append("   ").identifier(column.getName());
 
-                sb.append("   ").identifier(col.getName());
+                if (column.getType().getName().equals("CURSOR")) {
+                    sb.append(".*");
+                    continue;
+                }
 
                 sb.append(" ");
                 CwmExpression e;
                 if (skipDefaults) {
                     e = null;
                 } else {
-                    e = col.getInitialValue();
+                    e = column.getInitialValue();
                 }
                 final NullableType isNullable;
                 if (skipNullable) {
                     isNullable = null;
                 } else {
-                    isNullable = col.getIsNullable();
+                    isNullable = column.getIsNullable();
                 }
                 appendType(
-                    sb,
-                    col.getType(),
-                    col.getPrecision(),
-                    col.getScale(),
-                    col.getLength(),
-                    isNullable,
-                    e,
-                    true);
+                    sb, column.getType(), column.getPrecision(),
+                    column.getScale(), column.getLength(), isNullable, e, true);
 
                 // is this a stored column?
-                if (col instanceof FemElementWithStorageOptions) {
+                if (column instanceof FemElementWithStorageOptions) {
                     addOptions(
                         sb,
-                        ((FemElementWithStorageOptions) col)
+                        ((FemElementWithStorageOptions) column)
                         .getStorageOptions(),
                         2);
                 }
-
-                if (!isLast) {
-                    sb.append(",");
-                }
-
-                sb.append(NL);
             }
 
-            addPrimaryKeyConstraint(sb, pk);
+            if (pk != null) {
+                if (n++ > 0) {
+                    sb.append(",");
+                    sb.append(NL);
+                }
+                addPrimaryKeyConstraint(sb, pk);
+            }
             sb.append(")");
         }
     }
