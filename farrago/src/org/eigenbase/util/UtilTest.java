@@ -29,6 +29,7 @@ import java.lang.management.*;
 import java.math.*;
 
 import java.sql.Timestamp;
+import java.text.MessageFormat;
 import java.util.*;
 
 import junit.framework.*;
@@ -731,6 +732,75 @@ public class UtilTest
             ss += s;
         }
         assertEquals("abczzabczz", ss);
+    }
+
+    /**
+     * Unit test for {@link Template}.
+     */
+    public void testTemplate()
+    {
+        // Regular java message format.
+        assertEquals(
+            "Hello, world, what a nice day.",
+            MessageFormat.format(
+                "Hello, {0}, what a nice {1}.", "world", "day"));
+
+        // Our extended message format. First, just strings.
+        final HashMap<Object, Object> map = new HashMap<Object, Object>();
+        map.put("person", "world");
+        map.put("time", "day");
+        assertEquals(
+            "Hello, world, what a nice day.",
+            Template.formatByName(
+                "Hello, {person}, what a nice {time}.", map));
+
+        // String and an integer.
+        final Template template =
+            new Template("Happy {age,number,#.00}th birthday, {person}!");
+        map.clear();
+        map.put("person", "Ringo");
+        map.put("age", 64.5);
+        assertEquals(
+            "Happy 64.50th birthday, Ringo!",
+            template.format(map));
+
+        // Missing parameters evaluate to null.
+        map.remove("person");
+        assertEquals(
+            "Happy 64.50th birthday, null!",
+            template.format(map));
+
+        // Specify parameter by Integer ordinal.
+        map.clear();
+        map.put(1, "Ringo");
+        map.put("0", 64.5);
+        assertEquals(
+            "Happy 64.50th birthday, Ringo!",
+            template.format(map));
+
+        // Too many parameters supplied.
+        map.put("lastName", "Starr");
+        map.put("homeTown", "Liverpool");
+        assertEquals(
+            "Happy 64.50th birthday, Ringo!",
+            template.format(map));
+
+        // Get parameter names. In order of appearance.
+        assertEquals(
+            Arrays.asList("age", "person"),
+            template.getParameterNames());
+
+        // No parameters; doubled single quotes; quoted braces.
+        final Template template2 =
+            new Template("Don''t expand 'this {brace}'.");
+        assertEquals(
+            Collections.<String>emptyList(), template2.getParameterNames());
+        assertEquals(
+            "Don't expand this {brace}.",
+            template2.format(Collections.<Object, Object>emptyMap()));
+
+        // Empty template.
+        assertEquals("", Template.format("", map));
     }
 
     /**
