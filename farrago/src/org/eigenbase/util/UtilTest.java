@@ -800,7 +800,7 @@ public class UtilTest
             template2.format(Collections.<Object, Object>emptyMap()));
 
         // Empty template.
-        assertEquals("", Template.format("", map));
+        assertEquals("", Template.formatByName("", map));
     }
 
     /**
