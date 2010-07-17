@@ -544,6 +544,7 @@ public class FarragoJdbcTest
         try {
             stmt.execute(sql);
         } catch (SQLException ex) {
+            tracer.log(Level.INFO, ex.getMessage(), ex);
             // ignore
             Util.swallow(ex, tracer);
         }
@@ -708,9 +709,13 @@ public class FarragoJdbcTest
                             + " will cancel " + stmt);
                         stmt.cancel();
                     } catch (SQLException ex) {
-                        Assert.fail(
+                        // if the statement already completed, that's ok too
+                        // the test might simply cancel too late
+                        Assert.assertEquals(
                             "Cancel request failed:  "
-                            + ex.getMessage());
+                            + ex.getMessage(),
+                            "statement closed",
+                            ex.getMessage());
                     }
                 }
             };
