@@ -96,17 +96,13 @@ public abstract class MedAbstractColumnSet
         return localName;
     }
 
-    /**
-     * @return the name this ColumnSet is known by within the Farrago system
-     */
+    // implement FarragoMedColumnSet
     public String [] getLocalName()
     {
         return localName;
     }
 
-    /**
-     * @return the name of this ColumnSet as it is known on the foreign server
-     */
+    // implement FarragoMedColumnSet
     public String [] getForeignName()
     {
         return foreignName;

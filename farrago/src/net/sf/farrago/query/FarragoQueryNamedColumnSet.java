@@ -124,6 +124,20 @@ public abstract class FarragoQueryNamedColumnSet
     {
         return cwmColumnSet;
     }
+
+    // implement FarragoMedColumnSet
+    public String[] getForeignName()
+    {
+        // this method is not appropriate to all column sets; subclasses for
+        // which it is appropriate should override
+        throw new UnsupportedOperationException();
+    }
+
+    // implement FarragoMedColumnSet
+    public final String[] getLocalName()
+    {
+        return getQualifiedName();
+    }
 }
 
 // End FarragoQueryNamedColumnSet.java
