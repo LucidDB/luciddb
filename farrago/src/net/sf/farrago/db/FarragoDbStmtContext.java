@@ -268,7 +268,7 @@ public class FarragoDbStmtContext
         try {
             checkDynamicParamsSet();
             FarragoSessionRuntimeParams params =
-                session.newRuntimeContextParams();
+                session.newRuntimeContextParams(this);
             if (executableStmt.getTableModOp() == null) {
                 // only use txnCodeCache for real DML, not CALL
                 params.txnCodeCache = null;

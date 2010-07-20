@@ -1042,9 +1042,11 @@ public class FarragoDbSession
         return optRuleDescExclusionFilter;
     }
 
-    protected FarragoSessionRuntimeParams newRuntimeContextParams()
+    protected FarragoSessionRuntimeParams newRuntimeContextParams(
+        FarragoSessionStmtContext stmtContext)
     {
         FarragoSessionRuntimeParams params = new FarragoSessionRuntimeParams();
+        params.stmtContext = stmtContext;
         params.session = this;
         params.repos = getRepos();
         params.codeCache = getDatabase().getCodeCache();
