@@ -531,6 +531,93 @@
 >     cast("mofId" as varchar(128)) as mof_id
 >   from sys_fem.med."SystemBackup";
 > 
+> create or replace view dba_users as
+>   select
+>     cast("name" as varchar(128)) as name,
+>     cast("encryptedPassword" as varchar(128)) as password,
+>     cast("mofClassName" as varchar(128)) as class_name,
+>     cast("creationTimestamp" as varchar(128)) as creation_timestamp,
+>     cast("modificationTimestamp" as varchar(128)) as modification_timestamp,
+>     cast("mofId" as varchar(128)) as mof_id,
+>     cast("lineageId" as varchar(128)) as lineage_id
+>   from sys_fem."Security"."User";
+> 
+> create or replace view dba_roles as
+>   select
+>     cast("name" as varchar(128)) as name,
+>     cast("description" as varchar(128)) as description,
+>     cast("mofClassName" as varchar(128)) as class_name,
+>     cast("creationTimestamp" as varchar(128)) as creation_timestamp,
+>     cast("modificationTimestamp" as varchar(128)) as last_modified_timestamp,
+>     cast("mofId" as varchar(128)) as mof_id,
+>     cast("lineageId" as varchar(128)) as lineage_id
+>   from sys_fem."Security"."Role";
+> 
+> create or replace view dba_element_grants as
+>   select
+>     tables.catalog_name as granted_catalog,
+>     tables.schema_name as granted_schema,
+>     tables.table_name as granted_element,
+>     cast(gte."name" as varchar(128)) as grantee,
+>     cast(gto."name" as varchar(128)) as grantor,
+>     cast(g."action" as varchar(128)) as action,
+>     roles.name as role_name,
+>     case
+>       when users.class_name is not null then users.class_name
+>       when roles.class_name is not null then roles.class_name
+>       else 'Unknown'
+>     end as grant_type,
+>     tables.table_type,
+>     cast(g."withGrantOption" as varchar(128)) as with_grant_option,
+>     cast(me."mofId" as varchar(128)) as mof_id
+>   from
+>     sys_fem."Security"."Grant" as g
+>   inner join
+>     sys_fem."Security"."AuthId" as gto
+>   on
+>     g."Grantor" = gto."mofId"
+>   inner join
+>     sys_fem."Security"."AuthId" as gte
+>   on
+>     g."Grantee" = gte."mofId"
+>   inner join
+>     sys_cwm."Core"."ModelElement" as me
+>   on
+>     g."Element" = me."mofId"
+>   left outer join
+>     sys_root.dba_tables as tables
+>   on
+>     tables.mof_id = me."mofId"
+>   left outer join
+>     sys_root.dba_users as users
+>   on
+>     users.mof_id = g."Grantee"
+>   left outer join
+>     sys_root.dba_roles as roles
+>   on
+>     roles.mof_id = g."Grantee" or
+>     (roles.mof_id = g."Element" and g."action" = 'INHERIT_ROLE')
+> ;
+> 
+> create or replace view dba_user_roles as
+>   select
+>     users.name as name,
+>     roles.name as role,
+>     cast(g."withGrantOption" as varchar(128)) as with_grant_option
+>   from
+>     sys_fem."Security"."Grant" as g
+>   inner join
+>     sys_root.dba_users as users
+>   on
+>     users.mof_id = g."Grantee"
+>   inner join
+>     sys_root.dba_roles as roles
+>   on
+>     roles.mof_id = g."Element"
+>   where
+>     g."action" = 'INHERIT_ROLE'
+> ;
+> 
 > -- Flush all entries from the global code cache
 > create or replace procedure flush_code_cache()
 >   language java
