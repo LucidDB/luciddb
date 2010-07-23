@@ -513,6 +513,16 @@ public class SqlLiteral
     }
 
     /**
+     * Returns sign of value.
+     *
+     * @return -1, 0 or 1
+     */
+    public int signum() {
+        return bigDecimalValue().compareTo(
+            BigDecimal.ZERO);
+    }
+
+    /**
      * Returns a numeric literal's value as a {@link BigDecimal}.
      */
     public BigDecimal bigDecimalValue()
