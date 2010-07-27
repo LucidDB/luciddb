@@ -210,9 +210,16 @@ void ExternalSortExecStreamImpl::open(bool restart)
 
 void ExternalSortExecStreamImpl::initRunLoaders(bool restart)
 {
-    runLoaders.reset(new SharedExternalSortRunLoader[nParallel]);
-    for (uint i = 0; i < nParallel; ++i) {
-        runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
+    if (restart) {
+        // if restarting runLoaders, do nothing.
+    } else {
+        runLoaders.reset(new SharedExternalSortRunLoader[nParallel]);
+        for (uint i = 0; i < nParallel; ++i) {
+            runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
+            runLoaders[i]->initTraceSource(
+               getSharedTraceTarget(),
+               getTraceSourceName() + ".runLoader");
+        }
     }
 }
 
@@ -285,7 +292,6 @@ ExecStreamResult ExternalSortExecStreamImpl::handleUnderflow()
 void ExternalSortExecStreamImpl::reallocateResources()
 {
     initRunLoaders(true);
-
     for (uint i = 0; i < nParallel; ++i) {
         runLoaders[i]->startRun();
     }
