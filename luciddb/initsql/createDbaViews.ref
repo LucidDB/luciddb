@@ -531,27 +531,44 @@
 >     cast("mofId" as varchar(128)) as mof_id
 >   from sys_fem.med."SystemBackup";
 > 
-> create or replace view dba_users as
+> create or replace view dba_auth_ids as
 >   select
 >     cast("name" as varchar(128)) as name,
->     cast("encryptedPassword" as varchar(128)) as password,
+>     cast("description" as varchar(128)) as remarks,
 >     cast("mofClassName" as varchar(128)) as class_name,
->     cast("creationTimestamp" as varchar(128)) as creation_timestamp,
->     cast("modificationTimestamp" as varchar(128)) as modification_timestamp,
+>     cast("visibility" as varchar(128)) as visibility,
+>     cast("creationTimestamp" as timestamp) as creation_timestamp,
+>     cast("modificationTimestamp" as timestamp) as modification_timestamp,
 >     cast("mofId" as varchar(128)) as mof_id,
->     cast("lineageId" as varchar(128)) as lineage_id
->   from sys_fem."Security"."User";
+>     cast("lineageId" as varchar(128)) as lineage_id,
+>     cast("namespace" as varchar(128)) as namespace
+>   from sys_fem."Security"."AuthId";
+> 
+> create or replace view dba_users as
+>   select
+>     auth.name,
+>     cast("encryptedPassword" as varchar(128)) as password,
+>     cast("passwordEncryptionAlgorithm" as varchar(128)) as password_encryption_algorithm,
+>     auth.remarks,
+>     auth.class_name,
+>     auth.visibility,
+>     auth.creation_timestamp,
+>     auth.mof_id,
+>     auth.lineage_id,
+>     auth.namespace
+>   from
+>     sys_root.dba_auth_ids as auth
+>   inner join
+>     sys_fem."Security"."User" users
+>   on
+>     users."mofId" = auth.mof_id;
 > 
 > create or replace view dba_roles as
 >   select
->     cast("name" as varchar(128)) as name,
->     cast("description" as varchar(128)) as description,
->     cast("mofClassName" as varchar(128)) as class_name,
->     cast("creationTimestamp" as varchar(128)) as creation_timestamp,
->     cast("modificationTimestamp" as varchar(128)) as last_modified_timestamp,
->     cast("mofId" as varchar(128)) as mof_id,
->     cast("lineageId" as varchar(128)) as lineage_id
->   from sys_fem."Security"."Role";
+>     *
+>   from sys_root.dba_auth_ids
+>   where
+>     class_name = 'Role';
 > 
 > create or replace view dba_element_grants as
 >   select
@@ -561,15 +578,12 @@
 >     cast(gte."name" as varchar(128)) as grantee,
 >     cast(gto."name" as varchar(128)) as grantor,
 >     cast(g."action" as varchar(128)) as action,
->     roles.name as role_name,
->     case
->       when users.class_name is not null then users.class_name
->       when roles.class_name is not null then roles.class_name
->       else 'Unknown'
->     end as grant_type,
+>     gte."mofClassName" as grant_type,
 >     tables.table_type,
 >     cast(g."withGrantOption" as varchar(128)) as with_grant_option,
->     cast(me."mofId" as varchar(128)) as mof_id
+>     cast(gte."mofId" as varchar(128)) as grantee_mof_id,
+>     cast(gto."mofId" as varchar(128)) as grantor_mof_id,
+>     cast(me."mofId" as varchar(128)) as element_mof_id
 >   from
 >     sys_fem."Security"."Grant" as g
 >   inner join
@@ -588,30 +602,23 @@
 >     sys_root.dba_tables as tables
 >   on
 >     tables.mof_id = me."mofId"
->   left outer join
->     sys_root.dba_users as users
->   on
->     users.mof_id = g."Grantee"
->   left outer join
->     sys_root.dba_roles as roles
->   on
->     roles.mof_id = g."Grantee" or
->     (roles.mof_id = g."Element" and g."action" = 'INHERIT_ROLE')
 > ;
 > 
 > create or replace view dba_user_roles as
 >   select
 >     users.name as name,
 >     roles.name as role,
->     cast(g."withGrantOption" as varchar(128)) as with_grant_option
+>     cast(g."withGrantOption" as varchar(128)) as with_grant_option,
+>     cast(g."Grantee" as varchar(128)) as user_mof_id,
+>     cast(g."Element" as varchar(128)) as role_mof_id
 >   from
 >     sys_fem."Security"."Grant" as g
 >   inner join
->     sys_root.dba_users as users
+>     sys_root.dba_auth_ids as users
 >   on
 >     users.mof_id = g."Grantee"
 >   inner join
->     sys_root.dba_roles as roles
+>     sys_root.dba_auth_ids as roles
 >   on
 >     roles.mof_id = g."Element"
 >   where

@@ -359,10 +359,17 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> grant role tuv to bobbytables;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select grantee, action, role_name, grant_type
+0: jdbc:luciddb:> select grantee, action,
+. . . . . . . . > case
+. . . . . . . . >   when r.role is not null then r.role
+. . . . . . . . >   when grant_type = 'Role' then grantee
+. . . . . . . . > end as role_name,
+. . . . . . . . > grant_type
 . . . . . . . . > from sys_root.dba_element_grants
+. . . . . . . . > left outer join sys_root.dba_user_roles r
+. . . . . . . . > on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
 . . . . . . . . > where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-. . . . . . . . > role_name = 'TUV' and grant_type = 'User';
+. . . . . . . . > r.role = 'TUV' and grant_type = 'User';
 +--------------+---------------+------------+-------------+
 |   GRANTEE    |    ACTION     | ROLE_NAME  | GRANT_TYPE  |
 +--------------+---------------+------------+-------------+
@@ -478,6 +485,11 @@ sqlline> !connect jdbc:luciddb: sa ""
 | PARAM_NAME  | PARAM_VALUE  |
 +-------------+--------------+
 +-------------+--------------+
+0: jdbc:luciddb:> select * from sys_root.dba_auth_ids where false;
++-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
+| NAME  | REMARKS  | CLASS_NAME  | VISIBILITY  | CREATION_TIMESTAMP  | MODIFICATION_TIMESTAMP  | MOF_ID  | LINEAGE_ID  | NAMESPACE  |
++-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
++-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 0: jdbc:luciddb:> -- yield reliable results depending on whether or not Blackhawk creates a

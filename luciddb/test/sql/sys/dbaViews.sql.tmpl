@@ -195,10 +195,17 @@ grantee = 'TUV' and action = 'SELECT' and grant_type = 'Role';
 
 grant role tuv to bobbytables;
 
-select grantee, action, role_name, grant_type
+select grantee, action,
+case
+  when r.role is not null then r.role
+  when grant_type = 'Role' then grantee
+end as role_name,
+grant_type
 from sys_root.dba_element_grants
+left outer join sys_root.dba_user_roles r
+on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
 where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-role_name = 'TUV' and grant_type = 'User';
+r.role = 'TUV' and grant_type = 'User';
 
 -- dba_user_roles
 select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
@@ -239,6 +246,7 @@ select * from sys_root.dba_thread_stack_entries where false;
 select * from sys_root.dba_performance_counters where false;
 select * from sys_root.dba_system_info where false;
 select * from sys_root.user_session_parameters where false;
+select * from sys_root.dba_auth_ids where false;
 
 -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 -- yield reliable results depending on whether or not Blackhawk creates a
