@@ -531,6 +531,8 @@ create or replace view dba_system_backups as
     cast("mofId" as varchar(128)) as mof_id
   from sys_fem.med."SystemBackup";
 
+grant select on dba_system_backups to public;
+
 create or replace view dba_auth_ids as
   select
     cast("name" as varchar(128)) as name,
@@ -541,6 +543,8 @@ create or replace view dba_auth_ids as
     cast("mofId" as varchar(128)) as mof_id,
     cast("lineageId" as varchar(128)) as lineage_id
   from sys_fem."Security"."AuthId";
+
+grant select on dba_auth_ids to public;
 
 create or replace view dba_users as
   select
@@ -556,12 +560,16 @@ create or replace view dba_users as
   from
     sys_fem."Security"."User";
 
+grant select on dba_users to public;
+
 create or replace view dba_roles as
   select
     *
   from sys_root.dba_auth_ids
   where
     class_name = 'Role';
+
+grant select on dba_roles to public;
 
 create or replace view dba_element_grants as
   select
@@ -573,7 +581,7 @@ create or replace view dba_element_grants as
     cast(g."action" as varchar(128)) as action,
     gte."mofClassName" as grant_type,
     me."mofClassName" as class_name, 
-    cast(g."withGrantOption" as varchar(128)) as with_grant_option,
+    g."withGrantOption" as with_grant_option,
     cast(gte."mofId" as varchar(128)) as grantee_mof_id,
     cast(gto."mofId" as varchar(128)) as grantor_mof_id,
     cast(me."mofId" as varchar(128)) as element_mof_id
@@ -597,11 +605,13 @@ create or replace view dba_element_grants as
     si."mofId" = me."namespace"
 ;
 
+grant select on dba_element_grants to public;
+
 create or replace view dba_user_roles as
   select
     users.name as name,
     roles.name as role,
-    cast(g."withGrantOption" as varchar(128)) as with_grant_option,
+    g."withGrantOption" as with_grant_option,
     cast(g."Grantee" as varchar(128)) as user_mof_id,
     cast(g."Element" as varchar(128)) as role_mof_id
   from
@@ -617,6 +627,8 @@ create or replace view dba_user_roles as
   where
     g."action" = 'INHERIT_ROLE'
 ;
+
+grant select on dba_user_roles to public;
 
 -- Flush all entries from the global code cache
 create or replace procedure flush_code_cache()
