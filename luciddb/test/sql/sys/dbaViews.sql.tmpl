@@ -207,6 +207,18 @@ on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
 where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
 r.role = 'TUV' and grant_type = 'User';
 
+create or replace function mult(n1 int, n2 int)
+returns int
+language sql
+contains sql
+return n1 * n2;
+
+grant execute on specific function mult to tuv;
+select granted_element, action, class_name
+from sys_root.dba_element_grants
+where granted_element = 'MULT' and action = 'EXECUTE' and class_name='Routine';
+drop function mult;
+
 -- dba_user_roles
 select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
 role='TUV';

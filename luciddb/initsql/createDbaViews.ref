@@ -536,32 +536,25 @@
 >     cast("name" as varchar(128)) as name,
 >     cast("description" as varchar(128)) as remarks,
 >     cast("mofClassName" as varchar(128)) as class_name,
->     cast("visibility" as varchar(128)) as visibility,
 >     cast("creationTimestamp" as timestamp) as creation_timestamp,
 >     cast("modificationTimestamp" as timestamp) as modification_timestamp,
 >     cast("mofId" as varchar(128)) as mof_id,
->     cast("lineageId" as varchar(128)) as lineage_id,
->     cast("namespace" as varchar(128)) as namespace
+>     cast("lineageId" as varchar(128)) as lineage_id
 >   from sys_fem."Security"."AuthId";
 > 
 > create or replace view dba_users as
 >   select
->     auth.name,
+>     cast("name" as varchar(128)) as name,
 >     cast("encryptedPassword" as varchar(128)) as password,
 >     cast("passwordEncryptionAlgorithm" as varchar(128)) as password_encryption_algorithm,
->     auth.remarks,
->     auth.class_name,
->     auth.visibility,
->     auth.creation_timestamp,
->     auth.mof_id,
->     auth.lineage_id,
->     auth.namespace
+>     cast("description" as varchar(128)) as remarks,
+>     cast("mofClassName" as varchar(128)) as class_name,
+>     cast("creationTimestamp" as timestamp) as creation_timestamp,
+>     cast("modificationTimestamp" as timestamp) as modification_timestamp,
+>     cast("mofId" as varchar(128)) as mof_id,
+>     cast("lineageId" as varchar(128)) as lineage_id
 >   from
->     sys_root.dba_auth_ids as auth
->   inner join
->     sys_fem."Security"."User" users
->   on
->     users."mofId" = auth.mof_id;
+>     sys_fem."Security"."User";
 > 
 > create or replace view dba_roles as
 >   select
@@ -572,14 +565,14 @@
 > 
 > create or replace view dba_element_grants as
 >   select
->     tables.catalog_name as granted_catalog,
->     tables.schema_name as granted_schema,
->     tables.table_name as granted_element,
+>     si.object_catalog as granted_catalog,
+>     si.object_schema as granted_schema,
+>     me."name" as granted_element,
 >     cast(gte."name" as varchar(128)) as grantee,
 >     cast(gto."name" as varchar(128)) as grantor,
 >     cast(g."action" as varchar(128)) as action,
 >     gte."mofClassName" as grant_type,
->     tables.table_type,
+>     me."mofClassName" as class_name, 
 >     cast(g."withGrantOption" as varchar(128)) as with_grant_option,
 >     cast(gte."mofId" as varchar(128)) as grantee_mof_id,
 >     cast(gto."mofId" as varchar(128)) as grantor_mof_id,
@@ -599,9 +592,9 @@
 >   on
 >     g."Element" = me."mofId"
 >   left outer join
->     sys_root.dba_tables as tables
+>     sys_boot.jdbc_metadata.schemas_view_internal as si 
 >   on
->     tables.mof_id = me."mofId"
+>     si."mofId" = me."namespace"
 > ;
 > 
 > create or replace view dba_user_roles as

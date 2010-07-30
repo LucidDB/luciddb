@@ -376,6 +376,23 @@
 | BOBBYTABLES  | INHERIT_ROLE  | TUV        | User        |
 +--------------+---------------+------------+-------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace function mult(n1 int, n2 int)
+. . . . . . . . > returns int
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return n1 * n2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> grant execute on specific function mult to tuv;
+0: jdbc:luciddb:> select granted_element, action, class_name
+. . . . . . . . > from sys_root.dba_element_grants
+. . . . . . . . > where granted_element = 'MULT' and action = 'EXECUTE' and class_name='Routine';
++------------------+----------+-------------+
+| GRANTED_ELEMENT  |  ACTION  | CLASS_NAME  |
++------------------+----------+-------------+
+| MULT             | EXECUTE  | Routine     |
++------------------+----------+-------------+
+0: jdbc:luciddb:> drop function mult;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_user_roles
 0: jdbc:luciddb:> select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
 . . . . . . . . > role='TUV';
@@ -486,10 +503,10 @@ sqlline> !connect jdbc:luciddb: sa ""
 +-------------+--------------+
 +-------------+--------------+
 0: jdbc:luciddb:> select * from sys_root.dba_auth_ids where false;
-+-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
-| NAME  | REMARKS  | CLASS_NAME  | VISIBILITY  | CREATION_TIMESTAMP  | MODIFICATION_TIMESTAMP  | MOF_ID  | LINEAGE_ID  | NAMESPACE  |
-+-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
-+-------+----------+-------------+-------------+---------------------+-------------------------+---------+-------------+------------+
++-------+----------+-------------+---------------------+-------------------------+---------+-------------+
+| NAME  | REMARKS  | CLASS_NAME  | CREATION_TIMESTAMP  | MODIFICATION_TIMESTAMP  | MOF_ID  | LINEAGE_ID  |
++-------+----------+-------------+---------------------+-------------------------+---------+-------------+
++-------+----------+-------------+---------------------+-------------------------+---------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 0: jdbc:luciddb:> -- yield reliable results depending on whether or not Blackhawk creates a
