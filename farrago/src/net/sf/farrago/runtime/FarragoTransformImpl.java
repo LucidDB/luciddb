@@ -108,7 +108,7 @@ public abstract class FarragoTransformImpl
     public void pleaseSignalOnMoreData()
     {
         tracer.fine("pleaseSignalOnMoreData");
-        tupleIter.addListener(
+        boolean ok = tupleIter.addListener(
             new TupleIter.MoreDataListener() {
                 // called when more data after underflow
                 public void onMoreData()
@@ -119,12 +119,17 @@ public abstract class FarragoTransformImpl
                     graph.setStreamRunnable(peerStream, true);
                 }
             });
+        if (!ok) {
+            tracer.severe(
+                "FarragoTramsform failed to add input data listener: " + this);
+        }
     }
 
     /**
-     * Execute this transform. Execution continues until the underlying {@link
-     * #tupleIter} returns END_OF_DATA or UNDERFLOW or until the underlying
-     * {@link #tupleWriter} can no longer marshal tuples into the output buffer.
+     * Execute this transform, fetching rows from the source {@link #tupleIter}.
+     * Each row is written to the output buffer by the {@link #tupleWriter}.
+     * Produces rows until either the quantum is exceeded, the output buffer is
+     * full, or the source returns END_OF_DATA or UNDERFLOW.
      *
      * @param outputBuffer output ByteBuffer, written to via {@link
      * #tupleWriter}
@@ -141,7 +146,6 @@ public abstract class FarragoTransformImpl
         // there wasn't room to marshal it.
         if (next == null) {
             Object o = tupleIter.fetchNext();
-
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 traceOutput(Level.FINER, 0, outputBuffer);
                 return 0;
@@ -156,44 +160,39 @@ public abstract class FarragoTransformImpl
         outputBuffer.clear();
 
         for (;;) {
-            // Before attempting to marshal tuple, record current start
-            // position in case a partial marshalling attempt moves it.
+            // write a row
             int startPosition = outputBuffer.position();
             if (!tupleWriter.marshalTuple(outputBuffer, next)) {
                 if (startPosition == 0) {
-                    // We were not able to marshal the entire tuple,
-                    // and so far we haven't even marshalled one tuple,
-                    // so there's no way we're going to make progress.
-                    throw FarragoResource.instance().JavaRowTooLong.ex(
-                        outputBuffer.remaining(),
-                        next.toString());
+                    // no room even for one row: hopeless
+                    throw FarragoResource.instance()
+                        .JavaRowTooLong.ex(
+                            outputBuffer.remaining(), next.toString());
                 } else {
-                    // Not enough room to marshal the latest tuple, but we've
-                    // already got some earlier ones marshalled.
+                    tracer.finest("overflow");
                     break;
                 }
             }
-
-            // See note re: quantum as unsigned int.
+            tracer.log(Level.FINEST, "wrote row {0}", next);
+            next = null;                // was written
             if (++tupleCount >= quantum) {
-                next = null;
+                tracer.finest("quantum");
                 break;
             }
 
+            // fetch a row
             Object o = tupleIter.fetchNext();
-            tracer.log(Level.FINEST, "wrote row {0}", o);
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 // Will return 0 on next call to this method -- we've already
                 // marshaled at least one tuple that we need to return.
-                next = null;
+                tracer.finest("weak end of data");
                 break;
             } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
-                // We marshaled at least one tuple, so don't return -1.
-                next = null;
+                tracer.finest("weak underflow");
                 break;
+            } else {
+                next = o;
             }
-
-            next = o;
         }
 
         traceOutput(Level.FINER, tupleCount, outputBuffer);
