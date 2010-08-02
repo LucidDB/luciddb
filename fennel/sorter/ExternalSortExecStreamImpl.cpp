@@ -96,10 +96,19 @@ void ExternalSortExecStreamImpl::prepare(
     assert(params.outputTupleDesc == srcRecDef);
     sortInfo.tupleDesc = srcRecDef;
     sortInfo.keyDesc.projectFrom(sortInfo.tupleDesc, params.keyProj);
+    for (int i = 0; i < sortInfo.keyProj.size(); i++) {
+         FENNEL_TRACE(
+             TRACE_FINEST, "Sort Key Column = " << sortInfo.keyProj[i]);
+    }
     sortInfo.descendingKeyColumns = params.descendingKeyColumns;
     if (sortInfo.descendingKeyColumns.empty()) {
         // default is all ascending
         sortInfo.descendingKeyColumns.resize(sortInfo.keyProj.size(), false);
+    }
+    for (int i = 0; i < sortInfo.descendingKeyColumns.size(); i++) {
+         FENNEL_TRACE(
+             TRACE_FINEST, "Sort Order for Column " << i << " = "
+             << sortInfo.descendingKeyColumns[i]);
     }
     sortInfo.cbPage = params.pTempSegment->getFullPageSize();
     sortInfo.memSegmentAccessor = params.scratchAccessor;

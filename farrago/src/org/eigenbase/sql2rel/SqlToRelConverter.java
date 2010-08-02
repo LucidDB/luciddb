@@ -2473,7 +2473,7 @@ public class SqlToRelConverter
      *
      * @pre bb.root != null
      */
-    private void gatherOrderExprs(
+    protected void gatherOrderExprs(
         Blackboard bb,
         SqlSelect select,
         SqlNodeList orderList,
