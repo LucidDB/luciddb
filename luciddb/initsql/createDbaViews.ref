@@ -630,6 +630,20 @@
 > 
 > grant select on dba_user_roles to public;
 > 
+> create or replace view dba_jars as
+>   select
+>     cast("name" as varchar(128)) as name,
+>     cast("url" as varchar(128)) as url,
+>     sys_root.convert_nullable_int_to_boolean("deploymentState") as deployed,
+>     cast("description" as varchar(128)) as remarks,
+>     cast("creationTimestamp" as timestamp) as creation_timestamp,
+>     cast("modificationTimestamp" as timestamp) as modification_timestamp,
+>     cast("mofId" as varchar(128)) as mof_id,
+>     cast("lineageId" as varchar(128)) as lineage_id
+>   from sys_fem."SQL2003"."Jar";
+> 
+> grant select on dba_jars to public;
+> 
 > -- Flush all entries from the global code cache
 > create or replace procedure flush_code_cache()
 >   language java

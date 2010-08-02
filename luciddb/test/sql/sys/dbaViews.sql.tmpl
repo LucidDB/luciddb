@@ -231,6 +231,9 @@ select grantee from sys_root.dba_element_grants where grantee in ('TUV', 'BOBBYT
 select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
 role='TUV';
 
+-- dba_jars
+select name, url, deployed from sys_root.dba_jars where name = 'APPLIBJAR';
+
 -- test creator field
 create user lala authorization 'Unknown' Default schema DBAVTEST;
 

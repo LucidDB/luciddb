@@ -426,6 +426,14 @@
 +-------+-------+
 +-------+-------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dba_jars
+0: jdbc:luciddb:> select name, url, deployed from sys_root.dba_jars where name = 'APPLIBJAR';
++------------+-----------------------------------------+-----------+
+|    NAME    |                   URL                   | DEPLOYED  |
++------------+-----------------------------------------+-----------+
+| APPLIBJAR  | file:${FARRAGO_HOME}/plugin/applib.jar  | false     |
++------------+-----------------------------------------+-----------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test creator field
 0: jdbc:luciddb:> create user lala authorization 'Unknown' Default schema DBAVTEST;
 0: jdbc:luciddb:> 
