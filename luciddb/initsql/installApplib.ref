@@ -756,6 +756,35 @@
 > specific generate_crc_for_column_subset
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
 > 
+> -- Generate sequence
+> create or replace function generate_sequence(
+>   input_table cursor,
+>   start_number bigint,
+>   increment bigint)
+> returns table(
+>   input_table.*, 
+>   seq_num bigint)
+> language java
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
+> 
+> create or replace function generate_sequence_partitioned(
+>   input_table cursor,
+>   partitioning_columns select from input_table,
+>   start_number bigint,
+>   increment bigint)
+> returns table(
+>   input_table.*, 
+>   seq_num bigint)
+> language java
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.util.List, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
+> 
+> 
 > -- Pivot columns to rows
 > create or replace function pivot_columns_to_rows(c cursor)
 > returns table(col_name varchar(65535), col_value varchar(65535))
