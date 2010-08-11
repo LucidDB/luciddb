@@ -91,8 +91,15 @@ public enum SqlTypeName
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
 
     private static SqlTypeName [] jdbcTypeToName;
-    public static final int MIN_JDBC_TYPE = Types.BIT;
-    public static final int MAX_JDBC_TYPE = Types.REF;
+
+    // Basing type name mapping on these constants is fragile, since newer
+    // JDK versions may introduce new types with values outside of these
+    // boundaries.
+    // TODO: Find a less fragile way to map type constants to names
+    public static final int MIN_JDBC_TYPE = ExtraSqlTypes.LONGNVARCHAR;
+    public static final int MAX_JDBC_TYPE = ExtraSqlTypes.NCLOB;
+
+    public static final int JAVA6_NCHAR = -15;
 
     public static final int MAX_DATETIME_PRECISION = 3;
     public static final int MAX_NUMERIC_PRECISION = 19;
@@ -204,11 +211,19 @@ public enum SqlTypeName
         setNameForJdbcType(Types.CHAR, CHAR);
         setNameForJdbcType(Types.VARCHAR, VARCHAR);
 
-        // TODO
+        // TODO: provide real support for these eventually
+        setNameForJdbcType(ExtraSqlTypes.NCHAR, CHAR);
+        setNameForJdbcType(ExtraSqlTypes.NVARCHAR, VARCHAR);
+
+        // TODO: additional types not yet supported. See ExtraSqlTypes.java
         // setNameForJdbcType(Types.LONGVARCHAR, Longvarchar);
         // setNameForJdbcType(Types.CLOB, Clob);
         // setNameForJdbcType(Types.LONGVARBINARY, Longvarbinary);
         // setNameForJdbcType(Types.BLOB, Blob);
+        // setNameForJdbcType(Types.LONGNVARCHAR, Longnvarchar);
+        // setNameForJdbcType(Types.NCLOB, Nclob);
+        // setNameForJdbcType(Types.ROWID, Rowid);
+        // setNameForJdbcType(Types.SQLXML, Sqlxml);
 
         setNameForJdbcType(Types.BINARY, BINARY);
         setNameForJdbcType(Types.VARBINARY, VARBINARY);
