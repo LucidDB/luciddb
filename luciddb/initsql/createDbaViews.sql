@@ -536,7 +536,7 @@ grant select on dba_system_backups to public;
 create or replace view dba_auth_ids as
   select
     cast("name" as varchar(128)) as name,
-    cast("description" as varchar(128)) as remarks,
+    cast("description" as varchar(65535)) as remarks,
     cast("mofClassName" as varchar(128)) as class_name,
     cast("creationTimestamp" as timestamp) as creation_timestamp,
     cast("modificationTimestamp" as timestamp) as modification_timestamp,
@@ -551,7 +551,7 @@ create or replace view dba_users as
     cast("name" as varchar(128)) as name,
     cast("encryptedPassword" as varchar(128)) as password,
     cast("passwordEncryptionAlgorithm" as varchar(128)) as password_encryption_algorithm,
-    cast("description" as varchar(128)) as remarks,
+    cast("description" as varchar(65535)) as remarks,
     cast("mofClassName" as varchar(128)) as class_name,
     cast("creationTimestamp" as timestamp) as creation_timestamp,
     cast("modificationTimestamp" as timestamp) as modification_timestamp,
@@ -634,8 +634,14 @@ create or replace view dba_jars as
   select
     cast("name" as varchar(128)) as name,
     cast("url" as varchar(128)) as url,
-    sys_root.convert_nullable_int_to_boolean("deploymentState") as deployed,
-    cast("description" as varchar(128)) as remarks,
+    case
+      when "deploymentState" = 0 then 'NOT_DEPLOYED'
+      when "deploymentState" = 1 then 'DEPLOYMENT_PENDING'
+      when "deploymentState" = 2 then 'DEPLOYED'
+      when "deploymentState" = 3 then 'DEPLOYED_PARTIAL'
+      when "deploymentState" = 4 then 'UNDEPLOYMENT_PENDING'
+    end as deployment_state,
+    cast("description" as varchar(65535)) as remarks,
     cast("creationTimestamp" as timestamp) as creation_timestamp,
     cast("modificationTimestamp" as timestamp) as modification_timestamp,
     cast("mofId" as varchar(128)) as mof_id,
