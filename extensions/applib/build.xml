@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// Applib is a library of SQL-invocable routines for Eigenbase applications.
+// Copyright (C) 2010 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2010 DynamoBI Corporation
+//
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation; either version 2.1 of the License, or (at
+// your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+-->
+
+<!DOCTYPE project [
+<!ENTITY FarragoProps
+"
+-Dnet.sf.farrago.home=${farrago.dir}
+-Dnet.sf.farrago.catalog=${project.catalog.dir}
+-Djava.util.logging.config.file=${project.trace.propfile}
+">
+
+<!ENTITY FarragoSqlLineProps
+"
+&FarragoProps;
+-Dsqlline.historyFile=${sqlline.hist.file}
+">
+
+]>
+
+<project name="applib" basedir="." default="jar">
+  <dirname property="applib.dir" file="${ant.file.applib}" />
+  <property name="open.dir" location="${applib.dir}/../.." />
+  <property name="classes.dir" value="${applib.dir}/classes" />
+  <property name="applib.plugin.dir" location="${applib.dir}/plugin" />
+  <property name="resource.src.dir" location="${applib.dir}/src/org/eigenbase/applib/resource" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <path id="build.classpath">
+    <pathelement path="${farrago.run.classpath}" />
+    <pathelement path="${farrago.sqltest.classpath}"/>
+  </path>
+  <property name="build.classpath" refid="build.classpath"/>
+
+  <fileset dir="${applib.dir}" id="fileset.taggable">
+    <include name="src/**/*.java"/>
+  </fileset>
+
+  <path id="test.classpath">
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${classes.dir}"/>
+    <pathelement path="${build.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <antcall target="generateResources"/>
+    <javac
+      debug="on"
+      deprecation="off"
+      srcdir="${applib.dir}/src"
+      destdir="${classes.dir}"
+      classpath="${build.classpath}">
+      <include name="**/*.java" />
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${applib.plugin.dir}"/>
+    <jar jarfile="${applib.plugin.dir}/eigenbase-applib.jar">
+      <fileset dir="${applib.dir}/classes">
+        <include name="**"/>
+      </fileset>
+      <fileset dir="${applib.dir}">
+        <include name="COPYING"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="createEclipseProject">
+    <create.eclipse.project project.dir="${applib.dir}" classpath="${build.classpath}"/>
+  </target>
+
+  <target name="generateResources"
+    depends="checkResourceUptodate" unless="resource.uptodate">
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${applib.dir}/src"
+      destdir="${classes.dir}"
+      classpath="${build.classpath}">
+      <include name="**/ApplibException.java"/>
+    </farrago.javaCompile>
+    <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask"
+      classpathref="test.classpath" />
+    <resgen srcdir="${applib.dir}/src" destdir="${applib.dir}/src" 
+      resdir="${classes.dir}"
+      style="functor" locales="en_US">
+      <include name="org/eigenbase/applib/resource/ApplibResource.xml" />
+    </resgen>
+  </target>
+
+  <target name="checkResourceUptodate">
+    <condition property="resource.uptodate">
+      <uptodate srcfile="${resource.src.dir}/ApplibResource.xml"
+        targetfile="${resource.src.dir}/ApplibResource.java" />
+    </condition>
+  </target>
+
+  <target name="clean">
+    <delete dir="${classes.dir}" quiet="true"/>
+    <delete dir="${applib.plugin.dir}" quiet="true"/>
+    <delete>
+      <fileset dir="${resource.src.dir}">
+        <include name="**/ApplibResource*.java"/>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="etags">
+    <farrago.createEmacsTags filesetPropertyName="fileset.taggable"/>
+  </target>
+
+  <!-- Beautify source code.  This currently requires
+       the commercial Triemax version of Jalopy, which needs to
+       be installed manually under thirdparty/jalopy. -->
+  <target name="jalopy">
+    <taskdef name="jalopy"
+      classname="com.triemax.JalopyTask">
+      <classpath>
+        <fileset dir="${jalopy.dir}/lib">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
+    </taskdef>
+    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml" 
+      threads="2" classpathref="test.classpath" history="NONE" 
+      force="true">
+      <fileset dir="${applib.dir}/src">
+        <include name="**/*.java"/>
+      </fileset>
+    </jalopy>
+  </target>
+
+</project>
