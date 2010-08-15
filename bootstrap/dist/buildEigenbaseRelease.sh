@@ -81,11 +81,12 @@ p4 label -o $LABEL >> $DIST_DIR/VERSION
 
 # Start from a clean sync to requested label
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago luciddb
+rm -rf thirdparty fennel farrago luciddb extensions
 p4 sync -f thirdparty/...@$LABEL
 p4 sync -f fennel/...@$LABEL
 p4 sync -f farrago/...@$LABEL
 p4 sync -f luciddb/...@$LABEL
+p4 sync -f extensions/...@$LABEL
 
 # Verify that client was mapped correctly
 if [ ! -e thirdparty ]; then
@@ -102,6 +103,10 @@ if [ ! -e farrago ]; then
 fi
 if [ ! -e luciddb ]; then
     echo "Error:  luciddb is not where it should be"
+    exit -1
+fi
+if [ ! -e extensions ]; then
+    echo "Error:  extensions is not where it should be"
     exit -1
 fi
 
@@ -145,6 +150,7 @@ touch $SRC_RELEASE/thirdparty/tpch
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp -R $OPEN_DIR/luciddb $SRC_RELEASE
+cp -R $OPEN_DIR/extensions $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
 cp $DIST_DIR/README.src $SRC_RELEASE/README
 cp $OPEN_DIR/farrago/COPYING $SRC_RELEASE
