@@ -4,7 +4,7 @@
 > set path 'localdb.applib';
 > 
 > create or replace jar applib.applibJar
-> library 'file:${FARRAGO_HOME}/plugin/applib.jar'
+> library 'file:${FARRAGO_HOME}/plugin/eigenbase-applib.jar'
 > options(0);
 > 
 > -- UDFs
@@ -15,7 +15,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.CharReplaceUdf.execute';
 > 
 > create or replace function applib.char_replace(str varchar(65535), oldC integer, newC integer) 
 > returns varchar(65535)
@@ -24,7 +24,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.CharReplaceUdf.execute';
 > 
 > -- define CleanPhoneInternational functions
 > create or replace function applib.clean_phone_international(str varchar(128), b boolean)
@@ -33,7 +33,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneInternationalUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.phone.CleanPhoneInternationalUdf.execute';
 > 
 > -- define CleanPhone functions
 > create or replace function applib.clean_phone(str varchar(128))
@@ -43,7 +43,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.phone.CleanPhoneUdf.execute';
 > 
 > create or replace function applib.clean_phone(inStr varchar(128), format integer)
 > returns varchar(128)
@@ -52,7 +52,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.phone.CleanPhoneUdf.execute';
 > 
 > create or replace function applib.clean_phone(inStr varchar(128), format integer, reject boolean)
 > returns varchar(128)
@@ -61,7 +61,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.phone.CleanPhoneUdf.execute';
 > 
 > create or replace function applib.clean_phone(inStr varchar(128), format varchar(128), reject boolean)
 > returns varchar(128)
@@ -70,7 +70,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.phone.CleanPhoneUdf.execute';
 > 
 > -- define ContainsNumber function
 > create or replace function applib.contains_number(str varchar(65535))
@@ -79,7 +79,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.ContainsNumberUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.ContainsNumberUdf.execute';
 > 
 > -- define CYQuarter functions
 > create or replace function applib.calendar_quarter(dt date)
@@ -89,7 +89,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.CalendarQuarterUdf.execute';
 > 
 > create or replace function applib.calendar_quarter(ts timestamp)
 > returns varchar(128)
@@ -98,7 +98,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.CalendarQuarterUdf.execute';
 > 
 > -- define internalDate function (example function)
 > create or replace function applib.internal_date(indate bigint)
@@ -107,7 +107,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.contrib.InternalDateUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.contrib.InternalDateUdf.execute';
 > 
 > -- define DAYINYEAR function
 > create or replace function applib.day_in_year(dt date)
@@ -117,7 +117,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DayInYearUdf.execute';
 > 
 > create or replace function applib.day_in_year(ts timestamp)
 > returns integer
@@ -126,7 +126,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DayInYearUdf.execute';
 > 
 > create or replace function applib.day_in_year(yr integer, mth integer, dt integer)
 > returns integer
@@ -135,7 +135,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DayInYearUdf.execute';
 > 
 > -- define dayNumberOverall functions
 > create or replace function applib.day_number_overall(dt Date)
@@ -144,7 +144,7 @@
 > specific DAYNUMBEROVERALL_DATE
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DayNumberOverallUdf.execute';
 > 
 > create or replace function applib.day_number_overall(ts timestamp)
 > returns integer
@@ -152,7 +152,7 @@
 > specific DAYNUMBEROVERALL_TS
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DayNumberOverallUdf.execute';
 > 
 > -- define FYMonth functions
 > create or replace function applib.fiscal_month(dt date, fm integer)
@@ -162,7 +162,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalMonthUdf.execute';
 > 
 > create or replace function applib.fiscal_month(ts timestamp, fm integer)
 > returns integer
@@ -171,7 +171,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalMonthUdf.execute';
 > 
 > -- define FYQuarter functions
 > create or replace function applib.fiscal_quarter(yr integer, mth integer, fm integer)
@@ -181,7 +181,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalQuarterUdf.execute';
 > 
 > create or replace function applib.fiscal_quarter(dt date, fm integer)
 > returns varchar(10)
@@ -190,7 +190,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalQuarterUdf.execute';
 > 
 > create or replace function applib.fiscal_quarter(ts timestamp, fm integer)
 > returns varchar(10)
@@ -199,7 +199,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalQuarterUdf.execute';
 > 
 > -- define FYYear functions
 > create or replace function applib.fiscal_year(dt date, fm integer)
@@ -209,7 +209,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalYearUdf.execute';
 > 
 > create or replace function applib.fiscal_year(ts timestamp, fm integer)
 > returns integer
@@ -218,7 +218,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalYearUdf.execute';
 > 
 > -- define leftN functions
 > create or replace function applib.leftn(str varchar(65535), len integer)
@@ -227,7 +227,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.LeftNUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.LeftNUdf.execute';
 > 
 > -- define rand functions
 > create or replace function applib.rand(minVal integer, maxVal integer)
@@ -235,7 +235,7 @@
 > language java
 > not deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.numeric.RandUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.numeric.RandUdf.execute';
 > 
 > -- define repeater function
 > create or replace function applib.REPEATER(str varchar(65535), times integer)
@@ -244,7 +244,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RepeaterUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.RepeaterUdf.execute';
 > 
 > -- define rightn function
 > create or replace function applib.RIGHTN(str varchar(65535), len integer)
@@ -253,7 +253,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.RightNUdf.execute';
 > 
 > -- define StrReplace function
 > create or replace function applib.str_replace(inStr varchar(65535), oldStr varchar(65535), newStr varchar(65535))
@@ -261,7 +261,7 @@
 > language java
 > deterministic
 > no sql
-> external name "applib.applibJar:com.lucidera.luciddb.applib.string.StrReplaceUdf.execute";
+> external name "applib.applibJar:org.eigenbase.applib.string.StrReplaceUdf.execute";
 > 
 > -- define convert_date function
 > create or replace function applib.convert_date(str varchar(65535), mask varchar(65535), rej boolean)
@@ -270,7 +270,7 @@
 > specific convert_date_rejectable
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.ConvertDateUdf.execute';
 > 
 > create or replace function applib.convert_date(str varchar(65535), mask varchar(65535))
 > returns date
@@ -278,7 +278,7 @@
 > specific convert_date_not_rejectable
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.ConvertDateUdf.execute';
 > 
 > -- converts a string to a date, according to the specified format string
 > create or replace function applib.char_to_date(format varchar(65535), dateString varchar(65535))
@@ -287,7 +287,7 @@
 > specific applib_std_char_to_date
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_date';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.char_to_date';
 > 
 > create or replace function applib.char_to_time(format varchar(65535), timeString varchar(65535))
 > returns time
@@ -295,7 +295,7 @@
 > specific applib_std_char_to_time
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_time';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.char_to_time';
 > 
 > create or replace function applib.char_to_timestamp(
 >     format varchar(65535), timestampString varchar(65535))
@@ -304,7 +304,7 @@
 > specific applib_std_char_to_timestamp
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_timestamp';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.char_to_timestamp';
 > 
 > -- formats a string as a date, according to the specified format string
 > create or replace function applib.date_to_char(format varchar(65535), d date)
@@ -313,7 +313,7 @@
 > specific applib_std_date_to_char
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.date_to_char';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.date_to_char';
 > 
 > create or replace function applib.time_to_char(format varchar(65535), t time)
 > returns varchar(65535)
@@ -321,7 +321,7 @@
 > specific applib_std_time_to_char
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.time_to_char';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.time_to_char';
 > 
 > create or replace function applib.timestamp_to_char(format varchar(65535), ts timestamp)
 > returns varchar(65535)
@@ -329,7 +329,7 @@
 > specific applib_std_timestamp_to_char
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.StdConvertDateUdf.timestamp_to_char';
 > 
 > -- adds n number of days to a date
 > create or replace function applib.add_days(d date, n int)
@@ -402,7 +402,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.dateToJulianDay';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.ConvertJulianDayUdf.dateToJulianDay';
 > 
 > -- define current_date_in_julian
 > -- 2440588 is the number of days from the Julian Calendar start date to 
@@ -423,7 +423,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToDate';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.ConvertJulianDayUdf.julianDayToDate';
 > 
 > -- define julian_day_to_timestamp
 > create or replace function applib.julian_day_to_timestamp(jd integer)
@@ -432,7 +432,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToTimestamp';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.ConvertJulianDayUdf.julianDayToTimestamp';
 > 
 > -- define padweeknumber
 > create or replace function applib.padweeknumber(wk_num_as_yr integer)
@@ -455,7 +455,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.InStrUdf.execute';
 > 
 > create or replace function applib.instr(str varchar(65535), subStr varchar(65535))
 > returns int
@@ -464,7 +464,7 @@
 > deterministic
 > no sql
 > returns null on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.InStrUdf.execute';
 > 
 > 
 > ----
@@ -483,7 +483,7 @@
 >     description varchar(65535))
 > language java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeCreate';
+> external name 'applib.applibJar:org.eigenbase.applib.variable.AppVarApi.executeCreate';
 > 
 > -- Deletes a variable (or a context if var_id is null), which must
 > -- currently exist.
@@ -492,7 +492,7 @@
 >     var_id varchar(255))
 > language java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeDelete';
+> external name 'applib.applibJar:org.eigenbase.applib.variable.AppVarApi.executeDelete';
 > 
 > -- Sets the value for a variable.  var_id must not be null, and must
 > -- reference a previously created variable.
@@ -502,7 +502,7 @@
 >     new_value varchar(65535))
 > language java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeSet';
+> external name 'applib.applibJar:org.eigenbase.applib.variable.AppVarApi.executeSet';
 > 
 > -- Flushes modifications to a variable (or a context if var_id is null).
 > -- Before flush, there is no guarantee that modifications have
@@ -512,7 +512,7 @@
 >     var_id varchar(255))
 > language java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeFlush';
+> external name 'applib.applibJar:org.eigenbase.applib.variable.AppVarApi.executeFlush';
 > 
 > -- Retrieves the current value of a variable.  var_id must not be null,
 > -- and must reference a previously created variable.
@@ -527,7 +527,7 @@
 > deterministic
 > dynamic_function
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
+> external name 'applib.applibJar:org.eigenbase.applib.variable.AppVarApi.executeGet';
 > 
 > ----
 > -- UDXs
@@ -583,7 +583,7 @@
 > specific time_dimension_fm
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.TimeDimensionUdx.execute';
 > 
 > -- time dimension without fiscal information
 > create or replace function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
@@ -610,7 +610,7 @@
 > specific time_dimension
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.TimeDimensionUdx.execute';
 > 
 > -- Fiscal time dimension 
 > create or replace function APPLIB.FISCAL_TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
@@ -665,7 +665,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalTimeDimensionUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.FiscalTimeDimensionUdx.execute';
 > 
 > -- Calculate Effective To Timestamps
 > create or replace function applib.derive_effective_to_timestamp(
@@ -680,7 +680,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DeriveEffectiveToTimestampUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.datetime.DeriveEffectiveToTimestampUdx.execute';
 > 
 > -- Flatten hierarchical data, producing rows corresponding to leaf nodes only
 > create or replace function applib.flatten_recursive_hierarchy(c cursor)
@@ -705,7 +705,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
 > 
 > -- Flatten hierarchical data, producing rows for both leaf and non-leaf nodes
 > create or replace function applib.flatten_recursive_hierarchy_all_levels(
@@ -732,7 +732,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.executeAllLevels';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.FlattenRecursiveHierarchyUdx.executeAllLevels';
 > 
 > -- Generate CRC udx
 > create or replace function generate_crc(c cursor)
@@ -741,7 +741,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateCrcUdx.execute';
 > 
 > -- Generate CRC UDX with specified column set used to calculate CRC
 > create or replace function generate_crc(
@@ -754,7 +754,7 @@
 > deterministic
 > no sql
 > specific generate_crc_for_column_subset
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateCrcUdx.execute';
 > 
 > -- Generate sequence
 > create or replace function generate_sequence(
@@ -768,7 +768,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
 > 
 > create or replace function generate_sequence_partitioned(
 >   input_table cursor,
@@ -782,7 +782,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.util.List, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.util.List, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
 > 
 > 
 > -- Pivot columns to rows
@@ -792,7 +792,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.PivotColumnsToRowsUdx.execute';
 > 
 > -- retain top most rows
 > create or replace function applib.topN(IN_CURSOR cursor, N int)
@@ -800,7 +800,7 @@
 > language java
 > parameter style system defined java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.TopNUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.TopNUdx.execute';
 > 
 > -- collapse rows
 > create or replace function collapse_rows(c cursor, delimiter varchar(1))
@@ -812,7 +812,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.CollapseRowsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.CollapseRowsUdx.execute';
 > 
 > -- split strings
 > create or replace function applib.split_string_to_rows(
@@ -826,7 +826,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.execute';
 > 
 > create or replace function applib.split_rows(
 >        IN_CURSOR cursor, 
@@ -839,7 +839,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.execute';
 > 
 > create or replace function applib.split_rows(
 >        IN_CURSOR cursor, 
@@ -853,7 +853,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.execute';
 > 
 > -- split strings with sequence number
 > create or replace function applib.split_string_to_rows(
@@ -869,7 +869,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleStringWithSequence(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.splitSingleStringWithSequence(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 > 
 > create or replace function applib.split_rows(
 >        IN_CURSOR cursor, 
@@ -884,7 +884,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleColumnWithSequence(java.sql.ResultSet,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.splitSingleColumnWithSequence(java.sql.ResultSet,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 > 
 > create or replace function applib.split_rows(
 >        IN_CURSOR cursor, 
@@ -900,7 +900,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitMultiColumnWithSequence(java.sql.ResultSet,java.util.List,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.splitMultiColumnWithSequence(java.sql.ResultSet,java.util.List,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 > 
 > -- enforce row constraints, default message catalog
 > create or replace function enforce_row_constraints(c cursor, r select from c)
@@ -910,7 +910,7 @@
 > not deterministic
 > no sql
 > specific enforce_row_constraints_default_msg_jar
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 > 
 > -- enforce row constraints with msg jar
 > create or replace function enforce_row_constraints(
@@ -923,7 +923,7 @@
 > not deterministic
 > no sql
 > specific enforce_row_constraints_with_msg_jar
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 > 
 > -- enforce row constraints with tag for logging
 > create or replace function enforce_row_constraints(
@@ -937,7 +937,7 @@
 > not deterministic
 > no sql
 > specific enforce_row_constraints_with_tag
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 > 
 > create or replace function penultimate_values(
 >   input_table cursor,
@@ -950,7 +950,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PenultimateValuesUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.PenultimateValuesUdx.execute';
 > 
 > create or replace function contiguous_value_intervals(
 >   input_table cursor,
@@ -967,7 +967,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.ContiguousValueIntervalsUdx.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.cursor.ContiguousValueIntervalsUdx.execute';
 > 
 > ----
 > -- System procedures
@@ -980,7 +980,7 @@
 > language java
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute';
 > 
 > -- UDP for executing a sql statement for each table and view in an entire schema
 > create or replace procedure do_for_entire_schema(
@@ -990,7 +990,7 @@
 > language java
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.DoForEntireSchemaUdp.execute';
 > 
 > -- UDP for computing statistics for all tables in a schema
 > create or replace procedure compute_statistics_for_schema(
@@ -998,7 +998,7 @@
 > language java
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
 > 
 > -- UDP for estimating statistics for all tables in a schema
 > create or replace procedure estimate_statistics_for_schema(
@@ -1007,7 +1007,7 @@
 > specific estimate_statistics_for_schema_no_samplingrate
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
 > 
 > -- UDP for estimating statistics for all tables in a schema with a fixed sampling rate
 > create or replace procedure estimate_statistics_for_schema(
@@ -1017,7 +1017,7 @@
 > specific estimate_statistics_for_schema_float_samplingrate
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute(java.lang.String, java.lang.Double)';
+> external name 'applib.applibJar:org.eigenbase.applib.analysis.EstimateStatisticsForSchemaUdp.execute(java.lang.String, java.lang.Double)';
 > 
 > -- UDP for dropping a schema if it exists
 > create or replace procedure drop_schema_if_exists(
@@ -1026,7 +1026,7 @@
 > language java
 > parameter style java
 > reads sql data
-> external name  'applib.applibJar:com.lucidera.luciddb.applib.util.DropSchemaIfExistsUdp.execute';
+> external name  'applib.applibJar:org.eigenbase.applib.util.DropSchemaIfExistsUdp.execute';
 > 
 > -- UDP for replicating a Mondrian schema
 > create or replace procedure applib.replicate_mondrian(
@@ -1038,7 +1038,7 @@
 >     copy_data boolean)
 > language java
 > modifies sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ReplicateMondrianUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.mondrian.ReplicateMondrianUdp.execute';
 > 
 > -- UDP for clearing Mondrian Schema Cache on Pentaho Server
 > create or replace procedure applib.clear_pentaho_mondrian_cache(
@@ -1047,7 +1047,7 @@
 >     password varchar(128))
 > language java
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ClearPentahoMondrianCacheUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.mondrian.ClearPentahoMondrianCacheUdp.execute';
 > 
 > -- UDP for conditionally executing a SQL statement based on input set 
 > create or replace procedure exec_sql_if_no_rows( 
@@ -1056,7 +1056,7 @@
 > language java 
 > parameter style java 
 > reads sql data 
-> external name  'applib.applibJar:com.lucidera.luciddb.applib.util.ExecSqlIfNoRows.execute'; 
+> external name  'applib.applibJar:org.eigenbase.applib.util.ExecSqlIfNoRows.execute'; 
 > 
 > create or replace function APPLIB.WRITE_ROWS_TO_FILE(
 > IN_CURSOR cursor, 
@@ -1067,7 +1067,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.WriteRowsToFileUDX.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.impexp.WriteRowsToFileUDX.execute';
 >  
 > create or replace function APPLIB.READ_ROWS_FROM_FILE(
 > IN_CURSOR cursor, 
@@ -1078,7 +1078,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.ReadRowsFromFileUDX.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.impexp.ReadRowsFromFileUDX.execute';
 > 
 > create or replace function APPLIB.REMOTE_ROWS(IN_CURSOR cursor, PORT int, IS_COMPRESSED boolean)
 > returns table (IN_CURSOR.*)
@@ -1086,7 +1086,7 @@
 > parameter style system defined java
 > deterministic
 > no sql
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.impexp.RemoteRowsUDX.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.impexp.RemoteRowsUDX.execute';
 > 
 > create or replace procedure create_table_from_source_table(
 > in sourceTable varchar(1024),
@@ -1096,7 +1096,7 @@
 > language java
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSrcTbUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.CreateTbFromSrcTbUdp.execute';
 > 
 > create or replace procedure create_table_as(
 > in schemaName varchar(128),
@@ -1106,6 +1106,6 @@
 > language java
 > parameter style java
 > reads sql data
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.util.CreateTbFromSelectStmtUdp.execute';
+> external name 'applib.applibJar:org.eigenbase.applib.util.CreateTbFromSelectStmtUdp.execute';
 > 
 > !quit

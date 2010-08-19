@@ -17,7 +17,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style java
 . . . . . . . . > reads sql data
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_routines & routine parameters
 0: jdbc:luciddb:> select catalog_name, schema_name, invocation_name, specific_name, 
@@ -26,12 +26,12 @@
 . . . . . . . . > from sys_root.dba_routines
 . . . . . . . . > where schema_name='DBAVTEST'
 . . . . . . . . > order by 1,2,3,4;
-+---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
-| CATALOG_NAME  | SCHEMA_NAME  |     INVOCATION_NAME      |      SPECIFIC_NAME       |                                            EXTERNAL_NAME                                             | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |     DATA_ACCESS     |
-+---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
-| LOCALDB       | DBAVTEST     | ADDING                   | ADDING                   |                                                                                                      | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL    |
-| LOCALDB       | DBAVTEST     | GRANT_SELECT_FOR_SCHEMA  | GRANT_SELECT_FOR_SCHEMA  | "LOCALDB"."APPLIB"."APPLIBJAR":com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute  | PROCEDURE     | false              | RPS_JAVA         | false             | RDA_READS_SQL_DATA  |
-+---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
++---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| CATALOG_NAME  | SCHEMA_NAME  |     INVOCATION_NAME      |      SPECIFIC_NAME       |                                         EXTERNAL_NAME                                         | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |     DATA_ACCESS     |
++---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| LOCALDB       | DBAVTEST     | ADDING                   | ADDING                   |                                                                                               | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL    |
+| LOCALDB       | DBAVTEST     | GRANT_SELECT_FOR_SCHEMA  | GRANT_SELECT_FOR_SCHEMA  | "LOCALDB"."APPLIB"."APPLIBJAR":org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute  | PROCEDURE     | false              | RPS_JAVA         | false             | RDA_READS_SQL_DATA  |
++---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select creation_timestamp < current_timestamp, 
 . . . . . . . . >   creation_timestamp <= last_modified_timestamp
@@ -428,11 +428,11 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_jars
 0: jdbc:luciddb:> select name, url, deployment_state from sys_root.dba_jars where name = 'APPLIBJAR';
-+------------+-----------------------------------------+-----------------------+
-|    NAME    |                   URL                   |   DEPLOYMENT_STATE    |
-+------------+-----------------------------------------+-----------------------+
-| APPLIBJAR  | file:${FARRAGO_HOME}/plugin/applib.jar  | NOT_DEPLOYED          |
-+------------+-----------------------------------------+-----------------------+
++------------+---------------------------------------------------+-----------------------+
+|    NAME    |                        URL                        |   DEPLOYMENT_STATE    |
++------------+---------------------------------------------------+-----------------------+
+| APPLIBJAR  | file:${FARRAGO_HOME}/plugin/eigenbase-applib.jar  | NOT_DEPLOYED          |
++------------+---------------------------------------------------+-----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test creator field
 0: jdbc:luciddb:> create user lala authorization 'Unknown' Default schema DBAVTEST;

@@ -20,7 +20,7 @@ returns table( colname varchar(65535), coltype int, coltypename varchar(65535))
 language java
 parameter style system defined java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
+external name 'applib.applibJar:org.eigenbase.applib.test.GetColumnTypesUdx.execute';
 
 select * from table(
   get_column_types(
@@ -45,7 +45,7 @@ returns table(param_name varchar(65535), param_value varchar(65535))
 language java
 parameter style system defined java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
+external name 'applib.applibJar:org.eigenbase.applib.cursor.PivotColumnsToRowsUdx.execute';
 
 create view farrago_params as
 select * from table(
