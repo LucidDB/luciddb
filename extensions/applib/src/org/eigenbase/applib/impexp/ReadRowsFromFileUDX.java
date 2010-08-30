@@ -47,6 +47,7 @@ public class ReadRowsFromFileUDX
     public static final String PREFIX_ONE = "file://";
     public static final String PREFIX_TWO = "classpath://";
     public static final String PREFIX_THREE = "jar:";
+    public static final String PREFIX_FOUR = "http://";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -66,6 +67,10 @@ public class ReadRowsFromFileUDX
             } else {
                 throw new Exception("Bad File Location! Please check!");
             }
+        } else if (url.trim().startsWith(PREFIX_FOUR)) {
+	   URL myURL = new URL(url);
+	   URLConnection uc = myURL.openConnection();
+           ret = uc.getInputStream(); 
         } else {
             throw new Exception(
                 "Please use [file://] or [classpath://] as a prefix to input url");
