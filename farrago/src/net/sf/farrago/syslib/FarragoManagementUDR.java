@@ -71,6 +71,158 @@ public abstract class FarragoManagementUDR
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.schemaName"
         };
 
+    // Category, subcategory, and units are not passed in for
+    // performance counters, therefore we use this list from the
+    // documentation on Eigenpedia as a temporary solution.
+    // Structure: {counterName: [category, subcategory, units]}
+    private final static Map<String, String[]> perf_counter_info =
+        new HashMap<String, String[]>();
+
+    static {
+        perf_counter_info.put(
+                "JvmMemoryUnused", new String[]{"JVM Memory", null, "bytes"});
+        perf_counter_info.put(
+                "JvmMemoryAllocationLimit",
+                new String[]{"JVM Memory", null, "bytes"});
+        perf_counter_info.put(
+                "JvmMemoryAllocated",
+                new String[]{"JVM Memory", null, "bytes"});
+        perf_counter_info.put(
+                "ExpectedConcurrentStatements",
+                new String[]{"Parameter Settings", null, null});
+        perf_counter_info.put(
+                "CacheReservePercentage",
+                new String[]{"Parameter Settings", null, null});
+        perf_counter_info.put(
+                "CachePagesAllocated",
+                new String[]{"Parameter Settings", null, "pages"});
+        perf_counter_info.put(
+                "CachePagesGoverned",
+                new String[]{"Parameter Settings", null, "pages"});
+        perf_counter_info.put(
+                "CachePagesAllocationLimit",
+                new String[]{"Parameter Settings", null, "pages"});
+        perf_counter_info.put(
+                "DatabaseCheckpoints", new String[]{"Execution", null, null});
+        perf_counter_info.put(
+                "DatabaseCheckpointsSinceInit",
+                new String[]{"Execution", null, null});
+        perf_counter_info.put(
+                "DatabasePagesAllocated",
+                new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "DatabasePagesOccupiedHighWaterSinceInit",
+                new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "DatabasePagesExtendedSinceInit",
+                new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "TempPagesAllocated", new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "TempPagesOccupiedHighWaterSinceInit",
+                new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "TempPagesExtendedSinceInit",
+                new String[]{"Storage", null, "pages"});
+        perf_counter_info.put(
+                "CachePagesReserved", new String[]{"Buffer Pool Statistics",
+                    "General Usage", "pages"});
+        perf_counter_info.put(
+                "CachePagesUnused", new String[]{"Buffer Pool Statistics",
+                    "General Usage", "pages"});
+        perf_counter_info.put(
+                "CacheDirtyPages", new String[]{"Buffer Pool Statistics",
+                    "General Usage", "pages"});
+        perf_counter_info.put(
+                "CacheRequests",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CacheRequestsSinceInit",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CacheHits",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CacheHitsSinceInit",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CacheVictimizations",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CacheVictimizationsSinceInit",
+                new String[]{"Buffer Pool Statistics", "General Usage", null});
+        perf_counter_info.put(
+                "CachePageIoRetries",
+                new String[]{"Buffer Pool Statistics",
+                    "General Usage", "pages"});
+        perf_counter_info.put(
+                "CachePageIoRetriesSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "General Usage", "pages"});
+        perf_counter_info.put(
+                "CachePagesRead",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagesReadSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagesPrefetched",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagesPrefetchedSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagePrefetchesRejected",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagePrefetchesRejectedSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Read-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagesWritten",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CachePagesWrittenSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheVictimizationWrites",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheVictimizationWritesSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheLazyWriteCalls",
+                new String[]{"Buffer Pool Statistics", "Write-Specific", null});
+        perf_counter_info.put(
+                "CacheLazyWriteCallsSinceInit",
+                new String[]{"Buffer Pool Statistics", "Write-Specific", null});
+        perf_counter_info.put(
+                "CacheLazyWrites", new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheLazyWritesSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheCheckpointWrites", new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "CacheCheckpointWritesSinceInit",
+                new String[]{"Buffer Pool Statistics",
+                    "Write-Specific", "pages"});
+        perf_counter_info.put(
+                "JvmNanoTime", new String[]{"Miscellaneous", null, "ns"});
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -428,6 +580,7 @@ public abstract class FarragoManagementUDR
         }
     }
 
+
     /**
      * Populates a table of performance counters.
      *
@@ -442,24 +595,32 @@ public abstract class FarragoManagementUDR
         // Read values from System and Runtime
         addSysInfo(
             resultInserter,
+            perf_counter_info.get("JvmMemoryUnused")[0],
+            perf_counter_info.get("JvmMemoryUnused")[1],
             JVM_SRC,
             "JvmMemoryUnused",
             Long.toString(runtime.freeMemory()),
             "bytes");
         addSysInfo(
             resultInserter,
+            perf_counter_info.get("JvmMemoryAllocationLimit")[0],
+            perf_counter_info.get("JvmMemoryAllocationLimit")[1],
             JVM_SRC,
             "JvmMemoryAllocationLimit",
             Long.toString(runtime.maxMemory()),
             "bytes");
         addSysInfo(
             resultInserter,
+            perf_counter_info.get("JvmMemoryAllocated")[0],
+            perf_counter_info.get("JvmMemoryAllocated")[1],
             JVM_SRC,
             "JvmMemoryAllocated",
             Long.toString(runtime.totalMemory()),
             "bytes");
         addSysInfo(
             resultInserter,
+            perf_counter_info.get("JvmNanoTime")[0],
+            perf_counter_info.get("JvmNanoTime")[1],
             JVM_SRC,
             "JvmNanoTime",
             Long.toString(System.nanoTime()),
@@ -469,12 +630,18 @@ public abstract class FarragoManagementUDR
         Map<String, String> perfCounters =
             NativeTrace.instance().getPerfCounters();
         for (Map.Entry<String, String> entry : perfCounters.entrySet()) {
+            String[] info = perf_counter_info.get(entry.getKey());
+            if (info == null)
+                info = new String[]{null, null, null};
             addSysInfo(
                 resultInserter,
+                info[0],
+                info[1],
                 "Fennel",
                 entry.getKey(),
                 entry.getValue(),
-                null);
+                info[2]
+            );
         }
     }
 
@@ -492,12 +659,16 @@ public abstract class FarragoManagementUDR
         // Read values from System and Runtime
         addSysInfo(
             resultInserter,
+            null,
+            null,
             JVM_SRC,
             "currentTimeMillis",
             Long.toString(System.currentTimeMillis()),
             "ns");
         addSysInfo(
             resultInserter,
+            null,
+            null,
             JVM_SRC,
             "availableProcessors",
             Integer.toString(runtime.availableProcessors()),
@@ -507,6 +678,8 @@ public abstract class FarragoManagementUDR
         for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
             addSysInfo(
                 resultInserter,
+                null,
+                null,
                 "System.getenv",
                 entry.getKey(),
                 entry.getValue(),
@@ -520,6 +693,8 @@ public abstract class FarragoManagementUDR
         {
             addSysInfo(
                 resultInserter,
+                null,
+                null,
                 "System.getProperties",
                 entry.getKey().toString(),
                 entry.getValue().toString(),
@@ -546,6 +721,8 @@ public abstract class FarragoManagementUDR
 
     private static void addSysInfo(
         PreparedStatement resultInserter,
+        String category,
+        String subcategory,
         String source,
         String property,
         String value,
@@ -553,6 +730,8 @@ public abstract class FarragoManagementUDR
         throws Exception
     {
         int i = 0;
+        resultInserter.setString(++i, category);
+        resultInserter.setString(++i, subcategory);
         resultInserter.setString(++i, source);
         resultInserter.setString(++i, property);
         resultInserter.setString(++i, units);
@@ -576,7 +755,10 @@ public abstract class FarragoManagementUDR
             String itemName = st.nextToken();
             String itemValue = st.nextToken();
             String itemUnits = st.nextToken();
-            addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
+            addSysInfo(
+                    resultInserter, null, null, src, itemName,
+                    itemValue, itemUnits
+            );
         }
     }
 
@@ -596,7 +778,10 @@ public abstract class FarragoManagementUDR
             String itemName = st.nextToken().trim();
             String itemValue = st.nextToken().trim();
             String itemUnits = null;
-            addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
+            addSysInfo(
+                    resultInserter, null, null, src, itemName,
+                    itemValue, itemUnits
+            );
         }
     }
 

@@ -86,6 +86,8 @@
 > 
 > create or replace function system_info()
 > returns table(
+>     category varchar(128),
+>     subcategory varchar(128),
 >     source_name varchar(128), 
 >     item_name varchar(1024), 
 >     item_units varchar(128),
@@ -98,6 +100,8 @@
 > 
 > create or replace function performance_counters()
 > returns table(
+>     counter_category varchar(128),
+>     counter_subcategory varchar(128),
 >     source_name varchar(128), 
 >     counter_name varchar(1024), 
 >     counter_units varchar(128),
