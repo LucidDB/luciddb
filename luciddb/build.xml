@@ -736,6 +736,41 @@ ${farrago.test.jvmargs}
           name="org/eigenbase/util14/ConnectStringParser.class"/>
       </fileset>
     </jar>
+    <!-- Build a minimal job that does not include commons logging -->
+    <jar jarfile="${luciddb.plugin.dir}/LucidDbClient-minimal.jar"
+      filesetmanifest="skip">
+      <zipgroupfileset dir="${vjdbc.dir}/lib">
+        <include name="vjdbc.jar"/>
+      </zipgroupfileset>
+      <fileset dir="${luciddb.dir}/license/client">
+        <include name="COPYING"/>
+      </fileset>
+      <fileset dir="${luciddb.dir}/classes">
+        <include name="FarragoRelease.properties"/>
+      </fileset>
+      <fileset dir="${farrago.classes.dir}">
+        <include
+          name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
+        <include
+          name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include
+          name="net/sf/farrago/release/*"/>
+        <include
+          name="org/eigenbase/util/property/*"/>
+        <include
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
   </target>
 
   <!-- copy applib plugin jar from extensions -->
