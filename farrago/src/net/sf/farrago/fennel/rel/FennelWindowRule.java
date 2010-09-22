@@ -268,6 +268,28 @@ public abstract class FennelWindowRule
                 cluster.getRexBuilder(),
                 false);
 
+        // Make sure the orderkey is among the input expressions from the child.
+        // Merged program creates intermediate rowtype below. OutputProgram is
+        // then built based on the intermediate row which also holds winAgg
+        // results. orderKey is resolved before intermediate rowtype is
+        // constructed and "orderKey ordinal" may point to wrong offset within
+        // intermediate row. dtbug #2209.
+        for (RexNode expr : aggProgram.getExprList()) {
+            if (expr instanceof RexOver) {
+                RexOver over = (RexOver) expr;
+                RexNode[] orderKeys = over.getWindow().orderKeys;
+                for (RexNode orderKey : orderKeys) {
+                    if (orderKey instanceof RexLocalRef
+                        && ((RexLocalRef)orderKey).getIndex()
+                            >= child.getRowType().getFieldCount())
+                    {
+                        // do not merge inCalc and winAggRel.
+                        return;
+                    }
+                }
+            }
+        }
+
         // The purpose of the input program is to provide the expressions
         // needed by all of the aggregate functions. Its outputs are (a) all
         // of the input fields, followed by (b) the input expressions for the
