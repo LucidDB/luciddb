@@ -106,17 +106,21 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
     PConstBuffer pInBufStart = inAccessor.getConsumptionStart();
     PConstBuffer pInBufEnd = inAccessor.getConsumptionEnd();
     uint nbytes = pInBufEnd - pInBufStart;
-    sendData(pInBufStart, nbytes);
-    if (nbytes > 0) {
-        inAccessor.consumeData(pInBufEnd);
-        return (lastResult = EXECRC_BUF_UNDERFLOW);
+    bool success = sendData(pInBufStart, nbytes);
+    if (success) {
+        if (nbytes > 0) {
+            inAccessor.consumeData(pInBufEnd);
+            return (lastResult = EXECRC_BUF_UNDERFLOW);
+        } else {
+            return (lastResult = EXECRC_EOS);
+        }
     } else {
-        return (lastResult = EXECRC_EOS);
+        return EXECRC_QUANTUM_EXPIRED;
     }
 }
 
 /// sends data to java peer
-void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
+bool JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 {
     JniEnvAutoRef pEnv;
 
@@ -125,10 +129,18 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
     jobject javaByteBuf = pEnv->CallObjectMethod(
         javaFennelPipeTupleIter, methFennelPipeTupleIter_getByteBuffer, size);
-    assert(javaByteBuf);
+    if (!javaByteBuf) {
+        // no free buffers available
+        FENNEL_TRACE(
+            TRACE_FINE, "FennelPipeTupleIter.getByteBuffer returned NULL. "
+            << "Free buffers not available.");
+        return false;
+    }
 
     // copy the data, allowing upstream XO to produce more output
-    stuffByteBuffer(javaByteBuf, src, size);
+    if (size > 0) {
+        stuffByteBuffer(javaByteBuf, src, size);
+    }
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
@@ -139,6 +151,7 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
         javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
         javaByteBuf, size);
     FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
+    return true;
 }
 
 void JavaSinkExecStream::stuffByteBuffer(
