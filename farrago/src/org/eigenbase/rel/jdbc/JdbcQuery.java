@@ -236,13 +236,7 @@ public class JdbcQuery
      */
     public static void register(RelOptPlanner planner)
     {
-        // FIXME jvs 29-Aug-2004
-
-        /*
-        planner.addRule(new TableAccessToQueryRule());
-         */
-        planner.addRule(new AddFilterToQueryRule());
-        planner.addRule(new AddProjectToQueryRule());
+        // nothing for now
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -276,6 +270,8 @@ public class JdbcQuery
         // This is all a horrible hack. Need a way to 'freeze' a DataSource
         // into a Java expression which can be 'thawed' into a DataSource
         // at run-time. We should use the OJConnectionRegistry somehow.
+        // This is all old Saffron stuff; Farrago uses its own
+        // mechanism which works just fine.
         assert dataSource instanceof JdbcDataSource; // hack
 
         // DriverManager.getConnection("jdbc...", "scott", "tiger");
