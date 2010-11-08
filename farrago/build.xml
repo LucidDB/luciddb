@@ -1553,7 +1553,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc/"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
       <doclet
@@ -1606,7 +1606,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc/"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
     </javadoc>
