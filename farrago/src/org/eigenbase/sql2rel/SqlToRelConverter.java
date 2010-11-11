@@ -62,7 +62,7 @@ public class SqlToRelConverter
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger sqlToRelTracer =
+    protected static final Logger sqlToRelTracer =
         EigenbaseTrace.getSqlToRelTracer();
 
     //~ Instance fields --------------------------------------------------------
