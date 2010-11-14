@@ -22,6 +22,7 @@
 // Test Calculator object directly by instantiating instruction objects,
 // creating programs, running them, and checking the register set values.
 */
+
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleData.h"
@@ -46,7 +47,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/test/unit_test_suite.hpp>
 #include <limits>
-#include <iostream.h>
+
 #include <math.h>
 using namespace std;
 using namespace fennel;

@@ -45,7 +45,6 @@
 #include <string>
 #include <boost/scoped_array.hpp>
 #include <limits>
-#include <iostream.h>
 
 using namespace std;
 using namespace fennel;
@@ -4397,9 +4396,9 @@ unitTestPointerCache()
         }
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
+        double d = outF * 3.3 + 1;
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF++].pData)))
-             - (outF * 3.3 + 1))
+            output[outF++].pData))) - d)
             > 0.000001)
         {
             fail("pointercache2", __LINE__);
@@ -4431,9 +4430,10 @@ unitTestPointerCache()
         }
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
+        double d = outF * 3.3 + 1;
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
             output[outF++].pData)))
-             - (outF * 3.3 + 1)) > 0.000001)
+             - d) > 0.000001)
         {
             fail("pointercache4", __LINE__);
         }
@@ -5157,7 +5157,7 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 
 #else
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     return 0;
 }
