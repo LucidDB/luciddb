@@ -599,12 +599,13 @@ ${farrago.test.jvmargs}
 
   <!-- Customization for javac task -->
   <presetdef name="farrago.javaCompile">
-    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"/>
+    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"
+      includeantruntime="no" />
   </presetdef>
 
   <!-- Customization for javac task for compiling client-side code -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" 
+    <javac debug="on" deprecation="on" includeantruntime="no"
       source="${farrago.client.javasrc.version}" 
       target="${farrago.client.javasrc.version}"/>
   </presetdef>
