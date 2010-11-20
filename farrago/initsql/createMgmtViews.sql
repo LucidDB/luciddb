@@ -1108,6 +1108,75 @@ no sql
 external name 
 'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
 
+-- returns a create statement for every item in a given schema
+create or replace function generate_ddl_for_schema(
+  schema_name varchar(128))
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSchema';
+
+-- returns a create statement for all items with element_name in a given schema
+create or replace function generate_ddl_for_object(
+  schema_name varchar(128),
+  element_name varchar(128))
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForObject';
+
+-- ddl dumps everything in current catalog
+create or replace function generate_ddl_for_catalog()
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForCatalog';
+
+-- ddl for tables and views
+create or replace function generate_ddl_for_table(
+  schema_name varchar(128),
+  table_name varchar(128))
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForTable';
+
+-- ddl for procedures and functions
+create or replace function generate_ddl_for_routine(
+  schema_name varchar(128),
+  routine_name varchar(128))
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForRoutine';
+
+-- ddl for jars
+create or replace function generate_ddl_for_jar(
+  schema_name varchar(128),
+  jar_name varchar(128))
+returns table(
+  statement varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForJar';
+
 -- variation of LucidDB session personality but with index only scans enabled
 create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin 
 library 'class org.luciddb.session.LucidDbIndexOnlySessionFactory' 

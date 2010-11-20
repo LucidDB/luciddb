@@ -121,6 +121,16 @@ public class FarragoDdlGenerator
         return modelView;
     }
 
+    /**
+     * Finds a list of elements and their dependencies for a given
+     * schema and catalog.
+     *
+     * @param list - List to which found elements are added.
+     * @param schemaName - Schema to limit list, null to add all schemas.
+     * @param includeNonSchemaElements - Will include every other type
+     * of direct-child object in the catalog.
+     * @param catalog - Catalog object to search.
+     */
     public void gatherElements(
         List<CwmModelElement> list,
         String schemaName,
@@ -131,7 +141,8 @@ public class FarragoDdlGenerator
         for (CwmModelElement element : catalog.getOwnedElement()) {
             if (element instanceof CwmSchema) {
                 CwmSchema schema = (CwmSchema) element;
-                if (schema.getName().equals(schemaName)) {
+                // Note: ignore schema name if null.
+                if (schemaName == null || schema.getName().equals(schemaName)) {
                     list.add(schema);
                     for (CwmModelElement element2 : schema.getOwnedElement()) {
                         list.add(element2);
@@ -226,6 +237,28 @@ public class FarragoDdlGenerator
         addDescription(sb, schema);
 
         stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
+        FemJar jar,
+        GeneratedDdlStmt stmt)
+    {
+      SqlBuilder sb = createSqlBuilder();
+      createHeader(sb, "JAR", stmt);
+
+      name(sb, jar.getNamespace(), jar.getName());
+      addDescription(sb, jar);
+
+      stmt.addStmt(sb.getSqlAndClear());
+      sb.append(NL);
+      sb.append("LIBRARY ");
+      sb.literal(jar.getUrl());
+      sb.append(NL);
+      sb.append("OPTIONS(");
+      sb.append(jar.getDeploymentState());
+      sb.append(")");
+
+      stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(

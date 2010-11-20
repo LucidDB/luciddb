@@ -134,3 +134,35 @@ call sys_boot.mgmt.flush_code_cache();
 
 -- verify that flush did not modify code cache size
 select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
+
+-- these should all pass
+
+select statement from table(sys_boot.mgmt.generate_ddl_for_catalog());
+
+create schema reznor;
+create table reznor.rhino (
+  a int primary key,
+  b int
+);
+create view reznor.r_view as
+  select a, b from reznor.rhino;
+create function reznor.eat(plumber varchar(32))
+returns varchar(20)
+contains sql
+return case
+  when plumber = 'Mario' then 'Luigi'
+  else 'Mario' end;
+
+select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'R_VIEW'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'not_exist'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
+
+drop schema reznor cascade;
