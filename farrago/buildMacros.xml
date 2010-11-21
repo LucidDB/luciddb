@@ -57,6 +57,10 @@ ${farrago.test.jvmargs}
   <!-- determine Farrago home based on location of this buildfile -->
   <dirname property="farrago.dir" file="${ant.file.farragoBuildMacros}"/>
 
+  <!-- import local property overrides; these take precedence over
+  later definitions in this file -->
+  <property file="${farrago.dir}/customBuild.properties"/>
+
   <!-- Alias for farrago.dir to match runtime properties convention -->
   <property name="FARRAGO_HOME" location="${farrago.dir}"/>
 
@@ -520,6 +524,7 @@ ${farrago.test.jvmargs}
         classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
+      <echo message="FOOOF:  ${assertions.jvmarg}"/>
       <bh
         dir="@{dir}"
         testfile="@{basedir}/@{testscript}"

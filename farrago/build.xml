@@ -51,10 +51,6 @@ ${farrago.test.jvmargs}
   <!-- import settings defined by initBuild.sh with highest precedence -->
   <property file="initBuild.properties"/>
 
-  <!-- import local property overrides; these take precedence over
-  later definitions in this file -->
-  <property file="customBuild.properties"/>
-
   <!-- Definitions for Farrago build properties and macros -->
   <import file="buildMacros.xml"/>
 
