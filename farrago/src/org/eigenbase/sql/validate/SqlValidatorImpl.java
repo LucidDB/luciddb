@@ -3202,9 +3202,17 @@ public class SqlValidatorImpl
         // Derive the type of each GROUP BY item. We don't need the type, but
         // it resolves functions, and that is necessary for deducing
         // monotonicity.
+        final SqlValidatorScope selectScope = getSelectScope(select);
+        AggregatingSelectScope aggregatingScope = null;
+        if (selectScope instanceof AggregatingSelectScope) {
+            aggregatingScope = (AggregatingSelectScope) selectScope;
+        }
         for (SqlNode groupItem : groupList) {
             final RelDataType type = deriveType(groupScope, groupItem);
             setValidatedNodeTypeImpl(groupItem, type);
+            if (aggregatingScope != null) {
+                aggregatingScope.addGroupExpr(groupItem);
+            }
         }
 
         SqlNode agg = aggFinder.findAgg(groupList);

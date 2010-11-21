@@ -2,6 +2,7 @@
 -- Test aggregate queries
 
 set schema 'sales';
+set path 'sales';
 
 --------------------------
 -- Test Sort Aggregates --
@@ -670,5 +671,25 @@ select (select deptno from depts2) a from depts order by a;
 select (select depts.deptno from depts2) a from depts order by a;
 
 drop table depts2;
+
+-- LDB-231. UDF with SPECIFIC is not recognized as structurally equivalent, so 
+-- gives "Expression '...' is not being grouped" error.
+create function int_to_hex_string(i int)
+returns varchar(12)
+language java
+specific java_lang_integer_to_hex_string
+no sql
+external name 'class java.lang.Integer.toHexString';
+
+select int_to_hex_string(deptno)
+from emps
+group by int_to_hex_string(deptno)
+order by 1;
+
+select distinct int_to_hex_string(deptno), deptno
+from emps
+order by deptno;
+
+drop function java_lang_integer_to_hex_string;
 
 -- End agg.sql
