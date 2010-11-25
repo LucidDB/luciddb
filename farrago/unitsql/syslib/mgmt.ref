@@ -283,6 +283,13 @@
 >     file_extension 'csv',
 >     with_header 'yes', 
 >     lenient 'no');
+> create server test_server2
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'testgen/mgmt_files/',
+>     file_extension 'csv',
+>     with_header 'yes', 
+>     lenient 'no');
 > 
 > call sys_boot.mgmt.flush_code_cache();
 > 
@@ -321,45 +328,337 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 | 42000              |
 +--------------------+
 > 
-> -- these should all pass
+> -- test generate ddl functions, should all pass
 > 
+> -- test local catalog
 > select statement from table(sys_boot.mgmt.generate_ddl_for_catalog());
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CREATE OR REPLACE FOREIGN DATA WRAPPER "HSQLDB_WRAPPER" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-LANGUAGE JAVA
-OPTIONS (
-  "BROWSE_CONNECT_DESCRIPTION" 'Hypersonic',
-  "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',
-  "URL" 'jdbc:hsqldb:path/to/data'
-);
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class org.luciddb.lcs.LcsDataWrapper'
-LANGUAGE JAVA;
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
-LANGUAGE JAVA;
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
-LANGUAGE JAVA;
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_JDBC" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-LANGUAGE JAVA;
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MDR" LIBRARY 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-LANGUAGE JAVA;
-
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK" LIBRARY 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapp |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "HSQLDB_WRAPPER" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                                                                                                                   |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "BROWSE_CONNECT_DESCRIPTION" 'Hypersonic',                                                                                                                                                                                  |
+|   "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',                                                                                                                                                                                     |
+|   "URL" 'jdbc:hsqldb:path/to/data'                                                                                                                                                                                            |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class org.luciddb.lcs.LcsDataWrapper'                                                                                                                      |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'                                                                                               |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'                                                                                                               |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_JDBC" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                                                                                                                         |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MDR" LIBRARY 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'                                                                                                        |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK" LIBRARY 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'                                                                                                       |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK_FOREIGN" LIBRARY 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'                                                                                             |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SCHEMA "INFORMATION_SCHEMA";                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SCHEMA "SALES";                                                                                                                                                                                             |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SCHEMA "SQLJ";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE ROLE "PUBLIC";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_COLUMN_STORE_DATA_SERVER"                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_COLUMN_STORE";                                                                                                                                                                                      |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "TEST_SERVER"                                                                                                                                                                                        |
+| FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER"                                                                                                                                                                                       |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DIRECTORY" 'testgen/mgmt_files/',                                                                                                                                                                                          |
+|   "FILE_EXTENSION" 'csv',                                                                                                                                                                                                     |
+|   "LENIENT" 'no',                                                                                                                                                                                                             |
+|   "WITH_HEADER" 'yes'                                                                                                                                                                                                         |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "TEST_SERVER2"                                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER"                                                                                                                                                                                       |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DIRECTORY" 'testgen/mgmt_files/',                                                                                                                                                                                          |
+|   "FILE_EXTENSION" 'csv',                                                                                                                                                                                                     |
+|   "LENIENT" 'no',                                                                                                                                                                                                             |
+|   "WITH_HEADER" 'yes'                                                                                                                                                                                                         |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_FTRS_DATA_SERVER"                                                                                                                                                                               |
+| FOREIGN DATA WRAPPER "SYS_FTRS";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "HSQLDB_DEMO"                                                                                                                                                                                        |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',                                                                                                                                                                                     |
+|   "TABLE_TYPES" 'TABLE,VIEW',                                                                                                                                                                                                 |
+|   "URL" 'jdbc:hsqldb:testcases/hsqldb/scott',                                                                                                                                                                                 |
+|   "USER_NAME" 'SA'                                                                                                                                                                                                            |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_CWM"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "JNDI_NAME" 'java:ENKI_DATASOURCE',                                                                                                                                                                                         |
+|   "SCHEMA_NAME" 'DUMMY',                                                                                                                                                                                                      |
+|   "TABLE_PREFIX_MAPPING" '%.FEM_VT_Behavioral_%:Behavioral.%;%.FEM_VT_Core_%:Core.%;%.FEM_VT_DataTypes_%:DataTypes.%;%.FEM_VT_Instance_%:Instance.%;%.FEM_VT_KeysIndexes_%:KeysIndexes.%;%.FEM_VT_Relational_%:Relational.%'  |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_FEM"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "JNDI_NAME" 'java:ENKI_DATASOURCE',                                                                                                                                                                                         |
+|   "SCHEMA_NAME" 'DUMMY',                                                                                                                                                                                                      |
+|   "TABLE_PREFIX_MAPPING" '%.FEM_VT_Config_%:Config.%;%.FEM_VT_Med_%:MED.%;%.FEM_VT_Security_%:Security.%;%.FEM_VT_Sql2003_%:SQL2003.%'                                                                                        |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOF"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_MDR"                                                                                                                                                                                                |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "ROOT_PACKAGE_NAME" 'MOF',                                                                                                                                                                                                  |
+|   "SCHEMA_NAME" 'MODEL'                                                                                                                                                                                                       |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOCK_DATA_SERVER"                                                                                                                                                                               |
+| FOREIGN DATA WRAPPER "SYS_MOCK";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOCK_FOREIGN_DATA_SERVER"                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_MOCK_FOREIGN";                                                                                                                                                                                      |
+|                                                                                                                                                                                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CREATE OR REPLACE PROCEDURE "SQLJ"."ALTER_JAVA_PATH"(                                                                                                                                                                         |
+|   IN "JAR" VARCHAR(2000),                                                                                                                                                                                                     |
+|   IN "PATH" VARCHAR(2000))                                                                                                                                                                                                    |
+| SPECIFIC "SQLJ"."ALTER_JAVA_PATH"                                                                                                                                                                                             |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| MODIFIES SQL DATA                                                                                                                                                                                                             |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| EXTERNAL NAME 'class net.sf.farrago.ddl.DdlSqlj.alter_java_path';                                                                                                                                                             |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FUNCTION "SALES"."DECRYPT_PUBLIC_KEY"(                                                                                                                                                                      |
+|   "K" VARBINARY(50))                                                                                                                                                                                                          |
+| RETURNS VARCHAR(25)                                                                                                                                                                                                           |
+| SPECIFIC "SALES"."DECRYPT_PUBLIC_KEY"                                                                                                                                                                                         |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| NO SQL                                                                                                                                                                                                                        |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| EXTERNAL NAME 'class net.sf.farrago.test.FarragoTestUDR.decryptPublicKey';                                                                                                                                                    |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE PROCEDURE "SQLJ"."INSTALL_JAR"(                                                                                                                                                                             |
+|   IN "URL" VARCHAR(2000),                                                                                                                                                                                                     |
+|   IN "JAR" VARCHAR(2000),                                                                                                                                                                                                     |
+|   IN "DEPLOY" INTEGER)                                                                                                                                                                                                        |
+| SPECIFIC "SQLJ"."INSTALL_JAR"                                                                                                                                                                                                 |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| MODIFIES SQL DATA                                                                                                                                                                                                             |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| EXTERNAL NAME 'class net.sf.farrago.ddl.DdlSqlj.install_jar';                                                                                                                                                                 |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FUNCTION "SALES"."MAYBE_FEMALE"(                                                                                                                                                                            |
+|   "GENDER" CHAR(1))                                                                                                                                                                                                           |
+| RETURNS BOOLEAN                                                                                                                                                                                                               |
+| SPECIFIC "SALES"."MAYBE_FEMALE"                                                                                                                                                                                               |
+| LANGUAGE SQL                                                                                                                                                                                                                  |
+| CONTAINS SQL                                                                                                                                                                                                                  |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| RETURN NOT (("GENDER" = 'F') IS FALSE);                                                                                                                                                                                       |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE PROCEDURE "SQLJ"."REMOVE_JAR"(                                                                                                                                                                              |
+|   IN "JAR" VARCHAR(2000),                                                                                                                                                                                                     |
+|   IN "UNDEPLOY" INTEGER)                                                                                                                                                                                                      |
+| SPECIFIC "SQLJ"."REMOVE_JAR"                                                                                                                                                                                                  |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| MODIFIES SQL DATA                                                                                                                                                                                                             |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| EXTERNAL NAME 'class net.sf.farrago.ddl.DdlSqlj.remove_jar';                                                                                                                                                                  |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE PROCEDURE "SQLJ"."REPLACE_JAR"(                                                                                                                                                                             |
+|   IN "URL" VARCHAR(2000),                                                                                                                                                                                                     |
+|   IN "JAR" VARCHAR(2000))                                                                                                                                                                                                     |
+| SPECIFIC "SQLJ"."REPLACE_JAR"                                                                                                                                                                                                 |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| MODIFIES SQL DATA                                                                                                                                                                                                             |
+| NOT DETERMINISTIC                                                                                                                                                                                                             |
+| EXTERNAL NAME 'class net.sf.farrago.ddl.DdlSqlj.replace_jar';                                                                                                                                                                 |
+|                                                                                                                                                                                                                               |
+| CREATE TABLE "SALES"."DEPTS" (                                                                                                                                                                                                |
+|    "DEPTNO" INTEGER NOT NULL,                                                                                                                                                                                                 |
+|    "NAME" VARCHAR(128) NOT NULL,                                                                                                                                                                                              |
+|    PRIMARY KEY ("DEPTNO")                                                                                                                                                                                                     |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE TABLE "SALES"."EMPS" (                                                                                                                                                                                                 |
+|    "EMPNO" INTEGER NOT NULL,                                                                                                                                                                                                  |
+|    "NAME" VARCHAR(128) NOT NULL,                                                                                                                                                                                              |
+|    "DEPTNO" INTEGER NOT NULL,                                                                                                                                                                                                 |
+|    "GENDER" CHAR(1) DEFAULT 'M',                                                                                                                                                                                              |
+|    "CITY" VARCHAR(128),                                                                                                                                                                                                       |
+|    "EMPID" INTEGER NOT NULL,                                                                                                                                                                                                  |
+|    "AGE" INTEGER,                                                                                                                                                                                                             |
+|    "PUBLIC_KEY" VARBINARY(50),                                                                                                                                                                                                |
+|    "SLACKER" BOOLEAN,                                                                                                                                                                                                         |
+|    "MANAGER" BOOLEAN NOT NULL,                                                                                                                                                                                                |
+|    PRIMARY KEY ("EMPNO","DEPTNO")                                                                                                                                                                                             |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE TABLE "SALES"."TEMPS" (                                                                                                                                                                                                |
+|    "EMPNO" INTEGER NOT NULL,                                                                                                                                                                                                  |
+|    "NAME" VARCHAR(128) NOT NULL,                                                                                                                                                                                              |
+|    "DEPTNO" INTEGER NOT NULL,                                                                                                                                                                                                 |
+|    "GENDER" CHAR(1),                                                                                                                                                                                                          |
+|    "CITY" VARCHAR(128),                                                                                                                                                                                                       |
+|    "EMPID" INTEGER DEFAULT 999 NOT NULL,                                                                                                                                                                                      |
+|    "AGE" INTEGER,                                                                                                                                                                                                             |
+|    "PUBLIC_KEY" VARBINARY(50),                                                                                                                                                                                                |
+|    "SLACKER" BOOLEAN,                                                                                                                                                                                                         |
+|    "MANAGER" BOOLEAN NOT NULL,                                                                                                                                                                                                |
+|    PRIMARY KEY ("EMPNO","DEPTNO")                                                                                                                                                                                             |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE INDEX "EMPS_UX" ON "SALES"."EMPS" ("NAME");                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE VIEW "SALES"."EMPSVIEW" AS                                                                                                                                                                                  |
+| SELECT "EMPS"."EMPNO", "EMPS"."NAME"                                                                                                                                                                                          |
+| FROM "LOCALDB"."SALES"."EMPS" AS "EMPS";                                                                                                                                                                                      |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE VIEW "SALES"."JOINVIEW" AS                                                                                                                                                                                  |
+| SELECT "DEPTS"."NAME" AS "DNAME", "EMPS"."NAME" AS "ENAME"                                                                                                                                                                    |
+| FROM "LOCALDB"."SALES"."EMPS" AS "EMPS"                                                                                                                                                                                       |
+| INNER JOIN "LOCALDB"."SALES"."DEPTS" AS "DEPTS" ON "EMPS"."DEPTNO" = "DEPTS"."DEPTNO";                                                                                                                                        |
+|                                                                                                                                                                                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CREATE OR REPLACE VIEW "SALES"."TEMPSVIEW" AS                                                                                                                                                                                 |
+| SELECT "TEMPS"."EMPNO", "TEMPS"."NAME"                                                                                                                                                                                        |
+| FROM "LOCALDB"."SALES"."TEMPS" AS "TEMPS";                                                                                                                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> -- test sys_fem catalog
+> select statement from table(sys_boot.mgmt.generate_ddl_for_catalog('SYS_FEM'));
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "HSQLDB_WRAPPER" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                                                                                                                   |
+| LANGUAGE JAVA                                                                                                                                                                                                                 |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "BROWSE_CONNECT_DESCRIPTION" 'Hypersonic',                                                                                                                                                                                  |
+|   "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',                                                                                                                                                                                     |
+|   "URL" 'jdbc:hsqldb:path/to/data'                                                                                                                                                                                            |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class org.luciddb.lcs.LcsDataWrapper'                                                                                                                      |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'                                                                                               |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'                                                                                                               |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_JDBC" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                                                                                                                         |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MDR" LIBRARY 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'                                                                                                        |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK" LIBRARY 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'                                                                                                       |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK_FOREIGN" LIBRARY 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'                                                                                             |
+| LANGUAGE JAVA;                                                                                                                                                                                                                |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE ROLE "PUBLIC";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_COLUMN_STORE_DATA_SERVER"                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_COLUMN_STORE";                                                                                                                                                                                      |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "TEST_SERVER"                                                                                                                                                                                        |
+| FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER"                                                                                                                                                                                       |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DIRECTORY" 'testgen/mgmt_files/',                                                                                                                                                                                          |
+|   "FILE_EXTENSION" 'csv',                                                                                                                                                                                                     |
+|   "LENIENT" 'no',                                                                                                                                                                                                             |
+|   "WITH_HEADER" 'yes'                                                                                                                                                                                                         |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "TEST_SERVER2"                                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER"                                                                                                                                                                                       |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DIRECTORY" 'testgen/mgmt_files/',                                                                                                                                                                                          |
+|   "FILE_EXTENSION" 'csv',                                                                                                                                                                                                     |
+|   "LENIENT" 'no',                                                                                                                                                                                                             |
+|   "WITH_HEADER" 'yes'                                                                                                                                                                                                         |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_FTRS_DATA_SERVER"                                                                                                                                                                               |
+| FOREIGN DATA WRAPPER "SYS_FTRS";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "HSQLDB_DEMO"                                                                                                                                                                                        |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',                                                                                                                                                                                     |
+|   "TABLE_TYPES" 'TABLE,VIEW',                                                                                                                                                                                                 |
+|   "URL" 'jdbc:hsqldb:testcases/hsqldb/scott',                                                                                                                                                                                 |
+|   "USER_NAME" 'SA'                                                                                                                                                                                                            |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_CWM"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "JNDI_NAME" 'java:ENKI_DATASOURCE',                                                                                                                                                                                         |
+|   "SCHEMA_NAME" 'DUMMY',                                                                                                                                                                                                      |
+|   "TABLE_PREFIX_MAPPING" '%.FEM_VT_Behavioral_%:Behavioral.%;%.FEM_VT_Core_%:Core.%;%.FEM_VT_DataTypes_%:DataTypes.%;%.FEM_VT_Instance_%:Instance.%;%.FEM_VT_KeysIndexes_%:KeysIndexes.%;%.FEM_VT_Relational_%:Relational.%'  |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_FEM"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_JDBC"                                                                                                                                                                                               |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "JNDI_NAME" 'java:ENKI_DATASOURCE',                                                                                                                                                                                         |
+|   "SCHEMA_NAME" 'DUMMY',                                                                                                                                                                                                      |
+|   "TABLE_PREFIX_MAPPING" '%.FEM_VT_Config_%:Config.%;%.FEM_VT_Med_%:MED.%;%.FEM_VT_Security_%:Security.%;%.FEM_VT_Sql2003_%:SQL2003.%'                                                                                        |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOF"                                                                                                                                                                                            |
+| FOREIGN DATA WRAPPER "SYS_MDR"                                                                                                                                                                                                |
+| OPTIONS (                                                                                                                                                                                                                     |
+|   "ROOT_PACKAGE_NAME" 'MOF',                                                                                                                                                                                                  |
+|   "SCHEMA_NAME" 'MODEL'                                                                                                                                                                                                       |
+| );                                                                                                                                                                                                                            |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOCK_DATA_SERVER"                                                                                                                                                                               |
+| FOREIGN DATA WRAPPER "SYS_MOCK";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE SERVER "SYS_MOCK_FOREIGN_DATA_SERVER"                                                                                                                                                                       |
+| FOREIGN DATA WRAPPER "SYS_MOCK_FOREIGN";                                                                                                                                                                                      |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> -- should fail since it doesn't exist
+> select statement from table(sys_boot.mgmt.generate_ddl_for_catalog(
+>     '02FAC378-F888-11DF-B152-E56DDFD72085'));
+Error: java.lang.AssertionError: Specified catalog does not exist. (state=,code=0)
 > 
+> -- test schema, table, view, functions, procedures, jars
+> -- also runs catalog-specific functions on sys_fem, which should all be empty.
 > create schema reznor;
+> 
 > create table reznor.rhino (
 >   a int primary key,
 >   b int
 > );
+> 
 > create view reznor.r_view as
 >   select a, b from reznor.rhino;
+> 
 > create function reznor.eat(plumber varchar(32))
 > returns varchar(20)
 > contains sql
@@ -367,70 +666,87 @@ CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_MOCK" LIBRARY 'class net.sf.farrago.
 >   when plumber = 'Mario' then 'Luigi'
 >   else 'Mario' end;
 > 
+> create jar reznor.rez_jar
+> library 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+> options(0);
+> 
+> create procedure reznor.r_kill(in id bigint)
+>   language java
+>   parameter style java
+>   no sql
+>   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+> 
 > select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                                                                                                                                                  STATEMENT                                                                                                                                                                                                                                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CREATE OR REPLACE SCHEMA "REZNOR";
-
-CREATE TABLE "REZNOR"."RHINO" (
-   "A" INTEGER NOT NULL,
-   "B" INTEGER,
-   PRIMARY KEY ("A")
-);
-
-CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(
-  "PLUMBER" VARCHAR(32))
-RETURNS VARCHAR(20)
-SPECIFIC "REZNOR"."EAT"
-LANGUAGE SQL
-CONTAINS SQL
-NOT DETERMINISTIC
-RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;
-
-SET SCHEMA '"REZNOR"';
-CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS
-select a, b from reznor.rhino;
-
-  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------+
+|                                STATEMENT                                 |
++--------------------------------------------------------------------------+
+| CREATE OR REPLACE SCHEMA "REZNOR";                                       |
+|                                                                          |
+| CREATE TABLE "REZNOR"."RHINO" (                                          |
+|    "A" INTEGER NOT NULL,                                                 |
+|    "B" INTEGER,                                                          |
+|    PRIMARY KEY ("A")                                                     |
+| );                                                                       |
+|                                                                          |
+| CREATE OR REPLACE JAR "REZNOR"."REZ_JAR"                                 |
+| LIBRARY 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                 |
+| OPTIONS(0);                                                              |
+|                                                                          |
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                               |
+|   "PLUMBER" VARCHAR(32))                                                 |
+| RETURNS VARCHAR(20)                                                      |
+| SPECIFIC "REZNOR"."EAT"                                                  |
+| LANGUAGE SQL                                                             |
+| CONTAINS SQL                                                             |
+| NOT DETERMINISTIC                                                        |
+| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;      |
+|                                                                          |
+| CREATE OR REPLACE PROCEDURE "REZNOR"."R_KILL"(                           |
+|   IN "ID" BIGINT)                                                        |
+| SPECIFIC "REZNOR"."R_KILL"                                               |
+| LANGUAGE JAVA                                                            |
+| NO SQL                                                                   |
+| NOT DETERMINISTIC                                                        |
+| EXTERNAL NAME 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';  |
+|                                                                          |
+| CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS                              |
+| SELECT "RHINO"."A", "RHINO"."B"                                          |
+| FROM "LOCALDB"."REZNOR"."RHINO" AS "RHINO";                              |
++--------------------------------------------------------------------------+
+> select statement from table(sys_boot.mgmt.generate_ddl_for_schema(
+>     'SYS_FEM', 'REZNOR'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
-+-----------------------------------------------------------------------------------------------------+
-|                                              STATEMENT                                              |
-+-----------------------------------------------------------------------------------------------------+
-| CREATE TABLE "REZNOR"."RHINO" (
-   "A" INTEGER NOT NULL,
-   "B" INTEGER,
-   PRIMARY KEY ("A")
-);
-
-  |
-+-----------------------------------------------------------------------------------------------------+
++----------------------------------+
+|            STATEMENT             |
++----------------------------------+
+| CREATE TABLE "REZNOR"."RHINO" (  |
+|    "A" INTEGER NOT NULL,         |
+|    "B" INTEGER,                  |
+|    PRIMARY KEY ("A")             |
+| );                               |
++----------------------------------+
 > select statement from
->   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
-+-----------------------------------------------------------------------------------------------------+
-|                                              STATEMENT                                              |
-+-----------------------------------------------------------------------------------------------------+
-| CREATE TABLE "REZNOR"."RHINO" (
-   "A" INTEGER NOT NULL,
-   "B" INTEGER,
-   PRIMARY KEY ("A")
-);
-
-  |
-+-----------------------------------------------------------------------------------------------------+
+>   table(sys_boot.mgmt.generate_ddl_for_table('SYS_FEM', 'REZNOR', 'RHINO'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'R_VIEW'));
-+------------------------------------------------------------------------------------------------------+
-|                                              STATEMENT                                               |
-+------------------------------------------------------------------------------------------------------+
-| SET SCHEMA '"REZNOR"';
-CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS
-select a, b from reznor.rhino;
-
-  |
-+------------------------------------------------------------------------------------------------------+
++----------------------------------------------+
+|                  STATEMENT                   |
++----------------------------------------------+
+| CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS  |
+| SELECT "RHINO"."A", "RHINO"."B"              |
+| FROM "LOCALDB"."REZNOR"."RHINO" AS "RHINO";  |
++----------------------------------------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'not_exist'));
 +------------+
@@ -440,21 +756,217 @@ select a, b from reznor.rhino;
 +------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                             STATEMENT                                                                                                              |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(
-  "PLUMBER" VARCHAR(32))
-RETURNS VARCHAR(20)
-SPECIFIC "REZNOR"."EAT"
-LANGUAGE SQL
-CONTAINS SQL
-NOT DETERMINISTIC
-RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;
-
-  |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------+
+|                              STATEMENT                               |
++----------------------------------------------------------------------+
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                           |
+|   "PLUMBER" VARCHAR(32))                                             |
+| RETURNS VARCHAR(20)                                                  |
+| SPECIFIC "REZNOR"."EAT"                                              |
+| LANGUAGE SQL                                                         |
+| CONTAINS SQL                                                         |
+| NOT DETERMINISTIC                                                    |
+| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;  |
++----------------------------------------------------------------------+
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_routine('SYS_FEM', 'REZNOR', 'EAT'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'R_KILL'));
++--------------------------------------------------------------------------+
+|                                STATEMENT                                 |
++--------------------------------------------------------------------------+
+| CREATE OR REPLACE PROCEDURE "REZNOR"."R_KILL"(                           |
+|   IN "ID" BIGINT)                                                        |
+| SPECIFIC "REZNOR"."R_KILL"                                               |
+| LANGUAGE JAVA                                                            |
+| NO SQL                                                                   |
+| NOT DETERMINISTIC                                                        |
+| EXTERNAL NAME 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';  |
++--------------------------------------------------------------------------+
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_jar('REZNOR', 'REZ_JAR'));
++-----------------------------------------------------------+
+|                         STATEMENT                         |
++-----------------------------------------------------------+
+| CREATE OR REPLACE JAR "REZNOR"."REZ_JAR"                  |
+| LIBRARY 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'  |
+| OPTIONS(0);                                               |
++-----------------------------------------------------------+
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_jar('SYS_FEM', 'REZNOR', 'REZ_JAR'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
 > 
+> -- UNIQUE constraints need to be added
+> create table reznor.rezzy (a int primary key, b int unique);
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY'));
++----------------------------------+
+|            STATEMENT             |
++----------------------------------+
+| CREATE TABLE "REZNOR"."REZZY" (  |
+|    "A" INTEGER NOT NULL,         |
+|    "B" INTEGER,                  |
+|    PRIMARY KEY ("A")             |
+| );                               |
++----------------------------------+
+> 
+> -- test overloaded routine
+> create function reznor.eat(xy varchar(32), uv varchar(32))
+> returns varchar(20)
+> contains sql
+> specific eat2
+> return xy;
+> 
+> -- should show both
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
++----------------------------------------------------------------------+
+|                              STATEMENT                               |
++----------------------------------------------------------------------+
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                           |
+|   "PLUMBER" VARCHAR(32))                                             |
+| RETURNS VARCHAR(20)                                                  |
+| SPECIFIC "REZNOR"."EAT"                                              |
+| LANGUAGE SQL                                                         |
+| CONTAINS SQL                                                         |
+| NOT DETERMINISTIC                                                    |
+| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;  |
+|                                                                      |
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT2"(                          |
+|   "XY" VARCHAR(32),                                                  |
+|   "UV" VARCHAR(32))                                                  |
+| RETURNS VARCHAR(20)                                                  |
+| SPECIFIC "REZNOR"."EAT2"                                             |
+| LANGUAGE SQL                                                         |
+| CONTAINS SQL                                                         |
+| NOT DETERMINISTIC                                                    |
+| RETURN "XY";                                                         |
++----------------------------------------------------------------------+
+> -- should show just second one
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_specific_routine('REZNOR', 'EAT2'));
++----------------------------------------------+
+|                  STATEMENT                   |
++----------------------------------------------+
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT2"(  |
+|   "XY" VARCHAR(32),                          |
+|   "UV" VARCHAR(32))                          |
+| RETURNS VARCHAR(20)                          |
+| SPECIFIC "REZNOR"."EAT2"                     |
+| LANGUAGE SQL                                 |
+| CONTAINS SQL                                 |
+| NOT DETERMINISTIC                            |
+| RETURN "XY";                                 |
++----------------------------------------------+
+> 
+> -- test index
+> create index rhino_idx on reznor.rhino(a);
+> select statement from table(sys_boot.mgmt.generate_ddl_for_index(
+>     'REZNOR', 'RHINO_IDX'));
++------------------------------------------------------+
+|                      STATEMENT                       |
++------------------------------------------------------+
+| CREATE INDEX "RHINO_IDX" ON "REZNOR"."RHINO" ("A");  |
++------------------------------------------------------+
+> select statement from table(sys_boot.mgmt.generate_ddl_for_index(
+>     'SYS_FEM', 'REZNOR', 'RHINO_IDX'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
+> drop index reznor.rhino_idx;
 > drop schema reznor cascade;
+> 
+> -- test server created earlier
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_server('TEST_SERVER2'));
++------------------------------------------+
+|                STATEMENT                 |
++------------------------------------------+
+| CREATE OR REPLACE SERVER "TEST_SERVER2"  |
+| FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER"  |
+| OPTIONS (                                |
+|   "DIRECTORY" 'testgen/mgmt_files/',     |
+|   "FILE_EXTENSION" 'csv',                |
+|   "LENIENT" 'no',                        |
+|   "WITH_HEADER" 'yes'                    |
+| );                                       |
++------------------------------------------+
+> drop server test_server2;
+> 
+> -- test wrapper
+> create foreign data wrapper hsqldb_wrapper2
+> library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+> language java
+> options(
+>     browse_connect_description 'Hypersonic',
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:path/to/data'
+> );
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_wrapper('HSQLDB_WRAPPER2'));
++---------------------------------------------------------------------------------------------------------------+
+|                                                   STATEMENT                                                   |
++---------------------------------------------------------------------------------------------------------------+
+| CREATE OR REPLACE FOREIGN DATA WRAPPER "HSQLDB_WRAPPER2" LIBRARY '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'  |
+| LANGUAGE JAVA                                                                                                 |
+| OPTIONS (                                                                                                     |
+|   "BROWSE_CONNECT_DESCRIPTION" 'Hypersonic',                                                                  |
+|   "DRIVER_CLASS" 'org.hsqldb.jdbcDriver',                                                                     |
+|   "URL" 'jdbc:hsqldb:path/to/data'                                                                            |
+| );                                                                                                            |
++---------------------------------------------------------------------------------------------------------------+
+> drop foreign data wrapper hsqldb_wrapper2;
+> 
+> -- test user
+> create user peachy identified by 'toadstool';
+> select statement from table(sys_boot.mgmt.generate_ddl_for_user('PEACHY'));
++------------+
+| STATEMENT  |
++------------+
+|            |
++------------+
+> 
+> -- test role
+> create role xyz with admin peachy;
+> select statement from table(sys_boot.mgmt.generate_ddl_for_role('XYZ'));
++--------------------------------+
+|           STATEMENT            |
++--------------------------------+
+| CREATE OR REPLACE ROLE "XYZ";  |
++--------------------------------+
+> drop role xyz;
+> drop user peachy;
+> 
+> -- test label: (can only be created and dropped in the LucidDB personality)
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> create label alabel description 'some label';
+> create label alabel2 from label alabel description 'child label';
+> select statement from table(sys_boot.mgmt.generate_ddl_for_label('ALABEL'));
++-----------------------------------+
+|             STATEMENT             |
++-----------------------------------+
+| CREATE OR REPLACE LABEL "ALABEL"  |
+| DESCRIPTION 'some label';         |
++-----------------------------------+
+> select statement from table(sys_boot.mgmt.generate_ddl_for_label('ALABEL2'));
++--------------------------------------------------------+
+|                       STATEMENT                        |
++--------------------------------------------------------+
+| CREATE OR REPLACE LABEL "ALABEL2" FROM LABEL "ALABEL"  |
+| DESCRIPTION 'child label';                             |
++--------------------------------------------------------+
+> drop label alabel cascade;
+> 
 > 
 > !quit

@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.jmi.*;
@@ -60,6 +61,7 @@ public class FarragoDdlGenerator
     //~ Instance fields --------------------------------------------------------
 
     protected final JmiModelView modelView;
+    protected boolean uglyViews;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -83,6 +85,18 @@ public class FarragoDdlGenerator
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Sets whether we output the user-defined SQL for VIEWS, which is
+     * prettier but may be incorrect, or if we output the correct (but ugly)
+     * system-expanded rewrite of the view definition. Default is false.
+     *
+     * @param uglyViews whether to make VIEW SQL ugly
+     */
+    public void setUglyViews(boolean uglyViews)
+    {
+        this.uglyViews = uglyViews;
+    }
 
     private RefClass findRefClass(Class<? extends RefObject> clazz)
     {
@@ -166,8 +180,14 @@ public class FarragoDdlGenerator
         list.addAll(allOfClass(CwmOperation.class));
 
         if (includeNonSchemaElements) {
+            // Note these are independent of catalog.
             list.addAll(allOfType(FemDataServer.class));
             list.addAll(allOfType(FemDataWrapper.class));
+            // TODO: ks 25-Nov-2010: create() and drop() methods for user.
+            //list.addAll(allOfType(FemUser.class));
+            // TODO: ks 25-Nov-2010: extend create for Role to include admin.
+            list.addAll(allOfType(FemRole.class));
+            list.addAll(allOfType(FemLabel.class));
         }
     }
 
@@ -209,20 +229,25 @@ public class FarragoDdlGenerator
         // Assume that the view was created in the context of its schema. If
         // that was not the case, we would have no way to detect it. We'd need
         // implement a closure mechanism to deal with SET SCHEMA and SET PATH.
-        if (generateSetSchema(stmt, view.getNamespace().getName(), false)) {
+        if (!uglyViews
+              && generateSetSchema(stmt, view.getNamespace().getName(), false))
+        {
             stmt.addStmt(";" + NL);
         }
 
         SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "VIEW", stmt);
-
         name(sb, view.getNamespace(), view.getName());
         addDescription(sb, view);
         sb.append(" AS");
         sb.append(NL);
         stmt.addStmt(sb.getSqlAndClear());
 
-        sb.append(view.getOriginalDefinition());
+        if (!uglyViews) {
+            sb.append(view.getOriginalDefinition());
+        } else {
+            sb.append(view.getQueryExpression().getBody());
+        }
         stmt.addStmt(sb.getSqlAndClear());
     }
 
@@ -235,6 +260,18 @@ public class FarragoDdlGenerator
 
         name(sb, null, schema.getName());
         addDescription(sb, schema);
+
+        stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
+        FemRole role,
+        GeneratedDdlStmt stmt)
+    {
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "ROLE", stmt);
+
+        name(sb, null, role.getName());
 
         stmt.addStmt(sb.getSqlAndClear());
     }
@@ -726,6 +763,20 @@ public class FarragoDdlGenerator
             sb.append(" CASCADE");
         }
         stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void drop(
+        FemRole role,
+        GeneratedDdlStmt stmt)
+    {
+        drop(role, "ROLE", stmt);
+    }
+
+    public void drop(
+        FemJar jar,
+        GeneratedDdlStmt stmt)
+    {
+        drop(jar, "JAR", stmt);
     }
 
     public void drop(
