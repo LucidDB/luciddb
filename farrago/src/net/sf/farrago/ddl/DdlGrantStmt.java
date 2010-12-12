@@ -33,6 +33,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -46,12 +47,18 @@ import org.eigenbase.util.*;
 public abstract class DdlGrantStmt
     extends DdlStmt
 {
+    public enum GrantorReference
+    {
+        OMITTED, CURRENT_USER, CURRENT_ROLE
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     protected boolean grantOption;
     protected boolean currentRoleOption;
     protected boolean currentUserOption;
     protected List<SqlIdentifier> granteeList;
+    protected GrantorReference grantorReference;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -61,6 +68,7 @@ public abstract class DdlGrantStmt
     public DdlGrantStmt()
     {
         super(null);
+        grantorReference = GrantorReference.OMITTED;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,39 +89,47 @@ public abstract class DdlGrantStmt
         this.grantOption = grantOption;
     }
 
-    public void setCurrentRoleOption(boolean currentRoleOption)
+    public void setGrantorReference(GrantorReference grantorReference)
     {
-        this.currentRoleOption = currentRoleOption;
-    }
-
-    public void setCurrentUserOption(boolean currentUserOption)
-    {
-        this.currentUserOption = currentUserOption;
+        this.grantorReference = grantorReference;
     }
 
     public FemAuthId determineGrantor(FarragoSessionDdlValidator ddlValidator)
     {
-        FemAuthId grantorAuthId;
+        FemAuthId grantorAuthId = null;
 
-        if (currentRoleOption == true) {
-            // TODO: retrieve the current role from the session and set that to
-            // be the grantor
-            grantorAuthId = null;
-        } else {
-            // Either
-            // (a) CURRENT_USER is specified in the GRANTED BY clause or
-            // (b) the GRANTED BY clause is missing,
-            // then we use current session user as the grantor.
+        String currentUser =
+            ddlValidator.getInvokingSession().getSessionVariables()
+            .currentUserName;
+        String currentRole =
+            ddlValidator.getInvokingSession().getSessionVariables()
+            .currentRoleName;
+        String grantorName = null;
 
-            String grantorName =
-                ddlValidator.getInvokingSession().getSessionVariables()
-                .currentUserName;
+        switch (grantorReference) {
+        case OMITTED:
+            if (JmiObjUtil.isBlank(currentUser)) {
+                grantorName = currentRole;
+            } else {
+                grantorName = currentUser;
+            }
+            break;
+        case CURRENT_USER:
+            grantorName = currentUser;
+            break;
+        case CURRENT_ROLE:
+            grantorName = currentRole;
+            break;
+        }
+        if (!JmiObjUtil.isBlank(grantorName)) {
             grantorAuthId =
                 FarragoCatalogUtil.getAuthIdByName(
                     ddlValidator.getRepos(),
                     grantorName);
         }
-        assert (grantorAuthId != null);
+        if (grantorAuthId == null) {
+            throw FarragoResource.instance().ValidatorInvalidGrantor.ex();
+        }
 
         return grantorAuthId;
     }

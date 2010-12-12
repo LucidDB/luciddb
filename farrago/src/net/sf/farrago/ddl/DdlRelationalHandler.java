@@ -132,6 +132,12 @@ public class DdlRelationalHandler
                     index.refClass()));
         }
 
+        CwmClass abstractTable = index.getSpannedClass();
+        if (!(abstractTable instanceof FemLocalTable)) {
+            throw res.ValidatorIndexLocalTableOnly.ex(
+                repos.getLocalizedObjectName(index),
+                repos.getLocalizedObjectName(abstractTable));
+        }
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {

@@ -97,6 +97,9 @@ options(class_name 'Exception');
 -- test same query as above, but against inferred foreign table
 select "name" from mof_schema.mof_exception_inferred order by 1;
 
+-- creating an index on a foreign table should fail
+create index xyz on mof_schema.mof_exception_inferred("name");
+
 -- create a view against foreign table
 create view mof_schema.foreign_exception_names as
 select name from mof_schema.mof_exception;

@@ -25,6 +25,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
@@ -73,30 +74,35 @@ public class DdlGrantRoleStmt
         // model change!
 
         for (SqlIdentifier granteeId : granteeList) {
-            // REVIEW: SWZ: 2008-07-29: getAuthIdByName most certainly does not
-            // create an AuthId if it does not exist.  An optimization here
-            // would be to modify newRoleGrant to accept AuthId instances
-            // instead of re-doing the lookup for granteeId for each role in the
-            // roleList.
-
-            // Find the repository element id for the grantee,  create one if
-            // it does not exist
+            // Find the repository element id for the grantee.
             FemAuthId granteeAuthId =
                 FarragoCatalogUtil.getAuthIdByName(
                     repos,
                     granteeId.getSimple());
+            if (granteeAuthId == null) {
+                throw FarragoResource.instance().ValidatorInvalidGrantee.ex(
+                    repos.getLocalizedObjectName(granteeId.getSimple()));
+            }
 
             // for each role in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // the individual basis.
             for (SqlIdentifier roleId : roleList) {
+                // Look up the role
+                FemAuthId grantedRole =
+                    FarragoCatalogUtil.getAuthIdByName(
+                        repos, roleId.getSimple());
+                if (grantedRole == null) {
+                    throw FarragoResource.instance().ValidatorInvalidRole.ex(
+                        repos.getLocalizedObjectName(roleId.getSimple()));
+                }
                 // create a privilege object and set its properties
                 FemGrant grant =
                     FarragoCatalogUtil.newRoleGrant(
                         repos,
-                        grantorAuthId.getName(),
-                        granteeId.getSimple(),
-                        roleId.getSimple());
+                        grantorAuthId,
+                        granteeAuthId,
+                        grantedRole);
 
                 // set the privilege name (i.e. action) and properties
                 grant.setWithGrantOption(grantOption);

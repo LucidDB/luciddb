@@ -841,43 +841,26 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a new grant on a ROLE with specified role name and associate it
-     * to the grantor and grantee auth ids respectively. By default, the admin
+     * Creates a new grant of a role and associates it
+     * with the grantor and grantee auth ids respectively. By default, the admin
      * option is set to false. The caller will have to set it on the grant
      * object returned.
      *
      * @param repos repository containing the objects
      * @param grantorName the creator of this grant
-     * @param granteeName the receipient of this grant
-     * @param roleName the role name of the authorization id to be granted by
-     * this new grant
+     * @param granteeId the receipient of this grant
+     * @param roleName the role to be granted
      *
      * @return new grant object
      */
     public static FemGrant newRoleGrant(
         FarragoRepos repos,
-        String grantorName,
-        String granteeName,
-        String roleName)
+        FemAuthId grantorAuthId,
+        FemAuthId granteeAuthId,
+        FemAuthId grantedRole)
     {
-        FemAuthId grantorAuthId;
-        FemAuthId granteeAuthId;
-        FemAuthId grantedRole;
-
         // create a creation grant and set its properties
-        FemGrant grant;
-
-        // Find the authId by name for grantor and grantee
-        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
-        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
-
-        // Find the Fem role by name
-        grantedRole = FarragoCatalogUtil.getAuthIdByName(repos, roleName);
-        if (grantedRole == null) {
-            // TODO: throw res.instance().newRoleNameInvalid(roleName);
-        }
-
-        grant =
+        FemGrant grant =
             newElementGrant(
                 repos,
                 grantorAuthId,

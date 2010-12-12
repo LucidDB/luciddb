@@ -48,12 +48,15 @@ public interface FarragoSessionPrivilegeChecker
      * @param role the requesting role, or null for none
      * @param action the action to be performed on obj (see {@link
      * PrivilegedActionEnum} for base set)
+     * @param requireGrantOption whether the privilege needs to
+     * have been granted WITH GRANT OPTION
      */
     public void requestAccess(
         CwmModelElement obj,
         FemUser user,
         FemRole role,
-        String action);
+        String action,
+        boolean requireGrantOption);
 
     /**
      * Checks access for all requests that have been submitted, and clears the

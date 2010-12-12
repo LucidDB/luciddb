@@ -128,6 +128,10 @@ Error: Constraint definition not allowed on foreign table "MOF_SCHEMA"."TEST" (s
 | NameNotResolved  |
 +------------------+
 > 
+> -- creating an index on a foreign table should fail
+> create index xyz on mof_schema.mof_exception_inferred("name");
+Error: Cannot create index "MOF_SCHEMA"."XYZ" on foreign table "MOF_SCHEMA"."MOF_EXCEPTION_INFERRED"; only local tables can be indexed (state=,code=0)
+> 
 > -- create a view against foreign table
 > create view mof_schema.foreign_exception_names as
 > select name from mof_schema.mof_exception;

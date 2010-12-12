@@ -822,8 +822,9 @@ FemRole RoleDefinition() :
         role.setName(roleName.getSimple());
     }
     [ <WITH> <ADMIN> grantor = SimpleIdentifier() {
-            // Create a grant to represent an inheritant of this role and make the
-            // grantor specified in this statement as the grantee of that grant.
+            // Create a grant to represent an inheritant of this role and make
+            // the grantor specified in this statement as the grantee of that
+            // grant.
             FemGrant grant = FarragoCatalogUtil.newElementGrant(
                 getRepos(),
                 farragoParser.getStmtValidator().getSession()
@@ -2979,9 +2980,17 @@ void GrantOptions(DdlGrantStmt stmt) :
     [
         <GRANTED> <BY>
         (
-            <CURRENT_ROLE> {stmt.setCurrentRoleOption(true);}
+            <CURRENT_ROLE>
+            {
+                stmt.setGrantorReference(
+                    DdlGrantStmt.GrantorReference.CURRENT_ROLE);
+            }
             |
-            <CURRENT_USER> {stmt.setCurrentUserOption(true);}
+            <CURRENT_USER>
+            {
+                stmt.setGrantorReference(
+                    DdlGrantStmt.GrantorReference.CURRENT_USER);
+            }
         )
     ]
 }

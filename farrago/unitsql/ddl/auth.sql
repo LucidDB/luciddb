@@ -20,6 +20,11 @@ create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 
 grant select on extra.t to secman_4;
 
+grant select on extra.t to secman_2 with grant option;
+
+-- should fail:  unknown grantee
+grant select on extra.t to nobody;
+
 -- should fail:  duplicate user
 create user SECMAN_4;
 
@@ -36,6 +41,9 @@ create user R1;
 
 !closeall
 !connect jdbc:farrago: SECMAN tiger
+
+-- should fail:  grantor has no rights
+grant select on extra.t to secman_3;
 
 create schema authtest;
 set schema 'authtest';
@@ -134,6 +142,12 @@ order by "name";
 Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
 Grant Role R1_L3 to R1_L2;
 
+-- should fail:  unknown grantee
+Grant Role R1_L3 to BOZOS;
+
+-- should fail:  unknown role
+Grant Role BOZOS to R1_L3;
+
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U2' or grantee = 'R2_L1' or grantee = 'R1_L3'
@@ -211,6 +225,13 @@ create or replace user SECMAN_3;
 !closeall
 !connect jdbc:farrago: SECMAN_3 puma
 
+
+!closeall
+!connect jdbc:farrago: SECMAN_2 tiger
+
+-- should succeed because secman_2 has grant option
+grant select on extra.t to secman_3;
+
 -------------------------------------------------------------------------
 -- Test 4:
 -- default schemas and catalogs
@@ -226,6 +247,9 @@ select * from jdbc_metadata.table_types_view order by table_type;
 
 -- default schema is extra
 select * from t;
+
+-- should fail: grantor has access but no GRANT OPTION
+grant select on extra.t to secman;
 
 -- verify that dropping default schema does not cascade to user
 drop schema extra cascade;
