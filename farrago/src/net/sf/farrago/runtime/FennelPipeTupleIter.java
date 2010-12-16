@@ -191,18 +191,11 @@ public class FennelPipeTupleIter
         }
 
         ByteBuffer head = null;
-        try {
-            // The timeout of 3 milliseconds is based on experiments. Any value
-            // greater than 10ms caused throughput to drop. No timeout also
-            // seemed to drop throughput slightly.
-            head = freeBuffers.poll(3, TimeUnit.MILLISECONDS);
-            if (head != null) {
-                // Important to set correct limit here. Otherwise memcpy() in
-                // upstream C++ XO caused SEGV
-                head.limit(size);
-            }
-        } catch (InterruptedException e) {
-            assert (false);
+        head = freeBuffers.poll();
+        if (head != null) {
+            // Important to set correct limit here. Otherwise memcpy() in
+            // upstream C++ XO caused SEGV
+            head.limit(size);
         }
         return head;
     }
