@@ -90,7 +90,8 @@ public class FennelPipeTupleIter
             freeBuffers.offer(bb);
         }
 
-        rowBuffers = new ArrayBlockingQueue<ByteBuffer>(QUEUE_LENGTH);
+        // Allocate one more slot than number of buffers to fit dummyBuffer.
+        rowBuffers = new ArrayBlockingQueue<ByteBuffer>(QUEUE_LENGTH + 1);
         // An empty buffer which will cause us to fetch new rows the first time
         // our consumer tries to fetch. TODO: Add a new state 'have not yet
         // checked whether we have more data'.
@@ -162,7 +163,8 @@ public class FennelPipeTupleIter
         if (prevBuffer != dummyBuffer) {
             prevBuffer.order(ByteOrder.nativeOrder());
             prevBuffer.clear();
-            assert (freeBuffers.offer(prevBuffer));
+            boolean success = freeBuffers.offer(prevBuffer);
+            assert (success);
         }
 
         int n = byteBuffer.limit();
