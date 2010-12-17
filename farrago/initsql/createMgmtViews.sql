@@ -1133,33 +1133,6 @@ no sql
 external name
 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSchema';
 
--- returns a create statement for all items with element_name in a given schema
-create or replace function generate_ddl_for_object(
-  schema_name varchar(128),
-  element_name varchar(128))
-returns table(
-  statement varchar(65535))
-language java
-specific generate_ddl_for_object
-parameter style system defined java
-no sql
-external name
-'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForObject';
-
--- use other catalogs
-create or replace function generate_ddl_for_object(
-  catalog_name varchar(128),
-  schema_name varchar(128),
-  element_name varchar(128))
-returns table(
-  statement varchar(65535))
-language java
-specific generate_ddl_for_object2
-parameter style system defined java
-no sql
-external name
-'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForObject';
-
 -- ddl dumps everything in current catalog
 create or replace function generate_ddl_for_catalog()
 returns table(

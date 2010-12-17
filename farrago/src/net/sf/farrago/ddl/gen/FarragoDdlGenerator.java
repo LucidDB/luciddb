@@ -34,6 +34,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.catalog.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.SqlDialect;
@@ -183,9 +184,10 @@ public class FarragoDdlGenerator
             // Note these are independent of catalog.
             list.addAll(allOfType(FemDataServer.class));
             list.addAll(allOfType(FemDataWrapper.class));
-            // TODO: ks 25-Nov-2010: create() and drop() methods for user.
-            //list.addAll(allOfType(FemUser.class));
-            // TODO: ks 25-Nov-2010: extend create for Role to include admin.
+            list.addAll(allOfType(FemUser.class));
+            // TODO: ks 25-Nov-2010: extend create for Role to include admin;
+            // requires that we become aware of GRANT elements since the
+            // admin isn't directly stored with the FemRole.
             list.addAll(allOfType(FemRole.class));
             list.addAll(allOfType(FemLabel.class));
         }
@@ -265,6 +267,41 @@ public class FarragoDdlGenerator
     }
 
     public void create(
+        FemUser user,
+        GeneratedDdlStmt stmt)
+    {
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "USER", stmt);
+
+        name(sb, null, user.getName());
+        stmt.addStmt(sb.getSqlAndClear());
+
+        sb.append(NL);
+        if (user.getEncryptedPassword() == null) {
+            sb.append("AUTHORIZATION ");
+            // Auths are not stored by the parser.
+            sb.literal("Unused");
+        } else {
+            sb.append("IDENTIFIED BY ");
+            sb.literal("********");
+        }
+        stmt.addStmt(sb.getSqlAndClear());
+
+        CwmNamespace ns = user.getDefaultNamespace();
+        if (ns != null) {
+            sb.append(NL);
+            sb.append("DEFAULT ");
+            if (ns instanceof FemLocalSchema) {
+                sb.append("SCHEMA ");
+            } else if (ns instanceof FemLocalCatalog) {
+                sb.append("CATALOG ");
+            }
+            name(sb, ns.getNamespace(), ns.getName());
+        }
+        stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
         FemRole role,
         GeneratedDdlStmt stmt)
     {
@@ -280,22 +317,22 @@ public class FarragoDdlGenerator
         FemJar jar,
         GeneratedDdlStmt stmt)
     {
-      SqlBuilder sb = createSqlBuilder();
-      createHeader(sb, "JAR", stmt);
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "JAR", stmt);
 
-      name(sb, jar.getNamespace(), jar.getName());
-      addDescription(sb, jar);
+        name(sb, jar.getNamespace(), jar.getName());
+        addDescription(sb, jar);
 
-      stmt.addStmt(sb.getSqlAndClear());
-      sb.append(NL);
-      sb.append("LIBRARY ");
-      sb.literal(jar.getUrl());
-      sb.append(NL);
-      sb.append("OPTIONS(");
-      sb.append(jar.getDeploymentState());
-      sb.append(")");
+        stmt.addStmt(sb.getSqlAndClear());
+        sb.append(NL);
+        sb.append("LIBRARY ");
+        sb.literal(jar.getUrl());
+        sb.append(NL);
+        sb.append("OPTIONS(");
+        sb.append(jar.getDeploymentState());
+        sb.append(")");
 
-      stmt.addStmt(sb.getSqlAndClear());
+        stmt.addStmt(sb.getSqlAndClear());
     }
 
     public void create(
@@ -308,7 +345,7 @@ public class FarragoDdlGenerator
         name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.getSqlAndClear());
 
-        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
+        addColumns(sb, table);
         addOptions(
             sb,
             table.getStorageOptions());
@@ -326,7 +363,7 @@ public class FarragoDdlGenerator
         name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.getSqlAndClear());
 
-        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
+        addColumns(sb, table);
         sb.append(NL);
         sb.append("SERVER ");
         FemDataServer server = table.getServer();
@@ -655,7 +692,7 @@ public class FarragoDdlGenerator
         createHeader(sb, "TYPE", stmt);
         name(sb, type.getNamespace(), type.getName());
         sb.append(" AS");
-        addColumns(sb, Util.filter(type.getFeature(), CwmColumn.class));
+        addColumns(sb, type);
         sb.append(NL);
         sb.append(maybeNot(type.isFinal(), "FINAL"));
         sb.append(NL);
@@ -773,6 +810,13 @@ public class FarragoDdlGenerator
     }
 
     public void drop(
+        FemUser user,
+        GeneratedDdlStmt stmt)
+    {
+        drop(user, "USER", stmt);
+    }
+
+    public void drop(
         FemJar jar,
         GeneratedDdlStmt stmt)
     {
@@ -876,18 +920,18 @@ public class FarragoDdlGenerator
 
     protected void addColumns(
         SqlBuilder sb,
-        List<CwmColumn> columns)
+        CwmClassifier table)
     {
-        addColumns(sb, columns, false, false);
+        addColumns(sb, table, false, false);
     }
 
     protected void addColumns(
         SqlBuilder sb,
-        List<CwmColumn> columns,
+        CwmClassifier table,
         boolean skipDefaults,
         boolean skipNullable)
     {
-        generateColumnsAndKeys(sb, columns, skipDefaults, skipNullable, null);
+        generateColumnsAndKeys(sb, table, skipDefaults, skipNullable, null);
     }
 
     /**
@@ -895,22 +939,23 @@ public class FarragoDdlGenerator
      * (enclosed in parentheses unless there are no columns).
      *
      * @param sb receives generated string
-     * @param columns list of column definitions to generate
+     * @param table table to iterate down for columns and keys
      * @param skipDefaults whether to omit default value definitions
      * @param skipNullable whether to omit NOT NULL constraint definitions
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
      */
     public void generateColumnsAndKeys(
         SqlBuilder sb,
-        List<CwmColumn> columns,
+        CwmClassifier table,
         boolean skipDefaults,
         boolean skipNullable,
         List<String> imposedPrimaryKey)
     {
-        // TODO jvs 8-Jul-2007:  UNIQUE constraints
-
         boolean isLast = false;
         List<String> pk = imposedPrimaryKey;
+
+        List<CwmColumn> columns =
+            Util.filter(table.getFeature(), CwmColumn.class);
 
         if (columns.size() > 0) {
             sb.append(" (");
@@ -974,6 +1019,49 @@ public class FarragoDdlGenerator
             }
 
             addPrimaryKeyConstraint(sb, pk);
+            // add unique constraints
+            List<FemUniqueKeyConstraint> uniques =
+                FarragoCatalogUtil.getUniqueKeyConstraints(table);
+            // sort alphabetically
+            Collections.sort(
+                    uniques, new Comparator<Object>() {
+                        public int compare(Object obj1, Object obj2) {
+                            return (
+                              (FemUniqueKeyConstraint)obj1).getName().compareTo(
+                                  ((FemUniqueKeyConstraint)obj2).getName());
+                        }
+                    });
+
+            boolean firstConst = true;
+            for (FemUniqueKeyConstraint constraint : uniques) {
+                if (firstConst) {
+                    if (pk.size() > 0) {
+                        sb.append(",");
+                        sb.append(NL);
+                    }
+                    firstConst = false;
+                } else {
+                    sb.append(",");
+                    sb.append(NL);
+                }
+                sb.append("   CONSTRAINT ");
+                sb.identifier(constraint.getName());
+                sb.append(" UNIQUE(");
+                List<CwmColumn> cols = Util.filter(
+                        constraint.getFeature(), CwmColumn.class);
+                boolean firstCol = true;
+                for (CwmColumn col : cols) {
+                    if (!firstCol) {
+                        sb.append(",");
+                    } else {
+                        firstCol = false;
+                    }
+                    sb.identifier(col.getName());
+                }
+                sb.append(")");
+            }
+
+            sb.append(NL);
             sb.append(")");
         }
     }
@@ -1040,7 +1128,6 @@ public class FarragoDdlGenerator
                 sb.identifier(keyColumn);
             }
             sb.append(")");
-            sb.append(NL);
         }
     }
 

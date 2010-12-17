@@ -203,10 +203,20 @@ select statement from
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_jar('SYS_FEM', 'REZNOR', 'REZ_JAR'));
 
--- UNIQUE constraints need to be added
+-- UNIQUE constraints
 create table reznor.rezzy (a int primary key, b int unique);
+create table reznor.rezzy2 (
+  a int primary key,
+  b int not null,
+  c int not null,
+  d int not null,
+  e int not null,
+  CONSTRAINT b_and_c UNIQUE(b, c),
+  CONSTRAINT d_and_e UNIQUE(d, e));
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY2'));
 
 -- test overloaded routine
 create function reznor.eat(xy varchar(32), uv varchar(32))

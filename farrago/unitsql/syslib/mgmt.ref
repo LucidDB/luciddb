@@ -372,6 +372,12 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 |                                                                                                                                                                                                                               |
 | CREATE OR REPLACE ROLE "PUBLIC";                                                                                                                                                                                              |
 |                                                                                                                                                                                                                               |
+| CREATE OR REPLACE USER "_SYSTEM"                                                                                                                                                                                              |
+| AUTHORIZATION 'Unused';                                                                                                                                                                                                       |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE USER "sa"                                                                                                                                                                                                   |
+| AUTHORIZATION 'Unused';                                                                                                                                                                                                       |
+|                                                                                                                                                                                                                               |
 | CREATE OR REPLACE SERVER "SYS_COLUMN_STORE_DATA_SERVER"                                                                                                                                                                       |
 | FOREIGN DATA WRAPPER "SYS_COLUMN_STORE";                                                                                                                                                                                      |
 |                                                                                                                                                                                                                               |
@@ -428,15 +434,15 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 |   "SCHEMA_NAME" 'MODEL'                                                                                                                                                                                                       |
 | );                                                                                                                                                                                                                            |
 |                                                                                                                                                                                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CREATE OR REPLACE SERVER "SYS_MOCK_DATA_SERVER"                                                                                                                                                                               |
 | FOREIGN DATA WRAPPER "SYS_MOCK";                                                                                                                                                                                              |
 |                                                                                                                                                                                                                               |
 | CREATE OR REPLACE SERVER "SYS_MOCK_FOREIGN_DATA_SERVER"                                                                                                                                                                       |
 | FOREIGN DATA WRAPPER "SYS_MOCK_FOREIGN";                                                                                                                                                                                      |
 |                                                                                                                                                                                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                           STATEMENT                                                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CREATE OR REPLACE PROCEDURE "SQLJ"."ALTER_JAVA_PATH"(                                                                                                                                                                         |
 |   IN "JAR" VARCHAR(2000),                                                                                                                                                                                                     |
 |   IN "PATH" VARCHAR(2000))                                                                                                                                                                                                    |
@@ -495,7 +501,8 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 | CREATE TABLE "SALES"."DEPTS" (                                                                                                                                                                                                |
 |    "DEPTNO" INTEGER NOT NULL,                                                                                                                                                                                                 |
 |    "NAME" VARCHAR(128) NOT NULL,                                                                                                                                                                                              |
-|    PRIMARY KEY ("DEPTNO")                                                                                                                                                                                                     |
+|    PRIMARY KEY ("DEPTNO"),                                                                                                                                                                                                    |
+|    CONSTRAINT "DEPTS_UNIQUE_NAME" UNIQUE("NAME")                                                                                                                                                                              |
 | );                                                                                                                                                                                                                            |
 |                                                                                                                                                                                                                               |
 | CREATE TABLE "SALES"."EMPS" (                                                                                                                                                                                                 |
@@ -509,7 +516,8 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 |    "PUBLIC_KEY" VARBINARY(50),                                                                                                                                                                                                |
 |    "SLACKER" BOOLEAN,                                                                                                                                                                                                         |
 |    "MANAGER" BOOLEAN NOT NULL,                                                                                                                                                                                                |
-|    PRIMARY KEY ("EMPNO","DEPTNO")                                                                                                                                                                                             |
+|    PRIMARY KEY ("EMPNO","DEPTNO"),                                                                                                                                                                                            |
+|    CONSTRAINT "SYS$UNIQUE_KEY$EMPS$EMPID" UNIQUE("EMPID")                                                                                                                                                                     |
 | );                                                                                                                                                                                                                            |
 |                                                                                                                                                                                                                               |
 | CREATE TABLE "SALES"."TEMPS" (                                                                                                                                                                                                |
@@ -529,6 +537,9 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 | CREATE INDEX "EMPS_UX" ON "SALES"."EMPS" ("NAME");                                                                                                                                                                            |
 |                                                                                                                                                                                                                               |
 | CREATE OR REPLACE VIEW "SALES"."EMPSVIEW" AS                                                                                                                                                                                  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           STATEMENT                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | SELECT "EMPS"."EMPNO", "EMPS"."NAME"                                                                                                                                                                                          |
 | FROM "LOCALDB"."SALES"."EMPS" AS "EMPS";                                                                                                                                                                                      |
 |                                                                                                                                                                                                                               |
@@ -537,9 +548,6 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 | FROM "LOCALDB"."SALES"."EMPS" AS "EMPS"                                                                                                                                                                                       |
 | INNER JOIN "LOCALDB"."SALES"."DEPTS" AS "DEPTS" ON "EMPS"."DEPTNO" = "DEPTS"."DEPTNO";                                                                                                                                        |
 |                                                                                                                                                                                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                           STATEMENT                                                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CREATE OR REPLACE VIEW "SALES"."TEMPSVIEW" AS                                                                                                                                                                                 |
 | SELECT "TEMPS"."EMPNO", "TEMPS"."NAME"                                                                                                                                                                                        |
 | FROM "LOCALDB"."SALES"."TEMPS" AS "TEMPS";                                                                                                                                                                                    |
@@ -579,6 +587,12 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 | LANGUAGE JAVA;                                                                                                                                                                                                                |
 |                                                                                                                                                                                                                               |
 | CREATE OR REPLACE ROLE "PUBLIC";                                                                                                                                                                                              |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE USER "_SYSTEM"                                                                                                                                                                                              |
+| AUTHORIZATION 'Unused';                                                                                                                                                                                                       |
+|                                                                                                                                                                                                                               |
+| CREATE OR REPLACE USER "sa"                                                                                                                                                                                                   |
+| AUTHORIZATION 'Unused';                                                                                                                                                                                                       |
 |                                                                                                                                                                                                                               |
 | CREATE OR REPLACE SERVER "SYS_COLUMN_STORE_DATA_SERVER"                                                                                                                                                                       |
 | FOREIGN DATA WRAPPER "SYS_COLUMN_STORE";                                                                                                                                                                                      |
@@ -645,7 +659,7 @@ Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
 > -- should fail since it doesn't exist
 > select statement from table(sys_boot.mgmt.generate_ddl_for_catalog(
 >     '02FAC378-F888-11DF-B152-E56DDFD72085'));
-Error: java.lang.AssertionError: Specified catalog does not exist. (state=,code=0)
+Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state=,code=0)
 > 
 > -- test schema, table, view, functions, procedures, jars
 > -- also runs catalog-specific functions on sys_fem, which should all be empty.
@@ -677,42 +691,7 @@ Error: java.lang.AssertionError: Specified catalog does not exist. (state=,code=
 >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 > 
 > select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
-+--------------------------------------------------------------------------+
-|                                STATEMENT                                 |
-+--------------------------------------------------------------------------+
-| CREATE OR REPLACE SCHEMA "REZNOR";                                       |
-|                                                                          |
-| CREATE TABLE "REZNOR"."RHINO" (                                          |
-|    "A" INTEGER NOT NULL,                                                 |
-|    "B" INTEGER,                                                          |
-|    PRIMARY KEY ("A")                                                     |
-| );                                                                       |
-|                                                                          |
-| CREATE OR REPLACE JAR "REZNOR"."REZ_JAR"                                 |
-| LIBRARY 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                 |
-| OPTIONS(0);                                                              |
-|                                                                          |
-| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                               |
-|   "PLUMBER" VARCHAR(32))                                                 |
-| RETURNS VARCHAR(20)                                                      |
-| SPECIFIC "REZNOR"."EAT"                                                  |
-| LANGUAGE SQL                                                             |
-| CONTAINS SQL                                                             |
-| NOT DETERMINISTIC                                                        |
-| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;      |
-|                                                                          |
-| CREATE OR REPLACE PROCEDURE "REZNOR"."R_KILL"(                           |
-|   IN "ID" BIGINT)                                                        |
-| SPECIFIC "REZNOR"."R_KILL"                                               |
-| LANGUAGE JAVA                                                            |
-| NO SQL                                                                   |
-| NOT DETERMINISTIC                                                        |
-| EXTERNAL NAME 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';  |
-|                                                                          |
-| CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS                              |
-| SELECT "RHINO"."A", "RHINO"."B"                                          |
-| FROM "LOCALDB"."REZNOR"."RHINO" AS "RHINO";                              |
-+--------------------------------------------------------------------------+
+Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state=,code=0)
 > select statement from table(sys_boot.mgmt.generate_ddl_for_schema(
 >     'SYS_FEM', 'REZNOR'));
 +------------+
@@ -805,19 +784,44 @@ Error: java.lang.AssertionError: Specified catalog does not exist. (state=,code=
 |            |
 +------------+
 > 
-> -- UNIQUE constraints need to be added
+> -- UNIQUE constraints
 > create table reznor.rezzy (a int primary key, b int unique);
+> create table reznor.rezzy2 (
+>   a int primary key,
+>   b int not null,
+>   c int not null,
+>   d int not null,
+>   e int not null,
+>   CONSTRAINT b_and_c UNIQUE(b, c),
+>   CONSTRAINT d_and_e UNIQUE(d, e));
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY'));
-+----------------------------------+
-|            STATEMENT             |
-+----------------------------------+
-| CREATE TABLE "REZNOR"."REZZY" (  |
-|    "A" INTEGER NOT NULL,         |
-|    "B" INTEGER,                  |
-|    PRIMARY KEY ("A")             |
-| );                               |
-+----------------------------------+
++-----------------------------------------------------+
+|                      STATEMENT                      |
++-----------------------------------------------------+
+| CREATE TABLE "REZNOR"."REZZY" (                     |
+|    "A" INTEGER NOT NULL,                            |
+|    "B" INTEGER,                                     |
+|    PRIMARY KEY ("A"),                               |
+|    CONSTRAINT "SYS$UNIQUE_KEY$REZZY$B" UNIQUE("B")  |
+| );                                                  |
++-----------------------------------------------------+
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY2'));
++-------------------------------------------+
+|                 STATEMENT                 |
++-------------------------------------------+
+| CREATE TABLE "REZNOR"."REZZY2" (          |
+|    "A" INTEGER NOT NULL,                  |
+|    "B" INTEGER NOT NULL,                  |
+|    "C" INTEGER NOT NULL,                  |
+|    "D" INTEGER NOT NULL,                  |
+|    "E" INTEGER NOT NULL,                  |
+|    PRIMARY KEY ("A"),                     |
+|    CONSTRAINT "B_AND_C" UNIQUE("B","C"),  |
+|    CONSTRAINT "D_AND_E" UNIQUE("D","E")   |
+| );                                        |
++-------------------------------------------+
 > 
 > -- test overloaded routine
 > create function reznor.eat(xy varchar(32), uv varchar(32))
@@ -931,11 +935,12 @@ Error: java.lang.AssertionError: Specified catalog does not exist. (state=,code=
 > -- test user
 > create user peachy identified by 'toadstool';
 > select statement from table(sys_boot.mgmt.generate_ddl_for_user('PEACHY'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
++----------------------------------+
+|            STATEMENT             |
++----------------------------------+
+| CREATE OR REPLACE USER "PEACHY"  |
+| IDENTIFIED BY '********';        |
++----------------------------------+
 > 
 > -- test role
 > create role xyz with admin peachy;

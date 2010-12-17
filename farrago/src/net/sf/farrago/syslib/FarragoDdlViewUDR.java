@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
@@ -75,44 +76,6 @@ public abstract class FarragoDdlViewUDR
     {
         catalog = catalogName;
         generateForSchema(schemaName, resultInserter);
-    }
-
-    /**
-     * Generates a DDL for some object in a schema identified by
-     * its name. In the case of name collision, all items with the
-     * given name will be inserted into the output.
-     *
-     * @param schemaName - Schema name for ddl creation.
-     * @param elementName - Element in schema to search for.
-     * @param resultInserter - Handles the output.
-     */
-    public static void generateForObject(
-            String schemaName,
-            String elementName,
-            PreparedStatement resultInserter)
-        throws SQLException
-    {
-        List<CwmModelElement> elList = getElements(schemaName);
-        List<CwmModelElement> filteredEls = new ArrayList<CwmModelElement>();
-
-        for (CwmModelElement element : elList) {
-            if (element.getName().equals(elementName)) {
-                filteredEls.add(element);
-            }
-        }
-
-        createDdl(resultInserter, filteredEls);
-    }
-
-    public static void generateForObject(
-            String catalogName,
-            String schemaName,
-            String elementName,
-            PreparedStatement resultInserter)
-        throws SQLException
-    {
-        catalog = catalogName;
-        generateForObject(schemaName, elementName, resultInserter);
     }
 
     /**
@@ -371,6 +334,7 @@ public abstract class FarragoDdlViewUDR
      * @return Returns a list of all catalog elements.
      */
     private static List<CwmModelElement> getAllElements()
+        throws SQLException
     {
         FarragoDdlGenerator gen = getGenerator();
         CwmCatalog catalog = getCatalog();
@@ -384,6 +348,7 @@ public abstract class FarragoDdlViewUDR
      * @return Returns a list of all elements in a schema.
      */
     private static List<CwmModelElement> getElements(String schemaName)
+        throws SQLException
     {
         FarragoDdlGenerator gen = getGenerator();
         CwmCatalog catalog = getCatalog();
@@ -404,6 +369,7 @@ public abstract class FarragoDdlViewUDR
             String schemaName,
             String elementName,
             Class<T> classType)
+        throws SQLException
     {
         List<CwmModelElement> elList = new ArrayList<CwmModelElement>();
         List<CwmModelElement> checkedEls;
@@ -463,6 +429,7 @@ public abstract class FarragoDdlViewUDR
      * of finding its contained elements.
      */
     private static CwmCatalog getCatalog()
+        throws SQLException
     {
         FarragoRepos repos = FarragoUdrRuntime.getRepos();
         CwmCatalog cat;
@@ -471,10 +438,14 @@ public abstract class FarragoDdlViewUDR
             cat = repos.getCatalog(session.getSessionVariables().catalogName);
         } else {
             cat = repos.getCatalog(catalog);
+            if (cat == null) {
+                throw new SQLException(
+                        FarragoResource.instance().ValidatorUnknownObject.ex(
+                            "catalog: " + catalog).getMessage());
+            }
             // Always assume default cat unless explicitly overridden.
             catalog = null;
         }
-        assert (cat != null) : "Specified catalog does not exist.";
         return cat;
     }
 
