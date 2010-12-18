@@ -34,7 +34,6 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.catalog.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.SqlDialect;
@@ -1020,8 +1019,8 @@ public class FarragoDdlGenerator
 
             addPrimaryKeyConstraint(sb, pk);
             // add unique constraints
-            List<FemUniqueKeyConstraint> uniques =
-                FarragoCatalogUtil.getUniqueKeyConstraints(table);
+            List<FemUniqueKeyConstraint> uniques = getUniqueKeyConstraints(
+                    table);
             // sort alphabetically
             Collections.sort(
                     uniques, new Comparator<Object>() {
@@ -1064,6 +1063,21 @@ public class FarragoDdlGenerator
             sb.append(NL);
             sb.append(")");
         }
+    }
+
+    // NOTE: Copied from FarragoCatalogUtil
+    private List<FemUniqueKeyConstraint> getUniqueKeyConstraints(
+        CwmClassifier table)
+    {
+        List<FemUniqueKeyConstraint> listOfConstraints =
+            new ArrayList<FemUniqueKeyConstraint>();
+
+        for (Object obj : table.getOwnedElement()) {
+            if (obj instanceof FemUniqueKeyConstraint) {
+                listOfConstraints.add((FemUniqueKeyConstraint) obj);
+            }
+        }
+        return listOfConstraints;
     }
 
     protected void addOptions(
