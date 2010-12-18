@@ -139,8 +139,11 @@ Create Role R1_L3;
 select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
 order by "name";
 
-Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+Grant Role R1_L2 to R2_L1 WITH ADMIN OPTION;
 Grant Role R1_L3 to R1_L2;
+
+-- should fail:  role cycle
+grant role R1_L2 to R1_L3;
 
 -- should fail:  unknown grantee
 Grant Role R1_L3 to BOZOS;
@@ -169,7 +172,6 @@ select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
 order by grantee, granted_element;
-
 
 -- Alter user to make Role R1_L1 the default
 -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
@@ -259,3 +261,6 @@ drop schema extra cascade;
 
 -- should fail:  it's gone now
 select * from t;
+
+-- should fail:  no such role
+set role 'goofball';

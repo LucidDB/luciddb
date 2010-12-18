@@ -194,8 +194,12 @@ Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "EXTRA"
 | R4_L1  |
 +--------+
 > 
-> Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+> Grant Role R1_L2 to R2_L1 WITH ADMIN OPTION;
 > Grant Role R1_L3 to R1_L2;
+> 
+> -- should fail:  role cycle
+> grant role R1_L2 to R1_L3;
+Error: Cycle in grant of role "R1_L2" to role "R1_L3" (state=,code=0)
 > 
 > -- should fail:  unknown grantee
 > Grant Role R1_L3 to BOZOS;
@@ -252,7 +256,6 @@ Error: Unknown role "BOZOS" (state=,code=0)
 | R3_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-> 
 > 
 > -- Alter user to make Role R1_L1 the default
 > -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
@@ -359,5 +362,9 @@ sqlline> !connect jdbc:farrago: SECMAN_4 tiger
 > -- should fail:  it's gone now
 > select * from t;
 Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
+> 
+> -- should fail:  no such role
+> set role 'goofball';
+Error: Invalid or inaccessible role name "goofball" in SET ROLE statement (state=,code=0)
 > 
 > !quit

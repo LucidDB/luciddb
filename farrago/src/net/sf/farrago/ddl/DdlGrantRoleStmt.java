@@ -23,6 +23,8 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.resource.*;
@@ -96,6 +98,15 @@ public class DdlGrantRoleStmt
                     throw FarragoResource.instance().ValidatorInvalidRole.ex(
                         repos.getLocalizedObjectName(roleId.getSimple()));
                 }
+
+                // we could probably gang all of these up into a single
+                // LURQL query, but for now execute one check per
+                // granted role
+                checkCycle(
+                    ddlValidator.getInvokingSession(),
+                    grantedRole,
+                    granteeAuthId);
+
                 // create a privilege object and set its properties
                 FemGrant grant =
                     FarragoCatalogUtil.newRoleGrant(
@@ -106,6 +117,27 @@ public class DdlGrantRoleStmt
 
                 // set the privilege name (i.e. action) and properties
                 grant.setWithGrantOption(grantOption);
+            }
+        }
+    }
+
+    private void checkCycle(
+        FarragoSession session, FemAuthId grantedRole, FemAuthId granteeRole)
+    {
+        String lurql =
+            FarragoInternalQuery.instance().SecurityRoleCycleCheck.str();
+        Map<String, String> argMap = new HashMap<String, String>();
+        argMap.put("grantedRoleName", grantedRole.getName());
+        Collection<RefObject> result =
+            session.executeLurqlQuery(
+                lurql,
+                argMap);
+        for (RefObject o : result) {
+            FemRole role = (FemRole) o;
+            if (role.getName().equals(granteeRole.getName())) {
+                throw FarragoResource.instance().ValidatorRoleCycle.ex(
+                    session.getRepos().getLocalizedObjectName(grantedRole),
+                    session.getRepos().getLocalizedObjectName(granteeRole));
             }
         }
     }

@@ -824,6 +824,34 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Finds all applicable roles for a given authorization ID.
+     *
+     * @param authId authorization ID (user or role) to start from
+     *
+     * @return all applicable roles, inherited recursively
+     */
+    public static Set<FemRole> getApplicableRoles(FemAuthId authId)
+    {
+        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
+
+        Set<FemRole> inheritedRoles = new HashSet<FemRole>();
+        
+        for (FemGrant grant : authId.getGranteePrivilege()) {
+            if (grant.getAction().equals(inheritAction)) {
+                FemRole inheritedRole = (FemRole) grant.getElement();
+
+                // sanity check:  DDL validation is supposed to prevent
+                // cycles
+                assert (!inheritedRoles.contains(inheritedRole));
+                inheritedRoles.add(inheritedRole);
+                inheritedRoles.addAll(getApplicableRoles(inheritedRole));
+            }
+        }
+
+        return inheritedRoles;
+    }
+
+    /**
      * Looks up a role by name in a catalog.
      *
      * @param repos repos storing catalog

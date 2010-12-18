@@ -8,7 +8,14 @@
 > 
 > create user SECMAN authorization 'Unknown';
 > create user SECMAN_2 authorization 'Unknown';
+> create user SECMAN_3 authorization 'Unknown';
 > create user PRIV_USER1 authorization 'Unknown';
+> 
+> create role r1;
+> create role r2;
+> grant role r1 to secman_2;
+> grant role r1 to r2;
+> grant role r2 to secman_3;
 > 
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
@@ -22,6 +29,7 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 > create table pt1 (c1 int not null primary key, c2 int);
 > 
 > grant SELECT on pt1 to PRIV_USER1 with grant option;
+> grant SELECT on pt1 to r1;
 > 
 > grant SELECT on pt_notexist to PRIV_USER1 with grant option;
 Error: DDL validation error near line 1, column 17: Reference to unknown table "PT_NOTEXIST" (state=,code=0)
@@ -32,8 +40,11 @@ Error: DDL validation error near line 1, column 17: Reference to unknown table "
 +-------------+
 | PRIV_USER1  |
 | PUBLIC      |
+| R1          |
+| R2          |
 | SECMAN      |
 | SECMAN_2    |
+| SECMAN_3    |
 | _SYSTEM     |
 | sa          |
 +-------------+
@@ -148,5 +159,34 @@ Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=
 +-----+-----+
 +-----+-----+
 > 
+> -- should succeed:  via role r1
+> set role 'r1';
+> select * from pt1;
++-----+-----+
+| C1  | C2  |
++-----+-----+
++-----+-----+
+> 
+> set role none;
+> -- should fail:  no role any more
+> select * from pt1;
+Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=,code=0)
+> 
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+> 
+> set schema 'privstest';
+> 
+> -- should fail:  no grant
+> select * from pt1;
+Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=,code=0)
+> 
+> -- should succeed:  indirect via role r2
+> set role 'r2';
+> select * from pt1;
++-----+-----+
+| C1  | C2  |
++-----+-----+
++-----+-----+
 > 
 > !quit

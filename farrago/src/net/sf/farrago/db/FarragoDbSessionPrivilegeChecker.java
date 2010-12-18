@@ -86,7 +86,7 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (role != null) {
                 authSet.add(role);
-                inheritRoles(role, authSet);
+                authSet.addAll(FarragoCatalogUtil.getApplicableRoles(role));
             }
 
             authSet.add(getPublicRole());
@@ -127,23 +127,6 @@ public class FarragoDbSessionPrivilegeChecker
     {
         // This implementation does all the work immediately in requestAccess,
         // so nothing to do here.
-    }
-
-    private void inheritRoles(FemRole role, Set<FemAuthId> inheritedRoles)
-    {
-        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
-
-        for (FemGrant grant : role.getGranteePrivilege()) {
-            if (grant.getAction().equals(inheritAction)) {
-                FemRole inheritedRole = (FemRole) grant.getElement();
-
-                // sanity check:  DDL validation is supposed to prevent
-                // cycles
-                assert (!inheritedRoles.contains(inheritedRole));
-                inheritedRoles.add(inheritedRole);
-                inheritRoles(inheritedRole, inheritedRoles);
-            }
-        }
     }
 
     private boolean testAccess(

@@ -408,6 +408,14 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid catalog name {0} in SET CATALOG statement</text>
 </exception>
 
+<exception id="420525" name="ValidatorSetRoleInvalidExpr">
+<text>Invalid or inaccessible role name {0} in SET ROLE statement</text>
+</exception>
+
+<exception id="420526" name="ValidatorRoleCycle">
+<text>Cycle in grant of {0} to {1}</text>
+</exception>
+
 <exception id="420530" name="ValidatorSetSchemaInvalidExpr">
 <text>Invalid schema name {0} in SET SCHEMA statement</text>
 </exception>

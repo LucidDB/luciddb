@@ -8,7 +8,14 @@
 
 create user SECMAN authorization 'Unknown';
 create user SECMAN_2 authorization 'Unknown';
+create user SECMAN_3 authorization 'Unknown';
 create user PRIV_USER1 authorization 'Unknown';
+
+create role r1;
+create role r2;
+grant role r1 to secman_2;
+grant role r1 to r2;
+grant role r2 to secman_3;
 
 !closeall
 !connect jdbc:farrago: SECMAN tiger
@@ -22,6 +29,7 @@ set schema 'privstest';
 create table pt1 (c1 int not null primary key, c2 int);
 
 grant SELECT on pt1 to PRIV_USER1 with grant option;
+grant SELECT on pt1 to r1;
 
 grant SELECT on pt_notexist to PRIV_USER1 with grant option;
 
@@ -114,3 +122,22 @@ select * from pt2;
 -- is inaccessible
 select * from pv1;
 
+-- should succeed:  via role r1
+set role 'r1';
+select * from pt1;
+
+set role none;
+-- should fail:  no role any more
+select * from pt1;
+
+!closeall
+!connect jdbc:farrago: SECMAN_3 tiger
+
+set schema 'privstest';
+
+-- should fail:  no grant
+select * from pt1;
+
+-- should succeed:  indirect via role r2
+set role 'r2';
+select * from pt1;

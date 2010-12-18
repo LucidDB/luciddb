@@ -298,6 +298,13 @@ DdlStmt DdlStmt() :
                 {
                     ddlStmt = new DdlSetPathStmt(expr);
                 }
+                | <ROLE> (
+                    expr = Expression(ExprContext.ACCEPT_NONQUERY)
+                    | <NONE> { expr = null; }
+                    )
+                {
+                    ddlStmt = new DdlSetRoleStmt(expr);
+                }
             )
         )
         |
@@ -2961,22 +2968,11 @@ List PrivilegedActionList() :
     }
 }
 
-//
-// This method is common between the two grant statements
-// (i.e. GRANT privilege and GRANT ROLE).
-//
-void GrantOptions(DdlGrantStmt stmt) :
+void GrantedBy(DdlGrantStmt stmt) :
 {
     SqlIdentifier grantor;
 }
 {
-
-    [
-        <WITH> <GRANT> <OPTION>
-        {
-            stmt.setGrantOption(true);
-        }
-    ]
     [
         <GRANTED> <BY>
         (
@@ -3036,7 +3032,13 @@ DdlStmt GrantPrivStmt() :
             stmt.setHierarchyOption(true);
         }
     ]
-    GrantOptions(stmt)
+    [
+        <WITH> <GRANT> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    GrantedBy(stmt)
     {
         return stmt;
     }
@@ -3058,7 +3060,13 @@ DdlStmt GrantRoleStmt() :
     {
         stmt.setGranteeList(granteeList);
     }
-    GrantOptions(stmt)
+    [
+        <WITH> <ADMIN> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    GrantedBy(stmt)
     {
         return stmt;
     }
