@@ -930,7 +930,8 @@ public class FarragoDdlGenerator
         boolean skipDefaults,
         boolean skipNullable)
     {
-        generateColumnsAndKeys(sb, table, skipDefaults, skipNullable, null);
+        generateColumnsAndKeysForTable(
+                sb, table, skipDefaults, skipNullable, null);
     }
 
     /**
@@ -943,18 +944,108 @@ public class FarragoDdlGenerator
      * @param skipNullable whether to omit NOT NULL constraint definitions
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
      */
-    public void generateColumnsAndKeys(
+    public void generateColumnsAndKeysForTable(
         SqlBuilder sb,
         CwmClassifier table,
         boolean skipDefaults,
         boolean skipNullable,
         List<String> imposedPrimaryKey)
     {
-        boolean isLast = false;
-        List<String> pk = imposedPrimaryKey;
-
         List<CwmColumn> columns =
             Util.filter(table.getFeature(), CwmColumn.class);
+        List<String> pk = imposedPrimaryKey;
+
+        pk = generateColumnsAndKeysForCols(
+                sb, columns, skipDefaults, skipNullable, pk);
+        if (columns.size() > 0) {
+            // add unique constraints
+            List<FemUniqueKeyConstraint> uniques = getUniqueKeyConstraints(
+                    table);
+            // sort alphabetically
+            Collections.sort(
+                    uniques, new Comparator<Object>() {
+                        public int compare(Object obj1, Object obj2) {
+                            return (
+                              (FemUniqueKeyConstraint)obj1).getName().compareTo(
+                                  ((FemUniqueKeyConstraint)obj2).getName());
+                        }
+                    });
+
+            boolean firstConst = true;
+            for (FemUniqueKeyConstraint constraint : uniques) {
+                if (firstConst) {
+                    if (pk != null && pk.size() > 0) {
+                        sb.append(",");
+                        sb.append(NL);
+                    }
+                    firstConst = false;
+                } else {
+                    sb.append(",");
+                    sb.append(NL);
+                }
+                sb.append("   CONSTRAINT ");
+                sb.identifier(constraint.getName());
+                sb.append(" UNIQUE(");
+                List<CwmColumn> cols = Util.filter(
+                        constraint.getFeature(), CwmColumn.class);
+                boolean firstCol = true;
+                for (CwmColumn col : cols) {
+                    if (!firstCol) {
+                        sb.append(",");
+                    } else {
+                        firstCol = false;
+                    }
+                    sb.identifier(col.getName());
+                }
+                sb.append(")");
+            }
+        }
+        sb.append(NL);
+        sb.append(")");
+    }
+
+    // NOTE: Copied from FarragoCatalogUtil
+    private List<FemUniqueKeyConstraint> getUniqueKeyConstraints(
+        CwmClassifier table)
+    {
+        List<FemUniqueKeyConstraint> listOfConstraints =
+            new ArrayList<FemUniqueKeyConstraint>();
+
+        for (Object obj : table.getOwnedElement()) {
+            if (obj instanceof FemUniqueKeyConstraint) {
+                listOfConstraints.add((FemUniqueKeyConstraint) obj);
+            }
+        }
+        return listOfConstraints;
+    }
+
+    // NOTE: original method preserved for backwards compatibility
+    public void generateColumnsAndKeys(
+        SqlBuilder sb,
+        List<CwmColumn> columns,
+        boolean skipDefaults,
+        boolean skipNullable,
+        List<String> imposedPrimaryKey)
+    {
+        List<String> pk = imposedPrimaryKey;
+        pk = generateColumnsAndKeysForCols(
+                sb, columns, skipDefaults, skipNullable, pk);
+        if (pk != null && pk.size() > 0) {
+            sb.append(NL);
+        }
+        sb.append(NL);
+        sb.append(")");
+    }
+
+    private List<String> generateColumnsAndKeysForCols(
+        SqlBuilder sb,
+        List<CwmColumn> columns,
+        boolean skipDefaults,
+        boolean skipNullable,
+        List<String> imposedPrimaryKey)
+    {
+        boolean isLast = false;
+        List<String> pk = imposedPrimaryKey;
 
         if (columns.size() > 0) {
             sb.append(" (");
@@ -1018,66 +1109,8 @@ public class FarragoDdlGenerator
             }
 
             addPrimaryKeyConstraint(sb, pk);
-            // add unique constraints
-            List<FemUniqueKeyConstraint> uniques = getUniqueKeyConstraints(
-                    table);
-            // sort alphabetically
-            Collections.sort(
-                    uniques, new Comparator<Object>() {
-                        public int compare(Object obj1, Object obj2) {
-                            return (
-                              (FemUniqueKeyConstraint)obj1).getName().compareTo(
-                                  ((FemUniqueKeyConstraint)obj2).getName());
-                        }
-                    });
-
-            boolean firstConst = true;
-            for (FemUniqueKeyConstraint constraint : uniques) {
-                if (firstConst) {
-                    if (pk.size() > 0) {
-                        sb.append(",");
-                        sb.append(NL);
-                    }
-                    firstConst = false;
-                } else {
-                    sb.append(",");
-                    sb.append(NL);
-                }
-                sb.append("   CONSTRAINT ");
-                sb.identifier(constraint.getName());
-                sb.append(" UNIQUE(");
-                List<CwmColumn> cols = Util.filter(
-                        constraint.getFeature(), CwmColumn.class);
-                boolean firstCol = true;
-                for (CwmColumn col : cols) {
-                    if (!firstCol) {
-                        sb.append(",");
-                    } else {
-                        firstCol = false;
-                    }
-                    sb.identifier(col.getName());
-                }
-                sb.append(")");
-            }
-
-            sb.append(NL);
-            sb.append(")");
         }
-    }
-
-    // NOTE: Copied from FarragoCatalogUtil
-    private List<FemUniqueKeyConstraint> getUniqueKeyConstraints(
-        CwmClassifier table)
-    {
-        List<FemUniqueKeyConstraint> listOfConstraints =
-            new ArrayList<FemUniqueKeyConstraint>();
-
-        for (Object obj : table.getOwnedElement()) {
-            if (obj instanceof FemUniqueKeyConstraint) {
-                listOfConstraints.add((FemUniqueKeyConstraint) obj);
-            }
-        }
-        return listOfConstraints;
+        return pk;
     }
 
     protected void addOptions(
