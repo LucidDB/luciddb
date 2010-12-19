@@ -401,6 +401,8 @@ public abstract class FarragoDdlViewUDR
         String statement = "";
         if (elList.size() > 0) {
             statement = gen.getExportText(elList, true);
+        } else {
+            throw FarragoResource.instance().NoDdlGenObjsFound.ex();
         }
         for (String line : statement.split("\n")) {
             resultInserter.setString(1, line);

@@ -1285,7 +1285,7 @@
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForWrapper';
 > 
-> -- ddl for indicies
+> -- ddl for indexes
 > create or replace function generate_ddl_for_index(
 >   schema_name varchar(128),
 >   index_name varchar(128))

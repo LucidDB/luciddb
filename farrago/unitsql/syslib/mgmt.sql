@@ -183,11 +183,11 @@ create procedure reznor.r_kill(in id bigint)
 
 select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
 select statement from table(sys_boot.mgmt.generate_ddl_for_schema(
-    'SYS_FEM', 'REZNOR'));
+    'LOCALDB', 'REZNOR'));
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
 select statement from
-  table(sys_boot.mgmt.generate_ddl_for_table('SYS_FEM', 'REZNOR', 'RHINO'));
+  table(sys_boot.mgmt.generate_ddl_for_table('LOCALDB', 'REZNOR', 'RHINO'));
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'R_VIEW'));
 select statement from
@@ -195,13 +195,17 @@ select statement from
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
 select statement from
-  table(sys_boot.mgmt.generate_ddl_for_routine('SYS_FEM', 'REZNOR', 'EAT'));
+  table(sys_boot.mgmt.generate_ddl_for_routine('LOCALDB', 'REZNOR', 'EAT'));
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'R_KILL'));
 select statement from
   table(sys_boot.mgmt.generate_ddl_for_jar('REZNOR', 'REZ_JAR'));
 select statement from
-  table(sys_boot.mgmt.generate_ddl_for_jar('SYS_FEM', 'REZNOR', 'REZ_JAR'));
+  table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'REZNOR', 'REZ_JAR'));
+
+-- should fail:  schema does not exist
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'PEZNOR', 'REZ_JAR'));
 
 -- UNIQUE constraints
 create table reznor.rezzy (a int primary key, b int unique);
@@ -237,7 +241,7 @@ create index rhino_idx on reznor.rhino(a);
 select statement from table(sys_boot.mgmt.generate_ddl_for_index(
     'REZNOR', 'RHINO_IDX'));
 select statement from table(sys_boot.mgmt.generate_ddl_for_index(
-    'SYS_FEM', 'REZNOR', 'RHINO_IDX'));
+    'LOCALDB', 'REZNOR', 'RHINO_IDX'));
 drop index reznor.rhino_idx;
 drop schema reznor cascade;
 

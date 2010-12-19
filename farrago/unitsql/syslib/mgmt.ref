@@ -693,12 +693,43 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 > select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
 Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state=,code=0)
 > select statement from table(sys_boot.mgmt.generate_ddl_for_schema(
->     'SYS_FEM', 'REZNOR'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+>     'LOCALDB', 'REZNOR'));
++--------------------------------------------------------------------------+
+|                                STATEMENT                                 |
++--------------------------------------------------------------------------+
+| CREATE OR REPLACE SCHEMA "REZNOR";                                       |
+|                                                                          |
+| CREATE TABLE "REZNOR"."RHINO" (                                          |
+|    "A" INTEGER NOT NULL,                                                 |
+|    "B" INTEGER,                                                          |
+|    PRIMARY KEY ("A")                                                     |
+| );                                                                       |
+|                                                                          |
+| CREATE OR REPLACE JAR "REZNOR"."REZ_JAR"                                 |
+| LIBRARY 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'                 |
+| OPTIONS(0);                                                              |
+|                                                                          |
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                               |
+|   "PLUMBER" VARCHAR(32))                                                 |
+| RETURNS VARCHAR(20)                                                      |
+| SPECIFIC "REZNOR"."EAT"                                                  |
+| LANGUAGE SQL                                                             |
+| CONTAINS SQL                                                             |
+| NOT DETERMINISTIC                                                        |
+| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;      |
+|                                                                          |
+| CREATE OR REPLACE PROCEDURE "REZNOR"."R_KILL"(                           |
+|   IN "ID" BIGINT)                                                        |
+| SPECIFIC "REZNOR"."R_KILL"                                               |
+| LANGUAGE JAVA                                                            |
+| NO SQL                                                                   |
+| NOT DETERMINISTIC                                                        |
+| EXTERNAL NAME 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';  |
+|                                                                          |
+| CREATE OR REPLACE VIEW "REZNOR"."R_VIEW" AS                              |
+| SELECT "RHINO"."A", "RHINO"."B"                                          |
+| FROM "LOCALDB"."REZNOR"."RHINO" AS "RHINO";                              |
++--------------------------------------------------------------------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
 +----------------------------------+
@@ -711,12 +742,16 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 | );                               |
 +----------------------------------+
 > select statement from
->   table(sys_boot.mgmt.generate_ddl_for_table('SYS_FEM', 'REZNOR', 'RHINO'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+>   table(sys_boot.mgmt.generate_ddl_for_table('LOCALDB', 'REZNOR', 'RHINO'));
++----------------------------------+
+|            STATEMENT             |
++----------------------------------+
+| CREATE TABLE "REZNOR"."RHINO" (  |
+|    "A" INTEGER NOT NULL,         |
+|    "B" INTEGER,                  |
+|    PRIMARY KEY ("A")             |
+| );                               |
++----------------------------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'R_VIEW'));
 +----------------------------------------------+
@@ -728,11 +763,7 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 +----------------------------------------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'not_exist'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+Error: No matching objects found for DDL generation (state=,code=0)
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
 +----------------------------------------------------------------------+
@@ -748,12 +779,19 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 | RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;  |
 +----------------------------------------------------------------------+
 > select statement from
->   table(sys_boot.mgmt.generate_ddl_for_routine('SYS_FEM', 'REZNOR', 'EAT'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+>   table(sys_boot.mgmt.generate_ddl_for_routine('LOCALDB', 'REZNOR', 'EAT'));
++----------------------------------------------------------------------+
+|                              STATEMENT                               |
++----------------------------------------------------------------------+
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                           |
+|   "PLUMBER" VARCHAR(32))                                             |
+| RETURNS VARCHAR(20)                                                  |
+| SPECIFIC "REZNOR"."EAT"                                              |
+| LANGUAGE SQL                                                         |
+| CONTAINS SQL                                                         |
+| NOT DETERMINISTIC                                                    |
+| RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;  |
++----------------------------------------------------------------------+
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'R_KILL'));
 +--------------------------------------------------------------------------+
@@ -777,12 +815,19 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 | OPTIONS(0);                                               |
 +-----------------------------------------------------------+
 > select statement from
->   table(sys_boot.mgmt.generate_ddl_for_jar('SYS_FEM', 'REZNOR', 'REZ_JAR'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+>   table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'REZNOR', 'REZ_JAR'));
++-----------------------------------------------------------+
+|                         STATEMENT                         |
++-----------------------------------------------------------+
+| CREATE OR REPLACE JAR "REZNOR"."REZ_JAR"                  |
+| LIBRARY 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'  |
+| OPTIONS(0);                                               |
++-----------------------------------------------------------+
+> 
+> -- should fail:  schema does not exist
+> select statement from
+>   table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'PEZNOR', 'REZ_JAR'));
+Error: No matching objects found for DDL generation (state=,code=0)
 > 
 > -- UNIQUE constraints
 > create table reznor.rezzy (a int primary key, b int unique);
@@ -845,7 +890,7 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 | NOT DETERMINISTIC                                                    |
 | RETURN CASE WHEN "PLUMBER" = 'Mario' THEN 'Luigi' ELSE 'Mario' END;  |
 |                                                                      |
-| CREATE OR REPLACE FUNCTION "REZNOR"."EAT2"(                          |
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(                           |
 |   "XY" VARCHAR(32),                                                  |
 |   "UV" VARCHAR(32))                                                  |
 | RETURNS VARCHAR(20)                                                  |
@@ -858,19 +903,19 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 > -- should show just second one
 > select statement from
 >   table(sys_boot.mgmt.generate_ddl_for_specific_routine('REZNOR', 'EAT2'));
-+----------------------------------------------+
-|                  STATEMENT                   |
-+----------------------------------------------+
-| CREATE OR REPLACE FUNCTION "REZNOR"."EAT2"(  |
-|   "XY" VARCHAR(32),                          |
-|   "UV" VARCHAR(32))                          |
-| RETURNS VARCHAR(20)                          |
-| SPECIFIC "REZNOR"."EAT2"                     |
-| LANGUAGE SQL                                 |
-| CONTAINS SQL                                 |
-| NOT DETERMINISTIC                            |
-| RETURN "XY";                                 |
-+----------------------------------------------+
++---------------------------------------------+
+|                  STATEMENT                  |
++---------------------------------------------+
+| CREATE OR REPLACE FUNCTION "REZNOR"."EAT"(  |
+|   "XY" VARCHAR(32),                         |
+|   "UV" VARCHAR(32))                         |
+| RETURNS VARCHAR(20)                         |
+| SPECIFIC "REZNOR"."EAT2"                    |
+| LANGUAGE SQL                                |
+| CONTAINS SQL                                |
+| NOT DETERMINISTIC                           |
+| RETURN "XY";                                |
++---------------------------------------------+
 > 
 > -- test index
 > create index rhino_idx on reznor.rhino(a);
@@ -882,12 +927,12 @@ Error: Reference to unknown catalog: 02FAC378-F888-11DF-B152-E56DDFD72085 (state
 | CREATE INDEX "RHINO_IDX" ON "REZNOR"."RHINO" ("A");  |
 +------------------------------------------------------+
 > select statement from table(sys_boot.mgmt.generate_ddl_for_index(
->     'SYS_FEM', 'REZNOR', 'RHINO_IDX'));
-+------------+
-| STATEMENT  |
-+------------+
-|            |
-+------------+
+>     'LOCALDB', 'REZNOR', 'RHINO_IDX'));
++------------------------------------------------------+
+|                      STATEMENT                       |
++------------------------------------------------------+
+| CREATE INDEX "RHINO_IDX" ON "REZNOR"."RHINO" ("A");  |
++------------------------------------------------------+
 > drop index reznor.rhino_idx;
 > drop schema reznor cascade;
 > 

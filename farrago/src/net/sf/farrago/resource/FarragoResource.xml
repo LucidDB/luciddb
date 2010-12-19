@@ -1725,6 +1725,10 @@ have already been defined</text>
 <text>Cannot shut down because other sessions remain</text>
 </exception>
 
+<exception id="520070" name="NoDdlGenObjsFound">
+<text>No matching objects found for DDL generation</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

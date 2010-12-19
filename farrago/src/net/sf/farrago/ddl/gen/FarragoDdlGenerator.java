@@ -26,6 +26,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
@@ -430,7 +431,7 @@ public class FarragoDdlGenerator
             createHeader(sb, "PROCEDURE", stmt);
         }
 
-        name(sb, routine.getNamespace(), routine.getName());
+        name(sb, routine.getNamespace(), routine.getInvocationName());
         stmt.addStmt(sb.getSqlAndClear());
 
         if (method) {
@@ -959,8 +960,8 @@ public class FarragoDdlGenerator
                 sb, columns, skipDefaults, skipNullable, pk);
         if (columns.size() > 0) {
             // add unique constraints
-            List<FemUniqueKeyConstraint> uniques = getUniqueKeyConstraints(
-                    table);
+            List<FemUniqueKeyConstraint> uniques =
+                FarragoCatalogUtil.getUniqueKeyConstraints(table);
             // sort alphabetically
             Collections.sort(
                     uniques, new Comparator<Object>() {
@@ -1002,21 +1003,6 @@ public class FarragoDdlGenerator
         }
         sb.append(NL);
         sb.append(")");
-    }
-
-    // NOTE: Copied from FarragoCatalogUtil
-    private List<FemUniqueKeyConstraint> getUniqueKeyConstraints(
-        CwmClassifier table)
-    {
-        List<FemUniqueKeyConstraint> listOfConstraints =
-            new ArrayList<FemUniqueKeyConstraint>();
-
-        for (Object obj : table.getOwnedElement()) {
-            if (obj instanceof FemUniqueKeyConstraint) {
-                listOfConstraints.add((FemUniqueKeyConstraint) obj);
-            }
-        }
-        return listOfConstraints;
     }
 
     // NOTE: original method preserved for backwards compatibility
