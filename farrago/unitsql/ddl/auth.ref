@@ -18,7 +18,15 @@
 > 
 > create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 > 
+> create role rf;
+> 
+> create role rg;
+> 
 > grant select on extra.t to secman_4;
+> 
+> grant role rf to secman_4;
+> 
+> grant role rg to secman_4 with admin option;
 > 
 > grant select on extra.t to secman_2 with grant option;
 > 
@@ -44,12 +52,20 @@ Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" al
 > create user R1;
 Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
 > 
+> -- should fail:  can't grant user to role
+> grant role SECMAN_4 to R1;
+Error: Unknown role "SECMAN_4" (state=,code=0)
+> 
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
 > 
 > -- should fail:  grantor has no rights
 > grant select on extra.t to secman_3;
 Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "EXTRA"."T" (state=,code=0)
+> 
+> -- should fail:  same reason
+> grant role r1 to secman_3;
+Error: Role membership WITH ADMIN OPTION required for granting role "R1" (state=,code=0)
 > 
 > create schema authtest;
 > set schema 'authtest';
@@ -352,6 +368,13 @@ sqlline> !connect jdbc:farrago: SECMAN_4 tiger
 > -- should fail: grantor has access but no GRANT OPTION
 > grant select on extra.t to secman;
 Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "EXTRA"."T" (state=,code=0)
+> 
+> -- should fail:  grantor has role but no ADMIN OPTION
+> grant role rf to secman;
+Error: Role membership WITH ADMIN OPTION required for granting role "RF" (state=,code=0)
+> 
+> -- should succeed:  grantor has ADMIN OPTION
+> grant role rg to secman;
 > 
 > -- verify that dropping default schema does not cascade to user
 > drop schema extra cascade;

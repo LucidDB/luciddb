@@ -100,9 +100,17 @@ public class FarragoDbSessionPrivilegeChecker
 
         // Verboten!
         if (requireGrantOption) {
-            throw FarragoResource.instance().ValidatorNoGrantOption.ex(
-                session.getRepos().getLocalizedObjectName(action),
-                session.getRepos().getLocalizedObjectName(obj));
+            if (obj instanceof FemRole) {
+                // Special-case language for failed GRANT ROLE
+                assert(action.equals(
+                        PrivilegedActionEnum.INHERIT_ROLE.toString()));
+                throw FarragoResource.instance().ValidatorNoAdminOption.ex(
+                    session.getRepos().getLocalizedObjectName(obj));
+            } else {
+                throw FarragoResource.instance().ValidatorNoGrantOption.ex(
+                    session.getRepos().getLocalizedObjectName(action),
+                    session.getRepos().getLocalizedObjectName(obj));
+            }
         } else {
             throw FarragoResource.instance().ValidatorAccessDenied.ex(
                 session.getRepos().getLocalizedObjectName(action),

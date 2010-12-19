@@ -69,11 +69,37 @@ public class DdlGrantRoleStmt
     {
         FarragoRepos repos = ddlValidator.getRepos();
 
-        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
+        List<FemRole> grantedRoles = new ArrayList<FemRole>();
+        for (SqlIdentifier roleId : roleList) {
+            FemRole grantedRole =
+                FarragoCatalogUtil.getRoleByName(
+                    repos, roleId.getSimple());
+            if (grantedRole == null) {
+                throw FarragoResource.instance().ValidatorInvalidRole.ex(
+                    repos.getLocalizedObjectName(roleId.getSimple()));
+            }
+            grantedRoles.add(grantedRole);
+        }
 
-        // TODO: Check that for all roles to be granted  (a) the grantor must be
-        // the owner. Or (b) the owner has been granted with Admin Option. Need
-        // model change!
+        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
+        FemUser user = null;
+        FemRole role = null;
+        if (grantorAuthId instanceof FemUser) {
+            user = (FemUser) grantorAuthId;
+        } else {
+            role = (FemRole) grantorAuthId;
+        }
+        FarragoSessionPrivilegeChecker privChecker =
+            ddlValidator.getStmtValidator().getPrivilegeChecker();
+        for (FemRole grantedRole : grantedRoles) {
+            privChecker.requestAccess(
+                grantedRole,
+                user,
+                role,
+                PrivilegedActionEnum.INHERIT_ROLE.toString(),
+                true);
+        }
+        privChecker.checkAccess();
 
         for (SqlIdentifier granteeId : granteeList) {
             // Find the repository element id for the grantee.
@@ -86,19 +112,10 @@ public class DdlGrantRoleStmt
                     repos.getLocalizedObjectName(granteeId.getSimple()));
             }
 
-            // for each role in the list, we instantiate a repository
-            // element. Note that this makes it easier to revoke the privs on
-            // the individual basis.
-            for (SqlIdentifier roleId : roleList) {
-                // Look up the role
-                FemAuthId grantedRole =
-                    FarragoCatalogUtil.getAuthIdByName(
-                        repos, roleId.getSimple());
-                if (grantedRole == null) {
-                    throw FarragoResource.instance().ValidatorInvalidRole.ex(
-                        repos.getLocalizedObjectName(roleId.getSimple()));
-                }
-
+            // For each role in the list, we instantiate a repository element
+            // for the grant. Note that this makes it easier to revoke the
+            // privs on an individual basis.
+            for (FemRole grantedRole : grantedRoles) {
                 // we could probably gang all of these up into a single
                 // LURQL query, but for now execute one check per
                 // granted role

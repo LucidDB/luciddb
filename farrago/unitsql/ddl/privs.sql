@@ -13,9 +13,13 @@ create user PRIV_USER1 authorization 'Unknown';
 
 create role r1;
 create role r2;
+create role r3;
+create role r4;
 grant role r1 to secman_2;
 grant role r1 to r2;
 grant role r2 to secman_3;
+grant role r3 to secman with admin option;
+grant role r4 to r3 with admin option;
 
 !closeall
 !connect jdbc:farrago: SECMAN tiger
@@ -103,7 +107,34 @@ create table pt5 (c1 int not null primary key, c2 int);
 
 grant select on pt5 to PUBLIC granted by CURRENT_USER;
 
--- TODO: grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE
+-- should fail:  no current role set
+grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+
+-- should fail:  r1 does not have rights
+set role 'r3';
+grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+
+grant SELECT ON pt5 to r3 with grant option granted by current_user;
+
+-- now it should work
+grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+
+create role rx;
+
+-- should fail:  current user does not have role r1
+grant role r1 to rx granted by current_user;
+
+-- should fail:  nor does current role
+grant role r1 to rx granted by current_role;
+
+-- should work
+grant role r3 to rx granted by current_user;
+
+-- should fail:  r3 does not have admin option
+grant role r3 to rx granted by current_role;
+
+-- but this should work since r3 has r4 with admin option
+grant role r4 to rx granted by current_role;
 
 -- Test 6: Tests for insufficient privileges
 
@@ -124,9 +155,13 @@ select * from pv1;
 
 -- should succeed:  via role r1
 set role 'r1';
+values(current_role);
+
 select * from pt1;
 
 set role none;
+values(current_role);
+
 -- should fail:  no role any more
 select * from pt1;
 

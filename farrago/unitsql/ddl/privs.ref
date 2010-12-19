@@ -13,9 +13,13 @@
 > 
 > create role r1;
 > create role r2;
+> create role r3;
+> create role r4;
 > grant role r1 to secman_2;
 > grant role r1 to r2;
 > grant role r2 to secman_3;
+> grant role r3 to secman with admin option;
+> grant role r4 to r3 with admin option;
 > 
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
@@ -42,6 +46,8 @@ Error: DDL validation error near line 1, column 17: Reference to unknown table "
 | PUBLIC      |
 | R1          |
 | R2          |
+| R3          |
+| R4          |
 | SECMAN      |
 | SECMAN_2    |
 | SECMAN_3    |
@@ -131,7 +137,39 @@ Error: DDL validation error near line 1, column 36: Reference to unknown functio
 > 
 > grant select on pt5 to PUBLIC granted by CURRENT_USER;
 > 
-> -- TODO: grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE
+> -- should fail:  no current role set
+> grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+Error: Invalid grantor (state=,code=0)
+> 
+> -- should fail:  r1 does not have rights
+> set role 'r3';
+> grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "PRIVSTEST"."PT5" (state=,code=0)
+> 
+> grant SELECT ON pt5 to r3 with grant option granted by current_user;
+> 
+> -- now it should work
+> grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE;
+> 
+> create role rx;
+> 
+> -- should fail:  current user does not have role r1
+> grant role r1 to rx granted by current_user;
+Error: Role membership WITH ADMIN OPTION required for granting role "R1" (state=,code=0)
+> 
+> -- should fail:  nor does current role
+> grant role r1 to rx granted by current_role;
+Error: Role membership WITH ADMIN OPTION required for granting role "R1" (state=,code=0)
+> 
+> -- should work
+> grant role r3 to rx granted by current_user;
+> 
+> -- should fail:  r3 does not have admin option
+> grant role r3 to rx granted by current_role;
+Error: Role membership WITH ADMIN OPTION required for granting role "R3" (state=,code=0)
+> 
+> -- but this should work since r3 has r4 with admin option
+> grant role r4 to rx granted by current_role;
 > 
 > -- Test 6: Tests for insufficient privileges
 > 
@@ -161,6 +199,13 @@ Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=
 > 
 > -- should succeed:  via role r1
 > set role 'r1';
+> values(current_role);
++---------------+
+| CURRENT_ROLE  |
++---------------+
+| R1            |
++---------------+
+> 
 > select * from pt1;
 +-----+-----+
 | C1  | C2  |
@@ -168,6 +213,13 @@ Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=
 +-----+-----+
 > 
 > set role none;
+> values(current_role);
++---------------+
+| CURRENT_ROLE  |
++---------------+
+|               |
++---------------+
+> 
 > -- should fail:  no role any more
 > select * from pt1;
 Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=,code=0)

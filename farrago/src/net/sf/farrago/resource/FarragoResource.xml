@@ -636,6 +636,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} WITH GRANT OPTION required for access to {1}</text>
 </exception>
 
+<exception id="420946" name="ValidatorNoAdminOption">
+<text>Role membership WITH ADMIN OPTION required for granting {0}</text>
+</exception>
+
 <exception id="420950" name="ValidatorMultipleClusterForColumn">
 <text>Multiple clustered indexes contain {0}</text>
 </exception>

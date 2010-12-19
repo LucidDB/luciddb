@@ -18,7 +18,15 @@ create user SECMAN_3 identified by 'tiger' DEFAULT CATALOG sys_boot;
 
 create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 
+create role rf;
+
+create role rg;
+
 grant select on extra.t to secman_4;
+
+grant role rf to secman_4;
+
+grant role rg to secman_4 with admin option;
 
 grant select on extra.t to secman_2 with grant option;
 
@@ -39,11 +47,17 @@ create role SECMAN_4;
 -- should fail:  user name conflicts with role name
 create user R1;
 
+-- should fail:  can't grant user to role
+grant role SECMAN_4 to R1;
+
 !closeall
 !connect jdbc:farrago: SECMAN tiger
 
 -- should fail:  grantor has no rights
 grant select on extra.t to secman_3;
+
+-- should fail:  same reason
+grant role r1 to secman_3;
 
 create schema authtest;
 set schema 'authtest';
@@ -252,6 +266,12 @@ select * from t;
 
 -- should fail: grantor has access but no GRANT OPTION
 grant select on extra.t to secman;
+
+-- should fail:  grantor has role but no ADMIN OPTION
+grant role rf to secman;
+
+-- should succeed:  grantor has ADMIN OPTION
+grant role rg to secman;
 
 -- verify that dropping default schema does not cascade to user
 drop schema extra cascade;
