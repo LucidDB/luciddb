@@ -26,6 +26,7 @@ import java.util.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
@@ -125,15 +126,25 @@ public class DdlGrantRoleStmt
                     granteeAuthId);
 
                 // create a privilege object and set its properties
-                FemGrant grant =
-                    FarragoCatalogUtil.newRoleGrant(
-                        repos,
-                        grantorAuthId,
-                        granteeAuthId,
-                        grantedRole);
-
-                // set the privilege name (i.e. action) and properties
-                grant.setWithGrantOption(grantOption);
+                FemGrant grant = findExistingGrant(
+                    repos,
+                    grantedRole,
+                    grantorAuthId,
+                    granteeAuthId,
+                    PrivilegedActionEnum.INHERIT_ROLE.toString());
+                if (grant == null) {
+                    grant =
+                        FarragoCatalogUtil.newRoleGrant(
+                            repos,
+                            grantorAuthId,
+                            granteeAuthId,
+                            grantedRole);
+                }
+                // Note that for an existing grant without admin option, we
+                // upgrade in place.
+                if (grantOption) {
+                    grant.setWithGrantOption(true);
+                }
             }
         }
     }

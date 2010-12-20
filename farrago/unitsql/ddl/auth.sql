@@ -24,11 +24,20 @@ create role rg;
 
 grant select on extra.t to secman_4;
 
+-- Redundant grant to make sure they get coalesced correctly in the catalog
+grant select on extra.t to secman_4;
+
 grant role rf to secman_4;
 
+-- test role grant upgrade, and verify that there is no downgrade
+grant role rg to secman_4;
 grant role rg to secman_4 with admin option;
+grant role rg to secman_4;
 
+-- test privilege grant upgrade, and verify that there is not downgrade
+grant select on extra.t to secman_2;
 grant select on extra.t to secman_2 with grant option;
+grant select on extra.t to secman_2;
 
 -- should fail:  unknown grantee
 grant select on extra.t to nobody;
@@ -94,6 +103,9 @@ Create Role R1_L1;
 -- Grant the role R1_L1 directly to U1
 Grant Role R1_L1 to U1;
 
+-- Redundant grant to make sure they get coalesced correctly in the catalog
+Grant Role R1_L1 to U1;
+
 -- Alter user to make Role R1_L1 the default
 -- Alter user default role R1_L1;
 
@@ -109,6 +121,18 @@ order by "name";
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U1' or grantee= 'R1_L1'
+order by granted_element;
+
+-- check out another one
+select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+from grant_view
+where grantee = 'SECMAN_4'
+order by granted_element;
+
+-- and one more
+select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+from grant_view
+where grantee = 'SECMAN_2'
 order by granted_element;
 
 -- verify password encryption; we use a platform-independent algorithm

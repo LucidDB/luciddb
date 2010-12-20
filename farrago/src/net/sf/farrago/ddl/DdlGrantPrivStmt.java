@@ -112,20 +112,32 @@ public class DdlGrantPrivStmt
             // element. Note that this makes it easier to revoke the privs on
             // an individual basis.
             for (SqlIdentifier privId : privList) {
-                // Create a privilege object and set its properties.
-                FemGrant grant = repos.newFemGrant();
+                // Duplicate check
+                FemGrant grant = findExistingGrant(
+                    repos,
+                    grantedObject,
+                    grantorAuthId,
+                    granteeAuthId,
+                    privId.getSimple());
+                if (grant == null) {
+                    // Create the grant object and set its properties.
+                    grant = repos.newFemGrant();
 
-                // Set the privilege name (i.e. action) and properties.
-                grant.setAction(privId.getSimple());
-                grant.setWithGrantOption(grantOption);
+                    // Set the privilege name (i.e. action) and properties.
+                    grant.setAction(privId.getSimple());
 
-                // TODO: to grant.setHierarchyOption(hierarchyOption);
+                    // Associate the privilege with the grantor, grantee,
+                    // and object.
+                    grant.setGrantor(grantorAuthId);
+                    grant.setGrantee(granteeAuthId);
+                    grant.setElement(grantedObject);
+                }
 
-                // Associate the privilege with the grantor, grantee,
-                // and object.
-                grant.setGrantor(grantorAuthId);
-                grant.setGrantee(granteeAuthId);
-                grant.setElement(grantedObject);
+                // Note that for an existing grant without grant option, we
+                // upgrade in place.
+                if (grantOption) {
+                    grant.setWithGrantOption(true);
+                }
             }
         }
     }

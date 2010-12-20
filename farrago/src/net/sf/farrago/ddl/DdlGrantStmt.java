@@ -94,7 +94,8 @@ public abstract class DdlGrantStmt
         this.grantorReference = grantorReference;
     }
 
-    public FemAuthId determineGrantor(FarragoSessionDdlValidator ddlValidator)
+    protected FemAuthId determineGrantor(
+        FarragoSessionDdlValidator ddlValidator)
     {
         FemAuthId grantorAuthId = null;
 
@@ -132,6 +133,31 @@ public abstract class DdlGrantStmt
         }
 
         return grantorAuthId;
+    }
+
+    protected FemGrant findExistingGrant(
+        FarragoRepos repos,
+        CwmModelElement obj,
+        FemAuthId grantor,
+        FemAuthId grantee,
+        String action)
+    {
+        SecurityPackage sp = repos.getSecurityPackage();
+        for (FemGrant grant
+                 : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj))
+        {
+            if (!grant.getAction().equals(action)) {
+                continue;
+            }
+            if (!grant.getGrantee().equals(grantee)) {
+                continue;
+            }
+            if (!grant.getGrantor().equals(grantor)) {
+                continue;
+            }
+            return grant;
+        }
+        return null;
     }
 }
 
