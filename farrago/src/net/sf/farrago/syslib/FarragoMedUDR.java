@@ -32,6 +32,7 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -213,6 +214,134 @@ public abstract class FarragoMedUDR
         }
         resultInserter.setString(6, value);
         resultInserter.executeUpdate();
+    }
+
+    public static void browseForeignTables(
+            final String server,
+            final String schema,
+            final PreparedStatement resultInserter)
+        throws SQLException
+    {
+        browseForeignTablesAndColumns(server, schema, false, resultInserter);
+    }
+
+    public static void browseForeignColumns(
+            final String server,
+            final String schema,
+            final PreparedStatement resultInserter)
+        throws SQLException
+    {
+        browseForeignTablesAndColumns(server, schema, true, resultInserter);
+    }
+
+    private static void browseForeignTablesAndColumns(
+            final String server,
+            final String schema,
+            final boolean show_columns,
+            final PreparedStatement resultInserter)
+        throws SQLException
+    {
+        final FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            FemDataServer femServer =
+                stmtValidator.findDataServer(
+                        new SqlIdentifier(server, SqlParserPos.ZERO));
+
+            FarragoMedDataServer medServer =
+                stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                        femServer);
+            FarragoMedNameDirectory catalogDir = medServer.getNameDirectory();
+            if (catalogDir == null) {
+                return;
+            }
+            FarragoMedNameDirectory schemaDir =
+                catalogDir.lookupSubdirectory(schema);
+
+            FarragoMedMetadataQuery query = new MedMetadataQueryImpl();
+            query.getResultObjectTypes().add(FarragoMedMetadataQuery.OTN_TABLE);
+            if (show_columns) {
+                query.getResultObjectTypes().add(
+                        FarragoMedMetadataQuery.OTN_COLUMN);
+            }
+
+            FarragoMedMetadataSink sink = new MedAbstractMetadataSink(
+                    query, null) {
+                // implement FarragoMedMetadataSink
+                public boolean writeObjectDescriptor(
+                        String name,
+                        String typeName,
+                        String remarks,
+                        Properties properties)
+                {
+                    if (!shouldInclude(name, typeName, false)) {
+                        return false;
+                    }
+
+                    if (properties.getProperty("SCHEMA_NAME") != null
+                            && !properties.getProperty(
+                                "SCHEMA_NAME").equals(schema)) {
+                        return false;
+                    }
+
+                    if (!show_columns) {
+                        try {
+                            resultInserter.setString(1, name);
+                            resultInserter.setString(2, remarks);
+                            resultInserter.executeUpdate();
+                        } catch (SQLException ex) {
+                            throw FarragoResource.instance(
+                                    ).ValidatorImportFailed.ex(
+                                        name,
+                                        server,
+                                        ex);
+                        }
+                    }
+
+                    return true;
+                }
+
+                // implement FarragoMedMetadataSink
+                public boolean writeColumnDescriptor(
+                        String tableName,
+                        String columnName,
+                        int ordinal,
+                        RelDataType type,
+                        String remarks,
+                        String defaultValue,
+                        Properties properties)
+                {
+                    try {
+                        resultInserter.setString(1, tableName);
+                        resultInserter.setString(2, columnName);
+                        resultInserter.setInt(3, ordinal);
+                        resultInserter.setString(4, type.toString());
+                        resultInserter.setString(5, remarks);
+                        resultInserter.setString(6, defaultValue);
+                        resultInserter.executeUpdate();
+                    } catch (SQLException ex) {
+                        throw
+                            FarragoResource.instance().ValidatorImportFailed.ex(
+                                    tableName,
+                                    server,
+                                    ex);
+                    }
+                    return true;
+                }
+
+                public FarragoTypeFactory getTypeFactory() {
+                    return new FarragoTypeFactoryImpl(session.getRepos());
+                }
+            };
+
+            schemaDir.queryMetadata(query, sink);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
     }
 
     public static void browseForeignSchemas(

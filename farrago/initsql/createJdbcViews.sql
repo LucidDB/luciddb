@@ -240,7 +240,7 @@ create or replace view columns_view as
         t."name" as type_name,
         c.column_size,
         c.buffer_len,
-        c.dec_digits,
+        c.dec_digits as "DECIMAL_DIGITS",
         cast(null as integer) as num_prec_radix,
         c.nullable,
         null_remarks() as remarks,

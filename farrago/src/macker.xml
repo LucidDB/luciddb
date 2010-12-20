@@ -534,9 +534,7 @@
     </access-rule>
 
     <pattern name="ddl.gen.deps">
-      <include pattern="cwm" />
-      <include pattern="fem" />
-      <include pattern="eigenbase" />
+      <include pattern="query.deps" />
       <include pattern="ddl.gen" />
     </pattern>
 

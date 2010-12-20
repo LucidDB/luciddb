@@ -26,12 +26,14 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.jmi.*;
@@ -60,6 +62,7 @@ public class FarragoDdlGenerator
     //~ Instance fields --------------------------------------------------------
 
     protected final JmiModelView modelView;
+    protected boolean uglyViews;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -83,6 +86,18 @@ public class FarragoDdlGenerator
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Sets whether we output the user-defined SQL for VIEWS, which is
+     * prettier but may be incorrect, or if we output the correct (but ugly)
+     * system-expanded rewrite of the view definition. Default is false.
+     *
+     * @param uglyViews whether to make VIEW SQL ugly
+     */
+    public void setUglyViews(boolean uglyViews)
+    {
+        this.uglyViews = uglyViews;
+    }
 
     private RefClass findRefClass(Class<? extends RefObject> clazz)
     {
@@ -121,6 +136,16 @@ public class FarragoDdlGenerator
         return modelView;
     }
 
+    /**
+     * Finds a list of elements and their dependencies for a given
+     * schema and catalog.
+     *
+     * @param list - List to which found elements are added.
+     * @param schemaName - Schema to limit list, null to add all schemas.
+     * @param includeNonSchemaElements - Will include every other type
+     * of direct-child object in the catalog.
+     * @param catalog - Catalog object to search.
+     */
     public void gatherElements(
         List<CwmModelElement> list,
         String schemaName,
@@ -131,7 +156,8 @@ public class FarragoDdlGenerator
         for (CwmModelElement element : catalog.getOwnedElement()) {
             if (element instanceof CwmSchema) {
                 CwmSchema schema = (CwmSchema) element;
-                if (schema.getName().equals(schemaName)) {
+                // Note: ignore schema name if null.
+                if (schemaName == null || schema.getName().equals(schemaName)) {
                     list.add(schema);
                     for (CwmModelElement element2 : schema.getOwnedElement()) {
                         list.add(element2);
@@ -155,8 +181,15 @@ public class FarragoDdlGenerator
         list.addAll(allOfClass(CwmOperation.class));
 
         if (includeNonSchemaElements) {
+            // Note these are independent of catalog.
             list.addAll(allOfType(FemDataServer.class));
             list.addAll(allOfType(FemDataWrapper.class));
+            list.addAll(allOfType(FemUser.class));
+            // TODO: ks 25-Nov-2010: extend create for Role to include admin;
+            // requires that we become aware of GRANT elements since the
+            // admin isn't directly stored with the FemRole.
+            list.addAll(allOfType(FemRole.class));
+            list.addAll(allOfType(FemLabel.class));
         }
     }
 
@@ -198,20 +231,25 @@ public class FarragoDdlGenerator
         // Assume that the view was created in the context of its schema. If
         // that was not the case, we would have no way to detect it. We'd need
         // implement a closure mechanism to deal with SET SCHEMA and SET PATH.
-        if (generateSetSchema(stmt, view.getNamespace().getName(), false)) {
+        if (!uglyViews
+              && generateSetSchema(stmt, view.getNamespace().getName(), false))
+        {
             stmt.addStmt(";" + NL);
         }
 
         SqlBuilder sb = createSqlBuilder();
         createHeader(sb, "VIEW", stmt);
-
         name(sb, view.getNamespace(), view.getName());
         addDescription(sb, view);
         sb.append(" AS");
         sb.append(NL);
         stmt.addStmt(sb.getSqlAndClear());
 
-        sb.append(view.getOriginalDefinition());
+        if (!uglyViews) {
+            sb.append(view.getOriginalDefinition());
+        } else {
+            sb.append(view.getQueryExpression().getBody());
+        }
         stmt.addStmt(sb.getSqlAndClear());
     }
 
@@ -229,6 +267,75 @@ public class FarragoDdlGenerator
     }
 
     public void create(
+        FemUser user,
+        GeneratedDdlStmt stmt)
+    {
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "USER", stmt);
+
+        name(sb, null, user.getName());
+        stmt.addStmt(sb.getSqlAndClear());
+
+        sb.append(NL);
+        if (user.getEncryptedPassword() == null) {
+            sb.append("AUTHORIZATION ");
+            // Auths are not stored by the parser.
+            sb.literal("Unused");
+        } else {
+            sb.append("IDENTIFIED BY ");
+            sb.literal("********");
+        }
+        stmt.addStmt(sb.getSqlAndClear());
+
+        CwmNamespace ns = user.getDefaultNamespace();
+        if (ns != null) {
+            sb.append(NL);
+            sb.append("DEFAULT ");
+            if (ns instanceof FemLocalSchema) {
+                sb.append("SCHEMA ");
+            } else if (ns instanceof FemLocalCatalog) {
+                sb.append("CATALOG ");
+            }
+            name(sb, ns.getNamespace(), ns.getName());
+        }
+        stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
+        FemRole role,
+        GeneratedDdlStmt stmt)
+    {
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "ROLE", stmt);
+
+        name(sb, null, role.getName());
+
+        stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
+        FemJar jar,
+        GeneratedDdlStmt stmt)
+    {
+        SqlBuilder sb = createSqlBuilder();
+        createHeader(sb, "JAR", stmt);
+
+        name(sb, jar.getNamespace(), jar.getName());
+        addDescription(sb, jar);
+
+        stmt.addStmt(sb.getSqlAndClear());
+        sb.append(NL);
+        sb.append("LIBRARY ");
+        sb.literal(jar.getUrl());
+        sb.append(NL);
+        sb.append("OPTIONS(");
+        sb.append(jar.getDeploymentState());
+        sb.append(")");
+
+        stmt.addStmt(sb.getSqlAndClear());
+    }
+
+    public void create(
         FemLocalTable table,
         GeneratedDdlStmt stmt)
     {
@@ -238,7 +345,7 @@ public class FarragoDdlGenerator
         name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.getSqlAndClear());
 
-        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
+        addColumns(sb, table);
         addOptions(
             sb,
             table.getStorageOptions());
@@ -256,7 +363,7 @@ public class FarragoDdlGenerator
         name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.getSqlAndClear());
 
-        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
+        addColumns(sb, table);
         sb.append(NL);
         sb.append("SERVER ");
         FemDataServer server = table.getServer();
@@ -324,7 +431,7 @@ public class FarragoDdlGenerator
             createHeader(sb, "PROCEDURE", stmt);
         }
 
-        name(sb, routine.getNamespace(), routine.getName());
+        name(sb, routine.getNamespace(), routine.getInvocationName());
         stmt.addStmt(sb.getSqlAndClear());
 
         if (method) {
@@ -585,7 +692,7 @@ public class FarragoDdlGenerator
         createHeader(sb, "TYPE", stmt);
         name(sb, type.getNamespace(), type.getName());
         sb.append(" AS");
-        addColumns(sb, Util.filter(type.getFeature(), CwmColumn.class));
+        addColumns(sb, type);
         sb.append(NL);
         sb.append(maybeNot(type.isFinal(), "FINAL"));
         sb.append(NL);
@@ -696,6 +803,27 @@ public class FarragoDdlGenerator
     }
 
     public void drop(
+        FemRole role,
+        GeneratedDdlStmt stmt)
+    {
+        drop(role, "ROLE", stmt);
+    }
+
+    public void drop(
+        FemUser user,
+        GeneratedDdlStmt stmt)
+    {
+        drop(user, "USER", stmt);
+    }
+
+    public void drop(
+        FemJar jar,
+        GeneratedDdlStmt stmt)
+    {
+        drop(jar, "JAR", stmt);
+    }
+
+    public void drop(
         CwmView view,
         GeneratedDdlStmt stmt)
     {
@@ -792,18 +920,19 @@ public class FarragoDdlGenerator
 
     protected void addColumns(
         SqlBuilder sb,
-        List<CwmColumn> columns)
+        CwmClassifier table)
     {
-        addColumns(sb, columns, false, false);
+        addColumns(sb, table, false, false);
     }
 
     protected void addColumns(
         SqlBuilder sb,
-        List<CwmColumn> columns,
+        CwmClassifier table,
         boolean skipDefaults,
         boolean skipNullable)
     {
-        generateColumnsAndKeys(sb, columns, skipDefaults, skipNullable, null);
+        generateColumnsAndKeysForTable(
+                sb, table, skipDefaults, skipNullable, null);
     }
 
     /**
@@ -811,11 +940,72 @@ public class FarragoDdlGenerator
      * (enclosed in parentheses unless there are no columns).
      *
      * @param sb receives generated string
-     * @param columns list of column definitions to generate
+     * @param table table to iterate down for columns and keys
      * @param skipDefaults whether to omit default value definitions
      * @param skipNullable whether to omit NOT NULL constraint definitions
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
      */
+    public void generateColumnsAndKeysForTable(
+        SqlBuilder sb,
+        CwmClassifier table,
+        boolean skipDefaults,
+        boolean skipNullable,
+        List<String> imposedPrimaryKey)
+    {
+        List<CwmColumn> columns =
+            Util.filter(table.getFeature(), CwmColumn.class);
+        List<String> pk = imposedPrimaryKey;
+
+        pk = generateColumnsAndKeysForCols(
+                sb, columns, skipDefaults, skipNullable, pk);
+        if (columns.size() > 0) {
+            // add unique constraints
+            List<FemUniqueKeyConstraint> uniques =
+                FarragoCatalogUtil.getUniqueKeyConstraints(table);
+            // sort alphabetically
+            Collections.sort(
+                    uniques, new Comparator<Object>() {
+                        public int compare(Object obj1, Object obj2) {
+                            return (
+                              (FemUniqueKeyConstraint)obj1).getName().compareTo(
+                                  ((FemUniqueKeyConstraint)obj2).getName());
+                        }
+                    });
+
+            boolean firstConst = true;
+            for (FemUniqueKeyConstraint constraint : uniques) {
+                if (firstConst) {
+                    if (pk != null && pk.size() > 0) {
+                        sb.append(",");
+                        sb.append(NL);
+                    }
+                    firstConst = false;
+                } else {
+                    sb.append(",");
+                    sb.append(NL);
+                }
+                sb.append("   CONSTRAINT ");
+                sb.identifier(constraint.getName());
+                sb.append(" UNIQUE(");
+                List<CwmColumn> cols = Util.filter(
+                        constraint.getFeature(), CwmColumn.class);
+                boolean firstCol = true;
+                for (CwmColumn col : cols) {
+                    if (!firstCol) {
+                        sb.append(",");
+                    } else {
+                        firstCol = false;
+                    }
+                    sb.identifier(col.getName());
+                }
+                sb.append(")");
+            }
+        }
+        sb.append(NL);
+        sb.append(")");
+    }
+
+    // NOTE: original method preserved for backwards compatibility
     public void generateColumnsAndKeys(
         SqlBuilder sb,
         List<CwmColumn> columns,
@@ -823,8 +1013,23 @@ public class FarragoDdlGenerator
         boolean skipNullable,
         List<String> imposedPrimaryKey)
     {
-        // TODO jvs 8-Jul-2007:  UNIQUE constraints
+        List<String> pk = imposedPrimaryKey;
+        pk = generateColumnsAndKeysForCols(
+                sb, columns, skipDefaults, skipNullable, pk);
+        if (pk != null && pk.size() > 0) {
+            sb.append(NL);
+        }
+        sb.append(NL);
+        sb.append(")");
+    }
 
+    private List<String> generateColumnsAndKeysForCols(
+        SqlBuilder sb,
+        List<CwmColumn> columns,
+        boolean skipDefaults,
+        boolean skipNullable,
+        List<String> imposedPrimaryKey)
+    {
         boolean isLast = false;
         List<String> pk = imposedPrimaryKey;
 
@@ -890,8 +1095,8 @@ public class FarragoDdlGenerator
             }
 
             addPrimaryKeyConstraint(sb, pk);
-            sb.append(")");
         }
+        return pk;
     }
 
     protected void addOptions(
@@ -956,7 +1161,6 @@ public class FarragoDdlGenerator
                 sb.identifier(keyColumn);
             }
             sb.append(")");
-            sb.append(NL);
         }
     }
 

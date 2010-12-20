@@ -104,6 +104,13 @@ options (
     file_extension 'csv',
     with_header 'yes', 
     lenient 'no');
+create server test_server2
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'testgen/mgmt_files/',
+    file_extension 'csv',
+    with_header 'yes', 
+    lenient 'no');
 
 call sys_boot.mgmt.flush_code_cache();
 
@@ -134,3 +141,143 @@ call sys_boot.mgmt.flush_code_cache();
 
 -- verify that flush did not modify code cache size
 select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
+
+-- test generate ddl functions, should all pass
+
+-- test local catalog
+select statement from table(sys_boot.mgmt.generate_ddl_for_catalog());
+-- test sys_fem catalog
+select statement from table(sys_boot.mgmt.generate_ddl_for_catalog('SYS_FEM'));
+-- should fail since it doesn't exist
+select statement from table(sys_boot.mgmt.generate_ddl_for_catalog(
+    '02FAC378-F888-11DF-B152-E56DDFD72085'));
+
+-- test schema, table, view, functions, procedures, jars
+-- also runs catalog-specific functions on sys_fem, which should all be empty.
+create schema reznor;
+
+create table reznor.rhino (
+  a int primary key,
+  b int
+);
+
+create view reznor.r_view as
+  select a, b from reznor.rhino;
+
+create function reznor.eat(plumber varchar(32))
+returns varchar(20)
+contains sql
+return case
+  when plumber = 'Mario' then 'Luigi'
+  else 'Mario' end;
+
+create jar reznor.rez_jar
+library 'file:${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+options(0);
+
+create procedure reznor.r_kill(in id bigint)
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+
+select statement from table(sys_boot.mgmt.generate_ddl_for_schema('REZNOR'));
+select statement from table(sys_boot.mgmt.generate_ddl_for_schema(
+    'LOCALDB', 'REZNOR'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'RHINO'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('LOCALDB', 'REZNOR', 'RHINO'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'R_VIEW'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'not_exist'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_routine('LOCALDB', 'REZNOR', 'EAT'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'R_KILL'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_jar('REZNOR', 'REZ_JAR'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'REZNOR', 'REZ_JAR'));
+
+-- should fail:  schema does not exist
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_jar('LOCALDB', 'PEZNOR', 'REZ_JAR'));
+
+-- UNIQUE constraints
+create table reznor.rezzy (a int primary key, b int unique);
+create table reznor.rezzy2 (
+  a int primary key,
+  b int not null,
+  c int not null,
+  d int not null,
+  e int not null,
+  CONSTRAINT b_and_c UNIQUE(b, c),
+  CONSTRAINT d_and_e UNIQUE(d, e));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY'));
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_table('REZNOR', 'REZZY2'));
+
+-- test overloaded routine
+create function reznor.eat(xy varchar(32), uv varchar(32))
+returns varchar(20)
+contains sql
+specific eat2
+return xy;
+
+-- should show both
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_routine('REZNOR', 'EAT'));
+-- should show just second one
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_specific_routine('REZNOR', 'EAT2'));
+
+-- test index
+create index rhino_idx on reznor.rhino(a);
+select statement from table(sys_boot.mgmt.generate_ddl_for_index(
+    'REZNOR', 'RHINO_IDX'));
+select statement from table(sys_boot.mgmt.generate_ddl_for_index(
+    'LOCALDB', 'REZNOR', 'RHINO_IDX'));
+drop index reznor.rhino_idx;
+drop schema reznor cascade;
+
+-- test server created earlier
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_server('TEST_SERVER2'));
+drop server test_server2;
+
+-- test wrapper
+create foreign data wrapper hsqldb_wrapper2
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+language java
+options(
+    browse_connect_description 'Hypersonic',
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:path/to/data'
+);
+select statement from
+  table(sys_boot.mgmt.generate_ddl_for_wrapper('HSQLDB_WRAPPER2'));
+drop foreign data wrapper hsqldb_wrapper2;
+
+-- test user
+create user peachy identified by 'toadstool';
+select statement from table(sys_boot.mgmt.generate_ddl_for_user('PEACHY'));
+
+-- test role
+create role xyz with admin peachy;
+select statement from table(sys_boot.mgmt.generate_ddl_for_role('XYZ'));
+drop role xyz;
+drop user peachy;
+
+-- test label: (can only be created and dropped in the LucidDB personality)
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+create label alabel description 'some label';
+create label alabel2 from label alabel description 'child label';
+select statement from table(sys_boot.mgmt.generate_ddl_for_label('ALABEL'));
+select statement from table(sys_boot.mgmt.generate_ddl_for_label('ALABEL2'));
+drop label alabel cascade;
+
