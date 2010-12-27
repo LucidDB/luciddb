@@ -192,11 +192,10 @@ ExecStreamResult JavaTransformExecStream::execute(
         FENNEL_TRACE(TRACE_FINER, "wrote " << cb << " bytes");
         return EXECRC_BUF_OVERFLOW;
     } else if (cb < 0) {
-        FENNEL_TRACE(TRACE_FINER, "underflow");
+        FENNEL_TRACE(TRACE_FINER, "underflow or adapter (sink) queue is full.");
+        // if inputs are empty, request for more data from upstream.
         checkEmptyInputs();
-        // TODO mb 10/28/08: return EXECRC_YIELD when executing in data-push
-        // mode.
-        return EXECRC_BUF_UNDERFLOW;
+        return EXECRC_QUANTUM_EXPIRED;
     } else {
         FENNEL_TRACE(TRACE_FINER, "marking EOS");
         if (pOutAccessor) {
