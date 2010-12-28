@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
+
 import java.nio.*;
 
 import java.util.*;
@@ -31,6 +33,7 @@ import junit.framework.*;
 import net.sf.farrago.fennel.tuple.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -43,6 +46,10 @@ import org.eigenbase.util.*;
 public class FennelTupleTest
     extends TestCase
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final String UNICODE_CHARSET =
+        ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -176,6 +183,16 @@ public class FennelTupleTest
             case FennelStandardTypeDescriptor.VARBINARY_ORDINAL:
                 d.getDatum(i).setBytes(((String) objs[i]).getBytes());
                 break;
+            case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
+            case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
+                try {
+                    d.getDatum(i).setString(
+                        ((String) objs[i]),
+                        UNICODE_CHARSET);
+                } catch (UnsupportedEncodingException ex) {
+                    throw Util.newInternal(ex);
+                }
+                break;
             default:
                 assertTrue(false);
             }
@@ -283,6 +300,19 @@ public class FennelTupleTest
                         0,
                         d.getDatum(i).getLength());
                 break;
+            case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
+            case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
+                try {
+                    o[i] =
+                        new String(
+                            d.getDatum(i).getBytes(),
+                            0,
+                            d.getDatum(i).getLength(),
+                            UNICODE_CHARSET);
+                } catch (UnsupportedEncodingException ex) {
+                    throw Util.newInternal(ex);
+                }
+                break;
             default:
                 assertTrue(false);
             }
@@ -319,10 +349,9 @@ public class FennelTupleTest
                 0));
         desc.add(
             new FennelTupleAttributeDescriptor(
-                
 
                 // len=32 requires padding for 8-byte alignment
-        FennelStandardTypeDescriptor.VARCHAR,
+                FennelStandardTypeDescriptor.VARCHAR,
                 false,
                 32));
 
@@ -333,10 +362,17 @@ public class FennelTupleTest
         int defsize = def.getMaxByteCount();
         int by4size = by4.getMaxByteCount();
         int by8size = by8.getMaxByteCount();
-        //        System.out.println(            "def=" +defsize +" by4="
-        // +by4size +" by8=" +by8size);
+        // System.out.println(            "def=" +defsize +" by4=" +by4size +"
+        // by8=" +by8size);
 
+        // NOTE jvs 26-May-2007:  I'm disabling this because now
+        // default alignment is based on JVM data model; but see
+        // TODO on FennelTupleAccessor.TUPLE_ALIGN_JVM; resolution
+        // there may imply more testing here.
+        /*
         assertEquals("4-byte alignment is default,", by4size, defsize);
+        */
+
         assertTrue("4-byte alignment, size=" + by4size, (by4size % 4) == 0);
         assertTrue("8-byte alignment, size=" + by8size, (by8size % 8) == 0);
     }
@@ -344,23 +380,23 @@ public class FennelTupleTest
     public void testMinimal()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.INT_32,
-                FennelStandardTypeDescriptor.INT_16,
-                FennelStandardTypeDescriptor.UINT_32,
-                FennelStandardTypeDescriptor.INT_8,
-                FennelStandardTypeDescriptor.UINT_8
-            };
+        {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8
+        };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object [] before =
-            {
-                new Integer(5555),
-                new Short((short) -25),
-                new Long(555555L),
-                new Byte((byte) 120),
-                new Short((short) 128)
-            };
+        {
+            new Integer(5555),
+            new Short((short) -25),
+            new Long(555555L),
+            new Byte((byte) 120),
+            new Short((short) 128)
+        };
 
         ByteBuffer b1 = marshallValues(desc, before);
         b1.flip();
@@ -371,29 +407,35 @@ public class FennelTupleTest
     public void testNumericMaximums()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.INT_32,
-                FennelStandardTypeDescriptor.UINT_32,
-                FennelStandardTypeDescriptor.INT_64,
-                FennelStandardTypeDescriptor.UINT_64,
-                FennelStandardTypeDescriptor.INT_16,
-                FennelStandardTypeDescriptor.UINT_16,
-                FennelStandardTypeDescriptor.INT_8,
-                FennelStandardTypeDescriptor.UINT_8,
-                FennelStandardTypeDescriptor.BOOL,
-                FennelStandardTypeDescriptor.REAL,
-                FennelStandardTypeDescriptor.DOUBLE
-            };
+        {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_64,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.DOUBLE
+        };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object [] maxVals =
-            { new Integer(Integer.MAX_VALUE), new Long(
-                    (((long) (Integer.MAX_VALUE)) << 1) - 1), new Long(
-                    Long.MAX_VALUE), new Long(Long.MAX_VALUE), // FIXME
-                 new Short(Short.MAX_VALUE), new Integer(
-                    (((int) (Short.MAX_VALUE)) << 1) - 1), new Byte(
-                    Byte.MAX_VALUE), new Short((short) 255), new Boolean(true), new Float(
-                    Float.MAX_VALUE), new Double(Double.MAX_VALUE) };
+        {
+            new Integer(Integer.MAX_VALUE),
+            new Long(
+                (((long) (Integer.MAX_VALUE)) << 1) - 1),
+            new Long(
+                Long.MAX_VALUE), new Long(Long.MAX_VALUE), // FIXME
+            new Short(Short.MAX_VALUE),
+            new Integer(
+                (((int) (Short.MAX_VALUE)) << 1) - 1), new Byte(
+                Byte.MAX_VALUE), new Short((short) 255), new Boolean(true),
+            new Float(
+                Float.MAX_VALUE), new Double(Double.MAX_VALUE)
+        };
 
         ByteBuffer buff = marshallValues(desc, maxVals);
 
@@ -409,27 +451,32 @@ public class FennelTupleTest
     public void testNumericMinimums()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.INT_32,
-                FennelStandardTypeDescriptor.UINT_32,
-                FennelStandardTypeDescriptor.INT_64,
-                FennelStandardTypeDescriptor.UINT_64,
-                FennelStandardTypeDescriptor.INT_16,
-                FennelStandardTypeDescriptor.UINT_16,
-                FennelStandardTypeDescriptor.INT_8,
-                FennelStandardTypeDescriptor.UINT_8,
-                FennelStandardTypeDescriptor.BOOL,
-                FennelStandardTypeDescriptor.REAL,
-                FennelStandardTypeDescriptor.DOUBLE
-            };
+        {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_64,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.DOUBLE
+        };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object [] minVals =
-            { new Integer(Integer.MIN_VALUE), new Long(0L), new Long(
-                    Long.MIN_VALUE), new Long(0L), // FIXME
-                 new Short(Short.MIN_VALUE), new Integer(0), new Byte(
-                    Byte.MIN_VALUE), new Short((short) 0), new Boolean(false), new Float(
-                    Float.MAX_VALUE), new Double(Double.MAX_VALUE) };
+        {
+            new Integer(Integer.MIN_VALUE), new Long(0L),
+            new Long(
+                Long.MIN_VALUE), new Long(0L), // FIXME
+            new Short(Short.MIN_VALUE), new Integer(0),
+            new Byte(
+                Byte.MIN_VALUE), new Short((short) 0), new Boolean(false),
+            new Float(
+                Float.MAX_VALUE), new Double(Double.MAX_VALUE)
+        };
         ByteBuffer buff = marshallValues(desc, minVals);
 
         /*
@@ -444,31 +491,31 @@ public class FennelTupleTest
     public void testNullables()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.INT_32,
-                FennelStandardTypeDescriptor.UINT_32,
-                FennelStandardTypeDescriptor.BOOL,
-                FennelStandardTypeDescriptor.UINT_64,
-                FennelStandardTypeDescriptor.REAL,
-                FennelStandardTypeDescriptor.UINT_16,
-                FennelStandardTypeDescriptor.INT_8,
-                FennelStandardTypeDescriptor.UINT_8,
-                FennelStandardTypeDescriptor.BOOL
-            };
+        {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL
+        };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
                 new boolean[] {
                     true, true, true, true, true,
-                true, true, true, true
+                    true, true, true, true
                 },
                 new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 });
 
         Object [] nullVals =
-            {
-                null, null, null, null, null,
-                null, null, null, null
-            };
+        {
+            null, null, null, null, null,
+            null, null, null, null
+        };
         ByteBuffer buff = marshallValues(desc, nullVals);
 
         /*
@@ -483,25 +530,35 @@ public class FennelTupleTest
     public void testStrings()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.CHAR,
-                FennelStandardTypeDescriptor.VARCHAR,
-                FennelStandardTypeDescriptor.VARCHAR,
-                FennelStandardTypeDescriptor.CHAR
-            };
+        {
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.UNICODE_CHAR,
+            FennelStandardTypeDescriptor.UNICODE_VARCHAR,
+            FennelStandardTypeDescriptor.UNICODE_CHAR,
+            FennelStandardTypeDescriptor.UNICODE_VARCHAR
+        };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
-                new boolean[] { false, false, true, true },
-                new int[] { 10, 20, 12, 8 });
+                new boolean[] {
+                    false, false, true, true, false, false, true, true
+                },
+                new int[] { 10, 20, 12, 8, 20, 40, 24, 16 });
 
         Object [] stringVals =
-            {
-                new String("10bytes   "),
-                new String("hi"),
-                null,
-                new String("6bytes  ")
-            };
+        {
+            new String("10bytes   "),
+            new String("hi"),
+            null,
+            new String("6bytes  "),
+            new String("10bytes   "),
+            new String("hi"),
+            null,
+            new String("6bytes  ")
+        };
 
         ByteBuffer buff = marshallValues(desc, stringVals);
 
@@ -524,12 +581,12 @@ public class FennelTupleTest
     public void testBinaries()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.BINARY,
-                FennelStandardTypeDescriptor.VARBINARY,
-                FennelStandardTypeDescriptor.VARBINARY,
-                FennelStandardTypeDescriptor.BINARY
-            };
+        {
+            FennelStandardTypeDescriptor.BINARY,
+            FennelStandardTypeDescriptor.VARBINARY,
+            FennelStandardTypeDescriptor.VARBINARY,
+            FennelStandardTypeDescriptor.BINARY
+        };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
@@ -537,12 +594,12 @@ public class FennelTupleTest
                 new int[] { 10, 20, 12, 8 });
 
         Object [] binaryVals =
-            {
-                new String("10bytes   "),
-                new String("hi"),
-                null,
-                new String("6bytes  ")
-            };
+        {
+            new String("10bytes   "),
+            new String("hi"),
+            null,
+            new String("6bytes  ")
+        };
 
         ByteBuffer buff = marshallValues(desc, binaryVals);
 
@@ -562,9 +619,11 @@ public class FennelTupleTest
          * think we should be throwing an exception rather than an assert in the
          * tuple library, but that needs to be argued with the fennel library
          */
-        for (Iterator iterator =
+        for (
+            Iterator iterator =
                 FennelStandardTypeDescriptor.enumeration.iterator();
-            iterator.hasNext();) {
+            iterator.hasNext();)
+        {
             FennelStandardTypeDescriptor fennelStandardTypeDescriptor =
                 (FennelStandardTypeDescriptor) iterator.next();
             FennelTupleDescriptor desc =
@@ -573,7 +632,8 @@ public class FennelTupleTest
                         fennelStandardTypeDescriptor
                     });
             try {
-                ByteBuffer buff = marshallValues(
+                ByteBuffer buff =
+                    marshallValues(
                         desc,
                         new Object[] { null });
                 Util.discard(buff);
@@ -590,12 +650,12 @@ public class FennelTupleTest
     public void testMultipleMarshalling()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.VARCHAR,
-                FennelStandardTypeDescriptor.INT_32,
-                FennelStandardTypeDescriptor.VARCHAR,
-                FennelStandardTypeDescriptor.UINT_32
-            };
+        {
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.UINT_32
+        };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
@@ -605,7 +665,8 @@ public class FennelTupleTest
         final int COUNT = 20;
         Object [] initialVals = new Object[COUNT];
         for (int i = 0; i < COUNT; ++i) {
-            initialVals[i] = new Object[] {
+            initialVals[i] =
+                new Object[] {
                     new String("Value " + i),
                     new Integer(i),
                     new String("this is very cool data - iteration " + i),
@@ -672,11 +733,11 @@ public class FennelTupleTest
     public void testLargeVarBuffers()
     {
         FennelStandardTypeDescriptor [] o1 =
-            {
-                FennelStandardTypeDescriptor.CHAR,
-                FennelStandardTypeDescriptor.VARCHAR,
-                FennelStandardTypeDescriptor.VARBINARY
-            };
+        {
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.VARBINARY
+        };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
@@ -684,11 +745,11 @@ public class FennelTupleTest
                 new int[] { 40000, 2000, 5000 });
 
         Object [] stringVals =
-            {
-                new String("10bytes   "),
-                new String("hi"),
-                new String("howdy")
-            };
+        {
+            new String("10bytes   "),
+            new String("hi"),
+            new String("howdy")
+        };
 
         ByteBuffer buff = marshallValues(desc, stringVals);
 

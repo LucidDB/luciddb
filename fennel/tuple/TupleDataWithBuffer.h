@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,9 +38,10 @@ FENNEL_BEGIN_NAMESPACE
  * given the TupleDescriptor obtained from
  * Calculator::getOutputRegisterDescriptor and from
  * Calculator::getInputRegisterDescriptor()
- * 
+ *
  */
-class TupleDataWithBuffer : public TupleData
+class FENNEL_TUPLE_EXPORT TupleDataWithBuffer
+    : public TupleData
 {
 public:
     explicit TupleDataWithBuffer();

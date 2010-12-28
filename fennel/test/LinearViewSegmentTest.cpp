@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,15 +32,15 @@ class LinearViewSegmentTest : virtual public SegmentTestBase
 {
     uint nDiskPagesTotal;
     PageId firstPageId;
-    
+
 public:
     explicit LinearViewSegmentTest()
     {
         nDiskPagesTotal = nDiskPages;
-        FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(SegmentTestBase, testSingleThread);
+        FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
     }
-  
+
     virtual void openSegmentStorage(DeviceMode openMode)
     {
         nDiskPages = nDiskPagesTotal;
@@ -48,15 +48,15 @@ public:
             firstPageId = NULL_PAGE_ID;
         }
         SharedSegment pDeviceSegment = createLinearDeviceSegment(
-            dataDeviceId,nDiskPages);
+            dataDeviceId, nDiskPages);
         pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-            pDeviceSegment,openMode.create);
+            pDeviceSegment, openMode.create);
         nDiskPages /= 2;
         SharedSegment pLinearViewSegment =
-            pSegmentFactory->newLinearViewSegment(pRandomSegment,firstPageId);
+            pSegmentFactory->newLinearViewSegment(pRandomSegment, firstPageId);
         pLinearSegment = pLinearViewSegment;
     }
-    
+
     virtual void testAllocateAll()
     {
         SegmentTestBase::testAllocateAll();

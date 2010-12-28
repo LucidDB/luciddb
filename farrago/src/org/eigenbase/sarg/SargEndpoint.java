@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,13 +25,10 @@ import java.math.*;
 
 import java.nio.*;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.util14.*;
 
 
 /**
@@ -62,26 +59,27 @@ public class SargEndpoint
     protected final RelDataType dataType;
 
     /**
-     * Coordinate for this endpoint, constrained to be either {@link RexLiteral}
-     * or {@link RexDynamicParam}, or null to represent infinity (positive or
-     * negative infinity is implied by boundType).
+     * Coordinate for this endpoint, constrained to be either {@link
+     * RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or null to
+     * represent infinity (positive or negative infinity is implied by
+     * boundType).
      */
     protected RexNode coordinate;
 
     /**
-     * @see getBoundType
+     * @see #getBoundType
      */
     protected SargBoundType boundType;
 
     /**
-     * @see getStrictness
+     * @see #getStrictness
      */
     protected SargStrictness strictness;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newEndpoint
+     * @see SargFactory#newEndpoint
      */
     SargEndpoint(SargFactory factory, RelDataType dataType)
     {
@@ -140,13 +138,15 @@ public class SargEndpoint
     {
         // validate the input
         assert (coordinate != null);
-        if (!(coordinate instanceof RexDynamicParam)) {
+        if (!(coordinate instanceof RexDynamicParam)
+            && !(coordinate instanceof RexInputRef))
+        {
             assert (coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
                 assert (SqlTypeUtil.canAssignFrom(
-                            dataType,
-                            literal.getType()));
+                    dataType,
+                    literal.getType()));
             }
         }
 
@@ -159,9 +159,9 @@ public class SargEndpoint
     private void convertToTargetType()
     {
         if (!(coordinate instanceof RexLiteral)) {
-            // Dynamic parameters are always cast to the target type before
-            // comparison, so they are guaranteed not to need any special
-            // conversion logic.
+            // Dynamic parameters and RexInputRefs are always cast to the
+            // target type before comparison, so they are guaranteed not to
+            // need any special conversion logic.
             return;
         }
 
@@ -218,9 +218,9 @@ public class SargEndpoint
     {
         // For character strings, have to deal with truncation (complicated by
         // padding rules).
-        
-        boolean fixed = dataType.getSqlTypeName() == SqlTypeName.Char;
-        
+
+        boolean fixed = dataType.getSqlTypeName() == SqlTypeName.CHAR;
+
         String s = value.getValue();
         String trimmed = Util.rtrim(s);
 
@@ -271,7 +271,7 @@ public class SargEndpoint
     private int convertBytes(ByteBuffer value)
     {
         // REVIEW jvs 11-Sept-2006:  What about 0-padding for BINARY?
-        
+
         // For binary strings, have to deal with truncation.
 
         byte [] a = value.array();
@@ -353,8 +353,8 @@ public class SargEndpoint
     }
 
     /**
-     * @return true if this endpoint represents infinity (either positive or
-     * negative); false if a finite coordinate
+     * @return false if this endpoint represents infinity (either positive or
+     * negative); true if a finite coordinate
      */
     public boolean isFinite()
     {
@@ -432,9 +432,11 @@ public class SargEndpoint
         }
 
         if ((coordinate instanceof RexDynamicParam)
-            || (other.coordinate instanceof RexDynamicParam)) {
+            || (other.coordinate instanceof RexDynamicParam))
+        {
             if ((coordinate instanceof RexDynamicParam)
-                && (other.coordinate instanceof RexDynamicParam)) {
+                && (other.coordinate instanceof RexDynamicParam))
+            {
                 // make sure it's the same param
                 RexDynamicParam p1 = (RexDynamicParam) coordinate;
                 RexDynamicParam p2 = (RexDynamicParam) other.coordinate;
@@ -443,6 +445,23 @@ public class SargEndpoint
                 }
             } else {
                 // one is a dynamic param but the other isn't
+                return false;
+            }
+        } else if (
+            (coordinate instanceof RexInputRef)
+            || (other.coordinate instanceof RexInputRef))
+        {
+            if ((coordinate instanceof RexInputRef)
+                && (other.coordinate instanceof RexInputRef))
+            {
+                // make sure it's the same RexInputRef
+                RexInputRef r1 = (RexInputRef) coordinate;
+                RexInputRef r2 = (RexInputRef) other.coordinate;
+                if (r1.getIndex() != r2.getIndex()) {
+                    return false;
+                }
+            } else {
+                // one is a RexInputRef but the other isn't
                 return false;
             }
         } else if (compareCoordinates(coordinate, other.coordinate) != 0) {
@@ -517,7 +536,8 @@ public class SargEndpoint
         }
 
         // both are finite:  compare coordinates
-        int c = compareCoordinates(
+        int c =
+            compareCoordinates(
                 getCoordinate(),
                 other.getCoordinate());
 
@@ -543,8 +563,7 @@ public class SargEndpoint
      */
     public SargStrictness getStrictnessComplement()
     {
-        return
-            (strictness == SargStrictness.OPEN) ? SargStrictness.CLOSED
+        return (strictness == SargStrictness.OPEN) ? SargStrictness.CLOSED
             : SargStrictness.OPEN;
     }
 

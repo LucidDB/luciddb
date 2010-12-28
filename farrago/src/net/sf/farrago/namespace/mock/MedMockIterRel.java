@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,7 @@ import org.eigenbase.sql2rel.*;
 
 /**
  * MedMockIterRel provides a mock implementation for {@link TableAccessRel} with
- * {@link CallingConvention.ITERATOR}.
+ * {@link org.eigenbase.relopt.CallingConvention#ITERATOR}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -46,7 +46,6 @@ class MedMockIterRel
     implements JavaRel,
         RelStructuredTypeFlattener.SelfFlatteningRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;
@@ -92,7 +91,7 @@ class MedMockIterRel
     }
 
     // implement RelNode
-    public Object clone()
+    public MedMockIterRel clone()
     {
         MedMockIterRel clone =
             new MedMockIterRel(

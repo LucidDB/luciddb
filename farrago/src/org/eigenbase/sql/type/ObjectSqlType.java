@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 public class ObjectSqlType
     extends AbstractSqlType
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier sqlIdentifier;
@@ -97,7 +96,7 @@ public class ObjectSqlType
     }
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         // TODO jvs 10-Feb-2005:  proper quoting; dump attributes withDetail?
         sb.append("ObjectSqlType(");

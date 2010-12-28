@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  * methods in the BTreeNodeAccessor interface.  It requires the class used to
  * instantiate NodeAccessor to implement a getEntryForReadInline method.
  */
-template <class NodeAccessor,class KeyAccessor>
+template <class NodeAccessor, class KeyAccessor>
 class BTreeKeyedNodeAccessor : public NodeAccessor
 {
 public:
@@ -45,19 +45,19 @@ public:
     {
         assert(iEntry < node.nEntries);
         NodeAccessor::tupleAccessor.setCurrentTupleBuf(
-            NodeAccessor::getEntryForReadInline(node,iEntry));
+            NodeAccessor::getEntryForReadInline(node, iEntry));
     }
-    
+
     virtual void accessTuple(BTreeNode const &node,uint iEntry)
     {
-        return accessTupleInline(node,iEntry);
+        return accessTupleInline(node, iEntry);
     }
-    
+
     virtual void unmarshalKey(TupleData &keyData)
     {
         pKeyAccessor->unmarshal(keyData);
     }
-    
+
     virtual uint binarySearch(
         BTreeNode const &node,
         TupleDescriptor const &keyDescriptor,
@@ -74,13 +74,13 @@ public:
         while (nKeys > 0) {
             uint split = nKeys >> 1;
             probe = base + split;
-            accessTupleInline(node,probe);
+            accessTupleInline(node, probe);
             pKeyAccessor->unmarshal(scratchKey);
             int j = keyDescriptor.compareTuples(
-                searchKey,scratchKey);
+                searchKey, scratchKey);
             if (j == 0) {
                 found = true;
-                switch(dupSeek) {
+                switch (dupSeek) {
                 case DUP_SEEK_ANY:
                     return probe;
                 case DUP_SEEK_BEGIN:
@@ -103,11 +103,11 @@ public:
         if (!found && !leastUpper && (base > 0)) {
             base--;
         }
-        if (((base != probe) && (base < node.nEntries)) ||
-            ((node.nEntries == 1) && (node.height != 0)))
+        if (((base != probe) && (base < node.nEntries))
+            || ((node.nEntries == 1) && (node.height != 0)))
         {
-            // one entry: +infinity            
-            accessTupleInline(node,base);
+            // one entry: +infinity
+            accessTupleInline(node, base);
         }
         return base;
     }
@@ -119,8 +119,9 @@ public:
         TupleData &scratchKey)
     {
         int nKeys = NodeAccessor::getKeyCount(node);
-        if (nKeys == 0)
+        if (nKeys == 0) {
             return -1;
+        }
         accessTupleInline(node, 0);
         pKeyAccessor->unmarshal(scratchKey);
         int compareResult = keyDescriptor.compareTuples(searchKey, scratchKey);
@@ -129,7 +130,7 @@ public:
 
     virtual PConstBuffer getEntryForRead(BTreeNode const &node,uint iEntry)
     {
-        return NodeAccessor::getEntryForReadInline(node,iEntry);
+        return NodeAccessor::getEntryForReadInline(node, iEntry);
     }
 };
 

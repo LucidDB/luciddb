@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import junit.framework.*;
 public class FennelDmlTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -97,7 +96,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from depts");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Sales");
             refSet.add("Marketing");
             refSet.add("Accounts");
@@ -123,7 +122,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from emps");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Fred");
             refSet.add("Eric");
             refSet.add("John");
@@ -149,7 +148,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(2, rowCount);
             resultSet = stmt.executeQuery("select name from depts");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Sales");
             refSet.add("Marketing");
             refSet.add("Accounts");
@@ -176,7 +175,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select empid from temps");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("999");
             compareResultSet(refSet);
         } finally {
@@ -197,7 +196,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from temps");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Wilma");
             compareResultSet(refSet);
         } finally {
@@ -220,7 +219,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from depts");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Sales");
             refSet.add("Marketing");
             refSet.add("Accounts");
@@ -253,7 +252,7 @@ public class FennelDmlTest
 
             assertEquals(2, rowCount);
             resultSet = stmt.executeQuery("select name from depts");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Sales");
             refSet.add("Marketing");
             refSet.add("Accounts");
@@ -311,7 +310,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from depts");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add("Sales");
             refSet.add("Accounts");
             compareResultSet(refSet);
@@ -334,7 +333,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select age from emps");
-            Set refSet = new HashSet();
+            Set<String> refSet = new HashSet<String>();
             refSet.add(null);
             refSet.add("25");
             refSet.add("99");
@@ -358,7 +357,7 @@ public class FennelDmlTest
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
             resultSet = stmt.executeQuery("select name from depts order by 1");
-            List refList = new ArrayList();
+            List<String> refList = new ArrayList<String>();
             refList.add("Marketing");
             refList.add("Sales");
             refList.add("Slacking");
@@ -398,7 +397,7 @@ public class FennelDmlTest
         String sql = "select name from depts";
 
         int rowCount;
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add("Sales");
         refSet.add("Marketing");
         refSet.add("Accounts");

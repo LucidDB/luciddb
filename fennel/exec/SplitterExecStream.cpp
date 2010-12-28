@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,7 +38,7 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
 {
     if (pLastConsumptionEnd) {
         while (iOutput < outAccessors.size()) {
-            switch(outAccessors[iOutput]->getState()) {
+            switch (outAccessors[iOutput]->getState()) {
             case EXECBUF_NONEMPTY:
             case EXECBUF_OVERFLOW:
                 return EXECRC_BUF_OVERFLOW;
@@ -57,33 +57,27 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
          * means the downstream consumers must have consumed everything
          * up to the last byte we told them was available; pass that
          * information on to our upstream producer.
-         * Also reset the pLastConsumptionEnd pointer and the EOBCount.
          */
         pInAccessor->consumeData(pLastConsumptionEnd);
         pLastConsumptionEnd = NULL;
         iOutput = 0;
-
-        /*
-         * Now that all the consumers are done with this output buffer,
-         * should transition to the scheduler so that producer exec
-         * stream could be scheduled to provide new input buffer.
-         */
-        return EXECRC_BUF_UNDERFLOW;
     }
-    
-    switch(pInAccessor->getState()) {
+
+    switch (pInAccessor->getState()) {
     case EXECBUF_OVERFLOW:
     case EXECBUF_NONEMPTY:
-        pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
-        
-        /*
-         * The same buffer is provided for consumption to all the output buffer
-         * accessors.
-         */
-        for (int i = 0; i < outAccessors.size(); i ++) {
-            outAccessors[i]->provideBufferForConsumption(
-                pInAccessor->getConsumptionStart(),
-                pLastConsumptionEnd);
+        if (!pLastConsumptionEnd) {
+            pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
+
+            /*
+             * The same buffer is provided for consumption to all the output
+             * buffer accessors.
+             */
+            for (int i = 0; i < outAccessors.size(); i ++) {
+                outAccessors[i]->provideBufferForConsumption(
+                    pInAccessor->getConsumptionStart(),
+                    pLastConsumptionEnd);
+            }
         }
         return EXECRC_BUF_OVERFLOW;
     case EXECBUF_UNDERFLOW:

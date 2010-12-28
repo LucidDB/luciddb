@@ -57,7 +57,7 @@ create table dummy_region (
     R_COMMENT    VARCHAR(152));
 
 call sys_boot.mgmt.stat_set_page_count(
-    'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
+    'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DUMMY_REGION',1);
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 
@@ -73,7 +73,10 @@ call sys_boot.mgmt.stat_set_column_histogram(
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
@@ -82,7 +85,10 @@ select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
 
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 drop schema tpcd cascade;
@@ -94,6 +100,16 @@ drop schema tpcd cascade;
 
 create schema stat;
 set schema 'stat';
+
+-- create a backdoor to allow repeatable samples during estimation
+create or replace procedure test_set_sess_var(
+    in var_name varchar(2000),
+    in var_value varchar(2000))
+language java
+contains sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.setSessionVariable';
+
+call stat.test_set_sess_var('test.estimateStatsSeed', '112358');
 
 -- create a few tables
 create table depts(
@@ -128,7 +144,10 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
@@ -142,7 +161,10 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
@@ -155,7 +177,10 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
@@ -165,18 +190,48 @@ analyze table emps compute statistics for all columns;
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
--- 2.6 note: sampling has not been implemented, only test syntax
+-- 2.6 delete some rows and then reanalyze; make sure old histograms have
+-- been removed
 --
-analyze table depts estimate statistics for all columns sample 10 percent;
+delete from emps where empno = 110;
+analyze table emps compute statistics for all columns;
+
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
--- 2.7 analyze a foreign table
+-- 2.7 note: sampling has not been implemented, only test syntax
 --
+analyze table depts estimate statistics for all columns sample 50 percent;
+
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+
+-- Disable repeatable seed
+call stat.test_set_sess_var('test.estimateStatsSeed', null);
+
 drop schema stat cascade;
+
+--
+-- 2.8 analyze a foreign table
+--
 create schema stat;
 set schema 'stat';
 
@@ -199,18 +254,21 @@ analyze table stat_file compute statistics for all columns;
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
+drop table stat_file;
+
 --
--- 2.8 A few more rows than histogram bars
+-- 2.9 A few more rows than histogram bars
 --
-create table ten(i int primary key)
-server sys_column_store_data_server;
+create table ten(i int primary key);
 insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 
-create table hundred (i int primary key)
-server sys_column_store_data_server;
+create table hundred (i int primary key);
 insert into hundred (select a.i*10 + b.i from ten a, ten b);
 insert into hundred values (100), (101);
 
@@ -218,5 +276,28 @@ analyze table hundred compute statistics for all columns;
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
-select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+  cardinality_estimated, percent_sampled, sample_size, bar_count, 
+  rows_per_bar, rows_last_bar
+from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+
+-------------------------------------------------------------------------------
+-- Miscellaneous Tests
+------------------------------------------------------------------------------
+
+--
+-- Test fix for FRG-6448
+--
+
+!outputformat csv
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+create table frg6448 (id int primary key, val int not null);
+create index frg6448_val_idx on frg6448(val);
+insert into frg6448 values (1, 1), (2, 2), (3, 1), (4, 2), (5, 1), (6, 2);
+analyze table frg6448 compute statistics for all columns;
+
+explain plan for select * from frg6448 where val = ?;
+
+!outputformat table

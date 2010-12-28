@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -70,7 +70,6 @@ package org.eigenbase.util;
  */
 public class RhBase64
 {
-
     /* ********  P U B L I C   F I E L D S  ******** */
 
     //~ Static fields/initializers ---------------------------------------------
@@ -128,26 +127,24 @@ public class RhBase64
     private final static byte [] ALPHABET;
     private final static byte [] _NATIVE_ALPHABET = /* May be something funny
                                                      like EBCDIC */
-        {
-            (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte)
-            'F', (byte) 'G',
-            (byte) 'H', (byte) 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte)
-            'M', (byte) 'N',
-            (byte) 'O', (byte) 'P', (byte) 'Q', (byte) 'R', (byte) 'S', (byte)
-            'T', (byte) 'U',
-            (byte) 'V', (byte) 'W', (byte) 'X', (byte) 'Y', (byte) 'Z',
-            (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte)
-            'f', (byte) 'g',
-            (byte) 'h', (byte) 'i', (byte) 'j', (byte) 'k', (byte) 'l', (byte)
-            'm', (byte) 'n',
-            (byte) 'o', (byte) 'p', (byte) 'q', (byte) 'r', (byte) 's', (byte)
-            't', (byte) 'u',
-            (byte) 'v', (byte) 'w', (byte) 'x', (byte) 'y', (byte) 'z',
-            (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte)
-            '5',
-            (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+', (byte)
-            '/'
-        };
+    {
+        (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F',
+        (byte) 'G',
+        (byte) 'H', (byte) 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M',
+        (byte) 'N',
+        (byte) 'O', (byte) 'P', (byte) 'Q', (byte) 'R', (byte) 'S', (byte) 'T',
+        (byte) 'U',
+        (byte) 'V', (byte) 'W', (byte) 'X', (byte) 'Y', (byte) 'Z',
+        (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f',
+        (byte) 'g',
+        (byte) 'h', (byte) 'i', (byte) 'j', (byte) 'k', (byte) 'l', (byte) 'm',
+        (byte) 'n',
+        (byte) 'o', (byte) 'p', (byte) 'q', (byte) 'r', (byte) 's', (byte) 't',
+        (byte) 'u',
+        (byte) 'v', (byte) 'w', (byte) 'x', (byte) 'y', (byte) 'z',
+        (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5',
+        (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+', (byte) '/'
+    };
 
     /**
      * Determine which ALPHABET to use.
@@ -158,54 +155,57 @@ public class RhBase64
             __bytes =
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
                 .getBytes(PREFERRED_ENCODING);
-        } // end try
-        catch (java.io.UnsupportedEncodingException use) {
+        } catch (java.io.UnsupportedEncodingException use) {
             __bytes = _NATIVE_ALPHABET; // Fall back to native encoding
-        } // end catch
+        }
         ALPHABET = __bytes;
-    } // end static
+    }
 
     /**
      * Translates a Base64 value to either its 6-bit reconstruction value or a
      * negative number indicating some other meaning.
      */
     private final static byte [] DECODABET =
-        { -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal  0 -  8
-             -5, -5, // Whitespace: Tab and Linefeed
-             -9, -9, // Decimal 11 - 12
-             -5, // Whitespace: Carriage Return
-             -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal 14 - 26
-             -9, -9, -9, -9, -9, // Decimal 27 - 31
-             -5, // Whitespace: Space
-             -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal 33 - 42
-             62, // Plus sign at decimal 43
-             -9, -9, -9, // Decimal 44 - 46
-             63, // Slash at decimal 47
-             52, 53, 54, 55, 56, 57, 58, 59, 60, 61, // Numbers zero through
-                                                     // nine
-             -9, -9, -9, // Decimal 58 - 60
-             -1, // Equals sign at decimal 61
-             -9, -9, -9, // Decimal 62 - 64
-             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, // Letters 'A'
-                                                           // through 'N'
-             14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, // Letters 'O' through 'Z'
-             -9, -9, -9, -9, -9, -9, // Decimal 91 - 96
-             26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, // Letters 'a' through 'm'
-             39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, // Letters 'n' through 'z'
-             -9, -9, -9, -9 // Decimal 123 - 126
+    {
+        -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal  0 -  8
+        -5, -5, // Whitespace: Tab and Linefeed
+        -9, -9, // Decimal 11 - 12
+        -5, // Whitespace: Carriage Return
+        -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal 14 - 26
+        -9, -9, -9, -9, -9, // Decimal 27 - 31
+        -5, // Whitespace: Space
+        -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal 33 - 42
+        62, // Plus sign at decimal 43
+        -9, -9, -9, // Decimal 44 - 46
+        63, // Slash at decimal 47
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, // Numbers zero through
+                                                // nine
+        -9, -9, -9, // Decimal 58 - 60
+        -1, // Equals sign at decimal 61
+        -9, -9, -9, // Decimal 62 - 64
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, // Letters 'A'
+                                                      // through 'N'
+        14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, // Letters 'O' through
+                                                        // 'Z'
+        -9, -9, -9, -9, -9, -9, // Decimal 91 - 96
+        26, 27, 28, 29, 30, 31, 32, // Letters 'a' through 'f'
+        33, 34, 35, 36, 37, 38,     // Letters 'g' through 'm'
+        39, 40, 41, 42, 43, 44, 45, // Letters 'n' through 't'
+        46, 47, 48, 49, 50, 51,     // Letters 'u' through 'z'
+        -9, -9, -9, -9 // Decimal 123 - 126
 
-            /*,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 127 - 139
-            -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 140 - 152
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 153 - 165
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 166 - 178
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 179 - 191
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 192 - 204
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 205 - 217
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 218 - 230
-             -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 231 -
-             243-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9         // Decimal 244 - 255
-             */
-        };
+        /*,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 127 - 139
+        -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 140 - 152
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 153 - 165
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 166 - 178
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 179 - 191
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 192 - 204
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 205 - 217
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 218 - 230
+         -9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,     // Decimal 231 -
+         243-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9         // Decimal 244 - 255
+         */
+    };
 
     // I think I end up not using the BAD_ENCODING indicator. private final
     // static byte BAD_ENCODING    = -9; // Indicates error in encoding
@@ -243,13 +243,14 @@ public class RhBase64
      *
      * @since 1.5.1
      */
-    private static byte [] encode3to4(byte [] b4,
+    private static byte [] encode3to4(
+        byte [] b4,
         byte [] threeBytes,
         int numSigBytes)
     {
         encode3to4(threeBytes, 0, numSigBytes, b4, 0);
         return b4;
-    } // end encode3to4
+    }
 
     /**
      * Encodes up to three bytes of the array <var>source</var> and writes the
@@ -319,8 +320,8 @@ public class RhBase64
 
         default:
             return destination;
-        } // end switch
-    } // end encode3to4
+        }
+    }
 
     /**
      * Serializes an object and returns the Base64-encoded version of that
@@ -337,7 +338,7 @@ public class RhBase64
     public static String encodeObject(java.io.Serializable serializableObject)
     {
         return encodeObject(serializableObject, NO_OPTIONS);
-    } // end encodeObject
+    }
 
     /**
      * Serializes an object and returns the Base64-encoded version of that
@@ -366,7 +367,8 @@ public class RhBase64
      * @see RhBase64#DONT_BREAK_LINES
      * @since 2.0
      */
-    public static String encodeObject(java.io.Serializable serializableObject,
+    public static String encodeObject(
+        java.io.Serializable serializableObject,
         int options)
     {
         // Streams
@@ -388,18 +390,15 @@ public class RhBase64
             if (gzip == GZIP) {
                 gzos = new java.util.zip.GZIPOutputStream(b64os);
                 oos = new java.io.ObjectOutputStream(gzos);
-            } // end if: gzip
-            else {
+            } else {
                 oos = new java.io.ObjectOutputStream(b64os);
             }
 
             oos.writeObject(serializableObject);
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             e.printStackTrace();
             return null;
-        } // end catch
-        finally {
+        } finally {
             try {
                 oos.close();
             } catch (Exception e) {
@@ -416,18 +415,17 @@ public class RhBase64
                 baos.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         // Return value according to relevant encoding.
         try {
             return new String(
-                    baos.toByteArray(),
-                    PREFERRED_ENCODING);
-        } // end try
-        catch (java.io.UnsupportedEncodingException uue) {
+                baos.toByteArray(),
+                PREFERRED_ENCODING);
+        } catch (java.io.UnsupportedEncodingException uue) {
             return new String(baos.toByteArray());
-        } // end catch
-    } // end encode
+        }
+    }
 
     /**
      * Encodes a byte array into Base64 notation. Does not GZip-compress data.
@@ -439,7 +437,7 @@ public class RhBase64
     public static String encodeBytes(byte [] source)
     {
         return encodeBytes(source, 0, source.length, NO_OPTIONS);
-    } // end encodeBytes
+    }
 
     /**
      * Encodes a byte array into Base64 notation.
@@ -467,7 +465,7 @@ public class RhBase64
     public static String encodeBytes(byte [] source, int options)
     {
         return encodeBytes(source, 0, source.length, options);
-    } // end encodeBytes
+    }
 
     /**
      * Encodes a byte array into Base64 notation. Does not GZip-compress data.
@@ -481,7 +479,7 @@ public class RhBase64
     public static String encodeBytes(byte [] source, int off, int len)
     {
         return encodeBytes(source, off, len, NO_OPTIONS);
-    } // end encodeBytes
+    }
 
     /**
      * Encodes a byte array into Base64 notation.
@@ -508,7 +506,8 @@ public class RhBase64
      * @see RhBase64#DONT_BREAK_LINES
      * @since 2.0
      */
-    public static String encodeBytes(byte [] source,
+    public static String encodeBytes(
+        byte [] source,
         int off,
         int len,
         int options)
@@ -532,12 +531,10 @@ public class RhBase64
 
                 gzos.write(source, off, len);
                 gzos.close();
-            } // end try
-            catch (java.io.IOException e) {
+            } catch (java.io.IOException e) {
                 e.printStackTrace();
                 return null;
-            } // end catch
-            finally {
+            } finally {
                 try {
                     gzos.close();
                 } catch (Exception e) {
@@ -550,29 +547,29 @@ public class RhBase64
                     baos.close();
                 } catch (Exception e) {
                 }
-            } // end finally
+            }
 
             // Return value according to relevant encoding.
             try {
                 return new String(
-                        baos.toByteArray(),
-                        PREFERRED_ENCODING);
-            } // end try
-            catch (java.io.UnsupportedEncodingException uue) {
+                    baos.toByteArray(),
+                    PREFERRED_ENCODING);
+            } catch (java.io.UnsupportedEncodingException uue) {
                 return new String(baos.toByteArray());
-            } // end catch
-        } // end if: compress
-
-        // Else, don't compress. Better not to use streams at all then.
-        else {
+            }
+        } else {
+            // Else, don't compress. Better not to use streams at all then.
             // Convert option to boolean in way that code likes it.
             boolean breakLines = dontBreakLines == 0;
 
             int len43 = len * 4 / 3;
             byte [] outBuff =
-                new byte[(len43) // Main 4:3
-                + (((len % 3) > 0) ? 4 : 0) // Account for padding
-                + (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New lines
+                new byte[
+                    (len43) // Main 4:3
+                    + (((len % 3) > 0) ? 4 : 0) // Account for padding
+                    + (breakLines
+                       ? (len43 / MAX_LINE_LENGTH)
+                       : 0)]; // New lines
             int d = 0;
             int e = 0;
             int len2 = len - 2;
@@ -585,23 +582,22 @@ public class RhBase64
                     outBuff[e + 4] = NEW_LINE;
                     e++;
                     lineLength = 0;
-                } // end if: end of line
+                }
             } // en dfor: each piece of array
 
             if (d < len) {
                 encode3to4(source, d + off, len - d, outBuff, e);
                 e += 4;
-            } // end if: some padding needed
+            }
 
             // Return value according to relevant encoding.
             try {
                 return new String(outBuff, 0, e, PREFERRED_ENCODING);
-            } // end try
-            catch (java.io.UnsupportedEncodingException uue) {
+            } catch (java.io.UnsupportedEncodingException uue) {
                 return new String(outBuff, 0, e);
-            } // end catch
-        } // end else: don't compress
-    } // end encodeBytes
+            }
+        }
+    }
 
     /* ********  D E C O D I N G   M E T H O D S  ******** */
 
@@ -625,7 +621,8 @@ public class RhBase64
      *
      * @since 1.3
      */
-    private static int decode4to3(byte [] source,
+    private static int decode4to3(
+        byte [] source,
         int srcOffset,
         byte [] destination,
         int destOffset)
@@ -642,10 +639,8 @@ public class RhBase64
 
             destination[destOffset] = (byte) (outBuff >>> 16);
             return 1;
-        }
-
+        } else if (source[srcOffset + 3] == EQUALS_SIGN) {
         // Example: DkL=
-        else if (source[srcOffset + 3] == EQUALS_SIGN) {
             // Two ways to do the same thing. Don't know which way I like best.
             // int outBuff =   ( ( DECODABET[ source[ srcOffset     ] ] << 24 )
             // >>>  6 )              | ( ( DECODABET[ source[ srcOffset + 1 ] ]
@@ -659,10 +654,8 @@ public class RhBase64
             destination[destOffset] = (byte) (outBuff >>> 16);
             destination[destOffset + 1] = (byte) (outBuff >>> 8);
             return 2;
-        }
-
-        // Example: DkLE
-        else {
+        } else {
+            // Example: DkLE
             try {
                 // Two ways to do the same thing. Don't know which way I like
                 // best. int outBuff =   ( ( DECODABET[ source[ srcOffset     ]
@@ -695,9 +688,9 @@ public class RhBase64
                     "" + source[srcOffset + 3] + ": "
                     + (DECODABET[source[srcOffset + 3]]));
                 return -1;
-            } //e nd catch
+            }
         }
-    } // end decodeToBytes
+    }
 
     /**
      * Very low-level access to decoding ASCII characters in the form of a byte
@@ -727,9 +720,8 @@ public class RhBase64
             sbiCrop = (byte) (source[i] & 0x7f); // Only the low seven bits
             sbiDecode = DECODABET[sbiCrop];
 
-            if (sbiDecode >= WHITE_SPACE_ENC) // White space, Equals sign or
-                                              // better
-            {
+            if (sbiDecode >= WHITE_SPACE_ENC) {
+                 // White space, Equals sign or better
                 if (sbiDecode >= EQUALS_SIGN_ENC) {
                     b4[b4Posn++] = sbiCrop;
                     if (b4Posn > 3) {
@@ -740,21 +732,20 @@ public class RhBase64
                         if (sbiCrop == EQUALS_SIGN) {
                             break;
                         }
-                    } // end if: quartet built
-                } // end if: equals sign or better
-            } // end if: white space, equals sign or better
-            else {
+                    }
+                }
+            } else {
                 System.err.println(
                     "Bad Base64 input character at " + i + ": " + source[i]
                     + "(decimal)");
                 return null;
-            } // end else:
-        } // each input character
+            }
+        }
 
         byte [] out = new byte[outBuffPosn];
         System.arraycopy(outBuff, 0, out, 0, outBuffPosn);
         return out;
-    } // end decode
+    }
 
     /**
      * Decodes data from Base64 notation, automatically detecting
@@ -771,10 +762,9 @@ public class RhBase64
         byte [] bytes;
         try {
             bytes = s.getBytes(PREFERRED_ENCODING);
-        } // end try
-        catch (java.io.UnsupportedEncodingException uee) {
+        } catch (java.io.UnsupportedEncodingException uee) {
             bytes = s.getBytes();
-        } // end catch
+        }
 
         //</change>
 
@@ -799,15 +789,13 @@ public class RhBase64
 
                     while ((length = gzis.read(buffer)) >= 0) {
                         baos.write(buffer, 0, length);
-                    } // end while: reading input
+                    }
 
                     // No error? Get new bytes.
                     bytes = baos.toByteArray();
-                } // end try
-                catch (java.io.IOException e) {
+                } catch (java.io.IOException e) {
                     // Just return originally-decoded bytes
-                } // end catch
-                finally {
+                } finally {
                     try {
                         baos.close();
                     } catch (Exception e) {
@@ -820,12 +808,12 @@ public class RhBase64
                         bais.close();
                     } catch (Exception e) {
                     }
-                } // end finally
-            } // end if: gzipped
-        } // end if: bytes.length >= 2
+                }
+            }
+        }
 
         return bytes;
-    } // end decode
+    }
 
     /**
      * Attempts to decode Base64 data and deserialize a Java Object within.
@@ -851,16 +839,13 @@ public class RhBase64
             ois = new java.io.ObjectInputStream(bais);
 
             obj = ois.readObject();
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             e.printStackTrace();
             obj = null;
-        } // end catch
-        catch (java.lang.ClassNotFoundException e) {
+        } catch (java.lang.ClassNotFoundException e) {
             e.printStackTrace();
             obj = null;
-        } // end catch
-        finally {
+        } finally {
             try {
                 bais.close();
             } catch (Exception e) {
@@ -869,10 +854,10 @@ public class RhBase64
                 ois.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         return obj;
-    } // end decodeObject
+    }
 
     /**
      * Convenience method for encoding data to a file.
@@ -895,19 +880,17 @@ public class RhBase64
                     RhBase64.ENCODE);
             bos.write(dataToEncode);
             success = true;
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             success = false;
-        } // end catch: IOException
-        finally {
+        } finally {
             try {
                 bos.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         return success;
-    } // end encodeToFile
+    }
 
     /**
      * Convenience method for decoding data to a file.
@@ -930,19 +913,17 @@ public class RhBase64
                     RhBase64.DECODE);
             bos.write(dataToDecode.getBytes(PREFERRED_ENCODING));
             success = true;
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             success = false;
-        } // end catch: IOException
-        finally {
+        } finally {
             try {
                 bos.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         return success;
-    } // end decodeToFile
+    }
 
     /**
      * Convenience method for reading a base64-encoded file and decoding it.
@@ -970,7 +951,7 @@ public class RhBase64
                     "File is too big for this convenience method ("
                     + file.length() + " bytes).");
                 return null;
-            } // end if: file too big for int index
+            }
             buffer = new byte[(int) file.length()];
 
             // Open a stream
@@ -988,19 +969,17 @@ public class RhBase64
             // Save in a variable to return
             decodedData = new byte[length];
             System.arraycopy(buffer, 0, decodedData, 0, length);
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             System.err.println("Error decoding from file " + filename);
-        } // end catch: IOException
-        finally {
+        } finally {
             try {
                 bis.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         return decodedData;
-    } // end decodeFromFile
+    }
 
     /**
      * Convenience method for reading a binary file and base64-encoding it.
@@ -1037,19 +1016,17 @@ public class RhBase64
             // Save in a variable to return
             encodedData =
                 new String(buffer, 0, length, RhBase64.PREFERRED_ENCODING);
-        } // end try
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             System.err.println("Error encoding from file " + filename);
-        } // end catch: IOException
-        finally {
+        } finally {
             try {
                 bis.close();
             } catch (Exception e) {
             }
-        } // end finally
+        }
 
         return encodedData;
-    } // end encodeFromFile
+    }
 
     //~ Inner Classes ----------------------------------------------------------
 
@@ -1084,7 +1061,7 @@ public class RhBase64
         public InputStream(java.io.InputStream in)
         {
             this(in, DECODE);
-        } // end constructor
+        }
 
         /**
          * Constructs a {@link RhBase64.InputStream} in either ENCODE or DECODE
@@ -1119,7 +1096,7 @@ public class RhBase64
             this.buffer = new byte[bufferLength];
             this.position = -1;
             this.lineLength = 0;
-        } // end constructor
+        }
 
         /**
          * Reads enough of the input stream to convert to/from Base64 and
@@ -1145,28 +1122,24 @@ public class RhBase64
                             if (b >= 0) {
                                 b3[i] = (byte) b;
                                 numBinaryBytes++;
-                            } // end if: not end of stream
-                        } // end try: read
-                        catch (java.io.IOException e) {
+                            }
+                        } catch (java.io.IOException e) {
                             // Only a problem if we got no data at all.
                             if (i == 0) {
                                 throw e;
                             }
-                        } // end catch
-                    } // end for: each needed input byte
+                        }
+                    }
 
                     if (numBinaryBytes > 0) {
                         encode3to4(b3, 0, numBinaryBytes, buffer, 0);
                         position = 0;
                         numSigBytes = 4;
-                    } // end if: got data
-                    else {
+                    } else {
                         return -1;
-                    } // end else
-                } // end if: encoding
-
-                // Else decoding
-                else {
+                    }
+                } else {
+                    // Else decoding
                     byte [] b4 = new byte[4];
                     int i = 0;
                     for (i = 0; i < 4; i++) {
@@ -1174,7 +1147,8 @@ public class RhBase64
                         int b = 0;
                         do {
                             b = in.read();
-                        } while ((b >= 0)
+                        } while (
+                            (b >= 0)
                             && (DECODABET[b & 0x7f] <= WHITE_SPACE_ENC));
 
                         if (b < 0) {
@@ -1182,39 +1156,36 @@ public class RhBase64
                         }
 
                         b4[i] = (byte) b;
-                    } // end for: each needed input byte
+                    }
 
                     if (i == 4) {
                         numSigBytes = decode4to3(b4, 0, buffer, 0);
                         position = 0;
-                    } // end if: got four characters
-                    else if (i == 0) {
+                    } else if (i == 0) {
                         return -1;
-                    } // end else if: also padded correctly
-                    else {
+                    } else {
                         // Must have broken out from above.
                         throw new java.io.IOException(
                             "Improperly padded Base64 input.");
-                    } // end
-                } // end else: decode
-            } // end else: get data
+                    }
+                }
+            }
 
             // Got data?
             if (position >= 0) {
                 // End of relevant data?
-                if ( /*!encode &&*/
-                position >= numSigBytes) {
+                if (position >= numSigBytes) {
                     return -1;
                 }
 
                 if (encode && breakLines && (lineLength >= MAX_LINE_LENGTH)) {
                     lineLength = 0;
                     return '\n';
-                } // end if
-                else {
-                    lineLength++; // This isn't important when decoding
-                                  // but throwing an extra "if" seems
-                                  // just as wasteful.
+                } else {
+                    // This isn't important when decoding
+                    // but throwing an extra "if" seems
+                    // just as wasteful.
+                    lineLength++;
 
                     int b = buffer[position++];
 
@@ -1224,16 +1195,14 @@ public class RhBase64
 
                     return b & 0xFF; // This is how you "cast" a byte that's
                                      // intended to be unsigned.
-                } // end else
-            } // end if: position >= 0
-
-            // Else error
-            else {
+                }
+            } else {
+                // Else error
                 // When JDK1.4 is more accepted, use an assertion here.
                 throw new java.io.IOException(
                     "Error in Base64 code reading stream.");
-            } // end else
-        } // end read
+            }
+        }
 
         /**
          * Calls {@link #read()} repeatedly until the end of stream is reached
@@ -1266,10 +1235,10 @@ public class RhBase64
                 } else {
                     break; // Out of 'for' loop
                 }
-            } // end for: each byte read
+            }
             return i;
-        } // end read
-    } // end inner class InputStream
+        }
+    }
 
     /* ********  I N N E R   C L A S S   O U T P U T S T R E A M  ******** */
 
@@ -1304,7 +1273,7 @@ public class RhBase64
         public OutputStream(java.io.OutputStream out)
         {
             this(out, ENCODE);
-        } // end constructor
+        }
 
         /**
          * Constructs a {@link RhBase64.OutputStream} in either ENCODE or DECODE
@@ -1342,7 +1311,7 @@ public class RhBase64
             this.lineLength = 0;
             this.suspendEncoding = false;
             this.b4 = new byte[4];
-        } // end constructor
+        }
 
         /**
          * Writes the byte to the output stream after converting to/from Base64
@@ -1361,45 +1330,42 @@ public class RhBase64
             if (suspendEncoding) {
                 super.out.write(theByte);
                 return;
-            } // end if: supsended
+            }
 
             // Encode?
             if (encode) {
                 buffer[position++] = (byte) theByte;
-                if (position >= bufferLength) // Enough to encode.
-                {
+                if (position >= bufferLength) {
+                     // Enough to encode.
                     out.write(encode3to4(b4, buffer, bufferLength));
 
                     lineLength += 4;
                     if (breakLines && (lineLength >= MAX_LINE_LENGTH)) {
                         out.write(NEW_LINE);
                         lineLength = 0;
-                    } // end if: end of line
+                    }
 
                     position = 0;
-                } // end if: enough to output
-            } // end if: encoding
-
-            // Else, Decoding
-            else {
+                }
+            } else {
+                // Else, Decoding
                 // Meaningful Base64 character?
                 if (DECODABET[theByte & 0x7f] > WHITE_SPACE_ENC) {
                     buffer[position++] = (byte) theByte;
-                    if (position >= bufferLength) // Enough to output.
-                    {
+                    if (position >= bufferLength) {
+                         // Enough to output.
                         int len = RhBase64.decode4to3(buffer, 0, b4, 0);
                         out.write(b4, 0, len);
 
                         //out.write( RhBase64.decode4to3( buffer ) );
                         position = 0;
-                    } // end if: enough to output
-                } // end if: meaningful base64 character
-                else if (DECODABET[theByte & 0x7f] != WHITE_SPACE_ENC) {
+                    }
+                } else if (DECODABET[theByte & 0x7f] != WHITE_SPACE_ENC) {
                     throw new java.io.IOException(
                         "Invalid character in Base64 data.");
-                } // end else: not white space either
-            } // end else: decoding
-        } // end write
+                }
+            }
+        }
 
         /**
          * Calls {@link #write(int)} repeatedly until <var>len</var> bytes are
@@ -1418,12 +1384,12 @@ public class RhBase64
             if (suspendEncoding) {
                 super.out.write(theBytes, off, len);
                 return;
-            } // end if: supsended
+            }
 
             for (int i = 0; i < len; i++) {
                 write(theBytes[off + i]);
-            } // end for: each byte written
-        } // end write
+            }
+        }
 
         /**
          * Method added by PHIL. [Thanks, PHIL. -Rob] This pads the buffer
@@ -1436,13 +1402,12 @@ public class RhBase64
                 if (encode) {
                     out.write(encode3to4(b4, buffer, position));
                     position = 0;
-                } // end if: encoding
-                else {
+                } else {
                     throw new java.io.IOException(
                         "Base64 input not properly padded.");
-                } // end else: decoding
-            } // end if: buffer partially full
-        } // end flush
+                }
+            }
+        }
 
         /**
          * Flushes and closes (I think, in the superclass) the stream.
@@ -1461,7 +1426,7 @@ public class RhBase64
 
             buffer = null;
             out = null;
-        } // end close
+        }
 
         /**
          * Suspends encoding of the stream. May be helpful if you need to embed
@@ -1474,7 +1439,7 @@ public class RhBase64
         {
             flushBase64();
             this.suspendEncoding = true;
-        } // end suspendEncoding
+        }
 
         /**
          * Resumes encoding of the stream. May be helpful if you need to embed a
@@ -1485,6 +1450,8 @@ public class RhBase64
         public void resumeEncoding()
         {
             this.suspendEncoding = false;
-        } // end resumeEncoding
-    } // end inner class OutputStream
-} // end class RhBase64
+        }
+    }
+}
+
+// End RhBase64.java

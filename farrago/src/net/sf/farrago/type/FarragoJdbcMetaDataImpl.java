@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,12 @@
 package net.sf.farrago.type;
 
 import java.sql.*;
+import java.util.List;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -35,33 +38,45 @@ import org.eigenbase.sql.type.*;
  * @version $Id$
  */
 public class FarragoJdbcMetaDataImpl
+    extends Unwrappable
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    /**
-     * Type info to return.
-     */
     protected final RelDataType rowType;
+    private final List<List<String>> fieldOrigins;
 
     //~ Constructors -----------------------------------------------------------
 
-    protected FarragoJdbcMetaDataImpl(RelDataType rowType)
+    /**
+     * Creates a FarragoJdbcMetaDataImpl.
+     *
+     * @param rowType Type info to return
+     * @param fieldOrigins Origin of each field in column of catalog object
+     */
+    protected FarragoJdbcMetaDataImpl(
+        RelDataType rowType,
+        List<List<String>> fieldOrigins)
     {
         this.rowType = rowType;
+        this.fieldOrigins = fieldOrigins;
+        assert rowType != null;
+        assert fieldOrigins != null;
+        assert fieldOrigins.size() == rowType.getFieldCount()
+            : "field origins " + fieldOrigins
+            + " have different count than row type " + rowType;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    protected RelDataType getFieldNamedType(int fieldOrdinal)
+    public RelDataType getFieldNamedType(int fieldOrdinal)
     {
         return rowType.getFields()[fieldOrdinal - 1].getType();
     }
 
-    protected RelDataType getFieldType(int fieldOrdinal)
+    public RelDataType getFieldType(int fieldOrdinal)
     {
         RelDataType namedType = getFieldNamedType(fieldOrdinal);
-        if (namedType.getSqlTypeName() == SqlTypeName.Distinct) {
+        if (namedType.getSqlTypeName() == SqlTypeName.DISTINCT) {
             // for most metadata calls, report information about the
             // predefined type on which the distinct type is based
             return namedType.getFields()[0].getType();
@@ -75,18 +90,83 @@ public class FarragoJdbcMetaDataImpl
         return rowType.getFields()[fieldOrdinal - 1].getName();
     }
 
-    protected int getFieldCount()
+    public int getFieldCount()
     {
-        return rowType.getFieldList().size();
+        return rowType.getFieldCount();
     }
 
-    protected String getFieldClassName(int fieldOrdinal)
+    public String getFieldClassName(int fieldOrdinal)
     {
-        // TODO
+        int type = getFieldJdbcType(fieldOrdinal);
+        switch (type) {
+        case Types.ARRAY:
+            return "java.sql.Array";
+        case Types.BIGINT:
+            return "java.lang.Long";
+        case Types.BINARY:
+            return "[B";
+        case Types.BIT:
+            return "java.lang.Boolean";
+        case Types.BLOB:
+            return "java.sql.Blob";
+        case Types.BOOLEAN:
+            return "java.lang.Boolean";
+        case Types.CHAR:
+            return "java.lang.String";
+        case Types.CLOB:
+            return "java.sql.Clob";
+        case Types.DATALINK:
+            return "";
+        case Types.DATE:
+            return "java.sql.Date";
+        case Types.DECIMAL:
+            return "java.math.BigDecimal";
+        case Types.DISTINCT:
+            // TODO
+            return "";
+        case Types.DOUBLE:
+            return "java.lang.Double";
+        case Types.FLOAT:
+            return "java.lang.Double";
+        case Types.INTEGER:
+            return "java.lang.Integer";
+        case Types.JAVA_OBJECT:
+            return "java.lang.Object";
+        case Types.LONGVARBINARY:
+            return "[B";
+        case Types.LONGVARCHAR:
+            return "java.lang.String";
+        case Types.NULL:
+            // TODO
+            return "";
+        case Types.NUMERIC:
+            return "java.math.BigDecimal";
+        case Types.OTHER:
+            return "java.lang.Object";
+        case Types.REAL:
+            return "java.lang.Float";
+        case Types.REF:
+            // TODO
+            return "";
+        case Types.SMALLINT:
+            return "java.lang.Short";
+        case Types.STRUCT:
+            return "java.sql.Struct";
+        case Types.TIME:
+            return "java.sql.Time";
+        case Types.TIMESTAMP:
+            return "java.sql.Timestamp";
+        case Types.TINYINT:
+            return "java.lang.Byte";
+        case Types.VARBINARY:
+            return "[B";
+        case Types.VARCHAR:
+            return "java.lang.String";
+        }
         return "";
     }
 
-    protected int getFieldJdbcType(int fieldOrdinal)
+    public int getFieldJdbcType(int fieldOrdinal)
     {
         RelDataType type = getFieldNamedType(fieldOrdinal);
         SqlTypeName typeName = type.getSqlTypeName();
@@ -96,31 +176,31 @@ public class FarragoJdbcMetaDataImpl
         return typeName.getJdbcOrdinal();
     }
 
-    protected String getFieldTypeName(int fieldOrdinal)
+    public String getFieldTypeName(int fieldOrdinal)
     {
         RelDataType type = getFieldNamedType(fieldOrdinal);
         SqlTypeName typeName = type.getSqlTypeName();
         if (typeName == null) {
             return type.toString();
         }
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Structured_ordinal:
-        case SqlTypeName.Distinct_ordinal:
+        switch (typeName) {
+        case STRUCTURED:
+        case DISTINCT:
             return type.getSqlIdentifier().toString();
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return type.toString();
         }
-        return typeName.getName();
+        return typeName.name();
     }
 
-    protected int getFieldPrecision(int fieldOrdinal)
+    public int getFieldPrecision(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
         return type.getPrecision();
     }
 
-    protected int getFieldScale(int fieldOrdinal)
+    public int getFieldScale(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
         SqlTypeName typeName = type.getSqlTypeName();
@@ -134,7 +214,7 @@ public class FarragoJdbcMetaDataImpl
         }
     }
 
-    protected int getFieldDisplaySize(int column)
+    public int getFieldDisplaySize(int column)
     {
         int precision = getFieldPrecision(column);
         int type = getFieldJdbcType(column);
@@ -175,49 +255,69 @@ public class FarragoJdbcMetaDataImpl
         }
     }
 
-    protected String getFieldCatalogName(int fieldOrdinal)
+    public String getFieldCatalogName(int fieldOrdinal)
     {
-        // TODO
-        return "";
+        return getFieldOrigin(fieldOrdinal, 0);
     }
 
-    protected String getFieldSchemaName(int fieldOrdinal)
+    public String getFieldSchemaName(int fieldOrdinal)
     {
-        // TODO
-        return "";
+        return getFieldOrigin(fieldOrdinal, 1);
     }
 
-    protected String getFieldTableName(int fieldOrdinal)
+    public String getFieldTableName(int fieldOrdinal)
     {
-        // TODO
-        return "";
+        return getFieldOrigin(fieldOrdinal, 2);
     }
 
-    protected int isFieldNullable(int fieldOrdinal)
+    public String getFieldColumnName(int fieldOrdinal)
+    {
+        return getFieldOrigin(fieldOrdinal, 3);
+    }
+
+    private String getFieldOrigin(int fieldOrdinal, int index)
+    {
+        final List<String> list = fieldOrigins.get(fieldOrdinal - 1);
+        if (list == null) {
+            return ""; // per JDBC spec: 'Return "" if not applicable'
+        }
+        if (list.size() < 4) {
+            index -= (4 - list.size());
+        }
+        if (index < 0) {
+            return "";
+        }
+        final String name = list.get(index);
+        if (name == null) {
+            return "";
+        }
+        return name;
+    }
+
+    public int isFieldNullable(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
-        return
-            type.isNullable() ? ResultSetMetaData.columnNullable
+        return type.isNullable() ? ResultSetMetaData.columnNullable
             : ResultSetMetaData.columnNoNulls;
     }
 
-    protected boolean isFieldAutoIncrement(int fieldOrdinal)
+    public boolean isFieldAutoIncrement(int fieldOrdinal)
     {
         return false;
     }
 
-    protected boolean isFieldCaseSensitive(int fieldOrdinal)
+    public boolean isFieldCaseSensitive(int fieldOrdinal)
     {
         // TODO
         return false;
     }
 
-    protected boolean isFieldSearchable(int fieldOrdinal)
+    public boolean isFieldSearchable(int fieldOrdinal)
     {
         return true;
     }
 
-    protected boolean isFieldSigned(int fieldOrdinal)
+    public boolean isFieldSigned(int fieldOrdinal)
     {
         // TODO
         RelDataType type = getFieldType(fieldOrdinal);
@@ -228,22 +328,22 @@ public class FarragoJdbcMetaDataImpl
         }
     }
 
-    protected boolean isFieldCurrency(int fieldOrdinal)
+    public boolean isFieldCurrency(int fieldOrdinal)
     {
         return false;
     }
 
-    protected boolean isFieldReadOnly(int fieldOrdinal)
+    public boolean isFieldReadOnly(int fieldOrdinal)
     {
         return true;
     }
 
-    protected boolean isFieldWritable(int fieldOrdinal)
+    public boolean isFieldWritable(int fieldOrdinal)
     {
         return false;
     }
 
-    protected boolean isFieldDefinitelyWritable(int fieldOrdinal)
+    public boolean isFieldDefinitelyWritable(int fieldOrdinal)
     {
         return false;
     }

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package org.eigenbase.sql.validate;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -47,7 +48,6 @@ import org.eigenbase.sql.type.*;
 public class CollectNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall child;
@@ -55,9 +55,19 @@ public class CollectNamespace
 
     //~ Constructors -----------------------------------------------------------
 
-    CollectNamespace(SqlCall child, SqlValidatorScope scope)
+    /**
+     * Creates a CollectNamespace.
+     *
+     * @param child Parse tree node
+     * @param scope Scope
+     * @param enclosingNode Enclosing parse tree node
+     */
+    CollectNamespace(
+        SqlCall child,
+        SqlValidatorScope scope,
+        SqlNode enclosingNode)
     {
-        super((SqlValidatorImpl) scope.getValidator());
+        super((SqlValidatorImpl) scope.getValidator(), enclosingNode);
         this.child = child;
         this.scope = scope;
     }
@@ -69,8 +79,8 @@ public class CollectNamespace
         final RelDataType type =
             child.getOperator().deriveType(validator, scope, child);
 
-        switch (child.getKind().getOrdinal()) {
-        case SqlKind.MultisetValueConstructorORDINAL:
+        switch (child.getKind()) {
+        case MULTISET_VALUE_CONSTRUCTOR:
 
             // "MULTISET [<expr>, ...]" needs to be wrapped in a record if
             // <expr> has a scalar type.
@@ -89,20 +99,21 @@ public class CollectNamespace
                         new String[] { validator.deriveAlias(child, 0) });
                 final RelDataType multisetType =
                     typeFactory.createMultisetType(structType, -1);
-                return
-                    typeFactory.createTypeWithNullability(
-                        multisetType,
-                        isNullable);
+                return typeFactory.createTypeWithNullability(
+                    multisetType,
+                    isNullable);
             }
 
-        case SqlKind.MultisetQueryConstructorORDINAL:
+        case MULTISET_QUERY_CONSTRUCTOR:
 
             // "MULTISET(<query>)" is already a record.
             assert (type instanceof MultisetSqlType)
-                && ((MultisetSqlType) type).getComponentType().isStruct() : type;
+                && ((MultisetSqlType) type).getComponentType().isStruct()
+                : type;
             return type;
+
         default:
-            throw child.getKind().unexpected();
+            throw Util.unexpected(child.getKind());
         }
     }
 

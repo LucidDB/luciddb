@@ -4,9 +4,12 @@
 
 set schema 's';
 
+create table onerow(i int);
+insert into onerow values(1);
+
 -- in select list
 -- uncorrelated
-select (select 1 from ONEROW) from DEPT order by DEPTNO;
+select (select * from ONEROW) from DEPT order by DEPTNO;
 -- correlated
 select LNAME, (select DNAME from DEPT where DEPTNO = EMP.DEPTNO)
  from EMP order by EMPNO;
@@ -66,21 +69,23 @@ order by EMPNO;
 select * from DEPT
  where (select MIN(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
      < (select MAX(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
-order by *;
+--order by *
+order by 1,2,3;
 -- with EXISTS
 select * from DEPT
  where (select MIN(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
      < (select MAX(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
-    or exists (select null from SALES, EMP
+    or exists (select 1 from SALES, EMP
                where SALES.EMPNO = EMP.EMPNO
                and EMP.DEPTNO = DEPT.DEPTNO
                having SUM(PRICE) > 420)
-    or exists (select null from SALES, EMP
+    or exists (select 1 from SALES, EMP
                where SALES.EMPNO = EMP.EMPNO
                and EMP.DEPTNO = DEPT.DEPTNO
                and EMP.SEX = 'M'
                having COUNT(*) > 90)
-order by *;
+--order by *;
+order by 1,2,3;
 --
 select EMP.DEPTNO, EMP.LNAME
 from EMP right join DEPT on EMP.DEPTNO = DEPT.DEPTNO
@@ -88,28 +93,36 @@ where DNAME like 'S%' or (
   select FNAME from EMP E1 where EMPNO = (
     select MIN(EMPNO) from EMP
     where EMP.DEPTNO = DEPT.DEPTNO and EMP.DEPTNO = E1.DEPTNO)) like 'F%'
-order by *;
+--order by *;
+order by 1,2;
 
 -- in group by
-select (
-  select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID),
-  COUNT(*)
-from DEPT
-group by (
-  select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID)
-order by *;
+-- select (
+--   select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID),
+--   COUNT(*)
+-- from DEPT
+-- group by (
+--   select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID)
+-- --order by *;
+-- order by 1,2;
 --
 select distinct (select COUNT(*) from EMP where DEPTNO = DEPT.DEPTNO)
-from DEPT order by *;
+from DEPT 
+--order by *;
+order by 1;
 --
-select DEPTNO, (select MIN(SAL) from EMP E2 where E2.DEPTNO = E1.DEPTNO)
- from EMP E1
-group by DEPTNO order by *;
+-- group by for subqueries not supported
+-- select DEPTNO, (select MIN(SAL) from EMP E2 where E2.DEPTNO = E1.DEPTNO)
+--  from EMP E1
+-- group by DEPTNO
+-- -- order by *;
+-- order by 1,2;
 --
-select DEPTNO
-from EMP E1
-group by DEPTNO
-order by (select count(FNAME) from EMP E2 where E2.DEPTNO = E1.DEPTNO), DEPTNO;
+-- subquery in ORDER BY not supported
+-- select DEPTNO
+-- from EMP E1
+-- group by DEPTNO
+-- order by (select count(FNAME) from EMP E2 where E2.DEPTNO = E1.DEPTNO), DEPTNO;
 --
 select DEPTNO,
  MIN((select MIN(SEX) from EMP E2 where E2.MANAGER = E1.EMPNO)),
@@ -133,8 +146,9 @@ order by DEPTNO;
 -- in having
 -- uncorrelated
 select COUNT(*) from EMP group by DEPTNO
- having (select INTCOL from ONEROW where INTCOL = 5) is null
- order by *;
+ having (select i from ONEROW where i = 5) is null
+-- order by *;
+order by 1;
 -- error: uncorrelated non-group sex
 select COUNT(*) from EMP group by DEPTNO having exists (
  select 1 from ONEROW where SEX = 'F') order by deptno;
@@ -150,48 +164,50 @@ having DNAME like 'S%'
     where E2.DEPTNO = E1.DEPTNO and EMP.DEPTNO = E1.DEPTNO)) like 'F%'
 order by 1;
 
--- in order by
-select * from DEPT
-order by
- (select 1 from ONEROW),
- (select MIN(EMPNO) from EMP) asc,
- (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO) desc,
- -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO) desc;
+-- in order by (not supported)
+-- select * from DEPT
+-- order by
+--  (select 1 from ONEROW),
+--  (select MIN(EMPNO) from EMP) asc,
+--  (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO) desc,
+--  -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO) desc;
 -- same thing
-select DEPTNO,
- (select 1 from ONEROW),
- (select MIN(EMPNO) from EMP),
- (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO),
- -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
-from DEPT order by 2, 3, 4 desc, 5 desc;
+-- select DEPTNO,
+--  (select 1 from ONEROW),
+--  (select MIN(EMPNO) from EMP),
+--  (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO),
+--  -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+-- from DEPT order by 2, 3, 4 desc, 5 desc;
 
--- subqueries with setops
+-- subqueries with setops (no minus)
 -- uncorrelated
-select DEPTNO, (select 1 from ONEROW intersect
-                select intcol from ONEROW minus
-                (select 2 from ONEROW union
-                 select 3 from ONEROW))
-from DEPT order by *;
--- correlated
-select FNAME, ((select DEPTNO - 1 from DEPT intersect
-                select DEPTNO - 1 from EMP where DEPTNO = E1.DEPTNO) + 2)
-from EMP E1 order by FNAME;
--- fails, returns more than one row
-select (select 1 from ONEROW union all select INTCOL from ONEROW) from ONEROW;
+-- select DEPTNO, (select 1 from ONEROW intersect
+--                 select intcol from ONEROW minus
+--                 (select 2 from ONEROW union
+--                  select 3 from ONEROW))
+-- from DEPT 
+-- --order by *;
+-- order by 1,2;
+-- correlated (not implemented correlations through set ops not decorrelated)
+-- select FNAME, ((select DEPTNO - 1 from DEPT intersect
+--                 select DEPTNO - 1 from EMP where DEPTNO = E1.DEPTNO) + 2)
+-- from EMP E1 order by FNAME;
+-- -- fails, returns more than one row
+-- select (select 1 from ONEROW union all select i from ONEROW) from ONEROW;
 
 -- bug 6863: UPDATE using scalar select in SET statement fails
-create table bug6863 (x integer);
-insert into bug6863 values (1);
-update bug6863 set x = (select 2 from onerow);
-select * from bug6863;
+-- create table bug6863 (x integer);
+-- insert into bug6863 values (1);
+-- update bug6863 set x = (select 2 from onerow);
+-- select * from bug6863;
 -- similar: or exists fails in const-reduction
-select intcol from onerow
+select i from onerow
  where exists (select 1 from onerow)
     or exists (select 1 from onerow);
 
 -- bug 7191: agg in exists in select list doesn't make a agg query
-select intcol,
- case when exists (select min(intcol) from onerow) then 6 else 0 end
+select i,
+ case when exists (select min(i) from onerow) then 6 else 0 end
 from onerow;
 
 -- End scalarSubquery.sql

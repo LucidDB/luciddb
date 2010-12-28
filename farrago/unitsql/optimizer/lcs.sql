@@ -363,6 +363,9 @@ create index i_c9 on tencols(c9);
 insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 insert into tencols values(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LCS', 'TENCOLS', 100);
+
 !set outputformat csv
 -- should select all clusters
 explain plan for select * from tencols;
@@ -391,6 +394,15 @@ explain plan for select c0 + c1 from tencols where c0 = 0;
 -- column referenced in filter is processed by the index scan so it should
 -- not be projected
 explain plan for select c0 from tencols where c9 = 9;
+
+-- make sure deletion index scan appears in output when all attributes is
+-- specified
+explain plan including all attributes for
+    select * from tencols;
+explain plan including all attributes for
+    select c1, c4, c8 from tencols;
+explain plan including all attributes for
+    select c0, c5, c7, c1 from tencols where c8 = 5;
 
 !set outputformat table
 
@@ -461,8 +473,75 @@ select count(*) from rectangles;
 drop table rectangles;
 drop type rectangle;
 
+----------------------------------
+-- Part 5. Rowcounts on lcs tables
+----------------------------------
+create server test_data
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/optimizer/data',
+    file_extension 'csv',
+    with_header 'yes',
+    log_directory 'testlog');
+
+create foreign table matrix3x3(
+    a tinyint,
+    b integer,
+    c bigint)
+server test_data
+options (filename 'matrix3x3');
+
+create table rowcount(a tinyint, b int, c bigint);
+create index irc1 on rowcount(a);
+insert into rowcount select * from matrix3x3;
+select * from rowcount order by 1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+-- make sure create index doesn't wipe out the rowcount
+create index irc2 on rowcount(b);
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+insert into rowcount values(-1, -2, -3);
+select * from rowcount order by 1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+delete from rowcount where a = 11;
+select * from rowcount order by 1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+-- make sure rebuild maintains the same rowcount but resets the deletion count
+alter table rowcount rebuild;
+select * from rowcount order by 1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+-- make sure drop index doesn't wipe out rowcounts
+drop index irc1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+-- make sure truncate resets the rowcounts
+truncate table rowcount;
+select * from rowcount order by 1;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1 
+    order by 1;
+
+drop table rowcount;
+drop server test_data cascade;
+
 -------------------------------------
--- Part 5. Misc tests for bugfixes
+-- Part 6. Misc tests for bugfixes
 -------------------------------------
 -- Tests LER-312 -- should not create empty cluster pages when no data
 -- is inserted into table
@@ -515,11 +594,82 @@ insert into test_large_varchars values(1,
 select char_length(i), * from test_large_varchars order by a;
 drop table test_large_varchars;
 
--- Clean up
+-- LER-3681 (verify that self-insert with a UDX in the middle does not
+-- hang due to lockout)
 
-alter session implementation set default;
+create function stringify(c cursor, delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
 
--- drop schema
-drop schema lcs;
+create table self_insert_udx(a char(10));
+insert into self_insert_udx values('abc');
+insert into self_insert_udx 
+select * from table(stringify(cursor(select * from self_insert_udx), '|'));
+
+-- LER-10746 -- Insert into a table whose last cluster page is full
+create foreign table chars(a varchar(100))
+server flatfile_server
+options (filename 'unitsql/optimizer/data/chars.csv');
+create table t(a varchar(256) primary key);
+insert into t select * from chars;
+insert into t values('oppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp');
+insert into t values('pqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
+insert into t values('qrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr');
+insert into t values('rsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss');
+insert into t values('sttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt');
+insert into t values('tuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu');
+insert into t values('uvvvvvvvvvvvvvvvvvvv');
+insert into t values('vwwwwwwwwwwwwwwwwwww');
+insert into t values('wxxxxxxxxxxxxxxxxxxx');
+insert into t values('aaaaaaaaaaaaaaaaaaaa');
+insert into t values('bbbbbbbbbbbbbbbbbbbb');
+select * from t order by a;
+
+-- LDB-198:  indexing on trailing blanks
+
+create table trailing_blanks(v varchar(5));
+insert into trailing_blanks values
+('a'),
+('a'),
+('b '),
+('b '),
+('b'),
+('b'),
+('a '),
+('a '),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('x'),
+('a'),
+('a'),
+('b '),
+('b '),
+('b'),
+('b'),
+('a '),
+('a ');
+
+create index trailing_blanks_idx on trailing_blanks(v);
 
 -- End lcs.sql

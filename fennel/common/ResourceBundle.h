@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 
 using namespace std;
 
-class ResourceBundle
+class FENNEL_COMMON_EXPORT ResourceBundle
 {
 protected:
     explicit ResourceBundle(
@@ -100,24 +100,26 @@ _GRB *makeInstance(
             _GRB *parentBundle = makeInstance<_GRB, _BC, _BC_ITER>(
                 bundleCache,
                 locale.getParentLocale());
-      
+
             bundle->setParent(parentBundle);
         } else if (locale != Locale("")) {
             // lookup the default bundle
             _GRB *defaultBundle = makeInstance<_GRB, _BC, _BC_ITER>(
                 bundleCache,
                 Locale(""));
-      
+
             bundle->setParent(defaultBundle);
         }
-    
+
         bundleCache[locale] = bundle;
         return bundle;
     }
-  
+
     return (*iter).second;
 }
 
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_ResourceBundle_Included
+
+// End ResourceBundle.h

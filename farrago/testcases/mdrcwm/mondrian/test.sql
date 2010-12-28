@@ -14,7 +14,7 @@ returns table(
 language java
 parameter style system defined java
 no sql
-external name 'class com.lucidera.lurql.test.LurqlQueryUdx.queryMedMdr';
+external name 'class net.sf.farrago.test.LurqlQueryUdx.queryMedMdr';
 
 create or replace server olap_package
 foreign data wrapper sys_mdr

@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,6 +53,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -77,53 +78,46 @@
     </if>
 
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}/noidx" overwrite="true">
-          <fileset dir="${company.dir}" includes="*.tmpl"/>
-          <filterset id="dir.filter">
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
+    <copy todir="${gensql.dir}/noidx" overwrite="true">
+      <fileset dir="${company.dir}" includes="*.tmpl"/>
+      <filterset id="dir.filter">
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
 
-        <copy todir="${gensql.dir}/idx" overwrite="true">
-          <fileset dir="${company.dir}" includes="*.tmpl"/>
-          <filterset refid="dir.filter"/>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
+    <copy todir="${gensql.dir}/idx" overwrite="true">
+      <fileset dir="${company.dir}" includes="*.tmpl"/>
+      <filterset refid="dir.filter"/>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
 
-        <!-- copy over  non-index version of tests -->
-        <copy todir="${gensql.dir}/noidx" overwrite="true">
-          <fileset dir="${company.dir}">
-            <include name="*.ref"/>
-            <include name="*.sql"/>
-            <exclude name="index.*"/>
-            <exclude name="stats.*"/>
-            <exclude name="aggJoinFilt.*"/>
-            <exclude name="joinFilt.*"/>
-            <exclude name="negJoinFilt.*"/>
-            <exclude name="negJoinFiltExp.*"/>
-            <exclude name="compIdx.*"/>
-          </fileset>
-        </copy>
+    <!-- copy over  non-index version of tests -->
+    <copy todir="${gensql.dir}/noidx" overwrite="true">
+      <fileset dir="${company.dir}">
+        <include name="*.ref"/>
+        <include name="*.sql"/>
+        <exclude name="index.*"/>
+        <exclude name="stats.*"/>
+        <exclude name="aggJoinFilt.*"/>
+        <exclude name="joinFilt.*"/>
+        <exclude name="negJoinFilt.*"/>
+        <exclude name="negJoinFiltExp.*"/>
+        <exclude name="compIdx.*"/>
+      </fileset>
+    </copy>
 
-        <!-- copy over indexed version of tests -->
-        <copy todir="${gensql.dir}/idx" overwrite="true">
-          <fileset dir="${company.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-            <exclude name="create.*"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <!-- copy over indexed version of tests -->
+    <copy todir="${gensql.dir}/idx" overwrite="true">
+      <fileset dir="${company.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+       <exclude name="create.*"/>
+     </fileset>
+    </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${company.dir}"
       testscript="${testfile}"
@@ -149,10 +143,14 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
   </target>
 
   <!-- Experimental -->

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ class ExecStreamScheduler;
  * A stream is always a node is a stream graph, but over its lifetime it
  * may be moved from one graph to another. Specifically, it may be
  * prepared in one graph (see ExecStreamGraphEmbro), executed in another,
- * and finally closed & deleted in a third graph. 
+ * and finally closed & deleted in a third graph.
  *
  * <p>
  *
@@ -56,12 +56,12 @@ class ExecStreamScheduler;
  * ExecStreamId. This identifier is later used to work with the stream. If the
  * stream is moved to another graph, it obtains a new ExecStreamId.
  */
-class ExecStreamGraph
+class FENNEL_EXEC_EXPORT ExecStreamGraph
     : public boost::noncopyable,
         public ClosableObject
 {
     friend class ExecStreamScheduler;
-    
+
 protected:
     /**
      * A Scheduler responsible for executing streams in this graph.
@@ -76,9 +76,9 @@ protected:
      * Manager that handles dynamic parameters for this graph
      */
     SharedDynamicParamManager pDynamicParamManager;
-        
+
     explicit ExecStreamGraph();
-    
+
 public:
     /**
      * Constructs a new ExecStreamGraph.
@@ -86,14 +86,14 @@ public:
      * @return new graph
      */
     static SharedExecStreamGraph newExecStreamGraph();
-    
+
     virtual ~ExecStreamGraph();
 
     /**
      * @return pointer to executing scheduler, or null if there is none.
      */
     inline ExecStreamScheduler *getScheduler() const;
-    
+
     /**
      * @return reference to the DynamicParamManager for this graph.
      */
@@ -107,6 +107,15 @@ public:
      */
     virtual void setTxn(
         SharedLogicalTxn pTxn) = 0;
+
+    /**
+     * Sets the ErrorTarget to which this graph's streams should
+     * send row errors.
+     *
+     * @param pErrorTarget error target
+     */
+    virtual void setErrorTarget(
+        SharedErrorTarget pErrorTarget) = 0;
 
     /**
      * Sets the ScratchSegment from which this graph's streams should
@@ -129,6 +138,23 @@ public:
      * @return the transaction within which this graph is executing
      */
     virtual SharedLogicalTxn getTxn() = 0;
+
+    /**
+     * @return the transaction ID for this graph
+     */
+    virtual TxnId getTxnId() = 0;
+
+    /**
+     * Controls whether it is OK to call getTxnId without first
+     * calling setTxn.  Normally, this is a bad idea (since
+     * in that case getTxnId will return FIRST_TXN_ID as a dummy,
+     * which could lead to concurrency problems), but for
+     * non-transactional unit tests, this can be useful.
+     * Default is disabled.
+     *
+     * @param enabled whether dummy txn ID's are enabled
+     */
+    virtual void enableDummyTxnId(bool enabled) = 0;
 
     /**
      * @return exec stream governor
@@ -156,10 +182,15 @@ public:
      * @param producerId ID of producer stream in this graph
      *
      * @param consumerId ID of consumer stream in this graph
+     *
+     * @param isImplicit false (the default) if the edge represents
+     * direct dataflow; true if the edge represents an implicit
+     * dataflow dependency
      */
     virtual void addDataflow(
         ExecStreamId producerId,
-        ExecStreamId consumerId) = 0;
+        ExecStreamId consumerId,
+        bool isImplicit = false) = 0;
 
     /**
      * Defines a dataflow representing external output produced by this graph.
@@ -193,7 +224,8 @@ public:
      * @param nodes identifies source nodes.
      */
     virtual void mergeFrom(
-        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
+        ExecStreamGraph& src,
+        std::vector<ExecStreamId> const& nodes) = 0;
 
     /**
      * Finds a stream by name.
@@ -204,7 +236,7 @@ public:
      */
     virtual SharedExecStream findStream(
         std::string name) = 0;
-    
+
     /**
      * Finds last stream known for name. May be original stream or an adapter.
      *
@@ -217,9 +249,9 @@ public:
     virtual SharedExecStream findLastStream(
         std::string name,
         uint iOutput) = 0;
-    
+
     /**
-     * Interposes an adapter stream. In the process, creates a dataflow 
+     * Interposes an adapter stream. In the process, creates a dataflow
      * from last stream associated with name to the adapter stream.
      *
      * @param name name of stream to adapt
@@ -257,9 +289,8 @@ public:
      */
     virtual SharedExecStream getStream(ExecStreamId id) = 0;
 
-     
     /**
-     * Determines number of input flows consumed by a stream.
+     * Determines number of explicit input flows consumed by a stream.
      *
      * @param streamId ID of stream
      *
@@ -267,9 +298,9 @@ public:
      */
     virtual uint getInputCount(
         ExecStreamId streamId) = 0;
-    
+
     /**
-     * Determines number of output flows produced by a stream.
+     * Determines number of explicit output flows produced by a stream.
      *
      * @param streamId ID of stream
      *
@@ -277,13 +308,13 @@ public:
      */
     virtual uint getOutputCount(
         ExecStreamId streamId) = 0;
-    
+
     /**
      * Accesses a stream's input.
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based input flow ordinal
+     * @param iInput 0-based input explicit flow ordinal
      *
      * @return upstream producer
      */
@@ -296,7 +327,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based input flow ordinal
+     * @param iInput 0-based input explicit flow ordinal
      *
      * @return accessor used by upstream producer
      */
@@ -309,7 +340,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iOutput 0-based output flow ordinal
+     * @param iOutput 0-based output explicit flow ordinal
      *
      * @return downstream consumer
      */
@@ -322,7 +353,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iOutput 0-based output flow ordinal
+     * @param iOutput 0-based output explicit flow ordinal
      *
      * @return accessor used by downstream consumer
      */
@@ -356,11 +387,58 @@ public:
      * @param dotStream ostream on which to write .dot representation
      */
     virtual void renderGraphviz(std::ostream &dotStream) = 0;
-    
+
     /**
      * @return true if graph has no cycles
      */
     virtual bool isAcyclic() = 0;
+
+    /**
+     * Closes the producers of a stream with a given id.
+     *
+     * @param streamId stream id of the stream whose producers will be closed
+     */
+    virtual void closeProducers(ExecStreamId streamId) = 0;
+
+    /**
+     * Declares that a given stream writes a given dynamic parameter.
+     *
+     * @param streamId Stream id
+     * @param dynamicParamId Dynamic parameter id
+     */
+    virtual void declareDynamicParamWriter(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId) = 0;
+
+    /**
+     * Declares that a given stream reads a given dynamic parameter.
+     *
+     * @param streamId Stream id
+     * @param dynamicParamId Dynamic parameter id
+     */
+    virtual void declareDynamicParamReader(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId) = 0;
+
+    /**
+     * Returns a list of stream ids that write a given dynamic parameter.
+     *
+     * @param dynamicParamId Dynamic parameter id
+     * @return List of ids of streams that write the parameter
+     */
+    virtual const std::vector<ExecStreamId> &getDynamicParamWriters(
+        DynamicParamId dynamicParamId) = 0;
+
+
+    /**
+     * Returns a list of stream ids that read a given dynamic parameter.
+     *
+     * @param dynamicParamId Dynamic parameter id
+     * @return List of ids of streams that read the parameter
+     */
+    virtual const std::vector<ExecStreamId> &getDynamicParamReaders(
+        DynamicParamId dynamicParamId) = 0;
+
 };
 
 inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const

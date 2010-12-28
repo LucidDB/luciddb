@@ -1,120 +1,120 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema sequence_ddl_test;
-0: jdbc:farrago:> set schema 'sequence_ddl_test';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- double not allowed
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     d double generated always as identity primary key);
+> -- $Id$
+> 
+> create schema sequence_ddl_test;
+> set schema 'sequence_ddl_test';
+> 
+> -- double not allowed
+> create table t(
+>     d double generated always as identity primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Exact numeric type required for sequence in definition of D (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- scale must be zero
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     d decimal(10,1) generated always as identity primary key);
+> 
+> -- scale must be zero
+> create table t(
+>     d decimal(10,1) generated always as identity primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Scale must be zero in definition of D (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- parameters must be in range
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     t tinyint generated always as identity
-. . . . . . . . >         (maxvalue 200) primary key);
+> 
+> -- parameters must be in range
+> create table t(
+>     t tinyint generated always as identity
+>         (maxvalue 200) primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Value '200' is out of range for parameter of type TINYINT (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- increment cannot be zero
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     s smallint generated always as identity
-. . . . . . . . >         (increment by 0) primary key);
+> 
+> -- increment cannot be zero
+> create table t(
+>     s smallint generated always as identity
+>         (increment by 0) primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Increment is required to be nonzero in definition of S (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- max must be greater than min
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     i int generated always as identity
-. . . . . . . . >         (minvalue 500 maxvalue 100) primary key);
+> 
+> -- max must be greater than min
+> create table t(
+>     i int generated always as identity
+>         (minvalue 500 maxvalue 100) primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Sequence min value 500 cannot be greater than max value 100 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- start value must be between min and max
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     i int generated always as identity
-. . . . . . . . >         (minvalue 100 maxvalue 500 start with 1000) primary key);
+> 
+> -- start value must be between min and max
+> create table t(
+>     i int generated always as identity
+>         (minvalue 100 maxvalue 500 start with 1000) primary key);
 Error: org.eigenbase.sql.parser.SqlParseException: Sequence start 1000 is required to be between min value 100 and max value 500 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- tables contain at most one identity column
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     i int generated always as identity
-. . . . . . . . >         (minvalue 100 maxvalue 500) primary key,
-. . . . . . . . >     j int generated always as identity);
-Error: org.eigenbase.sql.parser.SqlParseException: Multiple identity columns are specified in definition of T (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- out of range
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     b bigint generated always as identity
-. . . . . . . . >         (minvalue 12345678900987654321) primary key,
-. . . . . . . . >     j int);
+> 
+> -- tables contain at most one identity column
+> create table t(
+>     i int generated always as identity
+>         (minvalue 100 maxvalue 500) primary key,
+>     j int generated always as identity);
+Error: Cannot specify more than one identity column in definition of table "SEQUENCE_DDL_TEST"."T" (state=,code=0)
+> 
+> -- out of range
+> create table t(
+>     b bigint generated always as identity
+>         (minvalue 12345678900987654321) primary key,
+>     j int);
 Error: From line 3, column 19 to line 3, column 38: Numeric literal '12345678900987654321' out of range (state=,code=0)
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     b bigint generated always as identity
-. . . . . . . . >         (maxvalue 1234567890.01) primary key,
-. . . . . . . . >     j int);
+> create table t(
+>     b bigint generated always as identity
+>         (maxvalue 1234567890.01) primary key,
+>     j int);
 Error: From line 3, column 19 to line 3, column 31: Numeric literal '1234567890.01' out of range (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- too many values
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     i int generated always as identity
-. . . . . . . . >         (minvalue 100 maxvalue 500 
-. . . . . . . . >         start with 350 increment by 100) primary key,
-. . . . . . . . >     j int);
-0: jdbc:farrago:> insert into t (j) values (1), (2);
-0: jdbc:farrago:> insert into t (j) values (3);
+> 
+> -- too many values
+> create table t(
+>     i int generated always as identity
+>         (minvalue 100 maxvalue 500 
+>         start with 350 increment by 100) primary key,
+>     j int);
+> insert into t (j) values (1), (2);
+> insert into t (j) values (3);
 Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.T (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> 
+> select * from t;
 +------+----+
 |  I   | J  |
 +------+----+
 | 350  | 1  |
 | 450  | 2  |
 +------+----+
-0: jdbc:farrago:> drop table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- allow cycles
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     d decimal(10,0) generated always as identity
-. . . . . . . . >         (minvalue 100 maxvalue 500 
-. . . . . . . . >         start with 350 increment by 200 cycle) primary key,
-. . . . . . . . >     j int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 350, 100, 300
-0: jdbc:farrago:> insert into t (j) values (1), (2), (3);
-0: jdbc:farrago:> -- 500, 100 (fail), ...
-0: jdbc:farrago:> insert into t (j) values (4), (5), (6);
+> drop table t;
+> 
+> -- allow cycles
+> create table t(
+>     d decimal(10,0) generated always as identity
+>         (minvalue 100 maxvalue 500 
+>         start with 350 increment by 200 cycle) primary key,
+>     j int);
+> 
+> -- 350, 100, 300
+> insert into t (j) values (1), (2), (3);
+> -- 500, 100 (fail), 300 (fail)
+> insert into t (j) values (4), (5), (6);
 Error: Duplicate key detected:  [ 100 ] (state=,code=0)
-0: jdbc:farrago:> -- 300 (fail)
-0: jdbc:farrago:> insert into t (j) values (7);
-Error: Duplicate key detected:  [ 300 ] (state=,code=0)
-0: jdbc:farrago:> -- 500
-0: jdbc:farrago:> insert into t (j) values (8);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> -- 500
+> insert into t (j) values (7);
+> -- 100 (fail)
+> insert into t (j) values (8);
+Error: Duplicate key detected:  [ 100 ] (state=,code=0)
+> 
+> select * from t;
 +------+----+
 |  D   | J  |
 +------+----+
 | 100  | 2  |
 | 300  | 3  |
 | 350  | 1  |
-| 500  | 8  |
+| 500  | 7  |
 +------+----+
-0: jdbc:farrago:> drop table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- reverse increment, big values
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     b bigint generated always as identity
-. . . . . . . . >         (minvalue 1000000000100 maxvalue 1000000000500 
-. . . . . . . . >         start with 1000000000450 increment by -200 cycle) primary key,
-. . . . . . . . >     j int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- [10000000000+] 450, 250, 500, 300, 100 
-0: jdbc:farrago:> insert into t (j) values (1), (2), (3), (4), (5);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> drop table t;
+> 
+> -- reverse increment, big values
+> create table t(
+>     b bigint generated always as identity
+>         (minvalue 1000000000100 maxvalue 1000000000500 
+>         start with 1000000000450 increment by -200 cycle) primary key,
+>     j int);
+> 
+> -- [10000000000+] 450, 250, 500, 300, 100 
+> insert into t (j) values (1), (2), (3), (4), (5);
+> 
+> select * from t;
 +----------------+----+
 |       B        | J  |
 +----------------+----+
@@ -124,24 +124,24 @@ Error: Duplicate key detected:  [ 300 ] (state=,code=0)
 | 1000000000450  | 1  |
 | 1000000000500  | 3  |
 +----------------+----+
-0: jdbc:farrago:> drop table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> -- ALTER COLUMN
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     i int primary key,
-. . . . . . . . >     b bigint generated by default as identity
-. . . . . . . . >         (minvalue -10 maxvalue 0 start with -5));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- alter sequence before it is started
-0: jdbc:farrago:> alter table t alter column b 
-. . . . . . . . >     set minvalue -5;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t (i) values (1), (2), (3), (4), (5), (6);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> drop table t;
+> 
+> ----------------------------------------------------------------------
+> -- ALTER COLUMN
+> ----------------------------------------------------------------------
+> 
+> create table t(
+>     i int primary key,
+>     b bigint generated by default as identity
+>         (minvalue -10 maxvalue 0 start with -5));
+> 
+> -- alter sequence before it is started
+> alter table t alter column b 
+>     set minvalue -5;
+> 
+> insert into t (i) values (1), (2), (3), (4), (5), (6);
+> 
+> select * from t;
 +----+-----+
 | I  |  B  |
 +----+-----+
@@ -152,27 +152,27 @@ Error: Duplicate key detected:  [ 300 ] (state=,code=0)
 | 5  | -1  |
 | 6  | 0   |
 +----+-----+
-0: jdbc:farrago:> truncate table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- out of range
-0: jdbc:farrago:> alter table t alter column b 
-. . . . . . . . >     restart with -20;
+> truncate table t;
+> 
+> -- out of range
+> alter table t alter column b 
+>     restart with -20;
 Error: Sequence start -20 is required to be between min value -5 and max value 0 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter table t alter column b 
-. . . . . . . . >     set minvalue 100;
+> 
+> alter table t alter column b 
+>     set minvalue 100;
 Error: Sequence min value 100 cannot be greater than max value 0 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter table t alter column b
-. . . . . . . . >     restart with 0 set increment by -1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert all values: 0, -1, -2, ... -5
-0: jdbc:farrago:> insert into t (i) values (1), (2), (3), (4), (5), (6);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t (i) values (7);
+> 
+> alter table t alter column b
+>     restart with 0 set increment by -1;
+> 
+> -- insert all values: 0, -1, -2, ... -5
+> insert into t (i) values (1), (2), (3), (4), (5), (6);
+> 
+> insert into t (i) values (7);
 Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.T (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> 
+> select * from t;
 +----+-----+
 | I  |  B  |
 +----+-----+
@@ -183,15 +183,15 @@ Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.T (state=
 | 5  | -4  |
 | 6  | -5  |
 +----+-----+
-0: jdbc:farrago:> truncate table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert -7, -9, 0, 2
-0: jdbc:farrago:> alter table t alter column b
-. . . . . . . . >     set minvalue -10 set increment by -2 set cycle;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t (i) values (1), (2), (3), (4);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> truncate table t;
+> 
+> -- insert -7, -9, 0, 2
+> alter table t alter column b
+>     set minvalue -10 set increment by -2 set cycle;
+> 
+> insert into t (i) values (1), (2), (3), (4);
+> 
+> select * from t;
 +----+-----+
 | I  |  B  |
 +----+-----+
@@ -200,50 +200,83 @@ Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.T (state=
 | 3  | 0   |
 | 4  | -2  |
 +----+-----+
-0: jdbc:farrago:> truncate table t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single value sequence
-0: jdbc:farrago:> create table s(
-. . . . . . . . >     i int primary key,
-. . . . . . . . >     d decimal(10,0) generated always as identity
-. . . . . . . . >         (minvalue 100 maxvalue 100));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into s (i) values (5);
-0: jdbc:farrago:> insert into s (i) values (10);
+> truncate table t;
+> 
+> -- single value sequence
+> create table s(
+>     i int primary key,
+>     d decimal(10,0) generated always as identity
+>         (minvalue 100 maxvalue 100));
+> 
+> insert into s (i) values (5);
+> insert into s (i) values (10);
 Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.S (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter table s alter column d 
-. . . . . . . . >     set cycle;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into s (i) values (10);
-0: jdbc:farrago:> select * from s;
+> 
+> alter table s alter column d 
+>     set cycle;
+> 
+> insert into s (i) values (10);
+> select * from s;
 +-----+------+
 |  I  |  D   |
 +-----+------+
 | 5   | 100  |
 | 10  | 100  |
 +-----+------+
-0: jdbc:farrago:> truncate table s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> -- GENERATED ALWAYS
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t values (10, -10);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into s values (20, 20);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: insert value into field which is always generated (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> -- VIEWS
-0: jdbc:farrago:> ----------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.sequences_view;
+> truncate table s;
+> 
+> ----------------------------------------------------------------------
+> -- GENERATED ALWAYS
+> ----------------------------------------------------------------------
+> 
+> insert into t values (10, -10);
+> 
+> insert into s values (20, 20);
+Error: Cannot explicitly insert value into IDENTITY column 'D' which is ALWAYS GENERATED (state=,code=0)
+> 
+> ----------------------------------------------------------------------
+> -- VIEWS
+> ----------------------------------------------------------------------
+> 
+> select * from sys_boot.mgmt.sequences_view order by TABLE_NAME, COLUMN_NAME;
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
 | TABLE_CAT  |    TABLE_SCHEM     | TABLE_NAME  | COLUMN_NAME  | baseValue  | increment  | minValue  | maxValue  | cycle  | expired  |
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
-| LOCALDB    | SEQUENCE_DDL_TEST  | T           | B            | 0          | -2         | -10       | 0         | true   | false    |
 | LOCALDB    | SEQUENCE_DDL_TEST  | S           | D            | 100        | 1          | 100       | 100       | true   | false    |
+| LOCALDB    | SEQUENCE_DDL_TEST  | T           | B            | 0          | -2         | -10       | 0         | true   | false    |
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> ----------------------------------------------------------------------
+> -- INTERACTION WITH REBUILD (LDB-160)
+> ----------------------------------------------------------------------
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table cs(
+>     i int primary key,
+>     d decimal(10,0) generated always as identity
+>         (minvalue 20 maxvalue 100));
+> 
+> insert into cs (i) values (5);
+> insert into cs (i) values (10);
+> 
+> select * from cs order by i;
++-----+-----+
+|  I  |  D  |
++-----+-----+
+| 5   | 20  |
+| 10  | 21  |
++-----+-----+
+> 
+> alter table cs rebuild;
+> 
+> select * from cs order by i;
++-----+-----+
+|  I  |  D  |
++-----+-----+
+| 5   | 20  |
+| 10  | 21  |
++-----+-----+
+> 
+> 
+> !quit

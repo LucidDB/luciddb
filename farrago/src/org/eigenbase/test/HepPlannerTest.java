@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.hep.*;
 
 
@@ -38,7 +39,6 @@ import org.eigenbase.relopt.hep.*;
 public class HepPlannerTest
     extends RelOptTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String unionTree =
@@ -60,7 +60,8 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleClass(CoerceInputsRule.class);
 
-        HepPlanner planner = new HepPlanner(
+        HepPlanner planner =
+            new HepPlanner(
                 programBuilder.createProgram());
 
         planner.addRule(new CoerceInputsRule(UnionRel.class, false));
@@ -80,7 +81,8 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleByDescription("FilterToCalcRule");
 
-        HepPlanner planner = new HepPlanner(
+        HepPlanner planner =
+            new HepPlanner(
                 programBuilder.createProgram());
 
         planner.addRule(FilterToCalcRule.instance);
@@ -98,7 +100,7 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchOrder(HepMatchOrder.TOP_DOWN);
         programBuilder.addMatchLimit(1);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),
@@ -113,7 +115,7 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(1);
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),
@@ -127,7 +129,7 @@ public class HepPlannerTest
 
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(HepProgram.MATCH_UNTIL_FIXPOINT);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),
@@ -145,7 +147,7 @@ public class HepPlannerTest
         // twice by the same parent (the join in this case).
 
         checkPlanning(
-            new RemoveTrivialProjectRule(),
+            RemoveTrivialProjectRule.instance,
             "select d1.deptno from (select * from dept) d1,"
             + " (select * from dept) d2");
     }

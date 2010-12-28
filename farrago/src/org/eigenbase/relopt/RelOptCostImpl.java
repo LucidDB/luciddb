@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,6 @@ package org.eigenbase.relopt;
 public class RelOptCostImpl
     implements RelOptCost
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final double value;
@@ -90,6 +89,12 @@ public class RelOptCostImpl
     }
 
     // implement RelOptCost
+    public boolean isEqWithEpsilon(RelOptCost other)
+    {
+        return Math.abs(getRows() - other.getRows()) < RelOptUtil.EPSILON;
+    }
+
+    // implement RelOptCost
     public RelOptCost minus(RelOptCost other)
     {
         return new RelOptCostImpl(getRows() - other.getRows());
@@ -105,6 +110,12 @@ public class RelOptCostImpl
     public RelOptCost multiplyBy(double factor)
     {
         return new RelOptCostImpl(getRows() * factor);
+    }
+
+    public double divideBy(RelOptCost cost)
+    {
+        RelOptCostImpl that = (RelOptCostImpl) cost;
+        return this.getRows() / that.getRows();
     }
 
     // implement RelOptCost

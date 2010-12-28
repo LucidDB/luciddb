@@ -218,8 +218,8 @@
 +----------+---------+
 |   NAME   | EXPR$1  |
 +----------+---------+
-| Chicken  | 48      |
-| Cookies  | 53      |
+| Chicken  | 49      |
+| Cookies  | 54      |
 | Plunger  | 51      |
 +----------+---------+
 0: jdbc:luciddb:> 
@@ -239,34 +239,32 @@
 +----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select floor(avg(SALES.CUSTID))
-. . . . . . . . > , PRODUCTS.NAME
 . . . . . . . . > from SALES, PRODUCTS
 . . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
 . . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
 . . . . . . . . > group by PRODUCTS.NAME
 . . . . . . . . > order by PRODUCTS.NAME;
-+---------+----------+
-| EXPR$0  |   NAME   |
-+---------+----------+
-| 48      | Chicken  |
-| 53      | Cookies  |
-| 51      | Plunger  |
-+---------+----------+
++---------+
+| EXPR$0  |
++---------+
+| 49      |
+| 54      |
+| 51      |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select 'HELLO'
-. . . . . . . . > , PRODUCTS.NAME
 . . . . . . . . > from SALES, PRODUCTS
 . . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
 . . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
 . . . . . . . . > group by PRODUCTS.NAME
 . . . . . . . . > order by PRODUCTS.NAME;
-+---------+----------+
-| EXPR$0  |   NAME   |
-+---------+----------+
-| HELLO   | Chicken  |
-| HELLO   | Cookies  |
-| HELLO   | Plunger  |
-+---------+----------+
++---------+
+| EXPR$0  |
++---------+
+| HELLO   |
+| HELLO   |
+| HELLO   |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- equality and non equality in one
 0: jdbc:luciddb:> select customers.custid, count(customers.custid), max(PRODUCTS.NAME),

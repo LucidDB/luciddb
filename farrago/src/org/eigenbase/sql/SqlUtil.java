@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,6 @@
 */
 package org.eigenbase.sql;
 
-import java.lang.reflect.*;
-
 import java.nio.charset.*;
 
 import java.sql.*;
@@ -38,6 +36,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -49,24 +48,6 @@ import org.eigenbase.util.*;
  */
 public abstract class SqlUtil
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    /**
-     * A {@link SqlDialect} useful for generating generic SQL. If you need to do
-     * something database-specific like quoting identifiers, don't rely on this
-     * dialect to do what you want.
-     */
-    public static final SqlDialect dummyDialect =
-        new SqlDialect(dummyDatabaseMetaData("fooBar", "`"));
-
-    /**
-     * A {@link SqlDialect} useful for generating SQL which can be parsed by the
-     * Eigenbase parser, but not much else.
-     */
-    public static final SqlDialect eigenbaseDialect =
-        new SqlDialect(dummyDatabaseMetaData("EigenbaseDummy", "\""));
-
     //~ Methods ----------------------------------------------------------------
 
     static SqlNode andExpressions(
@@ -77,20 +58,19 @@ public abstract class SqlUtil
             return node2;
         }
         ArrayList<SqlNode> list = new ArrayList<SqlNode>();
-        if (node1.isA(SqlKind.And)) {
+        if (node1.getKind() == SqlKind.AND) {
             list.addAll(Arrays.asList(((SqlCall) node1).operands));
         } else {
             list.add(node1);
         }
-        if (node2.isA(SqlKind.And)) {
+        if (node2.getKind() == SqlKind.AND) {
             list.addAll(Arrays.asList(((SqlCall) node2).operands));
         } else {
             list.add(node2);
         }
-        return
-            SqlStdOperatorTable.andOperator.createCall(
-                (SqlNode []) list.toArray(new SqlNode[list.size()]),
-                SqlParserPos.ZERO);
+        return SqlStdOperatorTable.andOperator.createCall(
+            SqlParserPos.ZERO,
+            list);
     }
 
     static ArrayList<SqlNode> flatten(SqlNode node)
@@ -115,8 +95,8 @@ public abstract class SqlUtil
         SqlNode node,
         ArrayList<SqlNode> list)
     {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.JoinORDINAL:
+        switch (node.getKind()) {
+        case JOIN:
             SqlJoin join = (SqlJoin) node;
             flatten(
                 join.getLeft(),
@@ -125,7 +105,7 @@ public abstract class SqlUtil
                 join.getRight(),
                 list);
             return;
-        case SqlKind.AsORDINAL:
+        case AS:
             SqlCall call = (SqlCall) node;
             flatten(call.operands[0], list);
             return;
@@ -167,7 +147,7 @@ public abstract class SqlUtil
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
-            if (literal.getTypeName() == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.NULL) {
                 assert (null == literal.getValue());
                 return true;
             } else {
@@ -177,7 +157,7 @@ public abstract class SqlUtil
             }
         }
         if (allowCast) {
-            if (node.isA(SqlKind.Cast)) {
+            if (node.getKind() == SqlKind.CAST) {
                 SqlCall call = (SqlCall) node;
                 if (isNullLiteral(call.operands[0], false)) {
                     // node is "CAST(NULL as type)"
@@ -196,12 +176,9 @@ public abstract class SqlUtil
      */
     public static boolean isNull(SqlNode node)
     {
-        return
-            isNullLiteral(node, false)
-            || (
-                (node.getKind() == SqlKind.Cast)
-                && isNull(((SqlCall) node).operands[0])
-               );
+        return isNullLiteral(node, false)
+            || ((node.getKind() == SqlKind.CAST)
+                && isNull(((SqlCall) node).operands[0]));
     }
 
     /**
@@ -238,7 +215,7 @@ public abstract class SqlUtil
         Util.pre(node != null, "node != null");
         if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            return call.isA(SqlKind.LiteralChain);
+            return call.getKind() == SqlKind.LITERAL_CHAIN;
         } else {
             return false;
         }
@@ -264,7 +241,8 @@ public abstract class SqlUtil
             SqlFunction function = (SqlFunction) operator;
 
             if (function.getFunctionType()
-                == SqlFunctionCategory.UserDefinedSpecificFunction) {
+                == SqlFunctionCategory.UserDefinedSpecificFunction)
+            {
                 writer.keyword("SPECIFIC");
             }
             SqlIdentifier id = function.getSqlIdentifier();
@@ -282,7 +260,7 @@ public abstract class SqlUtil
             return;
         }
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
+            writer.startList(SqlWriter.FrameTypeEnum.FunCall, "(", ")");
         if (null != quantifier) {
             quantifier.unparse(writer, 0, 0);
         }
@@ -305,8 +283,9 @@ public abstract class SqlUtil
         assert operands.length == 2;
         final SqlWriter.Frame frame =
             writer.startList(
-                (binop instanceof SqlSetOperator) ? SqlWriter.FrameType.Setop
-                : SqlWriter.FrameType.Simple);
+                (binop instanceof SqlSetOperator)
+                ? SqlWriter.FrameTypeEnum.Setop
+                : SqlWriter.FrameTypeEnum.Simple);
         operands[0].unparse(
             writer,
             leftPrec,
@@ -320,26 +299,6 @@ public abstract class SqlUtil
             binop.getRightPrec(),
             rightPrec);
         writer.endList(frame);
-    }
-
-    /**
-     * Creates a {@link DatabaseMetaData} object good enough to create a {@link
-     * SqlDialect} object with, but not good for much else.
-     *
-     * @param databaseProductName Database product name
-     * @param identifierQuoteString Identifier quote string
-     */
-    private static DatabaseMetaData dummyDatabaseMetaData(
-        String databaseProductName,
-        String identifierQuoteString)
-    {
-        return
-            (DatabaseMetaData) Proxy.newProxyInstance(
-                null,
-                new Class[] { DatabaseMetaData.class },
-                new DatabaseMetaDataInvocationHandler(
-                    databaseProductName,
-                    identifierQuoteString));
     }
 
     /**
@@ -418,17 +377,8 @@ public abstract class SqlUtil
         SqlFunctionCategory category)
     {
         // start with all routines matching by name
-        List<SqlOperator> operators =
-            opTab.lookupOperatorOverloads(
-                funcName,
-                category,
-                SqlSyntax.Function);
-        List<SqlFunction> routines = new ArrayList<SqlFunction>();
-        for (SqlOperator operator : operators) {
-            if (operator instanceof SqlFunction) {
-                routines.add((SqlFunction) operator);
-            }
-        }
+        List<SqlFunction> routines =
+            lookupSubjectRoutinesByName(opTab, funcName, category);
 
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
@@ -458,6 +408,53 @@ public abstract class SqlUtil
         return routines;
     }
 
+    /**
+     * Determine if there is a routine matching the given name and number of
+     * arguments.
+     *
+     * @param opTab operator table to search
+     * @param funcName name of function being invoked
+     * @param argTypes argument types
+     * @param category category of routine to look up
+     *
+     * @return true if match found
+     */
+    public static boolean matchRoutinesByParameterCount(
+        SqlOperatorTable opTab,
+        SqlIdentifier funcName,
+        RelDataType [] argTypes,
+        SqlFunctionCategory category)
+    {
+        // start with all routines matching by name
+        List<SqlFunction> routines =
+            lookupSubjectRoutinesByName(opTab, funcName, category);
+
+        // first pass:  eliminate routines which don't accept the given
+        // number of arguments
+        filterRoutinesByParameterCount(routines, argTypes);
+
+        return (routines.size() > 0);
+    }
+
+    private static List<SqlFunction> lookupSubjectRoutinesByName(
+        SqlOperatorTable opTab,
+        SqlIdentifier funcName,
+        SqlFunctionCategory category)
+    {
+        List<SqlOperator> operators =
+            opTab.lookupOperatorOverloads(
+                funcName,
+                category,
+                SqlSyntax.Function);
+        List<SqlFunction> routines = new ArrayList<SqlFunction>();
+        for (SqlOperator operator : operators) {
+            if (operator instanceof SqlFunction) {
+                routines.add((SqlFunction) operator);
+            }
+        }
+        return routines;
+    }
+
     private static void filterRoutinesByParameterCount(
         List<SqlFunction> routines,
         RelDataType [] argTypes)
@@ -467,7 +464,9 @@ public abstract class SqlUtil
             SqlFunction function = (SqlFunction) iter.next();
             SqlOperandCountRange od = function.getOperandCountRange();
             if (!od.isVariadic()
-                && !od.getAllowedList().contains(new Integer(argTypes.length))) {
+                && !od.getAllowedList().contains(
+                    new Integer(argTypes.length)))
+            {
                 iter.remove();
             }
         }
@@ -477,12 +476,12 @@ public abstract class SqlUtil
      * @sql.99 Part 2 Section 10.4 Syntax Rule 6.b.iii.2.B
      */
     private static void filterRoutinesByParameterType(
-        List routines,
+        List<SqlFunction> routines,
         RelDataType [] argTypes)
     {
-        Iterator iter = routines.iterator();
+        Iterator<SqlFunction> iter = routines.iterator();
         while (iter.hasNext()) {
-            SqlFunction function = (SqlFunction) iter.next();
+            SqlFunction function = iter.next();
             RelDataType [] paramTypes = function.getParamTypes();
             if (paramTypes == null) {
                 // no parameter information for builtins; keep for now
@@ -541,10 +540,9 @@ public abstract class SqlUtil
                     if (paramTypes == null) {
                         c = -1;
                     } else {
-                        c =
-                            precList.compareTypePrecedence(
-                                paramTypes[i],
-                                bestMatch);
+                        c = precList.compareTypePrecedence(
+                            paramTypes[i],
+                            bestMatch);
                     }
                     if (c < 0) {
                         iter.remove();
@@ -559,14 +557,15 @@ public abstract class SqlUtil
      */
     public static SqlNode getSelectListItem(SqlNode query, int i)
     {
-        if (query instanceof SqlSelect) {
+        switch (query.getKind()) {
+        case SELECT:
             SqlSelect select = (SqlSelect) query;
             SqlNode from = select.getFrom();
-            if (from.isA(SqlKind.As)) {
+            if (from.getKind() == SqlKind.AS) {
                 SqlCall as = (SqlCall) from;
                 from = as.operands[0];
             }
-            if (from.isA(SqlKind.Values)) {
+            if (from.getKind() == SqlKind.VALUES) {
                 // They wrote "VALUES (x, y)", but the validator has
                 // converted this into "SELECT * FROM VALUES (x, y)".
                 return getSelectListItem(from, i);
@@ -580,15 +579,18 @@ public abstract class SqlUtil
                 i = 0;
             }
             return fields.get(i);
-        } else if (query.isA(SqlKind.Values)) {
+
+        case VALUES:
             SqlCall call = (SqlCall) query;
-            Util.permAssert(call.operands.length > 0,
+            Util.permAssert(
+                call.operands.length > 0,
                 "VALUES must have at least one operand");
             final SqlCall row = (SqlCall) call.operands[0];
-            Util.permAssert(row.operands.length > i,
-                "VALUES has too few columns");
+            Util.permAssert(
+                row.operands.length > i, "VALUES has too few columns");
             return row.operands[i];
-        } else {
+
+        default:
             // Unexpected type of query.
             throw Util.needToImplement(query);
         }
@@ -615,13 +617,12 @@ public abstract class SqlUtil
                     // actually a call to a function. Construct a fake
                     // call to this function, so we can use the regular
                     // operator validation.
-                    return
-                        new SqlCall(
-                            operator,
-                            SqlNode.emptyArray,
-                            id.getParserPosition(),
-                            true,
-                            null);
+                    return new SqlCall(
+                        operator,
+                        SqlNode.emptyArray,
+                        id.getParserPosition(),
+                        true,
+                        null);
                 }
             }
         }
@@ -650,9 +651,9 @@ public abstract class SqlUtil
         List<? extends Object> typeList)
     {
         return getAliasedSignature(
-                op,
-                op.getName(),
-                typeList);
+            op,
+            op.getName(),
+            typeList);
     }
 
     /**
@@ -671,7 +672,7 @@ public abstract class SqlUtil
         String opName,
         List<? extends Object> typeList)
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         String template = op.getSignatureTemplate(typeList.size());
         if (null == template) {
             ret.append("'");
@@ -707,6 +708,20 @@ public abstract class SqlUtil
      */
     public static EigenbaseException newContextException(
         final SqlParserPos pos,
+        Throwable e,
+        String inputText)
+    {
+        EigenbaseContextException ex =
+            (EigenbaseContextException) newContextException(pos, e);
+        ex.setOriginalStatement(inputText);
+        return ex;
+    }
+
+    /**
+     * Wraps an exception with context.
+     */
+    public static EigenbaseException newContextException(
+        final SqlParserPos pos,
         Throwable e)
     {
         int line = pos.getLineNum();
@@ -729,14 +744,14 @@ public abstract class SqlUtil
         EigenbaseContextException contextExcn =
             ((line == endLine) && (col == endCol))
             ? EigenbaseResource.instance().ValidatorContextPoint.ex(
-                new Integer(line),
-                new Integer(col),
+                line,
+                col,
                 e)
             : EigenbaseResource.instance().ValidatorContext.ex(
-                new Integer(line),
-                new Integer(col),
-                new Integer(endLine),
-                new Integer(endCol),
+                line,
+                col,
+                endLine,
+                endCol,
                 e);
         contextExcn.setPosition(line, col, endLine, endCol);
         return contextExcn;
@@ -748,8 +763,7 @@ public abstract class SqlUtil
      */
     public static boolean isCallTo(SqlNode node, SqlOperator operator)
     {
-        return
-            (node instanceof SqlCall)
+        return (node instanceof SqlCall)
             && (((SqlCall) node).getOperator() == operator);
     }
 
@@ -770,7 +784,7 @@ public abstract class SqlUtil
     {
         Charset charset = str.getCharset();
         if (null == charset) {
-            charset = Util.getDefaultCharset();
+            charset = typeFactory.getDefaultCharset();
         }
         SqlCollation collation = str.getCollation();
         if (null == collation) {
@@ -778,7 +792,7 @@ public abstract class SqlUtil
         }
         RelDataType type =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 str.getValue().length());
         type =
             typeFactory.createTypeWithCharsetAndCollation(
@@ -786,6 +800,30 @@ public abstract class SqlUtil
                 charset,
                 collation);
         return type;
+    }
+
+    /**
+     * Translates a character set name from a SQL-level name into a Java-level
+     * name.
+     *
+     * @param name SQL-level name
+     *
+     * @return Java-level name, or null if SQL-level name is unknown
+     */
+    public static String translateCharacterSetName(String name)
+    {
+        if (name.equals("LATIN1")) {
+            return "ISO-8859-1";
+        } else if (name.equals("UTF16")) {
+            return ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
+        } else if (name.equals(ConversionUtil.NATIVE_UTF16_CHARSET_NAME)) {
+            // no translation needed
+            return name;
+        } else if (name.equals("ISO-8859-1")) {
+            // no translation needed
+            return name;
+        }
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

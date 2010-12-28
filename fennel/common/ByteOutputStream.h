@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,24 +32,24 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ByteOutputStream defines an interface for writing to a stream of bytes.
  */
-class ByteOutputStream : virtual public ByteStream
+class FENNEL_COMMON_EXPORT ByteOutputStream : virtual public ByteStream
 {
     /**
      * Next position to write in output buffer.
      */
     PBuffer pNextByte;
-    
+
     /**
      * Number of writable bytes remaining in output buffer.
      */
     uint cbWritable;
-    
+
 protected:
     /**
      * Current write latency mode.
      */
     WriteLatency writeLatency;
-    
+
     explicit ByteOutputStream();
 
     /**
@@ -69,8 +69,8 @@ protected:
      *
      * @param cbBuffer number of bytes in buffer
      */
-    void setBuffer(PBuffer pBuffer,uint cbBuffer);
-    
+    void setBuffer(PBuffer pBuffer, uint cbBuffer);
+
     /**
      * @return number of bytes remaining to be written in current buffer
      */
@@ -101,7 +101,7 @@ public:
      *
      * @return pointer to cbActual bytes of writable buffer space
      */
-    PBuffer getWritePointer(uint cbRequested,uint *pcbActual = NULL);
+    PBuffer getWritePointer(uint cbRequested, uint *pcbActual = NULL);
 
     /**
      * Advances stream position after a call to getWritePointer.
@@ -125,7 +125,7 @@ public:
      * @param writeLatency new WriteLatency setting
      */
     virtual void setWriteLatency(WriteLatency writeLatency);
-    
+
     /**
      * Writes a fixed-size type to the stream.
      *
@@ -139,7 +139,7 @@ public:
 };
 
 inline PBuffer ByteOutputStream::getWritePointer(
-    uint cbRequested,uint *pcbActual)
+    uint cbRequested, uint *pcbActual)
 {
     if (cbWritable < cbRequested) {
         flushBuffer(cbRequested);
@@ -159,7 +159,7 @@ inline void ByteOutputStream::consumeWritePointer(uint cbUsed)
     cbOffset += cbUsed;
 }
 
-inline void ByteOutputStream::setBuffer(PBuffer pBuffer,uint cbBuffer)
+inline void ByteOutputStream::setBuffer(PBuffer pBuffer, uint cbBuffer)
 {
     pNextByte = pBuffer;
     cbWritable = cbBuffer;

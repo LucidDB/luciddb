@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,8 @@ import java.sql.*;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 // REVIEW jvs 21-May-2005:  Make this a heavyweight allocation?
 
 
@@ -37,7 +39,6 @@ import java.util.*;
  */
 public interface JmiPreparedQuery
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -46,7 +47,7 @@ public interface JmiPreparedQuery
      * @return map from parameter name (String) to expected type (type
      * representation is implementation-dependent)
      */
-    public Map describeParameters();
+    public Map<String, ?> describeParameters();
 
     /**
      * Gets an explanation of the plan to be used to execute this query.
@@ -70,7 +71,9 @@ public interface JmiPreparedQuery
      * @return collection of JMI objects (instances of {@link RefObject}) found
      * by the query
      */
-    public Collection execute(Connection connection, Map args)
+    public Collection<RefObject> execute(
+        Connection connection,
+        Map<String, ?> args)
         throws JmiQueryException;
 }
 

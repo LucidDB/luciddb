@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,8 +49,8 @@ void LogicalRecoveryTxn::redoActions(
     while (pTxnInputStream->getOffset() < (cbStart + cbRedo)) {
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
-        switch(actionHeader.actionType) {
+
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             recoverParticipant(actionHeader.pParticipant);
             break;
@@ -67,7 +67,7 @@ void LogicalRecoveryTxn::redoActions(
                 svptEnd.cbLogged = pTxnInputStream->getOffset();
                 svptEnd.cbActionPrev = actionHeader.cbActionPrev;
                 // redo rollback
-                undoActions(svptEnd,MAXU,oldSvpt.cbLogged);
+                undoActions(svptEnd, MAXU, oldSvpt.cbLogged);
                 // restore position
                 pTxnInputStream->seekForward(
                     offset - pTxnInputStream->getOffset());
@@ -106,7 +106,7 @@ void LogicalRecoveryTxn::undoActions(
     FileSize minActionOffset)
 {
     assert(isMAXU(nActionsMax) || !minActionOffset);
-    
+
     uint nActions = 0;
     uint cbActionExpected = svptEnd.cbActionPrev;
     uint seekDist = 0;
@@ -119,16 +119,17 @@ void LogicalRecoveryTxn::undoActions(
         }
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
-        switch(actionHeader.actionType) {
+
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             if (swizzleParticipant(actionHeader.pParticipant)) {
                 // ignore log data since the participant is already available
                 seekDist = sizeof(actionHeader);
             } else {
                 recoverParticipant(actionHeader.pParticipant);
-                assert(pTxnInputStream->getOffset() ==
-                       actionOffset + cbActionExpected);
+                assert(
+                    pTxnInputStream->getOffset()
+                    == actionOffset + cbActionExpected);
                 seekDist = cbActionExpected;
             }
             break;
@@ -150,8 +151,9 @@ void LogicalRecoveryTxn::undoActions(
                 pParticipant->undoLogicalAction(
                     actionHeader.actionType,
                     *pTxnInputStream);
-                assert(pTxnInputStream->getOffset() ==
-                       actionOffset + cbActionExpected);
+                assert(
+                    pTxnInputStream->getOffset()
+                    == actionOffset + cbActionExpected);
                 seekDist = cbActionExpected;
             }
             break;

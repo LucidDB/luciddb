@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,9 +30,9 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlAlterStmt represents a DDL ALTER statement. Represents any kind of ALTER
- * statement except ALTER SYSTEM ..., which is handled by {@link
- * DdlSetSystemParamStmt}.
+ * DdlAlterStmt represents some but not all DDL ALTER statements. For others,
+ * see {@link DdlAlterTableStructureStmt}, {@link DdlRebuildTableStmt}, and
+ * {@link DdlSetSystemParamStmt}.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -40,10 +40,10 @@ import net.sf.farrago.session.*;
 public abstract class DdlAlterStmt
     extends DdlStmt
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    private enum ActionType {
+    private enum ActionType
+    {
         ALTER_IDENTITY
     }
 
@@ -63,6 +63,16 @@ public abstract class DdlAlterStmt
     public DdlAlterStmt(CwmModelElement alterElement)
     {
         super(alterElement);
+    }
+
+    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone
+    // subclasses require it.
+    /**
+     * @deprecated
+     */
+    public DdlAlterStmt(CwmModelElement alterElement, boolean runsAsDml)
+    {
+        super(alterElement, runsAsDml);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -87,6 +97,10 @@ public abstract class DdlAlterStmt
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        // REVIEW: SWZ: 2008-02-26: It may be possible to eliminate this
+        // reentrant session if DdlAlterGenericStmt (and its red-zone
+        // subclasses) don't require it.
+
         // Use a reentrant session to simplify cleanup.
         FarragoSession session = ddlValidator.newReentrantSession();
         try {
@@ -107,6 +121,12 @@ public abstract class DdlAlterStmt
         }
     }
 
+    /**
+     * Execute the alter statement
+     *
+     * @param ddlValidator the session validator
+     * @param session a reentrant session
+     */
     protected abstract void execute(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);

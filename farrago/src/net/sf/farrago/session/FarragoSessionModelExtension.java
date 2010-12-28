@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,7 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import net.sf.farrago.fem.security.*;
-
-import org.eigenbase.util.*;
+import net.sf.farrago.ddl.*;
 
 
 /**
@@ -39,7 +37,6 @@ import org.eigenbase.util.*;
  */
 public interface FarragoSessionModelExtension
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -50,11 +47,10 @@ public interface FarragoSessionModelExtension
      *
      * @param ddlValidator validator which will invoke handlers
      * @param handlerList receives handler objects in order in which they should
-     * be tried
      */
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
-        List handlerList);
+        List<DdlHandler> handlerList);
 
     /**
      * Defines resource bundles to be used for localizing model object names.
@@ -63,8 +59,7 @@ public interface FarragoSessionModelExtension
      *
      * @param bundleList receives instances of ResourceBundle
      */
-    public void defineResourceBundles(
-        List bundleList);
+    public void defineResourceBundles(List<ResourceBundle> bundleList);
 
     /**
      * Defines privileges allowed on various object types.

@@ -30,6 +30,7 @@
             <test-suite-modifier value="udf"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udf" target="copy-csv"/>
       </init-hook>
 
       <test name="udfInvocation">
@@ -72,9 +73,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/str_replace.sql"/>
       </test>
 
+      <!-- ngoodman: disabling until we can get it so it's not timezone specific 
       <test name="dateInternal" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/date_internal.sql"/>
-      </test>
+      </test>-->
 
       <test name="dayInYear" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/day_in_year.sql"/>
@@ -120,6 +122,15 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/stdToDate.sql"/>
       </test>
 
+      <test name="charToDatetime">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/charToDatetime.sql"/>
+      </test>
+
+      <test name="datetimeAddSubtract" requiresRun="stdToDate">
+        <!-- LER-1909 -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/datetimeAddSubtract.sql"/>
+      </test>
+
       <test name="julianDateTests">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/julianDateTests.sql"/>
       </test>
@@ -134,6 +145,10 @@
 
       <test name="appvar" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/appvar.sql"/>
+      </test>
+
+      <test name="dynamicFunction" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/dynamicFunction.sql"/>
       </test>
 
       <cleanup-hook>

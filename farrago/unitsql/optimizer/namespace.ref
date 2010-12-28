@@ -1,28 +1,39 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server mof_repository
-. . . . . . . . > foreign data wrapper sys_mdr
-. . . . . . . . > options(
-. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
-. . . . . . . . >     extent_name 'MOF', 
-. . . . . . . . >     schema_name 'MODEL');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single-table projection with no filters
-0: jdbc:farrago:> select "name" from mof_repository.model."Exception" order by 1;
+> -- $Id$
+> -- Test queries which make use of foreign namespaces
+> 
+> -- force usage of Java calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> create server mof_repository
+> foreign data wrapper sys_mdr
+> options(
+>     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
+>     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
+>     extent_name 'MOF', 
+>     schema_name 'MODEL');
+> 
+> -- special foreign server with some pushdown rules disabled
+> create server hsqldb_demo_limited_pushdown
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     disabled_pushdown_rel_pattern '.*on proj.*',
+>     table_types 'TABLE,VIEW');
+> 
+> -- single-table projection with no filters
+> select "name" from mof_repository.model."Exception" order by 1;
 +------------------+
 |       name       |
 +------------------+
 | NameNotFound     |
 | NameNotResolved  |
 +------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single-table projection with filter
-0: jdbc:farrago:> select "name" from mof_repository.model."Class" where "isAbstract"
-. . . . . . . . > order by 1;
+> 
+> -- single-table projection with filter
+> select "name" from mof_repository.model."Class" where "isAbstract"
+> order by 1;
 +-----------------------+
 |         name          |
 +-----------------------+
@@ -36,19 +47,19 @@
 | StructuralFeature     |
 | TypedElement          |
 +-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way one-to-many join
-0: jdbc:farrago:> select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> -- two-way one-to-many join
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 +------------------+--------------+
 |  EXCEPTION_NAME  |  PARAM_NAME  |
 +------------------+--------------+
@@ -56,40 +67,40 @@
 | NameNotResolved  | explanation  |
 | NameNotResolved  | restOfName   |
 +------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way join with filter
-0: jdbc:farrago:> select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select * 
-. . . . . . . . >     from mof_repository.model."Exception"
-. . . . . . . . >     where "name"='NameNotResolved') e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> -- two-way join with filter
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     (select * 
+>     from mof_repository.model."Exception"
+>     where "name"='NameNotResolved') e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 +------------------+--------------+
 |  EXCEPTION_NAME  |  PARAM_NAME  |
 +------------------+--------------+
 | NameNotResolved  | explanation  |
 | NameNotResolved  | restOfName   |
 +------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way many-to-one join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > order by 
-. . . . . . . . >     param_name,exception_name;
+> 
+> -- two-way many-to-one join
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from
+>     mof_repository.model."Parameter" p
+> inner join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> order by 
+>     param_name,exception_name;
 +--------------+------------------+
 |  PARAM_NAME  |  EXCEPTION_NAME  |
 +--------------+------------------+
@@ -97,26 +108,26 @@
 | name         | NameNotFound     |
 | restOfName   | NameNotResolved  |
 +--------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- three-way join
-0: jdbc:farrago:> select 
-. . . . . . . . >     namespace_name,
-. . . . . . . . >     exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select n."name" as namespace_name,e.
-. . . . . . . . >         "mofId" as e_id,e."name" as exception_name
-. . . . . . . . >     from
-. . . . . . . . >         mof_repository.model."Namespace" n
-. . . . . . . . >     inner join
-. . . . . . . . >         mof_repository.model."Exception" e
-. . . . . . . . >     on n."mofId" = e."container") ne
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     ne.e_id = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     namespace_name,exception_name,param_name;
+> 
+> -- three-way join
+> select 
+>     namespace_name,
+>     exception_name,
+>     p."name" as param_name
+> from
+>     (select n."name" as namespace_name,e.
+>         "mofId" as e_id,e."name" as exception_name
+>     from
+>         mof_repository.model."Namespace" n
+>     inner join
+>         mof_repository.model."Exception" e
+>     on n."mofId" = e."container") ne
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     ne.e_id = p."container"
+> order by 
+>     namespace_name,exception_name,param_name;
 +-----------------+------------------+--------------+
 | NAMESPACE_NAME  |  EXCEPTION_NAME  |  PARAM_NAME  |
 +-----------------+------------------+--------------+
@@ -124,91 +135,193 @@
 | Namespace       | NameNotResolved  | explanation  |
 | Namespace       | NameNotResolved  | restOfName   |
 +-----------------+------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- use outputformat xmlattr for outer joins so we can see nulls
-0: jdbc:farrago:> !set outputformat xmlattr
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- one-to-many left outer join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as package_name,
-. . . . . . . . >     i."name" as import_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Package" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Import" i
-. . . . . . . . > on 
-. . . . . . . . >     p."mofId" = i."container"
-. . . . . . . . > order by 
-. . . . . . . . >     package_name,import_name;
+> 
+> -- use outputformat xmlattr for outer joins so we can see nulls
+> !set outputformat xmlattr
+> 
+> -- one-to-many left outer join
+> select 
+>     p."name" as package_name,
+>     i."name" as import_name
+> from
+>     mof_repository.model."Package" p
+> left outer join
+>     mof_repository.model."Import" i
+> on 
+>     p."mofId" = i."container"
+> order by 
+>     package_name,import_name;
 <resultset>
   <result PACKAGE_NAME="CorbaIdlTypes" IMPORT_NAME="null"/>
   <result PACKAGE_NAME="Model" IMPORT_NAME="PrimitiveTypes"/>
   <result PACKAGE_NAME="PrimitiveTypes" IMPORT_NAME="null"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- many-to-one left outer join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from 
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > where 
-. . . . . . . . >     p."name"='name'
-. . . . . . . . > order by
-. . . . . . . . >     param_name,exception_name;
+> 
+> -- many-to-one left outer join
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from 
+>     mof_repository.model."Parameter" p
+> left outer join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> where 
+>     p."name"='name'
+> order by
+>     param_name,exception_name;
 <resultset>
   <result PARAM_NAME="name" EXCEPTION_NAME="null"/>
   <result PARAM_NAME="name" EXCEPTION_NAME="null"/>
   <result PARAM_NAME="name" EXCEPTION_NAME="NameNotFound"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which can be pushed down to foreign DBMS
-0: jdbc:farrago:> -- (but we don't support that yet)
-0: jdbc:farrago:> select dname 
-. . . . . . . . > from hsqldb_demo.sales.dept
-. . . . . . . . > where deptno=20;
+> 
+> -- filter which can be pushed down to foreign DBMS
+> select dname 
+> from hsqldb_demo.sales.dept
+> where deptno=20;
 <resultset>
   <result DNAME="RESEARCH"/>
 </resultset>
-0: jdbc:farrago:>     
-0: jdbc:farrago:> -- now explain plans for above queries
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select "name" from mof_repository.model."Exception" order by 1;
+> 
+> -- full-table agg which can be pushed down to foreign DBMS
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+<resultset>
+  <result EXPR$0="29025"/>
+</resultset>
+> 
+> -- GROUP BY which can be pushed down to foreign DBMS
+> select deptno, sum(sal), count(*)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+<resultset>
+  <result DEPTNO="10" EXPR$1="8750" EXPR$2="3"/>
+  <result DEPTNO="20" EXPR$1="10875" EXPR$2="5"/>
+  <result DEPTNO="30" EXPR$1="9400" EXPR$2="6"/>
+</resultset>
+> 
+> -- GROUP BY with standalone count(distinct) can be pushed down
+> -- as two-level agg
+> select deptno, count(distinct sal)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+<resultset>
+  <result DEPTNO="10" EXPR$1="3"/>
+  <result DEPTNO="20" EXPR$1="4"/>
+  <result DEPTNO="30" EXPR$1="5"/>
+</resultset>
+> 
+> -- JOIN which can be pushed down to remote server
+> select *
+> from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept where dept.deptno=20
+> order by empno;
+<resultset>
+  <result EMPNO="7369" ENAME="SMITH" JOB="CLERK" MGR="7902" HIREDATE="1980-12-17" SAL="800" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7499" ENAME="ALLEN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-20" SAL="1600" COMM="300" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7521" ENAME="WARD" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-22" SAL="1250" COMM="500" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7566" ENAME="JONES" JOB="MANAGER" MGR="7839" HIREDATE="1981-04-02" SAL="2975" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7654" ENAME="MARTIN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-28" SAL="1250" COMM="1400" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7698" ENAME="BLAKE" JOB="MANAGER" MGR="7839" HIREDATE="1981-05-01" SAL="2850" COMM="null" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7782" ENAME="CLARK" JOB="MANAGER" MGR="7839" HIREDATE="1981-06-09" SAL="2450" COMM="null" DEPTNO="10" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7788" ENAME="SCOTT" JOB="ANALYST" MGR="7566" HIREDATE="1987-04-19" SAL="3000" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7839" ENAME="KING" JOB="PRESIDENT" MGR="null" HIREDATE="1981-11-17" SAL="5000" COMM="null" DEPTNO="10" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7844" ENAME="TURNER" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-08" SAL="1500" COMM="0" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7876" ENAME="ADAMS" JOB="CLERK" MGR="7788" HIREDATE="1987-05-23" SAL="1100" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7900" ENAME="JAMES" JOB="CLERK" MGR="7698" HIREDATE="1981-12-03" SAL="950" COMM="null" DEPTNO="30" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7902" ENAME="FORD" JOB="ANALYST" MGR="7566" HIREDATE="1981-12-03" SAL="3000" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7934" ENAME="MILLER" JOB="CLERK" MGR="7782" HIREDATE="1982-01-23" SAL="1300" COMM="null" DEPTNO="10" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+</resultset>
+> select *
+> from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept
+> where emp.deptno=dept.deptno
+> order by empno;
+<resultset>
+  <result EMPNO="7369" ENAME="SMITH" JOB="CLERK" MGR="7902" HIREDATE="1980-12-17" SAL="800" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7499" ENAME="ALLEN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-20" SAL="1600" COMM="300" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7521" ENAME="WARD" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-22" SAL="1250" COMM="500" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7566" ENAME="JONES" JOB="MANAGER" MGR="7839" HIREDATE="1981-04-02" SAL="2975" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7654" ENAME="MARTIN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-28" SAL="1250" COMM="1400" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7698" ENAME="BLAKE" JOB="MANAGER" MGR="7839" HIREDATE="1981-05-01" SAL="2850" COMM="null" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7782" ENAME="CLARK" JOB="MANAGER" MGR="7839" HIREDATE="1981-06-09" SAL="2450" COMM="null" DEPTNO="10" DEPTNO0="10" DNAME="ACCOUNTING" LOC="NEW YORK"/>
+  <result EMPNO="7788" ENAME="SCOTT" JOB="ANALYST" MGR="7566" HIREDATE="1987-04-19" SAL="3000" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7839" ENAME="KING" JOB="PRESIDENT" MGR="null" HIREDATE="1981-11-17" SAL="5000" COMM="null" DEPTNO="10" DEPTNO0="10" DNAME="ACCOUNTING" LOC="NEW YORK"/>
+  <result EMPNO="7844" ENAME="TURNER" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-08" SAL="1500" COMM="0" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7876" ENAME="ADAMS" JOB="CLERK" MGR="7788" HIREDATE="1987-05-23" SAL="1100" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7900" ENAME="JAMES" JOB="CLERK" MGR="7698" HIREDATE="1981-12-03" SAL="950" COMM="null" DEPTNO="30" DEPTNO0="30" DNAME="SALES" LOC="CHICAGO"/>
+  <result EMPNO="7902" ENAME="FORD" JOB="ANALYST" MGR="7566" HIREDATE="1981-12-03" SAL="3000" COMM="null" DEPTNO="20" DEPTNO0="20" DNAME="RESEARCH" LOC="DALLAS"/>
+  <result EMPNO="7934" ENAME="MILLER" JOB="CLERK" MGR="7782" HIREDATE="1982-01-23" SAL="1300" COMM="null" DEPTNO="10" DEPTNO0="10" DNAME="ACCOUNTING" LOC="NEW YORK"/>
+</resultset>
+> select *
+> from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
+> on dept.deptno=emp.deptno
+> order by empno;
+<resultset>
+  <result DEPTNO="40" DNAME="OPERATIONS" LOC="BOSTON" EMPNO="null" ENAME="null" JOB="null" MGR="null" HIREDATE="null" SAL="null" COMM="null" DEPTNO0="null"/>
+  <result DEPTNO="20" DNAME="RESEARCH" LOC="DALLAS" EMPNO="7369" ENAME="SMITH" JOB="CLERK" MGR="7902" HIREDATE="1980-12-17" SAL="800" COMM="null" DEPTNO0="20"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7499" ENAME="ALLEN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-20" SAL="1600" COMM="300" DEPTNO0="30"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7521" ENAME="WARD" JOB="SALESMAN" MGR="7698" HIREDATE="1981-02-22" SAL="1250" COMM="500" DEPTNO0="30"/>
+  <result DEPTNO="20" DNAME="RESEARCH" LOC="DALLAS" EMPNO="7566" ENAME="JONES" JOB="MANAGER" MGR="7839" HIREDATE="1981-04-02" SAL="2975" COMM="null" DEPTNO0="20"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7654" ENAME="MARTIN" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-28" SAL="1250" COMM="1400" DEPTNO0="30"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7698" ENAME="BLAKE" JOB="MANAGER" MGR="7839" HIREDATE="1981-05-01" SAL="2850" COMM="null" DEPTNO0="30"/>
+  <result DEPTNO="10" DNAME="ACCOUNTING" LOC="NEW YORK" EMPNO="7782" ENAME="CLARK" JOB="MANAGER" MGR="7839" HIREDATE="1981-06-09" SAL="2450" COMM="null" DEPTNO0="10"/>
+  <result DEPTNO="20" DNAME="RESEARCH" LOC="DALLAS" EMPNO="7788" ENAME="SCOTT" JOB="ANALYST" MGR="7566" HIREDATE="1987-04-19" SAL="3000" COMM="null" DEPTNO0="20"/>
+  <result DEPTNO="10" DNAME="ACCOUNTING" LOC="NEW YORK" EMPNO="7839" ENAME="KING" JOB="PRESIDENT" MGR="null" HIREDATE="1981-11-17" SAL="5000" COMM="null" DEPTNO0="10"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7844" ENAME="TURNER" JOB="SALESMAN" MGR="7698" HIREDATE="1981-09-08" SAL="1500" COMM="0" DEPTNO0="30"/>
+  <result DEPTNO="20" DNAME="RESEARCH" LOC="DALLAS" EMPNO="7876" ENAME="ADAMS" JOB="CLERK" MGR="7788" HIREDATE="1987-05-23" SAL="1100" COMM="null" DEPTNO0="20"/>
+  <result DEPTNO="30" DNAME="SALES" LOC="CHICAGO" EMPNO="7900" ENAME="JAMES" JOB="CLERK" MGR="7698" HIREDATE="1981-12-03" SAL="950" COMM="null" DEPTNO0="30"/>
+  <result DEPTNO="20" DNAME="RESEARCH" LOC="DALLAS" EMPNO="7902" ENAME="FORD" JOB="ANALYST" MGR="7566" HIREDATE="1981-12-03" SAL="3000" COMM="null" DEPTNO0="20"/>
+  <result DEPTNO="10" DNAME="ACCOUNTING" LOC="NEW YORK" EMPNO="7934" ENAME="MILLER" JOB="CLERK" MGR="7782" HIREDATE="1982-01-23" SAL="1300" COMM="null" DEPTNO0="10"/>
+</resultset>
+> 
+> -- rename can be pushed down to remote server
+> select deptno as d
+> from hsqldb_demo.sales.dept
+> order by d;
+<resultset>
+  <result D="10"/>
+  <result D="20"/>
+  <result D="30"/>
+  <result D="40"/>
+</resultset>
+> 
+> -- now explain plans for above queries
+> !set outputformat csv
+> 
+> explain plan for
+> select "name" from mof_repository.model."Exception" order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name) NOT NULL])'
 '      IteratorToFennelConverter'
 '        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select "name" from mof_repository.model."Class" where "isAbstract"
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select "name" from mof_repository.model."Class" where "isAbstract"
+> order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
 '      IterCalcRel(expr#0..9=[{inputs}], name=[$t0], $condition=[$t5])'
 '        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Class]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -217,21 +330,21 @@
 '        MedMdrJoinRel(condition=[=($5, $9)], joinType=[inner])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select * 
-. . . . . . . . >     from mof_repository.model."Exception"
-. . . . . . . . >     where "name"='NameNotResolved') e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by
-. . . . . . . . >      exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     (select * 
+>     from mof_repository.model."Exception"
+>     where "name"='NameNotResolved') e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by
+>      exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -239,23 +352,23 @@
 '      IteratorToFennelConverter'
 '        MedMdrJoinRel(condition=[=($5, $9)], joinType=[inner])'
 '          FennelToIteratorConverter'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[_ISO-8859-1'NameNotResolved']], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" annotation, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" container, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" scope, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" visibility, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofId, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofClassName) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[['NameNotResolved']], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" annotation, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" container, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" scope, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" visibility, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofId, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofClassName) NOT NULL])'
 '              IteratorToFennelConverter'
 '                MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > order 
-. . . . . . . . >     by param_name,exception_name;
+> 
+> explain plan for
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from
+>     mof_repository.model."Parameter" p
+> inner join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> order 
+>     by param_name,exception_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -264,27 +377,27 @@
 '        MedMdrJoinRel(condition=[=($2, $13)], joinType=[inner])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     namespace_name,
-. . . . . . . . >     exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select n."name" as namespace_name,e.
-. . . . . . . . >         "mofId" as e_id,e."name" as exception_name
-. . . . . . . . >     from
-. . . . . . . . >         mof_repository.model."Namespace" n
-. . . . . . . . >     inner join
-. . . . . . . . >         mof_repository.model."Exception" e
-. . . . . . . . >     on 
-. . . . . . . . >         n."mofId" = e."container") ne
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     ne.e_id = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     namespace_name,exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     namespace_name,
+>     exception_name,
+>     p."name" as param_name
+> from
+>     (select n."name" as namespace_name,e.
+>         "mofId" as e_id,e."name" as exception_name
+>     from
+>         mof_repository.model."Namespace" n
+>     inner join
+>         mof_repository.model."Exception" e
+>     on 
+>         n."mofId" = e."container") ne
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     ne.e_id = p."container"
+> order by 
+>     namespace_name,exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
@@ -298,19 +411,19 @@
 '                  MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Namespace]])'
 '                  MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as package_name,
-. . . . . . . . >     i."name" as import_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Package" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Import" i
-. . . . . . . . > on 
-. . . . . . . . >     p."mofId" = i."container"
-. . . . . . . . > order by 
-. . . . . . . . >     package_name,import_name;
+> 
+> explain plan for
+> select 
+>     p."name" as package_name,
+>     i."name" as import_name
+> from
+>     mof_repository.model."Package" p
+> left outer join
+>     mof_repository.model."Import" i
+> on 
+>     p."mofId" = i."container"
+> order by 
+>     package_name,import_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -319,65 +432,165 @@
 '        MedMdrJoinRel(condition=[=($7, $11)], joinType=[left])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Package]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Import]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from 
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > where 
-. . . . . . . . >     p."name"='name'
-. . . . . . . . > order by 
-. . . . . . . . >     param_name,exception_name;
+> 
+> explain plan for
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from 
+>     mof_repository.model."Parameter" p
+> left outer join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> where 
+>     p."name"='name'
+> order by 
+>     param_name,exception_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[PARAM_NAME, EXCEPTION_NAME]])'
-'      FennelReshapeRel(projection=[[0, 8]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[_ISO-8859-1'name']], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name0) NOT NULL])'
+'      FennelReshapeRel(projection=[[0, 8]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[['name']], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name0) NOT NULL])'
 '        IteratorToFennelConverter'
 '          MedMdrJoinRel(condition=[=($2, $13)], joinType=[left])'
 '            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 '            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select dname 
-. . . . . . . . > from hsqldb_demo.sales.dept
-. . . . . . . . > where deptno=20;
+> 
+> explain plan for 
+> select dname 
+> from hsqldb_demo.sales.dept
+> where deptno=20;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
+'FROM "SALES"."DEPT"'
+'WHERE "DEPTNO" = 20])'
+> 
+> -- verify that even with complex pushdown rules disabled, we can
+> -- still push down both projection and filter
+> explain plan for 
+> select dname 
+> from hsqldb_demo_limited_pushdown.sales.dept
+> where deptno=20;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
+'FROM "SALES"."DEPT"'
+'WHERE "DEPTNO" = 20])'
+> 
+> explain plan for 
+> select sum(sal)
+> from hsqldb_demo.sales.emp;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT SUM("SAL")'
+'FROM (SELECT "SAL"'
+'FROM "SALES"."EMP")])'
+> 
+> explain plan for 
+> select deptno, sum(sal), count(*)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[20]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      ResultSetToFarragoIteratorConverter'
+'        MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO", SUM("SAL"), COUNT(*)'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM "SALES"."EMP")'
+'GROUP BY "DEPTNO"])'
+> 
+> explain plan for 
+> select deptno, count(distinct sal)
+> from hsqldb_demo.sales.emp
+> group by deptno
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      ResultSetToFarragoIteratorConverter'
+'        MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO", COUNT("SAL")'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM (SELECT "DEPTNO", "SAL"'
+'FROM "SALES"."EMP")'
+'GROUP BY "DEPTNO", "SAL")'
+'GROUP BY "DEPTNO"])'
+> 
+> explain plan for
+> select *
+> from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept where dept.deptno=20
+> order by empno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
 '      ResultSetToFarragoIteratorConverter'
 '        MedJdbcQueryRel(foreignSql=[SELECT *'
-'FROM "SALES"."DEPT"])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- join on pseudocolumn (FRG-69)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."mofClassName"
-. . . . . . . . > ;
+'FROM (SELECT *'
+'FROM "SALES"."EMP") AS "LEFT_INPUT",'
+'(SELECT *'
+'FROM "SALES"."DEPT"'
+'WHERE "DEPTNO" = 20) AS "RIGHT_INPUT"])'
+> 
+> explain plan for
+> select *
+> from hsqldb_demo.sales.emp, hsqldb_demo.sales.dept
+> where emp.deptno=dept.deptno;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t3)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t2], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT *'
+'FROM (SELECT *'
+'FROM "SALES"."EMP") AS "LEFT_INPUT",'
+'(SELECT *'
+'FROM "SALES"."DEPT") AS "RIGHT_INPUT"'
+'WHERE "LEFT_INPUT"."DEPTNO" = "RIGHT_INPUT"."DEPTNO"])'
+> 
+> explain plan for
+> select deptno as d
+> from hsqldb_demo.sales.dept;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DEPTNO" AS "D"'
+'FROM "SALES"."DEPT"])'
+> 
+> explain plan for
+> select *
+> from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
+> on dept.deptno=emp.deptno;
+'column0'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT *'
+'FROM (SELECT *'
+'FROM "SALES"."DEPT") AS "LEFT_INPUT"'
+'LEFT JOIN (SELECT *'
+'FROM "SALES"."EMP") AS "RIGHT_INPUT" ON "LEFT_INPUT"."DEPTNO" = "RIGHT_INPUT"."DEPTNO"])'
+> 
+> -- join on pseudocolumn (FRG-69)
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."mofClassName"
+> ;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXCEPTION_NAME, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PARAM_NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 5]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofId) NOT NULL])'
 '        IteratorToFennelConverter'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '      FennelReshapeRel(projection=[[0, 7]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofClassName) NOT NULL])'
 '        IteratorToFennelConverter'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

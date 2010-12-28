@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ import org.eigenbase.sql.parser.*;
 public class DdlSetPathStmt
     extends DdlSetContextStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<SqlIdentifier> schemaList;
@@ -96,9 +95,9 @@ public class DdlSetPathStmt
                     FarragoSessionVariables sessionVariables =
                         ddlValidator.getStmtValidator().getSessionVariables();
                     String [] names =
-                        { sessionVariables.catalogName, id.getSimple() };
+                    { sessionVariables.catalogName, id.getSimple() };
                     SqlParserPos [] poses =
-                        { SqlParserPos.ZERO, id.getParserPosition() };
+                    { SqlParserPos.ZERO, id.getParserPosition() };
                     id.setNames(names, poses);
                 }
                 schemaList.add(id);

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,6 @@ import org.eigenbase.util.property.*;
 public class FarragoReleaseProperties
     extends Properties
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static FarragoReleaseProperties instance;
@@ -122,6 +121,15 @@ public class FarragoReleaseProperties
      */
     public final IntegerProperty jdbcUrlPortDefault =
         new IntegerProperty(this, "jdbc.url.port.default", 5433);
+
+    /**
+     * Default port to use for JDBC connections over HTTP. Note that this is
+     * the release-level default; the actual port to use for a server can be
+     * overridden at each site through app server or catalog settings, and for
+     * a client by explicitly including the port in the connection URL.
+     */
+    public final IntegerProperty jdbcUrlHttpPortDefault =
+        new IntegerProperty(this, "jdbc.url.http.port.default", 8033);
 
     //~ Methods ----------------------------------------------------------------
 

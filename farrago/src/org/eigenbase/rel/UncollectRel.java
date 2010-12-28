@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -40,7 +41,6 @@ import org.eigenbase.reltype.*;
 public final class UncollectRel
     extends SingleRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -66,12 +66,12 @@ public final class UncollectRel
     //~ Methods ----------------------------------------------------------------
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public UncollectRel clone()
     {
         UncollectRel clone =
             new UncollectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()));
+                getChild().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -101,7 +101,7 @@ public final class UncollectRel
             ret =
                 rel.getCluster().getTypeFactory().createStructType(
                     new RelDataType[] { ret },
-                    new String[] { "EXPR$0" });
+                    new String[] { SqlUtil.deriveAliasFromOrdinal(0) });
         }
         return ret;
     }

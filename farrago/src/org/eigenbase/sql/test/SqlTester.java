@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.sql.test;
+
+import java.sql.ResultSet;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -45,6 +47,15 @@ import org.eigenbase.sql.*;
  */
 public interface SqlTester
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Name of a virtual machine that can potentially implement an operator.
+     */
+    public enum VmName
+    {
+        FENNEL, JAVA, EXPAND
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -151,10 +162,12 @@ public interface SqlTester
      *
      * @param expression Scalar expression
      * @param result Expected result
-     * @param resultType
+     * @param resultType Expected result type
      */
-    void checkString(String expression,
-        String result, String resultType);
+    void checkString(
+        String expression,
+        String result,
+        String resultType);
 
     /**
      * Tests that a SQL expression returns the SQL NULL value. For example,
@@ -171,7 +184,8 @@ public interface SqlTester
      * Tests that a SQL expression has a given type. For example,
      *
      * <blockquote>
-     * <pre>checkType("SUBSTR('hello' FROM 1 FOR 3)", "VARCHAR(3) NOT NULL");</pre>
+     * <code>checkType("SUBSTR('hello' FROM 1 FOR 3)",
+     * "VARCHAR(3) NOT NULL");</code>
      * </blockquote>
      *
      * This method checks length/precision, scale, and whether the type allows
@@ -183,6 +197,17 @@ public interface SqlTester
      */
     void checkType(
         String expression,
+        String type);
+
+    /**
+     * Checks that a query returns one column of an expected type. For example,
+     * <code>checkType("VALUES (1 + 2)", "INTEGER NOT NULL")</code>.
+     *
+     * @param sql Query expression
+     * @param type Type string
+     */
+    void checkColumnType(
+        String sql,
         String type);
 
     /**
@@ -210,10 +235,40 @@ public interface SqlTester
         double delta);
 
     /**
+     * Tests that a SQL query returns a result of expected type and value.
+     * Checking of type and value are abstracted using {@link TypeChecker}
+     * and {@link ResultChecker} functors.
+     *
+     * @param query SQL query
+     * @param typeChecker Checks whether the result is the expected type; must
+     *     not be null
+     * @param resultChecker Checks whether the result has the expected value;
+     *     must not be null
+     */
+    void check(
+        String query,
+        TypeChecker typeChecker,
+        ResultChecker resultChecker);
+
+    /**
      * Declares that this test is for a given operator. So we can check that all
      * operators are tested.
+     *
+     * @param operator Operator
+     * @param unimplementedVmNames Names of virtual machines for which this
      */
-    void setFor(SqlOperator operator);
+    void setFor(
+        SqlOperator operator,
+        VmName ... unimplementedVmNames);
+
+    /**
+     * Checks to see if this tester is for the given VmName. Return false if
+     * no vm associated with this tester.
+     *
+     * @param vmName VmName to check for.
+     * @return whether or not this tester is for the given VmName.
+     */
+    boolean isVm(VmName vmName);
 
     /**
      * Checks that an aggregate expression returns the expected result.
@@ -224,39 +279,60 @@ public interface SqlTester
      * @param expr Aggregate expression, e.g. <code>SUM(DISTINCT x)</code>
      * @param inputValues Array of input values, e.g. <code>["1", null,
      * "2"]</code>.
-     * @param result
-     * @param delta
+     * @param result Expected result
+     * @param delta Allowable variance from expected result
      */
-    void checkAgg(String expr,
-        String [] inputValues, Object result, int delta);
+    void checkAgg(
+        String expr,
+        String [] inputValues,
+        Object result,
+        double delta);
 
     /**
-     * Tests that a scalar SQL expression fails at validate time.
+     * Checks that a windowed aggregate expression returns the expected result.
      *
-     * @param expression SQL scalar expression
-     * @param expectedError Pattern for expected error. Must include an error
-     * location, demarcated by one or two "^" characters.
+     * <p>For example, <code>checkWinAgg("FIRST_VALUE(x)", new String[] {"2",
+     * "3", null, "3" }, "INTEGER NOT NULL", 2, 0d);</code>
+     *
+     * @param expr Aggregate expression, e.g. <code>SUM(DISTINCT x)</code>
+     * @param inputValues Array of input values, e.g. <code>["1", null,
+     * "2"]</code>.
+     * @param type Expected result type
+     * @param result Expected result
+     * @param delta Allowable variance from expected result
      */
-    void checkInvalid(
-        String expression,
-        String expectedError);
+    void checkWinAgg(
+        String expr,
+        String [] inputValues,
+        String windowSpec,
+        String type,
+        Object result,
+        double delta);
 
     /**
      * Tests that a scalar SQL expression fails at run time.
      *
      * @param expression SQL scalar expression
-     * @param expectedError Pattern for expected error. Unlike {@link
-     * #checkInvalid(String, String)}, does not include an error location.
+     * @param expectedError Pattern for expected error. If !runtime, must
+     * include an error location.
+     * @param runtime If true, must fail at runtime; if false, must fail at
+     * validate time
      */
     void checkFails(
         String expression,
-        String expectedError);
+        String expectedError,
+        boolean runtime);
 
     //~ Inner Interfaces -------------------------------------------------------
 
     interface TypeChecker
     {
         void checkType(RelDataType type);
+    }
+
+    interface ResultChecker
+    {
+        void checkResult(ResultSet result) throws Exception;
     }
 }
 

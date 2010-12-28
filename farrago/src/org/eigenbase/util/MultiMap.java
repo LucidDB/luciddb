@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,17 +25,14 @@ package org.eigenbase.util;
 import java.util.*;
 
 
-// REVIEW jvs 7-Jan-2003:  using inheritance from HashMap seems a little
-// dangerous since method like entrySet() won't work as expected; should
-// probably define a separate MultiMap interface and use aggregation rather
-// than inheritance in the implementation
-
 /**
  * Map which contains more than one value per key.
  *
- * <p>You can either use a <code>MultiMap</code> as a regular map, or you can use
- * the additional methods {@link #putMulti} and {@link #getMulti}. Values are
- * returned in the order in which they were added.</p>
+ * <p>You can either use a <code>MultiMap</code> as a regular map, or you can
+ * use the additional methods {@link #putMulti} and {@link #getMulti}. Values
+ * are returned in the order in which they were added.</p>
+ *
+ * <p>TODO jvs 21-Jul-2007: unit test for this class
  *
  * @author jhyde
  * @version $Id$
@@ -43,12 +40,21 @@ import java.util.*;
  */
 public class MultiMap<K, V>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<K, Object> map = new HashMap<K, Object>();
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Returns the number of keys in this MultiMap.
+     *
+     * @return number of keys in this MultiMap
+     */
+    public int size()
+    {
+        return map.size();
+    }
 
     private Object get(K key)
     {
@@ -74,6 +80,9 @@ public class MultiMap<K, V>
         } else if (o instanceof ValueList) {
             return (ValueList<V>) o;
         } else {
+            // FIXME jvs 21-Jul-2007:  This list is immutable, meaning callers
+            // have to avoid deleting from it.  That's inconsistent with
+            // ValueList, which goes to the effort to support deletion.
             return Collections.singletonList((V) o);
         }
     }
@@ -122,6 +131,10 @@ public class MultiMap<K, V>
                         put(
                             key,
                             list.get(0));
+                    } else if (list.isEmpty()) {
+                        // have just removed the last value belonging to this
+                        // key, so remove the key
+                        remove(key);
                     }
                     return true;
                 } else {
@@ -222,31 +235,31 @@ public class MultiMap<K, V>
             final K savedKey = key;
             final V value = valueIter.next();
             return new Map.Entry<K, V>() {
-                    public K getKey()
-                    {
-                        return savedKey;
-                    }
+                public K getKey()
+                {
+                    return savedKey;
+                }
 
-                    public V getValue()
-                    {
-                        return value;
-                    }
+                public V getValue()
+                {
+                    return value;
+                }
 
-                    public boolean equals(Object o)
-                    {
-                        throw new UnsupportedOperationException();
-                    }
+                public boolean equals(Object o)
+                {
+                    throw new UnsupportedOperationException();
+                }
 
-                    public int hashCode()
-                    {
-                        throw new UnsupportedOperationException();
-                    }
+                public int hashCode()
+                {
+                    throw new UnsupportedOperationException();
+                }
 
-                    public V setValue(V value)
-                    {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                public V setValue(V value)
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
 
         public void remove()

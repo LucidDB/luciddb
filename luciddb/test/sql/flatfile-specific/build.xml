@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="flatfile" basedir="." default="test">
+  <dirname property="flatfile.dir" file="${ant.file.flatfile}" />
+
+  <property name="open.dir" location="../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />  
+
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${flatfile.dir}/gen" />
+  <!-- directory where flatfiles are stored -->
+  <property name="flatfiles.dir" value="${flatfile.dir}/flatfiles" />
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${flatfile.dir}/testlog" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>    
+
+    <!-- generate config.properties file -->
+    <filter token="flatfiles.dir" value="${flatfiles.dir}"/>
+    <copy file="prop.flatfile" tofile="config.properties"
+      overwrite="true" filtering="true">
+      <filterset>
+        <filtersfile file="prop.flatfile"/>
+      </filterset>
+    </copy>
+
+    <!-- generate sql -->
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${flatfile.dir}" includes="*.tmpl"/>
+      <globmapper from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>          
+      </filterset>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${flatfile.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="test" depends="clean-test,gen-all-sql">
+    <blackhawk.fork
+      basedir="${flatfile.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${gensql.dir}"/>
+    <delete file="config.properties"/>
+  </target>
+
+</project>

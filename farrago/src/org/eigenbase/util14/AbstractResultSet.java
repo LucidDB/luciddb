@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,36 +22,58 @@
 */
 package org.eigenbase.util14;
 
+import java.io.*;
+
 import java.math.*;
 
 import java.sql.*;
+import java.sql.Date;
+
+import java.util.*;
+
+import org.eigenbase.jdbc4.*;
 
 
 /**
  * <code>AbstractResultSet</code> provides a abstract implementation for a
- * TYPE_FORWARD_ONLY, CONCUR_READ_ONLY ResultSet.
+ * TYPE_FORWARD_ONLY, CONCUR_READ_ONLY ResultSet. This class is JDK 1.4
+ * compatible.
  *
  * @author angel
  * @version $Id$
  * @since Jan 8, 2006
  */
 abstract public class AbstractResultSet
+    extends Unwrappable
     implements ResultSet
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    static final TimeZone gmtZone = DateTimeUtil.gmtZone;
+    static final TimeZone defaultZone = DateTimeUtil.defaultZone;
 
     //~ Instance fields --------------------------------------------------------
 
     protected boolean wasNull;
     protected int fetchSize = 0;
 
+    protected int maxRows;
+
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the raw value of a column as an object.
+     *
+     * @param columnIndex Column index, 1-based
      */
     abstract protected Object getRaw(int columnIndex)
         throws SQLException;
 
+    /**
+     * Returns the raw value of a column as an object.
+     *
+     * @param columnName Column name
+     */
     protected Object getRaw(String columnName)
         throws SQLException
     {
@@ -476,8 +498,8 @@ abstract public class AbstractResultSet
     {
         // THIS IS DEPRECATED in the current JDBC spec (use of 'scale')
         return getBigDecimal(
-                findColumn(columnName),
-                scale);
+            findColumn(columnName),
+            scale);
     }
 
     /**
@@ -490,7 +512,7 @@ abstract public class AbstractResultSet
     public java.sql.Date getDate(int columnIndex)
         throws SQLException
     {
-        return toDate(getRaw(columnIndex));
+        return toDate(getRaw(columnIndex), null);
     }
 
     /**
@@ -518,8 +540,7 @@ abstract public class AbstractResultSet
     public Date getDate(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+        return toDate(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -535,8 +556,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getDate(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
     /**
@@ -549,7 +570,7 @@ abstract public class AbstractResultSet
     public java.sql.Time getTime(int columnIndex)
         throws SQLException
     {
-        return toTime(getRaw(columnIndex));
+        return toTime(getRaw(columnIndex), null);
     }
 
     /**
@@ -577,8 +598,7 @@ abstract public class AbstractResultSet
     public Time getTime(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+        return toTime(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -594,22 +614,17 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getTime(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
-    /**
-     * Get the value of a column in the current row as a java.sql.Timestamp
-     * object.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     *
-     * @return the column value; if the value is SQL NULL, the result is null
-     */
     public java.sql.Timestamp getTimestamp(int columnIndex)
         throws SQLException
     {
-        return toTimestamp(getRaw(columnIndex));
+        // getTimestamp(x) -- i.e. without Calendar -- means don't do timezone
+        // conversion: different than getTimestamp(x, null), which means
+        // convert to the client Java VM's default timezone
+        return toTimestamp(getRaw(columnIndex), null);
     }
 
     /**
@@ -639,8 +654,7 @@ abstract public class AbstractResultSet
     public Timestamp getTimestamp(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+        return toTimestamp(getRaw(columnIndex), DateTimeUtil.getTimeZone(cal));
     }
 
     /**
@@ -657,8 +671,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getTimestamp(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
     /**
@@ -817,6 +831,9 @@ abstract public class AbstractResultSet
         Object o = getRaw(columnIndex);
         if (o == null) {
             wasNull = true;
+        } else if (o instanceof ZonelessDatetime) {
+            // convert into standard Jdbc types
+            o = ((ZonelessDatetime) o).toJdbcObject();
         } else {
             wasNull = false;
         }
@@ -891,8 +908,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getObject(
-                findColumn(columnName),
-                map);
+            findColumn(columnName),
+            map);
     }
 
     /**
@@ -1332,7 +1349,8 @@ abstract public class AbstractResultSet
             x);
     }
 
-    public void updateAsciiStream(int columnIndex,
+    public void updateAsciiStream(
+        int columnIndex,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1340,7 +1358,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateAsciiStream(String columnName,
+    public void updateAsciiStream(
+        String columnName,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1351,7 +1370,8 @@ abstract public class AbstractResultSet
             length);
     }
 
-    public void updateBinaryStream(int columnIndex,
+    public void updateBinaryStream(
+        int columnIndex,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1359,7 +1379,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateBinaryStream(String columnName,
+    public void updateBinaryStream(
+        String columnName,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1370,7 +1391,8 @@ abstract public class AbstractResultSet
             length);
     }
 
-    public void updateCharacterStream(int columnIndex,
+    public void updateCharacterStream(
+        int columnIndex,
         java.io.Reader x,
         int length)
         throws SQLException
@@ -1378,7 +1400,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateCharacterStream(String columnName,
+    public void updateCharacterStream(
+        String columnName,
         java.io.Reader x,
         int length)
         throws SQLException
@@ -1599,25 +1622,31 @@ abstract public class AbstractResultSet
             "Operation not supported right now");
     }
 
+    /**
+     * @see Statement#setMaxRows
+     */
+    public void setMaxRows(int maxRows)
+    {
+        this.maxRows = maxRows;
+    }
+
     // Errors
     protected SQLException newConversionError(
         Object o,
         String className)
     {
-        return
-            new SQLException(
-                "cannot convert " + o.getClass() + "(" + o
-                + ") to " + className);
+        return new SQLException(
+            "cannot convert " + o.getClass() + "(" + o
+            + ") to " + className);
     }
 
     protected SQLException newConversionError(
         Object o,
         Class clazz)
     {
-        return
-            new SQLException(
-                "cannot convert " + o.getClass() + "(" + o
-                + ") to " + clazz);
+        return new SQLException(
+            "cannot convert " + o.getClass() + "(" + o
+            + ") to " + clazz);
     }
 
     protected SQLException newDirectionError()
@@ -1677,13 +1706,11 @@ abstract public class AbstractResultSet
                 return false;
             } else {
                 // Try numeric
-                return
-                    (toDouble(o) != 0);
+                return (toDouble(o) != 0);
                     //throw newConversionError(o,boolean.class);
             }
         } else {
-            return
-                (toDouble(o) != 0);
+            return (toDouble(o) != 0);
                 //throw newConversionError(o,boolean.class);
         }
     }
@@ -1704,7 +1731,7 @@ abstract public class AbstractResultSet
         }
     }
 
-    private Date toDate(Object o)
+    private Date toDate(Object o, TimeZone zone)
         throws SQLException
     {
         if (o == null) {
@@ -1713,12 +1740,19 @@ abstract public class AbstractResultSet
         } else {
             wasNull = false;
         }
-        if (o instanceof Date) {
-            return (Date) o;
-        } else if (o instanceof Timestamp) {
-            return new Date(((Timestamp) o).getTime());
+        if (zone == null) {
+            zone = defaultZone;
+        }
+        if ((o instanceof ZonelessDate) || (o instanceof ZonelessTimestamp)) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Date(zd.getJdbcDate(zone));
         } else if (o instanceof String) {
-            return Date.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            ZonelessDate zd = ZonelessDate.parse(s);
+            if (zd == null) {
+                throw newConversionError(o, Date.class);
+            }
+            return new Date(zd.getJdbcDate(zone));
         } else {
             throw newConversionError(o, Date.class);
         }
@@ -1790,9 +1824,13 @@ abstract public class AbstractResultSet
         if (o instanceof BigDecimal) {
             return (BigDecimal) o;
         } else if (o instanceof Double) {
-            return BigDecimal.valueOf(((Double) o).doubleValue());
+            // For JDK 1.4 compatibility
+            return new BigDecimal(((Double) o).doubleValue());
+                // return BigDecimal.valueOf(((Double) o).doubleValue());
         } else if (o instanceof Float) {
-            return BigDecimal.valueOf(((Float) o).doubleValue());
+            // For JDK 1.4 compatibility
+            return new BigDecimal(((Float) o).doubleValue());
+                // return BigDecimal.valueOf(((Float) o).doubleValue());
         } else if (o instanceof String) {
             return new BigDecimal(((String) o).trim());
         } else {
@@ -1912,7 +1950,7 @@ abstract public class AbstractResultSet
         }
     }
 
-    private Time toTime(Object o)
+    private Time toTime(Object o, TimeZone zone)
         throws SQLException
     {
         if (o == null) {
@@ -1921,38 +1959,484 @@ abstract public class AbstractResultSet
         } else {
             wasNull = false;
         }
-        if (o instanceof Time) {
-            return (Time) o;
-        } else if (o instanceof Timestamp) {
-            return new Time(((Timestamp) o).getTime());
+        if (zone == null) {
+            zone = defaultZone;
+        }
+        if ((o instanceof ZonelessTime) || (o instanceof ZonelessTimestamp)) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Time(zd.getJdbcTime(zone));
         } else if (o instanceof String) {
-            return Time.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            ZonelessTime zt = ZonelessTime.parse(s);
+            if (zt == null) {
+                throw newConversionError(o, Time.class);
+            }
+            return new Time(zt.getJdbcTime(zone));
         } else {
             throw newConversionError(o, Time.class);
         }
     }
 
-    private Timestamp toTimestamp(Object o)
+    private Timestamp toTimestamp(Object o, TimeZone zone)
         throws SQLException
     {
+        // NOTE: ignore time zone since all timestamps are represented
+        // as milliseconds since the epoch
+
         if (o == null) {
             wasNull = true;
             return null;
         } else {
             wasNull = false;
         }
-        if (o instanceof Timestamp) {
-            return (Timestamp) o;
-        } else if (o instanceof Date) {
-            return new Timestamp(((Date) o).getTime());
-        } else if (o instanceof Time) {
-            return new Timestamp(((Time) o).getTime());
+        if (zone == null) {
+            zone = defaultZone;
+        }
+
+        // Note that dates returned as Jdbc objects already use the
+        // apropriate conventions
+        if (o instanceof ZonelessDatetime) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Timestamp(zd.getJdbcTimestamp(zone));
         } else if (o instanceof String) {
-            return Timestamp.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            ZonelessTimestamp ts = ZonelessTimestamp.parse(s);
+            if (ts == null) {
+                throw newConversionError(o, Timestamp.class);
+            }
+            return new Timestamp(ts.getJdbcTimestamp(zone));
         } else {
             throw newConversionError(o, Timestamp.class);
         }
     }
+
+    // begin JDBC 4 methods
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        int columnIndex,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        String columnName,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        int columnIndex,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        String columnName,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        int columnIndex,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        String columnName,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        int columnIndex,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        String columnName,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        int columnIndex,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        String columnName,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        int columnIndex,
+        InputStream inputStream,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        String columnName,
+        InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex,
+        NClob nclob)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName,
+        NClob nclob)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        int columnIndex,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        String columnName,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        int columnIndex,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        String columnName,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        int columnIndex,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        String columnName,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        int columnIndex,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        String columnName,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateSQLXML(
+        int columnIndex,
+        SQLXML sqlxml)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateSQLXML");
+    }
+
+    // implement ResultSet
+    public void updateSQLXML(
+        String columnName,
+        SQLXML sqlxml)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateSQLXML");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        int columnIndex,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        String columnName,
+        Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        int columnIndex,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        String columnName,
+        Reader reader,
+        long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNString(
+        int columnIndex,
+        String s)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNString");
+    }
+
+    // implement ResultSet
+    public void updateNString(
+        String columnName,
+        String s)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNString");
+    }
+
+    // implement ResultSet
+    public void updateRowId(
+        int columnIndex,
+        RowId rowId)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateRowId");
+    }
+
+    // implement ResultSet
+    public void updateRowId(
+        String columnName,
+        RowId rowId)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateRowId");
+    }
+
+    // implement ResultSet
+    public Reader getNCharacterStream(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNCharacterStream");
+    }
+
+    // implement ResultSet
+    public Reader getNCharacterStream(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNCharacterStream");
+    }
+
+    // implement ResultSet
+    public String getNString(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNString");
+    }
+
+    // implement ResultSet
+    public String getNString(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNString");
+    }
+
+    // implement ResultSet
+    public SQLXML getSQLXML(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getSQLXML");
+    }
+
+    // implement ResultSet
+    public SQLXML getSQLXML(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getSQLXML");
+    }
+
+    // implement ResultSet
+    public NClob getNClob(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNClob");
+    }
+
+    // implement ResultSet
+    public NClob getNClob(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNClob");
+    }
+
+    // implement ResultSet
+    public RowId getRowId(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getRowId");
+    }
+
+    // implement ResultSet
+    public RowId getRowId(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getRowId");
+    }
+
+    // implement ResultSet
+    public boolean isClosed()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("isClosed");
+    }
+
+    // implement ResultSet
+    public int getHoldability()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getHoldability");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End AbstractResultSet.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ import org.eigenbase.util.*;
  * A binary (or hexadecimal) string literal.
  *
  * <p>The {@link #value} field is a {@link BitString} and {@link #typeName} is
- * {@link SqlTypeName#Binary}.
+ * {@link SqlTypeName#BINARY}.
  *
  * @author wael
  * @version $Id$
@@ -38,14 +38,13 @@ import org.eigenbase.util.*;
 public class SqlBinaryStringLiteral
     extends SqlAbstractStringLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlBinaryStringLiteral(
         BitString val,
         SqlParserPos pos)
     {
-        super(val, SqlTypeName.Binary, pos);
+        super(val, SqlTypeName.BINARY, pos);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -78,10 +77,9 @@ public class SqlBinaryStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlBinaryStringLiteral) lits[i]).getBitString();
         }
-        return
-            new SqlBinaryStringLiteral(
-                BitString.concat(args),
-                lits[0].getParserPosition());
+        return new SqlBinaryStringLiteral(
+            BitString.concat(args),
+            lits[0].getParserPosition());
     }
 }
 

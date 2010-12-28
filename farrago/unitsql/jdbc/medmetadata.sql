@@ -12,13 +12,14 @@ create server csv_server
 foreign data wrapper test_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     schema_name 'TESTDATA');
 
--- Check the foreign data wrapper and server
+-- Check the foreign data wrapper and server (exclude some storage option names
+-- that vary by repository configuration in sys_fem/cwm)
 select "name" from sys_fem.med."DataWrapper" order by 1;
 select "name" from sys_fem.med."DataServer" order by 1;
-select "name","value" from sys_fem.med."StorageOption" order by 1,2;
+select "name","value" from sys_fem.med."StorageOption" where "name" in ('URL', 'DRIVER_CLASS') order by 1,2;
 
 -- Test a join to look up the storage options for a server
 select o."name",o."value" 

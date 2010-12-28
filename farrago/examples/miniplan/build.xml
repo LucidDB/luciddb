@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2008 The Eigenbase Project
+// Copyright (C) 2008 SQLstream, Inc.
+// Copyright (C) 2008 Dynamo BI Corporation
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<!-- Farrago miniplan ant build script -->
+
+<project name="farragoMiniplan" basedir="." default="jar">
+  <dirname property="farragoMiniplan.dir" file="${ant.file}" />
+
+  <!-- Definitions for Farrago build properties and macros -->
+  <import file="../../buildMacros.xml"/>
+
+  <!-- Specialization definitions required by buildPlugin.xml -->
+
+  <property name="plugin.dir" location="${farragoMiniplan.dir}"/>
+  <property name="plugin.jar.basename" value="FarragoMiniplan"/>
+  <property name="plugin.factory.class" 
+    value="net.sf.farrago.miniplan.FarragoMiniplanPersonalityFactory"/>
+
+  <!-- Classpath for plugin dependencies (none in this case) -->
+  <path id="plugin.3p.classpath">
+  </path>
+  <property name="plugin.3p.classpath" refid="plugin.3p.classpath"/>
+
+  <!-- Standard definitions for Farrago plugin build -->
+  <import file="../../plugin/buildPlugin.xml"/>
+
+  <target name="compile">
+    <mkdir dir="${plugin.classes.dir}"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${plugin.src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.classpath">
+      <include name="**/*.java" />
+    </farrago.javaCompile>
+  </target>
+
+  <target name="jar" depends="compile">
+    <antcall target="plugin.buildJar"/>
+  </target>
+
+  <target name="createPlugin">
+    <antcall target="clean"/>
+    <antcall target="jar"/>
+  </target>
+
+  <target name="clean" depends="plugin.clean">
+  </target>
+
+</project>

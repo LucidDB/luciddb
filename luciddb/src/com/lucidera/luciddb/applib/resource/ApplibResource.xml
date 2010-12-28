@@ -4,9 +4,9 @@
 <!-- 
   $Id$
   LucidDB is a DBMS optimized for business intelligence.
-  Copyright (C) 2005-2005 The Eigenbase Project
-  Copyright (C) 2005-2005 LucidEra, Inc.
-  Portions Copyright (C) 2003-2005 John V. Sichi
+  Copyright (C) 2005-2007 The Eigenbase Project
+  Copyright (C) 2005-2007 LucidEra, Inc.
+  Portions Copyright (C) 2003-2007 John V. Sichi
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -43,9 +43,13 @@
 <text>Invalid start date</text>
 </exception>
 
+<exception id="800001" name="TimeDimInvalidFiscalStartMonth">
+<text>Fiscal start month should be a value between 1 and 12</text>
+</exception>
+
 <exception id="800010" name="TimeDimInvalidEndDate">
 <text>Invalid end date</text>
-</exception>
+  </exception>
 
 <exception id="800020" name="TimeDimStartDayMustPrecedeEndDay">
 <text>Start day must precede end day</text>
@@ -211,6 +215,127 @@
 <text>Date format ''{0}'' could not be applied to string ''{1}''</text>
 </exception>
 
+<exception id="900400" name="NoSuchSchema">
+<text>Schema ''{0}'' could not be found</text>
+</exception>
+
+<exception id="900410" name="IllegalTimeUnitIdentifier">
+<text>The string ''{0}'' is not a legal time unit. Legal time units are: ''YEAR'', ''MONTH'', ''WEEK'', ''DAY'', ''HOUR'', ''MINUTE'', ''SECOND'', ''MILLISECOND''</text>
+</exception>
+
+<exception id="900411" name="IdOrEffectiveFromTimestampsNotOrdered">
+<text>To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order.</text>
+</exception>
+
+<exception id="900420" name="ParameterMustBeEitherRestrictOrCascade">
+<text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
+</exception>
+
+<exception id="900430" name="InvalidCheckColumns">
+<text>Check constraint column(s) could not be found or are not of type VARCHAR: {0}</text>
+</exception>
+
+<exception id="900431" name="RowConstraintsFatal">
+<text>Row constraint UDX failed with FATAL error code: {0}
+Message: {1}</text>
+</exception>
+
+<exception id="900432" name="MessageCatalogLoadFailed">
+<text>Failed to load message catalog jar ''{0}'', resource bundle ''{1}'' at ''{2}''
+Message: {3}</text>
+</exception>
+
+<exception id="900433" name="NoSuchMessageCatalogJar">
+<text>Message Catalog Jar ''{0}'' could not be found at ''{1}''</text>
+</exception>
+
+<exception id="900500" name="InputMustBeSingleColumn">
+<text>Input cursor must be one single column.</text>
+</exception>
+
+<exception id="900501" name="SplitColNameMustBeSingleColumn">
+<text>Can only split a single column at a time.</text>
+</exception>
+
+<exception id="900510" name="SeparatorMustBeOneCharacter">
+<text>Split separator must be a single character.</text>
+</exception>
+
+<exception id="900511" name="EscapeCharMustBeOneCharacter">
+<text>Escape symbol must be a single character.</text>
+</exception>
+
+<exception id="900520" name="IncrementByMustNotBeZero">
+<text>INCREMENT_BY cannot be zero (but it was).</text>
+</exception>
+
+<exception id="900600" name="MondrianReplicationFailed">
+<text>Failed while replicating Mondrian schema.</text>
+</exception>
+
+<exception id="900610" name="SqlStatementExecutionFailed">
+<text>Failed while executing SQL statement:  [{0}]</text>
+</exception>
+
+<exception id="900620" name="MondrianSchemaMismatch">
+<text>Schema qualifier {0} specified for table {1} does not match local_schema_name parameter {2}</text>
+</exception>
+
+<exception id="900630" name="InputRowsNotSorted">
+<text>Input cursor must be sorted by the following column(s) in ascending order: [{0}]; out of order column value(s): [{1}] </text>
+</exception>
+
+<exception id="900631" name="InvalidColumnDatatype">
+<text>Input column(s) [{0}] have invalid datatype; Datatype(s) should be: [{1}]</text>
+</exception>
+
+<exception id="900640" name="PenValDesignatedColsMustBeTwoCols">
+<text>DESIGNATED_VALUE_AND_TIMESTAMP must have two columns</text>
+</exception>
+
+<exception id="900641" name="PenValDesignatedTsColInvalidType">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must have TIMESTAMP datatype; column name: [{0}]</text>
+</exception>
+
+<exception id="900642" name="PenValGroupColsMustNotContainDesCols">
+<text>GROUPING_COLUMNS must not contain any of the columns in DESIGNATED_VALUE_AND_TIMESTAMP</text>
+</exception>
+
+<exception id="900643" name="PenValTsColMustNotBeNull">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must not contain NULL values; column name [{0}]</text>
+</exception>
+
+<exception id="900644" name="PenValIncomparableKeys">
+<text>Key values must be the same size to be compared</text>
+</exception>
+
+<exception id="900650" name="CVIInvalidTsCol">
+<text>TIMESTAMP_COLUMN must be one column and of type TIMESTAMP</text>
+</exception>
+
+<exception id="900651" name="CVIInvalidInputTable">
+<text>Input table must consist of the PARTITIONING_COLUMNS, a TIMESTAMP_COLUMN, and one clumping column</text>
+</exception>
+
+<exception id="900652" name="CVIInOutNumColsMismatch">
+<text>Number of columns of output table must be five plus number of columns of input table</text>
+</exception>
+
+<exception id="900653" name="CVITsInPartition">
+<text>Timestamp column must not be in partition columns</text>
+</exception>
+
+<exception id="900654" name="CVITsMustNotBeNull">
+<text>Timestamp column must not be NULL</text>
+</exception>
+
+<exception id="900655" name="EmptyInput">
+<text>Input contains no rows</text>
+</exception>
+
+<exception id="900655" name="MoreThanOneRow">
+<text>Input contains more than one row</text>
+</exception>
 
 <!-- ====================================================================== -->
  Messages

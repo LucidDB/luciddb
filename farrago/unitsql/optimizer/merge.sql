@@ -10,7 +10,10 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table emps(
     empno int not null, name varchar(20) not null, deptno int,
-    gender char(1), city char(30), age int, salary int);
+    gender char(1), city char(30), age int, salary numeric(10,2));
+create index iempno on emps(empno);
+create index ideptno on emps(deptno);
+create index icity on emps(city);
 create table tempemps(
     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
     t_city char(35), t_age int);
@@ -20,12 +23,21 @@ insert into emps(empno, name, deptno, gender, city, age, salary)
     select case when name = 'John' then 130 else empno end,
         name, deptno, gender, city, age, age * 900 from sales.emps;
 select * from emps order by empno;
+insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
+insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
 insert into tempemps
     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
         from emps;
-insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
-insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
 select * from tempemps order by t_empno;
+
+-- check rowcounts before doing any merges
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- basic merge
 merge into emps e
@@ -39,6 +51,19 @@ merge into emps e
             t.t_city);
 select * from emps order by empno;
 
+-- verify rowcounts after merge -- should be 2 new rows after the merge
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
+
+-- verify that the old rows are inserted before the new ones even
+-- though the new rows are stored first in the source table
+select lcs_rid(empno), * from emps order by 1;
+
 -- source select is a join
 delete from emps where name in ('BARNEY', 'BETTY');
 insert into salarytable values(100, 100000);
@@ -49,6 +74,14 @@ insert into salarytable values(140, 140000);
 insert into salarytable values(150, 150000);
 select * from emps order by empno;
 select * from salarytable order by empno;
+
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 merge into emps e
     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
@@ -62,6 +95,13 @@ merge into emps e
         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
             t.t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- no source rows; therefore, no rows should be affected
 merge into emps
@@ -73,6 +113,13 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- only updates, no inserts
 merge into emps
@@ -85,10 +132,24 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- only inserts, no updates
 delete from emps where empno >= 140;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps
     using (select * from tempemps where t_empno >= 140) on t_empno = empno
     when matched then
@@ -99,11 +160,25 @@ merge into emps
             values(t_empno, upper(t_name), t_empno-100, t_gender, t_city, t_age,
                 t_age * 1000);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- more than 1 row in the source table matches the target; per SQL2003, this
 -- should return an error; currently, we do not return an error
 insert into tempemps values(130, 'JohnClone', 41, 'M', 'Vancouver', null);
 select * from tempemps order by t_empno, t_name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps
     using (select * from tempemps where t_empno = 130) on t_empno = empno
     when matched then
@@ -113,16 +188,58 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
+
+-- LER-2614 -- issue the same merge again, except modify the update values
+-- so the update is not a no-op
+merge into emps
+    using (select * from tempemps where t_empno = 130) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = t_city, age = t_age,
+            gender = lower(t_gender)
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
+
+
 delete from tempemps where t_name = 'JohnClone';
                 
 -- no insert substatement
 insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 select * from tempemps order by t_empno;
 merge into emps
     using (select * from tempemps) on t_empno = empno
     when matched then
         update set name = t_name, city = t_city;
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- no update substatement
 merge into emps
@@ -130,15 +247,37 @@ merge into emps
     when not matched then
         insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- simple update via a merge
 delete from emps where empno = 130;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
+
 merge into emps e1
     using (select * from emps) e2 on e1.empno = e2.empno
     when matched then
         update set age = e1.age + 1;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by schema_name, table_name;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- the updates in the following merges are no-ops
 -- verify that no updates have occurred by ensuring that the rids haven't
@@ -185,6 +324,14 @@ merge into emps e
             t.t_city);
 select lcs_rid(empno), * from emps order by empno;
 
+-- make sure that when the new value is the same as the old one
+-- except for trailing spaces, the update occurs
+merge into emps e
+    using tempemps t on t.t_empno = e.empno and e.name='Fred'
+    when matched then
+        update set name = 'Fred   ';
+select name||'X' from emps order by name;
+
 -- LER-1953
 -- cast in the ON clause should cast to a not null type
 merge into emps e
@@ -192,6 +339,13 @@ merge into emps e
         e.name = cast('Fred' as varchar(20))
     when matched then
         update set name = cast('FRED' as varchar(20));
+select * from emps order by empno;
+
+-- LDB-241 -- allow non-SqlCall SqlNode in the ON condition
+merge into emps e
+    using tempemps t on false
+    when matched then
+        update set name = 'should not be updated';
 select * from emps order by empno;
 
 -----------------
@@ -322,6 +476,23 @@ merge into emps e
     when matched then
         update set name = cast('FRED' as varchar(20));
 
+explain plan for
+merge into emps e
+    using tempemps t on false
+    when matched then
+        update set name = 'should not be updated';
+
+-- source for INSERT matches the columns from the source table
+create table comic (empid int primary key, name varchar(30));
+create table comic_stg (empid int, name varchar(30));
+explain plan for
+merge into comic tgt using comic_stg src on src.empid = tgt.empid
+    when matched then
+        update set name = src.name
+    when not matched then
+        insert (empid, name)
+        values (src.empid, src.name);
+
 --------------
 -- Error cases
 --------------
@@ -444,20 +615,12 @@ merge into emps e
         insert (empno, name, age, gender, salary, city)
         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
 
--- mismatch in types in values clause
+-- mismatch in types in update clause
 explain plan without implementation for
 merge into emps e
     using tempemps t on t.t_empno = e.empno
     when matched then
-        update set deptno = t.t_deptno, city = upper(t.t_city),
-            salary = salary * .25
-    when not matched then
-        insert (empno, name, age, gender, salary, city)
-        values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
-            t.t_city);
-
--- LucidDb doesn't support UPDATE
-update emps set name = 'Foobar';
+        update set deptno = 'abc';
 
 -- Farrago doesn't support MERGE
 alter session implementation set default;

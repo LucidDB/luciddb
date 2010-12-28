@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,15 +37,32 @@ import org.eigenbase.util.*;
 class AggFinder
     extends SqlBasicVisitor<Void>
 {
+    //~ Instance fields --------------------------------------------------------
+
+    private final boolean over;
 
     //~ Constructors -----------------------------------------------------------
 
-    AggFinder()
+    /**
+     * Creates an AggFinder.
+     *
+     * @param over Whether to find windowed function calls {@code Agg(x) OVER
+     * windowSpec}
+     */
+    AggFinder(boolean over)
     {
+        this.over = over;
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Finds an aggregate.
+     *
+     * @param node Parse tree to search
+     *
+     * @return First aggregate function in parse tree, or null if not found
+     */
     public SqlNode findAgg(SqlNode node)
     {
         try {
@@ -62,13 +79,17 @@ class AggFinder
         if (call.getOperator().isAggregator()) {
             throw new Util.FoundOne(call);
         }
-        if (call.isA(SqlKind.Query)) {
+        if (call.isA(SqlKind.QUERY)) {
             // don't traverse into queries
             return null;
         }
-        if (call.isA(SqlKind.Over)) {
-            // an aggregate function over a window is not an aggregate!
-            return null;
+        if (call.getKind() == SqlKind.OVER) {
+            if (over) {
+                throw new Util.FoundOne(call);
+            } else {
+                // an aggregate function over a window is not an aggregate!
+                return null;
+            }
         }
         return super.visit(call);
     }

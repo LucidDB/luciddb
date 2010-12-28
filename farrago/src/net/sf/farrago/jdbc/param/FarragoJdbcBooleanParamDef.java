@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,8 @@ import org.eigenbase.util14.*;
 
 
 /**
- * FarragoJdbcEngineBooleanParamDef defines a boolean parameter.
+ * FarragoJdbcEngineBooleanParamDef defines a boolean parameter. This class is
+ * JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -34,7 +35,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcBooleanParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcBooleanParamDef(
@@ -57,11 +57,7 @@ class FarragoJdbcBooleanParamDef
                 return x;
             } else if (x instanceof Number) {
                 Number n = (Number) x;
-                if (n.longValue() == 0) {
-                    return new Boolean(false);
-                } else {
-                    return new Boolean(true);
-                }
+                return Boolean.valueOf(n.longValue() != 0);
             } else if (x instanceof String) {
                 try {
                     return ConversionUtil.toBoolean((String) x);
@@ -70,7 +66,7 @@ class FarragoJdbcBooleanParamDef
                     try {
                         String str = ((String) x).trim();
                         double d = Double.parseDouble(str);
-                        return new Boolean(d != 0);
+                        return Boolean.valueOf(d != 0);
                     } catch (NumberFormatException ex) {
                         throw newInvalidFormat(x);
                     }

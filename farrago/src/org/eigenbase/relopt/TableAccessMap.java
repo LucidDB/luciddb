@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ package org.eigenbase.relopt;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 
 
 // TODO jvs 9-Mar-2006:  move this class to another package; it
@@ -41,10 +40,10 @@ import org.eigenbase.relopt.*;
  */
 public class TableAccessMap
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    public static enum Mode {
+    public static enum Mode
+    {
         /**
          * Table is not accessed at all.
          */
@@ -96,6 +95,18 @@ public class TableAccessMap
         RelOptUtil.go(
             new TableRelVisitor(),
             rel);
+    }
+
+    /**
+     * Constructs a TableAccessMap for a single table
+     *
+     * @param table fully qualified name of the table, represented as a list
+     * @param mode access mode for the table
+     */
+    public TableAccessMap(List<String> table, Mode mode)
+    {
+        accessMap = new HashMap<List<String>, Mode>();
+        accessMap.put(table, mode);
     }
 
     //~ Methods ----------------------------------------------------------------

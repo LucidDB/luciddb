@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ class TestOptionsTest : public TestBase, public TraceSource
 
 public:
     explicit TestOptionsTest()
-        : TraceSource(shared_from_this(),"TestOptionsTest")
+        : TraceSource(shared_from_this(), "TestOptionsTest")
     {
         FENNEL_UNIT_TEST_CASE(TestOptionsTest, test1);
         FENNEL_UNIT_TEST_CASE(TestOptionsTest, test2);
@@ -64,7 +64,9 @@ void TestOptionsTest::test2()
     int m = configMap.getIntParam("m", 200);
     int n = configMap.getIntParam("n", 201);
     string s = configMap.getStringParam("s", "fennel");
-    FENNEL_TRACE(TRACE_INFO, "test2(): m = " << m << "; n = " << n << "; s = " << s);
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "test2(): m = " << m << "; n = " << n << "; s = " << s);
 }
 
 void TestOptionsTest::extra()
@@ -72,7 +74,9 @@ void TestOptionsTest::extra()
     int m = configMap.getIntParam("m", 300);
     int n = configMap.getIntParam("n", 301);
     string s = configMap.getStringParam("s", "fennel");
-    FENNEL_TRACE(TRACE_INFO, "extra(): m = " << m << "; n = " << n << "; s = " << s);
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "extra(): m = " << m << "; n = " << n << "; s = " << s);
 }
 
 FENNEL_UNIT_TEST_SUITE(TestOptionsTest)

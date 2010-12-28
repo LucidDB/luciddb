@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@
 #include "fennel/common/ConfigMap.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/segment/TracingSegment.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/device/DeviceMode.h"
 
 #include <boost/dynamic_bitset.hpp>
@@ -45,12 +46,12 @@ class PseudoUuid;
  * interface.  See <a href="structSegmentDesign.html#SegmentFactory">the design
  * docs</a> for more detail.
  */
-class SegmentFactory
+class FENNEL_SEGMENT_EXPORT SegmentFactory
     : public boost::noncopyable,
         public boost::enable_shared_from_this<SegmentFactory>
 {
     friend class TempSegDestructor;
-    
+
     static ParamName paramTraceSegments;
 
     /**
@@ -88,7 +89,7 @@ public:
     static SharedSegmentFactory newSegmentFactory(
         ConfigMap const &configMap,
         SharedTraceTarget pTraceTarget);
-    
+
     virtual ~SegmentFactory();
 
     /**
@@ -119,11 +120,72 @@ public:
      * @param bFormat if true, the RandomAllocationSegment is formatted as
      * empty; otherwise, the existing formatting is read
      *
+     * @param deferInit if true, defer initialization on the segment; defaults
+     * to false
+     *
      * @return new segment
      */
     SharedSegment newRandomAllocationSegment(
         SharedSegment delegateSegment,
-        bool bFormat);
+        bool bFormat,
+        bool deferInit = false);
+
+    /**
+     * Opens a VersionedRandomAllocationSegment.
+     *
+     * @param delegateSegment the underlying segment providing storage; this
+     * segment must return LINEAR_ALLOCATION from getAllocationOrder(), and
+     * should already be allocated to the desired size
+     *
+     * @param pTempSegment the temporary segment used to store modifications
+     * to allocation node pages
+     *
+     * @param bFormat if true, the VersionedRandomAllocationSegment is
+     * formatted as empty; otherwise, the existing formatting is read
+     *
+     * @param deferInit if true, defer initialization on the segment; defaults
+     * to false
+     *
+     * @return new segment
+     */
+    SharedSegment newVersionedRandomAllocationSegment(
+        SharedSegment delegateSegment,
+        SharedSegment pTempSegment,
+        bool bFormat,
+        bool deferInit = false);
+
+    /**
+     * Opens a new SnapshotRandomAllocationSegment.
+     *
+     * @param delegateSegment the underlying segment providing storage; most
+     * likely, this is the same as the versionedSegment
+     *
+     * @param versionedSegment the underlying segment that provides versioning
+     * of pages
+     *
+     * @param snapshotCsn the commit sequence number associated with the segment
+     * that determines which pages to read
+     *
+     * @param readOnlyCommittedData if true, read only committed data, even
+     * ignoring uncommitted data created by the current transaction; defaults
+     * to false
+     *
+     * @return new segment
+     */
+    SharedSegment newSnapshotRandomAllocationSegment(
+        SharedSegment delegateSegment,
+        SharedSegment versionedSegment,
+        TxnId snapshotCsn,
+        bool readOnlyCommittedData = false);
+
+    /**
+     * Opens a new DynamicDelegatingSegment.
+     *
+     * @param delegateSegment initial underlying delegating segment
+     *
+     * @return new segment
+     */
+    SharedSegment newDynamicDelegatingSegment(SharedSegment delegateSegment);
 
     /**
      * Opens a WALSegment.
@@ -245,7 +307,7 @@ public:
         SharedCache pCache,
         DeviceMode deviceMode,
         std::string deviceFileName);
-    
+
     /**
      * Some implementations of the Segment interface extend the interface with
      * implementation-specific features.  dynamicCast provides access to a
@@ -286,17 +348,30 @@ public:
         }
         return pDerived;
     }
+
+    /**
+     * Casts a shared segment to a SnapshotRandomAllocationSegment, if the
+     * segment is in fact a SnapshotRandomAllocationSegment.  It may be
+     * necessary to extract the SnapshotRandomAllocationSegment from a
+     * DynamicDelegatingSegment.
+     *
+     * @return the underlying SnapshotRandomAllocationSegment or NULL if
+     * the segment is not a SnapshotRandomAllocationSegment
+     */
+    static SnapshotRandomAllocationSegment *getSnapshotSegment(
+        SharedSegment pSegment);
 };
 
-class TempSegDestructor : public ClosableObjectDestructor
+class FENNEL_SEGMENT_EXPORT TempSegDestructor
+    : public ClosableObjectDestructor
 {
     SharedSegmentFactory pSegmentFactory;
-    
+
 public:
     explicit TempSegDestructor(SharedSegmentFactory);
     void operator()(Segment *pSegment);
 };
-    
+
 FENNEL_END_NAMESPACE
 
 #endif

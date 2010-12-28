@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,24 +28,21 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -58,7 +55,6 @@ import org.eigenbase.util.*;
 class FtrsDataServer
     extends MedAbstractFennelDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoTypeFactory indexTypeFactory;
@@ -82,7 +78,7 @@ class FtrsDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         return new FtrsTable(localName, rowType, tableProps, columnPropMap);
@@ -92,12 +88,12 @@ class FtrsDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
-        planner.addRule(new FtrsTableProjectionRule());
-        planner.addRule(new FtrsTableModificationRule());
-        planner.addRule(new FtrsScanToSearchRule());
-        planner.addRule(new FtrsIndexJoinRule());
-        planner.addRule(new FtrsRemoveRedundantSortRule());
-        planner.addRule(new FtrsIndexBuilderRule());
+        planner.addRule(FtrsTableProjectionRule.instance);
+        planner.addRule(FtrsTableModificationRule.instance);
+        planner.addRule(FtrsScanToSearchRule.instance);
+        planner.addRule(FtrsIndexJoinRule.instance);
+        planner.addRule(FtrsRemoveRedundantSortRule.instance);
+        planner.addRule(FtrsIndexBuilderRule.instance);
     }
 
     // implement FarragoMedLocalDataServer
@@ -107,11 +103,11 @@ class FtrsDataServer
         throws SQLException
     {
         // Validate that there's at most one clustered index.
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-        Iterator indexIter = indexes.iterator();
         int nClustered = 0;
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             if (index.isClustered()) {
                 nClustered++;
             }
@@ -143,11 +139,12 @@ class FtrsDataServer
                 repos,
                 table);
         assert (clusteredIndex != null);
-        for (Object obj : clusteredIndex.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) obj;
+        for (
+            CwmIndexedFeature indexedFeature
+            : clusteredIndex.getIndexedFeature())
+        {
             FemStoredColumn col = (FemStoredColumn) indexedFeature.getFeature();
-            col.setIsNullable(
-                NullableTypeEnum.COLUMN_NO_NULLS);
+            col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
     }
 
@@ -183,7 +180,8 @@ class FtrsDataServer
 
         RelNode project = CalcRel.createProject(tableScan, projExps, null);
 
-        SortRel sort = new SortRel(
+        SortRel sort =
+            new SortRel(
                 cluster,
                 project,
                 collations);
@@ -210,6 +208,137 @@ class FtrsDataServer
         FemLocalIndex index)
     {
         return false;
+    }
+
+    // implement FarragoMedDataServer
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        super.registerRelMetadataProviders(chain);
+        RelMetadataProvider ftrsProvider = new FtrsRelMetadataProvider(repos);
+        chain.addProvider(ftrsProvider);
+    }
+
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        return true;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    // REVIEW jvs 24-Aug-2008:  do stuff for FtrsIndexSearchRel too?
+
+    public static class FtrsRelMetadataProvider
+        extends ReflectiveRelMetadataProvider
+    {
+        private final FarragoRepos repos;
+
+        private final FtrsColumnMetadata columnMd;
+
+        FtrsRelMetadataProvider(FarragoRepos repos)
+        {
+            this.repos = repos;
+            columnMd = new FtrsColumnMetadata();
+
+            List<Class> args = new ArrayList<Class>();
+            args.add((Class) BitSet.class);
+            args.add((Class) RexNode.class);
+            mapParameterTypes("getDistinctRowCount", args);
+
+            mapParameterTypes(
+                "getPopulationSize",
+                Collections.singletonList((Class) BitSet.class));
+
+            mapParameterTypes(
+                "getUniqueKeys",
+                Collections.singletonList((Class) Boolean.TYPE));
+
+            args = new ArrayList<Class>();
+            args.add((Class) BitSet.class);
+            args.add((Class) Boolean.TYPE);
+            mapParameterTypes("areColumnsUnique", args);
+        }
+
+        public Double getDistinctRowCount(
+            FtrsIndexScanRel rel,
+            BitSet groupKey,
+            RexNode predicate)
+        {
+            return columnMd.getDistinctRowCount(rel, groupKey, predicate);
+        }
+
+        public Double getPopulationSize(FtrsIndexScanRel rel, BitSet groupKey)
+        {
+            return columnMd.getPopulationSize(rel, groupKey);
+        }
+
+        public Set<BitSet> getUniqueKeys(
+            FtrsIndexScanRel rel,
+            boolean ignoreNulls)
+        {
+            return columnMd.getUniqueKeys(rel, repos, ignoreNulls);
+        }
+
+        public Boolean areColumnsUnique(
+            FtrsIndexScanRel rel,
+            BitSet columns,
+            boolean ignoreNulls)
+        {
+            return columnMd.areColumnsUnique(rel, columns, repos, ignoreNulls);
+        }
+    }
+
+    private static class FtrsColumnMetadata
+        extends MedAbstractColumnMetadata
+    {
+        // implement MedAbstractColumnMetadata
+        protected int mapColumnToField(
+            RelNode rel,
+            FemAbstractColumn keyCol)
+        {
+            FtrsIndexScanRel scanRel = (FtrsIndexScanRel) rel;
+            int origColOrdinal = keyCol.getOrdinal();
+
+            // TODO zfong 5/29/06 - The code below does not account for UDTs.
+            // origColOrdinal represents an unflattened column ordinal.  It
+            // needs to be converted to a flattened ordinal.  Furthermore, the
+            // flattened ordinal may map to multiple fields.
+            if (scanRel.projectedColumns == null) {
+                return origColOrdinal;
+            }
+            for (int i = 0; i < scanRel.projectedColumns.length; i++) {
+                if (scanRel.projectedColumns[i] == origColOrdinal) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // implement MedAbstractColumnMetadata
+        protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)
+        {
+            FemAbstractColumn col = mapFieldToColumn(rel, fieldNo);
+            if (col == null) {
+                return -1;
+            }
+            return col.getOrdinal();
+        }
+
+        // implement MedAbstractColumnMetadata
+        protected FemAbstractColumn mapFieldToColumn(RelNode rel, int fieldNo)
+        {
+            FtrsIndexScanRel scanRel = (FtrsIndexScanRel) rel;
+            assert fieldNo >= 0;
+
+            if (scanRel.projectedColumns != null) {
+                fieldNo = scanRel.projectedColumns[fieldNo];
+            }
+
+            int columnOrdinal =
+                scanRel.getIndexGuide().unFlattenOrdinal(fieldNo);
+            return (FemAbstractColumn) scanRel.ftrsTable.getCwmColumnSet()
+                .getFeature().get(columnOrdinal);
+        }
     }
 }
 

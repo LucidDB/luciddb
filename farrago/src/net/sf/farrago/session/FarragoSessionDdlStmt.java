@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,6 @@ import net.sf.farrago.cwm.core.*;
  */
 public interface FarragoSessionDdlStmt
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -66,6 +65,7 @@ public interface FarragoSessionDdlStmt
 
     /**
      * Called after execution, after committing the repository transaction.
+     *
      * @param ddlValidator the object validating this stmt
      */
     public void postCommit(FarragoSessionDdlValidator ddlValidator);
@@ -74,6 +74,21 @@ public interface FarragoSessionDdlStmt
      * @return true if this statement implies an auto-commit before and after
      */
     public boolean requiresCommit();
+
+    /**
+     * @return true if this DDL statement should be treated like a DML statement
+     * with respect to locking
+     */
+    public boolean runsAsDml();
+
+    /**
+     * Sets the root statement context to be used for invoking
+     * reentrant SQL.
+     *
+     * @param rootStmtContext the root statement context in which
+     * this DDL statement is being invoked
+     */
+    public void setRootStmtContext(FarragoSessionStmtContext rootStmtContext);
 }
 
 // End FarragoSessionDdlStmt.java

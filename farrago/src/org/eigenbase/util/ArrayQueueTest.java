@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import junit.framework.*;
 public class ArrayQueueTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public ArrayQueueTest(String name)
@@ -49,7 +48,7 @@ public class ArrayQueueTest
 
     public void testOfferPoll()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         assertTrue(queue.offer("1"));
         assertTrue(queue.offer("2"));
@@ -78,7 +77,7 @@ public class ArrayQueueTest
 
     public void testRepeatedOfferPoll()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         for (int i = 1; i < 1000; i++) {
             for (int j = 0; j < i; j++) {
@@ -106,7 +105,7 @@ public class ArrayQueueTest
 
     public void testEmptyAndClear()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         assertTrue(queue.isEmpty());
         assertEquals(
@@ -133,7 +132,7 @@ public class ArrayQueueTest
 
     public void testAddAddAllRemove()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         queue.add("1");
         queue.add("2");
@@ -159,12 +158,12 @@ public class ArrayQueueTest
             queue.size());
         assertTrue(queue.isEmpty());
 
-        ArrayList list = new ArrayList();
+        ArrayList<String> list = new ArrayList<String>();
         list.add("1");
         list.add("2");
         list.add("3");
 
-        queue = new ArrayQueue();
+        queue = new ArrayQueue<String>();
 
         queue.addAll(list);
 
@@ -191,7 +190,7 @@ public class ArrayQueueTest
 
     public void testExceptions()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         try {
             queue.add(null);
@@ -201,7 +200,7 @@ public class ArrayQueueTest
         }
 
         try {
-            ArrayList l = new ArrayList();
+            ArrayList<String> l = new ArrayList<String>();
             l.add("1");
             l.add(null);
             l.add("2");
@@ -238,7 +237,7 @@ public class ArrayQueueTest
 
     public void testPeek()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         assertNull(queue.peek());
 
@@ -279,7 +278,7 @@ public class ArrayQueueTest
 
     public void testIterator()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
 
         assertTrue(queue.offer("1"));
         assertTrue(queue.offer("2"));
@@ -325,41 +324,37 @@ public class ArrayQueueTest
 
     public void testConstructors()
     {
-        boolean failed = false;
         try {
-            new ArrayQueue(0);
-
-            failed = true;
-        } catch (AssertionError e) {
+            new ArrayQueue<Integer>(0);
+            fail("expected exception");
+        } catch (IllegalArgumentException e) {
+            // ok
         }
-        assertTrue(!failed);
 
-        failed = false;
         try {
-            new ArrayQueue(-1);
-
-            failed = true;
-        } catch (AssertionError e) {
+            new ArrayQueue<Integer>(-1);
+            fail("expected exception");
+        } catch (IllegalArgumentException e) {
+            // ok
         }
-        assertTrue(!failed);
     }
 
     public void testEquals()
     {
-        ArrayQueue queue1 = new ArrayQueue();
+        ArrayQueue<String> queue1 = new ArrayQueue<String>();
         queue1.add("1");
         queue1.add("2");
         queue1.add("3");
 
-        ArrayList list = new ArrayList();
+        ArrayList<String> list = new ArrayList<String>();
         list.add("1");
         list.add("2");
         list.add("3");
-        ArrayQueue queue2 = new ArrayQueue(list);
+        ArrayQueue<String> queue2 = new ArrayQueue<String>(list);
 
         assertEquals(queue1, queue2);
 
-        ArrayQueue queue3 = new ArrayQueue();
+        ArrayQueue<String> queue3 = new ArrayQueue<String>();
         queue2.add("3");
         queue2.add("2");
         queue2.add("1");
@@ -369,7 +364,7 @@ public class ArrayQueueTest
 
     public void testToString()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
         queue.add("1");
         queue.add("2");
         queue.add("3");
@@ -381,28 +376,28 @@ public class ArrayQueueTest
 
     public void testToArray()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
         queue.add("1");
         queue.add("2");
         queue.add("3");
 
         assertEquals(
-            Arrays.asList(new Object[] { "1", "2", "3" }),
+            Arrays.asList((Object) "1", "2", "3"),
             Arrays.asList(queue.toArray()));
 
-        ArrayQueue queue2 = new ArrayQueue();
+        ArrayQueue<String> queue2 = new ArrayQueue<String>();
         queue2.add("a");
         queue2.add("b");
         queue2.add("c");
 
         assertEquals(
-            Arrays.asList(new String[] { "a", "b", "c" }),
+            Arrays.asList("a", "b", "c"),
             Arrays.asList(queue2.toArray(new String[3])));
     }
 
     public void testOfferNull()
     {
-        ArrayQueue queue = new ArrayQueue();
+        ArrayQueue<String> queue = new ArrayQueue<String>();
         assertTrue(!queue.offer(null));
         assertEquals(
             0,

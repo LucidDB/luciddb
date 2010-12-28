@@ -1,0 +1,48 @@
+0: jdbc:luciddb:> -- Q18 (tpch2.6.1)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set rowlimit 100
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >     C_NAME,
+. . . . . . . . >     C_CUSTKEY,
+. . . . . . . . >     O_ORDERKEY,
+. . . . . . . . >     O_ORDERDATE,
+. . . . . . . . >     O_TOTALPRICE,
+. . . . . . . . >     SUM(L_QUANTITY)
+. . . . . . . . > FROM
+. . . . . . . . >     TPCH.CUSTOMER,
+. . . . . . . . >     TPCH.ORDERS,
+. . . . . . . . >     TPCH.LINEITEM
+. . . . . . . . > WHERE
+. . . . . . . . >     O_ORDERKEY IN (
+. . . . . . . . >         SELECT
+. . . . . . . . >             L_ORDERKEY
+. . . . . . . . >         FROM
+. . . . . . . . >             TPCH.LINEITEM
+. . . . . . . . >         GROUP BY
+. . . . . . . . >             L_ORDERKEY 
+. . . . . . . . >         HAVING
+. . . . . . . . >             SUM(L_QUANTITY) > 300
+. . . . . . . . >     )
+. . . . . . . . >     AND C_CUSTKEY = O_CUSTKEY
+. . . . . . . . >     AND O_ORDERKEY = L_ORDERKEY
+. . . . . . . . > GROUP BY
+. . . . . . . . >     C_NAME,
+. . . . . . . . >     C_CUSTKEY,
+. . . . . . . . >     O_ORDERKEY,
+. . . . . . . . >     O_ORDERDATE,
+. . . . . . . . >     O_TOTALPRICE
+. . . . . . . . > ORDER BY
+. . . . . . . . >     O_TOTALPRICE DESC,
+. . . . . . . . >     O_ORDERDATE;
++---------------------+------------+-------------+--------------+---------------+---------+
+|       C_NAME        | C_CUSTKEY  | O_ORDERKEY  | O_ORDERDATE  | O_TOTALPRICE  | EXPR$5  |
++---------------------+------------+-------------+--------------+---------------+---------+
+| Customer#000001639  | 1639       | 502886      | 1994-04-12   | 456423.88     | 312.00  |
+| Customer#000006655  | 6655       | 29158       | 1995-10-21   | 452805.02     | 305.00  |
+| Customer#000014110  | 14110      | 565574      | 1995-09-24   | 425099.85     | 301.00  |
+| Customer#000001775  | 1775       | 6882        | 1997-04-09   | 408368.10     | 303.00  |
+| Customer#000011459  | 11459      | 551136      | 1993-05-19   | 386812.74     | 308.00  |
++---------------------+------------+-------------+--------------+---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

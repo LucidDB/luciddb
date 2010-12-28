@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class BasicSqlType
     extends AbstractSqlType
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
@@ -46,10 +45,10 @@ public class BasicSqlType
 
     //~ Instance fields --------------------------------------------------------
 
-    private final int precision;
-    private final int scale;
+    private int precision;
+    private int scale;
     private SqlCollation collation;
-    private Charset charset;
+    private SerializableCharset wrappedCharset;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -67,7 +66,7 @@ public class BasicSqlType
         Util.pre(
             typeName.allowsPrecScale(false, false),
             "typeName.allowsPrecScale(false,false), typeName="
-            + typeName.getName());
+            + typeName.name());
         this.precision = PRECISION_NOT_SPECIFIED;
         this.scale = SCALE_NOT_SPECIFIED;
         computeDigest();
@@ -121,7 +120,7 @@ public class BasicSqlType
      */
     BasicSqlType createWithNullability(boolean nullable)
     {
-        BasicSqlType ret = null;
+        BasicSqlType ret;
         try {
             ret = (BasicSqlType) this.clone();
         } catch (CloneNotSupportedException e) {
@@ -141,14 +140,14 @@ public class BasicSqlType
         Charset charset,
         SqlCollation collation)
     {
-        Util.pre(SqlTypeUtil.inCharFamily(this) == true, "Not an chartype");
+        Util.pre(SqlTypeUtil.inCharFamily(this), "Not an chartype");
         BasicSqlType ret;
         try {
             ret = (BasicSqlType) this.clone();
         } catch (CloneNotSupportedException e) {
             throw Util.newInternal(e);
         }
-        ret.charset = charset;
+        ret.wrappedCharset = SerializableCharset.forCharset(charset);
         ret.collation = collation;
         ret.computeDigest();
         return ret;
@@ -158,38 +157,38 @@ public class BasicSqlType
     public int getPrecision()
     {
         if (precision == PRECISION_NOT_SPECIFIED) {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Boolean_ordinal:
+            switch (typeName) {
+            case BOOLEAN:
                 return 1;
-            case SqlTypeName.Tinyint_ordinal:
+            case TINYINT:
                 return 3;
-            case SqlTypeName.Smallint_ordinal:
+            case SMALLINT:
                 return 5;
-            case SqlTypeName.Integer_ordinal:
+            case INTEGER:
                 return 10;
-            case SqlTypeName.Bigint_ordinal:
+            case BIGINT:
                 return 19;
-            case SqlTypeName.Decimal_ordinal:
+            case DECIMAL:
                 return SqlTypeName.MAX_NUMERIC_PRECISION;
-            case SqlTypeName.Real_ordinal:
+            case REAL:
                 return 7;
-            case SqlTypeName.Float_ordinal:
-            case SqlTypeName.Double_ordinal:
+            case FLOAT:
+            case DOUBLE:
                 return 15;
-            case SqlTypeName.Time_ordinal:
+            case TIME:
                 return 0; // SQL99 part 2 section 6.1 syntax rule 30
-            case SqlTypeName.Timestamp_ordinal:
+            case TIMESTAMP:
 
                 // farrago supports only 0 (see
                 // SqlTypeName.getDefaultPrecision), but it should be 6
                 // (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
                 return 0;
-            case SqlTypeName.Date_ordinal:
+            case DATE:
                 return 0;
-            case SqlTypeName.Char_ordinal:
-            case SqlTypeName.Varchar_ordinal:
-            case SqlTypeName.Binary_ordinal:
-            case SqlTypeName.Varbinary_ordinal:
+            case CHAR:
+            case VARCHAR:
+            case BINARY:
+            case VARBINARY:
                 return 1; // SQL2003 part 2 section 6.1 syntax rule 5
             default:
                 throw Util.newInternal(
@@ -203,12 +202,12 @@ public class BasicSqlType
     public int getScale()
     {
         if (scale == SCALE_NOT_SPECIFIED) {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Tinyint_ordinal:
-            case SqlTypeName.Smallint_ordinal:
-            case SqlTypeName.Integer_ordinal:
-            case SqlTypeName.Bigint_ordinal:
-            case SqlTypeName.Decimal_ordinal:
+            switch (typeName) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case DECIMAL:
                 return 0;
             default:
                 throw Util.newInternal(
@@ -222,7 +221,7 @@ public class BasicSqlType
     public Charset getCharset()
         throws RuntimeException
     {
-        return charset;
+        return (wrappedCharset == null) ? null : wrappedCharset.getCharset();
     }
 
     // implement RelDataType
@@ -233,12 +232,12 @@ public class BasicSqlType
     }
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         // Called to make the digest, which equals() compares;
         // so equivalent data types must produce identical type strings.
 
-        sb.append(typeName.getName());
+        sb.append(typeName.name());
         boolean printPrecision = (precision != PRECISION_NOT_SPECIFIED);
         boolean printScale = (scale != SCALE_NOT_SPECIFIED);
 
@@ -266,9 +265,9 @@ public class BasicSqlType
         if (!withDetail) {
             return;
         }
-        if (charset != null) {
+        if (wrappedCharset != null) {
             sb.append(" CHARACTER SET \"");
-            sb.append(charset.name());
+            sb.append(wrappedCharset.getCharset().name());
             sb.append("\"");
         }
         if (collation != null) {
@@ -276,6 +275,91 @@ public class BasicSqlType
             sb.append(collation.getCollationName());
             sb.append("\"");
         }
+    }
+
+    /**
+     * Returns a value which is a limit for this type.
+     *
+     * <p>For example,
+     *
+     * <table border="1">
+     * <tr>
+     * <th>Datatype</th>
+     * <th>sign</th>
+     * <th>limit</th>
+     * <th>beyond</th>
+     * <th>precision</th>
+     * <th>scale</th>
+     * <th>Returns</th>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>2147483647 (2 ^ 31 -1 = MAXINT)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>2147483648 (2 ^ 31 = MAXINT + 1)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>false</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>-2147483648 (-2 ^ 31 = MININT)</td>
+     * </tr>
+     * <tr>
+     * <td>Boolean</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>TRUE</td>
+     * </tr>
+     * <tr>
+     * <td>Varchar</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>10</td>
+     * <td>-1</td>
+     * <td>'ZZZZZZZZZZ'</td>
+     * </tr>
+     * </table>
+     *
+     * @param sign If true, returns upper limit, otherwise lower limit
+     * @param limit If true, returns value at or near to overflow; otherwise
+     * value at or near to underflow
+     * @param beyond If true, returns the value just beyond the limit, otherwise
+     * the value at the limit
+     *
+     * @return Limit value
+     */
+    public Object getLimit(
+        boolean sign,
+        SqlTypeName.Limit limit,
+        boolean beyond)
+    {
+        int precision = typeName.allowsPrec() ? this.getPrecision() : -1;
+        int scale = typeName.allowsScale() ? this.getScale() : -1;
+        return typeName.getLimit(
+            sign,
+            limit,
+            beyond,
+            precision,
+            scale);
     }
 }
 

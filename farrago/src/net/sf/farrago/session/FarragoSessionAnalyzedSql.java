@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.util.SqlString;
 
 
 /**
@@ -41,7 +42,6 @@ import org.eigenbase.reltype.*;
  */
 public class FarragoSessionAnalyzedSql
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -51,11 +51,20 @@ public class FarragoSessionAnalyzedSql
     public boolean optimized;
 
     /**
+     * The text of the SQL expression before expansion by the validator.
+     */
+    public SqlString rawString;
+
+    /**
      * The text of the SQL expression after expansion by the validator. This
      * contains no context-dependent information (e.g. all objects are fully
      * qualified), so it can be stored in the catalog.
+     *
+     * <p>Its type is {@link SqlString} to remind developers to apply hygienic
+     * practices to prevent SQL injection and poorly quoted identifiers and
+     * literals.
      */
-    public String canonicalString;
+    public SqlString canonicalString;
 
     /**
      * Set of catalog objects on which the expression directly depends.

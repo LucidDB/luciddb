@@ -1,0 +1,65 @@
+0: jdbc:luciddb:> -- tests which have different results depending on VM.  Jrockit results don't
+0: jdbc:luciddb:> -- seem logical
+0: jdbc:luciddb:> create schema fp;
+0: jdbc:luciddb:> set schema 'fp';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values (45.3, cast(45.3 as float));
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 45.3    | 45.3    |
++---------+---------+
+0: jdbc:luciddb:> values (45.3, cast(45.3 as double));
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 45.3    | 45.3    |
++---------+---------+
+0: jdbc:luciddb:> values (4.004, cast(4.004 as float));
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 4.004   | 4.004   |
++---------+---------+
+0: jdbc:luciddb:> values (4.004, cast(4.004 as double));
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 4.004   | 4.004   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table fp(f float, d double);
+0: jdbc:luciddb:> insert into fp values
+. . . . . . . . > (1.001, 1.001),
+. . . . . . . . > (1.003, 1.003),
+. . . . . . . . > (555.55, 555.55);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fp order by f,d;
++---------+---------+
+|    F    |    D    |
++---------+---------+
+| 1.001   | 1.001   |
+| 1.003   | 1.003   |
+| 555.55  | 555.55  |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fp where f = 1.001;
++--------+--------+
+|   F    |   D    |
++--------+--------+
+| 1.001  | 1.001  |
++--------+--------+
+0: jdbc:luciddb:> select * from fp where d = 1.001;
++--------+--------+
+|   F    |   D    |
++--------+--------+
+| 1.001  | 1.001  |
++--------+--------+
+0: jdbc:luciddb:> select * from fp where f = 555.55;
++---------+---------+
+|    F    |    D    |
++---------+---------+
+| 555.55  | 555.55  |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

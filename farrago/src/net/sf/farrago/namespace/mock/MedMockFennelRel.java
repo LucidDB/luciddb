@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,25 +22,15 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.sql.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
-
-import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -54,7 +44,6 @@ class MedMockFennelRel
     extends TableAccessRelBase
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;
@@ -100,7 +89,7 @@ class MedMockFennelRel
     }
 
     // implement RelNode
-    public Object clone()
+    public MedMockFennelRel clone()
     {
         MedMockFennelRel clone =
             new MedMockFennelRel(

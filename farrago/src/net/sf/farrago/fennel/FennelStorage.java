@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,11 +24,12 @@ package net.sf.farrago.fennel;
 
 import java.sql.*;
 
+import java.util.*;
+
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.util.*;
 
-import java.awt.*;
 
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago. Most
@@ -104,23 +105,41 @@ public class FennelStorage
      * Executes a command represented as a Java object.
      *
      * @param cmd Java representation of object
+     * @param execHandle optional execution handle associated with the command
+     * that's used to pass execution state from Farrago to Fennel; set to 0 if
+     * there is no handle
      *
      * @return output object handle if any
      */
-    static native long executeJavaCmd(FemCmd cmd)
+    static native long executeJavaCmd(FemCmd cmd, long execHandle)
         throws SQLException;
+
+    /**
+     * Find the input of a given stream node in a stream graph.
+     *
+     * @param hStreamGraph handle to stream graph
+     * @param node stream name
+     * @param inputs The names of the input streams are added to this list, in
+     * graph edge order.
+     */
+    static native void tupleStreamGraphGetInputStreams(
+        long hStreamGraph,
+        String node,
+        List<String> inputs);
 
     /**
      * Opens a stream graph.
      *
-     * @param hStream handle to stream
+     * @param hStreamGraph handle to stream graph
      * @param hTxn handle to txn in which stream is being opened
      * @param javaStreamMap optional FennelJavaStreamMap
+     * @param javaErrorTarget error target handles row errors
      */
     static native void tupleStreamGraphOpen(
         long hStreamGraph,
         long hTxn,
-        FennelJavaStreamMap javaStreamMap)
+        FennelJavaStreamMap javaStreamMap,
+        FennelJavaErrorTarget javaErrorTarget)
         throws SQLException;
 
     /**
@@ -152,7 +171,7 @@ public class FennelStorage
      */
     static native int tupleStreamTransformFetch(
         long hStream,
-        int execSTreamInputOrdinal,
+        int execStreamInputOrdinal,
         byte [] byteArray)
         throws SQLException;
 
@@ -166,15 +185,51 @@ public class FennelStorage
         throws SQLException;
 
     /**
+     * Sets a stream to the runnable state.
+     * Calls fennel::ExecStream::setRunnable on the stream. a suspend/resume
+     * control. A stream may return EXECRC_YIELD in order to wait on an external
+     * event; this method lets the farrago runtime signal the wake-up event.
+     *
+     * @param hStream handle to the stream
+     * @param state true to resume, false to suspend.
+     */
+    static native void tupleStreamSetRunnable(long hStream, boolean state)
+        throws SQLException;
+
+
+    /**
      * Closes a stream graph.
      *
-     * @param hStream handle to stream graph
+     * @param hStreamGraph handle to stream graph
      * @param action CLOSE_XXX
      */
     static native void tupleStreamGraphClose(
         long hStreamGraph,
         int action)
         throws SQLException;
+
+    /**
+     * Allocates a new object in Fennel that Farrago will use to communicate
+     * execution state information from Farrago to Fennel. Access to that object
+     * will be through a handle.
+     *
+     * @return the handle that will be used to access the Fennel object
+     */
+    static native long newExecutionHandle();
+
+    /**
+     * Deletes the Fennel object corresponding to an execution handle.
+     *
+     * @param execHandle the execution handle
+     */
+    static native void deleteExecutionHandle(long execHandle);
+
+    /**
+     * Cancels execution of a statement associated with an execution handle.
+     *
+     * @param execHandle the execution handle
+     */
+    public static native void cancelExecution(long execHandle);
 }
 
 // End FennelStorage.java

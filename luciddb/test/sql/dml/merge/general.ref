@@ -12,7 +12,7 @@
 0: jdbc:luciddb:> -- insert column list ommitted
 0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2
-. . . . . . . . > when not matched then insert values (m1, pow(m2,2));
+. . . . . . . . > when not matched then insert values (m1, power(m2,2));
 0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+---------+
 | N1  |   N2    |
@@ -152,11 +152,11 @@ Was expecting one of:
 0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2
 . . . . . . . . > when not matched then insert (n1,n2) values (101,102,103);
-Error: Number of INSERT target columns (2) does not equal number of source items (3) (state=,code=0)
+Error: From line 3, column 23 to line 3, column 28: Number of INSERT target columns (2) does not equal number of source items (3) (state=,code=0)
 0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2
 . . . . . . . . > when not matched then insert (n1,n2) values (101);
-Error: Number of INSERT target columns (2) does not equal number of source items (1) (state=,code=0)
+Error: From line 3, column 23 to line 3, column 28: Number of INSERT target columns (2) does not equal number of source items (1) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should throw exception due to multiple matches
 0: jdbc:luciddb:> -- not yet handled

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,23 +41,33 @@ import org.eigenbase.sql.type.*;
 public class SqlAvgAggFunction
     extends SqlAggFunction
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;
+    private final Subtype subtype;
 
     //~ Constructors -----------------------------------------------------------
 
-    public SqlAvgAggFunction(RelDataType type)
+    /**
+     * Creates a SqlAvgAggFunction
+     *
+     *
+     * @param type Data type
+     * @param subtype Specific function, e.g. AVG or STDDEV_POP
+     */
+    public SqlAvgAggFunction(
+        RelDataType type,
+        Subtype subtype)
     {
         super(
-            "AVG",
-            SqlKind.Function,
+            subtype.name(),
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
         this.type = type;
+        this.subtype = subtype;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -65,11 +75,6 @@ public class SqlAvgAggFunction
     public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         return new RelDataType[] { type };
-    }
-
-    public RelDataType getType()
-    {
-        return type;
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
@@ -80,6 +85,24 @@ public class SqlAvgAggFunction
     public OJClass [] getStartParameterTypes()
     {
         return new OJClass[0];
+    }
+
+    /**
+     * Returns the specific function, e.g. AVG or STDDEV_POP.
+     *
+     * @return Subtype
+     */
+    public Subtype getSubtype()
+    {
+        return subtype;
+    }
+
+    public enum Subtype {
+        AVG,
+        STDDEV_POP,
+        STDDEV_SAMP,
+        VAR_POP,
+        VAR_SAMP
     }
 }
 

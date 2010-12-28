@@ -1,0 +1,11 @@
+ID,NAME,EXTRA_FIELD
+123,"""S,""",F
+123,Jonathan Ackerman,A
+234,Grady O'Neil,B
+456,"Susan, Peter and Dave",C
+789,"Amelia ""meals"" Maurice",E
+234,"Peter ""peg leg"", Jimmy & Samantha ""Sam""",G
+"235","a bad missing pair of quotes, F"
+236,"This line is missing a quote, F
+237,"Missing quote at the end",G
+238,"Missing,H"

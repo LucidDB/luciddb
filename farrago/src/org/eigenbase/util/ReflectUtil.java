@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,15 +37,14 @@ import java.util.*;
  */
 public abstract class ReflectUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
-    private static Map primitiveToBoxingMap;
-    private static Map primitiveToByteBufferReadMethod;
-    private static Map primitiveToByteBufferWriteMethod;
+    private static Map<Class, Class> primitiveToBoxingMap;
+    private static Map<Class, Method> primitiveToByteBufferReadMethod;
+    private static Map<Class, Method> primitiveToByteBufferWriteMethod;
 
     static {
-        primitiveToBoxingMap = new HashMap();
+        primitiveToBoxingMap = new HashMap<Class, Class>();
         primitiveToBoxingMap.put(Boolean.TYPE, Boolean.class);
         primitiveToBoxingMap.put(Byte.TYPE, Byte.class);
         primitiveToBoxingMap.put(Character.TYPE, Character.class);
@@ -55,8 +54,8 @@ public abstract class ReflectUtil
         primitiveToBoxingMap.put(Long.TYPE, Long.class);
         primitiveToBoxingMap.put(Short.TYPE, Short.class);
 
-        primitiveToByteBufferReadMethod = new HashMap();
-        primitiveToByteBufferWriteMethod = new HashMap();
+        primitiveToByteBufferReadMethod = new HashMap<Class, Method>();
+        primitiveToByteBufferWriteMethod = new HashMap<Class, Method>();
         Method [] methods = ByteBuffer.class.getDeclaredMethods();
         for (int i = 0; i < methods.length; ++i) {
             Method method = methods[i];
@@ -106,7 +105,7 @@ public abstract class ReflectUtil
     public static Method getByteBufferReadMethod(Class clazz)
     {
         assert (clazz.isPrimitive());
-        return (Method) primitiveToByteBufferReadMethod.get(clazz);
+        return primitiveToByteBufferReadMethod.get(clazz);
     }
 
     /**
@@ -120,7 +119,7 @@ public abstract class ReflectUtil
     public static Method getByteBufferWriteMethod(Class clazz)
     {
         assert (clazz.isPrimitive());
-        return (Method) primitiveToByteBufferWriteMethod.get(clazz);
+        return primitiveToByteBufferWriteMethod.get(clazz);
     }
 
     /**
@@ -134,7 +133,7 @@ public abstract class ReflectUtil
     public static Class getBoxingClass(Class primitiveClass)
     {
         assert (primitiveClass.isPrimitive());
-        return (Class) primitiveToBoxingMap.get(primitiveClass);
+        return primitiveToBoxingMap.get(primitiveClass);
     }
 
     /**
@@ -170,7 +169,7 @@ public abstract class ReflectUtil
         String methodName,
         Class [] paramTypes)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(declaringClass.getName());
         sb.append(".");
         sb.append(methodName);
@@ -196,11 +195,10 @@ public abstract class ReflectUtil
     public static String getUnmangledMethodName(
         Method method)
     {
-        return
-            getUnmangledMethodName(
-                method.getDeclaringClass(),
-                method.getName(),
-                method.getParameterTypes());
+        return getUnmangledMethodName(
+            method.getDeclaringClass(),
+            method.getName(),
+            method.getParameterTypes());
     }
 
     /**
@@ -223,12 +221,36 @@ public abstract class ReflectUtil
      * @return true if a matching visit method was found and invoked
      */
     public static boolean invokeVisitor(
+        ReflectiveVisitor visitor,
+        Object visitee,
+        Class hierarchyRoot,
+        String visitMethodName)
+    {
+        return invokeVisitorInternal(
+            visitor,
+            visitee,
+            hierarchyRoot,
+            visitMethodName);
+    }
+
+    /**
+     * Shared implementation of the two forms of invokeVisitor.
+     *
+     * @param visitor object whose visit method is to be invoked
+     * @param visitee object to be passed as a parameter to the visit method
+     * @param hierarchyRoot if non-null, visitor method will only be invoked if
+     * it takes a parameter whose type is a subtype of hierarchyRoot
+     * @param visitMethodName name of visit method, e.g. "visit"
+     *
+     * @return true if a matching visit method was found and invoked
+     */
+    private static boolean invokeVisitorInternal(
         Object visitor,
         Object visitee,
         Class hierarchyRoot,
         String visitMethodName)
     {
-        Class visitorClass = visitor.getClass();
+        Class<?> visitorClass = visitor.getClass();
         Class visiteeClass = visitee.getClass();
         Method method =
             lookupVisitMethod(
@@ -249,7 +271,7 @@ public abstract class ReflectUtil
         try {
             method.invoke(
                 visitor,
-                new Object[] { visitee });
+                visitee);
         } catch (IllegalAccessException ex) {
             throw Util.newInternal(ex);
         } catch (InvocationTargetException ex) {
@@ -279,16 +301,15 @@ public abstract class ReflectUtil
      * @return method found, or null if none found
      */
     public static Method lookupVisitMethod(
-        Class visitorClass,
-        Class visiteeClass,
+        Class<?> visitorClass,
+        Class<?> visiteeClass,
         String visitMethodName)
     {
-        return
-            lookupVisitMethod(
-                visitorClass,
-                visiteeClass,
-                visitMethodName,
-                Collections.EMPTY_LIST);
+        return lookupVisitMethod(
+            visitorClass,
+            visiteeClass,
+            visitMethodName,
+            Collections.<Class>emptyList());
     }
 
     /**
@@ -302,60 +323,99 @@ public abstract class ReflectUtil
      * @param additionalParameterTypes list of additional parameter types
      *
      * @return method found, or null if none found
+     *
+     * @see #createDispatcher(Class,Class)
      */
     public static Method lookupVisitMethod(
-        Class visitorClass,
-        Class visiteeClass,
+        Class<?> visitorClass,
+        Class<?> visiteeClass,
         String visitMethodName,
         List<Class> additionalParameterTypes)
     {
-        // TODO jvs 28-Nov-2004:  cache results in a dispatch map
-
-        Class [] paramTypes = new Class[1 + additionalParameterTypes.size()];
+        // Prepare an array to re-use in recursive calls.  The first argument
+        // will have the visitee class substituted into it.
+        Class<?> [] paramTypes = new Class[1 + additionalParameterTypes.size()];
         int iParam = 0;
-        paramTypes[iParam++] = visiteeClass;
-        for (Class paramType : additionalParameterTypes) {
+        paramTypes[iParam++] = null;
+        for (Class<?> paramType : additionalParameterTypes) {
             paramTypes[iParam++] = paramType;
         }
 
-        try {
-            return visitorClass.getMethod(
-                    visitMethodName,
-                    paramTypes);
-        } catch (NoSuchMethodException ex) {
-            // not found:  carry on with lookup
+        // Cache Class to candidate Methods, to optimize the case where
+        // the original visiteeClass has a diamond-shaped interface inheritance
+        // graph. (This is common, for example, in JMI.) The idea is to avoid
+        // iterating over a single interface's method more than once in a call.
+        Map<Class<?>, Method> cache = new HashMap<Class<?>, Method>();
+
+        return lookupVisitMethod(
+            visitorClass,
+            visiteeClass,
+            visitMethodName,
+            paramTypes,
+            cache);
+    }
+
+    private static Method lookupVisitMethod(
+        final Class<?> visitorClass,
+        final Class<?> visiteeClass,
+        final String visitMethodName,
+        final Class<?> [] paramTypes,
+        final Map<Class<?>, Method> cache)
+    {
+        // Use containsKey since the result for a Class might be null.
+        if (cache.containsKey(visiteeClass)) {
+            return cache.get(visiteeClass);
         }
 
         Method candidateMethod = null;
 
-        Class superClass = visiteeClass.getSuperclass();
+        paramTypes[0] = visiteeClass;
+
+        try {
+            candidateMethod =
+                visitorClass.getMethod(
+                    visitMethodName,
+                    paramTypes);
+
+            cache.put(visiteeClass, candidateMethod);
+
+            return candidateMethod;
+        } catch (NoSuchMethodException ex) {
+            // not found:  carry on with lookup
+        }
+
+        Class<?> superClass = visiteeClass.getSuperclass();
         if (superClass != null) {
             candidateMethod =
                 lookupVisitMethod(
                     visitorClass,
                     superClass,
                     visitMethodName,
-                    additionalParameterTypes);
+                    paramTypes,
+                    cache);
         }
 
-        Class [] interfaces = visiteeClass.getInterfaces();
+        Class<?> [] interfaces = visiteeClass.getInterfaces();
         for (int i = 0; i < interfaces.length; ++i) {
             Method method =
                 lookupVisitMethod(
                     visitorClass,
                     interfaces[i],
                     visitMethodName,
-                    additionalParameterTypes);
+                    paramTypes,
+                    cache);
             if (method != null) {
                 if (candidateMethod != null) {
                     if (!method.equals(candidateMethod)) {
-                        Class c1 = method.getParameterTypes()[0];
-                        Class c2 = candidateMethod.getParameterTypes()[0];
+                        Class<?> c1 = method.getParameterTypes()[0];
+                        Class<?> c2 = candidateMethod.getParameterTypes()[0];
                         if (c1.isAssignableFrom(c2)) {
                             // c2 inherits from c1, so keep candidateMethod
+                            // (which is more specific than method)
                             continue;
                         } else if (c2.isAssignableFrom(c1)) {
-                            // c1 inherits from c2, so fall through
+                            // c1 inherits from c2 (method is more specific
+                            // than candidate method), so fall through
                             // to set candidateMethod = method
                         } else {
                             // c1 and c2 are not directly related
@@ -371,7 +431,84 @@ public abstract class ReflectUtil
             }
         }
 
+        cache.put(visiteeClass, candidateMethod);
+
         return candidateMethod;
+    }
+
+    /**
+     * Creates a dispatcher for calls to {@link #lookupVisitMethod}. The
+     * dispatcher caches methods between invocations.
+     *
+     * @param visitorBaseClazz Visitor base class
+     * @param visiteeBaseClazz Visitee base class
+     *
+     * @return cache of methods
+     */
+    public static <R extends ReflectiveVisitor, E> ReflectiveVisitDispatcher<R,
+        E> createDispatcher(
+        final Class<R> visitorBaseClazz,
+        final Class<E> visiteeBaseClazz)
+    {
+        assert ReflectiveVisitor.class.isAssignableFrom(visitorBaseClazz);
+        assert Object.class.isAssignableFrom(visiteeBaseClazz);
+        return new ReflectiveVisitDispatcher<R, E>() {
+            final Map<List<Object>, Method> map =
+                new HashMap<List<Object>, Method>();
+
+            public Method lookupVisitMethod(
+                Class<? extends R> visitorClass,
+                Class<? extends E> visiteeClass,
+                String visitMethodName)
+            {
+                return lookupVisitMethod(
+                    visitorClass,
+                    visiteeClass,
+                    visitMethodName,
+                    Collections.<Class>emptyList());
+            }
+
+            public Method lookupVisitMethod(
+                Class<? extends R> visitorClass,
+                Class<? extends E> visiteeClass,
+                String visitMethodName,
+                List<Class> additionalParameterTypes)
+            {
+                final List<Object> key =
+                    Arrays.asList(
+                        visitorClass,
+                        visiteeClass,
+                        visitMethodName,
+                        additionalParameterTypes);
+                Method method = map.get(key);
+                if (method == null) {
+                    if (map.containsKey(key)) {
+                        // We already looked for the method and found nothing.
+                    } else {
+                        method =
+                            ReflectUtil.lookupVisitMethod(
+                                visitorClass,
+                                visiteeClass,
+                                visitMethodName,
+                                additionalParameterTypes);
+                        map.put(key, method);
+                    }
+                }
+                return method;
+            }
+
+            public boolean invokeVisitor(
+                R visitor,
+                E visitee,
+                String visitMethodName)
+            {
+                return ReflectUtil.invokeVisitor(
+                    visitor,
+                    visitee,
+                    visiteeBaseClazz,
+                    visitMethodName);
+            }
+        };
     }
 
     /**
@@ -382,7 +519,7 @@ public abstract class ReflectUtil
      *
      * @return class
      */
-    public static Class getClassForName(String name)
+    public static Class<?> getClassForName(String name)
         throws Exception
     {
         if (name.equals("boolean")) {

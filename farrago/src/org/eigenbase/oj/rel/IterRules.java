@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ package org.eigenbase.oj.rel;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
@@ -37,7 +36,6 @@ import org.eigenbase.rex.*;
  */
 public abstract class IterRules
 {
-
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -54,14 +52,16 @@ public abstract class IterRules
 
         protected UnionToIteratorRule(String description)
         {
-            super(UnionRel.class,
+            super(
+                UnionRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 description);
         }
 
         // factory method
-        protected RelNode newIterConcatenateRel(RelOptCluster cluster,
+        protected RelNode newIterConcatenateRel(
+            RelOptCluster cluster,
             RelNode [] inputs)
         {
             return new IterConcatenateRel(cluster, inputs);
@@ -86,20 +86,27 @@ public abstract class IterRules
                 }
             }
             return newIterConcatenateRel(
-                    union.getCluster(),
-                    newInputs);
+                union.getCluster(),
+                newInputs);
         }
     }
 
     /**
      * Refinement of {@link UnionToIteratorRule} which only applies to a {@link
      * UnionRel} all of whose input rows are the same type as its output row.
-     * Luckily, a {@link CoerceInputsRule} will have made that happen.
+     * Luckily, a {@link org.eigenbase.rel.rules.CoerceInputsRule} will have
+     * made that happen.
      */
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule
     {
-        public HomogeneousUnionToIteratorRule()
+        public static final HomogeneousUnionToIteratorRule instance =
+            new HomogeneousUnionToIteratorRule();
+
+        /**
+         * Creates a HomogeneousUnionToIteratorRule.
+         */
+        private HomogeneousUnionToIteratorRule()
         {
             this("HomogeneousUnionToIteratorRule");
         }
@@ -122,9 +129,16 @@ public abstract class IterRules
     public static class OneRowToIteratorRule
         extends ConverterRule
     {
-        public OneRowToIteratorRule()
+        public static final OneRowToIteratorRule instance =
+            new OneRowToIteratorRule();
+
+        /**
+         * Creates a OneRowToIteratorRule.
+         */
+        private OneRowToIteratorRule()
         {
-            super(OneRowRel.class,
+            super(
+                OneRowRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 "OneRowToIteratorRule");
@@ -147,7 +161,8 @@ public abstract class IterRules
 
         private IterCalcRule()
         {
-            super(CalcRel.class,
+            super(
+                CalcRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 "IterCalcRule");
@@ -178,17 +193,17 @@ public abstract class IterRules
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
                     convertedChild,
-                    calc.getProgram())) {
+                    calc.getProgram()))
+            {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
 
-            return
-                new IterCalcRel(
-                    rel.getCluster(),
-                    convertedChild,
-                    calc.getProgram(),
-                    ProjectRelBase.Flags.Boxed);
+            return new IterCalcRel(
+                rel.getCluster(),
+                convertedChild,
+                calc.getProgram(),
+                ProjectRelBase.Flags.Boxed);
         }
     }
 }

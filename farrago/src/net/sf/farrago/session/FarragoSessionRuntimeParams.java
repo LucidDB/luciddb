@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
@@ -40,13 +41,23 @@ import org.eigenbase.reltype.*;
  */
 public class FarragoSessionRuntimeParams
 {
-
     //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Embracing statement context
+     */
+    public FarragoSessionStmtContext stmtContext;
 
     /**
      * Controlling session.
      */
     public FarragoSession session;
+
+    /**
+     * If no session is available to provide the plugin classloader, use this
+     * classloader instead.
+     */
+    public FarragoPluginClassLoader pluginClassLoader;
 
     /**
      * Repos storing object definitions.
@@ -62,7 +73,7 @@ public class FarragoSessionRuntimeParams
      * Txn-private cache for Fennel tuple streams, or null if streams don't need
      * to be pinned by txn.
      */
-    public Map txnCodeCache;
+    public Map<String, FarragoObjectCache.Entry> txnCodeCache;
 
     /**
      * Fennel context for transactions.
@@ -105,18 +116,30 @@ public class FarragoSessionRuntimeParams
     public Map<String, RelDataType> resultSetTypeMap;
 
     /**
-     * Map from IterCalcRel tag to row type. If a mapping is available, it 
-     * associates the tag with the type of a table being modified. It would 
-     * be possible to infer, for example, that result column 1 was being 
-     * used to insert into a column called "EMPNO".
+     * Map from IterCalcRel tag to row type. If a mapping is available, it
+     * associates the tag with the type of a table being modified. It would be
+     * possible to infer, for example, that result column 1 was being used to
+     * insert into a column called "EMPNO".
      */
     public Map<String, RelDataType> iterCalcTypeMap;
 
     /**
-     * An identifier for the executable statement id. This parameter 
-     * assumes there will be a one to one mapping from statement to context.
+     * An identifier for the executable statement id. This parameter assumes
+     * there will be a one to one mapping from statement to context.
      */
     public long stmtId;
+
+    /**
+     * Queue on which warnings should be posted, or null if runtime context
+     * should create a private queue.
+     */
+    public FarragoWarningQueue warningQueue;
+
+    /**
+     * The current time associated with the statement. If set to zero, this
+     * indicates that no current time has yet been set for the statement.
+     */
+    public long currentTime;
 }
 
 // End FarragoSessionRuntimeParams.java

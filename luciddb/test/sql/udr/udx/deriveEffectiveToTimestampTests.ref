@@ -1,0 +1,160 @@
+0: jdbc:luciddb:> -- set up a schema and a table
+0: jdbc:luciddb:> create schema DERIVEEFFECTIVE;
+0: jdbc:luciddb:> set schema 'DERIVEEFFECTIVE';
+0: jdbc:luciddb:> create table T1(id varchar(255), effective_from_timestamp timestamp);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try with an empty input query. should still behave civilized.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'YEAR'
+. . . . . . . . >     )
+. . . . . . . . > );
++-----+---------------------------+-------------------------+
+| ID  | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++-----+---------------------------+-------------------------+
++-----+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert a row, try with only one input row. should have "to" date as NULL
+0: jdbc:luciddb:> insert into T1 values ('USD~GBP~Corporate', CAST('2006-12-01 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'MONTH'
+. . . . . . . . >     )
+. . . . . . . . > );
++--------------------+---------------------------+-------------------------+
+|         ID         | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++--------------------+---------------------------+-------------------------+
+| USD~GBP~Corporate  | 2006-12-01 12:00:00       |                         |
++--------------------+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert another row but with different ID. both rows should get "to" date as NULL
+0: jdbc:luciddb:> insert into T1 values ('USD~JPY~Corporate', CAST('2006-01-01 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'WEEK'
+. . . . . . . . >     )
+. . . . . . . . > );
++--------------------+---------------------------+-------------------------+
+|         ID         | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++--------------------+---------------------------+-------------------------+
+| USD~GBP~Corporate  | 2006-12-01 12:00:00       |                         |
+| USD~JPY~Corporate  | 2006-01-01 12:00:00       |                         |
++--------------------+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert a bunch of rows, try different time units and counts
+0: jdbc:luciddb:> insert into T1 values ('USD~GBP~Corporate', CAST('2005-12-31 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> insert into T1 values ('USD~GBP~Corporate', CAST('2006-01-01 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> insert into T1 values ('USD~GBP~Corporate', CAST('2006-12-30 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> insert into T1 values ('USD~GBP~Corporate', CAST('2006-12-12 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> insert into T1 values ('USD~KRW~Corporate', CAST('2005-12-31 12:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> insert into T1 values ('USD~KRW~Corporate', CAST('2005-12-31 13:00:00' AS TIMESTAMP));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         60,
+. . . . . . . . >         'MINUTE'
+. . . . . . . . >     )
+. . . . . . . . > );
++--------------------+---------------------------+-------------------------+
+|         ID         | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++--------------------+---------------------------+-------------------------+
+| USD~GBP~Corporate  | 2005-12-31 12:00:00       | 2006-01-01 11:00:00     |
+| USD~GBP~Corporate  | 2006-01-01 12:00:00       | 2006-12-01 11:00:00     |
+| USD~GBP~Corporate  | 2006-12-01 12:00:00       | 2006-12-12 11:00:00     |
+| USD~GBP~Corporate  | 2006-12-12 12:00:00       | 2006-12-30 11:00:00     |
+| USD~GBP~Corporate  | 2006-12-30 12:00:00       |                         |
+| USD~JPY~Corporate  | 2006-01-01 12:00:00       |                         |
+| USD~KRW~Corporate  | 2005-12-31 12:00:00       | 2005-12-31 12:00:00     |
+| USD~KRW~Corporate  | 2005-12-31 13:00:00       |                         |
++--------------------+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         1,
+. . . . . . . . >         'SECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
++--------------------+---------------------------+-------------------------+
+|         ID         | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++--------------------+---------------------------+-------------------------+
+| USD~GBP~Corporate  | 2005-12-31 12:00:00       | 2006-01-01 11:59:59     |
+| USD~GBP~Corporate  | 2006-01-01 12:00:00       | 2006-12-01 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-01 12:00:00       | 2006-12-12 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-12 12:00:00       | 2006-12-30 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-30 12:00:00       |                         |
+| USD~JPY~Corporate  | 2006-01-01 12:00:00       |                         |
+| USD~KRW~Corporate  | 2005-12-31 12:00:00       | 2005-12-31 12:59:59     |
+| USD~KRW~Corporate  | 2005-12-31 13:00:00       |                         |
++--------------------+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         1,
+. . . . . . . . >         'MILLISECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
++--------------------+---------------------------+-------------------------+
+|         ID         | EFFECTIVE_FROM_TIMESTAMP  | EFFECTIVE_TO_TIMESTAMP  |
++--------------------+---------------------------+-------------------------+
+| USD~GBP~Corporate  | 2005-12-31 12:00:00       | 2006-01-01 11:59:59     |
+| USD~GBP~Corporate  | 2006-01-01 12:00:00       | 2006-12-01 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-01 12:00:00       | 2006-12-12 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-12 12:00:00       | 2006-12-30 11:59:59     |
+| USD~GBP~Corporate  | 2006-12-30 12:00:00       |                         |
+| USD~JPY~Corporate  | 2006-01-01 12:00:00       |                         |
+| USD~KRW~Corporate  | 2005-12-31 12:00:00       | 2005-12-31 12:59:59     |
+| USD~KRW~Corporate  | 2005-12-31 13:00:00       |                         |
++--------------------+---------------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try with more than two input columns. should give a nice error.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp, id FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'YEAR'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: Input table must have two columns, not '3' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try use a bad time unit string. should give a nice error.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id, effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'BLAH'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: The string 'BLAH' is not a legal time unit. Legal time units are: 'YEAR', 'MONTH', 'WEEK', 'DAY', 'HOUR', 'MINUTE', 'SECOND', 'MILLISECOND' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try with either input column out of order. should give nice errors.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id),
+. . . . . . . . >         365,
+. . . . . . . . >         'SECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'SECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema DERIVEEFFECTIVE cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

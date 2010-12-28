@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,8 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import java.text.*;
-
 import java.util.*;
 
 import org.eigenbase.sql.parser.*;
@@ -38,7 +36,6 @@ import org.eigenbase.sql.type.*;
 public class SqlTimeLiteral
     extends SqlAbstractDateTimeLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlTimeLiteral(
@@ -47,9 +44,10 @@ public class SqlTimeLiteral
         boolean hasTZ,
         SqlParserPos pos)
     {
-        super(t,
+        super(
+            t,
             hasTZ,
-            SqlTypeName.Time,
+            SqlTypeName.TIME,
             precision,
             SqlParserUtil.TimeFormatStr,
             pos);
@@ -62,19 +60,19 @@ public class SqlTimeLiteral
         String format,
         SqlParserPos pos)
     {
-        super(t, hasTZ, SqlTypeName.Time, precision, format, pos);
+        super(t, hasTZ, SqlTypeName.TIME, precision, format, pos);
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlTimeLiteral((Calendar) value,
-                precision,
-                hasTimeZone,
-                formatString,
-                pos);
+        return new SqlTimeLiteral(
+            (Calendar) value,
+            precision,
+            hasTimeZone,
+            formatString,
+            pos);
     }
 
     public String toString()
@@ -87,7 +85,7 @@ public class SqlTimeLiteral
      */
     public String toFormattedString()
     {
-        String result = new SimpleDateFormat(formatString).format(getTime());
+        String result = getTime().toString(formatString);
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);
@@ -96,7 +94,8 @@ public class SqlTimeLiteral
             String digits = Long.toString(cal.getTimeInMillis());
             result =
                 result + "."
-                + digits.substring(digits.length() - 3,
+                + digits.substring(
+                    digits.length() - 3,
                     digits.length() - 3 + precision);
         } else {
             assert (0 == cal.get(Calendar.MILLISECOND));

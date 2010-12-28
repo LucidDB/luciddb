@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql.test;
 
 import java.io.*;
@@ -44,7 +44,6 @@ import org.eigenbase.test.*;
 public class SqlPrettyWriterTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
@@ -90,7 +89,7 @@ public class SqlPrettyWriterTest
     {
         final SqlNode node = parseQuery(sql);
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
@@ -114,7 +113,7 @@ public class SqlPrettyWriterTest
         final SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
         final SqlNode node = rowCall.getOperands()[0];
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
@@ -139,7 +138,7 @@ public class SqlPrettyWriterTest
     {
         final SqlNode node =
             parseQuery(
-                "select x as a, b,"
+                "select x as a, b as b, c as c, d,"
                 + " 'mixed-Case string',"
                 + " unquotedCamelCaseId,"
                 + " \"quoted id\" "
@@ -171,7 +170,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
@@ -179,7 +178,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setIndentation(8);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -188,7 +187,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setClauseStartsLine(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -197,8 +196,18 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testSelectListExtraIndentFlag()
+        throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlDialect.DUMMY);
+        prettyWriter.setSelectListItemsOnSeparateLines(true);
+        prettyWriter.setSelectListExtraIndentFlag(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
@@ -206,7 +215,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setKeywordsLowerCase(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -215,7 +224,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setAlwaysUseParentheses(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -224,7 +233,7 @@ public class SqlPrettyWriterTest
         throws Exception
     {
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setQuoteAllIdentifiers(false);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -235,7 +244,7 @@ public class SqlPrettyWriterTest
         // Note that ( is at the indent, SELECT is on the same line, and ) is
         // below it.
         final SqlPrettyWriter prettyWriter =
-            new SqlPrettyWriter(SqlUtil.dummyDialect);
+            new SqlPrettyWriter(SqlDialect.DUMMY);
         prettyWriter.setSubqueryStyle(SqlWriter.SubqueryStyle.Black);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
@@ -250,7 +259,8 @@ public class SqlPrettyWriterTest
     {
         // Note that CASE is rewritten to the searched form. Wish it weren't
         // so, but that's beyond the control of the pretty-printer.
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
             "CASE" + NL
             + "WHEN 1 = 2 + 3" + NL
@@ -267,29 +277,34 @@ public class SqlPrettyWriterTest
 
     public void testCase2()
     {
-        assertExprPrintsTo(false,
+        assertExprPrintsTo(
+            false,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
             "CASE WHEN 1 = 2 + 3 THEN 4 WHEN 1 = CASE WHEN `A` = `B` THEN `C` ELSE `D` END THEN 6 ELSE 7 END");
     }
 
     public void testBetween()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "x not between symmetric y and z",
             "`X` NOT BETWEEN SYMMETRIC `Y` AND `Z`"); // todo: remove leading
-                                                      // space
+
+        // space
     }
 
     public void testCast()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "cast(x + y as decimal(5, 10))",
             "CAST(`X` + `Y` AS DECIMAL(5, 10))");
     }
 
     public void testLiteralChain()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "'x' /* comment */ 'y'" + NL
             + "  'z' ",
             "'x'" + NL + "'y'" + NL + "'z'");
@@ -297,7 +312,8 @@ public class SqlPrettyWriterTest
 
     public void testOverlaps()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "(x,xx) overlaps (y,yy) or x is not null",
             "(`X`, `XX`) OVERLAPS (`Y`, `YY`) OR `X` IS NOT NULL");
     }
@@ -335,6 +351,51 @@ public class SqlPrettyWriterTest
             true,
             "select * from x inner join y on x.k=y.k",
             "${formatted}");
+    }
+
+    public void testWhereListItemsOnSeparateLinesOr()
+        throws Exception
+    {
+        checkPrettySeparateLines(
+            "select x"
+            + " from y"
+            + " where h is not null and i < j"
+            + " or ((a or b) is true) and d not in (f,g)"
+            + " or x <> z");
+    }
+
+    public void testWhereListItemsOnSeparateLinesAnd()
+        throws Exception
+    {
+        checkPrettySeparateLines(
+            "select x"
+            + " from y"
+            + " where h is not null and (i < j"
+            + " or ((a or b) is true)) and (d not in (f,g)"
+            + " or v <> ((w * x) + y) * z)");
+    }
+
+    private void checkPrettySeparateLines(String sql)
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlDialect.DUMMY);
+        prettyWriter.setSelectListItemsOnSeparateLines(true);
+        prettyWriter.setSelectListExtraIndentFlag(false);
+
+        final SqlNode node = parseQuery(sql);
+
+        // Describe settings
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        prettyWriter.describe(pw, true);
+        pw.flush();
+        String desc = sw.toString();
+        getDiffRepos().assertEquals("desc", "${desc}", desc);
+        prettyWriter.setWhereListItemsOnSeparateLines(true);
+
+        // Format
+        String actual = prettyWriter.format(node);
+        getDiffRepos().assertEquals("formatted", "${formatted}", actual);
     }
 }
 

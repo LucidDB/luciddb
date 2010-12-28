@@ -9,13 +9,13 @@ if not exist "%MAIN_DIR%\bin\classpath.bat" goto need_install
 
 call "%MAIN_DIR%\bin\classpath.bat"
 
-set JAVA_ARGS=-cp %LCP% -Dnet.sf.farrago.home="%MAIN_DIR%" -Djava.util.logging.config.file="%MAIN_DIR%\trace\Trace.properties"
+set JAVA_ARGS=-Xms256m -Xmx256m -cp %LCP% -Dnet.sf.farrago.home="%MAIN_DIR%" -Djava.util.logging.config.file="%MAIN_DIR%\trace\Trace.properties"
 
 set SQLLINE_JAVA_ARGS=sqlline.SqlLine
 
 set JAVA_EXEC=%JAVA_HOME%\bin\java
 
-set PATH=%PATH%;%MAIN_DIR%\lib\fennel
+set PATH=%PATH%;%MAIN_DIR%\plugin;%MAIN_DIR%\lib\fennel
 
 goto done
 

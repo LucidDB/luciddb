@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2004-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,13 +39,13 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamScheduler
+class FENNEL_EXEC_EXPORT ExecStreamScheduler
     : public boost::noncopyable,
         public virtual TraceSource
 {
 protected:
     bool tracingFine;
-        
+
     /**
      * Constructs a new ExecStreamScheduler.
      *
@@ -57,7 +57,7 @@ protected:
     explicit ExecStreamScheduler(
         SharedTraceTarget pTraceTarget,
         std::string name);
-    
+
     /**
      * Executes one stream, performing tracing if enabled.
      *
@@ -81,7 +81,7 @@ protected:
     virtual void tracePreExecution(
         ExecStream &stream,
         ExecStreamQuantum const &quantum);
-    
+
     /**
      * Traces after execution of a stream.
      *
@@ -109,7 +109,10 @@ protected:
         ExecStream &stream,
         TraceLevel inputTupleTraceLevel,
         TraceLevel outputTupleTraceLevel);
-    
+
+public:
+    virtual ~ExecStreamScheduler();
+
     /**
      * Traces the contents of a stream buffer.
      *
@@ -121,11 +124,8 @@ protected:
      */
     virtual void traceStreamBufferContents(
         ExecStream &stream,
-        ExecStreamBufAccessor &bufAccessor, 
+        ExecStreamBufAccessor &bufAccessor,
         TraceLevel traceLevel);
-    
-public:
-    virtual ~ExecStreamScheduler();
 
     /**
      * Adds a graph to be scheduled.  Some implementations may require all
@@ -154,8 +154,19 @@ public:
      * Requests that a specific stream be considered for execution.
      *
      * @param stream the stream to make runnable
+     *
+     * @deprecated use setRunnable
      */
-    virtual void makeRunnable(ExecStream &stream) = 0;
+    inline void makeRunnable(ExecStream &stream);
+
+    /**
+     * Sets whether that a specific stream should be considered for execution.
+     *
+     * @param stream the stream to make runnable
+     */
+    virtual void setRunnable(
+        ExecStream &stream,
+        bool runnable) = 0;
 
     /**
      * Asynchronously aborts execution of any scheduled streams contained by a
@@ -166,6 +177,12 @@ public:
      * associated with this scheduler
      */
     virtual void abort(ExecStreamGraph &graph) = 0;
+
+    /**
+     * Checks whether there is an abort request for this
+     * scheduler, and if so, throws an AbortExcn.
+     */
+    virtual void checkAbort() const;
 
     /**
      * Shuts down this scheduler, preventing any further streams from
@@ -192,7 +209,7 @@ public:
      */
     virtual void createBufferProvisionAdapter(
         ExecStreamEmbryo &embryo);
-    
+
     /**
      * Creates a new adapter stream capable of copying the output
      * of a stream with BUFPROV_PRODUCER into the input of a stream
@@ -215,6 +232,12 @@ public:
      */
     virtual ExecStreamBufAccessor &readStream(
         ExecStream &stream) = 0;
+
+    /**
+     * @return the degree of parallelism implemented by this scheduler,
+     * or 1 for a non-parallel scheduler
+     */
+    virtual uint getDegreeOfParallelism();
 };
 
 inline ExecStreamResult ExecStreamScheduler::executeStream(
@@ -229,6 +252,12 @@ inline ExecStreamResult ExecStreamScheduler::executeStream(
     } else {
         return stream.execute(quantum);
     }
+}
+
+inline void ExecStreamScheduler::makeRunnable(
+    ExecStream &stream)
+{
+    setRunnable(stream, true);
 }
 
 FENNEL_END_NAMESPACE

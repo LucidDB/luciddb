@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -51,7 +51,6 @@ import org.eigenbase.util.*;
 public class OJSyntheticClass
     extends OJClass
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String JOIN_CLASS_PREFIX = "Oj_";
@@ -138,8 +137,7 @@ public class OJSyntheticClass
     // override Object
     public boolean equals(Object o)
     {
-        return
-            (o instanceof OJSyntheticClass)
+        return (o instanceof OJSyntheticClass)
             && this.description.equals(((OJSyntheticClass) o).description);
     }
 
@@ -164,8 +162,10 @@ outer:
             if (classes[i] instanceof OJSyntheticClass) {
                 ClassDeclaration innerClassDecl =
                     ((OJSyntheticClass) classes[i]).decl;
-                for (Enumeration existingDecls = memberDecls.elements();
-                    existingDecls.hasMoreElements();) {
+                for (
+                    Enumeration existingDecls = memberDecls.elements();
+                    existingDecls.hasMoreElements();)
+                {
                     if (existingDecls.nextElement() == innerClassDecl) {
                         continue outer;
                     }
@@ -218,7 +218,8 @@ outer:
                     (MethodDeclaration) memberDecl;
                 if (existingMethodDecl.getName().equals(name)
                     && existingMethodDecl.getParameters().equals(
-                        parameterList)) {
+                        parameterList))
+                {
                     oldMethodDecl = existingMethodDecl;
                 }
             }

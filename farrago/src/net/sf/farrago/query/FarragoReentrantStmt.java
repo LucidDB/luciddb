@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,9 @@
 */
 package net.sf.farrago.query;
 
-import java.sql.*;
-
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -42,11 +38,18 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoReentrantStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionPreparingStmt preparingStmt;
     private FarragoSessionStmtContext stmtContext;
+    private FarragoSessionStmtContext rootStmtContext;
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoReentrantStmt(FarragoSessionStmtContext rootStmtContext)
+    {
+        this.rootStmtContext = rootStmtContext;
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -58,6 +61,11 @@ public abstract class FarragoReentrantStmt
     protected FarragoSessionStmtContext getStmtContext()
     {
         return stmtContext;
+    }
+
+    protected FarragoSessionStmtContext getRootStmtContext()
+    {
+        return rootStmtContext;
     }
 
     /**
@@ -80,18 +88,30 @@ public abstract class FarragoReentrantStmt
             session = session.getSessionFactory().newReentrantSession(session);
         }
 
-        stmtContext = session.newStmtContext(null);
+        stmtContext = session.newStmtContext(null, rootStmtContext);
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(session.getRepos());
+        stmtValidator.setReposTxnContext(reposTxnContext);
+        boolean rollback = true;
         try {
             preparingStmt =
                 session.getPersonality().newPreparingStmt(
                     stmtContext,
-                     stmtValidator);
+                    rootStmtContext,
+                    stmtValidator);
             preparingStmt.preImplement();
             executeImpl();
+            rollback = false;
         } catch (Throwable ex) {
             throw FarragoResource.instance().SessionReentrantStmtFailed.ex(ex);
         } finally {
+            if (rollback && !reposTxnContext.isReadTxnInProgress()) {
+                reposTxnContext.rollback();
+            } else {
+                reposTxnContext.commit();
+            }
+            reposTxnContext.unlockAfterTxn();
             stmtContext.closeAllocation();
             stmtValidator.closeAllocation();
             if (allocateSession) {

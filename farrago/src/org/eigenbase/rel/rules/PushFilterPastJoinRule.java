@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,33 +39,38 @@ import org.eigenbase.rex.*;
 public class PushFilterPastJoinRule
     extends RelOptRule
 {
-    //  ~ Constructors --------------------------------------------------------
+    public static final PushFilterPastJoinRule instance =
+        new PushFilterPastJoinRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    public PushFilterPastJoinRule()
+    /**
+     * Creates a PushFilterPastJoinRule.
+     */
+    private PushFilterPastJoinRule()
     {
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
+                new RelOptRuleOperand(JoinRel.class, ANY)));
     }
 
-    public PushFilterPastJoinRule(RelOptRuleOperand rule, String id)
+    /**
+     * Creates a PushFilterPastJoinRule with an explicit root operand.
+     */
+    public PushFilterPastJoinRule(
+        RelOptRuleOperand operand,
+        String id)
     {
         // This rule is fired for either of the following two patterns:
         //
         // RelOptRuleOperand(
         //     FilterRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(JoinRel.class, null)})
+        //     new RelOptRuleOperand(JoinRel.class, ANY))
         //
         // RelOptRuleOperand(JoinRel.class, null)
         //
-        super(rule);
-        description = "PushFilterRule: " + id;
+        super(operand, "PushFilterRule: " + id);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -84,15 +89,8 @@ public class PushFilterPastJoinRule
             joinRel = (JoinRel) call.rels[1];
         }
 
-        // no need to push filters for joins that have been converted back
-        // from MultiJoinRels since filters have already been pushed to
-        // the appropriate relnodes
-        if (joinRel.isMultiJoinDone()) {
-            return;
-        }
-
         List<RexNode> joinFilters = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(
+        RelOptUtil.decomposeConjunction(
             joinRel.getCondition(),
             joinFilters);
 
@@ -102,10 +100,8 @@ public class PushFilterPastJoinRule
             // (with "true" condition) otherwise this rule will be applied
             // again on the new cartesian product joinRel.
             boolean onlyTrueFilter = true;
-            ListIterator filterIter = joinFilters.listIterator();
-            while (filterIter.hasNext()) {
-                RexNode filter = (RexNode) filterIter.next();
-                if (!filter.isAlwaysTrue()) {
+            for (RexNode joinFilter : joinFilters) {
+                if (!joinFilter.isAlwaysTrue()) {
                     onlyTrueFilter = false;
                     break;
                 }
@@ -119,7 +115,7 @@ public class PushFilterPastJoinRule
         List<RexNode> aboveFilters = new ArrayList<RexNode>();
 
         if (filterRel != null) {
-            RelOptUtil.decompCF(
+            RelOptUtil.decomposeConjunction(
                 filterRel.getCondition(),
                 aboveFilters);
         }
@@ -147,7 +143,8 @@ public class PushFilterPastJoinRule
                 !joinRel.getJoinType().generatesNullsOnRight(),
                 joinFilters,
                 leftFilters,
-                rightFilters)) {
+                rightFilters))
+        {
             filterPushed = true;
         }
 
@@ -164,7 +161,8 @@ public class PushFilterPastJoinRule
                 !joinRel.getJoinType().generatesNullsOnLeft(),
                 joinFilters,
                 leftFilters,
-                rightFilters)) {
+                rightFilters))
+        {
             filterPushed = true;
         }
 
@@ -207,9 +205,9 @@ public class PushFilterPastJoinRule
                 rightRel,
                 joinFilter,
                 joinRel.getJoinType(),
-                (Set<String>) Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.getSystemFieldList());
 
         // create a FilterRel on top of the join if needed
         RelNode newRel =

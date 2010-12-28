@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ class StoredTypeDescriptor;
 class TupleAttributeDescriptor;
 class TupleData;
 class TupleDatum;
-    
+
 /**
  * Abstract base class representing computation of a single aggregate function
  * over a collection of scalar values all having the same group key.  In order
@@ -44,14 +44,14 @@ class TupleDatum;
  * @author John V. Sichi
  * @version $Id$
  */
-class AggComputer
+class FENNEL_EXEC_EXPORT AggComputer
 {
 protected:
     int iInputAttr;
-    
+
 public:
     explicit AggComputer();
-    
+
     virtual ~AggComputer();
 
     /**
@@ -129,7 +129,7 @@ public:
     virtual void initAccumulator(
         TupleDatum &accumulatorDatumSrc,
         TupleDatum &accumulatorDatumDest) = 0;
-    
+
     /**
      * Computes a new accumulator from an existing accumulator dataum and a new
      * input tuple.

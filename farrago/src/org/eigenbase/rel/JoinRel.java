@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 
 
@@ -34,12 +35,11 @@ import org.eigenbase.rex.*;
  *
  * <p>Some rules:
  *
- * <ul>
- * <li>{@link ExtractJoinFilterRule} converts an {@link JoinRel inner join} to a
- * {@link FilterRel filter} on top of a {@link JoinRel cartesian inner join}.
- * <li>{@link net.sf.farrago.query.FennelCartesianJoinRule} implements a JoinRel
- * as a cartesian product.
- * </ul>
+ * <ul> <li>{@link org.eigenbase.rel.rules.ExtractJoinFilterRule} converts an
+ * {@link JoinRel inner join} to a {@link FilterRel filter} on top of a {@link
+ * JoinRel cartesian inner join}.  <li>{@link
+ * net.sf.farrago.fennel.rel.FennelCartesianJoinRule} implements a JoinRel as a
+ * cartesian product.  </ul>
  *
  * @author jhyde
  * @version $Id$
@@ -47,7 +47,6 @@ import org.eigenbase.rex.*;
 public final class JoinRel
     extends JoinRelBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     // NOTE jvs 14-Mar-2006:  Normally we don't use state like this
@@ -55,14 +54,22 @@ public final class JoinRel
     // semijoin optimizations, it's pretty much required.
     private final boolean semiJoinDone;
 
-    // Likewise for multiJoinDone.  This boolean indicates that this JoinRel
-    // has already been converted to a MultiJoinRel and now is being
-    // converted back to a JoinRel and therefore should not undergo another
-    // transformation back to a MultiJoinRel.
-    private final boolean multiJoinDone;
+    private List<RelDataTypeField> systemFieldList;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a JoinRel.
+     *
+     * @param cluster Cluster
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
+     */
     public JoinRel(
         RelOptCluster cluster,
         RelNode left,
@@ -79,9 +86,27 @@ public final class JoinRel
             joinType,
             variablesStopped,
             false,
-            false);
+            Collections.<RelDataTypeField>emptyList());
     }
 
+    /**
+     * Creates a JoinRel, flagged with whether it has been translated to a
+     * semi-join.
+     *
+     * @param cluster Cluster
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
+     * @param semiJoinDone Whether this join has been translated to a semi-join
+     * @param systemFieldList List of system fields that will be prefixed to
+     * output row type; typically empty but must not be null
+     *
+     * @see #isSemiJoinDone()
+     */
     public JoinRel(
         RelOptCluster cluster,
         RelNode left,
@@ -90,7 +115,7 @@ public final class JoinRel
         JoinRelType joinType,
         Set<String> variablesStopped,
         boolean semiJoinDone,
-        boolean multiJoinDone)
+        List<RelDataTypeField> systemFieldList)
     {
         super(
             cluster,
@@ -100,63 +125,63 @@ public final class JoinRel
             condition,
             joinType,
             variablesStopped);
+        assert systemFieldList != null;
         this.semiJoinDone = semiJoinDone;
-        this.multiJoinDone = multiJoinDone;
+        this.systemFieldList = systemFieldList;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    @SuppressWarnings({"CloneDoesntCallSuperClone"})
+    public JoinRel clone()
     {
         JoinRel clone =
             new JoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
-                RexUtil.clone(condition),
+                left.clone(),
+                right.clone(),
+                condition.clone(),
                 joinType,
                 new HashSet<String>(variablesStopped),
                 isSemiJoinDone(),
-                isMultiJoinDone());
+                systemFieldList);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin/multijoin state
-        // don't clutter things up in optimizers that don't use semijoins or
-        // multijoins.
-        if (!semiJoinDone && !multiJoinDone) {
+        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin state
+        // don't clutter things up in optimizers that don't use semijoins
+        if (!semiJoinDone) {
             super.explain(pw);
             return;
         }
         pw.explain(
             this,
             new String[] {
-                "left", "right", "condition", "joinType", "semiJoinDone",
-            "multiJoinDone"
+                "left", "right", "condition", "joinType", "semiJoinDone"
             },
             new Object[] {
-                joinType.name().toLowerCase(), semiJoinDone, multiJoinDone
+                joinType.name().toLowerCase(), semiJoinDone
             });
     }
 
     /**
-     * @return true if this join has already spawned a {@link SemiJoinRel} via
-     * {@link AddRedundantSemiJoinRule}; false otherwise
+     * Returns whether this JoinRel has already spawned a {@link
+     * org.eigenbase.rel.rules.SemiJoinRel} via {@link
+     * org.eigenbase.rel.rules.AddRedundantSemiJoinRule}.
+     *
+     * @return whether this join has already spawned a semi join
      */
     public boolean isSemiJoinDone()
     {
         return semiJoinDone;
     }
 
-    /**
-     * @return true if this JoinRel has already been converted to a MultiJoinRel
-     */
-    public boolean isMultiJoinDone()
+    public List<RelDataTypeField> getSystemFieldList()
     {
-        return multiJoinDone;
+        return systemFieldList;
     }
 }
 

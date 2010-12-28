@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,11 +26,14 @@ import java.io.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlString;
 
 
 /**
@@ -43,7 +46,6 @@ import org.eigenbase.sql.parser.*;
 public abstract class FarragoAbstractParserImpl
     extends SqlAbstractParserImpl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -125,7 +127,9 @@ public abstract class FarragoAbstractParserImpl
         SqlNode defaultClause)
     {
         CwmExpression defaultExpression = getRepos().newCwmExpression();
-        defaultExpression.setBody(defaultClause.toSqlString(null));
+        final SqlString sqlString =
+            defaultClause.toSqlString(SqlDialect.EIGENBASE);
+        defaultExpression.setBody(sqlString.getSql());
         defaultExpression.setLanguage("SQL");
         attribute.setInitialValue(defaultExpression);
     }
@@ -185,6 +189,51 @@ public abstract class FarragoAbstractParserImpl
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Creates new DDL Statement for DROP.
+     *
+     * @param droppedElement catalog element to drop
+     * @param restrict whether a DROP RESTRICT statement is being processed
+     *
+     * @return DDL Statement for DROP
+     */
+    public DdlDropStmt newDdlDropStmt(
+        CwmModelElement droppedElement,
+        boolean restrict)
+    {
+        return new DdlDropStmt(droppedElement, restrict);
+    }
+
+    /**
+     * Creates new DDL Statement for CREATE.
+     *
+     * @param createdElement catalog element to create
+     * @param replaceOptions attributes of CREATE OR REPLACE
+     *
+     * @return DDL Statement for CREATE
+     */
+    public DdlCreateStmt newDdlCreateStmt(
+        CwmModelElement createdElement,
+        DdlReplaceOptions replaceOptions)
+    {
+        return new DdlCreateStmt(createdElement, replaceOptions);
+    }
+
+    /**
+     * Creates new DDL Statement for DROP LABEL.
+     *
+     * @param droppedElement label element to drop
+     * @param restrict whether a DROP RESTRICT statement is being processed
+     *
+     * @return DDL Statement for DROP LABEL
+     */
+    public DdlDropStmt newDdlDropLabelStmt(
+        CwmModelElement droppedElement,
+        boolean restrict)
+    {
+        return new DdlDropLabelStmt((FemLabel) droppedElement, restrict);
     }
 }
 

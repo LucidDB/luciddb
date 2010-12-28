@@ -6,6 +6,10 @@
 0: jdbc:luciddb:> -- use xmlattr format so we can distinguish nulls from blanks
 0: jdbc:luciddb:> !set outputformat xmlattr
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- for this test, enable code cache to make sure that changes
+0: jdbc:luciddb:> -- in variables do not get ignored due to stale plan cache
+0: jdbc:luciddb:> alter system set "codeCacheMaxBytes" = max;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create a context
 0: jdbc:luciddb:> call applib.create_var('context1', null, 'very explicit');
 0: jdbc:luciddb:> 
@@ -36,36 +40,30 @@
 0: jdbc:luciddb:> !set outputformat csv
 0: jdbc:luciddb:> explain plan for values (applib.get_var('context1', 'var1'));
 'column0'
-'IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'bar'], expr#2=[CAST($t1):VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=['bar'], expr#2=[CAST($t1):VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
 '  IterOneRowRel'
 0: jdbc:luciddb:> !set outputformat xmlattr
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test null values
+0: jdbc:luciddb:> values (applib.get_var(cast(null as varchar(10)), 'var1'));
+Error: Application variable context 'null' has not been created (state=,code=0)
+0: jdbc:luciddb:> values (applib.get_var('context1', cast(null as varchar(10))));
+Error: Application variable id required for get/set request (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete variable
 0: jdbc:luciddb:> call applib.delete_var('context1', 'var1');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  no longer exists
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Application variable persistence error while reading context 'context1', variable 'var1'
-Application variable 'var1' has not been created in context 'context1' (state=,code=0)
+Error: Application variable 'var1' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  attempt to access a variable we never even created
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var0'));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Application variable persistence error while reading context 'context1', variable 'var0'
-Application variable 'var0' has not been created in context 'context1' (state=,code=0)
+Error: Application variable 'var0' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  create a variable, attempting to implicitly create its context
 0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Application variable persistence error while writing context 'context2', variable 'var2'
-Application variable context 'context2' has not been created (state=,code=0)
+Error: Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- do it right
 0: jdbc:luciddb:> call applib.create_var('context2', null, 'uncomfortably implicit');
@@ -82,10 +80,6 @@ Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  no longer exists
 0: jdbc:luciddb:> values (applib.get_var('context2', 'var2'));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Application variable persistence error while reading context 'context2', variable 'var2'
-Application variable context 'context2' has not been created (state=,code=0)
+Error: Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

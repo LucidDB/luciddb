@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import net.sf.farrago.resource.*;
  */
 public class FarragoAbstractPluginBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -50,16 +49,16 @@ public class FarragoAbstractPluginBase
         new DriverPropertyInfo[0];
 
     public static final String [] BOOLEAN_CHOICES_DEFAULT_FALSE =
-        {
-            "FALSE",
-            "TRUE"
-        };
+    {
+        "FALSE",
+        "TRUE"
+    };
 
     public static final String [] BOOLEAN_CHOICES_DEFAULT_TRUE =
-        {
-            "TRUE",
-            "FALSE"
-        };
+    {
+        "TRUE",
+        "FALSE"
+    };
 
     //~ Methods ----------------------------------------------------------------
 
@@ -103,7 +102,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Long.parseLong(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidLongProp.ex(
+                    s,
                     propName);
             }
         }
@@ -132,7 +132,128 @@ public class FarragoAbstractPluginBase
             try {
                 return Integer.parseInt(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidIntProp.ex(
+                    s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an short property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static short getShortProperty(
+        Properties props,
+        String propName,
+        short defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Short.parseShort(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidShortProp.ex(
+                    s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of a byte property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static byte getByteProperty(
+        Properties props,
+        String propName,
+        byte defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Byte.parseByte(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidByteProp.ex(
+                    s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an float property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static float getFloatProperty(
+        Properties props,
+        String propName,
+        float defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Float.parseFloat(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidFloatProp.ex(
+                    s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an double property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static double getDoubleProperty(
+        Properties props,
+        String propName,
+        double defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidDoubleProp.ex(
+                    s,
                     propName);
             }
         }
@@ -160,8 +281,7 @@ public class FarragoAbstractPluginBase
         if (s == null) {
             return defaultValue;
         }
-        return
-            s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
+        return s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
             || s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes")
             || s.equalsIgnoreCase("on");
     }

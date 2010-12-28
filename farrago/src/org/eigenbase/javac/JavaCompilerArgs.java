@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,11 +40,10 @@ import java.util.*;
  */
 public class JavaCompilerArgs
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    ArrayList argsList = new ArrayList();
-    ArrayList fileNameList = new ArrayList();
+    List<String> argsList = new ArrayList<String>();
+    List<String> fileNameList = new ArrayList<String>();
 
     ClassLoader classLoader;
 
@@ -70,12 +69,12 @@ public class JavaCompilerArgs
      */
     public void setString(String args)
     {
-        ArrayList list = new ArrayList();
+        List<String> list = new ArrayList<String>();
         StringTokenizer tok = new StringTokenizer(args);
         while (tok.hasMoreTokens()) {
             list.add(tok.nextToken());
         }
-        setStringArray((String []) list.toArray(new String[list.size()]));
+        setStringArray(list.toArray(new String[list.size()]));
     }
 
     /**
@@ -105,12 +104,8 @@ public class JavaCompilerArgs
 
     public String [] getStringArray()
     {
-        for (Iterator fileNames = fileNameList.iterator();
-            fileNames.hasNext();) {
-            String fileName = (String) fileNames.next();
-            argsList.add(fileName);
-        }
-        return (String []) argsList.toArray(new String[0]);
+        argsList.addAll(fileNameList);
+        return argsList.toArray(new String[argsList.size()]);
     }
 
     public void addFile(String fileName)
@@ -120,7 +115,7 @@ public class JavaCompilerArgs
 
     public String [] getFileNames()
     {
-        return (String []) fileNameList.toArray(new String[0]);
+        return fileNameList.toArray(new String[fileNameList.size()]);
     }
 
     public void setVerbose(boolean verbose)

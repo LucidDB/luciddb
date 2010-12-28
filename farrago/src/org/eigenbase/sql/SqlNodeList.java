@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,11 +19,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
 import java.util.*;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
@@ -37,7 +38,6 @@ public class SqlNodeList
     extends SqlNode
     implements Iterable<SqlNode>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -50,7 +50,6 @@ public class SqlNodeList
                 throw new UnsupportedOperationException();
             }
         };
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -100,8 +99,8 @@ public class SqlNodeList
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlNodeList(
-                list,
-                pos);
+            list,
+            pos);
     }
 
     public SqlNode get(int n)
@@ -133,10 +132,48 @@ public class SqlNodeList
 
     void commaList(SqlWriter writer)
     {
+        // The precedence of the comma operator if low but not zero. For
+        // instance, this ensures parentheses in
+        //    select x, (select * from foo order by z), y from t
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(",");
-            node.unparse(writer, 0, 0);
+            node.unparse(writer, 2, 3);
+        }
+    }
+
+    void andOrList(SqlWriter writer, SqlKind sepKind)
+    {
+        SqlBinaryOperator sepOp =
+            (sepKind == SqlKind.AND) ? SqlStdOperatorTable.andOperator
+            : SqlStdOperatorTable.orOperator;
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = list.get(i);
+            writer.sep(sepKind.name(), false);
+
+            // The precedence pulling on the LHS of a node is the
+            // right-precedence of the separator operator, except at the start
+            // of the list; similarly for the RHS of a node. If the operator
+            // has left precedence 4 and right precedence 5, the precedences
+            // in a 3-node list will look as follows:
+            //   0 <- node1 -> 4  5 <- node2 -> 4  5 <- node3 -> 0
+            int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
+            int rprec = (i == (list.size() - 1)) ? 0 : sepOp.getLeftPrec();
+            node.unparse(writer, lprec, rprec);
+        }
+    }
+
+    void _andOrList(SqlWriter writer, SqlKind sepKind)
+    {
+        SqlBinaryOperator sepOp =
+            (sepKind == SqlKind.AND) ? SqlStdOperatorTable.andOperator
+            : SqlStdOperatorTable.orOperator;
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = list.get(i);
+            writer.sep(sepKind.name(), false);
+            int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
+            int rprec = (i == (list.size() - 1)) ? 0 : sepOp.getLeftPrec();
+            node.unparse(writer, lprec, rprec);
         }
     }
 

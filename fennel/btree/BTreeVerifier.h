@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeStatistics is used to return information about the tree computed
  * as a side-effect of verification.
  */
-struct BTreeStatistics 
+struct FENNEL_BTREE_EXPORT BTreeStatistics
 {
     /**
      * Number of levels in tree.
@@ -44,22 +44,28 @@ struct BTreeStatistics
      * Number of non-leaf nodes in tree.
      */
     RecordNum nNonLeafNodes;
-    
+
     /**
      * Number of leaf nodes in tree.
      */
     RecordNum nLeafNodes;
-    
+
     /**
      * Number of leaf tuples in tree.
      */
     RecordNum nTuples;
+
+    /**
+     * Number of unique keys in tree.  Counts only the unique first keys.
+     */
+    RecordNum nUniqueKeys;
 };
 
 /**
  * BTreeVerifier checks BTree integrity.
  */
-class BTreeVerifier : public BTreeAccessBase
+class FENNEL_BTREE_EXPORT BTreeVerifier
+    : public BTreeAccessBase
 {
     /**
      * Key data used for verifying that all keys in a node are greater than or
@@ -67,9 +73,9 @@ class BTreeVerifier : public BTreeAccessBase
      * infinity.
      */
     TupleData lowerBoundKey;
-    
+
     /**
-     * Key data used for verifying that all keys in a node are 
+     * Key data used for verifying that all keys in a node are
      * less than or equal to an expected upper bound.  If size is 0, represents
      * positive infinity.
      */
@@ -139,7 +145,7 @@ class BTreeVerifier : public BTreeAccessBase
      */
     void verifyChildren(
         BTreeNode const &node);
-    
+
 public:
     explicit BTreeVerifier(BTreeDescriptor const &);
     virtual ~BTreeVerifier();
@@ -151,7 +157,7 @@ public:
      * with all update operations completed; if false, violations which are
      * possible with incomplete update operations are ignored
      *
-     * @param keys whether to verify key ordering
+     * @param keys whether to verify key ordering (and count unique keys)
      *
      * @param leaf whether to traverse the leaf level
      */

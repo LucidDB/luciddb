@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@
 
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
+    UNICODE_INPUT = true;
 }
 
 PARSER_BEGIN(FarragoParserImpl)
@@ -43,8 +43,10 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 import org.eigenbase.resource.*;
 import net.sf.farrago.resource.*;
+import java.math.*;
 import java.util.*;
 import javax.jmi.reflect.*;
 import java.sql.*;
@@ -73,6 +75,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
 {
     private static Metadata metadata;
 
+    // implement FarragoAbstractParserImpl
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -80,6 +83,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             token.beginColumn);
     }
 
+    // implement SqlAbstractParserImpl
     public SqlParseException normalizeException(Throwable ex)
     {
         try {
@@ -92,6 +96,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
         }
     }
 
+    // implement SqlAbstractParserImpl
     public Metadata getMetadata()
     {
         synchronized (FarragoParserImpl.class) {
@@ -101,6 +106,12 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             }
             return metadata;
         }
+    }
+
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
     }
 }
 

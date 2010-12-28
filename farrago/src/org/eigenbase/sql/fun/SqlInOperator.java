@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,17 +42,25 @@ import org.eigenbase.sql.validate.*;
 public class SqlInOperator
     extends SqlBinaryOperator
 {
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * If true the call represents 'NOT IN'.
      */
     private final boolean isNotIn;
-    
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlInOperator
+     *
+     * @param isNotIn Whether this is the 'NOT IN' operator
+     */
     SqlInOperator(boolean isNotIn)
     {
-        super(isNotIn ? "NOT IN" : "IN",
-            SqlKind.In,
+        super(
+            isNotIn ? "NOT IN" : "IN",
+            SqlKind.IN,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -63,6 +71,11 @@ public class SqlInOperator
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns whether this is the 'NOT IN' operator
+     *
+     * @return whether this is the 'NOT IN' operator
+     */
     public boolean isNotIn()
     {
         return isNotIn;
@@ -91,7 +104,7 @@ public class SqlInOperator
                 rightTypeList.add(nodeType);
             }
             RelDataType [] rightTypes =
-                (RelDataType []) rightTypeList.toArray(
+                rightTypeList.toArray(
                     new RelDataType[rightTypeList.size()]);
             rightType = typeFactory.leastRestrictive(rightTypes);
 
@@ -133,9 +146,12 @@ public class SqlInOperator
             SqlTypeStrategies.otcComparableUnorderedX2;
         if (!checker.checkOperandTypes(
                 new ExplicitOperatorBinding(
-                    typeFactory,
-                    this,
-                    new RelDataType[] { leftRowType, rightRowType }))) {
+                    new SqlCallBinding(
+                        validator,
+                        scope,
+                        call),
+                    new RelDataType[] { leftRowType, rightRowType })))
+        {
             throw validator.newValidationError(
                 call,
                 EigenbaseResource.instance().IncompatibleValueType.ex(
@@ -144,7 +160,7 @@ public class SqlInOperator
 
         // Result is a boolean, nullable if there are any nullable types
         // on either side.
-        RelDataType type = typeFactory.createSqlType(SqlTypeName.Boolean);
+        RelDataType type = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
         if (leftType.isNullable() || rightType.isNullable()) {
             type = typeFactory.createTypeWithNullability(type, true);
         }

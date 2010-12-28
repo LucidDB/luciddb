@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,10 @@
 */
 package org.eigenbase.util14;
 
+import java.nio.*;
+
+import java.sql.*;
+
 import java.text.*;
 
 import org.eigenbase.resource.*;
@@ -36,6 +40,28 @@ import org.eigenbase.resource.*;
  */
 public class ConversionUtil
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final String NATIVE_UTF16_CHARSET_NAME =
+        (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) ? "UTF-16BE"
+        : "UTF-16LE";
+
+    /**
+     * A constant string which can be used wherever a Java string containing
+     * Unicode characters is needed in a test. It spells 'anthropos' in Greek.
+     */
+    public static final String TEST_UNICODE_STRING =
+        "\u03B1\u03BD\u03B8\u03C1\u03C9\u03C0\u03BF\u03C2";
+
+    /**
+     * A constant string which can be used wherever a SQL literal containing
+     * Unicode escape characters is needed in a test. It spells 'anthropos' in
+     * Greek. The escape character is the SQL default (backslash); note that the
+     * backslash-doubling here is for Java only, so by the time the SQL parser
+     * gets it, there is only one backslash.
+     */
+    public static final String TEST_UNICODE_SQL_ESCAPED_LITERAL =
+        "\\03B1\\03BD\\03B8\\03C1\\03C9\\03C0\\03BF\\03C2";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -49,7 +75,8 @@ public class ConversionUtil
         byte [] value,
         int radix)
     {
-        assert (2 == radix) || (16 == radix) : "Make sure that the algorithm below works for your radix";
+        assert (2 == radix) || (16 == radix)
+            : "Make sure that the algorithm below works for your radix";
         if (0 == value.length) {
             return "";
         }
@@ -73,18 +100,23 @@ public class ConversionUtil
         String value,
         int radix)
     {
-        assert (16 == radix) : "Specified string to byte array conversion not supported yet";
-        assert ((value.length() % 2) == 0) : "Hex binary string must contain even number of characters";
+        assert 16 == radix
+            : "Specified string to byte array conversion not supported yet";
+        assert (value.length() % 2) == 0
+            : "Hex binary string must contain even number of characters";
 
         byte [] ret = new byte[value.length() / 2];
         for (int i = 0; i < ret.length; i++) {
-            int digit1 = Character.digit(
+            int digit1 =
+                Character.digit(
                     value.charAt(i * 2),
                     radix);
-            int digit2 = Character.digit(
+            int digit2 =
+                Character.digit(
                     value.charAt((i * 2) + 1),
                     radix);
-            assert ((digit1 != -1) && (digit2 != -1)) : "String could not be converted to byte array";
+            assert (digit1 != -1) && (digit2 != -1)
+                : "String could not be converted to byte array";
             ret[i] = (byte) ((digit1 * radix) + digit2);
         }
         return ret;

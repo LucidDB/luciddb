@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package org.eigenbase.sql.parser;
 
+import java.io.*;
+
 import java.util.*;
 
 import org.eigenbase.resource.*;
@@ -37,8 +39,8 @@ import org.eigenbase.sql.*;
  * @since Jun 1, 2004
  */
 public class SqlParserPos
+    implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -47,12 +49,14 @@ public class SqlParserPos
      */
     public static final SqlParserPos ZERO = new SqlParserPos(0, 0);
 
+    private static final long serialVersionUID = 1L;
+
     //~ Instance fields --------------------------------------------------------
 
-    private int lineNumber;
-    private int columnNumber;
-    private int endLineNumber;
-    private int endColumnNumber;
+    private final int lineNumber;
+    private final int columnNumber;
+    private final int endLineNumber;
+    private final int endColumnNumber;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -85,6 +89,27 @@ public class SqlParserPos
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public int hashCode()
+    {
+        return lineNumber
+            ^ (columnNumber << 2)
+            ^ (endLineNumber << 5)
+            ^ (endColumnNumber << 7);
+    }
+
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof SqlParserPos) {
+            final SqlParserPos that = (SqlParserPos) obj;
+            return (that.lineNumber == this.lineNumber)
+                && (that.columnNumber == this.columnNumber)
+                && (that.endLineNumber == this.endLineNumber)
+                && (that.endColumnNumber == this.endColumnNumber);
+        } else {
+            return false;
+        }
+    }
 
     /**
      * @return 1-based starting line number
@@ -123,10 +148,9 @@ public class SqlParserPos
     // implements Object
     public String toString()
     {
-        return
-            EigenbaseResource.instance().ParserContext.str(
-                new Integer(lineNumber),
-                new Integer(columnNumber));
+        return EigenbaseResource.instance().ParserContext.str(
+            lineNumber,
+            columnNumber);
     }
 
     /**
@@ -135,12 +159,11 @@ public class SqlParserPos
      */
     public SqlParserPos plus(SqlParserPos pos)
     {
-        return
-            new SqlParserPos(
-                getLineNum(),
-                getColumnNum(),
-                pos.getEndLineNum(),
-                pos.getEndColumnNum());
+        return new SqlParserPos(
+            getLineNum(),
+            getColumnNum(),
+            pos.getEndLineNum(),
+            pos.getEndColumnNum());
     }
 
     /**
@@ -176,6 +199,28 @@ public class SqlParserPos
         return sum(nodes, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
     }
 
+    /**
+     * Combines the parser positions of a list of nodes to create a position
+     * which spans from the beginning of the first to the end of the last.
+     */
+    public static SqlParserPos sum(List<SqlNode> nodes)
+    {
+        return sum(nodes.toArray(new SqlNode[nodes.size()]));
+    }
+
+    /**
+     * Computes the parser position which is the sum of the positions of an
+     * array of parse tree nodes and of a parser position represented by (line,
+     * column, endLine, endColumn).
+     *
+     * @param nodes Array of parse tree nodes
+     * @param line Start line
+     * @param column Start column
+     * @param endLine End line
+     * @param endColumn End column
+     *
+     * @return Sum of parser positions
+     */
     private static SqlParserPos sum(
         SqlNode [] nodes,
         int line,
@@ -191,10 +236,14 @@ public class SqlParserPos
                 continue;
             }
             SqlParserPos pos = node.getParserPosition();
+            if (pos.equals(SqlParserPos.ZERO)) {
+                continue;
+            }
             testLine = pos.getLineNum();
             testColumn = pos.getColumnNum();
             if ((testLine < line)
-                || ((testLine == line) && (testColumn < column))) {
+                || ((testLine == line) && (testColumn < column)))
+            {
                 line = testLine;
                 column = testColumn;
             }
@@ -202,7 +251,8 @@ public class SqlParserPos
             testLine = pos.getEndLineNum();
             testColumn = pos.getEndColumnNum();
             if ((testLine > endLine)
-                || ((testLine == endLine) && (testColumn > endColumn))) {
+                || ((testLine == endLine) && (testColumn > endColumn)))
+            {
                 endLine = testLine;
                 endColumn = testColumn;
             }
@@ -220,6 +270,19 @@ public class SqlParserPos
         return sum(poses, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
     }
 
+    /**
+     * Computes the parser position which is the sum of an array of parser
+     * positions and of a parser position represented by (line, column, endLine,
+     * endColumn).
+     *
+     * @param poses Array of parser positions
+     * @param line Start line
+     * @param column Start column
+     * @param endLine End line
+     * @param endColumn End column
+     *
+     * @return Sum of parser positions
+     */
     private static SqlParserPos sum(
         SqlParserPos [] poses,
         int line,
@@ -237,7 +300,8 @@ public class SqlParserPos
             testLine = pos.getLineNum();
             testColumn = pos.getColumnNum();
             if ((testLine < line)
-                || ((testLine == line) && (testColumn < column))) {
+                || ((testLine == line) && (testColumn < column)))
+            {
                 line = testLine;
                 column = testColumn;
             }
@@ -245,7 +309,8 @@ public class SqlParserPos
             testLine = pos.getEndLineNum();
             testColumn = pos.getEndColumnNum();
             if ((testLine > endLine)
-                || ((testLine == endLine) && (testColumn > endColumn))) {
+                || ((testLine == endLine) && (testColumn > endColumn)))
+            {
                 endLine = testLine;
                 endColumn = testColumn;
             }

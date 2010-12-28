@@ -1,0 +1,1093 @@
+0: jdbc:luciddb:> ------------------------------------------------------------
+0: jdbc:luciddb:> -- test basic lenient reading from flatfiles with mapping
+0: jdbc:luciddb:> ------------------------------------------------------------
+0: jdbc:luciddb:> !set shownestederrs true
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema flatfile_schema;
+0: jdbc:luciddb:> set schema 'flatfile_schema';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server lenientwmap_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >         directory '@DIRECTORY@',
+. . . . . . . . >         file_extension '.csv',
+. . . . . . . . >         mapped 'yes');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema bcp
+. . . . . . . . > from server lenientwmap_server
+. . . . . . . . > into flatfile_schema;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> -- basic mapping (everything matches, only position switch)
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."swappedcols" order by id;
++--------------+----------+-----------------------------------------------------+
+| EXTRA_FIELD  |    ID    |                        NAME                         |
++--------------+----------+-----------------------------------------------------+
+| F            | 123      | "S,"                                                |
+| A            | 123      | Jonathan Ackerman                                   |
+| B            | 234      | Grady O'Neil                                        |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C            | 456      | Susan, Peter and Dave                               |
+| E            | 789      | Amelia "meals" Maurice                              |
++--------------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table basicmap(
+. . . . . . . . >         extra_field     char(1) not null,
+. . . . . . . . >         id              int not null,
+. . . . . . . . >         name            varchar(50) not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'swappedcols');
+0: jdbc:luciddb:> select * from basicmap order by id;
++--------------+------+------------------------------------------+
+| EXTRA_FIELD  |  ID  |                   NAME                   |
++--------------+------+------------------------------------------+
+| F            | 123  | "S,"                                     |
+| A            | 123  | Jonathan Ackerman                        |
+| B            | 234  | Grady O'Neil                             |
+| G            | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |
+| C            | 456  | Susan, Peter and Dave                    |
+| E            | 789  | Amelia "meals" Maurice                   |
++--------------+------+------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table basicmap1
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'swappedcols');
+0: jdbc:luciddb:> select * from basicmap1 order by id;
++--------------+----------+-----------------------------------------------------+
+| EXTRA_FIELD  |    ID    |                        NAME                         |
++--------------+----------+-----------------------------------------------------+
+| F            | 123      | "S,"                                                |
+| A            | 123      | Jonathan Ackerman                                   |
+| B            | 234      | Grady O'Neil                                        |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C            | 456      | Susan, Peter and Dave                               |
+| E            | 789      | Amelia "meals" Maurice                              |
++--------------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "swappedcols" order by id;
++--------------+----------+-----------------------------------------------------+
+| EXTRA_FIELD  |    ID    |                        NAME                         |
++--------------+----------+-----------------------------------------------------+
+| F            | 123      | "S,"                                                |
+| A            | 123      | Jonathan Ackerman                                   |
+| B            | 234      | Grady O'Neil                                        |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C            | 456      | Susan, Peter and Dave                               |
+| E            | 789      | Amelia "meals" Maurice                              |
++--------------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- all column names in lower case (test case insensitivity)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."lowercase" order by "id";
++----------+-----------------------------------------------------+--------------+
+|    id    |                        name                         | extra_field  |
++----------+-----------------------------------------------------+--------------+
+| 123      | "S,"                                                | F            |
+| 123      | Jonathan Ackerman                                   | A            |
+| 234      | Grady O'Neil                                        | B            |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G            |
+| 456      | Susan, Peter and Dave                               | C            |
+| 789      | Amelia "meals" Maurice                              | E            |
++----------+-----------------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table lowercase(
+. . . . . . . . >         "id"            int not null,
+. . . . . . . . >         "name"          varchar(50) not null,
+. . . . . . . . >         "extra_field"   char(1) not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'lowercase');
+0: jdbc:luciddb:> select * from lowercase order by "id";
++------+------------------------------------------+--------------+
+|  id  |                   name                   | extra_field  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     | F            |
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table lowercasea
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'lowercase');
+0: jdbc:luciddb:> select * from lowercasea order by "id";
++----------+-----------------------------------------------------+--------------+
+|    id    |                        name                         | extra_field  |
++----------+-----------------------------------------------------+--------------+
+| 123      | "S,"                                                | F            |
+| 123      | Jonathan Ackerman                                   | A            |
+| 234      | Grady O'Neil                                        | B            |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G            |
+| 456      | Susan, Peter and Dave                               | C            |
+| 789      | Amelia "meals" Maurice                              | E            |
++----------+-----------------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "lowercase" order by "id";
++----------+-----------------------------------------------------+--------------+
+|    id    |                        name                         | extra_field  |
++----------+-----------------------------------------------------+--------------+
+| 123      | "S,"                                                | F            |
+| 123      | Jonathan Ackerman                                   | A            |
+| 234      | Grady O'Neil                                        | B            |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G            |
+| 456      | Susan, Peter and Dave                               | C            |
+| 789      | Amelia "meals" Maurice                              | E            |
++----------+-----------------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> -- csv file has fewer columns
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- all field names match
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."mapped" order by id;
++-----------------------------------------------------+-------------+----------+---------+
+|                        NAME                         |   EXTRA1    |    ID    | EXTRA2  |
++-----------------------------------------------------+-------------+----------+---------+
+| "S,"                                                | F           | 123      |         |
+| Jonathan Ackerman                                   | A           | 123      |         |
+| Grady O'Neil                                        | B           | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |         |
+| Susan, Peter and Dave                               | C           | 456      |         |
+| Amelia "meals" Maurice                              | E           | 789      |         |
++-----------------------------------------------------+-------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol1(
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         extra1          char(1) not null,
+. . . . . . . . >         id              int not null,
+. . . . . . . . >         extra_col2      char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped');
+0: jdbc:luciddb:> select * from hasfewercol1 order by id;
++------------------------------------------+---------+------+-------------+
+|                   NAME                   | EXTRA1  |  ID  | EXTRA_COL2  |
++------------------------------------------+---------+------+-------------+
+| "S,"                                     | F       | 123  |             |
+| Jonathan Ackerman                        | A       | 123  |             |
+| Grady O'Neil                             | B       | 234  |             |
+| Peter "peg leg", Jimmy & Samantha "Sam"  | G       | 234  |             |
+| Susan, Peter and Dave                    | C       | 456  |             |
+| Amelia "meals" Maurice                   | E       | 789  |             |
++------------------------------------------+---------+------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped');
+0: jdbc:luciddb:> select * from hasfewercol1a order by id;
++-----------------------------------------------------+-------------+----------+---------+
+|                        NAME                         |   EXTRA1    |    ID    | EXTRA2  |
++-----------------------------------------------------+-------------+----------+---------+
+| "S,"                                                | F           | 123      |         |
+| Jonathan Ackerman                                   | A           | 123      |         |
+| Grady O'Neil                                        | B           | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |         |
+| Susan, Peter and Dave                               | C           | 456      |         |
+| Amelia "meals" Maurice                              | E           | 789      |         |
++-----------------------------------------------------+-------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "mapped" order by id;
++-----------------------------------------------------+-------------+----------+---------+
+|                        NAME                         |   EXTRA1    |    ID    | EXTRA2  |
++-----------------------------------------------------+-------------+----------+---------+
+| "S,"                                                | F           | 123      |         |
+| Jonathan Ackerman                                   | A           | 123      |         |
+| Grady O'Neil                                        | B           | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |         |
+| Susan, Peter and Dave                               | C           | 456      |         |
+| Amelia "meals" Maurice                              | E           | 789      |         |
++-----------------------------------------------------+-------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- all field names match, another position mapping
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."mapped1" order by id;
++---------+-----------------------------------------------------+-------------+----------+
+| EXTRA2  |                        NAME                         |   EXTRA1    |    ID    |
++---------+-----------------------------------------------------+-------------+----------+
+|         | "S,"                                                | F           | 123      |
+|         | Jonathan Ackerman                                   | A           | 123      |
+|         | Grady O'Neil                                        | B           | 234      |
+|         | Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |
+|         | Susan, Peter and Dave                               | C           | 456      |
+|         | Amelia "meals" Maurice                              | E           | 789      |
++---------+-----------------------------------------------------+-------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol11(
+. . . . . . . . >         extra_col2      char(50),
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         extra1          char(1) not null,
+. . . . . . . . >         id              int not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped1');
+0: jdbc:luciddb:> select * from hasfewercol11 order by id;
++-------------+------------------------------------------+---------+------+
+| EXTRA_COL2  |                   NAME                   | EXTRA1  |  ID  |
++-------------+------------------------------------------+---------+------+
+|             | "S,"                                     | F       | 123  |
+|             | Jonathan Ackerman                        | A       | 123  |
+|             | Grady O'Neil                             | B       | 234  |
+|             | Peter "peg leg", Jimmy & Samantha "Sam"  | G       | 234  |
+|             | Susan, Peter and Dave                    | C       | 456  |
+|             | Amelia "meals" Maurice                   | E       | 789  |
++-------------+------------------------------------------+---------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol11a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped1');
+0: jdbc:luciddb:> select * from hasfewercol11a order by id;
++---------+-----------------------------------------------------+-------------+----------+
+| EXTRA2  |                        NAME                         |   EXTRA1    |    ID    |
++---------+-----------------------------------------------------+-------------+----------+
+|         | "S,"                                                | F           | 123      |
+|         | Jonathan Ackerman                                   | A           | 123      |
+|         | Grady O'Neil                                        | B           | 234      |
+|         | Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |
+|         | Susan, Peter and Dave                               | C           | 456      |
+|         | Amelia "meals" Maurice                              | E           | 789      |
++---------+-----------------------------------------------------+-------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "mapped1" order by id;
++---------+-----------------------------------------------------+-------------+----------+
+| EXTRA2  |                        NAME                         |   EXTRA1    |    ID    |
++---------+-----------------------------------------------------+-------------+----------+
+|         | "S,"                                                | F           | 123      |
+|         | Jonathan Ackerman                                   | A           | 123      |
+|         | Grady O'Neil                                        | B           | 234      |
+|         | Peter "peg leg", Jimmy & Samantha "Sam"             | G           | 234      |
+|         | Susan, Peter and Dave                               | C           | 456      |
+|         | Amelia "meals" Maurice                              | E           | 789      |
++---------+-----------------------------------------------------+-------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- yet another position mapping
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."mapped2" order by id;
++-------------+---------+----------+-----------------------------------------------------+
+|   EXTRA1    | EXTRA2  |    ID    |                        NAME                         |
++-------------+---------+----------+-----------------------------------------------------+
+| F           |         | 123      | "S,"                                                |
+| A           |         | 123      | Jonathan Ackerman                                   |
+| B           |         | 234      | Grady O'Neil                                        |
+| G           |         | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C           |         | 456      | Susan, Peter and Dave                               |
+| E           |         | 789      | Amelia "meals" Maurice                              |
++-------------+---------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol12(
+. . . . . . . . >         extra1          char(1) not null,
+. . . . . . . . >         extra_col2      char(10),
+. . . . . . . . >         id              int not null,
+. . . . . . . . >         name            varchar(50) not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped2');
+0: jdbc:luciddb:> select * from hasfewercol12 order by id;
++---------+-------------+------+------------------------------------------+
+| EXTRA1  | EXTRA_COL2  |  ID  |                   NAME                   |
++---------+-------------+------+------------------------------------------+
+| F       |             | 123  | "S,"                                     |
+| A       |             | 123  | Jonathan Ackerman                        |
+| B       |             | 234  | Grady O'Neil                             |
+| G       |             | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |
+| C       |             | 456  | Susan, Peter and Dave                    |
+| E       |             | 789  | Amelia "meals" Maurice                   |
++---------+-------------+------+------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol12a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mapped2');
+0: jdbc:luciddb:> select * from hasfewercol12a order by id;
++-------------+---------+----------+-----------------------------------------------------+
+|   EXTRA1    | EXTRA2  |    ID    |                        NAME                         |
++-------------+---------+----------+-----------------------------------------------------+
+| F           |         | 123      | "S,"                                                |
+| A           |         | 123      | Jonathan Ackerman                                   |
+| B           |         | 234      | Grady O'Neil                                        |
+| G           |         | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C           |         | 456      | Susan, Peter and Dave                               |
+| E           |         | 789      | Amelia "meals" Maurice                              |
++-------------+---------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "mapped2" order by id;
++-------------+---------+----------+-----------------------------------------------------+
+|   EXTRA1    | EXTRA2  |    ID    |                        NAME                         |
++-------------+---------+----------+-----------------------------------------------------+
+| F           |         | 123      | "S,"                                                |
+| A           |         | 123      | Jonathan Ackerman                                   |
+| B           |         | 234      | Grady O'Neil                                        |
+| G           |         | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |
+| C           |         | 456      | Susan, Peter and Dave                               |
+| E           |         | 789      | Amelia "meals" Maurice                              |
++-------------+---------+----------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- extra_field1 (in bcp) and extra_field (in csv) is a mismatch
+0: jdbc:luciddb:> -- extra_field in csv matches with the column in explicit foreign table definition
+0: jdbc:luciddb:> -- that match should override
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."colmismatch" order by id;
++-----------------------------------------------------+---------------+----------+---------+
+|                        NAME                         | EXTRA_FIELD1  |    ID    | EXTRA2  |
++-----------------------------------------------------+---------------+----------+---------+
+| "S,"                                                |               | 123      |         |
+| Jonathan Ackerman                                   |               | 123      |         |
+| Grady O'Neil                                        |               | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             |               | 234      |         |
+| Susan, Peter and Dave                               |               | 456      |         |
+| Amelia "meals" Maurice                              |               | 789      |         |
++-----------------------------------------------------+---------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol2(
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         extra_field     char(1),
+. . . . . . . . >         id              int not null,
+. . . . . . . . >         extra_col2      char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'colmismatch');
+0: jdbc:luciddb:> select * from hasfewercol2 order by id;
++------------------------------------------+--------------+------+-------------+
+|                   NAME                   | EXTRA_FIELD  |  ID  | EXTRA_COL2  |
++------------------------------------------+--------------+------+-------------+
+| "S,"                                     | F            | 123  |             |
+| Jonathan Ackerman                        | A            | 123  |             |
+| Grady O'Neil                             | B            | 234  |             |
+| Peter "peg leg", Jimmy & Samantha "Sam"  | G            | 234  |             |
+| Susan, Peter and Dave                    | C            | 456  |             |
+| Amelia "meals" Maurice                   | E            | 789  |             |
++------------------------------------------+--------------+------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasfewercol2a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'colmismatch');
+0: jdbc:luciddb:> select * from hasfewercol2a order by id;
++-----------------------------------------------------+---------------+----------+---------+
+|                        NAME                         | EXTRA_FIELD1  |    ID    | EXTRA2  |
++-----------------------------------------------------+---------------+----------+---------+
+| "S,"                                                |               | 123      |         |
+| Jonathan Ackerman                                   |               | 123      |         |
+| Grady O'Neil                                        |               | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             |               | 234      |         |
+| Susan, Peter and Dave                               |               | 456      |         |
+| Amelia "meals" Maurice                              |               | 789      |         |
++-----------------------------------------------------+---------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "colmismatch" order by id;
++-----------------------------------------------------+---------------+----------+---------+
+|                        NAME                         | EXTRA_FIELD1  |    ID    | EXTRA2  |
++-----------------------------------------------------+---------------+----------+---------+
+| "S,"                                                |               | 123      |         |
+| Jonathan Ackerman                                   |               | 123      |         |
+| Grady O'Neil                                        |               | 234      |         |
+| Peter "peg leg", Jimmy & Samantha "Sam"             |               | 234      |         |
+| Susan, Peter and Dave                               |               | 456      |         |
+| Amelia "meals" Maurice                              |               | 789      |         |
++-----------------------------------------------------+---------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> -- csv file has more columns (example.csv has 3 cols)
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."example2mapped" order by id;
++-----------------------------------------------------+----------+
+|                        NAME                         |    ID    |
++-----------------------------------------------------+----------+
+| "S,"                                                | 123      |
+| Jonathan Ackerman                                   | 123      |
+| Grady O'Neil                                        | 234      |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | 234      |
+| Susan, Peter and Dave                               | 456      |
+| Amelia "meals" Maurice                              | 789      |
++-----------------------------------------------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasmorecol1(
+. . . . . . . . >         name    varchar(50) not null,
+. . . . . . . . >         id      int not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'example2mapped');
+0: jdbc:luciddb:> select * from hasmorecol1 order by id;
++------------------------------------------+------+
+|                   NAME                   |  ID  |
++------------------------------------------+------+
+| "S,"                                     | 123  |
+| Jonathan Ackerman                        | 123  |
+| Grady O'Neil                             | 234  |
+| Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| Susan, Peter and Dave                    | 456  |
+| Amelia "meals" Maurice                   | 789  |
++------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table hasmorecol1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'example2mapped');
+0: jdbc:luciddb:> select * from hasmorecol1a order by id;
++-----------------------------------------------------+----------+
+|                        NAME                         |    ID    |
++-----------------------------------------------------+----------+
+| "S,"                                                | 123      |
+| Jonathan Ackerman                                   | 123      |
+| Grady O'Neil                                        | 234      |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | 234      |
+| Susan, Peter and Dave                               | 456      |
+| Amelia "meals" Maurice                              | 789      |
++-----------------------------------------------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "example2mapped" order by id;
++-----------------------------------------------------+----------+
+|                        NAME                         |    ID    |
++-----------------------------------------------------+----------+
+| "S,"                                                | 123      |
+| Jonathan Ackerman                                   | 123      |
+| Grady O'Neil                                        | 234      |
+| Peter "peg leg", Jimmy & Samantha "Sam"             | 234      |
+| Susan, Peter and Dave                               | 456      |
+| Amelia "meals" Maurice                              | 789      |
++-----------------------------------------------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- csv has various number of columns
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."mixednumcols1mapped" order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table mixednumcols1(
+. . . . . . . . >         extra_field     char(1),
+. . . . . . . . >         id              int not null,
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         extra_col       char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mixednumcols1mapped');
+0: jdbc:luciddb:> select * from mixednumcols1 order by id;
++--------------+------+------------------------------------------+------------+
+| EXTRA_FIELD  |  ID  |                   NAME                   | EXTRA_COL  |
++--------------+------+------------------------------------------+------------+
+| F            | 123  | "S,"                                     |            |
+|              | 123  | Jonathan Ackerman                        |            |
+| B            | 234  | Grady O'Neil                             |            |
+| G            | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |            |
+| C            | 456  | Susan, Peter and Dave                    |            |
+| E            | 789  | Amelia "meals" Maurice                   |            |
++--------------+------+------------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table mixednumcols1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mixednumcols1mapped');
+0: jdbc:luciddb:> select * from mixednumcols1a order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "mixednumcols1mapped" order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."mixednumcols2mapped" order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+|              | 124      | Jonathan Ackerman                                   |         |
+|              | 125      |                                                     |         |
+|              | 126      | Jonathan Ackerman                                   |         |
+|              | 127      |                                                     |         |
+|              | 128      |                                                     |         |
+|              | 129      |                                                     |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| C            | 457      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table mixednumcols2(
+. . . . . . . . >         extra_field     char(1),
+. . . . . . . . >         id              int,
+. . . . . . . . >         name            varchar(50),
+. . . . . . . . >         extra_col       char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mixednumcols2mapped');
+0: jdbc:luciddb:> select * from mixednumcols2 order by id;
++--------------+------+------------------------------------------+------------+
+| EXTRA_FIELD  |  ID  |                   NAME                   | EXTRA_COL  |
++--------------+------+------------------------------------------+------------+
+| F            | 123  | "S,"                                     |            |
+|              | 123  | Jonathan Ackerman                        |            |
+|              | 124  | Jonathan Ackerman                        |            |
+|              | 125  |                                          |            |
+|              | 126  | Jonathan Ackerman                        |            |
+|              | 127  |                                          |            |
+|              | 128  |                                          |            |
+|              | 129  |                                          |            |
+| B            | 234  | Grady O'Neil                             |            |
+| G            | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |            |
+| C            | 456  | Susan, Peter and Dave                    |            |
+| C            | 457  | Susan, Peter and Dave                    |            |
+| E            | 789  | Amelia "meals" Maurice                   |            |
++--------------+------+------------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table mixednumcols2a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'mixednumcols2mapped');
+0: jdbc:luciddb:> select * from mixednumcols2a order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+|              | 124      | Jonathan Ackerman                                   |         |
+|              | 125      |                                                     |         |
+|              | 126      | Jonathan Ackerman                                   |         |
+|              | 127      |                                                     |         |
+|              | 128      |                                                     |         |
+|              | 129      |                                                     |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| C            | 457      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "mixednumcols2mapped" order by id;
++--------------+----------+-----------------------------------------------------+---------+
+| EXTRA_FIELD  |    ID    |                        NAME                         | EXTRA2  |
++--------------+----------+-----------------------------------------------------+---------+
+| F            | 123      | "S,"                                                |         |
+|              | 123      | Jonathan Ackerman                                   |         |
+|              | 124      | Jonathan Ackerman                                   |         |
+|              | 125      |                                                     |         |
+|              | 126      | Jonathan Ackerman                                   |         |
+|              | 127      |                                                     |         |
+|              | 128      |                                                     |         |
+|              | 129      |                                                     |         |
+| B            | 234      | Grady O'Neil                                        |         |
+| G            | 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |
+| C            | 456      | Susan, Peter and Dave                               |         |
+| C            | 457      | Susan, Peter and Dave                               |         |
+| E            | 789      | Amelia "meals" Maurice                              |         |
++--------------+----------+-----------------------------------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- csv has blank lines
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."blanklines1mapped" order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table blanklines1(
+. . . . . . . . >         extra_field     char(1) not null,
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         id              int not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'blanklines1mapped');
+0: jdbc:luciddb:> select * from blanklines1 order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table blanklines1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'blanklines1mapped');
+0: jdbc:luciddb:> select * from blanklines1a order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "blanklines1mapped" order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."blanklines2mapped" order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table blanklines2(
+. . . . . . . . >         extra_field     char(1) not null,
+. . . . . . . . >         name            varchar(50) not null,
+. . . . . . . . >         id              int not null)
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'blanklines2mapped');
+0: jdbc:luciddb:> select * from blanklines2 order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table blanklines2a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'blanklines2mapped');
+0: jdbc:luciddb:> select * from blanklines2a order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "blanklines2mapped" order by id;
++--------------+------------------------------------------+------+
+| EXTRA_FIELD  |                   NAME                   |  ID  |
++--------------+------------------------------------------+------+
+| F            | "S,"                                     | 123  |
+| A            | Jonathan Ackerman                        | 123  |
+| B            | Grady O'Neil                             | 234  |
+| G            | Peter "peg leg", Jimmy & Samantha "Sam"  | 234  |
+| C            | Susan, Peter and Dave                    | 456  |
+| E            | Amelia "meals" Maurice                   | 789  |
++--------------+------------------------------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- errors in flatfile
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- note extra_field column in foreign table matches with csv
+0: jdbc:luciddb:> -- missing quote led to concatenating 2 lines into one
+0: jdbc:luciddb:> -- with new line char in the middle
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingquotes1" order by id;
++----------+-----------------------------------------------------+---------+---------+
+|    ID    |                        NAME                         | EXTRA1  | EXTRA2  |
++----------+-----------------------------------------------------+---------+---------+
+| 123      | "S,"                                                |         |         |
+| 123      | Jonathan Ackerman                                   |         |         |
+| 234      | Grady O'Neil                                        |         |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |         |
+| 235      | a bad missing pair of quotes, F                     |         |         |
+| 236      | This line is missing a quote, F
+237,                |         |         |
+| 238      | Missing,H                                           |         |         |
+| 456      | Susan, Peter and Dave                               |         |         |
+| 789      | Amelia "meals" Maurice                              |         |         |
++----------+-----------------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes1(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra_field  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes1');
+0: jdbc:luciddb:> select * from missingquotes1 order by id;
++------+------------------------------------------+--------------+---------+
+|  ID  |                   NAME                   | EXTRA_FIELD  | EXTRA2  |
++------+------------------------------------------+--------------+---------+
+| 123  | "S,"                                     | F            |         |
+| 123  | Jonathan Ackerman                        | A            |         |
+| 234  | Grady O'Neil                             | B            |         |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |         |
+| 235  | a bad missing pair of quotes, F          |              |         |
+| 236  | This line is missing a quote, F
+237,     | G            |         |
+| 238  | Missing,H                                |              |         |
+| 456  | Susan, Peter and Dave                    | C            |         |
+| 789  | Amelia "meals" Maurice                   | E            |         |
++------+------------------------------------------+--------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes1');
+0: jdbc:luciddb:> select * from missingquotes1a order by id;
++----------+-----------------------------------------------------+---------+---------+
+|    ID    |                        NAME                         | EXTRA1  | EXTRA2  |
++----------+-----------------------------------------------------+---------+---------+
+| 123      | "S,"                                                |         |         |
+| 123      | Jonathan Ackerman                                   |         |         |
+| 234      | Grady O'Neil                                        |         |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |         |
+| 235      | a bad missing pair of quotes, F                     |         |         |
+| 236      | This line is missing a quote, F
+237,                |         |         |
+| 238      | Missing,H                                           |         |         |
+| 456      | Susan, Peter and Dave                               |         |         |
+| 789      | Amelia "meals" Maurice                              |         |         |
++----------+-----------------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingquotes1" order by id;
++----------+-----------------------------------------------------+---------+---------+
+|    ID    |                        NAME                         | EXTRA1  | EXTRA2  |
++----------+-----------------------------------------------------+---------+---------+
+| 123      | "S,"                                                |         |         |
+| 123      | Jonathan Ackerman                                   |         |         |
+| 234      | Grady O'Neil                                        |         |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             |         |         |
+| 235      | a bad missing pair of quotes, F                     |         |         |
+| 236      | This line is missing a quote, F
+237,                |         |         |
+| 238      | Missing,H                                           |         |         |
+| 456      | Susan, Peter and Dave                               |         |         |
+| 789      | Amelia "meals" Maurice                              |         |         |
++----------+-----------------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingquotes2" order by id;
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+|    ID    |                                                                                                   NAME                                                                                                    |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+| 236      | This line is missing a quote at the begining                                                                                                                                                              | F           |         |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes2(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra1  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes2');
+0: jdbc:luciddb:> select * from missingquotes2 order by id;
++------+-----------------------------------------------+---------+---------+
+|  ID  |                     NAME                      | EXTRA1  | EXTRA2  |
++------+-----------------------------------------------+---------+---------+
+| 236  | This line is missing a quote at the begining  | F       |         |
++------+-----------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes2a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes2');
+0: jdbc:luciddb:> select * from missingquotes2a order by id;
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+|    ID    |                                                                                                   NAME                                                                                                    |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+| 236      | This line is missing a quote at the begining                                                                                                                                                              | F           |         |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingquotes2" order by id;
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+|    ID    |                                                                                                   NAME                                                                                                    |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+| 236      | This line is missing a quote at the begining                                                                                                                                                              | F           |         |
++----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingquotes3" order by id;
+Error: Column has no delimiter (state=,code=0)
+Error: Could not process input:
+[238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
+
+]
+Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes3(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra1  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes3');
+0: jdbc:luciddb:> select * from missingquotes3 order by id;
+Error: Column has no delimiter (state=,code=0)
+Error: Could not process input:
+[238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
+
+]
+Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingquotes3a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingquotes3');
+0: jdbc:luciddb:> select * from missingquotes3a order by id;
+Error: Column has no delimiter (state=,code=0)
+Error: Could not process input:
+[238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
+
+]
+Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingquotes3" order by id;
+Error: Column has no delimiter (state=,code=0)
+Error: Could not process input:
+[238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
+
+]
+Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingcommas1" order by id;
++----------+-----------------------------------------------------+-------------+---------+
+|    ID    |                        NAME                         |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------+-------------+---------+
+| 123      | "S,"                                                | F           |         |
+| 123      | Jonathan Ackerman                                   | A           |         |
+| 234      | Grady O'Neil                                        | B           |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G           |         |
+| 235      | Peter"Pan                                           |             |         |
+| 456      | Susan, Peter and Dave                               | C           |         |
+| 789      | Amelia "meals" Maurice                              | E           |         |
++----------+-----------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas1(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra1  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas1');
+0: jdbc:luciddb:> select * from missingcommas1 order by id;
++------+------------------------------------------+---------+---------+
+|  ID  |                   NAME                   | EXTRA1  | EXTRA2  |
++------+------------------------------------------+---------+---------+
+| 123  | "S,"                                     | F       |         |
+| 123  | Jonathan Ackerman                        | A       |         |
+| 234  | Grady O'Neil                             | B       |         |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G       |         |
+| 235  | Peter"Pan                                |         |         |
+| 456  | Susan, Peter and Dave                    | C       |         |
+| 789  | Amelia "meals" Maurice                   | E       |         |
++------+------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas1a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas1');
+0: jdbc:luciddb:> select * from missingcommas1a order by id;
++----------+-----------------------------------------------------+-------------+---------+
+|    ID    |                        NAME                         |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------+-------------+---------+
+| 123      | "S,"                                                | F           |         |
+| 123      | Jonathan Ackerman                                   | A           |         |
+| 234      | Grady O'Neil                                        | B           |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G           |         |
+| 235      | Peter"Pan                                           |             |         |
+| 456      | Susan, Peter and Dave                               | C           |         |
+| 789      | Amelia "meals" Maurice                              | E           |         |
++----------+-----------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingcommas1" order by id;
++----------+-----------------------------------------------------+-------------+---------+
+|    ID    |                        NAME                         |   EXTRA1    | EXTRA2  |
++----------+-----------------------------------------------------+-------------+---------+
+| 123      | "S,"                                                | F           |         |
+| 123      | Jonathan Ackerman                                   | A           |         |
+| 234      | Grady O'Neil                                        | B           |         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"             | G           |         |
+| 235      | Peter"Pan                                           |             |         |
+| 456      | Susan, Peter and Dave                               | C           |         |
+| 789      | Amelia "meals" Maurice                              | E           |         |
++----------+-----------------------------------------------------+-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingcommas2" order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     |              |
+| 123  | Jonathan Ackerman                        |              |
+| 234  | Grady O'Neil                             |              |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |              |
+| 235  | Peter                                    |              |
+| 236  | another Peter                            |              |
+| 456  | Susan, Peter and Dave                    |              |
+| 789  | Amelia "meals" Maurice                   |              |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas2(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra1  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas2');
+0: jdbc:luciddb:> select * from missingcommas2 order by id;
++------+------------------------------------------+---------+---------+
+|  ID  |                   NAME                   | EXTRA1  | EXTRA2  |
++------+------------------------------------------+---------+---------+
+| 123  | "S,"                                     | F       |         |
+| 123  | Jonathan Ackerman                        | A       |         |
+| 234  | Grady O'Neil                             | B       |         |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G       |         |
+| 235  | Peter                                    | H       |         |
+| 236  | another Peter                            |         |         |
+| 456  | Susan, Peter and Dave                    | C       |         |
+| 789  | Amelia "meals" Maurice                   | E       |         |
++------+------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas2a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas2');
+0: jdbc:luciddb:> select * from missingcommas2a order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     |              |
+| 123  | Jonathan Ackerman                        |              |
+| 234  | Grady O'Neil                             |              |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |              |
+| 235  | Peter                                    |              |
+| 236  | another Peter                            |              |
+| 456  | Susan, Peter and Dave                    |              |
+| 789  | Amelia "meals" Maurice                   |              |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingcommas2" order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     |              |
+| 123  | Jonathan Ackerman                        |              |
+| 234  | Grady O'Neil                             |              |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |              |
+| 235  | Peter                                    |              |
+| 236  | another Peter                            |              |
+| 456  | Susan, Peter and Dave                    |              |
+| 789  | Amelia "meals" Maurice                   |              |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingcommas3" order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     | F            |
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
+| 235  | Peter Pan                                |              |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas3(
+. . . . . . . . >         id      int,
+. . . . . . . . >         name    varchar(50),
+. . . . . . . . >         extra1  char(1),
+. . . . . . . . >         extra2  char(1))
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas3');
+0: jdbc:luciddb:> select * from missingcommas3 order by id;
++------+------------------------------------------+---------+---------+
+|  ID  |                   NAME                   | EXTRA1  | EXTRA2  |
++------+------------------------------------------+---------+---------+
+| 123  | "S,"                                     |         |         |
+| 123  | Jonathan Ackerman                        |         |         |
+| 234  | Grady O'Neil                             |         |         |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  |         |         |
+| 235  | Peter Pan                                |         |         |
+| 456  | Susan, Peter and Dave                    |         |         |
+| 789  | Amelia "meals" Maurice                   |         |         |
++------+------------------------------------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table missingcommas3a
+. . . . . . . . > server lenientwmap_server
+. . . . . . . . > options (filename 'missingcommas3');
+0: jdbc:luciddb:> select * from missingcommas3a order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     | F            |
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
+| 235  | Peter Pan                                |              |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from "missingcommas3" order by id;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | "S,"                                     | F            |
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
+| 235  | Peter Pan                                |              |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
++------+------------------------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> drop schema flatfile_schema cascade;
+0: jdbc:luciddb:> drop server lenientwmap_server cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

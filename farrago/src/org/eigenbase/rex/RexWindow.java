@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2004-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2004-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
  */
 public class RexWindow
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final RexNode [] partitionKeys;
@@ -102,7 +101,6 @@ public class RexWindow
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        pw.print("(");
         int clauseCount = 0;
         if (partitionKeys.length > 0) {
             if (clauseCount++ > 0) {
@@ -110,6 +108,9 @@ public class RexWindow
             }
             pw.print("PARTITION BY ");
             for (int i = 0; i < partitionKeys.length; i++) {
+                if (i > 0) {
+                    pw.print(", ");
+                }
                 RexNode partitionKey = partitionKeys[i];
                 pw.print(partitionKey.toString());
             }
@@ -120,6 +121,9 @@ public class RexWindow
             }
             pw.print("ORDER BY ");
             for (int i = 0; i < orderKeys.length; i++) {
+                if (i > 0) {
+                    pw.print(", ");
+                }
                 RexNode orderKey = orderKeys[i];
                 pw.print(orderKey.toString());
             }
@@ -149,7 +153,6 @@ public class RexWindow
             pw.print(" AND ");
             pw.print(upperBound.toString());
         }
-        pw.print(")");
         return sw.toString();
     }
 
@@ -166,6 +169,14 @@ public class RexWindow
     public boolean isRows()
     {
         return physical;
+    }
+
+    public SqlWindowOperator.OffsetRange getOffsetAndRange()
+    {
+        return SqlWindowOperator.getOffsetAndRange(
+            getLowerBound(),
+            getUpperBound(),
+            isRows());
     }
 }
 

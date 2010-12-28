@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.ojrex;
 
+import net.sf.farrago.type.runtime.*;
+
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -37,11 +39,12 @@ import org.eigenbase.sql.fun.*;
 public class FarragoOJRexImplementorTable
     extends OJRexImplementorTableImpl
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a table with all supported standard operators registered.
+     *
+     * @param opTab Operator table
      */
     public FarragoOJRexImplementorTable(SqlStdOperatorTable opTab)
     {
@@ -61,171 +64,187 @@ public class FarragoOJRexImplementorTable
         // FarragoRexToOJTranslatorTest
         // refine with Farrago specifics
         registerOperator(
-            opTab.lnFunc,
+            SqlStdOperatorTable.lnFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LN_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LN));
 
         registerOperator(
-            opTab.log10Func,
+            SqlStdOperatorTable.log10Func,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LOG10_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LOG10));
 
         registerOperator(
-            opTab.absFunc,
+            SqlStdOperatorTable.absFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.ABS_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.ABS));
 
         registerOperator(
-            opTab.ceilFunc,
+            SqlStdOperatorTable.ceilFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CEIL_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CEIL));
 
         registerOperator(
-            opTab.floorFunc,
+            SqlStdOperatorTable.floorFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.FLOOR_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.FLOOR));
 
         registerOperator(
-            opTab.expFunc,
+            SqlStdOperatorTable.expFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.EXP_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.EXP));
 
         registerOperator(
-            opTab.modFunc,
+            SqlStdOperatorTable.modFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.MOD_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.MOD));
 
         registerOperator(
-            opTab.substringFunc,
+            SqlStdOperatorTable.substringFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.SUBSTRING_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.SUBSTRING));
 
         registerOperator(
-            opTab.overlayFunc,
+            SqlStdOperatorTable.overlayFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.OVERLAY_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.OVERLAY));
 
         registerOperator(
-            opTab.powFunc,
+            SqlStdOperatorTable.powerFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.POW_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.POWER));
 
         registerOperator(
-            opTab.concatOperator,
+            SqlStdOperatorTable.concatOperator,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
+                FarragoOJRexBuiltinImplementor.Function.CONCAT));
 
-        /*
-        registerOperator( opTab.convertFunc, new FarragoOJRexBuiltinImplementor(
-         FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
+        if (false) {
+            registerOperator(
+                SqlStdOperatorTable.convertFunc,
+                new FarragoOJRexBuiltinImplementor(
+                    null /*FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION*/));
 
-         registerOperator( opTab.translateFunc, new
-         FarragoOJRexBuiltinImplementor(
-         FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
-         */
+            registerOperator(
+                SqlStdOperatorTable.translateFunc,
+                new FarragoOJRexBuiltinImplementor(
+                    null
+                    /*FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION*/));
+        }
 
         registerOperator(
-            opTab.positionFunc,
+            SqlStdOperatorTable.positionFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.POSITION_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.POSITION));
 
         registerOperator(
-            opTab.trimFunc,
+            SqlStdOperatorTable.trimFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.TRIM_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.TRIM));
 
         registerOperator(
-            opTab.charLengthFunc,
+            SqlStdOperatorTable.charLengthFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CHAR_LENGTH_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CHAR_LENGTH));
 
         registerOperator(
-            opTab.characterLengthFunc,
+            SqlStdOperatorTable.characterLengthFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CHARACTER_LENGTH_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CHARACTER_LENGTH));
 
         registerOperator(
-            opTab.upperFunc,
+            SqlStdOperatorTable.upperFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.UPPER_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.UPPER));
 
         registerOperator(
-            opTab.lowerFunc,
+            SqlStdOperatorTable.lowerFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LOWER_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LOWER));
 
         registerOperator(
-            opTab.initcapFunc,
+            SqlStdOperatorTable.initcapFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.INITCAP));
 
         registerOperator(
-            opTab.similarOperator,
-            new FarragoOJRexSimilarLikeImplementor(true, false));
+            SqlStdOperatorTable.similarOperator,
+            new FarragoOJRexSimilarLikeImplementor(true));
 
         registerOperator(
-            opTab.notSimilarOperator,
-            new FarragoOJRexSimilarLikeImplementor(true, true));
+            SqlStdOperatorTable.likeOperator,
+            new FarragoOJRexSimilarLikeImplementor(false));
 
         registerOperator(
-            opTab.likeOperator,
-            new FarragoOJRexSimilarLikeImplementor(false, false));
-
-        registerOperator(
-            opTab.notLikeOperator,
-            new FarragoOJRexSimilarLikeImplementor(false, true));
-
-        registerOperator(
-            opTab.caseOperator,
+            SqlStdOperatorTable.caseOperator,
             new FarragoOJRexCaseImplementor());
 
         registerOperator(
-            opTab.castFunc,
+            SqlStdOperatorTable.castFunc,
             new FarragoOJRexCastImplementor());
 
         registerOperator(
-            opTab.isTrueOperator,
-            new FarragoOJRexTruthTestImplementor(true));
+            SqlStdOperatorTable.isTrueOperator,
+            new FarragoOJRexTruthTestImplementor(true, false));
 
         registerOperator(
-            opTab.isFalseOperator,
-            new FarragoOJRexTruthTestImplementor(false));
+            SqlStdOperatorTable.isNotTrueOperator,
+            new FarragoOJRexTruthTestImplementor(true, true));
 
         registerOperator(
-            opTab.isNullOperator,
+            SqlStdOperatorTable.isFalseOperator,
+            new FarragoOJRexTruthTestImplementor(false, false));
+
+        registerOperator(
+            SqlStdOperatorTable.isNotFalseOperator,
+            new FarragoOJRexTruthTestImplementor(false, true));
+
+        registerOperator(
+            SqlStdOperatorTable.isNullOperator,
             new FarragoOJRexNullTestImplementor(true));
 
         registerOperator(
-            opTab.isNotNullOperator,
+            SqlStdOperatorTable.isNotNullOperator,
             new FarragoOJRexNullTestImplementor(false));
 
         registerOperator(
-            opTab.rowConstructor,
+            SqlStdOperatorTable.rowConstructor,
             new FarragoOJRexRowImplementor());
 
         registerOperator(
-            opTab.newOperator,
+            SqlStdOperatorTable.newOperator,
             new FarragoOJRexRowImplementor());
 
         registerOperator(
-            opTab.reinterpretOperator,
+            SqlStdOperatorTable.reinterpretOperator,
             new FarragoOJRexReinterpretImplementor());
 
         registerOperator(
             SqlStdOperatorTable.nextValueFunc,
             new FarragoOJRexNextValueImplementor());
 
-        registerContextOp(opTab.userFunc);
-        registerContextOp(opTab.systemUserFunc);
-        registerContextOp(opTab.sessionUserFunc);
-        registerContextOp(opTab.currentUserFunc);
-        registerContextOp(opTab.currentRoleFunc);
-        registerContextOp(opTab.currentPathFunc);
-        registerContextOp(opTab.currentDateFunc);
-        registerContextOp(opTab.currentTimeFunc);
-        registerContextOp(opTab.currentTimestampFunc);
-        registerContextOp(opTab.localTimeFunc);
-        registerContextOp(opTab.localTimestampFunc);
+        registerOperator(
+            SqlStdOperatorTable.isDifferentFromOperator,
+            new FarragoOJRexStaticMethodImplementor(
+                FarragoSyntheticObject.class,
+                "testIsDifferentFrom"));
+
+        registerOperator(
+            SqlStdOperatorTable.columnListConstructor,
+            new FarragoOJRexColumnListImplementor());
+
+        registerContextOp(SqlStdOperatorTable.userFunc);
+        registerContextOp(SqlStdOperatorTable.systemUserFunc);
+        registerContextOp(SqlStdOperatorTable.sessionUserFunc);
+        registerContextOp(SqlStdOperatorTable.currentUserFunc);
+        registerContextOp(SqlStdOperatorTable.currentRoleFunc);
+        registerContextOp(SqlStdOperatorTable.currentPathFunc);
+        registerContextOp(SqlStdOperatorTable.currentCatalogFunc);
+        registerContextOp(SqlStdOperatorTable.currentSchemaFunc);
+        registerContextOp(SqlStdOperatorTable.currentDateFunc);
+        registerContextOp(SqlStdOperatorTable.currentTimeFunc);
+        registerContextOp(SqlStdOperatorTable.currentTimestampFunc);
+        registerContextOp(SqlStdOperatorTable.localTimeFunc);
+        registerContextOp(SqlStdOperatorTable.localTimestampFunc);
     }
 
     protected void registerContextOp(SqlFunction op)

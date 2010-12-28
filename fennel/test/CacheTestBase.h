@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,13 +34,15 @@ FENNEL_BEGIN_NAMESPACE
  * CacheTestBase is a common base for any test which depends on the Cache
  * interface.
  */
-class CacheTestBase : virtual public TestBase
+class FENNEL_TEST_EXPORT CacheTestBase
+    : virtual public TestBase
 {
 protected:
     /**
      * The available victim policy implementations.
      */
     enum VictimPolicy {
+        victimTwoQ,
         victimLRU,
         victimRandom
     };
@@ -54,7 +56,7 @@ protected:
      * Parameters for cache initialization.
      */
     CacheParams cacheParams;
-    
+
     /**
      * Cache instance being tested.
      */
@@ -69,7 +71,7 @@ protected:
      * Size of cache in memory pages.
      */
     uint nMemPages;
-    
+
     /**
      * Size of device in disk pages.
      */
@@ -79,7 +81,7 @@ protected:
      * Disk page size.
      */
     uint cbPageFull;
-    
+
     /**
      * Fixed ID to assign to data device.
      */
@@ -87,22 +89,22 @@ protected:
 
 public:
     explicit CacheTestBase();
-    
+
     Cache &getCache();
 
     virtual SharedCache newCache();
 
     SharedRandomAccessDevice openDevice(
-        std::string devName,DeviceMode openMode,uint nDevicePages,
+        std::string devName, DeviceMode openMode, uint nDevicePages,
         DeviceId deviceId);
-    
+
     virtual void openStorage(DeviceMode openMode);
 
     virtual void closeStorage();
 
     virtual void testCaseTearDown();
 
-    void closeDevice(DeviceId deviceId,SharedRandomAccessDevice &pDevice);
+    void closeDevice(DeviceId deviceId, SharedRandomAccessDevice &pDevice);
 };
 
 FENNEL_END_NAMESPACE

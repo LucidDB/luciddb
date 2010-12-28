@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class SqlSelect
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -58,15 +57,20 @@ public class SqlSelect
         SqlParserPos pos)
     {
         super(operator, operands, pos);
-        Util.pre(operands.length == OPERAND_COUNT,
+        Util.pre(
+            operands.length == OPERAND_COUNT,
             "operands.length == OPERAND_COUNT");
-        Util.pre(operands[KEYWORDS_OPERAND] != null,
+        Util.pre(
+            operands[KEYWORDS_OPERAND] != null,
             "operands[KEYWORDS_OPERAND] != null");
-        Util.pre(operands[KEYWORDS_OPERAND] instanceof SqlNodeList,
+        Util.pre(
+            operands[KEYWORDS_OPERAND] instanceof SqlNodeList,
             "operands[KEYWORDS_OPERAND] instanceof SqlNodeList");
-        Util.pre(operands[WINDOW_OPERAND] != null,
+        Util.pre(
+            operands[WINDOW_OPERAND] != null,
             "operands[WINDOW_OPERAND] != null");
-        Util.pre(operands[WINDOW_OPERAND] instanceof SqlNodeList,
+        Util.pre(
+            operands[WINDOW_OPERAND] instanceof SqlNodeList,
             "operands[WINDOW_OPERAND] instanceof SqlNodeList");
         Util.pre(pos != null, "pos != null");
     }
@@ -135,23 +139,24 @@ public class SqlSelect
         } else {
             fromClause =
                 SqlStdOperatorTable.joinOperator.createCall(
+                    null,
                     fromClause,
-                    tableId,
-                    null);
+                    tableId);
         }
         operands[FROM_OPERAND] = fromClause;
     }
 
     public void addWhere(SqlNode condition)
     {
-        assert (operands[SELECT_OPERAND] == null) : "cannot add a filter if there is already a select list";
+        assert operands[SELECT_OPERAND] == null
+            : "cannot add a filter if there is already a select list";
         operands[WHERE_OPERAND] =
             SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
-        validator.validateQuery(this);
+        validator.validateQuery(this, scope);
     }
 
     // Override SqlCall, to introduce a subquery frame.
@@ -162,7 +167,7 @@ public class SqlSelect
             // frame. (The topmost item in the subquery might be a UNION or
             // ORDER. In this case, we don't need a wrapper frame.)
             final SqlWriter.Frame frame =
-                writer.startList(SqlWriter.FrameType.Subquery, "(", ")");
+                writer.startList(SqlWriter.FrameTypeEnum.Subquery, "(", ")");
             getOperator().unparse(writer, operands, 0, 0);
             writer.endList(frame);
         } else {

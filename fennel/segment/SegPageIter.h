@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,13 +41,46 @@ class Segment;
  *
  * NOTE:  this is not an STL-style iterator.
  */
-class SegPageIter
+class FENNEL_SEGMENT_EXPORT SegPageIter
 {
+    /**
+     * Maximum number of outstanding pre-fetch requests
+     */
+    uint prefetchPagesMax;
+
+    /**
+     * Number of successful pre-fetches before pre-fetch can be throttled back
+     * up
+     */
+    uint prefetchThrottleRate;
+
+    /**
+     * Current slot in the prefetchQueue that needs to be populated
+     */
+    uint currPageSlot;
+
+    /**
+     * True if pre-fetches have been turned off
+     */
+    bool noPrefetch;
+
+    /**
+     * The remaining number of successful pre-fetches that need to occur before
+     * the pre-fetch rate can be throttled back up
+     */
+    uint throttleCount;
+
+    /**
+     * If true, force the next pre-fetch request to be rejected
+     */
+    bool forceReject;
+
+protected:
     /**
      * Accessor for the Segment containing the pages to be visited.
      */
     SegmentAccessor segmentAccessor;
-    
+
     /**
      * PageId at which to stop iteration.
      */
@@ -70,17 +103,29 @@ class SegPageIter
     bool atEnd;
 
     /**
-     * Number of pages per batch prefetch.
+     * Current size of the pre-fetch queue
      */
-    uint nPagesPerBatch;
+    uint queueSize;
 
     /**
-     * Number of batches to prefetch.
+     * Number of slots available in the prefetchQueue.  May temporarily become
+     * negative in the case where pre-fetches are turned off.
      */
-    uint nBatchPrefetches;
-    
-    void prefetchBatch(PageId head,uint batchNumber);
-    
+    int nFreePageSlots;
+
+    /**
+     * Reads the pre-fetch parameters, sizes the pre-fetch queue, and
+     * initializes various state variables related to the queue.
+     */
+    void initPrefetchQueue();
+
+    /**
+     * Pre-fetches a specified page.
+     *
+     * @param pageId the id of the page to be pre-fetched
+     */
+    void prefetchPage(PageId pageId);
+
 public:
     /**
      * Constructor:  iterator starts out singular.
@@ -119,6 +164,12 @@ public:
      * called when positioned on endPageId.
      */
     void operator ++ ();
+
+    /**
+     * Forces the next pre-fetch request to be rejected.  Used for testing
+     * purposes.
+     */
+    void forcePrefetchReject();
 
     /**
      * Aborts any iteration in progress and release all resources.

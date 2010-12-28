@@ -17,9 +17,15 @@ select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
 where schema_name='MGMT' and routine_specific_name='SLEEP'
 order by 1;
 
+-- SYS_CWM/FEM use different wrappers depending on repository configuration
 select foreign_wrapper_name, foreign_server_name
 from sys_boot.mgmt.dba_foreign_servers_internal2
+where foreign_server_name not in ('SYS_CWM', 'SYS_FEM')
 order by 1,2;
+
+select foreign_server_name
+from sys_boot.mgmt.dba_foreign_servers_internal2
+order by 1;
 
 create schema mtest;
 create table mtest.t(col int primary key);
@@ -89,6 +95,38 @@ select source_name, counter_name
 from table(sys_boot.mgmt.performance_counters())
 order by source_name, counter_name;
 
+call sys_boot.mgmt.create_directory('testgen/mgmt_files');
+
+create server test_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'testgen/mgmt_files/',
+    file_extension 'csv',
+    with_header 'yes', 
+    lenient 'no');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should pass
+call sys_boot.mgmt.test_data_server('TEST_SERVER');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should pass
+call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+
+call sys_boot.mgmt.delete_file_or_directory('testgen/mgmt_files');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should fail now that directory is gone
+call sys_boot.mgmt.test_data_server('TEST_SERVER');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should fail now that directory is gone
+call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+
 -- set code cache size to some arbitrary number
 alter system set "codeCacheMaxBytes" = 42000;
 
@@ -96,6 +134,3 @@ call sys_boot.mgmt.flush_code_cache();
 
 -- verify that flush did not modify code cache size
 select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
-
--- back to max
-alter system set "codeCacheMaxBytes" = max;

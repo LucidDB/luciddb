@@ -2,10 +2,10 @@
 <!-- 
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -35,11 +35,21 @@
   <property name="plugin.catalog.dir" 
     location="${plugin.dir}/catalog"/>
 
+  <!-- By default, use Farrago's repository storage properties. -->
+  <property
+    name="plugin.repos.storage.propfile" 
+    location="${farrago.ReposStorage.propfile}"/>
+
   <property name="plugin.xmi.dir" 
     location="${plugin.catalog.dir}/xmi"/>
 
   <property name="plugin.catalog.src.dir" 
     location="${plugin.catalog.dir}/java"/>
+
+  <property name="plugin.catalog.sql.dir" 
+    location="${plugin.catalog.dir}/sql"/>
+
+  <property name="plugin.catalog.schema" value="${project.catalog.schema}"/>
 
   <property name="plugin.src.dir" 
     location="${plugin.dir}/src"/>
@@ -56,6 +66,9 @@
   <property name="plugin.parser.impl.dir" 
     location="${plugin.src.dir}/${plugin.parser.impl.package}"/>
 
+  <property name="plugin.manifest.attr.name" 
+    value="PluginFactoryClassName"/>
+
   <path id="plugin.classpath">
     <pathelement path="${plugin.3p.classpath}"/>
     <pathelement path="${farrago.run.classpath}"/>
@@ -69,6 +82,10 @@
     <fail unless="plugin.model.prefix"/>
     <fail unless="plugin.model.package"/>
     <fail unless="plugin.factory.class"/>
+    <property
+       name="plugin.uml2mof.storageModel"
+       value="${uml2mof.default.storageModel}"/>
+
     <mkdir dir="${plugin.catalog.src.dir}"/>
     <mkdir dir="${plugin.classes.dir}"/>
     <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
@@ -80,14 +97,16 @@
           umlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.uml"
           umlBasename="${plugin.model.basename}Model"
           mofBasename="${plugin.model.basename}Mof"
-          xmiDir="${plugin.xmi.dir}"/>
+          xmiDir="${plugin.xmi.dir}"
+          storageModel="${plugin.uml2mof.storageModel}"/>
       </ac:then>
       <ac:else>
         <farrago.extractPoseidonModel 
           zumlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.zuml"
           umlBasename="${plugin.model.basename}Model"
           mofBasename="${plugin.model.basename}Mof"
-          xmiDir="${plugin.xmi.dir}"/>
+          xmiDir="${plugin.xmi.dir}"
+          storageModel="${plugin.uml2mof.storageModel}"/>
       </ac:else>
     </ac:if>
     <farrago.transformExtensionModel
@@ -98,18 +117,39 @@
       extMofBasename="${plugin.model.basename}Mof"
       xmiDir="${plugin.xmi.dir}"/>
     <farrago.antFork dir="${plugin.dir}" 
-      target="plugin.forked_importMetamodel"/>
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${plugin.catalog.src.dir}" 
-        excludes="${plugin.model.package}/**"/>
-    </delete>
-    <farrago.uncommentGenerics javadir="${plugin.catalog.src.dir}"/>
+      target="plugin.forked_generateMetamodelCode">
+      <jvmargs>
+        <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+        <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+      </jvmargs>
+    </farrago.antFork>
     <farrago.javaCompile
       srcdir="${plugin.catalog.src.dir}"
       destdir="${plugin.catalog.src.dir}"
       classpathref="plugin.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
+    <farrago.setReposProvider
+      reposStorageProps="${plugin.repos.storage.propfile}"/>
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <farrago.antFork dir="${plugin.dir}" 
+          target="plugin.forked_configureMetamodelSchema">
+          <jvmargs>
+            <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+            <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+          </jvmargs>
+        </farrago.antFork>
+      </then>
+    </ac:if>
+    <farrago.antFork dir="${plugin.dir}" 
+      target="plugin.forked_importMetamodel">
+      <jvmargs>
+        <jvmarg line="-Dfarrago.ReposStorage.propfile=${plugin.repos.storage.propfile}" />
+        <jvmarg line="-DFARRAGO_CATALOG_DIR=${FARRAGO_CATALOG_DIR}" />
+      </jvmargs>
+    </farrago.antFork>
     <farrago.javaExec
       classname="net.sf.farrago.catalog.FarragoReposUtil"
       classpathref="farrago.run.classpath">
@@ -126,14 +166,86 @@
       out="${plugin.xmi.dir}/${plugin.model.prefix}PluginModel.xmi" />
   </target>
 
-  <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">
-    <mdr storageFile="${plugin.catalog.dir}/FarragoCatalog">
-      <instantiate name="FarragoMetamodel"/>
-      <readXMI
-        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
-        extent="FarragoMetamodel"/>
+  <target name="plugin.forked_generateMetamodelCode" depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider
+      reposStorageProps="${plugin.repos.storage.propfile}"/>
+
+    <!-- Make sure the MDR build trace file is configured. -->
+    <farrago.configureTrace
+      propFile="${FarragoMdrBuildTrace.properties}" logFile="${FarragoMdrBuildTrace.log}"/>
+
+    <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
       <mapJava
+        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
         dir="${plugin.catalog.src.dir}"
+        extent="FarragoMetamodel"
+        generatorClass="${farrago.enki.generator}"
+        generatorOptions="tablePrefix='FEM_',plugin=true,include='${plugin.model.package}'"/>
+    </mdr>
+
+    <delete quiet="true">
+      <fileset dir="." includes="mdr.bt?"/>
+    </delete>
+
+  </target>
+
+  <target name="plugin.forked_configureMetamodelSchema" depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider
+      reposStorageProps="${plugin.repos.storage.propfile}"/>
+
+    <mkdir dir="${plugin.catalog.sql.dir}"/>
+
+    <mdr
+        propertiesFile="${plugin.repos.storage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}"
+        modelPathRef="plugin.classpath">
+      <exportSchema
+        mode="model-plugin"
+        dir="${plugin.catalog.src.dir}"
+        extent="FarragoMetamodel"/>
+      <applyTablePrefix output="${plugin.catalog.sql.dir}">
+        <fileset dir="${plugin.catalog.src.dir}">
+          <include name="**/*.sql"/>
+        </fileset>
+      </applyTablePrefix>
+    </mdr>
+
+    <property 
+        file="${plugin.repos.storage.propfile}"
+        prefix="gensch"/>
+
+    <!-- N.B. this expects that the given database already has the FEM
+         metamodel in place and that we just need to create the plugin's
+         tables. Otherwise, need to invoke farrago/catalog/sql/provider.sql 
+         and create.sql as well. -->
+    <echo>
+      Configuring repository schema at:
+      ${gensch.net.sf.farrago.dev.connection.schema.url}
+    </echo>
+    <sql
+        driver="${gensch.net.sf.farrago.dev.connection.driver_class}"
+        url="${gensch.net.sf.farrago.dev.connection.schema.url}"
+        userid="${gensch.net.sf.farrago.dev.connection.username}"
+        password="${gensch.net.sf.farrago.dev.connection.password}"
+        classpathref="plugin.classpath">
+      <fileset dir="${plugin.catalog.sql.dir}">
+        <include name="**/create.sql"/>
+      </fileset>
+    </sql>
+  </target>
+
+  <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">
+    <mdr>
+      <storageProperty
+        name="org.eigenbase.enki.implementationType" 
+        value="NETBEANS_MDR"/>
+      <storageProperty
+        name="org.netbeans.mdr.persistence.Dir"
+        value="${plugin.catalog.dir}/FarragoCatalog"/>
+
+      <createExtent name="FarragoMetamodel"/>
+      <importXMI
+        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
         extent="FarragoMetamodel"/>
     </mdr>
   </target>
@@ -192,10 +304,9 @@
     <mkdir dir="${plugin.classes.dir}/META-INF"/>
     <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <attribute
-        name="PluginFactoryClassName"
+        name="${plugin.manifest.attr.name}"
         value="${plugin.factory.class}"/>
     </manifest>
-    <antcall target="plugin.retroweaveIfRequested"/>
     <jar destfile="${plugin.jar.file}" compress="true" 
       manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.classes.dir}">
@@ -217,20 +328,13 @@
       manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.catalog.src.dir}">
         <include name="**/*.class"/>
+        <include name="**/*.properties"/>
+        <include name="**/*.xml"/>
       </fileset>
       <fileset dir="${plugin.xmi.dir}">
         <include name="${plugin.model.prefix}PluginModel.xmi"/>
       </fileset>
     </jar>
-  </target>
-
-  <target name="plugin.retroweaveIfRequested" if="farrago.need.retroweave">
-    <retroweaver srcdir="${plugin.classes.dir}" />
-    <antcall target="plugin.retroweave.catalog"/>
-  </target>
-
-  <target name="plugin.retroweave.catalog" if="plugin.model.prefix">
-    <retroweaver srcdir="${plugin.catalog.src.dir}" />
   </target>
 
   <target name="plugin.clean">
@@ -246,6 +350,7 @@
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.xmi.dir}" includes="*.xmi"/>
       <fileset dir="${plugin.catalog.dir}" includes="FarragoCatalog.*"/>
+      <fileset dir="${plugin.catalog.src.dir}" includes="**"/>
     </delete>
   </target>
 

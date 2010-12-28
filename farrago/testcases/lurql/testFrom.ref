@@ -32,6 +32,52 @@ Class: Exception
 
 ****
 
+# Test MATCHES filter
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "name" matches '.*x.*';
+
+EXPLANATION:
+anon_1 { ModelElement } where "name" matches '.*x.*'
+
+EXECUTION RESULT:
+Association: Exposes
+AssociationEnd: except
+AssociationEnd: exposedEnd
+Attribute: expression
+Class: Exception
+Constraint: ContainerMustMatchExposedType
+Constraint: ExceptionContainmentRules
+Constraint: ExceptionsHaveOnlyOutParameters
+Constraint: LowerCannotExceedUpper
+Constraint: OperationExceptionsMustBeVisible
+Operation: findElementsByTypeExtended
+Operation: lookupElementExtended
+Parameter: explanation
+Reference: exceptions
+Reference: exposedEnd
+
+****
+
+# Test MATCHES filter with NOT
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    not "name" matches '.*[a-j].*';
+
+EXPLANATION:
+anon_1 { ModelElement } where not "name" matches '.*[a-j].*'
+
+EXECUTION RESULT:
+Class: Import
+
+****
+
 # Test IN filter with SQL query.
 PARSE RESULT:
 select *
@@ -82,6 +128,61 @@ EXECUTION RESULT:
 Attribute: annotation
 Attribute: name
 Attribute: qualifiedName
+
+****
+
+# Test filter based on null (without matches)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "name" = null;
+
+EXECUTION RESULT:
+
+****
+
+# Test filter based on null (with matches)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "container" = null;
+
+EXECUTION RESULT:
+Package: CorbaIdlTypes
+Package: Model
+Package: PrimitiveTypes
+
+****
+
+# Test filter based on null with IN (no matches for null)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "name" in (null, 'Exception');
+
+EXECUTION RESULT:
+Class: Exception
+
+****
+
+# Test filter based on null with IN (with matches for null)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "container" in (null, 'Foo');
+
+EXECUTION RESULT:
+Package: CorbaIdlTypes
+Package: Model
+Package: PrimitiveTypes
 
 ****
 

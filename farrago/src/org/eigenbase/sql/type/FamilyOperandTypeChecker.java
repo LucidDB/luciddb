@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,14 +38,13 @@ import org.eigenbase.sql.*;
 public class FamilyOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected SqlTypeFamily [] families;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FamilyOperandTypeChecker(SqlTypeFamily [] families)
+    public FamilyOperandTypeChecker(SqlTypeFamily ... families)
     {
         this.families = families;
     }
@@ -60,7 +59,7 @@ public class FamilyOperandTypeChecker
         boolean throwOnFailure)
     {
         SqlTypeFamily family = families[iFormalOperand];
-        if (family == SqlTypeFamily.Any) {
+        if (family == SqlTypeFamily.ANY) {
             // no need to check
             return true;
         }
@@ -104,7 +103,8 @@ public class FamilyOperandTypeChecker
                     callBinding,
                     operand,
                     i,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
         }
@@ -121,9 +121,9 @@ public class FamilyOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
         return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                Arrays.asList(families));
+            op,
+            opName,
+            Arrays.asList(families));
     }
 
     // hack for FarragoCalcSystemTest

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -71,11 +71,13 @@ void TupleAccessor::clear()
         bind(delete_ptr(),_1));
     ppAttributeAccessors.clear();
     pVarWidthAttrIndices.clear();
+    marshalOrder.clear();
     pTupleBuf = NULL;
+    bAlignedVar = false;
 }
 
 // TODO:  clean up template factory craziness below, and add network support
-// for 64-bit types
+// for 64-bit types and UNICODE
 
 // NOTE:  there's a small amount of code in Farrago which is sensitive to this
 // algorithm, e.g. bit field ordering
@@ -88,10 +90,12 @@ void TupleAccessor::compute(
 
     // these vectors keep track of the logical 0-based indices of the
     // attributes belonging to the various attribute storage classes
-    std::vector<uint> aligned8;
-    std::vector<uint> aligned4;
-    std::vector<uint> aligned2;
-    std::vector<uint> unalignedFixed;
+    VectorOfUint aligned8;
+    VectorOfUint aligned4;
+    VectorOfUint aligned2;
+    VectorOfUint unalignedFixed;
+    VectorOfUint unalignedVar;
+    VectorOfUint alignedVar2;
 
     // special-case reference to the accessor for the first variable-width
     // attribute
@@ -141,46 +145,18 @@ void TupleAccessor::compute(
             attr.cbStorage);
         if (!bFixedWidth) {
             cbVarDataMax += attr.cbStorage;
-            assert(iAlign == 1);
-            if (pFirstVariableAccessor) {
-                if (bNullable) {
-                    if (format == TUPLE_FORMAT_NETWORK) {
-                        pNewAccessor =
-                            new NullableAccessor< VarOffsetAccessor<true> >;
-                    } else {
-                        pNewAccessor =
-                            new NullableAccessor< VarOffsetAccessor<false> >;
-                    }
-                } else {
-                    if (format == TUPLE_FORMAT_NETWORK) {
-                        pNewAccessor = new VarOffsetAccessor<true>;
-                    } else {
-                        pNewAccessor = new VarOffsetAccessor<false>;
-                    }
-                }
+            if (iAlign == 2) {
+                alignedVar2.push_back(iAttr);
+                bAlignedVar = true;
             } else {
-                if (bNullable) {
-                    if (format == TUPLE_FORMAT_NETWORK) {
-                        pFirstVariableAccessor =
-                            new NullableAccessor<
-                            FixedOffsetVarWidthAccessor<true> >;
-                    } else {
-                        pFirstVariableAccessor =
-                            new NullableAccessor<
-                            FixedOffsetVarWidthAccessor<false> >;
-                    }
-                } else {
-                    if (format == TUPLE_FORMAT_NETWORK) {
-                        pFirstVariableAccessor =
-                            new FixedOffsetVarWidthAccessor<true>;
-                    } else {
-                        pFirstVariableAccessor =
-                            new FixedOffsetVarWidthAccessor<false>;
-                    }
-                }
-                pNewAccessor = pFirstVariableAccessor;
+                assert(iAlign == 1);
+                unalignedVar.push_back(iAttr);
             }
-            pVarWidthAttrIndices.push_back(iAttr);
+            // We need to defer actual creation of the accessor until
+            // after we've sorted out aligned from unaligned, so just
+            // fill a placeholder into the array for now and
+            // we'll overwrite it later.
+            pNewAccessor = new VarOffsetAccessor<false>();
         } else if (nBits) {
             if (bNullable) {
                 pNewAccessor = new NullableAccessor<BitAccessor>;
@@ -190,11 +166,15 @@ void TupleAccessor::compute(
             pNewAccessor->iValueBit = nBitFields;
             nBitFields++;
         } else {
-            assert((cbMin%iAlign) == 0);
-            switch(iAlign) {
+            assert((cbMin % iAlign) == 0);
+            bool bArray =
+                StandardTypeDescriptor::isArray(
+                    StandardTypeDescriptorOrdinal(
+                        attr.pTypeDescriptor->getOrdinal()));
+            switch (iAlign) {
             case 2:
                 if (bNullable) {
-                    if (format == TUPLE_FORMAT_NETWORK) {
+                    if ((format == TUPLE_FORMAT_NETWORK) && !bArray) {
                         pNewAccessor =
                             new NullableAccessor<FixedWidthNetworkAccessor16>;
                     } else {
@@ -202,7 +182,7 @@ void TupleAccessor::compute(
                             new NullableAccessor<FixedWidthAccessor>;
                     }
                 } else {
-                    if (format == TUPLE_FORMAT_NETWORK) {
+                    if ((format == TUPLE_FORMAT_NETWORK) && !bArray) {
                         pNewAccessor = new FixedWidthNetworkAccessor16;
                     } else {
                         pNewAccessor = new FixedWidthAccessor;
@@ -251,7 +231,7 @@ void TupleAccessor::compute(
                 }
                 break;
             }
-            switch(iAlign) {
+            switch (iAlign) {
             case 1:
                 unalignedFixed.push_back(iAttr);
                 break;
@@ -277,12 +257,72 @@ void TupleAccessor::compute(
     }
     bitFields.resize(nBitFields);
 
+    // fill in variable-width attributes, since we had to defer them
+    // above so that we could collect aligned ones before unaligned ones
+    pVarWidthAttrIndices.resize(alignedVar2.size() + unalignedVar.size());
+    std::copy(
+        alignedVar2.begin(), alignedVar2.end(),
+        pVarWidthAttrIndices.begin());
+    std::copy(
+        unalignedVar.begin(), unalignedVar.end(),
+        pVarWidthAttrIndices.begin() + alignedVar2.size());
+    for (uint i = 0; i < pVarWidthAttrIndices.size(); ++i) {
+        uint iAttr = pVarWidthAttrIndices[i];
+        TupleAttributeDescriptor const &attr = tuple[iAttr];
+        bool bNullable = attr.isNullable;
+        AttributeAccessor *pNewAccessor;
+        if (pFirstVariableAccessor) {
+            if (bNullable) {
+                if (format == TUPLE_FORMAT_NETWORK) {
+                    pNewAccessor =
+                        new NullableAccessor< VarOffsetAccessor<true> >;
+                } else {
+                    pNewAccessor =
+                        new NullableAccessor< VarOffsetAccessor<false> >;
+                }
+            } else {
+                if (format == TUPLE_FORMAT_NETWORK) {
+                    pNewAccessor = new VarOffsetAccessor<true>;
+                } else {
+                    pNewAccessor = new VarOffsetAccessor<false>;
+                }
+            }
+        } else {
+            if (bNullable) {
+                if (format == TUPLE_FORMAT_NETWORK) {
+                    pFirstVariableAccessor =
+                        new NullableAccessor<
+                        FixedOffsetVarWidthAccessor<true> >;
+                } else {
+                    pFirstVariableAccessor =
+                        new NullableAccessor<
+                        FixedOffsetVarWidthAccessor<false> >;
+                }
+            } else {
+                if (format == TUPLE_FORMAT_NETWORK) {
+                    pFirstVariableAccessor =
+                        new FixedOffsetVarWidthAccessor<true>;
+                } else {
+                    pFirstVariableAccessor =
+                        new FixedOffsetVarWidthAccessor<false>;
+                }
+            }
+            pNewAccessor = pFirstVariableAccessor;
+        }
+        AttributeAccessor *pPlaceholder = ppAttributeAccessors[iAttr];
+        pNewAccessor->cbStorage = attr.cbStorage;
+        pNewAccessor->iNullBit = pPlaceholder->iNullBit;
+        // overwrite placeholder
+        ppAttributeAccessors[iAttr] = pNewAccessor;
+        delete pPlaceholder;
+    }
+
     // now, make a pass over each storage class, calculating actual offsets;
     // note that initFixedAccessors advances cbMaxStorage as a side-effect
-    initFixedAccessors(tuple,aligned8);
-    initFixedAccessors(tuple,aligned4);
-    initFixedAccessors(tuple,aligned2);
-    
+    initFixedAccessors(tuple, aligned8);
+    initFixedAccessors(tuple, aligned4);
+    initFixedAccessors(tuple, aligned2);
+
     if (pFirstVariableAccessor) {
         iFirstVarEndIndirectOffset = cbMaxStorage;
     } else {
@@ -294,14 +334,14 @@ void TupleAccessor::compute(
             cbMaxStorage;
         cbMaxStorage += sizeof(StoredValueOffset);
     }
-    
+
     if (pFirstVariableAccessor) {
         iLastVarEndIndirectOffset = cbMaxStorage - sizeof(StoredValueOffset);
     } else {
         iLastVarEndIndirectOffset = MAXU;
     }
-    
-    initFixedAccessors(tuple,unalignedFixed);
+
+    initFixedAccessors(tuple, unalignedFixed);
 
     if (nBitFields) {
         iBitFieldOffset = cbMaxStorage;
@@ -310,6 +350,13 @@ void TupleAccessor::compute(
     }
     cbMaxStorage += bytesForBits(nBitFields);
     if (pFirstVariableAccessor) {
+        if (bAlignedVar) {
+            // First variable-width value needs to be 2-byte aligned,
+            // so add one byte of padding if necessary.
+            if (cbMaxStorage & 1) {
+                ++cbMaxStorage;
+            }
+        }
         pFirstVariableAccessor->iFixedOffset = cbMaxStorage;
         iFirstVarOffset = cbMaxStorage;
     } else {
@@ -331,10 +378,30 @@ void TupleAccessor::compute(
     // AFTER computing cbMaxStorage based on the unaligned cbMinStorage
     cbMinStorage = alignRoundUp(cbMinStorage);
     cbMaxStorage = alignRoundUp(cbMaxStorage);
+
+    // if aligned variable-width fields are present, permute the marshalling
+    // order so that they come before unaligned variable-width fields
+    if (bAlignedVar) {
+        // add all of the fixed-width attributes
+        for (uint i = 0; i < tuple.size(); ++i) {
+            AttributeAccessor const &accessor = getAttributeAccessor(i);
+            if (isMAXU(accessor.iEndIndirectOffset)) {
+                marshalOrder.push_back(i);
+            }
+        }
+        uint nFixed = marshalOrder.size();
+        assert(nFixed + pVarWidthAttrIndices.size() == tuple.size());
+        marshalOrder.resize(tuple.size());
+        // then all of the variable-width attributes, in the correct order
+        std::copy(
+            pVarWidthAttrIndices.begin(),
+            pVarWidthAttrIndices.end(),
+            marshalOrder.begin() + nFixed);
+    }
 }
 
 void TupleAccessor::initFixedAccessors(
-    TupleDescriptor const &tuple,std::vector<uint> &v)
+    TupleDescriptor const &tuple,VectorOfUint &v)
 {
     for (uint i = 0; i < v.size(); i++) {
         uint iAttr = v[i];
@@ -421,9 +488,9 @@ void TupleAccessor::resetCurrentTupleBuf()
 
 void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 {
-    uint n = std::min(tuple.size() - iFirstDatum,ppAttributeAccessors.size());
-    
-    if (format == TUPLE_FORMAT_NETWORK) {
+    uint n = std::min(tuple.size() - iFirstDatum, ppAttributeAccessors.size());
+
+    if ((format == TUPLE_FORMAT_NETWORK) || bAlignedVar) {
         // for TUPLE_FORMAT_NETWORK, unmarshal attributes individually
         for (uint i = 0; i < n; ++i) {
             getAttributeAccessor(i).unmarshalValue(
@@ -434,7 +501,7 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 
     // for other formats, we can go a little faster by avoiding per-attribute
     // call overhead
-    
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset const *pNextVarEndOffset =
         referenceIndirectOffset(iFirstVarEndIndirectOffset);
@@ -460,8 +527,9 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
                 *this,value);
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset ==
-                   referenceIndirectOffset(accessor.iEndIndirectOffset));
+            assert(
+                pNextVarEndOffset
+                == referenceIndirectOffset(accessor.iEndIndirectOffset));
             uint iEndOffset = *pNextVarEndOffset;
             pNextVarEndOffset++;
             value.cbData = iEndOffset - iNextVarOffset;
@@ -476,16 +544,22 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
 #if DEBUG_TUPLE_ACCESS
     *reinterpret_cast<MagicNumber *>(pTupleBufDest) = TUPLE_MAGIC_NUMBER;
 #endif
-    
+
     pTupleBuf = pTupleBufDest;
-            
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset *pNextVarEndOffset =
-        referenceIndirectOffset(pTupleBufDest,iFirstVarEndIndirectOffset);
+        referenceIndirectOffset(pTupleBufDest, iFirstVarEndIndirectOffset);
 
     for (uint i = 0; i < tuple.size(); i++) {
-        TupleDatum const &value = tuple[i];
-        AttributeAccessor const &accessor = getAttributeAccessor(i);
+        uint iAttr;
+        if (bAlignedVar) {
+            iAttr = marshalOrder[i];
+        } else {
+            iAttr = i;
+        }
+        TupleDatum const &value = tuple[iAttr];
+        AttributeAccessor const &accessor = getAttributeAccessor(iAttr);
         if (!isMAXU(accessor.iNullBit)) {
             bitFields[accessor.iNullBit] = value.pData ? false : true;
         }
@@ -499,7 +573,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
                 }
                 assert(value.cbData <= accessor.cbStorage);
                 accessor.marshalValueData(
-                    pTupleBufDest+iOffset,
+                    pTupleBufDest + iOffset,
                     value);
             } else {
                 bitFields[accessor.iValueBit] =
@@ -512,8 +586,9 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
             assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset ==
-                   referenceIndirectOffset(accessor.iEndIndirectOffset));
+            assert(
+                pNextVarEndOffset
+                == referenceIndirectOffset(accessor.iEndIndirectOffset));
             if (value.pData) {
                 iNextVarOffset += value.cbData;
             }

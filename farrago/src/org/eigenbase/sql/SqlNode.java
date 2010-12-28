@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public abstract class SqlNode
     implements Cloneable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlNode [] emptyArray = new SqlNode[0];
@@ -88,27 +87,34 @@ public abstract class SqlNode
     }
 
     /**
-     * Returns whether this node is a particular kind.
-     *
-     * @param kind a {@link org.eigenbase.sql.SqlKind} value
-     */
-    public boolean isA(SqlKind kind)
-    {
-        // REVIEW jvs 6-Feb-2005:  either this should be
-        // getKind().isA(kind), or this method should be renamed to
-        // avoid confusion
-        return getKind() == kind;
-    }
-
-    /**
      * Returns the type of node this is, or {@link
-     * org.eigenbase.sql.SqlKind#Other} if it's nothing special.
+     * org.eigenbase.sql.SqlKind#OTHER} if it's nothing special.
+     *
+     * @see #isA
      *
      * @return a {@link SqlKind} value, never null
      */
     public SqlKind getKind()
     {
-        return SqlKind.Other;
+        return SqlKind.OTHER;
+    }
+
+    /**
+     * Returns whether this node is a member of an aggregate category.
+     *
+     * <p>For example, {@code node.isA(SqlKind.QUERY)} returns {@code true}
+     * if the node is a SELECT, INSERT, UPDATE etc.
+     *
+     * <p>This method is shorthand: {@code node.isA(category)} is always
+     * equivalent to {@code node.getKind().belongsTo(category)}.
+     *
+     * @param category Category
+     *
+     * @return Whether this node belongs to the given category.
+     */
+    public final boolean isA(Set<SqlKind> category)
+    {
+        return getKind().belongsTo(category);
     }
 
     public static SqlNode [] cloneArray(SqlNode [] nodes)
@@ -125,14 +131,14 @@ public abstract class SqlNode
 
     public String toString()
     {
-        return toSqlString(null);
+        return toSqlString(null).getSql();
     }
 
     /**
      * Returns the SQL text of the tree of which this <code>SqlNode</code> is
      * the root.
      *
-     * @param dialect
+     * @param dialect Dialect
      * @param forceParens wraps all expressions in parentheses; good for parse
      * test, but false by default.
      *
@@ -145,20 +151,21 @@ public abstract class SqlNode
      * <li>DATE '1969-04-29'</li>
      * </ul>
      */
-    public String toSqlString(SqlDialect dialect, boolean forceParens)
+    public SqlString toSqlString(SqlDialect dialect, boolean forceParens)
     {
         if (dialect == null) {
-            dialect = SqlUtil.dummyDialect;
+            dialect = SqlDialect.DUMMY;
         }
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         writer.setAlwaysUseParentheses(forceParens);
         writer.setSelectListItemsOnSeparateLines(false);
         writer.setIndentation(0);
         unparse(writer, 0, 0);
-        return writer.toString();
+        final String sql = writer.toString();
+        return new SqlString(dialect, sql);
     }
 
-    public String toSqlString(SqlDialect dialect)
+    public SqlString toSqlString(SqlDialect dialect)
     {
         return toSqlString(dialect, false);
     }
@@ -223,22 +230,6 @@ public abstract class SqlNode
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlParserPos pos,
-        List<SqlMoniker> hintList)
-    {
-        // no valid options
-    }
-
-    /**
-     * Populates a list of all the valid alternatives for this node. Only
-     * implemented now for {@link SqlIdentifier}.
-     *
-     * @param validator Validator
-     * @param scope Validation scope
-     * @param hintList a list of valid options
-     */
-    public void findValidOptions(
-        SqlValidator validator,
-        SqlValidatorScope scope,
         List<SqlMoniker> hintList)
     {
         // no valid options
@@ -311,11 +302,12 @@ public abstract class SqlNode
      * This property is useful because it allows to safely aggregte infinite
      * streams of values.
      *
-     * <p>The default implementation returns <code>false</code>
+     * <p>The default implementation returns {@link
+     * SqlMonotonicity#NotMonotonic}.
      */
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 }
 

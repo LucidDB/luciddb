@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,9 @@
 #define Fennel_JniUtil_Included
 
 #include "fennel/common/AtomicCounter.h"
+#include "fennel/common/PseudoUuid.h"
+#include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/farrago/JavaThreadTracker.h"
 
 #include <jni.h>
 #include <locale>
@@ -35,16 +38,22 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Helper for JniEnvRef.
  */
-class JniExceptionChecker
+class FENNEL_FARRAGO_EXPORT JniExceptionChecker
 {
     JNIEnv *pEnv;
-    
+
+    /**
+     * Checks whether any Java exception has occurred, and if so throws
+     * it as a C++ exception.
+     */
+    void checkExceptions();
+
 public:
     explicit JniExceptionChecker(JNIEnv *pEnvInit)
     {
         pEnv = pEnvInit;
     }
-    
+
     ~JniExceptionChecker();
 
     JNIEnv *operator->() const
@@ -61,10 +70,10 @@ public:
  * call wrapper technique</a> (except without the shared_ptrs, because
  * they're too slow!).
  */
-class JniEnvRef
+class FENNEL_FARRAGO_EXPORT JniEnvRef
 {
     JNIEnv *pEnv;
-    
+
 public:
     /**
      * Explicit constructor:  use supplied JNIEnv pointer.
@@ -101,17 +110,57 @@ public:
  * by allocating a JniEnvAutoRef on a thread's initial stack frame
  * so that it will be available to all methods called.
  */
-class JniEnvAutoRef : public JniEnvRef
+class FENNEL_FARRAGO_EXPORT JniEnvAutoRef
+    : public JniEnvRef
 {
     bool needDetach;
-    
+
 public:
     /**
      * Uses GetEnv to access current thread's JNIEnv pointer.
      */
     explicit JniEnvAutoRef();
 
+    /**
+     * Suppresses default detach-on-destruct behavior.
+     *
+     *<p>
+     *
+     * REVIEW jvs 13-Oct-2006:  Get rid of this and arrange for all
+     * native-spawned threads to attach on start and detach on end.
+     */
+    void suppressDetach();
+
     ~JniEnvAutoRef();
+};
+
+// TODO jvs 21-Aug-2007:  templatize and clean this up as part of
+// memory allocation cleanup (FNL-55)
+
+/**
+ * Guard for deleting a local ref automatically on unwind.  Needed
+ * in places where temporary Java objects are needed inside of utility
+ * methods which may be called many times before control returns to Java.
+ */
+class FENNEL_FARRAGO_EXPORT JniLocalRefReaper
+{
+    JNIEnv *pEnv;
+    jobject obj;
+
+public:
+    JniLocalRefReaper(JniEnvRef &pEnvInit, jobject objInit)
+    {
+        pEnv = pEnvInit.get();
+        obj = objInit;
+    }
+
+    ~JniLocalRefReaper()
+    {
+        if (obj) {
+            pEnv->DeleteLocalRef(obj);
+            obj = NULL;
+        }
+    }
 };
 
 class ConfigMap;
@@ -119,7 +168,7 @@ class ConfigMap;
 /**
  * JniUtilParams defines parameters used to configure JniUtil.
  */
-class JniUtilParams
+class FENNEL_FARRAGO_EXPORT JniUtilParams
 {
 public:
     static ParamName paramJniHandleTraceFile;
@@ -144,7 +193,7 @@ public:
 /**
  * Static utility methods for dealing with JNI.
  */
-class JniUtil 
+class FENNEL_FARRAGO_EXPORT JniUtil
 {
     friend class JniEnvAutoRef;
 
@@ -159,15 +208,35 @@ class JniUtil
     static jmethodID methGetClassName;
 
     /**
+     * java.lang.Class.getInterfaces()
+     */
+    static jmethodID methGetInterfaces;
+
+    /**
+     * java.lang.Class.getModifiers()
+     */
+    static jmethodID methGetModifiers;
+
+    /**
+     * class java.lang.Modifier
+     */
+    static jclass classModifier;
+
+    /**
+     * java.lang.reflect.Modifier.isPublic()
+     */
+    static jmethodID methIsPublic;
+
+    /**
      * java.util.Collection.iterator()
      */
     static jmethodID methIterator;
-    
+
     /**
      * java.util.Iterator.hasNext()
      */
     static jmethodID methHasNext;
-    
+
     /**
      * java.util.Iterator.next()
      */
@@ -190,16 +259,9 @@ class JniUtil
     static JNIEnv *getAttachedJavaEnv(bool &needDetach);
 
     /**
-     * Detaches the JNIEnv for the current thread (undoes effect
-     * of getAttachedJavaEnv in the case where needDetach received true).
-     */
-    static void detachJavaEnv();
-    
-    /**
      * Counter for all handles opened by Farrago.
      */
     static AtomicCounter handleCount;
-
 
     /**
      * Flag indicating whether tracing of handles is enabled.  Should only
@@ -208,7 +270,7 @@ class JniUtil
     static bool traceHandleCountEnabled;
 
     /**
-     * Flag indicating that the JNI handle trace stream should be closed 
+     * Flag indicating that the JNI handle trace stream should be closed
      * when the handle count reaches 0.
      */
     static bool closeHandleCountTraceOnZero;
@@ -217,6 +279,11 @@ class JniUtil
      * Stream for tracing handles opened by Farrago.
      */
     static std::ofstream handleCountTraceStream;
+
+    /**
+     * Tracker for JNI thread attach/detach.
+     */
+    static JavaThreadTracker threadTracker;
 
     /**
      * JNI handle tracing method.
@@ -246,17 +313,33 @@ public:
     static jmethodID methBase64Decode;
     static jclass classRhBase64;
 
-    /** 
+    /**
+     * Java method UUID.randomUUID.
+     */
+    static jmethodID methRandomUUID;
+    static jclass classUUID;
+
+    /**
      * Java method FarragoTransform.init.
      */
     static jmethodID methFarragoTransformInit;
 
-    /** 
+    /**
      * Java method FarragoTransform.execute.
      */
     static jmethodID methFarragoTransformExecute;
 
-    /** 
+    /**
+     * Java method FarragoTransform.setInputFetchTimeout.
+     */
+    static jmethodID methFarragoTransformSetInputFetchTimeout;
+
+    /**
+     * Java method FarragoTransform.pleaseSignalOnMoreData.
+     */
+    static jmethodID methFarragoTransformPleaseSignalOnMoreData;
+
+    /**
      * Java method FarragoTransform.restart.
      */
     static jmethodID methFarragoTransformRestart;
@@ -277,12 +360,81 @@ public:
     static jmethodID methFarragoRuntimeContextStatementClassForName;
 
     /**
+     * Java method FarragoRuntimeContext.findFarragoTransform.
+     */
+    static jmethodID methFarragoRuntimeContextFindFarragoTransform;
+
+    /**
+     * Java class org.eigenbase.util.Util.
+     */
+    static jclass classUtil;
+
+    /**
+     * Java method org.eigenbase.util.Util.getStackTrace(Throwable).
+     */
+    static jmethodID methUtilGetStackTrace;
+
+    /** java.lang.Long */
+    static jclass classLong;
+
+    /** java.lang.Integer */
+    static jclass classInteger;
+
+    /** java.lang.Short */
+    static jclass classShort;
+
+    /** java.lang.Double */
+    static jclass classDouble;
+
+    /** java.lang.Float */
+    static jclass classFloat;
+
+    /** java.lang.Boolean */
+    static jclass classBoolean;
+
+    /** java.lang.Long.valueOf(long) */
+    static jmethodID methLongValueOf;
+
+    /** java.lang.Integer.valueOf(int) */
+    static jmethodID methIntegerValueOf;
+
+    /** java.lang.Short.valueOf(short) */
+    static jmethodID methShortValueOf;
+
+    /** java.lang.Double.valueOf(double) */
+    static jmethodID methDoubleValueOf;
+
+    /** java.lang.Float.valueOf(float) */
+    static jmethodID methFloatValueOf;
+
+    /** java.lang.Boolean.valueOf(boolean) */
+    static jmethodID methBooleanValueOf;
+
+    /** java.lang.Long.longValue() */
+    static jmethodID methLongValue;
+
+    /** java.lang.Integer.intValue() */
+    static jmethodID methIntValue;
+
+    /** java.lang.Short.shortValue() */
+    static jmethodID methShortValue;
+
+    /** java.lang.Double.doubleValue() */
+    static jmethodID methDoubleValue;
+
+    /** java.lang.Float.floatValue() */
+    static jmethodID methFloatValue;
+
+    /** java.lang.Boolean.booleanValue() */
+    static jmethodID methBooleanValue;
+
+    /**
      * Initializes JNI debugging.
      *
      * @param envVarName name of environment variable used to trigger debugging
      */
     static void initDebug(char const *envVarName);
-    
+
     /**
      * Initializes our JNI support.
      *
@@ -313,6 +465,18 @@ public:
     static std::string getClassName(jclass jClass);
 
     /**
+     * Calls java.lang.Class.getInterfaces() and returns result of
+     * java.lang.Class.getClassName() for the first public interface
+     * returned.
+     *
+     * @param jClass the Class of interest
+     *
+     * @return the fully-qualified class name of the Class's first public
+     *         interface
+     */
+    static std::string getFirstPublicInterfaceName(jclass jClass);
+
+    /**
      * Converts a Java string to a C++ string.
      *
      * @param pEnv the current thread's JniEnvRef
@@ -321,7 +485,7 @@ public:
      *
      * @return the converted C++ string
      */
-    static std::string toStdString(JniEnvRef pEnv,jstring jString);
+    static std::string toStdString(JniEnvRef pEnv, jstring jString);
 
     /**
      * Calls toString() on a Java object.
@@ -332,7 +496,7 @@ public:
      *
      * @return result of toString()
      */
-    static jstring toString(JniEnvRef pEnv,jobject jObject);
+    static jstring toString(JniEnvRef pEnv, jobject jObject);
 
     /**
      * Calls java.util.Collection.iterator().
@@ -343,7 +507,7 @@ public:
      *
      * @return the new Java iterator
      */
-    static jobject getIter(JniEnvRef pEnv,jobject jCollection);
+    static jobject getIter(JniEnvRef pEnv, jobject jCollection);
 
     /**
      * Calls java.util.Iterator.hasNext/next()
@@ -354,7 +518,7 @@ public:
      *
      * @return next object from iterator, or NULL if !hasNext()
      */
-    static jobject getNextFromIter(JniEnvRef pEnv,jobject jIter);
+    static jobject getNextFromIter(JniEnvRef pEnv, jobject jIter);
 
     /**
      * Looks up an enum value.
@@ -367,7 +531,13 @@ public:
      */
     static uint lookUpEnum(std::string *pSymbols,std::string const &symbol);
 
-    
+    // TODO jvs 13-Oct-2006:  reprivate this
+    /**
+     * Detaches the JNIEnv for the current thread (undoes effect
+     * of getAttachedJavaEnv in the case where needDetach received true).
+     */
+    static void detachJavaEnv();
+
     /**
      * Increment the handle count.  The handle type is used for JNI
      * handle tracing.  It indicates the type of handle that was
@@ -401,6 +571,23 @@ public:
     {
         return handleCount;
     }
+
+    /**
+     * Constructs a FemTupleDescriptor xmi string
+     */
+    static std::string getXmi(const TupleDescriptor &tupleDesc);
+
+    /**
+     * @return the tracker for JNI thread attach/detach
+     */
+    static ThreadTracker &getThreadTracker();
+};
+
+class FENNEL_FARRAGO_EXPORT JniPseudoUuidGenerator
+    : public PseudoUuidGenerator
+{
+public:
+    virtual void generateUuid(PseudoUuid &pseudoUuid);
 };
 
 // NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux
@@ -409,13 +596,25 @@ public:
 // Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.
 #define FENNEL_JNI_ONLOAD_COMMON() \
 { \
-  _STL::num_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 12; \
+  _STL::num_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      12; \
   _STL::num_get<char, const char*>::id._M_index          = 13; \
-  _STL::num_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 14; \
+  _STL::num_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      14; \
   _STL::num_put<char, char*>::id._M_index                = 15; \
-  _STL::time_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 16; \
+  _STL::time_get< \
+    char, \
+    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      16; \
   _STL::time_get<char, const char*>::id._M_index         = 17; \
-  _STL::time_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 18; \
+  _STL::time_put< \
+    char, \
+    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
+      18; \
   _STL::time_put<char, char*>::id._M_index               = 19; \
 }
 

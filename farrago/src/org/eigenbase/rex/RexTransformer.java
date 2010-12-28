@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@ package org.eigenbase.rex;
 import java.util.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 
@@ -34,20 +35,21 @@ import org.eigenbase.sql.type.*;
  * sense equivalent tree. Nodes in tree will be modified and hence tree will not
  * remain unchanged.
  *
+ * <p>NOTE: You must validate the tree of RexNodes before using this class.
+ *
  * @author wael
  * @version $Id$
  * @since Mar 8, 2004
- * @pre The RexTree must have been validated prior to using this class
  */
 public class RexTransformer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RexNode root;
     private final RexBuilder rexBuilder;
     private int isParentsCount;
-    private final Set transformableOperators = new HashSet();
+    private final Set<SqlOperator> transformableOperators =
+        new HashSet<SqlOperator>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,8 +95,8 @@ public class RexTransformer
 
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            return
-                !transformableOperators.contains(call.getOperator())
+            return !transformableOperators.contains(
+                call.getOperator())
                 && isNullable(node);
         }
         return isNullable(node);
@@ -131,7 +133,8 @@ public class RexTransformer
             RexNode operand = call.operands[0];
             if (((operand instanceof RexLiteral)
                     || (operand instanceof RexInputRef)
-                    || (operand instanceof RexDynamicParam))) {
+                    || (operand instanceof RexDynamicParam)))
+            {
                 if (isNullable(node)) {
                     RexNode notNullNode =
                         rexBuilder.makeCall(
@@ -141,11 +144,13 @@ public class RexTransformer
                         rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode eqNode =
-                        rexBuilder.makeCall(SqlStdOperatorTable.equalsOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.equalsOperator,
                             operand,
                             boolNode);
                     RexNode andBoolNode =
-                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.andOperator,
                             notNullNode,
                             eqNode);
 
@@ -155,7 +160,8 @@ public class RexTransformer
                         rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode andBoolNode =
-                        rexBuilder.makeCall(SqlStdOperatorTable.equalsOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.equalsOperator,
                             node,
                             boolNode);
                     return andBoolNode;
@@ -202,7 +208,8 @@ public class RexTransformer
                 RexNode intoFinalAnd = null;
                 if ((null != isNotNullOne) && (null != isNotNullTwo)) {
                     intoFinalAnd =
-                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.andOperator,
                             isNotNullOne,
                             isNotNullTwo);
                 } else if (null != isNotNullOne) {
@@ -213,7 +220,8 @@ public class RexTransformer
 
                 if (null != intoFinalAnd) {
                     RexNode andNullAndCheckNode =
-                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.andOperator,
                             intoFinalAnd,
                             call);
                     return andNullAndCheckNode;

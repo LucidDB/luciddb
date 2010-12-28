@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.sql.type.*;
  */
 public class RexMultisetUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -53,21 +52,21 @@ public class RexMultisetUtil
     private static final Set createMultisetOperatorSet()
     {
         SqlOperator [] operators =
-            {
-                SqlStdOperatorTable.cardinalityFunc,
-                SqlStdOperatorTable.castFunc,
-                SqlStdOperatorTable.elementFunc,
-                SqlStdOperatorTable.elementSlicefunc,
-                SqlStdOperatorTable.multisetExceptAllOperator,
-                SqlStdOperatorTable.multisetExceptOperator,
-                SqlStdOperatorTable.multisetIntersectAllOperator,
-                SqlStdOperatorTable.multisetIntersectOperator,
-                SqlStdOperatorTable.multisetUnionAllOperator,
-                SqlStdOperatorTable.multisetUnionOperator,
-                SqlStdOperatorTable.isASetOperator,
-                SqlStdOperatorTable.memberOfOperator,
-                SqlStdOperatorTable.submultisetOfOperator
-            };
+        {
+            SqlStdOperatorTable.cardinalityFunc,
+            SqlStdOperatorTable.castFunc,
+            SqlStdOperatorTable.elementFunc,
+            SqlStdOperatorTable.elementSlicefunc,
+            SqlStdOperatorTable.multisetExceptAllOperator,
+            SqlStdOperatorTable.multisetExceptOperator,
+            SqlStdOperatorTable.multisetIntersectAllOperator,
+            SqlStdOperatorTable.multisetIntersectOperator,
+            SqlStdOperatorTable.multisetUnionAllOperator,
+            SqlStdOperatorTable.multisetUnionOperator,
+            SqlStdOperatorTable.isASetOperator,
+            SqlStdOperatorTable.memberOfOperator,
+            SqlStdOperatorTable.submultisetOfOperator
+        };
         return new HashSet(Arrays.asList(operators));
     }
 
@@ -84,7 +83,8 @@ public class RexMultisetUtil
             expr.accept(counter);
 
             if ((counter.totalCount != counter.multisetCount)
-                && (0 != counter.multisetCount)) {
+                && (0 != counter.multisetCount))
+            {
                 return true;
             }
         }
@@ -100,8 +100,7 @@ public class RexMultisetUtil
         RexCallMultisetOperatorCounter counter =
             new RexCallMultisetOperatorCounter();
         node.accept(counter);
-        return
-            (counter.totalCount != counter.multisetCount)
+        return (counter.totalCount != counter.multisetCount)
             && (0 != counter.multisetCount);
     }
 
@@ -141,7 +140,7 @@ public class RexMultisetUtil
         if (!call.getOperator().equals(SqlStdOperatorTable.castFunc)) {
             return false;
         }
-        return call.getType().getSqlTypeName() == SqlTypeName.Multiset;
+        return call.getType().getSqlTypeName() == SqlTypeName.MULTISET;
     }
 
     /**
@@ -151,10 +150,9 @@ public class RexMultisetUtil
     public static RexCall findFirstMultiset(final RexNode node, boolean deep)
     {
         if (node instanceof RexFieldAccess) {
-            return
-                findFirstMultiset(
-                    ((RexFieldAccess) node).getReferenceExpr(),
-                    deep);
+            return findFirstMultiset(
+                ((RexFieldAccess) node).getReferenceExpr(),
+                deep);
         }
 
         if (!(node instanceof RexCall)) {
@@ -170,7 +168,8 @@ public class RexMultisetUtil
             if (null != firstOne) {
                 if (firstOne.getOperator().equals(
                         SqlStdOperatorTable.castFunc)
-                    && !isMultisetCast(firstOne)) {
+                    && !isMultisetCast(firstOne))
+                {
                     firstOne = null;
                     continue;
                 }
@@ -214,7 +213,8 @@ public class RexMultisetUtil
             ++totalCount;
             if (multisetOperators.contains(call.getOperator())) {
                 if (!call.getOperator().equals(SqlStdOperatorTable.castFunc)
-                    || isMultisetCast(call)) {
+                    || isMultisetCast(call))
+                {
                     ++multisetCount;
                 }
             }

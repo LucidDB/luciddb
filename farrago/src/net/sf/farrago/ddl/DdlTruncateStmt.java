@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,16 @@
 */
 package net.sf.farrago.ddl;
 
+import java.util.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
 
@@ -34,7 +43,13 @@ import net.sf.farrago.session.*;
  */
 public class DdlTruncateStmt
     extends DdlStmt
+    implements DdlMultipleTransactionStmt
 {
+    //~ Instance fields --------------------------------------------------------
+
+    private String tableMofId;
+    private RefClass tableClass;
+    private List<String> indexMofIds;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -45,25 +60,70 @@ public class DdlTruncateStmt
      */
     public DdlTruncateStmt(CwmModelElement truncatedElement)
     {
-        super(truncatedElement);
+        super(truncatedElement, true);
+        tableMofId = truncatedElement.refMofId();
+        tableClass = truncatedElement.refClass();
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    // override DdlStmt
-    public void preValidate(FarragoSessionDdlValidator ddlValidator)
-    {
-        super.preValidate(ddlValidator);
-
-        // There's no JMI operation corresponding to a truncation, so use
-        // an explicit call to request it.
-        ddlValidator.scheduleTruncation(getModelElement());
-    }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
+    }
+
+    // implement DdlMultipleTransactionStmt
+    public void prepForExecuteUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
+        indexMofIds = new ArrayList<String>();
+        CwmTable table = (CwmTable) getModelElement();
+        Collection<FemLocalIndex> tableIndexes =
+            FarragoCatalogUtil.getTableIndexes(session.getRepos(), table);
+        for (FemLocalIndex index : tableIndexes) {
+            indexMofIds.add(index.refMofId());
+        }
+    }
+
+    // implement DdlMultipleTransactionStmt
+    public void executeUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
+        FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
+        FarragoDataWrapperCache wrapperCache =
+            ddlValidator.getDataWrapperCache();
+        for (String indexMofId : indexMofIds) {
+            baseIndexMap.dropIndexStorage(wrapperCache, indexMofId, true);
+        }
+    }
+
+    // implement DdlMultipleTransactionStmt
+    public boolean completeRequiresWriteTxn()
+    {
+        return true;
+    }
+
+    // implement DdlMultipleTransactionStmt
+    public void completeAfterExecuteUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session,
+        boolean success)
+    {
+        if (!success) {
+            // NOTE jvs 11-Dec-2008:  I'm not sure whether anything
+            // can cause a TRUNCATE to fail, but if it does fail, we
+            // shouldn't reset the rowcounts.
+            return;
+        }
+        FemAbstractColumnSet table =
+            (FemAbstractColumnSet) session.getRepos().getEnkiMdrRepos()
+            .getByMofId(
+                tableMofId,
+                tableClass);
+        session.getPersonality().resetRowCounts(table);
     }
 }
 

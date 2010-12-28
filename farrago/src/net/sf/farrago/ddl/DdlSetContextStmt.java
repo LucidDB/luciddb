@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,6 @@ import org.eigenbase.sql.type.*;
 public abstract class DdlSetContextStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlNode valueExpr;
@@ -96,7 +95,7 @@ public abstract class DdlSetContextStmt
         // evaluate it to a string value.  We do this by executing
         // the query "VALUES <valueExpr>".
 
-        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect dialect = SqlDialect.create(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         writer.keyword("VALUES");
         valueExpr.unparse(writer, 0, 0);
@@ -108,9 +107,9 @@ public abstract class DdlSetContextStmt
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(sql, true);
         RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
+        List<RelDataTypeField> fieldList = rowType.getFieldList();
         if (fieldList.size() == 1) {
-            RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
+            RelDataType type = fieldList.get(0).getType();
             if (!SqlTypeUtil.inCharFamily(type)) {
                 fieldList = null;
             }

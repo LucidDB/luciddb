@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,9 +29,11 @@ import java.sql.*;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 
 import net.sf.farrago.jdbc.param.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
@@ -41,19 +43,23 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX.
+ * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX. It
+ * supports both the blocking interface {@link Iterator} and the non-blocking
+ * {@link TupleIter}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
-    implements RestartableIterator
+    implements RestartableIterator,
+        TupleIter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final int QUEUE_ARRAY_SIZE = 100;
+    protected static final Logger tracer =
+        FarragoTrace.getRuntimeContextTracer();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -61,15 +67,19 @@ public abstract class FarragoJavaUdxIterator
 
     private final PreparedStatement resultInserter;
 
-    private final FarragoSessionRuntimeContext runtimeContext;
+    // protected because needed by generated subclasses
+    protected final FarragoSessionRuntimeContext runtimeContext;
 
     private int iRow;
-
-    private boolean restart;
+    private long defaultTimeout = Long.MAX_VALUE;
+    private boolean timeoutAsUnderflow = true;
+    private boolean didUnderflow = false;
+    private boolean stopThread;
 
     private CountDownLatch latch;
-
     private final ParameterMetaData parameterMetaData;
+    private List<TupleIter> restartableInputs;
+    private List<MoreDataListener> moreDataListeners;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,6 +90,7 @@ public abstract class FarragoJavaUdxIterator
     {
         super(new ArrayBlockingQueue(QUEUE_ARRAY_SIZE));
         this.runtimeContext = runtimeContext;
+        runtimeContext.addAllocation(this);
 
         parameterMetaData = new FarragoParameterMetaData(rowType);
 
@@ -101,6 +112,9 @@ public abstract class FarragoJavaUdxIterator
                 null,
                 new Class[] { PreparedStatement.class },
                 new PreparedStatementInvocationHandler(rowType));
+
+        restartableInputs = new ArrayList<TupleIter>();
+        moreDataListeners = new ArrayList<MoreDataListener>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -117,11 +131,132 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext();
     }
 
+    // override QueueIterator
+    public boolean hasNext(long timeout)
+        throws QueueIterator.TimeoutException
+    {
+        if (latch == null) {
+            startWithLatch();
+        }
+        return super.hasNext(timeout);
+    }
+
+    // implement TupleIter
+    public boolean setTimeout(long timeout, boolean asUnderflow)
+    {
+        this.defaultTimeout = timeout;
+        this.timeoutAsUnderflow = asUnderflow;
+        return true;
+    }
+
+    // implement TupleIter
+    public boolean addListener(MoreDataListener c)
+    {
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.log(
+                Level.FINE, "FarragoJavaUdxIterator {0} added listener {1}",
+                new Object[] {this, c});
+        }
+        moreDataListeners.add(c);
+        return true;
+    }
+
+    private void onUnderflow()
+    {
+        tracer.fine("underflow");
+        didUnderflow = true;
+    }
+
+    private void onData()
+    {
+        if (didUnderflow) {
+            tracer.fine("more data after underflow");
+            didUnderflow = false;
+            for (MoreDataListener c : moreDataListeners) {
+                c.onMoreData();
+            }
+        }
+    }
+
+    // override QueueIterator
+    public void done(Throwable e)
+    {
+        super.done(e);
+        onData();
+    }
+
+    // override QueueIterator
+    public void put(Object o)
+    {
+        super.put(o);
+        onData();
+    }
+
+    // override QueueIterator
+    public boolean offer(Object o, long timeoutMillis)
+    {
+        if (super.offer(o, timeoutMillis)) {
+            onData();
+            return true;
+        }
+        return false;
+    }
+
+    // implement TupleIter
+    public Object fetchNext()
+    {
+        try {
+            if (defaultTimeout < Long.MAX_VALUE) {
+                return next(defaultTimeout);
+            } else {
+                return next();
+            }
+        } catch (NoSuchElementException e) {
+            return NoDataReason.END_OF_DATA;
+        } catch (QueueIterator.TimeoutException e) {
+            didUnderflow = true;
+            if (timeoutAsUnderflow) {
+                return NoDataReason.UNDERFLOW;
+            } else {
+                throw new TupleIter.TimeoutException();
+            }
+        }
+    }
+
+    /**
+     * Called by generated code to add an input cursor's iterator so that it can
+     * be restarted as needed.
+     *
+     * @param inputIter input cursor's iterator
+     */
+    protected void addRestartableInput(TupleIter inputIter)
+    {
+        restartableInputs.add(inputIter);
+    }
+
     // implement ThreadIterator
     protected void doWork()
     {
+        // Start a repository session in the event that the UDX accesses the
+        // metadata repository -- the session is lightweight, so no problem
+        // if repository txn is never started
         try {
-            executeUdx();
+            // sometimes sessions don't exist (don't ask why, if you don't know
+            // you will always have a session)
+            if (runtimeContext.getSession() != null) {
+                runtimeContext.getSession().getRepos().beginReposSession();
+            } else {
+                runtimeContext.getRepos().beginReposSession();
+            }
+            try {
+                executeUdx();
+            } finally {
+                if (runtimeContext.getSession() != null) {
+                    runtimeContext.getSession().getRepos().endReposSession();
+                } else {
+                    runtimeContext.getRepos().endReposSession();
+                }
+            }
         } finally {
             latch.countDown();
         }
@@ -141,19 +276,7 @@ public abstract class FarragoJavaUdxIterator
     // implement RestartableIterator
     public void restart()
     {
-        // Tell the running thread to buzz off.
-        if (latch != null) {
-            restart = true;
-
-            // Wait for it to die.  (TODO:  If we ever get ThreadIterator
-            // to stop using daemons, change this to use thread.join instead.)
-            try {
-                latch.await();
-            } catch (InterruptedException ex) {
-                throw Util.newInternal(ex);
-            }
-            restart = false;
-        }
+        stopWithLatch();
 
         reset(1);
 
@@ -163,8 +286,41 @@ public abstract class FarragoJavaUdxIterator
         // Toss anything it was producing.
         queue.clear();
 
+        // Input cursors are currently "throwaway", but this is still
+        // needed so that we correctly invoke a restart on Fennel streams.
+        for (TupleIter inputIter : restartableInputs) {
+            inputIter.restart();
+        }
+        restartableInputs.clear();
+
         // Restart a new thread.
         startWithLatch();
+    }
+
+    // implement TupleIter
+    public void closeAllocation()
+    {
+        tracer.fine("close");
+        stopWithLatch();
+    }
+
+    private void stopWithLatch()
+    {
+        if (latch == null) {
+            // thread never ran
+            return;
+        }
+
+        // Tell the running thread to buzz off.
+        stopThread = true;
+        try {
+            // Wait for it to die.  (TODO:  If we ever get ThreadIterator
+            // to stop using daemons, change this to use thread.join instead.)
+            latch.await();
+        } catch (InterruptedException ex) {
+            throw Util.newInternal(ex);
+        }
+        stopThread = false;
     }
 
     private void startWithLatch()
@@ -176,8 +332,8 @@ public abstract class FarragoJavaUdxIterator
     private void checkCancel()
     {
         runtimeContext.checkCancel();
-        if (restart) {
-            throw new RuntimeException("UDX thread restart");
+        if (stopThread) {
+            throw new RuntimeException("UDX thread stop requested");
         }
     }
 
@@ -193,7 +349,7 @@ public abstract class FarragoJavaUdxIterator
         extends BarfingInvocationHandler
     {
         private final FarragoJdbcParamDef [] dynamicParamDefs;
-        
+
         PreparedStatementInvocationHandler(RelDataType paramRowType)
         {
             RelDataTypeField [] fields = paramRowType.getFields();
@@ -204,13 +360,13 @@ public abstract class FarragoJavaUdxIterator
                         fields[i].getType(),
                         ParameterMetaData.parameterModeIn);
                 dynamicParamDefs[i] =
-                    FarragoJdbcParamDefFactory.newParamDef(
+                    FarragoJdbcParamDefFactory.instance.newParamDef(
                         fields[i].getName(),
                         paramMetaData,
                         false);
             }
         }
-        
+
         // implement PreparedStatement
         public int executeUpdate()
             throws SQLException
@@ -224,7 +380,8 @@ public abstract class FarragoJavaUdxIterator
             // for cancellation
             while (!offer(
                     getCurrentRow(),
-                    1000)) {
+                    1000))
+            {
                 checkCancel();
             }
             ++iRow;
@@ -258,17 +415,33 @@ public abstract class FarragoJavaUdxIterator
         {
             int iField = parameterIndex - 1;
 
-            // result types are always nullable, so we're guaranteed
-            // to get something which implements both NullableValue
-            // and AssignableValue
+            // Result types are always nullable, so we should get something
+            // which is both a NullableValue and an AssignableValue. However
+            // SqlDateTimeWithoutTZ is not a NullableValue, for some reason.
+            // Hack around this for the time being, as changing
+            // SqlDateTimeWithoutTZ seems to cause unmarshalling problems.
             Object fieldObj = getCurrentRow().getFieldValue(iField);
-            NullableValue nullableValue = (NullableValue) fieldObj;
-            if (obj == null) {
-                nullableValue.setNull(true);
-            } else {
-                nullableValue.setNull(false);
+
+            if (fieldObj instanceof NullableValue) {
+                NullableValue nullableValue = (NullableValue) fieldObj;
+                nullableValue.setNull(obj == null);
+            } else if (fieldObj instanceof SqlDateTimeWithoutTZ) {
+                SqlDateTimeWithoutTZ dt = (SqlDateTimeWithoutTZ) fieldObj;
+                dt.setNull(obj == null); // its own public method!
+            }
+
+            if (obj != null) {
                 AssignableValue assignableValue = (AssignableValue) fieldObj;
-                Object scrubbedValue = dynamicParamDefs[iField].scrubValue(obj);
+
+                // Note: Calendar is an optional argument so it wouldn't
+                // make sense to pass in a null Calendar as a parameter
+                Object scrubbedValue;
+                if (calendar == null) {
+                    scrubbedValue = dynamicParamDefs[iField].scrubValue(obj);
+                } else {
+                    scrubbedValue =
+                        dynamicParamDefs[iField].scrubValue(obj, calendar);
+                }
                 assignableValue.assignFrom(scrubbedValue);
             }
         }

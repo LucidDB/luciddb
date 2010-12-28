@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
@@ -49,7 +49,7 @@ ${farrago.test.jvmargs}
 
 ]>
 
-<project name="farragoBuildMacros" default="unspecified">
+<project name="farragoBuildMacros" >
   <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
   <!-- Project locations and properties -->
@@ -76,6 +76,9 @@ ${farrago.test.jvmargs}
        customBuild.properties. -->
   <property name="farrago.test.jvmargs" value=""/>
 
+  <!-- Catalog schema (or database) name (for Postgres or
+       Enki+Hibernate on Mysql. -->
+  <property name="farrago.catalog.schema" value="farrago"/>
 
   <!-- forked ant verbosity control -->
   <property name="farrago.forkVerbosity" value="-e"/>
@@ -84,27 +87,23 @@ ${farrago.test.jvmargs}
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
   <!-- Java source version -->
+  <!-- NOTE jvs 8-Oct-2008:  farrago.javasrc.14 is not actually supported -->
+  <!-- any more; delete it once red zone dependencies are gone.  -->
   <property name="farrago.javasrc.version" value="1.5"/>
   <condition property="farrago.javasrc.14">
     <equals arg1="${farrago.javasrc.version}" arg2="1.4"/>
   </condition>
 
+  <!-- Java source version for client dependencies; this -->
+  <!-- tends to lag the server by one version.  So when we're building -->
+  <!-- Farrago with JDK 1.5, we want JVM 1.4 client compatibility; -->
+  <!-- building with JDK 1.6, we want JVM 1.5 client compatibility; -->
+  <condition property="farrago.client.javasrc.version" value="1.4" else="1.5">
+    <equals arg1="${ant.java.version}" arg2="1.5"/>
+  </condition>
+
   <!-- JRE location for test execution -->
   <property name="farrago.jre.dir" location="${javahome.dir}"/>
-
-  <!-- if JRE location doesn't match javahome, assume we should retroweave -->
-  <condition property="farrago.need.retroweave">
-    <not>
-      <equals arg1="${farrago.jre.dir}" arg2="${javahome.dir}"/>
-    </not>
-  </condition>
-
-  <condition property="farrago.jre.14">
-    <or>
-      <isset property="farrago.javasrc.14"/>
-      <isset property="farrago.need.retroweave"/>
-    </or>
-  </condition>
 
   <!-- import thirdparty library settings -->
   <property file="${thirdparty.dir}/build.properties"/>
@@ -118,10 +117,14 @@ ${farrago.test.jvmargs}
   <fail unless="sqlline.dir"/>
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
+  <fail unless="enki.dir"/>
   <fail unless="rmijdbc.dir"/>
-  <fail unless="retroweaver.dir"/>
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
+  <fail unless="jtds.dir"/>
+  <fail unless="findbugs.dir"/>
+  <fail unless="mysql.dir"/>
+  <fail unless="jetty.dir"/>
 
   <!-- Directories -->
 
@@ -145,18 +148,17 @@ ${farrago.test.jvmargs}
   <!-- overridable alias for farrago.catalog.dir -->
   <property name="project.catalog.dir" location="${farrago.catalog.dir}"/>
 
-  <!-- overridable alias for FarragoTrace.properties -->
-  <property name="project.trace.propfile" 
-    location="${FarragoTrace.properties}"/>
-
   <!-- Alias for project.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
+
+  <!-- overridable alias for farrago.catalog.schema -->
+  <property name="project.catalog.schema" value="${farrago.catalog.schema}"/>
 
   <!-- directory for JUnit run output -->
   <property name="project.testlog.dir" location="${farrago.dir}/testlog"/>
 
   <!-- directory in which catalog sources are generated -->
-  <property name="farrago.catalog.src.dir" 
+  <property name="farrago.catalog.src.dir"
     location="${farrago.catalog.dir}/java"/>
 
   <!-- directory in which SQL parser source code is stored -->
@@ -184,15 +186,18 @@ ${farrago.test.jvmargs}
     location="${farrago.classes.dir}/net/sf/farrago/resource"/>
 
   <!-- directory in which catalog data is backed up -->
-  <property name="farrago.catalog.backup.dir" 
+  <property name="farrago.catalog.backup.dir"
     location="${farrago.catalog.dir}/backup"/>
 
   <!-- directory in which unconfigured catalog data is backed up -->
-  <property name="farrago.catalog.unconfigured.dir" 
+  <property name="farrago.catalog.unconfigured.dir"
     location="${farrago.catalog.dir}/unconfigured"/>
 
   <!-- directory in which catalog-related XMI files are stored -->
   <property name="farrago.xmi.dir" location="${farrago.catalog.dir}/xmi"/>
+
+  <!-- directory in which catalog-related SQL files are stored -->
+  <property name="farrago.catalog.sql.dir" location="${farrago.catalog.dir}/sql"/>
 
   <!-- directory in which trace files are configured and generated -->
   <property name="farrago.trace.dir" location="${farrago.dir}/trace"/>
@@ -200,17 +205,23 @@ ${farrago.test.jvmargs}
   <!-- directory for initialization scripts -->
   <property name="farrago.initsql.dir" location="${farrago.dir}/initsql"/>
 
-  <!-- Directory for SqlLine history/properties. We direct SqlLine to 
-       place its history file in sqlline.hist.file by setting the system
+  <!-- target directory for JDBC4 compatibility gunk -->
+  <property name="farrago.jdbc4.gen.dir"
+    location="${farrago.src.dir}/org/eigenbase/jdbc4"/>
+
+  <!-- We direct SqlLine to squelch its history file by setting the system
        property sqlline.historyFile. This keeps the normal history
        file (~/.sqlline/history under Unix) free from the clutter
-       of Farrago sqlline test commands. -->
-  <property name="sqlline.hist.file"
-    location="${project.testlog.dir}/sqlline.history"/>
+       of Farrago sqlline test commands, and also speeds up
+       SQL-based tests by avoiding reloading history on startup. -->
+  <condition property="sqlline.hist.file" value="nul">
+    <os family="windows"/>
+  </condition>
+  <property name="sqlline.hist.file" location="/dev/null"/>
   <!-- Files -->
 
   <!-- file controlling repository storage -->
-  <property name="farrago.ReposStorage.propfile" 
+  <property name="farrago.ReposStorage.propfile"
     location="${farrago.catalog.dir}/ReposStorage.properties"/>
 
   <!-- NOTE:  it would be nice if we could combine parser filesets below, -->
@@ -226,7 +237,7 @@ ${farrago.test.jvmargs}
     includes="DdlParser.jj"/>
 
   <!-- a fileset of the Farrago common DDL parser -->
-  <fileset id="farrago.parser.common.ddl" dir="${farrago.parser.ddl.dir}" 
+  <fileset id="farrago.parser.common.ddl" dir="${farrago.parser.ddl.dir}"
     includes="CommonDdlParser.jj"/>
 
   <!-- XMI file containing CWM defintion  -->
@@ -248,13 +259,9 @@ ${farrago.test.jvmargs}
   <property name="FarragoExtMetamodelTransformed.xmi"
     location="${farrago.xmi.dir}/FarragoExtMetamodelTransformed.xmi"/>
 
-  <!-- XMI file containing UML representation of Farrago metamodel -->
-  <property name="FarragoExtMetamodelUML.xmi"
-    location="${farrago.xmi.dir}/FarragoExtMetamodelUML.xmi"/>
-
-  <!-- Same as FarragoExtMetamodelUML, but with diagrams deleted -->
-  <property name="FarragoExtMetamodelUMLSansDiagrams.xmi"
-    location="${farrago.xmi.dir}/FarragoExtMetamodelUMLSansDiagrams.xmi"/>
+  <!-- Same as FarragoExtMetamodel.xmi, but with diagrams deleted -->
+  <property name="FarragoExtMetamodelSansDiagrams.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelSansDiagrams.xmi"/>
 
   <!-- File containing ArgoUML XMI representation of -->
   <!-- Farrago metamodel -->
@@ -265,15 +272,87 @@ ${farrago.test.jvmargs}
   <property name="FarragoTrace.properties"
     location="${farrago.trace.dir}/FarragoTrace.properties"/>
 
+  <!-- overridable alias for FarragoTrace.properties (must come after the
+       property it uses) -->
+  <property name="project.trace.propfile"
+    location="${FarragoTrace.properties}"/>
+
   <!-- File for Farrago trace log -->
   <property name="FarragoTrace.log"
     location="${farrago.trace.dir}/FarragoTrace.log"/>
+
+  <!-- File defining Farrago MDR build tracing -->
+  <property name="FarragoMdrBuildTrace.properties"
+    location="${farrago.trace.dir}/MdrBuildTrace.properties"/>
+
+  <!-- File for Farrago trace log -->
+  <property name="FarragoMdrBuildTrace.log"
+    location="${farrago.trace.dir}/MdrBuildTrace.log"/>
+
+  <!-- Start Enki Hibernate MDR properties.  The following properties
+       are only used if the farrago.enki.provider is ENKI_HIBERNATE.
+       Override them via customBuild.properties or before importing
+       this file.  These should come after project.catalog.schema -->
+
+  <!-- Database backup executable (backup data expected on stdout) -->
+  <property 
+    name="farrago.enki.hibernate.backup.cmd"
+    value="mysqldump"/>
+
+  <property 
+    name="farrago.enki.hibernate.backup.user"
+    value="root"/>
+
+  <!-- Database backup arguments -->
+  <property 
+    name="farrago.enki.hibernate.backup.args"
+    value="-u ${farrago.enki.hibernate.backup.user} --opt ${project.catalog.schema}"/>
+
+  <!-- Database restore executable -->
+  <property 
+    name="farrago.enki.hibernate.restore.cmd"
+    value="mysql"/>
+
+  <!-- Database backup arguments (backup data provided on stdin) -->
+  <property 
+    name="farrago.enki.hibernate.restore.args"
+    value="-u ${farrago.enki.hibernate.backup.user} -D ${project.catalog.schema}"/>
+
+  <!-- End Enki Hibernate MDR properties -->
+
+  <!-- UML2MOF Defaults to Netbeans MDR's btree implementation.  That
+       implementation has a bug which intermittently causes ordered 
+       multi-value associations to be re-ordered during XMI import.
+       The re-ordering can cause attributes to be re-ordered which 
+       causes FRG-322. The memory implementation provides deterministic
+       output. -->
+  <property
+     name="uml2mof.default.storageModel"
+     value="org.netbeans.mdr.persistence.memoryimpl.StorageFactoryImpl"/>
 
   <!-- Classpaths -->
 
   <!-- Set a default for this classpath in case it's not set in a
        properties file.  The properties file will take precedence. -->
   <property name="farrago.custom.classpath" value=""/>
+
+  <path id="emma.classpath">
+    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
+  </path>
+  <property name="emma.classpath" refid="emma.classpath"/>
+
+  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
+
+  <!-- set test.emma.classpath for emma test only -->
+  <if>
+    <isset property="codecov.build"/>
+    <then>
+	    <property name="test.emma.classpath" value="${emma.classpath}"/>
+    </then>
+    <else>
+	    <property name="test.emma.classpath" value=""/>
+    </else>
+  </if>
 
   <!-- xerces path -->
   <path id="xerces.classpath">
@@ -287,7 +366,8 @@ ${farrago.test.jvmargs}
   </path>
 
   <!-- third-party libraries -->
-  <path id="farrago.3p.classpath">
+  <path id="farrago.3p.nojdbc.classpath">
+    <fileset dir="${enki.dir}" includes="*.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
     <pathelement location="${mdrlibs.dir}/nbmdr.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrapi.jar"/>
@@ -295,9 +375,9 @@ ${farrago.test.jvmargs}
     <pathelement location="${mdrlibs.dir}/mof.jar"/>
     <pathelement location="${mdrlibs.dir}/jmi.jar"/>
     <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
+    <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
-    <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
     <path refid="xerces.classpath"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
@@ -307,41 +387,51 @@ ${farrago.test.jvmargs}
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
-    <pathelement location="${thirdparty.dir}/postgresql-8.1-406.jdbc2.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-logging.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.2.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
+    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <!-- REVIEW jvs 22-Sept-2009:  do we need ALL of these? -->
+    <fileset dir="${jetty.dir}" includes="lib/*.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
+  </path>
+  <property name="farrago.3p.nojdbc.classpath" refid="farrago.3p.nojdbc.classpath"/>
+
+  <!-- third party JDBC drivers -->
+  <path id="farrago.jdbc.classpath">
+    <pathelement location="${mysql.dir}/mysql-connector-java-3.1.14-bin.jar"/>
+    <pathelement location="${thirdparty.dir}/postgresql-8.4-701.jdbc3.jar"/>
+    <pathelement location="${jtds.dir}/jtds-1.2.jar"/>
+  </path>
+  <property name="farrago.jdbc.classpath" refid="farrago.jdbc.classpath"/>
+
+  <!-- third-party libraries -->
+  <path id="farrago.3p.classpath">
+    <pathelement path="${farrago.3p.nojdbc.classpath}"/>
+    <pathelement path="${farrago.jdbc.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 
   <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <fileset dir="${retroweaver.dir}">
-      <include name="release/retroweaver-rt.jar" if="farrago.need.retroweave"/>
-    </fileset>
-    <fileset dir="${jgrapht.dir}">
-      <include name="jgrapht-jdk1.4.jar" if="farrago.jre.14"/>
-      <include name="jgrapht-jdk1.5.jar" unless="farrago.jre.14"/>
-    </fileset>
-    <fileset dir="${jgrapht7.dir}">
-      <include name="jgrapht7-jdk1.5.jar" />
-    </fileset>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 
-  <!-- classpath for retroweaving -->
-  <path id="farrago.retro.classpath">
-    <pathelement location="${java14rt.jar}"/>
-    <pathelement location="${retroweaver.dir}/release/retroweaver-rt.jar"/>
-    <pathelement path="${farrago.run.classpath}"/>
+  <!-- classpath for running javadoc -->
+  <path id="farrago.javadoc.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
+    <pathelement location="${jgrapht.dir}/lib/jgraph.jar"/>
   </path>
-  <property name="farrago.retro.classpath" refid="farrago.retro.classpath"/>
+  <property name="farrago.javadoc.classpath" refid="farrago.javadoc.classpath"/>
 
   <!-- classpath for reentrantly invoking ant -->
   <path id="ant.classpath">
@@ -351,13 +441,25 @@ ${farrago.test.jvmargs}
     <pathelement location="${ant.home}/lib/ant-contrib.jar"/>
     <path refid="xerces.classpath"/>
     <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+    <pathelement location="${ant.home}/lib/ant-nodeps.jar"/>
+    <pathelement location="${ant.home}/lib/ant-trax.jar"/>
+    <pathelement path="${test.emma.classpath}"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
+
+  <!-- classpath for model import -->
+  <path id="farrago.model.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement path="${ant.classpath}"/>
+  </path>
+  <property name="farrago.model.classpath" refid="farrago.model.classpath"/>
 
   <!-- classpath for running from sqlline -->
   <path id="farrago.sqlline.classpath">
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar"/>
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
@@ -369,13 +471,6 @@ ${farrago.test.jvmargs}
   </path>
   <property name="farrago.jalopy.classpath" refid="farrago.jalopy.classpath"/>
 
-  <path id="emma.classpath">
-    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
-  </path>
-  <property name="emma.classpath" refid="emma.classpath"/>
-
-  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
-
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
 
@@ -385,17 +480,17 @@ ${farrago.test.jvmargs}
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/jakarta-regexp-1.4.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/xmlbeans/lib/xbean.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/xmlbeans/lib/jsr173_1.0_api.jar"/>
     <pathelement location="${bh.home}/schema.jar"/>
   </path>
-  <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>    
-  
-  <taskdef name="blackhawk" 
+  <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>
+
+  <taskdef name="blackhawk"
     classname="org.eigenbase.blackhawk.BhVMTask"
     classpathref="blackhawk.run.classpath"
     onerror="ignore"/>
@@ -411,9 +506,10 @@ ${farrago.test.jvmargs}
     <attribute name="inheritAll" default="true"/>
     <attribute name="gtlf.dtd.use.remote" default="false"/>
     <attribute name="gtlf.dtd.local" default="${thirdparty.dir}/blackhawk/gtlf-config-2-1.dtd"/>
+    <attribute name="luciddb.listener.port" default=""/>
     <sequential>
-      <taskdef 
-        name="bh" 
+      <taskdef
+        name="bh"
         classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
@@ -426,15 +522,25 @@ ${farrago.test.jvmargs}
         inheritAll="@{inheritAll}"
         fork="true"
         classpathref="@{classpathref}">
+        <jvmarg line="-Xmx256m"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
         <sysproperty key="gtlf.dtd.local" value="@{gtlf.dtd.local}"/>
+        <sysproperty key="luciddb.listener.port"
+          value="@{luciddb.listener.port}"/>
       </bh>
     </sequential>
   </macrodef>
 
-
+  <taskdef name="junit"
+   classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+    <classpath>
+      <pathelement location="${junit.dir}/junit.jar"/>
+      <path refid="ant.classpath"/>
+    </classpath>
+  </taskdef>
 
   <!-- Macros -->
 
@@ -451,7 +557,7 @@ ${farrago.test.jvmargs}
         dir="@{dir}"
         classpathref="@{classpathref}" jvm="@{jvm}">
         <jvmargs/>
-        <arg value="${farrago.forkVerbosity}"/>
+        <arg line="${farrago.forkVerbosity}"/>
         <arg value="@{target}"/>
       </java>
     </sequential>
@@ -461,16 +567,24 @@ ${farrago.test.jvmargs}
   <!-- NOTE:  Logger setting squelches unwanted INFORMATIONAL messages -->
   <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
+    <attribute name="classpathref" default="farrago.model.classpath"/>
     <sequential>
-      <loadproperties 
-        srcFile="${project.catalog.dir}/ReposStorage.properties"/>
-      <farrago.antFork target="@{target}" jvm="java">
+      <farrago.antFork 
+          target="@{target}"
+          jvm="java"
+          classpathref="@{classpathref}">
+        <!-- REVIEW: SWZ: 2008-03-26: Remove when all callers
+             explicitly set storage properties (by file or element). -->
         <jvmargs>
-          <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
-          <syspropertyset>
-            <propertyref prefix="org.netbeans.mdr"/>
-            <propertyref prefix="MDRStorageProperty"/>
-          </syspropertyset>
+          <sysproperty 
+              key="enki.compatibility.storagePropertiesFile"
+              value="${project.catalog.dir}/ReposStorage.properties"/>
+          <sysproperty 
+              key="enki.compatibility.substPropertyName"
+              value="FARRAGO_CATALOG_DIR"/>
+          <sysproperty
+              key="enki.compatibility.substPropertyValue"
+              value="${project.catalog.dir}"/>
         </jvmargs>
       </farrago.antFork>
     </sequential>
@@ -482,9 +596,10 @@ ${farrago.test.jvmargs}
   </presetdef>
 
   <!-- Customization for javac task for compiling client-side code -->
-  <!-- NOTE jvs 2-Oct-2005:  We keep all client-side code 1.4-compatible -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" source="1.4" target="1.4"/>
+    <javac debug="on" deprecation="on" 
+      source="${farrago.client.javasrc.version}" 
+      target="${farrago.client.javasrc.version}"/>
   </presetdef>
 
   <!-- Customization for java task -->
@@ -525,19 +640,23 @@ ${farrago.test.jvmargs}
       </java>
     </sequential>
   </macrodef>
- 
+
   <!-- Macro for converting metamodel from UML to MOF -->
   <macrodef name="farrago.uml2mof">
     <attribute name="umlmodelname" default="unspecified" />
     <attribute name="outputfilename" default="unspecified" />
     <attribute name="umlsansdiagrams" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <xslt style="${farrago.xmi.dir}/deleteUmlDiagrams.xsl"
         in="@{umlmodelname}"
         out="@{umlsansdiagrams}">
       </xslt>
-      <java classname="org.netbeans.lib.jmi.uml2mof.Main" 
+      <java classname="org.netbeans.lib.jmi.uml2mof.Main"
         fork="true" failonerror="true">
+        <sysproperty
+          key="org.netbeans.mdr.storagemodel.StorageFactoryClassName"
+          value="@{storageModel}"/>
         <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <classpath>
           <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
@@ -560,6 +679,7 @@ ${farrago.test.jvmargs}
     <attribute name="umlBasename" default="unspecified" />
     <attribute name="mofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <unzip src="@{zumlFile}" dest="@{xmiDir}">
         <patternset>
@@ -568,7 +688,8 @@ ${farrago.test.jvmargs}
       </unzip>
       <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
         outputfilename="@{xmiDir}/@{mofBasename}.xmi"
-        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"
+        storageModel="@{storageModel}"/>
     </sequential>
   </macrodef>
 
@@ -579,6 +700,7 @@ ${farrago.test.jvmargs}
     <attribute name="umlBasename" default="unspecified" />
     <attribute name="mofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <xslt style="${farrago.xmi.dir}/extractArgoModel.xsl"
         in="@{umlFile}"
@@ -586,7 +708,8 @@ ${farrago.test.jvmargs}
       </xslt>
       <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
         outputfilename="@{xmiDir}/@{mofBasename}.xmi"
-        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"
+        storageModel="@{storageModel}"/>
     </sequential>
   </macrodef>
 
@@ -638,7 +761,7 @@ ${farrago.test.jvmargs}
         <components/>
       </concat>
       <chmod file="@{combined}" perm="a-w"/>
-      <javacc 
+      <javacc
         target="@{combined}" javacchome="${javacc.dir}"/>
     </sequential>
   </macrodef>
@@ -654,15 +777,26 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
+  <!-- Macro for extracting the timestamp from an ArgoUML model  -->
+  <macrodef name="farrago.extractModelTimestamp">
+    <attribute name="umlFile" default="unspecified" />
+    <attribute name="outFile" default="unspecified" />
+    <sequential>
+      <xslt style="${farrago.xmi.dir}/extractArgoTimestamp.xsl" in="@{umlFile}"
+        out="@{outFile}"/>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for running JUnit and sqlline tests -->
   <macrodef name="farrago.runTests">
     <attribute name="targetonerror" default=""/>
+    <attribute name="fork" default="no"/>
     <element name="testfileset" optional="no"/>
     <element name="junitargs" optional="yes"/>
     <sequential>
       <fail unless="testlog.dir"/>
       <mkdir dir="${testlog.dir}"/>
-      <junit printsummary="yes" fork="no" failureproperty="junit.failure"
+      <junit printsummary="yes" fork="@{fork}" failureproperty="junit.failure"
         tempdir="${testlog.dir}" reloading="false">
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <junitargs/>
@@ -694,16 +828,21 @@ ${farrago.test.jvmargs}
     <attribute name="file" default="unspecified"/>
     <sequential>
       <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-        tempdir="${testlog.dir}" forkmode="perBatch">
-        <classpath refid="farrago.sqlline.classpath"/>
+        tempdir="${testlog.dir}" forkmode="perBatch" includeantruntime="no">
+        <!-- <classpath refid="farrago.sqlline.classpath"/> -->
+        <classpath>
+            <pathelement path="${farrago.sqlline.classpath}" />
+            <pathelement path="${ant.classpath}" />
+        </classpath>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
+        <jvmarg line="-Xmx1024m"/>
+        <jvmarg line="-XX:MaxPermSize=160m" />
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
-        <sysproperty key="net.sf.farrago.fileset.unitsql"
-          file="@{file}"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql" file="@{file}"/>
         <formatter type="plain"/>
         <formatter type="xml"/> <!-- for integration builds -->
-        <test todir="${testlog.dir}" 
+        <test todir="${testlog.dir}"
           name="net.sf.farrago.test.FarragoSqlTest" />
       </junit>
     </sequential>
@@ -724,17 +863,23 @@ ${farrago.test.jvmargs}
   -->
 
   <target name="farrago.mdr_taskdef">
-    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
-      classpathref="farrago.3p.classpath"/>
-  </target>
+    <taskdef name="mdr" 
+      classname="org.eigenbase.enki.ant.EnkiTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
 
-  <taskdef name="retroweaver"
-    classname="com.rc.retroweaver.ant.RetroWeaverTask">
-    <classpath>
-      <fileset dir="${retroweaver.dir}/lib" includes="**/*"/>
-      <pathelement location="${retroweaver.dir}/release/retroweaver.jar"/>
-    </classpath>
-  </taskdef>
+    <!-- Enki provider-specific sub tasks. -->
+    <typedef 
+      name="exportSchema"
+      classname="org.eigenbase.enki.hibernate.ant.ExportSchemaSubTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
+    <typedef 
+      name="applyTablePrefix"
+      classname="org.eigenbase.enki.hibernate.ant.ApplyTablePrefixSubTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
+  </target>
 
   <!-- Macro for creating a TAGS file suitable for use in Emacs -->
   <macrodef name="farrago.createEmacsTags">
@@ -760,16 +905,112 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
+  <!-- Sets the farrago.enki.provider property -->
+  <macrodef name="farrago.setReposProvider">
+    <attribute name="reposStorageProps" default="${farrago.ReposStorage.propfile}"/>
+    <sequential>
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <not>
+          <isset property="farrago.enki.provider"/>
+        </not>
+        <then>
+          <loadproperties srcFile="@{reposStorageProps}">
+            <filterchain>
+              <linecontainsregexp>
+                <regexp pattern="(org.eigenbase.enki.implementationType|hibernate.dialect=)"/>
+              </linecontainsregexp>
+              <tokenfilter>
+                <replacestring 
+                  from="org.eigenbase.enki.implementationType"
+                  to="farrago.enki.provider"/>
+                <replacestring 
+                  from="hibernate.dialect="
+                  to="farrago.enki.dialect="/>
+              </tokenfilter>
+            </filterchain>
+          </loadproperties>
+      
+          <condition 
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.hibernate.codegen.HibernateGenerator">
+            <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          </condition>
+          <condition 
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.trans.codegen.TransientGenerator">
+            <equals arg1="${farrago.enki.provider}" arg2="ENKI_TRANSIENT"/>
+          </condition>
+          <condition 
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.netbeans.codegen.NetbeansGenerator">
+            <not>
+              <isset property="farrago.enki.generator"/>
+            </not>
+          </condition>
+        </then>
+      </ac:if>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for cleaning out a catalog directory -->
   <macrodef name="farrago.cleanCatalog">
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <attribute name="dropStorage" default="false"/>
+
     <sequential>
       <delete>
         <fileset dir="@{catalogDir}" includes="*.dat"/>
-        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
         <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
         <fileset dir="@{catalogDir}" includes="FarragoBootUrls.lst"/>
+
+        <!-- Deletes HSQLDB files or MYSQL .dump files. -->
+        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
       </delete>
+
+      <property 
+          file="@{catalogDir}/ReposStorage.properties"
+          prefix="cleanCatalog"/>
+
+      <if>
+        <and>
+          <equals arg1="@{dropStorage}" arg2="true"/>
+          <isset property="cleanCatalog.net.sf.farrago.dev.dropStorage"/>
+          <isset property="cleanCatalog.net.sf.farrago.dev.createStorage"/>
+        </and>
+        <then>
+          <echo>
+            Database URL:
+            ${cleanCatalog.net.sf.farrago.dev.connection.url}
+
+            Executing:
+            ${cleanCatalog.net.sf.farrago.dev.dropStorage}
+            ${cleanCatalog.net.sf.farrago.dev.createStorage}
+          </echo>
+          <!-- Allow drop to fail (may be first time we run this). -->
+          <!-- propertyresource allows semi-colon delimited statements. -->
+          <sql
+              driver="${cleanCatalog.net.sf.farrago.dev.connection.driver_class}"
+              url="${cleanCatalog.net.sf.farrago.dev.connection.url}" 
+              userid="${cleanCatalog.net.sf.farrago.dev.connection.username}"
+              password="${cleanCatalog.net.sf.farrago.dev.connection.password}"
+              classpathref="farrago.3p.classpath"
+              onerror="continue"
+              autocommit="true">
+            <propertyresource 
+                name="cleanCatalog.net.sf.farrago.dev.dropStorage"/>
+          </sql>
+          <sql
+              driver="${cleanCatalog.net.sf.farrago.dev.connection.driver_class}"
+              url="${cleanCatalog.net.sf.farrago.dev.connection.url}" 
+              userid="${cleanCatalog.net.sf.farrago.dev.connection.username}"
+              password="${cleanCatalog.net.sf.farrago.dev.connection.password}"
+              classpathref="farrago.3p.classpath"
+              autocommit="true">
+            <propertyresource
+                name="cleanCatalog.net.sf.farrago.dev.createStorage"/>
+          </sql>
+        </then>
+      </if>
     </sequential>
   </macrodef>
 
@@ -777,15 +1018,109 @@ ${farrago.test.jvmargs}
   <macrodef name="farrago.backupCatalog">
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
     <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
+    <attribute name="catalogOnly" default="false"/>
+    <attribute name="includeTempDataFile" default="false"/>
+
     <sequential>
+      <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
+
       <delete includeEmptyDirs="true" quiet="true">
         <fileset dir="@{backupDir}" includes="*"/>
       </delete>
       <mkdir dir="@{backupDir}"/>
+
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <and>
+          <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          <not>
+            <equals 
+                arg1="${farrago.enki.dialect}"
+                arg2="org.hibernate.dialect.HSQLDialect"/>
+          </not>
+        </and>
+        <then>
+          <!-- Backup the hibernate database to FarragoCatalog.dump. -->
+          <echo message="Backing up Enki/Hibernate repository from schema '${project.catalog.schema}'"/> 
+          <exec 
+              executable="${farrago.enki.hibernate.backup.cmd}"
+              output="@{backupDir}/FarragoCatalog.dump"
+              logError="true"
+              failonerror="true">
+            <arg line="${farrago.enki.hibernate.backup.args}"/>
+          </exec>
+        </then>
+      </ac:if>
+
       <copy todir="@{backupDir}">
         <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
-        <fileset dir="@{catalogDir}" includes="db.dat"/>
       </copy>
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <isfalse value="@{catalogOnly}"/>
+        <then>
+          <copy todir="@{backupDir}">
+            <fileset dir="@{catalogDir}" includes="db.dat"/>
+          </copy>
+          <if>
+            <istrue value="@{includeTempDataFile}"/>
+            <then>
+              <copy todir="@{backupDir}">
+                <fileset dir="@{catalogDir}" includes="temp.dat"/>
+              </copy>
+            </then>
+          </if>
+        </then>
+      </ac:if>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for restoring a backed up catalog directory -->
+  <macrodef name="farrago.restoreCatalog">
+    <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
+    <attribute name="catalogOnly" default="false"/>
+
+    <sequential>
+      <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
+
+      <copy overwrite="true" todir="@{catalogDir}">
+        <fileset dir="@{backupDir}">
+          <exclude name="*.dump"/>
+          <exclude name="*.dat"/>
+        </fileset>
+      </copy>
+      
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <isfalse value="@{catalogOnly}"/>
+        <then>
+          <copy overwrite="true" todir="@{catalogDir}">
+            <fileset dir="@{backupDir}">
+              <include name="*.dat"/>
+            </fileset>
+          </copy>
+        </then>
+      </ac:if>
+      
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <and>
+          <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          <not>
+            <equals 
+                arg1="${farrago.enki.dialect}"
+                arg2="org.hibernate.dialect.HSQLDialect"/>
+          </not>
+        </and>
+        <then>
+          <!-- Restore the hibernate database from FarragoCatalog.dump. -->
+          <echo message="Restoring Enki/Hibernate repository to schema '${project.catalog.schema}'"/> 
+          <exec 
+              executable="${farrago.enki.hibernate.restore.cmd}"
+              input="@{backupDir}/FarragoCatalog.dump"
+              logError="true"
+              failonerror="true">
+            <arg line="${farrago.enki.hibernate.restore.args}"/>
+          </exec>
+        </then>
+      </ac:if>
     </sequential>
   </macrodef>
 
@@ -811,8 +1146,8 @@ ${farrago.test.jvmargs}
       <fail message="catalog differs from clean state">
         <condition>
           <not>
-            <filesmatch 
-              file1="@{log.dir}/before.masked.xmi" 
+            <filesmatch
+              file1="@{log.dir}/before.masked.xmi"
               file2="@{log.dir}/after.masked.xmi" />
           </not>
         </condition>
@@ -825,7 +1160,7 @@ ${farrago.test.jvmargs}
     <attribute name="propFile" default="unspecified"/>
     <attribute name="logFile" default="unspecified"/>
     <sequential>
-      <touch file="@{propFile}"/>
+      <touch file="@{propFile}" mkdirs="true"/>
       <propertyfile file="@{propFile}"
         comment="Developer tracing configuration (do not add comments)">
         <entry key="handlers" default="java.util.logging.FileHandler"/>
@@ -900,16 +1235,16 @@ ${farrago.test.jvmargs}
         <and>
           <isset property="jdbc.url.port.default"/>
           <not>
-            <equals 
+            <equals
                 arg1="${RELEASE_PROPS.jdbc.url.port.default}"
                 arg2="${jdbc.url.port.default}"/>
           </not>
         </and>
         <then>
           <propertyfile file="@{file}">
-            <entry 
-                key="jdbc.url.port.default" 
-                default="${jdbc.url.port.default}"/>
+            <entry
+                key="jdbc.url.port.default"
+                value="${jdbc.url.port.default}"/>
           </propertyfile>
         </then>
       </if>

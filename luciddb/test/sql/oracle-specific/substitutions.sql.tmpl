@@ -1,0 +1,241 @@
+create foreign data wrapper ORACLE_WRAPPER
+library '@DATA_LIBRARY@'
+language java;
+
+create server ORCL_SERVER_NO_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@'
+);
+
+-- no substitution
+select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+-- wrapper substitution
+create foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+library '@DATA_LIBRARY@'
+language java
+options(
+    type_mapping 'DATE:TIMESTAMP'
+);
+
+create server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@'
+);
+
+
+-- with wrapper substitution only
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'TIMESTAMP:DATE'
+);
+
+-- with overridden server substitution
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;TIMESTAMP:DATE'
+);
+
+-- with more than one substitution
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+-- using precision/scale, scale does not match
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(22,3):DOUBLE'
+);
+
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+-- using precision/scale, scale matches
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(30,3):DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+-- using precision/scale, with no scale
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(22):DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+-- without specifying precision/scale
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL:DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+
+-- TEST: TYPE_MAPPING's interaction with TYPE_SUBSTITUTION
+
+-- (1) With TYPE_SUBSTITUTION = false, No TYPE_MAPPING
+
+create or replace server ORCL_SERVER_TYPE_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_substitution 'FALSE'
+);
+
+select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+
+-- (2) With TYPE_SUBSTITUTION = false and TYPE_MAPPING specified
+
+create or replace server ORCL_SERVER_TYPE_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_substitution 'FALSE',
+    type_mapping 'DECIMAL:DOUBLE'
+);
+
+select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+
+-- oops, forgot about CLOB/BLOB
+
+create or replace server ORCL_SERVER_TYPE_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_substitution 'FALSE',
+    type_mapping 'DECIMAL:DOUBLE;CLOB:VARCHAR(1);BLOB:Varchar(1)'
+);
+
+select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+-- (3) With TYPE_SUBSTITUTION = true and No TYPE_MAPPING
+
+create or replace server ORCL_SERVER_TYPE_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_substitution 'TRUE'
+);
+
+select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+
+-- (4) With TYPE_SUBSTITUTION = true and TYPE_MAPPING specified
+
+create or replace server ORCL_SERVER_TYPE_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_substitution 'TRUE',
+    type_mapping 'DECIMAL:DOUBLE;CLOB:VARCHAR(2)'
+);
+
+select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
+
+select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+
+drop schema test cascade;

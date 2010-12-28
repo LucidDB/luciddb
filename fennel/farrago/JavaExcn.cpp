@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,11 +30,32 @@ JavaExcn::JavaExcn(jthrowable javaExceptionInit)
     : FennelExcn("FennelJavaExcn")
 {
     javaException = javaExceptionInit;
+
+    // Initialize the msg field to the stack trace. It is necessary to
+    // store the stack trace, so that 'what' can hand out a 'const
+    // char *'.
+    JniEnvAutoRef pEnv;
+    jstring s = reinterpret_cast<jstring>(
+        pEnv->CallStaticObjectMethod(
+            JniUtil::classUtil,
+            JniUtil::methUtilGetStackTrace,
+            javaException));
+    msg = JniUtil::toStdString(pEnv, s);
 }
 
 jthrowable JavaExcn::getJavaException() const
 {
     return javaException;
+}
+
+void JavaExcn::throwSelf()
+{
+    throw *this;
+}
+
+const std::string& JavaExcn::getStackTrace() const
+{
+    return msg;
 }
 
 FENNEL_END_CPPFILE("$Id$");

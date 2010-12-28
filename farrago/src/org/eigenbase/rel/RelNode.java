@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -69,8 +69,8 @@ import org.eigenbase.rex.*;
  * @since May 24, 2004
  */
 public interface RelNode
+    extends Cloneable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     AbstractRelNode [] emptyArray = new AbstractRelNode[0];
@@ -90,6 +90,11 @@ public interface RelNode
      */
     public RexNode [] getChildExps();
 
+    /**
+     * Returns the cluster this relational expression belongs to.
+     *
+     * @return cluster
+     */
     public RelOptCluster getCluster();
 
     /**
@@ -112,8 +117,21 @@ public interface RelNode
      */
     public RelTraitSet getTraits();
 
+    /**
+     * Sets the name of the variable which is to be implicitly set at runtime
+     * each time a row is returned from this relational expression
+     *
+     * @param correlVariable Name of correlating variable
+     */
     public void setCorrelVariable(String correlVariable);
 
+    /**
+     * Returns the name of the variable which is to be implicitly set at runtime
+     * each time a row is returned from this relational expression; or null if
+     * there is no variable.
+     *
+     * @return Name of correlating variable, or null
+     */
     public String getCorrelVariable();
 
     /**
@@ -122,10 +140,20 @@ public interface RelNode
      */
     public boolean isDistinct();
 
+    /**
+     * Returns the ID of this relational expression, unique among all relational
+     * expressions created since the server was started.
+     *
+     * @return Unique ID
+     */
     public int getId();
 
     /**
-     * Gets the <code>i</code><sup>th</sup> input.
+     * Returns the <code>i</code><sup>th</sup> input relational expression.
+     *
+     * @param i Ordinal of input
+     *
+     * @return <code>i</code><sup>th</sup> input
      */
     public RelNode getInput(int i);
 
@@ -136,6 +164,13 @@ public interface RelNode
      */
     public String getOrCreateCorrelVariable();
 
+    /**
+     * Returns the sub-query this relational expression belongs to. A sub-query
+     * determines the scope for correlating variables (see {@link
+     * #setCorrelVariable(String)}).
+     *
+     * @return Sub-query
+     */
     public RelOptQuery getQuery();
 
     /**
@@ -298,7 +333,7 @@ public interface RelNode
      * that children have already been normalized).
      *
      * <p>If you want a descriptive string which contains the identity, call
-     * {@link #toString()}, which always returns "rel#{id}:{digest}".
+     * {@link Object#toString()}, which always returns "rel#{id}:{digest}".
      */
     String getDigest();
 
@@ -308,6 +343,29 @@ public interface RelNode
      * "rel#{id}:{digest}".
      */
     String getDescription();
+
+    /**
+     * Clones this RelNode.
+     *
+     * <p>Traits of the RelNode must be explicitly cloned, using {@link
+     * AbstractRelNode#inheritTraitsFrom(AbstractRelNode)}, as the RelNode may
+     * have traits of which it has no knowledge. Example implementation:
+     *
+     * <pre>
+     *     public MyRelNode clone()
+     *     {
+     *         MyRelNode clone = new MyRelNode(...);
+     *         clone.inheritTraitsFrom(this);
+     *         return clone;
+     *     }
+     * </pre>
+     * <b>N.B.:</b> This method must be overridden whenever an existing,
+     * concrete RelNode is extended. Otherwise, calling clone() will produce a
+     * differently typed RelNode, resulting in invalid or incorrect query plans.
+     *
+     * @return a clone of this RelNode
+     */
+    RelNode clone();
 }
 
 // End RelNode.java

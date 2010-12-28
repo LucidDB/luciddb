@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@
 #define Fennel_SharedBuffer_Included
 
 #include <boost/scoped_array.hpp>
+#include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -35,11 +36,13 @@ FENNEL_BEGIN_NAMESPACE
  * @since Aug 01, 2005
  * @version $Id$
  **/
-class SizeBuffer : public boost::noncopyable
+class FENNEL_COMMON_EXPORT SizeBuffer : public boost::noncopyable
 {
 public:
     explicit SizeBuffer(uint capacity, uint length = 0);
-    ~SizeBuffer() { }
+    ~SizeBuffer()
+    {
+    }
     void length(uint length);
     uint length() const;
     uint capacity() const;

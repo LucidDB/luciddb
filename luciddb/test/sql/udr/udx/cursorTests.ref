@@ -20,7 +20,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table(
 . . . . . . . . >   get_column_types(
@@ -33,11 +33,13 @@
 | calcVirtualMachine        | 12       | VARCHAR      |
 | checkpointInterval        | 4        | INTEGER      |
 | codeCacheMaxBytes         | -5       | BIGINT       |
+| connectionTimeoutMillis   | -5       | BIGINT       |
 | fennelDisabled            | 16       | BOOLEAN      |
 | javaCompilerClassName     | 12       | VARCHAR      |
 | mofClassName              | 12       | VARCHAR      |
 | mofId                     | 12       | VARCHAR      |
 | name                      | 12       | VARCHAR      |
+| serverHttpPort            | 4        | INTEGER      |
 | serverRmiRegistryPort     | 4        | INTEGER      |
 | serverSingleListenerPort  | 4        | INTEGER      |
 | userCatalogEnabled        | 16       | BOOLEAN      |
@@ -62,11 +64,17 @@
 | databaseShadowLogInitSize       | 4        | INTEGER      |
 | databaseTxnLogIncrementSize     | 4        | INTEGER      |
 | databaseTxnLogInitSize          | 4        | INTEGER      |
+| deviceSchedulerType             | 12       | VARCHAR      |
 | expectedConcurrentStatements    | 4        | INTEGER      |
+| freshmenPageQueuePercentage     | 4        | INTEGER      |
 | groupCommitInterval             | 4        | INTEGER      |
 | jniHandleTraceFile              | 12       | VARCHAR      |
 | mofClassName                    | 12       | VARCHAR      |
 | mofId                           | 12       | VARCHAR      |
+| pageHistoryQueuePercentage      | 4        | INTEGER      |
+| prefetchPagesMax                | 4        | INTEGER      |
+| prefetchThrottleRate            | 4        | INTEGER      |
+| processorCacheBytes             | 4        | INTEGER      |
 | resourceDir                     | 12       | VARCHAR      |
 | tempIncrementSize               | 4        | INTEGER      |
 | tempInitSize                    | 4        | INTEGER      |
@@ -134,9 +142,9 @@
 | cachePagesMax                   | 5000                                |
 | calcVirtualMachine              | CALCVM_JAVA                         |
 | checkpointInterval              | 0                                   |
-| codeCacheMaxBytes               | 0                                   |
+| codeCacheMaxBytes               | 2000000                             |
 | databaseIncrementSize           | 1000                                |
-| databaseInitSize                | 1000                                |
+| databaseInitSize                | 2000                                |
 | databaseMaxSize                 | 0                                   |
 | databaseShadowLogIncrementSize  | 1000                                |
 | databaseShadowLogInitSize       | 2000                                |
@@ -151,7 +159,7 @@
 | serverRmiRegistryPort           | -1                                  |
 | serverSingleListenerPort        | -1                                  |
 | tempIncrementSize               | 1000                                |
-| tempInitSize                    | 1000                                |
+| tempInitSize                    | 3000                                |
 | tempMaxSize                     | 0                                   |
 | userCatalogEnabled              | false                               |
 +---------------------------------+-------------------------------------+
@@ -247,7 +255,7 @@
 +---------------------------+-------------------------------------+----------+--------------+
 | calcVirtualMachine        | CALCVM_JAVA                         | 12       | VARCHAR      |
 | checkpointInterval        | 0                                   | 4        | INTEGER      |
-| codeCacheMaxBytes         | 0                                   | -5       | BIGINT       |
+| codeCacheMaxBytes         | 2000000                             | -5       | BIGINT       |
 | fennelDisabled            | false                               | 16       | BOOLEAN      |
 | javaCompilerClassName     | org.eigenbase.javac.JaninoCompiler  | 12       | VARCHAR      |
 | name                      | Current                             | 12       | VARCHAR      |
@@ -293,5 +301,32 @@ Error: hey, hey, it's an exception (state=,code=0)
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from ct.mytable order by 1;
--- Error: Failed to acquire lock on LOCALDB.CT.MYTABLE (state=,code=0)
++---------------------------+-------------------------------------+
+|        PARAM_NAME         |             PARAM_VALUE             |
++---------------------------+-------------------------------------+
+| calcVirtualMachine        | CALCVM_JAVA                         |
+| checkpointInterval        | 0                                   |
+| codeCacheMaxBytes         | 2000000                             |
+| fennelDisabled            | false                               |
+| javaCompilerClassName     | org.eigenbase.javac.JaninoCompiler  |
+| name                      | Current                             |
+| serverRmiRegistryPort     | -1                                  |
+| serverSingleListenerPort  | -1                                  |
+| userCatalogEnabled        | false                               |
++---------------------------+-------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with empty input
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     pivot_columns_to_rows(cursor(select * from t1 where aa = 0)));
+Error: Input contains no rows (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with too many input rows
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     pivot_columns_to_rows(cursor(select * from t1)));
+Error: Input contains more than one row (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

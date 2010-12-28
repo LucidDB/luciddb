@@ -1,0 +1,26 @@
+----------------------------------------
+-- Negative tests
+----------------------------------------
+
+-- mapped without lenient
+create server mapwolenient_server
+foreign data wrapper sys_file_wrapper
+options (
+        mapped 'yes',
+        lenient 'no',
+        directory '@DIRECTORY@',
+        file_extension '@FILE_EXTENSION@');
+
+-- mapped without header
+create server mapwoheader_server
+foreign data wrapper sys_file_wrapper
+options (
+        mapped 'yes',
+        with_header 'no',
+        directory '@DIRECTORY@',
+        file_extension '@FILE_EXTENSION@');
+
+-- mapped with header but actual csv file does not have header
+-- or all headers are wrong
+select * from lenientwmap_server.bcp."csvnoheader";
+select * from lenientwmap_server.bcp."allwrongheaders";

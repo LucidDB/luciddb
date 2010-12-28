@@ -19,8 +19,6 @@
 
 package net.sf.saffron.oj;
 
-import com.disruptivetech.farrago.volcano.*;
-
 import net.sf.saffron.core.ImplementableTable;
 import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.oj.rel.*;
@@ -32,9 +30,8 @@ import org.eigenbase.rel.convert.FactoryConverterRule;
 import org.eigenbase.rel.jdbc.JdbcQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.volcano.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexUtil;
-
 
 /**
  * OJPlannerFactory constructs planners initialized to handle all calling
@@ -45,7 +42,8 @@ import org.eigenbase.rex.RexUtil;
  */
 public class OJPlannerFactory
 {
-    private static ThreadLocal threadInstances = new ThreadLocal();
+    private static ThreadLocal<OJPlannerFactory> threadInstances =
+        new ThreadLocal<OJPlannerFactory>();
 
     //~ Methods ---------------------------------------------------------------
 
@@ -56,12 +54,14 @@ public class OJPlannerFactory
 
     public static OJPlannerFactory threadInstance()
     {
-        return (OJPlannerFactory) threadInstances.get();
+        return threadInstances.get();
     }
-    
+
     public RelOptPlanner newPlanner()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
+
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         // Create converter rules for all of the standard calling conventions.
         add(
@@ -200,7 +200,7 @@ public class OJPlannerFactory
     public static void registerIterRels(VolcanoPlanner planner)
     {
         planner.addRule(new IterRules.UnionToIteratorRule());
-        planner.addRule(new IterRules.OneRowToIteratorRule());
+        planner.addRule(IterRules.OneRowToIteratorRule.instance);
     }
 
     /**
@@ -227,7 +227,7 @@ public class OJPlannerFactory
             final AggregateRel aggregate = (AggregateRel) rel;
             final RelNode javaChild =
                 mergeTraitsAndConvert(
-                    aggregate.getTraits(), CallingConvention.JAVA, 
+                    aggregate.getTraits(), CallingConvention.JAVA,
                     aggregate.getChild());
             if (javaChild == null) {
                 return null;
@@ -236,7 +236,7 @@ public class OJPlannerFactory
                 aggregate.getCluster(),
                 javaChild,
                 aggregate.getGroupCount(),
-                aggregate.getAggCalls());
+                aggregate.getAggCallList());
         }
     }
 
@@ -249,7 +249,7 @@ public class OJPlannerFactory
     {
         public DistinctToExistsRule()
         {
-            super(new RelOptRuleOperand(JavaDistinctRel.class, null));
+            super(new RelOptRuleOperand(JavaDistinctRel.class, ANY));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -269,8 +269,11 @@ public class OJPlannerFactory
     {
         public DistinctToJavaRule()
         {
-            super(AggregateRel.class, CallingConvention.NONE,
-                CallingConvention.JAVA, "DistinctToJavaRule");
+            super(
+                AggregateRel.class,
+                CallingConvention.NONE,
+                CallingConvention.JAVA,
+                "DistinctToJavaRule");
         }
 
         public RelNode convert(RelNode rel)
@@ -358,7 +361,7 @@ public class OJPlannerFactory
                 join.getCluster(),
                 convertedLeft,
                 convertedRight,
-                RexUtil.clone(join.getCondition()),
+                join.getCondition().clone(),
                 join.getJoinType(),
                 join.getVariablesStopped());
         }
@@ -378,7 +381,7 @@ public class OJPlannerFactory
 
         public RelNode convert(RelNode rel)
         {
-            // REVIEW: SWZ: 3/5/2005: Might need to propagate other 
+            // REVIEW: SWZ: 3/5/2005: Might need to propagate other
             // traits fro OneRowRel to JavaOneRowRel
             final OneRowRel oneRow = (OneRowRel) rel;
             return new JavaOneRowRel(oneRow.getCluster());

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 class FarragoOJRexNextValueImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static String GET_SEQUENCE_METHOD_NAME = "getSequenceAccessor";
@@ -52,20 +51,20 @@ class FarragoOJRexNextValueImplementor
         RexCall call,
         Expression [] operands)
     {
-        // make sequence a static member variable
-        // to avoid retrieving it every iteration
+        // make sequence a member variable to avoid retrieving it every
+        // iteration
         Variable sequence = translator.newVariable();
         FieldDeclaration declaration =
             translator.newMember(
-                ModifierList.STATIC,
+                ModifierList.PRIVATE,
                 OJClass.forClass(FarragoSequenceAccessor.class),
                 sequence,
                 null);
         translator.addMember(declaration);
 
         // before processing a row, inialize the sequence if
-        // it has not been intialized yet
-        // FIXME: this should be synchronized
+        // it has not been initialized yet; no need to synchronize because
+        // member is non-static
         Expression mofId = translator.toString(operands[0]);
         Expression expForSequence =
             new MethodCall(

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,14 +29,13 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -50,20 +49,14 @@ class FarragoDbSessionIndexMap
     extends FarragoCompoundAllocation
     implements FarragoSessionIndexMap
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private FarragoDatabase database;
+    private FarragoDbSession dbSession;
 
     /**
-     * Map from index to root PageId for temporary tables.
+     * Map from index MOF ID to root PageId for temporary tables.
      */
-    private Map tempIndexRootMap;
-
-    /**
-     * Map from index ID to index for all tables.
-     */
-    private Map indexIdMap;
+    private Map<String, Long> tempIndexRootMap;
 
     /**
      * Repos for this session.
@@ -82,27 +75,24 @@ class FarragoDbSessionIndexMap
      *
      * @param owner FarragoAllocationOwner which will own this map; on
      * closeAllocation, any temporary indexes will be deleted automatically
-     * @param database FarragoDatabase context
+     * @param dbSession FarragoDbSession context
      * @param repos the repos for this session
      */
     public FarragoDbSessionIndexMap(
         FarragoAllocationOwner owner,
-        FarragoDatabase database,
+        FarragoDbSession dbSession,
         FarragoRepos repos)
     {
-        this.database = database;
+        this.dbSession = dbSession;
         this.repos = repos;
-        tempIndexRootMap = new HashMap();
-        indexIdMap = new HashMap();
+        tempIndexRootMap = new HashMap<String, Long>();
         owner.addAllocation(this);
-
         privateDataWrapperCache =
-            new FarragoDataWrapperCache(
+            dbSession.newFarragoDataWrapperCache(
                 this,
-                database.getDataWrapperCache(),
-                database.getPluginClassLoader(),
+                dbSession.getDatabase().getDataWrapperCache(),
                 repos,
-                database.getFennelDbHandle(),
+                dbSession.getDatabase().getFennelDbHandle(),
                 null);
     }
 
@@ -111,8 +101,14 @@ class FarragoDbSessionIndexMap
     // implement FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index)
     {
+        return getIndexRoot(index, false);
+    }
+
+    // implement FarragoSessionIndexMap
+    public long getIndexRoot(FemLocalIndex index, boolean write)
+    {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            Long root = (Long) tempIndexRootMap.get(index);
+            Long root = tempIndexRootMap.get(index.refMofId());
             assert (root != null);
             return root.longValue();
         } else {
@@ -120,13 +116,15 @@ class FarragoDbSessionIndexMap
         }
     }
 
-    private void setIndexRoot(
+    // implement FarragoSessionIndexMap
+    public void setIndexRoot(
         FemLocalIndex index,
         long root)
     {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            Object old = tempIndexRootMap.put(
-                    index,
+            Long old =
+                tempIndexRootMap.put(
+                    index.refMofId(),
                     new Long(root));
             assert (old == null);
         } else {
@@ -144,35 +142,52 @@ class FarragoDbSessionIndexMap
         FemLocalIndex clusteredIndex =
             FarragoCatalogUtil.getClusteredIndex(repos, table);
 
-        if (tempIndexRootMap.containsKey(clusteredIndex)) {
+        if (tempIndexRootMap.containsKey(clusteredIndex.refMofId())) {
             // already instantiated this table
             return;
         }
 
-        Iterator iter =
-            FarragoCatalogUtil.getTableIndexes(repos, table).iterator();
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-            assert (!tempIndexRootMap.containsKey(index));
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
+            assert (!tempIndexRootMap.containsKey(index.refMofId()));
             createIndexStorage(wrapperCache, index);
         }
+    }
+
+    // implement FarragoSessionIndexMap
+    public CwmTable getReloadTable()
+    {
+        return null;
+    }
+
+    // implement FarragoSessionIndexMap
+    public CwmTable getOldTableStructure()
+    {
+        return null;
     }
 
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        // materialize deletion list to avoid ConcurrentModificationException
-        List list = new ArrayList(tempIndexRootMap.keySet());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-            dropIndexStorage(privateDataWrapperCache, index, false);
-        }
+        repos.beginReposSession();
+        try {
+            // materialize deletion list to avoid
+            // ConcurrentModificationException
+            List<String> list =
+                new ArrayList<String>(tempIndexRootMap.keySet());
+            for (String indexMofId : list) {
+                dropIndexStorage(privateDataWrapperCache, indexMofId, false);
+            }
 
-        // TODO:  make Fennel drop temporary indexes on recovery also
-        // NOTE:  do this last, so that we don't release data wrappers
-        // until we're done using them for drops above
-        super.closeAllocation();
+            // TODO:  make Fennel drop temporary indexes on recovery also
+            // NOTE:  do this last, so that we don't release data wrappers
+            // until we're done using them for drops above
+            super.closeAllocation();
+        } finally {
+            repos.endReposSession();
+        }
     }
 
     /**
@@ -181,38 +196,50 @@ class FarragoDbSessionIndexMap
      */
     public void onCommit()
     {
-        Iterator iter = tempIndexRootMap.keySet().iterator();
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (String indexMofId : tempIndexRootMap.keySet()) {
+            FemLocalIndex index =
+                (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
+
             String temporaryScope =
                 FarragoCatalogUtil.getIndexTable(index).getTemporaryScope();
             if (temporaryScope.endsWith("PRESERVE")) {
                 continue;
             }
-            dropIndexStorage(privateDataWrapperCache, index, true);
+            dropIndexStorage(privateDataWrapperCache, indexMofId, true);
         }
     }
 
-    // REVIEW:  rollback issues
     // implement FarragoSessionIndexMap
     public void createIndexStorage(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index)
     {
+        createIndexStorage(wrapperCache, index, true);
+    }
+
+    // REVIEW:  rollback issues
+    // implement FarragoSessionIndexMap
+    public long createIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        boolean updateMap)
+    {
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
         long indexRoot;
         try {
-            indexRoot = server.createIndex(index);
+            indexRoot =
+                server.createIndex(index, dbSession.getFennelTxnContext());
         } catch (SQLException ex) {
             throw FarragoResource.instance().DataServerIndexCreateFailed.ex(
                 repos.getLocalizedObjectName(index),
                 ex);
         }
-        setIndexRoot(index, indexRoot);
-        indexIdMap.put(
-            new Long(JmiUtil.getObjectId(index)),
-            index);
+        if (updateMap) {
+            setIndexRoot(index, indexRoot);
+        }
+
+        return indexRoot;
     }
 
     // implement FarragoSessionIndexMap
@@ -221,34 +248,80 @@ class FarragoDbSessionIndexMap
         FemLocalIndex index,
         boolean truncate)
     {
-        if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            if (!tempIndexRootMap.containsKey(index)) {
-                // index was never created, so nothing to do
-                return;
-            }
-        }
+        dropIndexStorageImpl(wrapperCache, index, null, truncate);
+    }
 
-        FarragoMedLocalDataServer server =
-            getIndexDataServer(wrapperCache, index);
+    // implement FarragoSessionIndexMap
+    public void dropIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        String indexMofId,
+        boolean truncate)
+    {
+        dropIndexStorageImpl(wrapperCache, null, indexMofId, truncate);
+    }
+
+    private void dropIndexStorageImpl(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        String indexMofId,
+        boolean truncate)
+    {
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        if (index == null) {
+            assert (indexMofId != null);
+            txn.beginReadTxn();
+            index = (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
+        } else {
+            assert (indexMofId == null);
+            indexMofId = index.refMofId();
+        }
         try {
-            server.dropIndex(
-                index,
-                getIndexRoot(index),
-                truncate);
-        } catch (SQLException ex) {
-            throw FarragoResource.instance().DataServerIndexDropFailed.ex(
-                repos.getLocalizedObjectName(index),
-                ex);
-        }
+            if (FarragoCatalogUtil.isIndexTemporary(index)) {
+                if (!tempIndexRootMap.containsKey(indexMofId)) {
+                    // index was never created, so nothing to do
+                    return;
+                }
+            }
 
-        if (!truncate) {
-            indexIdMap.remove(new Long(JmiUtil.getObjectId(index)));
-            tempIndexRootMap.remove(index);
+            FarragoMedLocalDataServer server =
+                getIndexDataServer(wrapperCache, index);
+            String localizedIndexName = repos.getLocalizedObjectName(index);
+            try {
+                long root = getIndexRoot(index);
+
+                // The dropIndex call is the potentially long-running part, so
+                // before invoking it, end our repository transaction if we
+                // started one.  We've already been careful to dig out anything
+                // we need from the repository by this point.
+                txn.commit();
+
+                // FIXME jvs 11-Dec-2008:  We're still passing in
+                // the index reference here.  The local data wrapper
+                // SPI needs to be fixed to avoid this.  We're probably
+                // OK for now since the calls so far
+                // (e.g. FarragoCatalogUtil.isIndexTemporary) will
+                // have preloaded references needed.
+                server.dropIndex(
+                    index,
+                    root,
+                    truncate,
+                    dbSession.getFennelTxnContext());
+            } catch (SQLException ex) {
+                throw FarragoResource.instance().DataServerIndexDropFailed.ex(
+                    localizedIndexName,
+                    ex);
+            }
+
+            if (!truncate) {
+                tempIndexRootMap.remove(indexMofId);
+            }
+        } finally {
+            txn.commit();
         }
     }
 
     // implement FarragoSessionIndexMap
-    public void computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate)
@@ -256,10 +329,11 @@ class FarragoDbSessionIndexMap
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
         try {
-            server.computeIndexStats(
+            return server.computeIndexStats(
                 index,
                 getIndexRoot(index),
-                estimate);
+                estimate,
+                dbSession.getFennelTxnContext());
         } catch (SQLException ex) {
             throw FarragoResource.instance().DataServerIndexVerifyFailed.ex(
                 repos.getLocalizedObjectName(index),
@@ -270,7 +344,12 @@ class FarragoDbSessionIndexMap
     // implement FarragoSessionIndexMap
     public FemLocalIndex getIndexById(long id)
     {
-        return (FemLocalIndex) indexIdMap.get(new Long(id));
+        String mofId = JmiObjUtil.toMofId(id);
+
+        FemLocalIndex index =
+            (FemLocalIndex) repos.getMdrRepos().getByMofId(mofId);
+
+        return index;
     }
 
     private FarragoMedLocalDataServer getIndexDataServer(
@@ -278,9 +357,32 @@ class FarragoDbSessionIndexMap
         FemLocalIndex index)
     {
         FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
-        return
-            (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
-                localTable.getServer());
+        return (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
+            localTable.getServer());
+    }
+
+    public void versionIndexRoot(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        Long newRoot)
+    {
+        FarragoMedLocalDataServer server =
+            getIndexDataServer(wrapperCache, index);
+        try {
+            // Truncate the original index and then version the new index
+            // root to the now empty root.  Note that we cannot drop the
+            // original index because that would result in losing the
+            // original root page that we need to version.
+            dropIndexStorage(wrapperCache, index, true);
+            server.versionIndexRoot(
+                getIndexRoot(index),
+                newRoot,
+                dbSession.getFennelTxnContext());
+        } catch (SQLException ex) {
+            throw FarragoResource.instance().DataServerIndexVersionFailed.ex(
+                repos.getLocalizedObjectName(index),
+                ex);
+        }
     }
 }
 

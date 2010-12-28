@@ -1,0 +1,73 @@
+0: jdbc:luciddb:> create server ff_tpch
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >   directory '@FFDIR@',
+. . . . . . . . >   file_extension '.tbl',
+. . . . . . . . >   ctrl_file_extension '.bcp',
+. . . . . . . . >   field_delimiter '|',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   escape_char '',
+. . . . . . . . >   with_header 'no',
+. . . . . . . . >   num_rows_scan '1',
+. . . . . . . . >   log_directory '@LOGDIR@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."lineitem";
++---------+
+| EXPR$0  |
++---------+
+| 600572  |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."nation";
++---------+
+| EXPR$0  |
++---------+
+| 25      |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."region";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."part";
++---------+
+| EXPR$0  |
++---------+
+| 20000   |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."supplier";
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."customer";
++---------+
+| EXPR$0  |
++---------+
+| 15000   |
++---------+
+0: jdbc:luciddb:> select count(*) from ff_tpch.bcp."orders";
++---------+
+| EXPR$0  |
++---------+
+| 150000  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server errlogs
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >   directory '@ERRLOGDIR@',
+. . . . . . . . >   file_extension '.log',
+. . . . . . . . >   field_delimiter ',',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   escape_char '"',
+. . . . . . . . >   with_header 'yes',
+. . . . . . . . >   num_rows_scan '5',
+. . . . . . . . >   log_directory '@LOGDIR@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

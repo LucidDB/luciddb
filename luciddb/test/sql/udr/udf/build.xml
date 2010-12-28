@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,11 @@
   <property name="bh.log.basedir" value="${udf.dir}/testlog" />
 
   <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${udf.dir}/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+
+  <!-- directory for log files -->
+  <property name="log.dir" value="${open.dir}/luciddb/testlog" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -47,6 +51,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -66,25 +71,44 @@
     <copy todir="${udf.dir}" overwrite="true">
       <fileset dir="${udf.dir}" includes="*.tmpl"/>
       <filterset>
-        <filter token="DATADIR" value="${data.dir}"/>
+        <filter token="DATADIR" value="${csv.copy.dir}"/>
+        <filter token="LOGDIR" value="${log.dir}"/>
       </filterset>
       <globmapper from="*.tmpl" to="*"/>
     </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${udf.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
 
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="dates.*"/>
+      </fileset>
+    </sync>
+  </target>
+
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${udf.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete file="stdToDate.sql"/>
+    <delete file="stdToDate.ref"/>    
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
 </project>

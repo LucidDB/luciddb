@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,14 +21,18 @@
 */
 package net.sf.farrago.plugin;
 
+import java.io.*;
 import java.net.*;
 
 import java.util.*;
 import java.util.jar.*;
+import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
 
 /**
  * FarragoPluginClassLoader allows plugin jars to be added to the ClassLoader
@@ -40,8 +44,9 @@ import net.sf.farrago.util.*;
 public class FarragoPluginClassLoader
     extends URLClassLoader
 {
-
     //~ Static fields/initializers ---------------------------------------------
+
+    private static final Logger tracer = FarragoTrace.getRuntimeContextTracer();
 
     /**
      * Prefix used to indicate that a wrapper library is loaded directly from a
@@ -82,6 +87,12 @@ public class FarragoPluginClassLoader
         urlSet = new HashSet();
     }
 
+    public FarragoPluginClassLoader(ClassLoader parentClassLoader)
+    {
+        super(new URL[0], parentClassLoader);
+        urlSet = new HashSet();
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -91,6 +102,18 @@ public class FarragoPluginClassLoader
      */
     public void addPluginUrl(URL url)
     {
+        // Canonicalize local filenames to reduce the chance of
+        // loading two copies of the same jar
+        if (url.getProtocol().equals("file")) {
+            try {
+                String libraryName = url.getFile();
+                File libraryFile = new File(libraryName);
+                libraryName = libraryFile.getCanonicalPath();
+                url = new URL("file", null, libraryName);
+            } catch (Throwable ex) {
+                throw Util.newInternal(ex);
+            }
+        }
         if (urlSet.contains(url)) {
             return;
         }
@@ -124,14 +147,29 @@ public class FarragoPluginClassLoader
                 Manifest manifest = jar.getManifest();
                 String className =
                     manifest.getMainAttributes().getValue(jarAttributeName);
+                if (className == null) {
+                    throw FarragoResource.instance().PluginManifestMissing.ex(
+                        libraryName,
+                        jarAttributeName);
+                }
                 return loadClassFromJarUrl(
-                        "file:" + libraryName,
-                        className);
+                    "file:" + libraryName,
+                    className);
             }
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginJarLoadFailed.ex(
                 libraryName,
                 ex);
+        }
+    }
+
+    protected Class<?> findClass(String name)
+        throws ClassNotFoundException
+    {
+        try {
+            return super.findClass(name);
+        } catch (ClassNotFoundException cnfe) {
+            return getParent().loadClass(name);
         }
     }
 
@@ -231,8 +269,7 @@ public class FarragoPluginClassLoader
      */
     public static boolean isLibraryClass(String libraryName)
     {
-        return
-            libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
+        return libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
             || libraryName.startsWith(LIBRARY_CLASS_PREFIX2);
     }
 

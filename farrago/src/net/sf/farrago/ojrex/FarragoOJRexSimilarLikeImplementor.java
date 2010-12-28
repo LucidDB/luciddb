@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 Xiaoyang Luo
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 Xiaoyang Luo
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,9 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import java.util.regex.*;
-
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
@@ -34,14 +31,14 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
 /**
  * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for builtin functions
+ * org.eigenbase.oj.rex.OJRexImplementor} for builtin functions <code>
+ * SIMILAR</code> and <code>LIKE</code>.
  *
  * @author Xiaoyang Luo
  * @version $Id$
@@ -49,19 +46,16 @@ import org.eigenbase.util.*;
 public class FarragoOJRexSimilarLikeImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    boolean isSimilar;
-    boolean isNot;
+    private final boolean similar;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FarragoOJRexSimilarLikeImplementor(boolean bIsSimilar,
-        boolean bIsNot)
+    public FarragoOJRexSimilarLikeImplementor(
+        boolean similar)
     {
-        isSimilar = bIsSimilar;
-        isNot = bIsNot;
+        this.similar = similar;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -114,10 +108,9 @@ public class FarragoOJRexSimilarLikeImplementor
             hasEscape = true;
         }
         if ((call.operands[1] instanceof RexLiteral)
-            && (
-                !hasEscape
-                || (hasEscape && (call.operands[2] instanceof RexLiteral))
-               )) {
+            && (!hasEscape
+                || (hasEscape && (call.operands[2] instanceof RexLiteral))))
+        {
             atRuntime = false;
         }
 
@@ -136,7 +129,7 @@ public class FarragoOJRexSimilarLikeImplementor
                 escapeStr = str.getValue();
             }
             String javaPattern = null;
-            if (isSimilar) {
+            if (similar) {
                 javaPattern =
                     RuntimeTypeUtil.SqlToRegexSimilar(
                         sqlPattern,
@@ -209,7 +202,7 @@ public class FarragoOJRexSimilarLikeImplementor
                 likeArguments.add(Literal.constantNull());
             }
             String funcName = null;
-            if (isSimilar) {
+            if (similar) {
                 funcName = "SqlToRegexSimilar";
             } else {
                 funcName = "SqlToRegexLike";
@@ -285,28 +278,6 @@ public class FarragoOJRexSimilarLikeImplementor
             call.getType(),
             varResult,
             false);
-
-        if (isNot) {
-            // should not be here.
-            // The optimizer should have already got rid of IS NOT.
-            // but we just implement it anyway.
-            Expression value = varResult;
-            if (retType.isNullable()) {
-                value =
-                    new FieldAccess(varResult,
-                        NullablePrimitive.VALUE_FIELD_NAME);
-            } else {
-                value = varResult;
-            }
-            stmtList.add(
-                new ExpressionStatement(
-                    new AssignmentExpression(
-                        value,
-                        AssignmentExpression.EQUALS,
-                        new UnaryExpression(
-                            value,
-                            UnaryExpression.NOT))));
-        }
 
         // All the builtin function returns null if
         // one of the arguements is null.

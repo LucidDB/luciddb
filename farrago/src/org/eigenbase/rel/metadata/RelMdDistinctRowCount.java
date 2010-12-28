@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ import org.eigenbase.util14.*;
 public class RelMdDistinctRowCount
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdDistinctRowCount()
@@ -66,12 +65,27 @@ public class RelMdDistinctRowCount
         RexNode predicate)
     {
         Double rowCount = 0.0;
+        int [] adjustments = new int[rel.getRowType().getFieldCount()];
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         for (RelNode input : rel.getInputs()) {
+            // convert the predicate to reference the types of the union child
+            RexNode modifiedPred;
+            if (predicate == null) {
+                modifiedPred = null;
+            } else {
+                modifiedPred =
+                    predicate.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder,
+                            null,
+                            input.getRowType().getFields(),
+                            adjustments));
+            }
             Double partialRowCount =
                 RelMetadataQuery.getDistinctRowCount(
                     input,
                     groupKey,
-                    predicate);
+                    modifiedPred);
             if (partialRowCount == null) {
                 return null;
             }
@@ -85,11 +99,10 @@ public class RelMdDistinctRowCount
         BitSet groupKey,
         RexNode predicate)
     {
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getChild(),
-                groupKey,
-                predicate);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(),
+            groupKey,
+            predicate);
     }
 
     public Double getDistinctRowCount(
@@ -106,11 +119,10 @@ public class RelMdDistinctRowCount
                 predicate,
                 rel.getCondition());
 
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getChild(),
-                groupKey,
-                unionPreds);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(),
+            groupKey,
+            unionPreds);
     }
 
     public Double getDistinctRowCount(
@@ -142,11 +154,10 @@ public class RelMdDistinctRowCount
                     predicate);
         }
 
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getLeft(),
-                groupKey,
-                newPred);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getLeft(),
+            groupKey,
+            newPred);
     }
 
     public Double getDistinctRowCount(
@@ -172,11 +183,22 @@ public class RelMdDistinctRowCount
         BitSet childKey = new BitSet();
         RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
 
-        return
+        Double distinctRowCount =
             RelMetadataQuery.getDistinctRowCount(
                 rel.getChild(),
                 childKey,
                 childPreds);
+        if (distinctRowCount == null) {
+            return null;
+        } else if (notPushable.isEmpty()) {
+            return distinctRowCount;
+        } else {
+            RexNode preds =
+                RexUtil.andRexNodeList(
+                    rel.getCluster().getRexBuilder(),
+                    notPushable);
+            return distinctRowCount * RelMdUtil.guessSelectivity(preds);
+        }
     }
 
     public Double getDistinctRowCount(
@@ -204,27 +226,50 @@ public class RelMdDistinctRowCount
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getChild().getRowType().getFieldCount(),
+            rel.getRowType().getFieldCount(),
             predicate,
             pushable,
             notPushable);
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
 
         // get the distinct row count of the child input, passing in the
-        // columns and filters that only reference the child
+        // columns and filters that only reference the child; convert the
+        // filter to reference the children projection expressions
         RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
+        RexNode modifiedPred;
+        if (childPred == null) {
+            modifiedPred = null;
+        } else {
+            modifiedPred = RelOptUtil.pushFilterPastProject(childPred, rel);
+        }
         Double distinctRowCount =
             RelMetadataQuery.getDistinctRowCount(
                 rel.getChild(),
                 baseCols,
-                childPred);
+                modifiedPred);
+
         if (distinctRowCount == null) {
             return null;
+        } else if (!notPushable.isEmpty()) {
+            RexNode preds =
+                RexUtil.andRexNodeList(
+                    rel.getCluster().getRexBuilder(),
+                    notPushable);
+            distinctRowCount *= RelMdUtil.guessSelectivity(preds);
+        }
+
+        // No further computation required if the projection expressions
+        // are all column references
+        if (projCols.cardinality() == 0) {
+            return distinctRowCount;
         }
 
         // multiply by the cardinality of the non-child projection expressions
-        for (int bit = projCols.nextSetBit(0); bit >= 0;
-            bit = projCols.nextSetBit(bit + 1)) {
+        for (
+            int bit = projCols.nextSetBit(0);
+            bit >= 0;
+            bit = projCols.nextSetBit(bit + 1))
+        {
             Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
             if (subRowCount == null) {
                 return null;
@@ -232,10 +277,9 @@ public class RelMdDistinctRowCount
             distinctRowCount *= subRowCount;
         }
 
-        return
-            RelMdUtil.numDistinctVals(
-                distinctRowCount,
-                RelMetadataQuery.getRowCount(rel));
+        return RelMdUtil.numDistinctVals(
+            distinctRowCount,
+            RelMetadataQuery.getRowCount(rel));
     }
 
     // Catch-all rule when none of the others apply.
@@ -247,12 +291,11 @@ public class RelMdDistinctRowCount
         // REVIEW zfong 4/19/06 - Broadbase code does not take into
         // consideration selectivity of predicates passed in.  Also, they
         // assume the rows are unique even if the table is not
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if ((uniq != null) && uniq) {
-            return
-                NumberUtil.multiply(
-                    RelMetadataQuery.getRowCount(rel),
-                    RelMetadataQuery.getSelectivity(rel, predicate));
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
+        if (uniq) {
+            return NumberUtil.multiply(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getSelectivity(rel, predicate));
         }
         return null;
     }

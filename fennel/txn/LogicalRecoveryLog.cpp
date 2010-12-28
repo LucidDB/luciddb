@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ LogicalRecoveryLog::LogicalRecoveryLog(
       logSegmentAccessor(logSegmentAccessorInit)
 {
     pInputStream = CrcSegInputStream::newCrcSegInputStream(
-        logSegmentAccessor,onlineUuid);
+        logSegmentAccessor, onlineUuid);
 }
 
 SharedLogicalRecoveryLog LogicalRecoveryLog::newLogicalRecoveryLog(
@@ -54,7 +54,8 @@ SharedLogicalRecoveryLog LogicalRecoveryLog::newLogicalRecoveryLog(
 {
     return SharedLogicalRecoveryLog(
         new LogicalRecoveryLog(
-            participantFactory,logSegmentAccessor,onlineUuid,pSegmentFactory));
+            participantFactory, logSegmentAccessor, onlineUuid,
+            pSegmentFactory));
 }
 
 LogicalRecoveryLog::~LogicalRecoveryLog()
@@ -87,10 +88,10 @@ void LogicalRecoveryLog::recover(
             // logged?  If so, need to prevent it or detect it.
             pTxnInputStream = pInputStream;
         }
-        switch(txnMemento.event) {
+        switch (txnMemento.event) {
         case LogicalTxnEventMemento::EVENT_COMMIT:
             if (pTxnEntry == checkpointTxnMap.end()) {
-                redoTxn(txnMemento,NULL,pTxnInputStream);
+                redoTxn(txnMemento, NULL, pTxnInputStream);
             } else {
                 redoTxn(
                     txnMemento,
@@ -101,7 +102,7 @@ void LogicalRecoveryLog::recover(
             break;
         case LogicalTxnEventMemento::EVENT_ROLLBACK:
             assert(pTxnEntry != checkpointTxnMap.end());
-            undoTxn(pTxnEntry->second,pTxnInputStream);
+            undoTxn(pTxnEntry->second, pTxnInputStream);
             checkpointTxnMap.erase(txnId);
             break;
         case LogicalTxnEventMemento::EVENT_CHECKPOINT:
@@ -115,7 +116,7 @@ void LogicalRecoveryLog::recover(
     {
         SharedSegInputStream pTxnInputStream =
             openLongLogStream(pTxnEntry->first);
-        undoTxn(pTxnEntry->second,pTxnInputStream);
+        undoTxn(pTxnEntry->second, pTxnInputStream);
     }
     checkpointTxnMap.clear();
 }

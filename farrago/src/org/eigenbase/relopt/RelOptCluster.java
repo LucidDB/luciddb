@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,6 @@ import openjava.mop.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -44,16 +43,14 @@ import org.eigenbase.rex.*;
  */
 public class RelOptCluster
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Environment env;
     private final RelDataTypeFactory typeFactory;
     private final RelOptQuery query;
-    private RelOptPlanner planner;
+    private final RelOptPlanner planner;
     private RexNode originalExpression;
     private final RexBuilder rexBuilder;
-    private RexToSqlTranslator rexToSqlTranslator;
     private RelMetadataProvider metadataProvider;
 
     //~ Constructors -----------------------------------------------------------
@@ -82,9 +79,7 @@ public class RelOptCluster
 
         // set up a default rel metadata provider,
         // giving the planner first crack at everything
-        DefaultRelMetadataProvider defaultMetadataProvider =
-            new DefaultRelMetadataProvider();
-        metadataProvider = defaultMetadataProvider;
+        metadataProvider = new DefaultRelMetadataProvider();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -97,11 +92,6 @@ public class RelOptCluster
     public RelOptQuery getQuery()
     {
         return query;
-    }
-
-    public RexToSqlTranslator getRexToSqlTranslator()
-    {
-        return rexToSqlTranslator;
     }
 
     public RexNode getOriginalExpression()

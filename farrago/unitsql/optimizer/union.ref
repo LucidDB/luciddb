@@ -1,15 +1,15 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test UNION queries
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java implementation
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION without duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from emps union select name from depts)
-. . . . . . . . >  order by 1;
+> -- $Id$
+> -- Test UNION queries
+> 
+> set schema 'sales';
+> 
+> -- force usage of Java implementation
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- test UNION without duplicates
+> select * from 
+> (select name from emps union select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -21,11 +21,11 @@
 | Sales      |
 | Wilma      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION ALL without duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from emps union all select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION ALL without duplicates
+> select * from 
+> (select name from emps union all select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -37,11 +37,11 @@
 | Sales      |
 | Wilma      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION with duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from depts union select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION with duplicates
+> select * from 
+> (select name from depts union select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -49,11 +49,11 @@
 | Marketing  |
 | Sales      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION ALL with duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from depts union all select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION ALL with duplicates
+> select * from 
+> (select name from depts union all select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -64,42 +64,55 @@
 | Sales      |
 | Sales      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- make sure the time function returns the same value; note that this test
+> -- isn't repeated for Fennel calc below because Fennel calc doesn't guarantee
+> -- that time functions return the same value if invoked multiple times within a
+> -- statement
+> select count(*) from
+>     (select current_timestamp from emps union
+>         select current_timestamp from depts);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select * from 
+> (select name from emps union select name from depts)
+>  order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'    LhxAggRel(groupCount=[1])'
 '      IteratorToFennelConverter'
 '        IterConcatenateRel(all=[true])'
 '          FennelToIteratorConverter'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '          FennelToIteratorConverter'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union select name from depts);
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union select name from depts);
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[1])'
 '    IteratorToFennelConverter'
 '      IterConcatenateRel(all=[true])'
 '        FennelToIteratorConverter'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '        FennelToIteratorConverter'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union all select name from depts)
-. . . . . . . . >  order by 1;
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union all select name from depts)
+>  order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -108,27 +121,27 @@
 '        FennelToIteratorConverter'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '        FennelToIteratorConverter'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union all select name from depts);
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union all select name from depts);
 'column0'
 'IterConcatenateRel(all=[true])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- repeat everything, this time with Fennel implementation
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION without duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from emps union select name from depts)
-. . . . . . . . >  order by 1;
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> -- repeat everything, this time with Fennel implementation
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> !set outputformat table
+> 
+> -- test UNION without duplicates
+> select * from 
+> (select name from emps union select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -140,11 +153,11 @@
 | Sales      |
 | Wilma      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION ALL without duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from emps union all select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION ALL without duplicates
+> select * from 
+> (select name from emps union all select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -156,11 +169,11 @@
 | Sales      |
 | Wilma      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION with duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from depts union select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION with duplicates
+> select * from 
+> (select name from depts union select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -168,11 +181,11 @@
 | Marketing  |
 | Sales      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test UNION ALL with duplicates
-0: jdbc:farrago:> select * from 
-. . . . . . . . > (select name from depts union all select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- test UNION ALL with duplicates
+> select * from 
+> (select name from depts union all select name from depts)
+>  order by 1;
 +------------+
 |    NAME    |
 +------------+
@@ -183,61 +196,62 @@
 | Sales      |
 | Sales      |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union select name from depts)
-. . . . . . . . >  order by 1;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select * from 
+> (select name from emps union select name from depts)
+>  order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'    LhxAggRel(groupCount=[1])'
 '      FennelMergeRel'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union select name from depts);
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union select name from depts);
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[1])'
 '    FennelMergeRel'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union all select name from depts)
-. . . . . . . . >  order by 1;
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union all select name from depts)
+>  order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelMergeRel'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from 
-. . . . . . . . > (select name from emps union all select name from depts);
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (select name from emps union all select name from depts);
 'column0'
 'FennelToIteratorConverter'
 '  FennelMergeRel'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > insert into depts(name)
-. . . . . . . . > select name from emps union all select name from depts;
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> insert into depts(name)
+> select name from emps union all select name from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FtrsTableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER NOT NULL], DEPTNO=[$t2], NAME=[$t0])'
-'      FennelMergeRel'
+'    FennelMergeRel'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER NOT NULL], DEPTNO=[$t2], NAME=[$t0])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER NOT NULL], DEPTNO=[$t2], NAME=[$t0])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> !quit

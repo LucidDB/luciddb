@@ -34,7 +34,6 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
-
 /**
  * <code>JavaAggregateRel</code> implements the {@link AggregateRel} relational
  * operator by generating code. The code looks like this:
@@ -95,7 +94,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        java.util.List<AggregateCall> aggCalls)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.JAVA), child,
@@ -103,7 +102,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaAggregateRel clone()
     {
         JavaAggregateRel clone =
             new JavaAggregateRel(
@@ -115,9 +114,9 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getChild().getRows();
-        double 
+        double
         // reflects memory cost also
-        dCpu = Util.nLogN(dRows) + (aggCalls.length * 4);
+        dCpu = Util.nLogN(dRows) + (aggCalls.size() * 4);
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -214,7 +213,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
             throw Util.newInternal("todo: implement");
         }
         Variable var_aggs = implementor.newVariable();
-        if (aggCalls.length == 1) {
+        if (aggCalls.size() == 1) {
             //       Object agg = h.get(groups);
             //       row.c2 = <<agg result code {agg}>>
             stmtList2.add(
@@ -234,7 +233,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                             var_row,
                             field.getName()),
                         AssignmentExpression.EQUALS,
-                        implementor.implementResult(aggCalls[i], var_aggs))));
+                        implementor.implementResult(aggCalls.get(i), var_aggs))));
         } else {
             //       Object[] aggs = (Object[]) h.get(groups);
             //       row.c2 = <<agg result code {aggs[0]}>>
@@ -250,7 +249,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                             "get",
                             new ExpressionList(var_groups)))));
             OJField [] fields = rowType.getDeclaredFields();
-            for (int i = 0; i < aggCalls.length; i++) {
+            for (int i = 0; i < aggCalls.size(); i++) {
                 OJField field = fields[groupCount + i];
                 stmtList2.add(
                     new ExpressionStatement(
@@ -260,7 +259,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                                 field.getName()),
                             AssignmentExpression.EQUALS,
                             implementor.implementResult(
-                                aggCalls[i],
+                                aggCalls.get(i),
                                 new ArrayAccess(
                                     var_aggs,
                                     Literal.makeLiteral(i))))));
@@ -310,7 +309,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
             throw Util.newInternal("todo:");
         }
         Variable var_aggs = implementor.newVariable();
-        if (aggCalls.length == 1) {
+        if (aggCalls.size() == 1) {
             //   Object aggs = h.get(groups);
             stmtList.add(
                 new VariableDeclaration(
@@ -348,7 +347,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                 ifBlock,
                 elseBlock));
         implementor.pushStatementList(ifBlock);
-        if (aggCalls.length == 1) {
+        if (aggCalls.size() == 1) {
             //     aggs = <<aggs[0] start code>>;
             int i = 0;
             ifBlock.add(
@@ -356,15 +355,15 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                     new AssignmentExpression(
                         var_aggs,
                         AssignmentExpression.EQUALS,
-                        implementor.implementStartAndNext(aggCalls[i], this))));
+                        implementor.implementStartAndNext(aggCalls.get(i), this))));
         } else {
             //     aggs = new Object[] {
             //       <<aggs[0] start code>>,
             //       <<aggs[1] start code>>};
             ExpressionList startList = new ExpressionList();
-            for (int i = 0; i < aggCalls.length; i++) {
+            for (int i = 0; i < aggCalls.size(); i++) {
                 startList.add(
-                    implementor.implementStartAndNext(aggCalls[i], this));
+                    implementor.implementStartAndNext(aggCalls.get(i), this));
             }
             ifBlock.add(
                 new ExpressionStatement(
@@ -389,12 +388,12 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
         // <<agg inc code {aggs[0], child row}>>
         // <<agg inc code {aggs[1], child row}>>
         implementor.pushStatementList(elseBlock);
-        for (int i = 0; i < aggCalls.length; i++) {
-            assert (aggCalls[i].getArgs().length == 1);
+        for (int i = 0; i < aggCalls.size(); i++) {
+            assert (aggCalls.get(i).getArgList().size() == 1);
             implementor.implementNext(
-                aggCalls[i],
+                aggCalls.get(i),
                 this,
-                (aggCalls.length == 1) ?
+                (aggCalls.size() == 1) ?
                 (Expression) var_aggs :
                 (Expression) new ArrayAccess(
                     var_aggs,

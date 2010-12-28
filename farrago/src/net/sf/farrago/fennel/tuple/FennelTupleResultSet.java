@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.fennel.tuple;
+
+import java.io.*;
 
 import java.math.*;
 
@@ -40,7 +42,7 @@ import org.eigenbase.util14.*;
  * in fennel tuple format and presents java objects and/or primitives as
  * requested by the application. TODO: FennelTupleResultSet minimizes object
  * creation while remapping tuple data to java objects in order to provide
- * higher performance.
+ * higher performance. This class is JDK 1.4 compatible.
  *
  * @author angel
  * @version $Id$
@@ -49,7 +51,6 @@ import org.eigenbase.util14.*;
 abstract public class FennelTupleResultSet
     extends AbstractResultSet
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String ERRMSG_NO_TUPLE = "tuple not yet read";
@@ -67,16 +68,27 @@ abstract public class FennelTupleResultSet
     protected FennelTupleAccessor accessor = null;
     protected FennelTupleData data = null;
     protected boolean tupleComputed = false;
-    protected final int tupleAlignment = FennelTupleAccessor.TUPLE_ALIGN4;
-    protected final int tupleAlignmentMask = tupleAlignment - 1;
+    protected final int tupleAlignment;
+    protected final int tupleAlignmentMask;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FennelTupleResultSet(FennelTupleDescriptor desc,
-        ResultSetMetaData metaData)
+    public FennelTupleResultSet(
+        FennelTupleDescriptor desc,
+        ResultSetMetaData metaData,
+        int tupleAlignment)
     {
         this.desc = desc;
         this.metaData = metaData;
+        this.tupleAlignment = tupleAlignment;
+        this.tupleAlignmentMask = tupleAlignment - 1;
+    }
+
+    public FennelTupleResultSet(
+        FennelTupleDescriptor desc,
+        ResultSetMetaData metaData)
+    {
+        this(desc, metaData, FennelTupleAccessor.TUPLE_ALIGN_JVM);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -90,7 +102,8 @@ abstract public class FennelTupleResultSet
         accessor = new FennelTupleAccessor(tupleAlignment);
         accessor.compute(desc, FennelTupleAccessor.TUPLE_FORMAT_NETWORK);
         data = new FennelTupleData(desc);
-        assert (data.getDatumCount() == accessor.size()) : "ResultSet metadata mismatch";
+        assert data.getDatumCount() == accessor.size()
+            : "ResultSet metadata mismatch";
         tupleComputed = true;
         return true;
     }
@@ -103,6 +116,7 @@ abstract public class FennelTupleResultSet
      */
     protected void alignBufferPosition(ByteBuffer buf)
     {
+        // TODO jvs 26-May-2007:  Unify with FennelTupleAccessor.
         int pos = buf.position();
         int pad = pos & tupleAlignmentMask;
         if (pad > 0) {
@@ -110,21 +124,32 @@ abstract public class FennelTupleResultSet
         }
     }
 
-    protected long getMillis(FennelTupleDatum d)
+    protected static long getMillis(
+        FennelTupleDatum d,
+        boolean shiftForTimeZone)
     {
         long millis = d.getLong();
-        long timeZoneOffset = defaultZone.getOffset(millis);
 
-        // Shift time from GMT into local timezone
-        return millis - timeZoneOffset;
+        if (shiftForTimeZone) {
+            // Shift time from GMT into local timezone
+            long timeZoneOffset = defaultZone.getOffset(millis);
+            return millis - timeZoneOffset;
+        } else {
+            return millis;
+        }
+    }
+
+    protected static long getMillis(FennelTupleDatum d)
+    {
+        return getMillis(d, false);
     }
 
     /**
      * Returns the raw object representing this column
      *
-     * @param columnIndex
+     * @param columnIndex column ordinal
      *
-     * @return
+     * @return raw object for a column
      *
      * @throws SQLException
      */
@@ -136,27 +161,71 @@ abstract public class FennelTupleResultSet
             throw new SQLException(ERRMSG_NO_TUPLE);
         }
 
-        int columnType = metaData.getColumnType(columnIndex);
-        FennelTupleDatum d = data.getDatum(columnIndex - 1);
+        Object d = getRawColumnData(columnIndex, metaData, data);
+        wasNull = (d == null);
+        return d;
+    }
+
+    /**
+     * @param columnIndex column ordinal
+     * @param metaData metadata for all columns
+     * @param tupleData tuple data representing a row of columns
+     *
+     * @return column data corresponding to a specified column ordinal; null if
+     * the data is null
+     *
+     * @throws SQLException
+     */
+    public static Object getRawColumnData(
+        int columnIndex,
+        ResultSetMetaData metaData,
+        FennelTupleData tupleData)
+        throws SQLException
+    {
+        FennelTupleDatum d = tupleData.getDatum(columnIndex - 1);
         if (!d.isPresent()) {
-            wasNull = true;
             return null;
         }
 
-        wasNull = false;
+        int columnType = metaData.getColumnType(columnIndex);
         switch (columnType) {
         case Types.TINYINT: // NOTE: the JDBC spec maps this to an Integer
+
+            // For JDK 1.4 compatibility
             return new Byte(d.getByte());
+
+        //return Byte.valueOf(d.getByte());
         case Types.SMALLINT: // NOTE: the JDBC spec maps this to an Integer
+
+            // For JDK 1.4 compatibility
             return new Short(d.getShort());
+
+        //return Short.valueOf(d.getShort());
         case Types.INTEGER:
+
+            // For JDK 1.4 compatibility
             return new Integer(d.getInt());
+
+        //return Integer.valueOf(d.getInt());
         case Types.BIGINT:
+
+            // For JDK 1.4 compatibility
             return new Long(d.getLong());
+
+        //return Long.valueOf(d.getLong());
         case Types.REAL:
+
+            // For JDK 1.4 compatibility
             return new Float(d.getFloat());
+
+        //return Float.valueOf(d.getFloat());
+        case Types.FLOAT:
         case Types.DOUBLE:
+
+            // For JDK 1.4 compatibility
             return new Double(d.getDouble());
+
+        //return Double.valueOf(d.getDouble());
         case Types.DECIMAL:
         case Types.NUMERIC:
             BigDecimal bd = BigDecimal.valueOf(d.getLong());
@@ -164,20 +233,37 @@ abstract public class FennelTupleResultSet
             return bd;
         case Types.BOOLEAN:
         case Types.BIT:
-            return new Boolean(d.getBoolean());
+            return Boolean.valueOf(d.getBoolean());
         case Types.DATE:
-            return new Date(getMillis(d));
+            ZonelessDate zd = new ZonelessDate();
+            zd.setZonelessTime(d.getLong());
+            return zd;
         case Types.TIME:
-            return new Time(getMillis(d));
+            ZonelessTime zt = new ZonelessTime();
+            zt.setZonelessTime(d.getLong());
+            return zt;
         case Types.TIMESTAMP:
-            return new Timestamp(getMillis(d));
+            ZonelessTimestamp zts = new ZonelessTimestamp();
+            zts.setZonelessTime(d.getLong());
+            return zts;
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-            return new String(
+            String charsetName =
+                d.isUnicode() ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+                : "ISO-8859-1";
+            try {
+                return new String(
                     d.getBytes(),
                     0,
-                    d.getLength());
+                    d.getLength(),
+                    charsetName);
+            } catch (UnsupportedEncodingException ex) {
+                // According to Charset javadoc, ISO-8859-1 and
+                // UTF-16* should always be available.
+                throw new AssertionError(
+                    "Standard charset " + charsetName + " missing?");
+            }
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
@@ -191,7 +277,7 @@ abstract public class FennelTupleResultSet
             return ret;
         default:
             throw new UnsupportedOperationException(
-                "Operation not supported right now");
+                "Conversion not supported");
         }
     }
 

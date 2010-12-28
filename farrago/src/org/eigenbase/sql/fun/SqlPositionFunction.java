@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,13 +36,17 @@ import org.eigenbase.sql.validate.*;
 public class SqlPositionFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
+
+    // FIXME jvs 25-Jan-2009:  POSITION should verify that
+    // params are all same character set, like OVERLAY does implicitly
+    // as part of rtiDyadicStringSumPrecision
 
     public SqlPositionFunction()
     {
-        super("POSITION",
-            SqlKind.Function,
+        super(
+            "POSITION",
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableInteger,
             null,
             SqlTypeStrategies.otcStringSameX2,
@@ -91,10 +95,9 @@ public class SqlPositionFunction
             return false;
         }
 
-        return
-            getOperandTypeChecker().checkOperandTypes(
-                callBinding,
-                throwOnFailure);
+        return getOperandTypeChecker().checkOperandTypes(
+            callBinding,
+            throwOnFailure);
     }
 }
 

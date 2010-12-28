@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
  */
 public interface FarragoSessionTxnListener
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -66,7 +65,7 @@ public interface FarragoSessionTxnListener
      * Notifies listener of a call to FarragoSessionTxnMgr.endTxn.
      *
      * @param txnId ID of ending transaction
-     * @param end how transaction is ending
+     * @param endType how transaction is ending
      */
     public void transactionEnded(
         FarragoSessionTxnId txnId,

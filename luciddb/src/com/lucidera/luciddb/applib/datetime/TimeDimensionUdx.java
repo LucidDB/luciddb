@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -287,10 +287,11 @@ public abstract class TimeDimensionUdx
             //~---------- fiscal columns ----------
           
             // FISCAL_WEEK_START_DATE
-            resultInserter.setDate(++column, tdi.getFirstDayOfWeekDate());
+            resultInserter.setDate(++column, 
+                tdi.getFirstDayOfFiscalWeekDate());
 
             // FISCAL_WEEK_END_DATE
-            resultInserter.setDate(++column, tdi.getLastDayOfWeekDate());
+            resultInserter.setDate(++column, tdi.getLastDayOfFiscalWeekDate());
 
             // FISCAL_WEEK_NUMBER_IN_MONTH
             resultInserter.setInt(++column, tdi.getWeekOfFiscalMonth());

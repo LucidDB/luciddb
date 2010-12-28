@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,17 +34,18 @@ FENNEL_BEGIN_NAMESPACE
  * of 2-byte offsets to the actual data, which is stored non-contiguously
  * (intermixed with free space) throughout the rest of the data area.
  */
-class BTreeHeapNodeAccessor : public BTreeNodeAccessor
+class FENNEL_BTREE_EXPORT BTreeHeapNodeAccessor
+    : public BTreeNodeAccessor
 {
     // REVIEW:  this limits us to 64K page size max; could be templatized
     typedef uint16_t EntryOffset;
 
     inline EntryOffset const *getEntryOffsetPointer(
         BTreeNode const &node,uint iEntry);
-    
+
     inline EntryOffset *getEntryOffsetPointer(
         BTreeNode &node,uint iEntry);
-    
+
     inline uint getEntryOffset(BTreeNode const &node,uint iEntry);
 
     inline uint getEntrySizeWithOverhead(uint cbEntry);
@@ -73,7 +74,7 @@ BTreeHeapNodeAccessor::getEntryOffsetPointer(
     return reinterpret_cast<EntryOffset const *>(node.getDataForRead())
         + iEntry;
 }
-    
+
 inline BTreeHeapNodeAccessor::EntryOffset *
 BTreeHeapNodeAccessor::getEntryOffsetPointer(
     BTreeNode &node,uint iEntry)
@@ -81,7 +82,7 @@ BTreeHeapNodeAccessor::getEntryOffsetPointer(
     return reinterpret_cast<EntryOffset *>(node.getDataForWrite())
         + iEntry;
 }
-    
+
 inline uint BTreeHeapNodeAccessor::getEntryOffset(
     BTreeNode const &node,uint iEntry)
 {
@@ -103,7 +104,7 @@ inline uint BTreeHeapNodeAccessor::getEntryOffsetArrayByteSize(uint nEntries)
 inline PConstBuffer BTreeHeapNodeAccessor::getEntryForReadInline(
     BTreeNode const &node,uint iEntry)
 {
-    uint offset = getEntryOffset(node,iEntry);
+    uint offset = getEntryOffset(node, iEntry);
     return reinterpret_cast<PConstBuffer>(&node) + offset;
 }
 

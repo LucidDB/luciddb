@@ -91,4 +91,9 @@ insert into a (j, k) select 0, val from float_nullable;
 
 select * from a;
 
+-- bug LER-2179
+create table adouble(i int primary key, d double);
+insert into adouble values (1, null), (2, null), (3, null);
+select cast(d as int) from adouble;
+
 alter system set "calcVirtualMachine"='CALCVM_AUTO';

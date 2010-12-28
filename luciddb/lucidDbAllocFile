@@ -1,0 +1,48 @@
+#!/bin/bash
+# $Id:$
+# Preallocates LucidDB data files
+
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+usage() {
+    echo "Usage:  lucidDbAllocFile --append-pages=<number of pages> <filename>"
+}
+
+if [ "$#" -ne 2 ]
+then
+    echo "Illegal number of arguments"; usage; exit -1
+fi
+
+APPEND_PAGES=""
+FILENAME=""
+
+shopt -sq extglob
+
+while [ -n "$1" ]; do
+    case $1 in 
+        --append-pages=+([[:digit:]]))
+            APPEND_PAGES="$1";;
+        --append-pages*)
+            echo "Invalid <number of pages> in --append-pages argument"
+            usage; exit -1;;
+        --*)
+            echo "Unknown argument: $1"; usage; exit -1;;
+        *)
+            FILENAME="$1";;
+    esac
+
+    shift
+done
+
+shopt -uq extglob
+
+if [ "$APPEND_PAGES" = "" ]
+then
+    echo "--append-pages argument not specified"; usage; exit -1
+fi
+if [ "$FILENAME" = "" ]
+then
+    echo "<filename> argument not specified"; usage; exit -1
+fi
+
+$BIN_DIR/allocFile $APPEND_PAGES $FILENAME --pagesize=32768

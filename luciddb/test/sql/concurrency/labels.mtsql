@@ -1,0 +1,129 @@
+@nolockstep
+
+@setup
+-- Test concurrent usage of labels
+
+  create schema label;
+  set schema 'label';
+  create table t(a int);
+  create label l1;
+  insert into t values(1);
+  create label l2;
+  insert into t values(2);
+  create label l3;
+
+  create label lalias1 from label l1;
+  create label lalias2 from label l1;
+
+@end
+
+--------------------------------------------------------------------------------
+
+@thread labeluser1
+
+  alter session set "label" = 'L1';
+  set schema 'label';
+  select * from t;
+  @sync
+  @sync
+  @sync
+  alter session set "label" = null;
+  @sync
+
+@end
+
+@thread labeluser2
+ 
+  alter session set "label" = 'L2';
+  set schema 'label';
+  select * from t;
+  -- make sure the scalar subquery also executes based on the label setting
+  select * from t where a = (select count(*) from t);
+  -- but in this case, the subquery is executed based on one label, whereas
+  -- the rest of the statement executes under a different label
+  select max(a) from t;
+  @prepare select * from t where a - 1 = (select max(a) from t);
+  @sync
+  alter session set "label" = 'L3';
+  @fetch
+  select * from t where a - 1 = (select max(a) from t);
+  @sync
+  @sync
+  @sync
+@end
+
+@thread labeluser3
+ 
+  alter session set "label" = 'L3';
+  set schema 'label';
+  select * from t order by a;
+  @sync
+  @sync
+  @sync
+  @sync
+@end
+
+@thread labeluser4
+
+  set schema 'label';
+  alter session set "label" = 'LALIAS1';
+  select * from t;
+  @sync
+  @sync
+  alter session set "label" = 'LALIAS2';
+  select * from t;
+  @sync
+  alter session set "label" = null;
+  @sync
+@end
+
+--------------------------------------------------------------------------------
+
+@thread labeldropper1
+
+  @sync
+  @err drop label l1 cascade;
+  @sync
+  @sync
+  @sync
+
+@end
+
+@thread labeldropper2
+
+  @sync
+  @sync
+  @err create or replace label l1 description 'this should still fail';
+  @sync
+  @sync
+
+@end
+
+@thread labeldropper3
+
+  @sync
+  @sync
+  @sync
+  @sync
+  -- should succeed now that the label is no longer being used
+  drop label l1 cascade;
+
+@end
+
+@thread labelreplacer
+
+  @sync
+  -- Even though these label aliases are still being used by other threads,
+  -- those aliases have been mapped to their base labels.  So, it should
+  -- be possible to drop/replace the aliases.
+  drop label lalias1;
+  @sync
+  @sync
+  create or replace label lalias2 from label l2;
+  set schema 'label';
+  alter session set "label" = 'LALIAS2';
+  -- should now return 1 row instead of 0
+  select * from t;
+
+  @sync
+@end

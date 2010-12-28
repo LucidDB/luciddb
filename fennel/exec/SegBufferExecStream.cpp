@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,8 +25,8 @@
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
-#include "fennel/segment/SegInputStream.h"
-#include "fennel/segment/SegOutputStream.h"
+#include "fennel/exec/SegBufferReader.h"
+#include "fennel/exec/SegBufferWriter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -43,11 +43,11 @@ void SegBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
 
-    // pages for I/O (including pre-fetch)
-    minQuantity.nCachePages += SEG_NUM_PREFETCH_PAGES;
-    
+    // set aside 1 page for I/O
+    minQuantity.nCachePages += 1;
+
     optQuantity = minQuantity;
 }
 
@@ -55,17 +55,17 @@ void SegBufferExecStream::open(bool restart)
 {
     assert(pInAccessor);
     assert(pInAccessor->getProvision() == BUFPROV_CONSUMER);
-    
+
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
     // TODO jvs 1-June-2006:  generalize SegStreamAllocation to handle
     // the multipass usage requirements here
-    
+
     if (restart) {
         pOutAccessor->clear();
         if (multipass) {
-            if (pByteInputStream) {
+            if (pSegBufferReader) {
                 // reread from beginning
                 openBufferForRead(false);
             } else {
@@ -92,112 +92,51 @@ void SegBufferExecStream::closeImpl()
 
 void SegBufferExecStream::destroyBuffer()
 {
-    if (pByteOutputStream || (multipass && (firstPageId != NULL_PAGE_ID))) {
+    if (pSegBufferWriter || (multipass && (firstPageId != NULL_PAGE_ID))) {
         // this is to make sure that buffer storage gets deallocated in all
         // cases
         openBufferForRead(true);
     }
-    pByteInputStream.reset();
+    pSegBufferReader.reset();
     firstPageId = NULL_PAGE_ID;
 }
 
 void SegBufferExecStream::openBufferForRead(bool destroy)
 {
-    cbLastRead = 0;
     if (firstPageId == NULL_PAGE_ID) {
-        firstPageId = pByteOutputStream->getFirstPageId();
-        pByteOutputStream.reset();
-        pByteInputStream = SegInputStream::newSegInputStream(
-            bufferSegmentAccessor,firstPageId);
-        pByteInputStream->getSegPos(restartPos);
-    } else {
-        pByteInputStream->endPrefetch();
-        pByteInputStream->seekSegPos(restartPos);
+        firstPageId = pSegBufferWriter->getFirstPageId();
+        pSegBufferWriter.reset();
+        pSegBufferReader =
+            SegBufferReader::newSegBufferReader(
+                pOutAccessor,
+                bufferSegmentAccessor,
+                firstPageId);
     }
-    
-    if (destroy) {
-        pByteInputStream->setDeallocate(true);
-    }
-    pByteInputStream->startPrefetch();
+    pSegBufferReader->open(destroy);
 }
 
 ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
 {
-    if (!pByteInputStream) {
-        if (!pByteOutputStream) {
-            pByteOutputStream = SegOutputStream::newSegOutputStream(
-                bufferSegmentAccessor);
-        }
-        switch(pInAccessor->getState()) {
-        case EXECBUF_NONEMPTY:
-        case EXECBUF_OVERFLOW:
-            pByteOutputStream->consumeWritePointer(
-                pInAccessor->getConsumptionAvailable());
-            pByteOutputStream->hardPageBreak();
-            pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_UNDERFLOW:
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_EMPTY:
-            {
-                uint cb;
-                PBuffer pBuffer = pByteOutputStream->getWritePointer(1,&cb);
-                pInAccessor->provideBufferForProduction(
-                    pBuffer,
-                    pBuffer + cb,
+    if (!pSegBufferReader) {
+        if (!pSegBufferWriter) {
+            pSegBufferWriter =
+                SegBufferWriter::newSegBufferWriter(
+                    pInAccessor,
+                    bufferSegmentAccessor,
                     false);
-            }
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_EOS:
-            closeProducers(getStreamId());
-            openBufferForRead(!multipass);
-            break;
-        default:
-            permAssert(false);
         }
-    }
-    
-    switch(pOutAccessor->getState()) {
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        return EXECRC_BUF_OVERFLOW;
-    case EXECBUF_UNDERFLOW:
-    case EXECBUF_EMPTY:
-        break;
-    case EXECBUF_EOS:
-        return EXECRC_EOS;
-    default:
-        permAssert(false);
-    }
-    pByteInputStream->consumeReadPointer(cbLastRead);
-    PConstBuffer pBuffer = pByteInputStream->getReadPointer(1,&cbLastRead);
-    if (!pBuffer) {
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    }
-    pOutAccessor->provideBufferForConsumption(
-        pBuffer,
-        pBuffer + cbLastRead);
-    return EXECRC_BUF_OVERFLOW;
-}
+        ExecStreamResult rc = pSegBufferWriter->write();
+        if (rc != EXECRC_EOS) {
+            return rc;
+        }
 
-void SegBufferExecStream::closeProducers(ExecStreamId streamId)
-{
-    ExecStreamGraphImpl &graphImpl =
-        dynamic_cast<ExecStreamGraphImpl&>(getGraph());
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
-    ExecStreamGraphImpl::InEdgeIterPair inEdges =
-        boost::in_edges(streamId, graphRep);
-    for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
-        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
-        // move streamId upstream
-        streamId = boost::source(edge,graphRep);
-        // close the producers of this stream before closing the stream
-        // itself
-        closeProducers(streamId);
-        SharedExecStream pStream = graphImpl.getStreamFromVertex(streamId);
-        pStream->close();
+        ExecStreamGraphImpl &graphImpl =
+            dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+        graphImpl.closeProducers(getStreamId());
+        openBufferForRead(!multipass);
     }
+
+    return pSegBufferReader->read();
 }
 
 ExecStreamBufProvision SegBufferExecStream::getOutputBufProvision() const

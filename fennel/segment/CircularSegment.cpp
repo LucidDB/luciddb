@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -120,14 +120,14 @@ PageId CircularSegment::allocatePageId(PageOwnerId)
 
     // This wraparound should never be hit in practice.  If it is, a
     // restart which truncates logs should fix it.
-    assert(!isMAXU(nextPageNum+1));
+    assert(!isMAXU(nextPageNum + 1));
 
     PageId pageId = Segment::getLinearPageId(nextPageNum);
     ++nextPageNum;
     return pageId;
 }
 
-void CircularSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void CircularSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     if (endPageId == NULL_PAGE_ID) {
@@ -156,10 +156,10 @@ PageId CircularSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void CircularSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void CircularSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
     // Don't delegate this!
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

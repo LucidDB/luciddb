@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,18 +23,19 @@ package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
-import org.eigenbase.relopt.*;
 
 
 /**
- * Unit test for rules in {@link org.eigenbase.rel} and subpackages. As input,
- * the test supplies a SQL statement and a single rule; the SQL is translated
- * into relational algebra and then fed into a {@link HepPlanner}. The planner
- * fires the rule on every pattern match in a depth-first left-to-right preorder
- * traversal of the tree for as long as the rule continues to succeed in
- * applying its transform. (For rules which call transformTo more than once,
- * only the last result is used.) The plan before and after "optimization" is
- * diffed against a .ref file using {@link DiffRepository}.
+ * Unit test for rules in {@link org.eigenbase.rel} and subpackages.
+ *
+ * <p>As input, the test supplies a SQL statement and a single rule; the SQL is
+ * translated into relational algebra and then fed into a {@link
+ * org.eigenbase.relopt.hep.HepPlanner}. The planner fires the rule on every
+ * pattern match in a depth-first left-to-right preorder traversal of the tree
+ * for as long as the rule continues to succeed in applying its transform. (For
+ * rules which call transformTo more than once, only the last result is used.)
+ * The plan before and after "optimization" is diffed against a .ref file using
+ * {@link DiffRepository}.
  *
  * <p>Procedure for adding a new test case:
  *
@@ -60,7 +61,6 @@ import org.eigenbase.relopt.*;
 public class RelOptRulesTest
     extends RelOptTestBase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected DiffRepository getDiffRepos()
@@ -71,7 +71,7 @@ public class RelOptRulesTest
     public void testUnionToDistinctRule()
     {
         checkPlanning(
-            new UnionToDistinctRule(),
+            UnionToDistinctRule.instance,
             "select * from dept union select * from dept");
     }
 
@@ -85,14 +85,14 @@ public class RelOptRulesTest
     public void testAddRedundantSemiJoinRule()
     {
         checkPlanning(
-            new AddRedundantSemiJoinRule(),
+            AddRedundantSemiJoinRule.instance,
             "select 1 from emp inner join dept on emp.deptno = dept.deptno");
     }
 
     public void testPushFilterThroughOuterJoin()
     {
         checkPlanning(
-            new PushFilterPastJoinRule(),
+            PushFilterPastJoinRule.instance,
             "select 1 from sales.dept d left outer join sales.emp e"
             + " on d.deptno = e.deptno"
             + " where d.name = 'Charlie'");
@@ -109,7 +109,7 @@ public class RelOptRulesTest
     public void testPushProjectPastFilter()
     {
         checkPlanning(
-            new PushProjectPastFilterRule(),
+            PushProjectPastFilterRule.instance,
             "select empno + deptno from emp where sal = 10 * comm "
             + "and upper(ename) = 'FOO'");
     }
@@ -117,9 +117,35 @@ public class RelOptRulesTest
     public void testPushProjectPastJoin()
     {
         checkPlanning(
-            new PushProjectPastJoinRule(),
+            PushProjectPastJoinRule.instance,
             "select e.sal + b.comm from emp e inner join bonus b "
             + "on e.ename = b.ename and e.deptno = 10");
+    }
+
+    public void testPushProjectPastSetOp()
+    {
+        checkPlanning(
+            PushProjectPastSetOpRule.instance,
+            "select sal from "
+            + "(select * from emp e1 union all select * from emp e2)");
+    }
+
+    public void testPushJoinThroughUnionOnLeft()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnLeft,
+            "select r1.sal from "
+            + "(select * from emp e1 union all select * from emp e2) r1, "
+            + "emp r2");
+    }
+
+    public void testPushJoinThroughUnionOnRight()
+    {
+        checkPlanning(
+            PushJoinThroughUnionRule.instanceUnionOnRight,
+            "select r1.sal from "
+            + "emp r1, "
+            + "(select * from emp e1 union all select * from emp e2) r2");
     }
 }
 

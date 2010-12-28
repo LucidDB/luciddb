@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,22 +45,20 @@ import org.eigenbase.util.*;
 public class ReflectiveConvertletTable
     implements SqlRexConvertletTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private final Map map = new HashMap();
+    private final Map<Object, Object> map = new HashMap<Object, Object>();
 
     //~ Constructors -----------------------------------------------------------
 
     public ReflectiveConvertletTable()
     {
-        final Class clazz = getClass();
+        final Class<? extends Object> clazz = getClass();
         final Method [] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             final Method method = methods[i];
             registerNodeTypeMethod(method);
             registerOpTypeMethod(method);
-            continue;
         }
     }
 
@@ -101,10 +99,10 @@ public class ReflectiveConvertletTable
                     SqlCall call)
                 {
                     try {
-                        return
-                            (RexNode) method.invoke(
-                                ReflectiveConvertletTable.this,
-                                new Object[] { cx, call });
+                        return (RexNode) method.invoke(
+                            ReflectiveConvertletTable.this,
+                            cx,
+                            call);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(
                             e,
@@ -158,10 +156,11 @@ public class ReflectiveConvertletTable
                     SqlCall call)
                 {
                     try {
-                        return
-                            (RexNode) method.invoke(
-                                ReflectiveConvertletTable.this,
-                                new Object[] { cx, call.getOperator(), call });
+                        return (RexNode) method.invoke(
+                            ReflectiveConvertletTable.this,
+                            cx,
+                            call.getOperator(),
+                            call);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(
                             e,
@@ -189,7 +188,7 @@ public class ReflectiveConvertletTable
 
         // Is there a convertlet for this class of operator
         // (e.g. SqlBinaryOperator)?
-        Class clazz = op.getClass();
+        Class<? extends Object> clazz = op.getClass();
         while (clazz != null) {
             convertlet = (SqlRexConvertlet) map.get(clazz);
             if (convertlet != null) {
@@ -215,7 +214,7 @@ public class ReflectiveConvertletTable
      * Registers a convertlet for a given operator instance
      *
      * @param op Operator instance, say {@link
-     * SqlStdOperatorTable#minusOperator}
+     * org.eigenbase.sql.fun.SqlStdOperatorTable#minusOperator}
      * @param convertlet Convertlet
      */
     protected void registerOp(SqlOperator op, SqlRexConvertlet convertlet)
@@ -243,8 +242,8 @@ public class ReflectiveConvertletTable
                         "call to wrong operator");
                     final SqlCall newCall =
                         target.createCall(
-                            call.getOperands(),
-                            SqlParserPos.ZERO);
+                            SqlParserPos.ZERO,
+                            call.getOperands());
                     return cx.convertExpression(newCall);
                 }
             });

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,12 +25,12 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract {@link
- * FarragoIndexBuilderRule} into a corresponding {@link FtrsIndexBuilderRel}.
+ * FtrsIndexBuilderRule is a rule for converting an abstract {@link
+ * net.sf.farrago.query.FarragoIndexBuilderRel} into a corresponding {@link
+ * net.sf.farrago.namespace.ftrs.FtrsIndexBuilderRel}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -38,17 +38,20 @@ import org.eigenbase.util.*;
 public class FtrsIndexBuilderRule
     extends RelOptRule
 {
+    public static final FtrsIndexBuilderRule instance =
+        new FtrsIndexBuilderRule();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsIndexBuilderRule object.
+     * Creates a FtrsIndexBuilderRule.
      */
-    public FtrsIndexBuilderRule()
+    private FtrsIndexBuilderRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FarragoIndexBuilderRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

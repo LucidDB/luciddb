@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,7 +39,8 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi, Marc Berkowitz
  * @version $Id$
  */
-class ExecStreamUnitTestBase : public ExecStreamTestBase
+class FENNEL_TEST_EXPORT ExecStreamUnitTestBase
+    : public ExecStreamTestBase
 {
 protected:
     SharedExecStreamGraph pGraph;
@@ -127,7 +128,7 @@ protected:
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of two source streams
+     * Defines and prepares a graph consisting of a list of source streams
      * and one confluence stream.
      *
      * @param sourceStreamEmbryos list of embryonic source streams that
@@ -140,6 +141,22 @@ protected:
      */
     SharedExecStream prepareConfluenceGraph(
         std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
+        ExecStreamEmbryo &confluenceStreamEmbryo);
+
+    /**
+     * Defines and prepares a graph consisting of one or more source streams
+     * and one confluence stream.  Each source stream can be a list of streams.
+     *
+     * @param sourceStreamEmbryosList list of embryonic source streams which
+     * produce tuples
+     *
+     * @param confluenceStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the source streams
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareConfluenceGraph(
+        std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
@@ -205,7 +222,7 @@ protected:
         ExecStreamEmbryo &destStreamEmbryo,
         bool createSink = true,
         bool saveSrc = true);
-    
+
     /**
      * Executes the prepared stream graph and verifies that its output
      * matches that produced by a value generator.
@@ -237,7 +254,7 @@ protected:
      * @param nRowsExpected
      */
     void verifyConstantOutput(
-        ExecStream &stream, 
+        ExecStream &stream,
         const TupleData  &expectedTuple,
         uint nRowsExpected);
 
@@ -275,4 +292,5 @@ public:
 
 FENNEL_END_NAMESPACE
 #endif
-// End ExecStreamTestUnitBase.h
+
+// End ExecStreamUnitTestBase.h

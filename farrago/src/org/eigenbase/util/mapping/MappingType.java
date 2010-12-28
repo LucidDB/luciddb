@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -67,15 +67,15 @@ public enum MappingType
     Function,
 
     /**
-     * An inverse surjection has a source for every target,
-     * and no source has more than one target.
+     * An inverse surjection has a source for every target, and no source has
+     * more than one target.
      */
     //                  4      1   <= 1 partial  1 Surjection
     InverseSurjection,
 
     /**
-     * A partial surjection has no more than one source for any target,
-     * and no more than one target for any source.
+     * A partial surjection has no more than one source for any target, and no
+     * more than one target for any source.
      */
     //                  5   <= 1   <= 1 partial  5 PartialSurjection
     PartialSurjection,
@@ -99,13 +99,19 @@ public enum MappingType
     Eleven,
 
     /**
-     * An inverse function has a source for every target,
-     * but a source might have 0, 1 or more targets.
-     * Similar types:<ul>
+     * An inverse function has a source for every target, but a source might
+     * have 0, 1 or more targets.
+     *
+     * <p>Obeys the constaints {@link MappingType#isMandatorySource()}, {@link
+     * MappingType#isSingleSource()}.
+     *
+     * <p>Similar types:
+     *
+     * <ul>
      * <li> {@link #InverseSurjection} is stronger (a source may not have
-     *      multiple targets);
-     * <li>{@link #InversePartialFunction} is weaker (a target
-     *     may have 0 or 1 sources).
+     * multiple targets);
+     * <li>{@link #InversePartialFunction} is weaker (a target may have 0 or 1
+     * sources).
      * </ul>
      */
     //                 12      1    any multi    3 Function
@@ -167,8 +173,7 @@ public enum MappingType
      */
     public boolean isSurjection()
     {
-        return
-            (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource))
+        return (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource))
             == 0;
     }
 
@@ -178,8 +183,7 @@ public enum MappingType
      */
     public boolean isInjection()
     {
-        return
-            (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource))
+        return (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource))
             == 0;
     }
 
@@ -189,34 +193,41 @@ public enum MappingType
      */
     public boolean isBijection()
     {
-        return
-            (
-                ordinal()
-                & (
-                    OptionalTarget | MultipleTarget | OptionalSource
-                    | MultipleSource
-                  )
-            ) == 0;
+        return (ordinal()
+            & (OptionalTarget | MultipleTarget | OptionalSource
+                | MultipleSource)) == 0;
     }
 
-    public boolean isOptionalTarget()
+    /**
+     * Constraint that every source has at least one target.
+     */
+    public boolean isMandatoryTarget()
     {
-        return (ordinal() & OptionalTarget) == OptionalTarget;
+        return !((ordinal() & OptionalTarget) == OptionalTarget);
     }
 
-    public boolean isMultipleTarget()
+    /**
+     * Constraint that every source has at most one target.
+     */
+    public boolean isSingleTarget()
     {
-        return (ordinal() & MultipleTarget) == MultipleTarget;
+        return !((ordinal() & MultipleTarget) == MultipleTarget);
     }
 
-    public boolean isOptionalSource()
+    /**
+     * Constraint that every target has at least one source.
+     */
+    public boolean isMandatorySource()
     {
-        return (ordinal() & OptionalSource) == OptionalSource;
+        return !((ordinal() & OptionalSource) == OptionalSource);
     }
 
-    public boolean isMultipleSource()
+    /**
+     * Constraint that every target has at most one source.
+     */
+    public boolean isSingleSource()
     {
-        return (ordinal() & MultipleSource) == MultipleSource;
+        return !((ordinal() & MultipleSource) == MultipleSource);
     }
 
     /**

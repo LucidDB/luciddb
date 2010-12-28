@@ -58,7 +58,7 @@ create view td1 as
 select * 
 from table(applib.time_dimension(1997, 1, 1, 1997, 2, 1, 1));
 
-select * from td1;
+select * from td1 order by time_key;
 
 create table udxtest.period (
 time_key_seq integer,
@@ -154,7 +154,8 @@ select
   fiscal_quarter_number_in_year,
   fiscal_year_start_date,
   fiscal_year_end_date
-from table(applib.time_dimension(2005,12,18,2006,4,2,12));
+from table(applib.time_dimension(2005,12,18,2006,4,2,12))
+order by time_key;
 
 select 
   time_key, 
@@ -172,7 +173,8 @@ select
   fiscal_quarter_number_in_year,
   fiscal_year_start_date,
   fiscal_year_end_date
-from table(applib.time_dimension(2005,12,18,2006,4,2,1));
+from table(applib.time_dimension(2005,12,18,2006,4,2,1))
+order by time_key;
 
 select
   time_key,
@@ -183,7 +185,8 @@ select
   fiscal_month_number_in_quarter as fmiq,
   fiscal_month_number_in_year as fmiy,
   fiscal_quarter_number_in_year as fqiy
-from table (applib.time_dimension(2000,1,1,2001,1,1,2));
+from table (applib.time_dimension(2000,1,1,2001,1,1,2))
+order by time_key;
 
 select
   time_key,
@@ -194,4 +197,18 @@ select
   fiscal_month_number_in_quarter as fmiq,
   fiscal_month_number_in_year as fmiy,
   fiscal_quarter_number_in_year as fqiy
-from table (applib.time_dimension(1999,12,1,2000,2,1,2));
+from table (applib.time_dimension(1999,12,1,2000,2,1,2))
+order by time_key;
+
+-- LER-2227
+select 
+  time_key,
+  week_number_in_month as wim,
+  week_number_in_quarter as wiq,
+  week_number_in_year as wiy,
+  fiscal_week_number_in_month as fwim,
+  fiscal_week_number_in_quarter as fwiq,
+  fiscal_week_number_in_year as fwiy
+from table("APPLIB"."TIME_DIMENSION"(2010,11,28,2011,1,4,4))
+order by time_key;
+

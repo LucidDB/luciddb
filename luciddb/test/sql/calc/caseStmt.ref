@@ -47,12 +47,14 @@
 | 12345      | 1000    |
 | 99999999   | 1000    |
 +------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-209
 0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
 . . . . . . . . >  WHEN (n1 < 0) THEN 0
 . . . . . . . . >  WHEN (n1 < 100) THEN 100
 . . . . . . . . >  ELSE 1000
 . . . . . . . . > END)
-. . . . . . . . > FROM TEST_REAL_TABLE ORDER BY n1;
+. . . . . . . . > FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1;
 +-------------+---------+
 |     N1      | EXPR$1  |
 +-------------+---------+
@@ -66,10 +68,24 @@
 | 1.233E-29   | 100     |
 | 0.123456    | 100     |
 | 1.0         | 100     |
-| 1.001       | 100     |
 | 1234567.0   | 1000    |
 | 1.233E31    | 1000    |
 +-------------+---------+
+0: jdbc:luciddb:> -- set numberFormat since floating point differs based on VM
+0: jdbc:luciddb:> !set numberFormat 0.0000
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+. . . . . . . . >  WHEN (n1 < 0) THEN 0
+. . . . . . . . >  WHEN (n1 < 100) THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
++---------+-----------+
+|   N1    |  EXPR$1   |
++---------+-----------+
+| 1.0010  | 100.0000  |
++---------+-----------+
+0: jdbc:luciddb:> !set numberFormat default
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Mix up strings and non-strings
 0: jdbc:luciddb:> -- Return a string from a numeric value
@@ -111,7 +127,7 @@ Error: From line 1, column 13 to line 5, column 3: Illegal mixing of types in CA
 . . . . . . . . >  ELSE NULL
 . . . . . . . . > END)
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+Error: From line 1, column 13 to line 5, column 3: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 0: jdbc:luciddb:> -- Output into an expression with null
 0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN NULL
 . . . . . . . . >  WHEN (n1 < 0) THEN NULL
@@ -119,7 +135,7 @@ Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 . . . . . . . . >  ELSE NULL
 . . . . . . . . > END) * 14.553
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+Error: From line 1, column 13 to line 5, column 3: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check null values
 0: jdbc:luciddb:> -- simulate NVL(col, 0)
@@ -162,10 +178,12 @@ Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 | 12345      | 12345      |
 | 99999999   | 99999999   |
 +------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-209
 0: jdbc:luciddb:> SELECT n1, (CASE WHEN n1 IS NULL THEN 0
 . . . . . . . . >  ELSE n1
 . . . . . . . . > END)
-. . . . . . . . > FROM TEST_REAL_TABLE ORDER BY n1;
+. . . . . . . . > FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1;
 +-------------+-------------+
 |     N1      |   EXPR$1    |
 +-------------+-------------+
@@ -179,10 +197,22 @@ Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 | 1.233E-29   | 1.233E-29   |
 | 0.123456    | 0.123456    |
 | 1.0         | 1.0         |
-| 1.001       | 1.001       |
 | 1234567.0   | 1234567.0   |
 | 1.233E31    | 1.233E31    |
 +-------------+-------------+
+0: jdbc:luciddb:> -- set numberFormat since floating point differs based on VM
+0: jdbc:luciddb:> !set numberFormat 0.0000
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN n1 IS NULL THEN 0
+. . . . . . . . >  ELSE n1
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
++---------+---------+
+|   N1    | EXPR$1  |
++---------+---------+
+| 1.0010  | 1.0010  |
++---------+---------+
+0: jdbc:luciddb:> !set numberFormat default
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Do funky null <> null semantics so that it's in the regression
 0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN NULL THEN 0 ELSE n1 END)
@@ -231,7 +261,7 @@ Error: From line 1, column 13 to line 5, column 3: Cannot apply '=' to arguments
 . . . . . . . . >  ELSE 1000
 . . . . . . . . > END)
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1976-08-11' at line 2, column 23: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: Illegal TIMESTAMP literal '1976-08-11': not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- CHAR VARCHAR Comparison
 0: jdbc:luciddb:> SELECT c2, (CASE c2 WHEN 'KIRK' THEN 100

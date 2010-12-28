@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,17 +35,24 @@ import org.eigenbase.rel.*;
  * <ul>
  * <li>extend {@link org.eigenbase.rel.AbstractRelNode}, and</li>
  * <li>return one of the following calling-conventions from their {@link
- * #getConvention} method: {@link CallingConvention#ARRAY ARRAY}, {@link
- * CallingConvention#ITERABLE ITERABLE}, {@link CallingConvention#ITERATOR
- * ITERATOR}, {@link CallingConvention#COLLECTION COLLECTION}, {@link
- * CallingConvention#MAP MAP}, {@link CallingConvention#VECTOR VECTOR}, {@link
- * CallingConvention#HASHTABLE HASHTABLE}, {@link CallingConvention#JAVA JAVA}
- * .</li>
+ * #getConvention} method:
+ *
+ * <ul>
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ARRAY ARRAY},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ITERABLE ITERABLE},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ITERATOR ITERATOR},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#COLLECTION COLLECTION},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#MAP MAP},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#VECTOR VECTOR},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#HASHTABLE HASHTABLE},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#JAVA JAVA}
+ * </ul>
+ * </li>
  * </ul>
  *
- * <p>For {@link CallingConvention#JAVA JAVA calling-convention}, see the
- * sub-interface {@link JavaLoopRel}, and the auxilliary interface {@link
- * JavaSelfRel}.
+ * <p>For {@link org.eigenbase.relopt.CallingConvention#JAVA JAVA
+ * calling-convention}, see the sub-interface {@link JavaLoopRel}, and the
+ * auxilliary interface {@link JavaSelfRel}.
  *
  * @author jhyde
  * @version $Id$
@@ -54,7 +61,6 @@ import org.eigenbase.rel.*;
 public interface JavaRel
     extends RelNode
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,9 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -49,7 +51,6 @@ import org.eigenbase.sql.type.*;
  */
 public class RexProgram
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -78,6 +79,11 @@ public class RexProgram
     private final RelDataType outputRowType;
     private final List<RexLocalRef> projectReadOnlyList;
     private final List<RexNode> exprReadOnlyList;
+
+    /**
+     * Reference counts for each expression, computed on demand.
+     */
+    private int [] refCounts;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -147,8 +153,11 @@ public class RexProgram
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the common sub-expressions of this program. Never null, may be
-     * empty, and never contain common sub-expressions.
+     * Returns the common sub-expressions of this program.
+     *
+     * <p>The list is never null but may be empty; each the expression in the
+     * list is not null; and no further reduction into smaller common
+     * subexpressions is possible.
      *
      * @post return != null
      * @post !containCommonExprs(exprs)
@@ -183,8 +192,8 @@ public class RexProgram
      * @param projectExprs Project expressions
      * @param conditionExpr Condition on which to filter rows, or null if rows
      * are not to be filtered
-     * @param outputRowType
-     * @param rexBuilder
+     * @param outputRowType Output row type
+     * @param rexBuilder Builder of rex expressions
      *
      * @return A program
      */
@@ -217,7 +226,7 @@ public class RexProgram
      */
     public RexNode [] flatten()
     {
-        final List list = new ArrayList();
+        final List<RexNode> list = new ArrayList<RexNode>();
         list.addAll(Arrays.asList(exprs));
         list.addAll(Arrays.asList(projects));
         if (condition != null) {
@@ -231,10 +240,10 @@ public class RexProgram
     {
         // Intended to produce similar output to explainCalc,
         // but without requiring a RelNode or RelOptPlanWriter.
-        List termList = new ArrayList();
-        List valueList = new ArrayList();
+        List<String> termList = new ArrayList<String>();
+        List<Object> valueList = new ArrayList<Object>();
         collectExplainTerms("", termList, valueList);
-        final StringBuffer buf = new StringBuffer("(");
+        final StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < valueList.size(); i++) {
             if (i > 0) {
                 buf.append(", ");
@@ -257,30 +266,36 @@ public class RexProgram
         RelNode rel,
         RelOptPlanWriter pw)
     {
-        List termList = new ArrayList();
-        List valueList = new ArrayList();
+        List<String> termList = new ArrayList<String>();
+        List<Object> valueList = new ArrayList<Object>();
         termList.add("child");
         collectExplainTerms("", termList, valueList, pw.getDetailLevel());
-        String [] terms =
-            (String []) termList.toArray(new String[termList.size()]);
-        Object [] values =
-            (Object []) valueList.toArray(new Object[valueList.size()]);
+
+        if ((pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+            && false)
+        {
+            termList.add("type");
+            valueList.add(rel.getRowType());
+        }
 
         // Relational expressions which contain a program should report their
         // children in a different way than getChildExps().
         assert rel.getChildExps().length == 0;
-        pw.explain(rel, terms, values);
+        pw.explain(rel, termList, valueList);
     }
 
     public void collectExplainTerms(
         String prefix,
-        List termList,
-        List valueList)
+        List<String> termList,
+        List<Object> valueList)
     {
-        collectExplainTerms(prefix, termList, valueList, 
+        collectExplainTerms(
+            prefix,
+            termList,
+            valueList,
             SqlExplainLevel.EXPPLAN_ATTRIBUTES);
     }
-    
+
     /**
      * Collects the expressions in this program into a list of terms and values.
      *
@@ -291,8 +306,8 @@ public class RexProgram
      */
     public void collectExplainTerms(
         String prefix,
-        List termList,
-        List valueList,
+        List<String> termList,
+        List<Object> valueList,
         SqlExplainLevel level)
     {
         final RelDataTypeField [] inFields = inputRowType.getFields();
@@ -312,13 +327,13 @@ public class RexProgram
         // If a lot of the fields are simply projections of the underlying
         // expression, try to be a bit less verbose.
         int trivialCount = 0;
-        
-        // Do not use the trivialCount optimization if computing digest for the optimizer
-        // (as opposed to doing an explain plan).
+
+        // Do not use the trivialCount optimization if computing digest for the
+        // optimizer (as opposed to doing an explain plan).
         if (level != SqlExplainLevel.DIGEST_ATTRIBUTES) {
             trivialCount = countTrivial(projects);
         }
-        
+
         switch (trivialCount) {
         case 0:
             break;
@@ -373,13 +388,12 @@ public class RexProgram
      */
     public RexProgram copy()
     {
-        return
-            new RexProgram(
-                inputRowType,
-                exprs,
-                projects,
-                (condition == null) ? null : (RexLocalRef) condition.clone(),
-                outputRowType);
+        return new RexProgram(
+            inputRowType,
+            exprs,
+            projects,
+            (condition == null) ? null : condition.clone(),
+            outputRowType);
     }
 
     /**
@@ -398,11 +412,21 @@ public class RexProgram
         return new RexProgram(rowType, refs, projectRefs, null, rowType);
     }
 
+    /**
+     * Returns the type of the input row to the program.
+     *
+     * @return input row type
+     */
     public RelDataType getInputRowType()
     {
         return inputRowType;
     }
 
+    /**
+     * Returns whether this program contains windowed aggregate functions
+     *
+     * @return whether this program contains windowed aggregate functions
+     */
     public boolean containsAggs()
     {
         return aggs || RexOver.containsOver(this);
@@ -413,6 +437,11 @@ public class RexProgram
         this.aggs = aggs;
     }
 
+    /**
+     * Returns the type of the output row from this program.
+     *
+     * @return output row type
+     */
     public RelDataType getOutputRowType()
     {
         return outputRowType;
@@ -481,7 +510,23 @@ public class RexProgram
             assert !fail;
             return false;
         }
-        final Checker checker = new Checker(fail);
+        final Checker checker =
+            new Checker(
+                fail,
+                inputRowType,
+                new AbstractList<RelDataType>()
+                {
+                    public RelDataType get(int index)
+                    {
+                        return exprs[index].getType();
+                    }
+
+                    @Override
+                    public int size()
+                    {
+                        return exprs.length;
+                    }
+                });
         if (condition != null) {
             if (!SqlTypeUtil.inBooleanFamily(condition.getType())) {
                 assert !fail : "condition must be boolean";
@@ -559,8 +604,7 @@ public class RexProgram
      * returns a list of collations which hold for its output. The result is
      * mutable.
      */
-    public List<RelCollation> getCollations(
-        List<RelCollation> inputCollations)
+    public List<RelCollation> getCollations(List<RelCollation> inputCollations)
     {
         List<RelCollation> outputCollations = new ArrayList<RelCollation>(1);
         deduceCollations(
@@ -575,7 +619,8 @@ public class RexProgram
      * Given a list of expressions and a description of which are ordered,
      * computes a list of collations. The result is mutable.
      */
-    public static void deduceCollations(List<RelCollation> outputCollations,
+    public static void deduceCollations(
+        List<RelCollation> outputCollations,
         final int sourceCount,
         List<RexLocalRef> refs,
         List<RelCollation> inputCollations)
@@ -593,8 +638,10 @@ loop:
         for (RelCollation collation : inputCollations) {
             final ArrayList<RelFieldCollation> fieldCollations =
                 new ArrayList<RelFieldCollation>(0);
-            for (RelFieldCollation fieldCollation
-                : collation.getFieldCollations()) {
+            for (
+                RelFieldCollation fieldCollation
+                : collation.getFieldCollations())
+            {
                 final int source = fieldCollation.getFieldIndex();
                 final int target = targets[source];
                 if (target < 0) {
@@ -616,7 +663,8 @@ loop:
      * Returns whether the fields on the leading edge of the project list are
      * the input fields.
      *
-     * @param fail
+     * @param fail Whether to throw an assert failure if does not project
+     * identity
      */
     public boolean projectsIdentity(final boolean fail)
     {
@@ -640,6 +688,54 @@ loop:
     }
 
     /**
+     * Returns whether this program returns its input exactly.
+     *
+     * <p>This is a stronger condition than {@link #projectsIdentity(boolean)}.
+     */
+    public boolean isTrivial()
+    {
+        if (getCondition() != null) {
+            return false;
+        }
+        if (projects.length != inputRowType.getFieldCount()) {
+            return false;
+        }
+        for (int i = 0; i < projects.length; i++) {
+            RexLocalRef project = projects[i];
+            if (project.index != i) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Gets reference counts for each expression in the program, where the
+     * references are detected from later expressions in the same program, as
+     * well as the project list and condition. Expressions with references
+     * counts greater than 1 are true common subexpressions.
+     *
+     * @return array of reference counts; the ith element in the returned array
+     * is the number of references to getExprList()[i]
+     */
+    public int [] getReferenceCounts()
+    {
+        if (refCounts != null) {
+            return refCounts;
+        }
+        refCounts = new int[exprs.length];
+        ReferenceCounter refCounter = new ReferenceCounter();
+        apply(refCounter, exprs, null);
+        if (condition != null) {
+            refCounter.visitLocalRef(condition);
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            refCounter.visitLocalRef(projects[i]);
+        }
+        return refCounts;
+    }
+
+    /**
      * Applies a visitor to an array of expressions and, if specified, a single
      * expression.
      *
@@ -648,7 +744,7 @@ loop:
      * @param expr Single expression, may be null
      */
     public static void apply(
-        RexVisitor visitor,
+        RexVisitor<Void> visitor,
         RexNode [] exprs,
         RexNode expr)
     {
@@ -662,10 +758,6 @@ loop:
 
     /**
      * Returns whether an expression is constant.
-     *
-     * @param ref
-     *
-     * @return
      */
     public boolean isConstant(RexNode ref)
     {
@@ -677,27 +769,145 @@ loop:
         return expr.accept(new Marshaller());
     }
 
+    /**
+     * Returns the input field that an output field is populated from, or -1 if
+     * it is populated from an expression.
+     */
+    public int getSourceField(int outputOrdinal)
+    {
+        assert (outputOrdinal >= 0) && (outputOrdinal < this.projects.length);
+        RexLocalRef project = projects[outputOrdinal];
+        int index = project.index;
+        while (true) {
+            RexNode expr = exprs[index];
+            if (expr instanceof RexCall
+                && ((RexCall) expr).getOperator()
+                == SqlStdOperatorTable.inFennelFunc)
+            {
+                // drill through identity function
+                expr = ((RexCall) expr).getOperands()[0];
+            }
+            if (expr instanceof RexLocalRef) {
+                index = ((RexLocalRef) expr).index;
+            } else if (expr instanceof RexInputRef) {
+                return ((RexInputRef) expr).index;
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    /**
+     * Returns whether this program is a permutation of its inputs.
+     */
+    public boolean isPermutation()
+    {
+        if (projects.length != inputRowType.getFields().length) {
+            return false;
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            if (getSourceField(i) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns a permutation, if this program is a permutation, otherwise null.
+     */
+    public Permutation getPermutation()
+    {
+        Permutation permutation = new Permutation(projects.length);
+        if (projects.length != inputRowType.getFields().length) {
+            return null;
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            int sourceField = getSourceField(i);
+            if (sourceField < 0) {
+                return null;
+            }
+            permutation.set(i, sourceField);
+        }
+        return permutation;
+    }
+
+    /**
+     * Returns the set of correlation variables used (read) by this program.
+     *
+     * @return set of correlation variable names
+     */
+    public HashSet<String> getCorrelVariableNames()
+    {
+        final HashSet<String> paramIdSet = new HashSet<String>();
+        apply(
+            new RexVisitorImpl<Void>(true) {
+                public Void visitCorrelVariable(
+                    RexCorrelVariable correlVariable)
+                {
+                    paramIdSet.add(correlVariable.getName());
+                    return null;
+                }
+            },
+            exprs,
+            null);
+        return paramIdSet;
+    }
+
+    /**
+     * Returns whether this program is in canonical form.
+     *
+     * @param fail Whether to throw an assertion error if not in canonical form
+     * @param rexBuilder Rex builder
+     * @return whether in canonical form
+     */
+    public boolean isNormalized(boolean fail, RexBuilder rexBuilder)
+    {
+        final RexProgram normalizedProgram =
+            RexProgramBuilder.normalize(rexBuilder, this);
+        String normalized = normalizedProgram.toString();
+        String string = toString();
+        if (!normalized.equals(string)) {
+            assert !fail
+                : "Program is not normalized:\n"
+                + "program:    " + string + "\n"
+                + "normalized: " + normalized + "\n";
+            return false;
+        }
+        return true;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Visitor which walks over a program and checks validity.
      */
-    class Checker
-        extends RexVisitorImpl<Boolean>
+    static class Checker extends RexChecker
     {
-        private final boolean fail;
-        int failCount = 0;
+        private final List<RelDataType> internalExprTypeList;
 
-        public Checker(boolean fail)
+        /**
+         * Creates a Checker.
+         *
+         * @param fail Whether to fail
+         * @param inputRowType Types of the input fields
+         * @param internalExprTypeList Types of the internal expressions
+         */
+        public Checker(
+            boolean fail,
+            RelDataType inputRowType,
+            List<RelDataType> internalExprTypeList)
         {
-            super(true);
-            this.fail = fail;
+            super(inputRowType, fail);
+            this.internalExprTypeList = internalExprTypeList;
         }
 
+        // override RexChecker; RexLocalRef is illegal in most rex expressions,
+        // but legal in a program
         public Boolean visitLocalRef(RexLocalRef localRef)
         {
             final int index = localRef.getIndex();
-            if ((index < 0) || (index >= exprs.length)) {
+            if ((index < 0) || (index >= internalExprTypeList.size())) {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -706,35 +916,9 @@ loop:
                     "type1",
                     localRef.getType(),
                     "type2",
-                    exprs[index].getType(),
-                    fail)) {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            return true;
-        }
-
-        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
-        {
-            super.visitFieldAccess(fieldAccess);
-            final RelDataType refType =
-                fieldAccess.getReferenceExpr().getType();
-            assert refType.isStruct();
-            final RelDataTypeField field = fieldAccess.getField();
-            final int index = field.getIndex();
-            if ((index < 0) || (index > refType.getFieldCount())) {
-                assert !fail;
-                ++failCount;
-                return false;
-            }
-            final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq(
-                    "type1",
-                    typeField.getType(),
-                    "type2",
-                    fieldAccess.getType(),
-                    fail)) {
+                    internalExprTypeList.get(index),
+                    fail))
+            {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -806,8 +990,7 @@ loop:
         {
             // Constant if operator is deterministic and all operands are
             // constant.
-            return
-                call.getOperator().isDeterministic()
+            return call.getOperator().isDeterministic()
                 && RexVisitorImpl.visitArrayAnd(
                     this,
                     call.getOperands());
@@ -861,8 +1044,8 @@ loop:
                 newOperands[i] = operands[i].accept(this);
             }
             return call.clone(
-                    call.getType(),
-                    newOperands);
+                call.getType(),
+                newOperands);
         }
 
         public RexNode visitOver(RexOver over)
@@ -890,8 +1073,27 @@ loop:
             final RexNode referenceExpr =
                 fieldAccess.getReferenceExpr().accept(this);
             return new RexFieldAccess(
-                    referenceExpr,
-                    fieldAccess.getField());
+                referenceExpr,
+                fieldAccess.getField());
+        }
+    }
+
+    /**
+     * Visitor which marks which expressions are used.
+     */
+    private class ReferenceCounter
+        extends RexVisitorImpl<Void>
+    {
+        ReferenceCounter()
+        {
+            super(true);
+        }
+
+        public Void visitLocalRef(RexLocalRef localRef)
+        {
+            final int index = localRef.getIndex();
+            refCounts[index]++;
+            return null;
         }
     }
 }

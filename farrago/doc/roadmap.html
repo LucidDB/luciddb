@@ -13,119 +13,43 @@
 
 <hr>
 
-Farrago has been under incubation since early in 2003.  We have mainly
-focused on getting core functionality working and tested, and have
-already exposed the most important extensibility points.  Some basic
-features (such as GROUP BY processing) are still under development,
-and some (such as the fixed-point NUMERIC datatype) remain missing
-entirely.  However, the project is now fleshed out and stable enough
-to start encouraging contributions from a wider audience as well as
-specializations for various domains.
-
-<p>
-
-The purpose of this roadmap is to sketch out the release plan for 2005
-so that we can track progress and prioritize incoming requirements.
+Farrago has been under development since early in 2003.  We have
+mainly focused on getting core functionality working and tested, and
+have exposed a number of important extensibility points.  The project
+is now fleshed out and stable enough to be usable in a wide variety of
+domains, but many areas remain to be improved.
 
 <hr>
 
-<h2>First GPL-only Release</h2>
-
-The current release (0.5) is the first packaged Sourceforge release
-under a unified copyright and GPL license.  Its purpose is to make it
-easier for potential framework developers and integrators to play with
-Farrago (without the hassle of using the source control system).
-
-<hr>
-
-<h2>Refactoring</h2>
-
-As part of preparing the Farrago platform for use by other projects, we
-are currently engaged in a comprehensive review process, taking stock of the
-state of various layers.  This 
-<a href="http://www.eigenbase.org/process/inventory.html">process</a>
-has several outputs:
+<h2>Missing or Incomplete Framework Areas</h2>
 
 <ul>
 
-<li>refactoring tasks for components which need it
+<li>security
 
-<li>documentation on which components and interfaces are safe to
-reuse or extend in their current form, which should remain internal to the
-framework, and which need to be refactored before being declared
-ready for reuse or extension
+<li>domains, user-defined types and aggregates
 
-<li>design documents
+<li>SQL/J and SQL/PSM
 
-<li>incremental releases as refactoring and documentation tasks are completed
+<li>SQL/XML
 
-</ul>
+<li>triggers
 
-Important areas known to need work include:
+<li>referential integrity, CHECK constraints, and assertions
 
-<ul>
-
-<li>validator
-
-<li>dependency tangle within org.eigenbase packages
-
-<li>session interfaces and plugin mechanism
-
-<li>utility classes
-
-<li>catalog extensibility mechanism
-
-<li>parser extensibility mechanism
-
-<li>Java runtime type system
-
-<li>storage management
-
-<li>scheduler resource allocation
-
-</ul>
-
-A possibly realistic goal is to complete the comprehensive review
-process by August (including publication of the state of all components)
-and complete most of the resulting refactoring tasks by the end of the
-year.
-
-<hr>
-
-<h2>Standardization</h2>
-
-In parallel with refactoring, we will be completing our support for
-SQL and related standards.  Two startup contributors (codenamed Disruptive
-Tech and LucidEra) are already at work in this area.  Here are some
-of the important missing items:
-
-<ul>
-
-<li>access control (currently owned by the LucidEra team)
-
-<li>user-defined functions (currently owned by the Disruptive Tech team)
-
-<li>user-defined types (currently owned by the Disruptive Tech team)
-
-<li>user-defined relational transformations (currently owned by the
-LucidEra team)
-
-<li>referential integrity
+<li>generated columns
 
 <li>Information Schema views into catalog
 
-<li>complete JDBC metadata support
+<li>ARRAY, MULTISET, ROW, and datetime interval datatypes
 
-<li>GROUP BY support (jointly owned by both teams)
+<li>UNICODE character set and collation support
 
-<li>MULTISET, ROW, and datetime interval datatypes (currently owned by
-the Disruptive Tech team)
-
-<li>fixed-point NUMERIC datatype
-
-<li>ARRAY and LOB datatypes
+<li>LOB datatypes
 
 <li>distributed transaction support
+
+<li>concurrency control
 
 <li>storage management, backup/restore
 
@@ -137,7 +61,7 @@ the Disruptive Tech team)
 
 <h2>Specialization Projects</h2>
 
-Some of the candidate areas for applying the Farrago platform include:
+Some of the candidate areas for applying Farrago include:
 
 <ul>
 
@@ -147,7 +71,8 @@ Some of the candidate areas for applying the Farrago platform include:
 
 <li>distributed or replicated DBMS
 
-<li>data warehousing (a LucidEra project is currently underway in this area)
+<li>data warehousing (already available with <a
+href="http://www.luciddb.org">LucidDB</a>)
 
 <li>pure-Java DBMS (but this space is already very crowded with
 open-source projects such as HSQLDB, Derby, and Mckoi)
@@ -162,12 +87,9 @@ here)
 
 <li>multimedia, spatial, full-text, temporal
 
-<li>XML
+<li>XML query and storage
 
 </ul>
-
-As the platform matures, parties interested in spearheading these
-efforts can get moving on their own release schedules.
 
 <hr>
 

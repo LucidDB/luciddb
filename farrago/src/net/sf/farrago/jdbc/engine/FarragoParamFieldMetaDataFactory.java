@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,15 +22,12 @@
 */
 package net.sf.farrago.jdbc.engine;
 
-import java.sql.*;
-
 import java.util.*;
 
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.runtime.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -43,7 +40,6 @@ import org.eigenbase.sql.type.*;
  */
 public class FarragoParamFieldMetaDataFactory
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -65,9 +61,9 @@ public class FarragoParamFieldMetaDataFactory
     /**
      * Determines the parameter column meta data from the rowType
      *
-     * @param rowType
+     * @param rowType Row type
      *
-     * @return
+     * @return Parameter column metadata
      */
     public static FarragoParamFieldMetaData [] newParamMetaData(
         RelDataType rowType,
@@ -75,12 +71,12 @@ public class FarragoParamFieldMetaDataFactory
     {
         FarragoParamFieldMetaData [] metaData;
 
-        List fieldTypes = rowType.getFieldList();
+        List<RelDataTypeField> fieldTypes = rowType.getFieldList();
         int colCnt = fieldTypes.size();
         metaData = new FarragoParamFieldMetaData[colCnt];
 
         for (int i = 0; i < colCnt; ++i) {
-            RelDataTypeField f = (RelDataTypeField) fieldTypes.get(i);
+            RelDataTypeField f = fieldTypes.get(i);
             RelDataType relType = f.getType();
 
             FarragoParamFieldMetaData meta =
@@ -90,6 +86,5 @@ public class FarragoParamFieldMetaDataFactory
         return metaData;
     }
 }
-;
 
 // End FarragoParamFieldMetaDataFactory.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -37,7 +36,6 @@ import org.eigenbase.util.*;
 public class SqlNullifFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlNullifFunction()
@@ -47,8 +45,9 @@ public class SqlNullifFunction
         // rewriteCall to convert NULLIF into CASE early.  However,
         // validator rewrite can optionally be disabled, in which case these
         // strategies are used.
-        super("NULLIF",
-            SqlKind.Function,
+        super(
+            "NULLIF",
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcComparableUnorderedX2,
@@ -67,19 +66,18 @@ public class SqlNullifFunction
             validator,
             getOperandTypeChecker(),
             call);
-        assert(operands.length == 2);
+        assert (operands.length == 2);
 
         SqlNodeList whenList = new SqlNodeList(pos);
         SqlNodeList thenList = new SqlNodeList(pos);
         whenList.add(operands[1]);
         thenList.add(SqlLiteral.createNull(SqlParserPos.ZERO));
-        return
-            SqlStdOperatorTable.caseOperator.createCall(
-                operands[0],
-                whenList,
-                thenList,
-                operands[0].clone(operands[0].getParserPosition()),
-                pos);
+        return SqlStdOperatorTable.caseOperator.createSwitchedCall(
+            pos,
+            operands[0],
+            whenList,
+            thenList,
+            operands[0].clone(operands[0].getParserPosition()));
     }
 }
 

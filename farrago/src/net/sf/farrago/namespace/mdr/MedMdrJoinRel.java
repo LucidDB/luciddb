@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,6 @@ class MedMdrJoinRel
     extends JoinRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private int leftOrdinal;
@@ -70,10 +69,9 @@ class MedMdrJoinRel
             right,
             condition,
             joinType,
-            Collections.EMPTY_SET);
-        assert ((joinType == JoinRelType.INNER) || (
-                    joinType == JoinRelType.LEFT
-                                                   ));
+            Collections.<String>emptySet());
+        assert ((joinType == JoinRelType.INNER)
+            || (joinType == JoinRelType.LEFT));
 
         this.leftOrdinal = leftOrdinal;
         this.rightReference = rightReference;
@@ -91,14 +89,14 @@ class MedMdrJoinRel
         return rightReference;
     }
 
-    public Object clone()
+    public MedMdrJoinRel clone()
     {
         MedMdrJoinRel clone =
             new MedMdrJoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
-                RexUtil.clone(condition),
+                left.clone(),
+                right.clone(),
+                condition.clone(),
                 joinType,
                 leftOrdinal,
                 rightReference);
@@ -111,10 +109,10 @@ class MedMdrJoinRel
     {
         // TODO:  refine
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return
-            planner.makeCost(rowCount,
-                0,
-                rowCount * getRowType().getFieldList().size());
+        return planner.makeCost(
+            rowCount,
+            0,
+            rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
@@ -127,10 +125,9 @@ class MedMdrJoinRel
         } else {
             // one-to-many:  assume a fanout of five, capped by the
             // total number of rows on the right
-            return
-                Math.min(
-                    5 * RelMetadataQuery.getRowCount(left),
-                    RelMetadataQuery.getRowCount(right));
+            return Math.min(
+                5 * RelMetadataQuery.getRowCount(left),
+                RelMetadataQuery.getRowCount(right));
         }
     }
 

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,14 +46,14 @@ class FarragoDbSessionPrivilegeMap
 
     private final JmiModelView modelView;
 
-    private final Map mapTypeToSet;
+    private final Map<RefClass, Set<String>> mapTypeToSet;
 
     //~ Constructors -----------------------------------------------------------
 
     FarragoDbSessionPrivilegeMap(JmiModelView modelView)
     {
         this.modelView = modelView;
-        mapTypeToSet = new HashMap();
+        mapTypeToSet = new HashMap<RefClass, Set<String>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -68,11 +68,11 @@ class FarragoDbSessionPrivilegeMap
         if (includeSubclasses) {
             JmiClassVertex classVertex =
                 modelView.getModelGraph().getVertexForRefClass(refClass);
-            Iterator iter =
-                modelView.getAllSubclassVertices(
-                    classVertex).iterator();
-            while (iter.hasNext()) {
-                classVertex = (JmiClassVertex) iter.next();
+            for (
+                JmiClassVertex jmiClassVertex
+                : modelView.getAllSubclassVertices(classVertex))
+            {
+                classVertex = (JmiClassVertex) jmiClassVertex;
                 mapPrivilegeForType(
                     classVertex.getRefClass(),
                     privilegeName,
@@ -82,7 +82,7 @@ class FarragoDbSessionPrivilegeMap
             return;
         }
 
-        Set set = (Set) mapTypeToSet.get(refClass);
+        Set<String> set = mapTypeToSet.get(refClass);
         if (!isLegal) {
             if (set == null) {
                 return;
@@ -92,7 +92,7 @@ class FarragoDbSessionPrivilegeMap
         }
 
         if (set == null) {
-            set = new TreeSet();
+            set = new TreeSet<String>();
             mapTypeToSet.put(refClass, set);
         }
 
@@ -100,21 +100,22 @@ class FarragoDbSessionPrivilegeMap
     }
 
     // implement FarragoSessionPrivilegeMap
-    public Set getLegalPrivilegesForType(RefClass refClass)
+    public Set<String> getLegalPrivilegesForType(RefClass refClass)
     {
-        Set set = (Set) mapTypeToSet.get(refClass);
+        Set<String> set = mapTypeToSet.get(refClass);
         if (set == null) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
         return set;
     }
 
     void makeImmutable()
     {
-        Iterator iter = mapTypeToSet.entrySet().iterator();
+        Iterator<Map.Entry<RefClass, Set<String>>> iter =
+            mapTypeToSet.entrySet().iterator();
         while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            Set set = (Set) entry.getValue();
+            Map.Entry<RefClass, Set<String>> entry = iter.next();
+            Set<String> set = entry.getValue();
             if (set.isEmpty()) {
                 iter.remove();
             } else if (set.size() == 1) {

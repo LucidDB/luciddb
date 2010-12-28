@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -55,7 +55,6 @@ import org.eigenbase.util.*;
 public class FarragoSequenceAccessor
     extends CompoundClosableAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static String NEXT_VALUE_METHOD_NAME = "getNext";
@@ -116,7 +115,12 @@ public class FarragoSequenceAccessor
      */
     synchronized public void closeAllocation()
     {
-        unreserve();
+        repos.beginReposSession();
+        try {
+            unreserve();
+        } finally {
+            repos.endReposSession();
+        }
         super.closeAllocation();
     }
 
@@ -157,14 +161,16 @@ public class FarragoSequenceAccessor
         RelDataType dataType)
     {
         unreserve();
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             FemSequenceGenerator sequence = getSequence();
             assert (sequence != null) : "sequence was null";
             options.alter(sequence, dataType);
             loadSequence(sequence);
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            txn.rollback();
         }
     }
 
@@ -183,11 +189,15 @@ public class FarragoSequenceAccessor
             return;
         }
 
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             reserveInternal();
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            // REVIEW jvs 12-Jan-2007:  need to revert transient state
+            // in this class too?
+            txn.rollback();
         }
     }
 
@@ -235,8 +245,9 @@ public class FarragoSequenceAccessor
         if (!reserved) {
             return;
         }
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             FemSequenceGenerator sequence = getSequence();
             if (sequence == null) {
                 // NOTE: sequence was deleted
@@ -248,8 +259,9 @@ public class FarragoSequenceAccessor
                 sequence.setExpired(false);
             }
             reserved = false;
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            txn.rollback();
         }
     }
 
@@ -281,4 +293,4 @@ public class FarragoSequenceAccessor
     }
 }
 
-// End FarragoSequenceGenerator.java
+// End FarragoSequenceAccessor.java

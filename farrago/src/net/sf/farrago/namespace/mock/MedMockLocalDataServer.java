@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,6 @@ import java.sql.*;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
@@ -36,7 +35,6 @@ import net.sf.farrago.type.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -50,7 +48,6 @@ class MedMockLocalDataServer
     extends MedMockDataServer
     implements FarragoMedLocalDataServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     MedMockLocalDataServer(
@@ -75,11 +72,21 @@ class MedMockLocalDataServer
         FemLocalIndex generatedPrimaryKeyIndex)
         throws SQLException
     {
-        // no special validation rules
+        // by default, no special validation rules
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex,
+        boolean creation)
+        throws SQLException
+    {
+        validateTableDefinition(table, generatedPrimaryKeyIndex);
+    }
+
+    // implement FarragoMedLocalDataServer
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
         throws SQLException
     {
         // mock roots are meaningless
@@ -90,20 +97,22 @@ class MedMockLocalDataServer
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
         throws SQLException
     {
         // ignore
     }
 
     // implement FarragoMedLocalDataServer
-    public void computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
         throws SQLException
     {
-        // ignore
+        return new FarragoMedLocalIndexStats(0, -1);
     }
 
     // implement FarragoMedDataServer
@@ -119,28 +128,27 @@ class MedMockLocalDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         long nRows = getLongProperty(tableProps, PROP_ROW_COUNT, 0);
         String executorImpl =
             tableProps.getProperty(PROP_EXECUTOR_IMPL, PROPVAL_JAVA);
         assert (executorImpl.equals(PROPVAL_JAVA)
-                || executorImpl.equals(PROPVAL_FENNEL));
+            || executorImpl.equals(PROPVAL_FENNEL));
         String udxSpecificName = tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
 
         if (udxSpecificName != null) {
             assert (executorImpl.equals(PROPVAL_JAVA));
         }
 
-        return
-            new MedMockColumnSet(
-                this,
-                localName,
-                rowType,
-                nRows,
-                executorImpl,
-                udxSpecificName);
+        return new MedMockColumnSet(
+            this,
+            localName,
+            rowType,
+            nRows,
+            executorImpl,
+            udxSpecificName);
     }
 
     // implement FarragoMedLocalDataServer
@@ -166,8 +174,24 @@ class MedMockLocalDataServer
 
         // Add a dummy project on top to keep the optimizer happy.
         return RelOptUtil.createRenameRel(
-                rel.getRowType(),
-                rel);
+            rel.getRowType(),
+            rel);
+    }
+
+    //  implement FarragoMedLocalDataServer
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+        throws SQLException
+    {
+        return;
+    }
+
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        return false;
     }
 }
 

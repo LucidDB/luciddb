@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlValidatorScope
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -79,28 +78,29 @@ public interface SqlValidatorScope
      * org.eigenbase.sql.validate.IdentifierNamespace}, it throws {@link
      * UnsupportedOperationException}.</p>
      *
-     * @param columnName
+     * @param columnName Column name
      * @param ctx Validation context, to appear in any error thrown
      *
      * @return Table alias
      */
-    String findQualifyingTableName(String columnName, SqlNode ctx);
+    String findQualifyingTableName(
+        String columnName,
+        SqlNode ctx);
 
     /**
      * Collects the {@link SqlMoniker}s of all possible columns in this scope.
      *
-     * @param parentObjName if not null, used to resolve a namespace from which
-     * to query the column names
      * @param result an array list of strings to add the result to
      */
-    void findAllColumnNames(String parentObjName, List<SqlMoniker> result);
+    void findAllColumnNames(List<SqlMoniker> result);
 
     /**
-     * Collects the {@link SqlMoniker}s of all possible tables in this scope.
+     * Collects the {@link SqlMoniker}s of all table aliases (uses of tables in
+     * query FROM clauses) available in this scope.
      *
-     * @param result an array list of strings to add the result to
+     * @param result a list of monikers to add the result to
      */
-    void findAllTableNames(List<SqlMoniker> result);
+    void findAliases(List<SqlMoniker> result);
 
     /**
      * Converts an identifier into a fully-qualified identifier. For example,
@@ -109,6 +109,12 @@ public interface SqlValidatorScope
      */
     SqlIdentifier fullyQualify(SqlIdentifier identifier);
 
+    /**
+     * Registers a relation in this scope.
+     *
+     * @param ns Namespace representing the result-columns of the relation
+     * @param alias Alias with which to reference the relation, must not be null
+     */
     void addChild(SqlValidatorNamespace ns, String alias);
 
     /**
@@ -121,7 +127,7 @@ public interface SqlValidatorScope
      * the scope has previously been sorted by columns X, Y, then X is monotonic
      * in this scope, but Y is not.
      */
-    boolean isMonotonic(SqlNode expr);
+    SqlMonotonicity getMonotonicity(SqlNode expr);
 
     /**
      * Returns the expressions by which the rows in this scope are sorted. If
@@ -154,6 +160,11 @@ public interface SqlValidatorScope
      */
     SqlValidatorScope getOperandScope(SqlCall call);
 
+    /**
+     * Performs any scope-specific validation of an expression. For example, an
+     * aggregating scope requires that expressions are valid aggregations. The
+     * expression has already been validated.
+     */
     void validateExpr(SqlNode expr);
 }
 

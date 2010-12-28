@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@
 #define Fennel_SharedTypes_Included
 
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -41,6 +42,7 @@ typedef boost::shared_ptr<CacheAccessor> SharedCacheAccessor;
 
 class Segment;
 typedef boost::shared_ptr<Segment> SharedSegment;
+typedef boost::weak_ptr<Segment> WeakSegment;
 
 class SegmentAccessor;
 typedef boost::shared_ptr<SegmentAccessor> SharedSegmentAccessor;
@@ -65,6 +67,12 @@ typedef boost::shared_ptr<ByteArrayOutputStream> SharedByteArrayOutputStream;
 
 class ByteArrayInputStream;
 typedef boost::shared_ptr<ByteArrayInputStream> SharedByteArrayInputStream;
+
+class SegPageBackupRestoreDevice;
+typedef boost::shared_ptr<SegPageBackupRestoreDevice>
+    SharedSegPageBackupRestoreDevice;
+typedef boost::weak_ptr<SegPageBackupRestoreDevice>
+    WeakSegPageBackupRestoreDevice;
 
 class StatsSource;
 typedef boost::shared_ptr<StatsSource> SharedStatsSource;
@@ -105,6 +113,12 @@ typedef boost::shared_ptr<BTreeAccessBase> SharedBTreeAccessBase;
 class BTreeReader;
 typedef boost::shared_ptr<BTreeReader> SharedBTreeReader;
 
+class BTreeNonLeafReader;
+typedef boost::shared_ptr<BTreeNonLeafReader> SharedBTreeNonLeafReader;
+
+class BTreeLeafReader;
+typedef boost::shared_ptr<BTreeLeafReader> SharedBTreeLeafReader;
+
 class BTreeWriter;
 typedef boost::shared_ptr<BTreeWriter> SharedBTreeWriter;
 
@@ -120,8 +134,14 @@ typedef boost::shared_ptr<BTreeRecoveryFactory> SharedBTreeRecoveryFactory;
 class Database;
 typedef boost::shared_ptr<Database> SharedDatabase;
 
+class PseudoUuidGenerator;
+typedef boost::shared_ptr<PseudoUuidGenerator> SharedPseudoUuidGenerator;
+
 class TraceTarget;
 typedef boost::shared_ptr<TraceTarget> SharedTraceTarget;
+
+class ErrorTarget;
+typedef boost::shared_ptr<ErrorTarget> SharedErrorTarget;
 
 class CheckpointThread;
 typedef boost::shared_ptr<CheckpointThread> SharedCheckpointThread;
@@ -175,6 +195,12 @@ typedef boost::shared_ptr<DynamicParam> SharedDynamicParam;
 class DynamicParamManager;
 typedef boost::shared_ptr<DynamicParamManager> SharedDynamicParamManager;
 
+class SegBufferReader;
+typedef boost::shared_ptr<SegBufferReader> SharedSegBufferReader;
+
+class SegBufferWriter;
+typedef boost::shared_ptr<SegBufferWriter> SharedSegBufferWriter;
+
 class SizeBuffer;
 typedef boost::shared_ptr<SizeBuffer> SharedSizeBuffer;
 
@@ -193,6 +219,9 @@ typedef boost::shared_ptr<LcsClusterReader> SharedLcsClusterReader;
 
 class LbmEntry;
 typedef boost::shared_ptr<LbmEntry> SharedLbmEntry;
+
+class LbmTupleReader;
+typedef boost::shared_ptr<LbmTupleReader> SharedLbmTupleReader;
 
 class ByteBuffer;
 typedef boost::shared_ptr<ByteBuffer> SharedByteBuffer;

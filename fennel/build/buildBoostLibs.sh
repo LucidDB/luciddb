@@ -6,44 +6,28 @@ source ./defineVariables.sh
 set -e
 set -v
 
-# First, build bjam
-cd ${BOOST_DIR}/tools/build/jam_src
-./build.sh
-
-# Locate bjam executable
-BOOST_PLATFORM=bin.${BOOST_JAM_PLATFORM}
-BJAM=${BOOST_DIR}/tools/build/jam_src/${BOOST_PLATFORM}/bjam
-
-# Choose Boost build options
-BUILD_OPTS="debug release <runtime-link>dynamic <threading>multi"
-BUILD_OPTS="${BUILD_OPTS} <stlport-anachronisms>off"
-
-BJAM_OPTS="--stagedir=${BOOST_DIR}"
-
-# exclude the Boost libraries we don't want
-BJAM_OPTS="${BJAM_OPTS} --without-test"
-BJAM_OPTS="${BJAM_OPTS} --without-signals"
-BJAM_OPTS="${BJAM_OPTS} --without-python"
-BJAM_OPTS="${BJAM_OPTS} --without-graph"
-BJAM_OPTS="${BJAM_OPTS} --without-program_options"
-BJAM_OPTS="${BJAM_OPTS} --without-serialization"
-BJAM_OPTS="${BJAM_OPTS} --without-iostreams"
-BJAM_OPTS="${BJAM_OPTS} --without-wave"
-
-# export variables to control bjam
-export BUILD="${BUILD_OPTS}"
-export TOOLS="${BOOST_TOOLSET}"
-export STLPORT_ROOT="${STLPORT_LOCATION}"
-
-if test "${TARGET_OS}" = "mingw32"
-then
-    export NOCYGWIN_STLPORT_LIB_ID=stlport_gcc
-    # NOTE:  horrible hack
-    sed -i -e 's:IRIX:CYGWIN*:g' \
-        ${BOOST_DIR}/tools/build/v1/gcc-stlport-tools.jam
-    set -e
-fi
-
-# Run the Boost build, staging the libraries into ${BOOST_DIR}/lib
 cd ${BOOST_DIR}
-${BJAM} ${BJAM_OPTS} stage
+if test "${TARGET_OS}" = "windows"
+then
+    ./bootstrap.bat --prefix=${BOOST_DIR} \
+        --with-libraries=date_time,filesystem,regex,system,thread,test \
+        --without-icu
+else
+    ./bootstrap.sh --prefix=${BOOST_DIR} \
+        --with-libraries=date_time,filesystem,regex,system,thread,test \
+        --without-icu
+fi
+echo "using stlport : 5.1.6 : ${STLPORT_LOCATION}/stlport : ${STLPORT_LOCATION}/lib ;" >> ${BOOST_DIR}/tools/build/v2/user-config.jam
+
+if test "${TARGET_OS}" = "win32"
+then
+    export INCLUDE="$INCLUDE;."
+    ./bjam toolset=${BOOST_TOOLSET} stdlib=stlport target-os=windows threadapi=win32 variant=debug,release link=shared runtime-link=shared threading=multi address-model=${CPU_BITS} --layout=tagged  --stagedir=${BOOST_DIR}
+else
+    if test "${TARGET_OS}" = "darwin"
+    then
+	./bjam toolset=darwin-4.0 stdlib=stlport architecture=x86 target-os=darwin variant=debug,release link=shared runtime-link=shared threading=multi address-model=${CPU_BITS} --layout=tagged --stagedir=${BOOST_DIR} cflags="-D_REENTRANT -Wno-long-long"
+    else
+        ./bjam toolset=${BOOST_TOOLSET} stdlib=stlport variant=debug,release link=shared runtime-link=shared threading=multi address-model=${CPU_BITS} --layout=tagged --stagedir=${BOOST_DIR} cflags=-Wno-long-long
+    fi
+fi

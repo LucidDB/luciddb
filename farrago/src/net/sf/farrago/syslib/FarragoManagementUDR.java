@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,14 +27,24 @@ import java.io.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.regex.*;
+
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.defimpl.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -48,7 +58,6 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoManagementUDR
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final String STORAGEFACTORY_PROP_NAME =
@@ -177,6 +186,9 @@ public abstract class FarragoManagementUDR
             resultInserter.setBoolean(
                 ++i,
                 s.isTxnInProgress());
+            resultInserter.setString(
+                ++i,
+                v.get(FarragoDefaultSessionPersonality.LABEL));
             resultInserter.executeUpdate();
         }
     }
@@ -187,7 +199,7 @@ public abstract class FarragoManagementUDR
     public static void sessionParameters(PreparedStatement resultInserter)
         throws SQLException
     {
-        FarragoSessionVariables variables = 
+        FarragoSessionVariables variables =
             FarragoUdrRuntime.getSession().getSessionVariables();
         Map<String, String> readMap = variables.getMap();
         for (String paramName : readMap.keySet()) {
@@ -232,11 +244,12 @@ public abstract class FarragoManagementUDR
             DriverManager.getConnection(
                 "jdbc:default:connection");
         Statement stmt = conn.createStatement();
-        
+
         // First, retrieve current setting.
-        ResultSet rs = stmt.executeQuery(
-            "select \"codeCacheMaxBytes\" from "
-            + "sys_fem.\"Config\".\"FarragoConfig\"");
+        ResultSet rs =
+            stmt.executeQuery(
+                "select \"codeCacheMaxBytes\" from "
+                + "sys_fem.\"Config\".\"FarragoConfig\"");
         rs.next();
         long savedSetting = rs.getLong(1);
         rs.close();
@@ -268,7 +281,7 @@ public abstract class FarragoManagementUDR
             "FarragoCatalog");
     }
 
-    private static FarragoModelLoader getModelLoader()
+    public static FarragoModelLoader getModelLoader()
     {
         FarragoSession callerSession = FarragoUdrRuntime.getSession();
         FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
@@ -276,10 +289,9 @@ public abstract class FarragoManagementUDR
     }
 
     /**
-     * Retrieves a list of repository integrity violations.  The
-     * result has two string columns; the first is the error description,
-     * the second is the MOFID of the object on which the error was
-     * detected, or null if unknown.
+     * Retrieves a list of repository integrity violations. The result has two
+     * string columns; the first is the error description, the second is the
+     * MOFID of the object on which the error was detected, or null if unknown.
      */
     public static void repositoryIntegrityViolations(
         PreparedStatement resultInserter)
@@ -287,15 +299,23 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
-        for (FarragoReposIntegrityErr err : errs) {
-            resultInserter.setString(1, err.getDescription());
-            if (err.getRefObject() != null) {
-                resultInserter.setString(2, err.getRefObject().refMofId());
-            } else {
-                resultInserter.setString(2, null);
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginReadTxn();
+
+        try {
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
+            for (FarragoReposIntegrityErr err : errs) {
+                resultInserter.setString(1, err.getDescription());
+                if (err.getRefObject() != null) {
+                    resultInserter.setString(2, err.getRefObject().refMofId());
+                } else {
+                    resultInserter.setString(2, null);
+                }
+                resultInserter.executeUpdate();
             }
-            resultInserter.executeUpdate();
+        } finally {
+            reposTxnContext.commit();
         }
     }
 
@@ -343,19 +363,23 @@ public abstract class FarragoManagementUDR
         // TODO jvs 17-Sept-2006:  Inside of Fennel, require all threads
         // to register with the JVM so that we can get a complete
         // picture here.
-        
+
         Map<Thread, StackTraceElement[]> stackTraces =
             Thread.getAllStackTraces();
 
-        for (Map.Entry<Thread, StackTraceElement[]> entry
-                 : stackTraces.entrySet())
+        for (
+            Map.Entry<Thread, StackTraceElement[]> entry
+            : stackTraces.entrySet())
         {
             Thread thread = entry.getKey();
 
             int i = 0;
 
             resultInserter.setLong(++i, thread.getId());
-            resultInserter.setString(++i, thread.getThreadGroup().getName());
+            final ThreadGroup threadGroup = thread.getThreadGroup();
+            resultInserter.setString(
+                ++i,
+                (threadGroup == null) ? "null" : threadGroup.getName());
             resultInserter.setString(++i, thread.getName());
             resultInserter.setInt(++i, thread.getPriority());
             resultInserter.setString(++i, thread.getState().toString());
@@ -365,7 +389,7 @@ public abstract class FarragoManagementUDR
             resultInserter.executeUpdate();
         }
     }
-    
+
     /**
      * Populates a table of stack entries for all threads running in the JVM.
      *
@@ -379,8 +403,9 @@ public abstract class FarragoManagementUDR
         Map<Thread, StackTraceElement[]> stackTraces =
             Thread.getAllStackTraces();
 
-        for (Map.Entry<Thread, StackTraceElement[]> entry
-                 : stackTraces.entrySet())
+        for (
+            Map.Entry<Thread, StackTraceElement[]> entry
+            : stackTraces.entrySet())
         {
             Thread thread = entry.getKey();
             StackTraceElement [] stackArray = entry.getValue();
@@ -388,7 +413,6 @@ public abstract class FarragoManagementUDR
             int j = 0;
 
             for (StackTraceElement element : stackArray) {
-
                 int i = 0;
 
                 resultInserter.setLong(++i, thread.getId());
@@ -414,7 +438,7 @@ public abstract class FarragoManagementUDR
     {
         String JVM_SRC = "JVM";
         Runtime runtime = Runtime.getRuntime();
-        
+
         // Read values from System and Runtime
         addSysInfo(
             resultInserter,
@@ -440,7 +464,7 @@ public abstract class FarragoManagementUDR
             "JvmNanoTime",
             Long.toString(System.nanoTime()),
             "ns");
-        
+
         // Read values from Fennel
         Map<String, String> perfCounters =
             NativeTrace.instance().getPerfCounters();
@@ -462,8 +486,6 @@ public abstract class FarragoManagementUDR
     public static void systemInfo(PreparedStatement resultInserter)
         throws Exception
     {
-        int i = 0;
-
         String JVM_SRC = "java.lang.System";
         Runtime runtime = Runtime.getRuntime();
 
@@ -492,8 +514,9 @@ public abstract class FarragoManagementUDR
         }
 
         // Read system properties
-        for (Map.Entry<Object, Object> entry
-                 : System.getProperties().entrySet())
+        for (
+            Map.Entry<Object, Object> entry
+            : System.getProperties().entrySet())
         {
             addSysInfo(
                 resultInserter,
@@ -576,6 +599,285 @@ public abstract class FarragoManagementUDR
             addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
         }
     }
+
+    /**
+     * Retrieves a long catalog string attribute in chunks.
+     *
+     * @param mofId MOFID of a repository object
+     * @param attributeName name of attribute to retrieve
+     * @param resultInserter
+     */
+    public static void lobText(
+        String mofId,
+        String attributeName,
+        PreparedStatement resultInserter)
+        throws Exception
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginReadTxn();
+        String text;
+        try {
+            RefObject refObj =
+                (RefObject) repos.getMdrRepos().getByMofId(mofId);
+            if (refObj == null) {
+                throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                    "MOFID " + mofId);
+            }
+
+            Object expr = refObj.refGetValue(attributeName);
+
+            if (expr == null) {
+                text = null;
+            } else if (expr instanceof CwmExpression) {
+                text = ((CwmExpression) expr).getBody();
+            } else {
+                text = expr.toString();
+            }
+        } finally {
+            reposTxnContext.commit();
+        }
+
+        // special case for null
+        if (text == null) {
+            // emit a single null value
+            resultInserter.setInt(1, -1);
+            resultInserter.setString(2, null);
+            resultInserter.executeUpdate();
+            return;
+        }
+
+        // special case for empty string
+        int textLength = text.length();
+        if (textLength == 0) {
+            resultInserter.setInt(1, 0);
+            resultInserter.setString(2, "");
+            resultInserter.executeUpdate();
+            return;
+        }
+
+        // break up text into chunks of maximum size 1024 characters
+        int begin = 0;
+        do {
+            int end = begin + 1024;
+            if (end > textLength) {
+                end = textLength;
+            }
+            String chunk = text.substring(begin, end);
+            resultInserter.setInt(1, begin);
+            resultInserter.setString(2, chunk);
+            resultInserter.executeUpdate();
+            begin = end;
+        } while (begin < textLength);
+    }
+
+    /**
+     * Sets a filter on the optimizer rules to be used in the current session.
+     *
+     * @param regex regular expression for rule names to be excluded
+     */
+    public static void setOptRuleDescExclusionFilter(String regex)
+    {
+        FarragoSession sess = FarragoUdrRuntime.getSession();
+        if (regex == null) {
+            sess.setOptRuleDescExclusionFilter(null);
+        } else {
+            sess.setOptRuleDescExclusionFilter(Pattern.compile(regex));
+        }
+    }
+
+    /**
+     * Creates a directory, including any parent directories.
+     *
+     * @param path directory path to be created
+     */
+    public static void createDirectory(String path)
+        throws Exception
+    {
+        new File(path).mkdirs();
+    }
+
+    /**
+     * Deletes a file or directory. Attempts to delete a non-empty directory
+     * will fail.
+     */
+    public static void deleteFileOrDirectory(String path)
+        throws Exception
+    {
+        if (!(new File(path).delete())) {
+            throw FarragoResource.instance().FileDeletionFailed.ex(path);
+        }
+    }
+
+    /**
+     * Backs up the database, but without checking that there's enough space to
+     * perform the backup.
+     *
+     * @param archiveDirectory the pathname of the directory where the backup
+     * files will be created
+     * @param backupType string value indicating whether the backup is a FULL,
+     * INCREMENTAL, or DIFFERENTIAL backup
+     * @param compressionMode string value indicating whether the backup is
+     * COMPRESSED or UNCOMPRESSED
+     */
+    public static void backupDatabaseWithoutSpaceCheck(
+        String archiveDirectory,
+        String backupType,
+        String compressionMode)
+        throws Exception
+    {
+        FarragoSystemBackup backup =
+            new FarragoSystemBackup(
+                archiveDirectory,
+                backupType,
+                compressionMode,
+                false,
+                0);
+        backup.backupDatabase();
+    }
+
+    /**
+     * Backs up the database, checking that there's enough space to perform the
+     * backup.
+     *
+     * @param archiveDirectory the pathname of the directory where the backup
+     * files will be created
+     * @param backupType string value indicating whether the backup is a FULL,
+     * INCREMENTAL, or DIFFERENTIAL backup
+     * @param compressionMode string value indicating whether the backup is
+     * COMPRESSED or UNCOMPRESSED
+     * @param padding number of bytes of additional space required on top of
+     * what's estimated based on the number of data pages allocated
+     */
+    public static void backupDatabaseWithSpaceCheck(
+        String archiveDirectory,
+        String backupType,
+        String compressionMode,
+        long padding)
+        throws Exception
+    {
+        FarragoSystemBackup backup =
+            new FarragoSystemBackup(
+                archiveDirectory,
+                backupType,
+                compressionMode,
+                true,
+                padding);
+        backup.backupDatabase();
+    }
+
+    /**
+     * Restores a database from backup.
+     *
+     * @param archiveDirectory the directory containing the backup
+     */
+    public static void restoreDatabase(String archiveDirectory)
+        throws Exception
+    {
+        FarragoSystemRestore restore =
+            new FarragoSystemRestore(archiveDirectory);
+        restore.restoreDatabase(true);
+    }
+
+    /**
+     * Restores a database from backup, excluding the catalog data.
+     *
+     * @param archiveDirectory the directory containing the backup
+     */
+    public static void restoreDatabaseWithoutCatalog(String archiveDirectory)
+        throws Exception
+    {
+        FarragoSystemRestore restore =
+            new FarragoSystemRestore(archiveDirectory);
+        restore.restoreDatabase(false);
+    }
+
+    /**
+     * Sets Unicode as the default character set.
+     */
+    public static void setUnicodeAsDefault()
+        throws Exception
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginWriteTxn();
+        try {
+            Collection c =
+                repos.getMedPackage().getFemLocalTable().refAllOfType();
+            if (!c.isEmpty()) {
+                throw FarragoResource.instance().ChangeToUnicodeFailed.ex();
+            }
+            String characterSetName = ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
+            String collationName =
+                ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US";
+            c = repos.getRelationalPackage().getCwmCatalog().refAllOfType();
+            for (Object obj : c) {
+                CwmCatalog catalog = (CwmCatalog) obj;
+                catalog.setDefaultCharacterSetName(characterSetName);
+                catalog.setDefaultCollationName(collationName);
+            }
+            c = repos.getRelationalPackage().getCwmColumn().refAllOfType();
+            for (Object obj : c) {
+                FemAbstractTypedElement column = (FemAbstractTypedElement) obj;
+                setElementToUnicode(
+                    FarragoCatalogUtil.toFemSqltypedElement(column),
+                    characterSetName,
+                    collationName);
+            }
+            c = repos.getSql2003Package().getFemRoutineParameter()
+                .refAllOfType();
+            for (Object obj : c) {
+                FemRoutineParameter param = (FemRoutineParameter) obj;
+                setElementToUnicode(
+                    FarragoCatalogUtil.toFemSqltypedElement(param),
+                    characterSetName,
+                    collationName);
+            }
+            reposTxnContext.commit();
+        } finally {
+            reposTxnContext.rollback();
+        }
+    }
+
+    private static void setElementToUnicode(
+        FemSqltypedElement element,
+        String characterSetName,
+        String collationName)
+    {
+        // TODO jvs 4-Mar-2009:  deal with the nested attributes for
+        // UDT's and collection types
+        if (!JmiObjUtil.isBlank(element.getCharacterSetName())) {
+            element.setCharacterSetName(characterSetName);
+            element.setCollationName(collationName);
+        }
+    }
+
+    public static long getCurrentSessionId()
+    {
+        return FarragoUdrRuntime.getSession().getSessionInfo().getId();
+    }
+
+    /**
+     * Simple server shutdown statement
+     */
+    public static void shutdownServer(boolean killSessions)
+        throws Exception
+    {
+        if (!killSessions) {
+            // TODO: nag 25-feb-2010 Ground References should come from where?
+            if (!FarragoDbSingleton.shutdownConditional(1)) {
+                throw new Exception(
+                        "Shutdown failed because of oustanding sessions, use true for killSessions");
+            }
+        } else {
+            FarragoDbSingleton.shutdown();
+        }
+    }
+
 }
 
 // End FarragoManagementUDR.java

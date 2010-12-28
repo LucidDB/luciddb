@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class SqlValidatorFeatureTest
     extends SqlValidatorTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String FEATURE_DISABLED = "feature_disabled";
@@ -60,13 +59,9 @@ public class SqlValidatorFeatureTest
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Returns a tester. Derived classes should override this method to run the
-     * same set of tests in a different testing environment.
-     */
-    public Tester getTester()
+    public Tester getTester(SqlConformance conformance)
     {
-        return new FeatureTesterImpl();
+        return new FeatureTesterImpl(conformance);
     }
 
     public void testDistinct()
@@ -76,21 +71,50 @@ public class SqlValidatorFeatureTest
             EigenbaseResource.instance().SQLFeature_E051_01);
     }
 
+    public void testOrderByDesc()
+    {
+        checkFeature(
+            "select name from dept order by ^name desc^",
+            EigenbaseResource.instance().SQLConformance_OrderByDesc);
+    }
+
     // NOTE jvs 6-Mar-2006:  carets don't come out properly placed
     // for INTERSECT/EXCEPT, so don't bother
 
     public void testIntersect()
     {
         checkFeature(
-            "select name from dept intersect select name from dept",
+            "^select name from dept intersect select name from dept^",
             EigenbaseResource.instance().SQLFeature_F302);
     }
 
     public void testExcept()
     {
         checkFeature(
-            "select name from dept except select name from dept",
+            "^select name from dept except select name from dept^",
             EigenbaseResource.instance().SQLFeature_E071_03);
+    }
+
+    public void testMultiset()
+    {
+        checkFeature(
+            "values ^multiset[1]^",
+            EigenbaseResource.instance().SQLFeature_S271);
+
+        checkFeature(
+            "values ^multiset(select * from dept)^",
+            EigenbaseResource.instance().SQLFeature_S271);
+    }
+
+    public void testTablesample()
+    {
+        checkFeature(
+            "select name from ^dept tablesample bernoulli(50)^",
+            EigenbaseResource.instance().SQLFeature_T613);
+
+        checkFeature(
+            "select name from ^dept tablesample substitute('sample_dept')^",
+            EigenbaseResource.instance().SQLFeatureExt_T613_Substitution);
     }
 
     private void checkFeature(String sql, ResourceDefinition feature)
@@ -112,15 +136,19 @@ public class SqlValidatorFeatureTest
     private class FeatureTesterImpl
         extends TesterImpl
     {
+        private FeatureTesterImpl(SqlConformance conformance)
+        {
+            super(conformance);
+        }
+
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return
-                new FeatureValidator(
-                    SqlStdOperatorTable.instance(),
-                    new MockCatalogReader(typeFactory),
-                    typeFactory,
-                    getCompatible());
+            return new FeatureValidator(
+                SqlStdOperatorTable.instance(),
+                new MockCatalogReader(typeFactory),
+                typeFactory,
+                getConformance());
         }
     }
 
@@ -131,9 +159,9 @@ public class SqlValidatorFeatureTest
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
-            Compatible compatible)
+            SqlConformance conformance)
         {
-            super(opTab, catalogReader, typeFactory, compatible);
+            super(opTab, catalogReader, typeFactory, conformance);
         }
 
         protected void validateFeature(

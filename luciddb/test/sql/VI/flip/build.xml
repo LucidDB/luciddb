@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@
   <property name="bh.log.basedir" value="${vi_flip.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${vi_flip.dir}/csv" />
   <property name="csv.copy.dir" value="${vi_flip.dir}/csv-copy" />
 
@@ -49,6 +49,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -65,26 +66,16 @@
       </else>
     </if>
     <!-- generate sql -->
-    <uptodate property="gensql.uptodate">
-      <srcfiles dir="${vi_flip.dir}" includes="*.tmpl"/>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-    </uptodate>
-    <if>
-      <isset property="gensql.uptodate"/>
-      <then/>
-      <else>
-        <copy todir="${vi_flip.dir}" overwrite="true">
-          <fileset dir="${vi_flip.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${vi_flip.dir}" overwrite="true">
+      <fileset dir="${vi_flip.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${vi_flip.dir}"
       testscript="${testfile}"
@@ -129,12 +120,19 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
     <delete>
       <fileset dir="${vi_flip.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete file="creschema.sql"/>
+    <delete file="creschema.ref"/>
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
   <target name="clean-csv" depends="clean">

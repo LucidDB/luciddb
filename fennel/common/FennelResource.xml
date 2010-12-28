@@ -69,6 +69,58 @@
     <text>Cache scratch memory exhausted</text>
   </message>
 
+  <message id="440080" name="uniqueConstraintViolated">
+    <text>Unique constraint violation</text>
+  </message>
+
+  <message id="440090" name="incompatibleDataFormat">
+    <text>Incompatible data format encountered</text>
+  </message>
+
+  <message id="440100" name="libaioRequired">
+    <text>Linux requires libaio package</text>
+  </message>
+
+  <message id="440110" name="unsupportedOperation">
+    <text>Unsupported operation: {0}</text>
+  </message>
+
+  <message id="440120" name="outOfBackupSpace">
+    <text>Insufficient space to execute system backup</text>
+  </message>
+
+  <message id="440130" name="mismatchedRestore">
+    <text>Commit sequence number in the restore does not match the expected value</text>
+  </message>
+
+  <message id="440140" name="openBackupFileFailed">
+    <text>Open of backup file {0} failed</text>
+  </message>
+
+  <message id="440150" name="readBackupFileFailed">
+    <text>Read from backup file {0} failed</text>
+  </message>
+
+  <message id="440160" name="writeBackupFileFailed">
+    <text>Write to backup file {0} failed</text>
+  </message>
+
+  <message id="440170" name="readDataPageFailed">
+    <text>Read of data page failed</text>
+  </message>
+
+  <message id="440180" name="writeDataPageFailed">
+    <text>Write of data page failed</text>
+  </message>
+
+  <message id="440190" name="outOfSpaceDuringRestore">
+    <text>Insufficient disk space to restore backup</text>
+  </message>
+
+  <message id="440200" name="bitmapEntryTooLong">
+    <text>Bitmap entry size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); key value:  {2}</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

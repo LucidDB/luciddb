@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,6 +27,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -40,7 +41,6 @@ import org.eigenbase.sql.type.*;
 public abstract class ValuesRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final List<List<RexLiteral>> tuples;
@@ -93,12 +93,12 @@ public abstract class ValuesRelBase
                 RelDataType fieldType = fields[i++].getType();
 
                 // TODO jvs 19-Feb-2006: strengthen this a bit.  For example,
-                // overflow, rounding, and truncation must already have been
-                // dealt with.
+                // overflow, rounding, and padding/truncation must already have
+                // been dealt with.
                 if (!RexLiteral.isNullLiteral(literal)) {
                     assert (SqlTypeUtil.canAssignFrom(
-                                fieldType,
-                                literal.getType()));
+                        fieldType,
+                        literal.getType()));
                 }
             }
         }
@@ -106,7 +106,7 @@ public abstract class ValuesRelBase
     }
 
     // override Object
-    public Object clone()
+    public ValuesRelBase clone()
     {
         // immutable with no children
         return this;
@@ -141,17 +141,27 @@ public abstract class ValuesRelBase
         // A little adapter just to get the tuples to come out
         // with curly brackets instead of square brackets.  Plus
         // more whitespace for readability.
-        List renderList = new ArrayList();
+        List<String> renderList = new ArrayList<String>();
         for (List<RexLiteral> tuple : tuples) {
             String s = tuple.toString();
             assert (s.startsWith("["));
             assert (s.endsWith("]"));
             renderList.add("{ " + s.substring(1, s.length() - 1) + " }");
         }
-        pw.explain(
-            this,
-            new String[] { "tuples" },
-            new Object[] { renderList });
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            // For rel digest, include the row type since a rendered
+            // literal may leave the type ambiguous (e.g. "null").
+            pw.explain(
+                this,
+                new String[] { "type", "tuples" },
+                new Object[] { rowType, renderList });
+        } else {
+            // For normal EXPLAIN PLAN, omit the type.
+            pw.explain(
+                this,
+                new String[] { "tuples" },
+                new Object[] { renderList });
+        }
     }
 }
 

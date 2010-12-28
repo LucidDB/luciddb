@@ -1,11 +1,12 @@
 0: jdbc:luciddb:> -- Test the grant_select_for_schema UDP
 0: jdbc:luciddb:> create schema MASSGRANTTEST;
-0: jdbc:luciddb:> create user MONDRIAN_USER authorization NOPE default schema MASSGRANTTEST;
+0: jdbc:luciddb:> create user MONDRIAN_USER authorization 'NOPE' default schema MASSGRANTTEST;
 0: jdbc:luciddb:> set schema 'MASSGRANTTEST';
 0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
 0: jdbc:luciddb:> create view V1 as select * from T2;
 0: jdbc:luciddb:> create view V2 as select col2 from T1;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- connect as new user and try to do select on tables. should fail.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;
@@ -13,9 +14,15 @@ Error: Privilege "SELECT" required for access to table "MASSGRANTTEST"."T1" (sta
 1: jdbc:luciddb:> select * from V2;
 Error: Privilege "SELECT" required for access to view "MASSGRANTTEST"."V2" (state=,code=0)
 1: jdbc:luciddb:> !closeall
+sqlline> 
 sqlline> -- connect as sysadmin and give new user select privs for everything in schema
 sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> call applib.grant_select_for_schema('MASSGRANTTEST', 'MONDRIAN_USER');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should print error if schema doesn't exist, LER-2608
+0: jdbc:luciddb:> call applib.grant_select_for_schema('IMAGINARY_SCHEMA', 'MONDRIAN_USER');
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try again. should succeed.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;

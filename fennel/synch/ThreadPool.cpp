@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/synch/ThreadPool.h"
 #include "fennel/synch/Thread.h"
+#include "fennel/synch/ThreadTracker.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -33,7 +34,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 class PooledThread : public Thread
 {
     ThreadPoolBase &pool;
-    
+
 public:
     explicit PooledThread(ThreadPoolBase &poolInit)
         : pool(poolInit)
@@ -85,7 +86,7 @@ void ThreadPoolBase::stop()
     state = STATE_STOPPED;
     condition.notify_all();
     guard.unlock();
-    
+
     for (uint i = 0; i < threads.size(); ++i) {
         threads[i]->join();
     }
@@ -99,17 +100,36 @@ void ThreadPoolBase::stop()
 
 void ThreadPoolBase::runPooledThread()
 {
-    StrictMutexGuard guard(mutex);
-    for (;;) {
-        while ((state != STATE_STOPPED) && isQueueEmpty()) {
-            condition.wait(guard);
-        }
-        if (state == STATE_STOPPED) {
-            return;
-        }
-        runOneTask(guard);
-        stoppingCondition.notify_one();
+    // TODO jvs 28-Jul-2008:  resource acquisition as initialization
+    if (pThreadTracker) {
+        pThreadTracker->onThreadStart();
     }
+    try {
+        StrictMutexGuard guard(mutex);
+        for (;;) {
+            while ((state != STATE_STOPPED) && isQueueEmpty()) {
+                condition.wait(guard);
+            }
+            if (state == STATE_STOPPED) {
+                break;
+            }
+            runOneTask(guard);
+            stoppingCondition.notify_one();
+        }
+    } catch (...) {
+        if (pThreadTracker) {
+            pThreadTracker->onThreadEnd();
+        }
+        throw;
+    }
+    if (pThreadTracker) {
+        pThreadTracker->onThreadEnd();
+    }
+}
+
+void ThreadPoolBase::setThreadTracker(ThreadTracker &threadTracker)
+{
+    pThreadTracker = &threadTracker;
 }
 
 FENNEL_END_CPPFILE("$Id$");

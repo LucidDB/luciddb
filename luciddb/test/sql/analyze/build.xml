@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+<project name="analyze" basedir="." default="test">
+  <dirname property="analyze.dir" file="${ant.file.analyze}" />
+
+  <property name="open.dir" location="${analyze.dir}/../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${analyze.dir}/testlog" />
+
+  <!-- directories for csv data files -->
+  <property name="csv.copy.dir" value="${analyze.dir}/csv-copy" />
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
+  <property name="csv.dir" value="${analyze.dir}/csv" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql -->
+    <copy todir="${analyze.dir}" overwrite="true">
+      <fileset dir="${analyze.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+  </target>
+
+  <target name="test" depends="clean-test,gen-all-sql">
+    <blackhawk.fork
+      basedir="${analyze.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="copy-csv">
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}"
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}">
+            <include name="bench1M.csv"/>
+            <include name="bench10K.csv"/>
+          </fileset>
+        </sync>
+      </then>
+    </if>
+    <available file="${csv.dir}" type="dir"
+      property="csv.available"/>
+    <if>
+      <isset property="csv.available"/>
+      <then>
+        <!-- sync csv.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${csv.dir}"/>
+        </sync>
+        <!-- copy bcp -->
+        <copy todir="${csv.copy.dir}" overwrite="true">
+           <fileset dir="${analyze.dir}">
+            <include name="*.bcp"/>
+          </fileset>
+        </copy>
+      </then>
+      <else>
+        <echo message="!! NO CSV FILES !!"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <delete>
+      <fileset dir="${analyze.dir}">
+        <include name="*.log"/>
+        <include name="download.ref"/>
+        <include name="download.sql"/>
+      </fileset>
+    </delete>
+    <delete dir="${csv.copy.dir}"/>
+  </target>
+
+  <target name="clean-csv">
+    <antcall target="clean"/>
+  </target>
+
+</project>

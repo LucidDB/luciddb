@@ -1,0 +1,81 @@
+0: jdbc:luciddb:> -- test the create_table_from_source_table UDP
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- setup a schema and couples of tables for testing.
+0: jdbc:luciddb:> create schema "S";
+0: jdbc:luciddb:> set schema 'S';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table T1 (col1 varchar(50));
+0: jdbc:luciddb:> create view T2 
+. . . . . . . . > description 'test for create_table_from_source_table UDP'
+. . . . . . . . > as select * from "S"."T1";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to make sure datatypes, precision match
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T1_TARGET', null);
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T1%' and schema_name = 'S';
++-------------+--------------+-----------+------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
++-------------+--------------+-----------+------------+--------------+
+| T1          | COL1         | VARCHAR   | 50         | true         |
+| T1_TARGET   | COL1         | VARCHAR   | 50         | true         |
++-------------+--------------+-----------+------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to make sure it works with tables and views
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T2"', null, 'T2_TARGET', null);
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T2%' and schema_name = 'S';
++-------------+--------------+-----------+------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
++-------------+--------------+-----------+------------+--------------+
+| T2          | COL1         | VARCHAR   | 50         | true         |
+| T2_TARGET   | COL1         | VARCHAR   | 50         | true         |
++-------------+--------------+-----------+------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test adding additional columns
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T3_TARGET', 'desc varchar(255)');
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
++-------------+--------------+-----------+------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
++-------------+--------------+-----------+------------+--------------+
+| T1          | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | DESC         | VARCHAR   | 255        | true         |
++-------------+--------------+-----------+------------+--------------+
+0: jdbc:luciddb:> --The source table input, if a simple table name, should try and access tables in the default schema
+0: jdbc:luciddb:> drop table "T3_TARGET";
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"T1"', null, 'T3_TARGET', 'desc varchar(255)');
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
++-------------+--------------+-----------+------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
++-------------+--------------+-----------+------------+--------------+
+| T1          | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | COL1         | VARCHAR   | 50         | true         |
+| T3_TARGET   | DESC         | VARCHAR   | 255        | true         |
++-------------+--------------+-----------+------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to make sure that it works with remote tables
+0: jdbc:luciddb:> --TODO: NOT UNDERSTAND REMOTE TABLES.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to make sure errors are thrown when:
+0: jdbc:luciddb:> --table already exists 
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T1_TARGET', null);
+Error: java.lang.Exception: [ErrorInfo]: The table[S.T1_TARGET] is existing.
+[Create Table SQL:] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --additional columns clause contains another column already in the table
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T4_TARGET', 'col1 varchar(25)');
+Error: java.lang.Exception: [ErrorInfo]: DDL validation error near line 1, column 49: Duplicate definition for column "COL1" within table "S"."T4_TARGET"; earlier definition was near line 1, column 32
+[Create Table SQL:] Create Table "S"."T4_TARGET" ( COL1 VARCHAR(50),col1 varchar(25) ) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --additional columns clause is invalid 
+0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T5_TARGET', 'desc vachar(50)');
+Error: java.lang.Exception: [ErrorInfo]: DDL validation error near line 1, column 49: Reference to unknown datatype "VACHAR"
+[Create Table SQL:] Create Table "S"."T5_TARGET" ( COL1 VARCHAR(50),desc vachar(50) ) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- do cleanup
+0: jdbc:luciddb:> drop view "T2";
+0: jdbc:luciddb:> drop table "T1";
+0: jdbc:luciddb:> drop table "T1_TARGET";
+0: jdbc:luciddb:> drop table "T2_TARGET";
+0: jdbc:luciddb:> drop table "T3_TARGET";
+0: jdbc:luciddb:> drop schema "S";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

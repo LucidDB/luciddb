@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -102,11 +102,10 @@ import java.util.*;
  */
 public class OptionsList
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private final ArrayList optionGroups = new ArrayList();
-    private final ArrayList options = new ArrayList();
+    private final ArrayList<Group> optionGroups = new ArrayList<Group>();
+    private final ArrayList<Option> options = new ArrayList<Option>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -165,7 +164,7 @@ public class OptionsList
     public void parse(String [] args)
     {
         final Option [] options = toArray();
-        HashSet usedOptions = new HashSet();
+        Set<Option> usedOptions = new HashSet<Option>();
         for (int i = 0; i < args.length; i++) {
             for (int j = 0; j < options.length; j++) {
                 Option option = options[j];
@@ -195,7 +194,7 @@ public class OptionsList
 
         // Check inclusivity/exclusivity.
         for (int i = 0; i < optionGroups.size(); i++) {
-            Group group = (Group) optionGroups.get(i);
+            Group group = optionGroups.get(i);
             int count = 0;
             for (int j = 0; j < options.length; j++) {
                 Option option = group.options[j];
@@ -222,7 +221,8 @@ public class OptionsList
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
             if (!usedOptions.contains(option)
-                && (option.defaultValue != null)) {
+                && (option.defaultValue != null))
+            {
                 option.set(option.defaultValue, false);
             }
         }
@@ -230,7 +230,7 @@ public class OptionsList
 
     public Option [] toArray()
     {
-        return (Option []) options.toArray(new Option[options.size()]);
+        return options.toArray(new Option[options.size()]);
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -378,8 +378,10 @@ public class OptionsList
             int i)
         {
             final String arg = args[i];
-            if (arg.startsWith("-") && (flag != null)
-                && arg.equals("-" + flag)) {
+            if (arg.startsWith("-")
+                && (flag != null)
+                && arg.equals("-" + flag))
+            {
                 // e.g. "-nolog"
                 // e.g. "-threads 5"
                 readArg(args[i + 1]);
@@ -495,7 +497,8 @@ public class OptionsList
             EnumeratedValues enumeration,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,
@@ -528,7 +531,8 @@ public class OptionsList
             Number defaultValue,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,
@@ -579,7 +583,8 @@ public class OptionsList
             String defaultValue,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,
@@ -616,7 +621,7 @@ public class OptionsList
             this.options = options;
 
             // derive description
-            StringBuffer buf = new StringBuffer("{");
+            StringBuilder buf = new StringBuilder("{");
             for (int j = 0; j < this.options.length; j++) {
                 Option option = this.options[j];
                 if (j > 0) {

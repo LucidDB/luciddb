@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,9 @@
 */
 package org.eigenbase.sql.type;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -36,12 +32,11 @@ import org.eigenbase.util.*;
  *
  * @author Wael Chatila
  * @version $Id$
- * @see {@link MultisetSqlType#getComponentType}
+ * @see MultisetSqlType#getComponentType
  */
 public class MultisetOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public boolean checkOperandTypes(
@@ -54,7 +49,8 @@ public class MultisetOperandTypeChecker
                 callBinding,
                 op0,
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 
@@ -63,7 +59,8 @@ public class MultisetOperandTypeChecker
                 callBinding,
                 op1,
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 
@@ -84,9 +81,10 @@ public class MultisetOperandTypeChecker
                 argTypes);
         if (null == biggest) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().TypeNotComparable.ex(
-                    call.operands[0].getParserPosition().toString(),
-                    call.operands[1].getParserPosition().toString());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().TypeNotComparable.ex(
+                        call.operands[0].getParserPosition().toString(),
+                        call.operands[1].getParserPosition().toString()));
             }
 
             return false;

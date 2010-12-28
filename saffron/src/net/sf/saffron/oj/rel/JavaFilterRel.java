@@ -28,11 +28,8 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -50,12 +47,12 @@ public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
             condition);
     }
 
-    public Object clone()
+    public JavaFilterRel clone()
     {
         JavaFilterRel clone = new JavaFilterRel(
             getCluster(),
-            RelOptUtil.clone(getChild()),
-            RexUtil.clone(getCondition()));
+            getChild().clone(),
+            getCondition().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }

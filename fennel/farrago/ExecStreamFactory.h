@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2003-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,9 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+class BarrierExecStreamParams;
 class BTreeExecStreamParams;
+class BTreePrefetchSearchExecStreamParams;
 class BTreeReadExecStreamParams;
 class BTreeScanExecStreamParams;
 class BTreeSearchExecStreamParams;
@@ -46,14 +48,17 @@ class TupleProjection;
 class StoredTypeDescriptorFactory;
 class SingleOutputExecStreamParams;
 class SortedAggExecStreamParams;
+class LcsRowScanBaseExecStreamParams;
+class LcsClusterAppendExecStreamParams;
+class LbmBitOpExecStreamParams;
 
 /**
- * ExecStreamFactory builds an ExecStreamEmbryo from the  
+ * ExecStreamFactory builds an ExecStreamEmbryo from the
  * Java representation of a stream definition.
  *
  * NOTE: this class is not thread-safe
  */
-class ExecStreamFactory
+class FENNEL_FARRAGO_EXPORT ExecStreamFactory
     : public boost::noncopyable, virtual public FemVisitor
 {
 protected:
@@ -86,7 +91,7 @@ protected:
      * Embryo for graph being built.
      */
     ExecStreamGraphEmbryo *pGraphEmbryo;
-    
+
     /**
      * Subfactories for extending factory behavior.
      */
@@ -98,10 +103,12 @@ protected:
      */
     virtual void invokeVisit(
         ProxyExecutionStreamDef &);
-    
+
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyBarrierStreamDef &);
     virtual void visit(ProxyBufferingTupleStreamDef &);
+    virtual void visit(ProxyBufferReaderStreamDef &);
+    virtual void visit(ProxyBufferWriterStreamDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyIndexScanDef &);
@@ -118,20 +125,37 @@ protected:
     virtual void visit(ProxySplitterStreamDef &);
     virtual void visit(ProxyValuesStreamDef &);
     virtual void visit(ProxyReshapeStreamDef &);
+    virtual void visit(ProxyNestedLoopJoinStreamDef &);
+    virtual void visit(ProxyBernoulliSamplingStreamDef &);
+    virtual void visit(ProxyCalcTupleStreamDef &streamDef);
+    virtual void visit(ProxyCorrelationJoinStreamDef &streamDef);
+    virtual void visit(ProxyCollectTupleStreamDef &streamDef);
+    virtual void visit(ProxyUncollectTupleStreamDef &streamDef);
+    virtual void visit(ProxyFlatFileTupleStreamDef &streamDef);
+    virtual void visit(ProxyLhxJoinStreamDef &streamDef);
+    virtual void visit(ProxyLhxAggStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef);
+    virtual void visit(ProxyLcsClusterReplaceStreamDef &streamDef);
+    virtual void visit(ProxyLcsRowScanStreamDef &streamDef);
+    virtual void visit(ProxyLbmGeneratorStreamDef &streamDef);
+    virtual void visit(ProxyLbmSplicerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSearchStreamDef &streamDef);
+    virtual void visit(ProxyLbmChopperStreamDef &streamDef);
+    virtual void visit(ProxyLbmUnionStreamDef &streamDef);
+    virtual void visit(ProxyLbmIntersectStreamDef &streamDef);
+    virtual void visit(ProxyLbmMinusStreamDef &streamDef);
+    virtual void visit(ProxyLbmNormalizerStreamDef &streamDef);
+    virtual void visit(ProxyLbmSortedAggStreamDef &streamDef);
 
-    // helpers for above visitors
-
-    void readBTreeReadStreamParams(
-        BTreeReadExecStreamParams &,
-        ProxyIndexScanDef &);
-
-    void readIndexWriterParams(
-        FtrsTableIndexWriterParams &,
-        ProxyIndexWriterDef &);
-
-    void readTableWriterStreamParams(
-        FtrsTableWriterExecStreamParams &,
-        ProxyTableWriterDef &);
+    void implementSortWithBTree(ProxySortingStreamDef &streamDef);
+    void readClusterScan(
+        ProxyLcsRowScanStreamDef &streamDef,
+        LcsRowScanBaseExecStreamParams &params);
+    void readClusterAppendParams(
+        ProxyLcsClusterAppendStreamDef &streamDef,
+        LcsClusterAppendExecStreamParams &params);
+    void readBitOpDynamicParams(
+        ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params);
 
 public:
     explicit ExecStreamFactory(
@@ -155,7 +179,9 @@ public:
         ProxyExecutionStreamDef &);
 
     // helpers for subfactories
-    
+
+    char readCharParam(const std::string &val);
+
     /** makes a TupleDescriptor from its proxy definition */
     void readTupleDescriptor(
         TupleDescriptor& desc, const SharedProxyTupleDescriptor def);
@@ -173,18 +199,26 @@ public:
     void createPrivateScratchSegment(ExecStreamParams &params);
 
     void createQuotaAccessors(ExecStreamParams &params);
-    
+
     void readExecStreamParams(
         ExecStreamParams &,
         ProxyExecutionStreamDef &);
-    
+
     void readTupleStreamParams(
         SingleOutputExecStreamParams &,
         ProxyTupleStreamDef &);
 
+    void initBTreePrefetchSearchParams(
+        BTreePrefetchSearchExecStreamParams &,
+        ProxyIndexSearchDef &);
+
     void readBTreeStreamParams(
         BTreeExecStreamParams &,
-        ProxyIndexAccessorDef &);    
+        ProxyIndexAccessorDef &);
+
+    void readBTreeParams(
+        BTreeParams &,
+        ProxyIndexAccessorDef &);
 
     void readBTreeSearchStreamParams(
         BTreeSearchExecStreamParams &,
@@ -193,13 +227,36 @@ public:
     void readAggStreamParams(
         SortedAggExecStreamParams &,
         ProxyAggStreamDef &);
+
+    void readBTreeReadStreamParams(
+        BTreeReadExecStreamParams &,
+        ProxyIndexScanDef &);
+
+    void readIndexWriterParams(
+        FtrsTableIndexWriterParams &,
+        ProxyIndexWriterDef &);
+
+    void readTableWriterStreamParams(
+        FtrsTableWriterExecStreamParams &,
+        ProxyTableWriterDef &);
+
+    void readBarrierDynamicParams(
+        BarrierExecStreamParams &,
+        ProxyBarrierStreamDef &);
+
+    void readColumnList(
+        ProxyFlatFileTupleStreamDef &streamDef,
+        std::vector<std::string> &names);
+
+    DynamicParamId readDynamicParamId(const int val);
 };
 
-class ExecStreamSubFactory : public boost::noncopyable
+class FENNEL_FARRAGO_EXPORT ExecStreamSubFactory
+    : public boost::noncopyable
 {
 public:
     virtual ~ExecStreamSubFactory();
-    
+
     /**
      * Reads the Java representation of an ExecStream.
      *

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,12 +32,13 @@ FENNEL_BEGIN_NAMESPACE
 class LogicalTxn;
 
 /**
- * SpillOutputStream implements the ByteOutputStream interface by 
+ * SpillOutputStream implements the ByteOutputStream interface by
  * starting with writes to a cache scratch page.  If this overflows, the
  * contents are spilled to a new SegOutputStream to which all further writes
  * are directed.
  */
-class SpillOutputStream : public ByteOutputStream
+class FENNEL_SEGMENT_EXPORT SpillOutputStream
+    : public ByteOutputStream
 {
     /**
      * Factory to use for creating spill segment if necessary.
@@ -73,19 +74,19 @@ class SpillOutputStream : public ByteOutputStream
      * Filename to assign to spill segment.
      */
     std::string spillFileName;
-    
+
     // implement the ByteOutputStream interface
     virtual void flushBuffer(uint cbRequested);
     virtual void closeImpl();
 
     void spill();
     void updatePage();
-    
+
     explicit SpillOutputStream(
         SharedSegmentFactory,
         SharedCacheAccessor,
         std::string);
-    
+
 public:
     /**
      * Creates a new SpillOutputStream.
@@ -101,7 +102,7 @@ public:
         SharedSegmentFactory pSegmentFactory,
         SharedCacheAccessor pCacheAccessor,
         std::string spillFileName);
-    
+
     virtual ~SpillOutputStream();
 
     /**

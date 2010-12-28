@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql2rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -45,7 +44,6 @@ public class FarragoIndexBuilderRel
     extends SingleRel
     implements RelStructuredTypeFlattener.SelfFlatteningRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -87,13 +85,13 @@ public class FarragoIndexBuilderRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FarragoIndexBuilderRel clone()
     {
         FarragoIndexBuilderRel clone =
             new FarragoIndexBuilderRel(
                 getCluster(),
                 getTable(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 index);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -103,7 +101,7 @@ public class FarragoIndexBuilderRel
     public RelDataType deriveRowType()
     {
         return RelOptUtil.createDmlRowType(
-                getCluster().getTypeFactory());
+            getCluster().getTypeFactory());
     }
 
     // implement RelNode

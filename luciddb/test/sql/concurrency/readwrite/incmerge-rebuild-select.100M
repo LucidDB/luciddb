@@ -1,0 +1,647 @@
+-- setup
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> truncate table lineitemu1;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread select
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60175               |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60175               |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 120515              |
++---------------------+
+
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 17230               |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 120515              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 180566              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 180566              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 240292              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 240292              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 299814              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 299814              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 419866              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 419866              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 419866              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 419866              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 540412              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 540412              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 540412              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 540412              |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread select
+
+-- thread insert
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem1";
+60175 rows affected.
+> insert into lineitemu1 select * from "lineitem2";
+60340 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem3";
+60051 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem4";
+59726 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem5";
+59522 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem6";
+59913 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem7";
+60139 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem8";
+60401 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem9";
+60145 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+> insert into lineitemu1 select * from "lineitem10";
+60160 rows affected.
+> alter table lineitemu1 rebuild;
+0 rows affected.
+-- end of thread insert
+
+-- thread incrementalMerge
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem1";
+60175 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+60340 rows affected.
+> delete from lineitem where l_shipmode = 'TRUCK';
+17230 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+77281 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+59726 rows affected.
+> delete from lineitem where l_shipmode <> 'TRUCK';
+205835 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> analyze table lineitem compute statistics for all columns;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+265357 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> analyze table lineitem compute statistics for all columns;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+120052 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+419866 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+120546 rows affected.
+> delete from lineitem where 1 = 1;
+540412 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+540412 rows affected.
+> delete from lineitem where 0 = 1;
+0 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> merge into lineitem tgt
+> using lineitemu1 as src
+> on
+> tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set
+> l_orderkey = src.l_orderkey,
+> l_partkey = src.l_partkey
+> when not matched then
+> insert(
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+60160 rows affected.
+-- end of thread incrementalMerge
+

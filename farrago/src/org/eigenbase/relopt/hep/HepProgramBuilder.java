@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
  */
 public class HepProgramBuilder
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<HepInstruction> instructions;
@@ -137,7 +136,7 @@ public class HepProgramBuilder
      * the actual instances. If the planner does not have a rule matching the
      * description, this instruction is a nop.
      *
-     * @param rule rule to fire
+     * @param ruleDescription description of rule to fire
      */
     public void addRuleByDescription(String ruleDescription)
     {
@@ -189,6 +188,19 @@ public class HepProgramBuilder
         HepInstruction.ConverterRules instruction =
             new HepInstruction.ConverterRules();
         instruction.guaranteed = guaranteed;
+        instructions.add(instruction);
+    }
+
+    /**
+     * Adds an instruction to attempt to match instances of
+     * {@link CommonRelSubExprRule}, but only in cases where vertices have more
+     * than one parent.
+     */
+    public void addCommonRelSubExprInstruction()
+    {
+        assert (group == null);
+        HepInstruction.CommonRelSubExprRules instruction =
+            new HepInstruction.CommonRelSubExprRules();
         instructions.add(instruction);
     }
 

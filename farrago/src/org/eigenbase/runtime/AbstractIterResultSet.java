@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@ import java.sql.*;
 
 import java.util.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
@@ -43,7 +44,6 @@ import org.eigenbase.util14.*;
 public abstract class AbstractIterResultSet
     extends AbstractResultSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ColumnGetter columnGetter;
@@ -198,10 +198,12 @@ public abstract class AbstractIterResultSet
             try {
                 return fields[columnIndex - 1].get(o);
             } catch (IllegalArgumentException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             } catch (IllegalAccessException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             }
         }
@@ -213,7 +215,8 @@ public abstract class AbstractIterResultSet
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 if (Modifier.isPublic(field.getModifiers())
-                    && !Modifier.isStatic(field.getModifiers())) {
+                    && !Modifier.isStatic(field.getModifiers()))
+                {
                     list.add(field);
                 }
             }
@@ -225,6 +228,7 @@ public abstract class AbstractIterResultSet
     // NOTE jvs 30-May-2003:  I made this public because iSQL wanted it that
     // way for reflection.
     public class MetaData
+        extends Unwrappable
         implements ResultSetMetaData
     {
         public boolean isAutoIncrement(int column)
@@ -242,13 +246,13 @@ public abstract class AbstractIterResultSet
         public String getCatalogName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public String getColumnClassName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public int getColumnCount()
@@ -329,7 +333,7 @@ public abstract class AbstractIterResultSet
         public String getSchemaName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isSearchable(int column)
@@ -347,7 +351,7 @@ public abstract class AbstractIterResultSet
         public String getTableName(int column)
             throws SQLException
         {
-            return null;
+            return "";
         }
 
         public boolean isWritable(int column)

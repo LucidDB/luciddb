@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,27 +27,32 @@
 #include "fennel/common/SysCallExcn.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifndef __MSVC__
+#include <sys/file.h>
+#endif
+
 #include <fcntl.h>
 #include <sstream>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 FileDevice::FileDevice(
-    std::string filenameInit,DeviceMode openMode)
+    std::string filenameInit, DeviceMode openMode, FileSize initialSize)
 {
     filename = filenameInit;
     mode = openMode;
-    
-#ifdef __MINGW32__
+
+#ifdef __MSVC__
 
     DWORD fdwCreate = mode.create ? CREATE_ALWAYS : OPEN_EXISTING;
 
     DWORD fdwFlags = FILE_FLAG_OVERLAPPED;
-    
+
     DWORD fdwAccess = GENERIC_READ;
     if (!mode.readOnly) {
         fdwAccess |= GENERIC_WRITE;
@@ -70,7 +75,7 @@ FileDevice::FileDevice(
     // log file for read while it was still open for write by the original
     // txn.  Should probably fix the tests instead, in case allowing sharing
     // could hinder performance.
-    
+
     handle = reinterpret_cast<int>(
         CreateFile(
             filename.c_str(),
@@ -98,10 +103,18 @@ FileDevice::FileDevice(
     cbLarge.LowPart = cbLow;
     cbLarge.HighPart = cbHigh;
     cbFile = cbLarge.QuadPart;
+    if (mode.create && initialSize > 0) {
+        setSizeInBytes(initialSize);
+    }
 
 #else
-    
+
+#ifdef __APPLE__
+    int access = 0;
+#else
     int access = O_LARGEFILE;
+#endif
+
     int permission = S_IRUSR;
     if (mode.readOnly) {
         access |= O_RDONLY;
@@ -114,21 +127,44 @@ FileDevice::FileDevice(
     }
 
     if (mode.direct) {
+        // REVIEW jvs 4-Dec-2008: Comment below used to be true, but probably
+        // only on 2.4 kernels.  2.6 kernels seem to be happy with
+        // O_DIRECT+pwrite.
+        // (http://lkml.indiana.edu/hypermail/linux/kernel/0511.2/1758.html).
+        // So we can probably clean this up now.
         access |= O_SYNC;
         // NOTE:  We don't actually set O_DIRECT here, because on Linux
         // that results in EINVAL errors from pwrite.  Instead,
         // O_DIRECT is set from AioLinuxScheduler, because it is required
         // for libaio.
     }
-    
+
     handle = ::open(filename.c_str(), access, permission);
     if (!isOpen()) {
         std::ostringstream oss;
         oss << "Failed to open file " << filename;
         throw SysCallExcn(oss.str());
     }
-    cbFile = ::lseek(handle,0,SEEK_END);
-    
+    if (flock(handle, LOCK_SH | LOCK_NB) < 0) {
+        throw SysCallExcn("File lock failed");
+    }
+
+    cbFile = ::lseek(handle, 0, SEEK_END);
+
+    // Preallocate the file if we're creating the file, and an initial size
+    // is specified.
+    if (mode.create && initialSize > 0) {
+#ifdef __APPLE__
+        int rc = ftruncate(handle, initialSize);
+#else
+        int rc = posix_fallocate(handle, 0, initialSize);
+#endif
+        if (rc) {
+            throw SysCallExcn("File allocation failed", rc);
+        }
+        cbFile = initialSize;
+    }
+
 #endif
 }
 
@@ -142,7 +178,7 @@ FileDevice::~FileDevice()
 void FileDevice::close()
 {
     assert(isOpen());
-#ifdef __MINGW32__
+#ifdef __MSVC__
     CloseHandle(HANDLE(handle));
 #else
     ::close(handle);
@@ -158,30 +194,32 @@ void FileDevice::flush()
     if (mode.readOnly) {
         return;
     }
-#ifdef __MINGW32__
+#ifdef __MSVC__
     if (!FlushFileBuffers(HANDLE(handle))) {
         throw SysCallExcn("Flush failed");
     }
 #else
+#ifndef __APPLE__
     if (::fdatasync(handle)) {
         throw SysCallExcn("Flush failed");
     }
+#endif
 #endif
 }
 
 void FileDevice::setSizeInBytes(FileSize cbFileNew)
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     LARGE_INTEGER cbLarge;
     cbLarge.QuadPart = cbFileNew;
-    if (!SetFilePointerEx(HANDLE(handle),cbLarge,NULL,FILE_BEGIN)) {
+    if (!SetFilePointerEx(HANDLE(handle), cbLarge, NULL, FILE_BEGIN)) {
         throw SysCallExcn("Resize file failed:  SetFilePointer");
     }
     if (!SetEndOfFile(HANDLE(handle))) {
         throw SysCallExcn("Resize file failed:  SetEndOfFile");
     }
 #else
-    if(::ftruncate(handle,cbFileNew)){
+    if (::ftruncate(handle, cbFileNew)) {
         throw SysCallExcn("Resize file failed");
     }
 #endif
@@ -192,13 +230,13 @@ void FileDevice::transfer(RandomAccessRequest const &request)
 {
     FileSize cbActual;
     assert(request.bindingList.size() == 1);
-#ifdef __MINGW32__
+#ifdef __MSVC__
     LARGE_INTEGER largeInt;
     RandomAccessRequestBinding &binding = request.bindingList.front();
     largeInt.QuadPart = request.cbOffset;
     binding.Offset = largeInt.LowPart;
     binding.OffsetHigh = largeInt.HighPart;
-    
+
     DWORD dwActual = 0;
     BOOL bCompleted;
     if (request.type == RandomAccessRequest::READ) {
@@ -231,21 +269,6 @@ void FileDevice::transfer(RandomAccessRequest const &request)
         }
     }
     cbActual = dwActual;
-#elif defined(__CYGWIN__)
-    StrictMutexGuard guard(mutex);
-    ::lseek(handle, request.cbOffset, SEEK_SET);
-    if (request.type == RandomAccessRequest::READ) {
-        cbActual = ::read(
-            handle,
-            request.bindingList.front().getBuffer(),
-            request.cbTransfer);
-    } else {
-        cbActual = ::write(
-            handle,
-            request.bindingList.front().getBuffer(),
-            request.cbTransfer);
-    }
-    guard.unlock();
 #else
     if (request.type == RandomAccessRequest::READ) {
         cbActual = ::pread(

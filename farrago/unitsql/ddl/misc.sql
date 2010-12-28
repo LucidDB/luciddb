@@ -16,6 +16,32 @@ create table dup_constraints(
     i int not null constraint charlie primary key,
     j int not null constraint charlie unique);
 
+-- test schema-wide index name uniqueness
+
+create table t1(i int not null primary key)
+create index xxx on t1(i);
+
+-- should fail
+create table t2(i int not null primary key)
+create index xxx on t2(i);
+
+-- likewise for constraint name uniqueness
+
+create table t3(i int not null constraint lucy primary key);
+
+-- should fail
+create table t4(i int not null constraint lucy primary key);
+
+-- test column uniqueness in index
+create table t5(col1 int not null primary key, col2 int not null);
+-- should be successful
+create index i1 on t5(col1,col2);
+-- should fail
+create index i2 on t5(col1,col2,col1);
+
+-- test column uniqueness error when index is a primary key constraint
+-- should fail
+create table t6(col1 int not null, col2 int not null, primary key(col1,col1));
 
 -- FTRS-specific table validation rules
 
@@ -135,5 +161,10 @@ drop index unclustered_i;
 create table lcs_table_multiset(i int not null,im integer multiset)
 server sys_column_store_data_server
 ;
+
+-- should fail: can't drop primary key/unique indexes
+create table testdrop(i1 int primary key, i2 int unique);
+drop index "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP";
+drop index "SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2";
 
 -- End misc.sql

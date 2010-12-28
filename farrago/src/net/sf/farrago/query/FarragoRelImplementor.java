@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2003-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,18 +24,21 @@ package net.sf.farrago.query;
 
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.ojrex.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
@@ -57,28 +60,48 @@ public class FarragoRelImplementor
     implements FennelRelImplementor,
         FarragoOJRexRelImplementor
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    // trace with fennel plan
+    private static final Logger tracer =
+        FarragoTrace.getPreparedStreamGraphTracer();
 
     //~ Instance fields --------------------------------------------------------
 
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
+
     private Set<FemExecutionStreamDef> streamDefSet;
     private String serverMofId;
     private long nextRelParamId;
     private int nextDynamicParamId;
 
-    // ordered from child rel to parent rel; for now only
-    // includes FennelRels during StreamDef generation
-    private List<RelScope> scopeStack;
+    // An ordered list representing the path from the root RelNode to the
+    // current child RelNode being visited in the execution graph.
+    private List<RelPathEntry> currRelPathList;
+
+    // Mapping from the different RelPathEntry lists to the dynamic parameters
+    // accessible from the leaf RelNode in that RelPathEntry list
+    private Map<List<RelPathEntry>, RelScope> relPathScopeMap;
+
+    // all FarragoTransforms in the plan,
+    private List<FarragoTransformDef> transformDefs;
+
+    // the matching stream defs
+    private List<FemJavaTransformStreamDef> transformStreamDefs;
+
+    // indexes transformDefs by name of generated FarragoTransform subclass
+    private Map<String, FarragoTransformDef> transformMap;
     private int nextTransformId;
 
-    /**
-     * List of ClassDeclarations representing generated Java code not directly
-     * linked to the plan's root rel node.
-     */
-    private List<ClassDeclaration> transformDeclarations;
+    // Maps a RelNode to the stream definitions that have been registered to
+    // that RelNode
+    private Map<RelNode, List<FemExecutionStreamDef>> relToStreamDefMap;
 
+    // Maps a RelNode to its RelPathEntry list when the
+    // isFirstTranslationInstance method was first called on the RelNode
+    private Map<RelNode, List<RelPathEntry>> relToFirstRelPathEntryMap;
     //~ Constructors -----------------------------------------------------------
 
     public FarragoRelImplementor(
@@ -89,15 +112,16 @@ public class FarragoRelImplementor
             rexBuilder,
             new UdfAwareOJRexImplementorTable(
                 preparingStmt.getSession().getPersonality()
-                .getOJRexImplementorTable(
-                    preparingStmt)));
+                             .getOJRexImplementorTable(
+                                 preparingStmt)));
 
         this.preparingStmt = preparingStmt;
         ojAssignableValue = OJClass.forClass(AssignableValue.class);
         ojBytePointer = OJClass.forClass(BytePointer.class);
 
         streamDefSet = new HashSet<FemExecutionStreamDef>();
-        scopeStack = new LinkedList<RelScope>();
+        currRelPathList = new LinkedList<RelPathEntry>();
+        relPathScopeMap = new HashMap<List<RelPathEntry>, RelScope>();
         nextRelParamId = 1;
 
         // REVIEW jvs 22-Mar-2006:  does this match how user-level
@@ -105,7 +129,11 @@ public class FarragoRelImplementor
         nextDynamicParamId =
             preparingStmt.getSqlToRelConverter().getDynamicParamCount() + 1;
         nextTransformId = 1;
-        transformDeclarations = new ArrayList<ClassDeclaration>();
+        transformDefs = new ArrayList<FarragoTransformDef>();
+        transformStreamDefs = new ArrayList<FemJavaTransformStreamDef>();
+        transformMap = new HashMap<String, FarragoTransformDef>();
+        relToStreamDefMap = new HashMap<RelNode, List<FemExecutionStreamDef>>();
+        relToFirstRelPathEntryMap = new HashMap<RelNode, List<RelPathEntry>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -138,43 +166,112 @@ public class FarragoRelImplementor
         return new FennelRelParamId(nextRelParamId++);
     }
 
-    public FennelDynamicParamId translateParamId(
-        FennelRelParamId relParamId)
+    public FennelDynamicParamId translateParamId(FennelRelParamId relParamId)
     {
-        assert (!scopeStack.isEmpty());
+        return translateParamId(
+            relParamId,
+            null,
+            FennelDynamicParamId.StreamType.UNKNOWN);
+    }
 
+    public FennelDynamicParamId translateParamId(
+        FennelRelParamId relParamId,
+        FemExecutionStreamDef streamDef,
+        FennelDynamicParamId.StreamType streamType)
+    {
         // FennelDynamicParamid == 0 represents an unused parameter
         if (relParamId == null) {
             return new FennelDynamicParamId(0);
         }
 
-        // Check for an existing translation.
-        for (RelScope scope : scopeStack) {
-            FennelDynamicParamId dynamicParamId =
-                scope.paramMap.get(relParamId);
-            if (dynamicParamId != null) {
-                return dynamicParamId;
+        // Check for an existing translation by first looking for
+        // currRelPathList in relPathScopeMap.  If we can't find it,
+        // then progressively reduce the entries in the path list by one
+        // entry, until we empty the list.
+        List<RelPathEntry> targetPathList =
+            new LinkedList<RelPathEntry>(currRelPathList);
+        do {
+            RelScope scope = relPathScopeMap.get(targetPathList);
+            if (scope != null) {
+                FennelDynamicParamId dynamicParamId =
+                    scope.paramMap.get(relParamId);
+                if (dynamicParamId != null) {
+                    dynamicParamId.associateStream(streamDef, streamType);
+                    return dynamicParamId;
+                }
             }
-        }
+            targetPathList.remove(0);
+        } while (!targetPathList.isEmpty());
 
         // None found:  make up a new one and add it to current scope.
         FennelDynamicParamId dynamicParamId =
-            new FennelDynamicParamId(nextDynamicParamId++);
-        RelScope scope = scopeStack.get(0);
+            new FennelDynamicParamId(
+                nextDynamicParamId++,
+                streamDef,
+                streamType);
+        RelScope scope = relPathScopeMap.get(currRelPathList);
+        if (scope == null) {
+            scope = new RelScope();
+
+            // Make a copy of the current list to store in the map,
+            // since we'll continue adding and removing elements from the
+            // current list
+            List<RelPathEntry> pathList =
+                new LinkedList<RelPathEntry>(currRelPathList);
+            relPathScopeMap.put(pathList, scope);
+        }
         scope.paramMap.put(relParamId, dynamicParamId);
         return dynamicParamId;
     }
 
     // implement FennelRelImplementor
-    public FemExecutionStreamDef visitFennelChild(FennelRel rel)
+    public void setErrorRecordType(
+        FennelRel rel,
+        FemExecutionStreamDef streamDef,
+        RelDataType errorType)
     {
-        scopeStack.add(
-            0,
-            new RelScope());
-        FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
-        scopeStack.remove(0);
+        // retrieve the stream name early to perform a
+        // (stream => error record type) mapping by stream name
+        String streamName = getStreamGlobalName(streamDef, rel);
+        streamDef.setName(streamName);
+
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
+        stmt.mapResultSetType(streamName, errorType);
+    }
+
+    // implement FennelRelImplementor
+    public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal)
+    {
+        FemExecutionStreamDef streamDef = toStreamDefImpl(rel, ordinal);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
+    }
+
+    public List<RelPathEntry> getRelPathEntry()
+    {
+        return currRelPathList;
+    }
+
+    /**
+     * Adds a RelPathEntry corresponding to a new RelNode to the current
+     * RelPathEntry list
+     *
+     * @param rel the new RelNode
+     * @param ordinal the input position of the RelNode
+     */
+    protected void addRelPathEntry(RelNode rel, int ordinal)
+    {
+        RelPathEntry pathEntry = new RelPathEntry(rel, ordinal);
+        currRelPathList.add(0, pathEntry);
+    }
+
+    /**
+     * Removes the RelPathEntry corresponding to the current RelNode being
+     * visited from the current RelPathEntry list
+     */
+    protected void removeRelPathEntry()
+    {
+        currRelPathList.remove(0);
     }
 
     /**
@@ -185,31 +282,47 @@ public class FarragoRelImplementor
      * functionality.
      *
      * @param rel Relational expression
+     * @param ordinal input position of the relational expression for its parent
      *
      * @return Plan
      */
-    protected final FemExecutionStreamDef toStreamDefImpl(FennelRel rel)
+    protected final FemExecutionStreamDef toStreamDefImpl(
+        FennelRel rel,
+        int ordinal)
     {
+        addRelPathEntry(rel, ordinal);
+
+        FemExecutionStreamDef streamDef;
         try {
-            return rel.toStreamDef(this);
+            streamDef = rel.toStreamDef(this);
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
                 "Error occurred while translating relational expression "
                 + rel + " to a plan");
         }
+        removeRelPathEntry();
+
+        return streamDef;
     }
 
     /**
      * Override method to deal with the possibility that we are being called
      * from a {@link FennelRel} via our {@link FennelRelImplementor} interface.
      */
-    public Object visitChildInternal(RelNode child)
+    public Object visitChildInternal(RelNode child, int ordinal)
     {
+        addRelPathEntry(child, ordinal);
+
+        Object retObj;
         if (child instanceof FennelRel) {
-            return ((FennelRel) child).implementFennelChild(this);
+            retObj = ((FennelRel) child).implementFennelChild(this);
+        } else {
+            retObj = super.visitChildInternal(child, ordinal);
         }
-        return super.visitChildInternal(child);
+        removeRelPathEntry();
+
+        return retObj;
     }
 
     public Set<FemExecutionStreamDef> getStreamDefSet()
@@ -217,19 +330,82 @@ public class FarragoRelImplementor
         return streamDefSet;
     }
 
-    public List<ClassDeclaration> getTransforms()
+    public List<FarragoTransformDef> getTransforms()
     {
-        return Collections.unmodifiableList(transformDeclarations);
+        if (tracer.isLoggable(Level.FINEST)) {
+            tracer.finest("transform list: " + printTransforms());
+            tracer.finest("transform map: " + printTransformMap());
+        }
+        finishTransforms();
+        return Collections.unmodifiableList(transformDefs);
     }
 
-    public void addTransform(ClassDeclaration transform)
+    public void addTransform(RelNode rel, ClassDeclaration decl)
     {
-        transformDeclarations.add(transform);
+        FarragoTransformDef tdef = new FarragoTransformDef(rel, decl);
+        transformDefs.add(tdef);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("added transform " + tdef);
+        }
     }
 
     public int allocateTransform()
     {
         return nextTransformId++;
+    }
+
+    public void compileTransforms(String pkgName)
+    {
+        for (FarragoTransformDef t : transformDefs) {
+            t.compile(preparingStmt, pkgName);
+            transformMap.put(t.getClassName(), t);
+        }
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(
+                "compiled transforms: "
+                + printTransforms()
+                + "\n transform map now: "
+                + printTransformMap());
+        }
+    }
+
+    private void finishTransforms()
+    {
+        for (FemJavaTransformStreamDef sdef : transformStreamDefs) {
+            String streamName = sdef.getName();
+            String className = sdef.getJavaClassName();
+            FarragoTransformDef tdef = transformMap.get(className);
+            assert tdef != null;
+            assert transformDefs.contains(tdef); // TODO rm this
+            tdef.setStreamName(streamName);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer("set stream name for " + tdef);
+            }
+        }
+        for (FarragoTransformDef t : transformDefs) {
+            t.disconnectFromImplementor();
+        }
+    }
+
+    private String printTransforms()
+    {
+        StringBuilder buf = new StringBuilder("( ");
+        for (FarragoTransformDef def : transformDefs) {
+            buf.append(def).append(" ");
+        }
+        return buf.append(")").toString();
+    }
+
+    private String printTransformMap()
+    {
+        StringBuilder buf = new StringBuilder("{");
+        for (Map.Entry<String, FarragoTransformDef> e
+            : transformMap.entrySet())
+        {
+            buf.append("\n").append(e.getKey()).append(" => ").append(
+                e.getValue());
+        }
+        return buf.append("}").toString();
     }
 
     public FarragoPreparingStmt getPreparingStmt()
@@ -247,6 +423,9 @@ public class FarragoRelImplementor
             rowType = rel.getRowType();
         }
         registerStreamDef(streamDef, rel, rowType);
+        if (streamDef instanceof FemJavaTransformStreamDef) {
+            transformStreamDefs.add((FemJavaTransformStreamDef) streamDef);
+        }
     }
 
     // implement FennelRelImplementor
@@ -254,7 +433,17 @@ public class FarragoRelImplementor
         FemExecutionStreamDef producer,
         FemExecutionStreamDef consumer)
     {
+        addDataFlowFromProducerToConsumer(producer, consumer, false);
+    }
+
+    // implement FennelRelImplementor
+    public void addDataFlowFromProducerToConsumer(
+        FemExecutionStreamDef producer,
+        FemExecutionStreamDef consumer,
+        boolean implicit)
+    {
         FemExecStreamDataFlow flow = getRepos().newFemExecStreamDataFlow();
+        flow.setImplicit(implicit);
         producer.getOutputFlow().add(flow);
         consumer.getInputFlow().add(flow);
     }
@@ -262,11 +451,10 @@ public class FarragoRelImplementor
     protected FemTupleDescriptor computeStreamDefOutputDesc(
         RelDataType rowType)
     {
-        return
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                preparingStmt.getRepos(),
-                preparingStmt.getTypeFactory(),
-                rowType);
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            preparingStmt.getRepos(),
+            preparingStmt.getTypeFactory(),
+            rowType);
     }
 
     private void registerStreamDef(
@@ -274,14 +462,23 @@ public class FarragoRelImplementor
         RelNode rel,
         RelDataType rowType)
     {
-        if (streamDef.getName() != null) {
+        if (streamDefSet.contains(streamDef)) {
             // already registered
             return;
         }
 
-        String streamName = getStreamGlobalName(streamDef, rel);
-        streamDef.setName(streamName);
+        if (streamDef.getName() == null) {
+            String streamName = getStreamGlobalName(streamDef, rel);
+            streamDef.setName(streamName);
+        }
         streamDefSet.add(streamDef);
+        List<FemExecutionStreamDef> streamDefList =
+            relToStreamDefMap.get(rel);
+        if (streamDefList == null) {
+            streamDefList = new ArrayList<FemExecutionStreamDef>();
+        }
+        streamDefList.add(streamDef);
+        relToStreamDefMap.put(rel, streamDefList);
 
         // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType
         // may not be correct all the way down.
@@ -290,10 +487,33 @@ public class FarragoRelImplementor
         }
 
         // recursively ensure all inputs have also been registered
-        for (Object obj : streamDef.getInputFlow()) {
-            FemExecStreamDataFlow flow = (FemExecStreamDataFlow) obj;
+        for (FemExecStreamDataFlow flow : streamDef.getInputFlow()) {
             FemExecutionStreamDef producer = flow.getProducer();
             registerStreamDef(producer, null, rowType);
+        }
+    }
+
+    // implement FennelRelImplementor
+    public List<FemExecutionStreamDef> getRegisteredStreamDefs(RelNode rel)
+    {
+        return relToStreamDefMap.get(rel);
+    }
+
+    // implement FennelRelImplementor
+    public boolean isFirstTranslationInstance(RelNode rel)
+    {
+        List<RelPathEntry> relPathEntry = relToFirstRelPathEntryMap.get(rel);
+        if (relPathEntry == null) {
+            // This is the first translation instance, so make a copy of the
+            // current RelPathEntry, and save it in the map
+            relPathEntry = new LinkedList<RelPathEntry>(currRelPathList);
+            relToFirstRelPathEntryMap.put(rel, relPathEntry);
+            return true;
+        } else if (relPathEntry.equals(currRelPathList)) {
+            // This matches the previously saved first instance
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -322,7 +542,7 @@ public class FarragoRelImplementor
         }
 
         // make sure stream names are globally unique
-        streamName = streamName + ":" + JmiUtil.getObjectId(streamDef);
+        streamName = streamName + ":" + JmiObjUtil.getObjectId(streamDef);
         return streamName;
     }
 
@@ -335,19 +555,21 @@ public class FarragoRelImplementor
     // override JavaRelImplementor
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
-        // NOTE jvs 14-June-2004:  since we aren't given stmtList/memberList,
+        // NOTE jvs 14-June-2004: since we aren't given memberList,
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
-        // currently the only caller
-        return
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this,
-                rel,
-                implementorTable,
-                null,
-                null,
-                null);
+        // currently the only caller.
+        //
+        // Updated jhyde 03-June-2010: Create a dummy StatementList because the
+        // translator now requires one.
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this,
+            rel,
+            implementorTable,
+            new StatementList(),
+            null,
+            null);
     }
 
     // override JavaRelImplementor
@@ -356,15 +578,14 @@ public class FarragoRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        return
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this,
-                rel,
-                implementorTable,
-                stmtList,
-                memberList,
-                null);
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this,
+            rel,
+            implementorTable,
+            stmtList,
+            memberList,
+            null);
     }
 
     // override JavaRelImplementor
@@ -405,9 +626,44 @@ public class FarragoRelImplementor
         }
     }
 
+    /**
+     * RelPathEntry keeps track of a RelNode and its input position within that
+     * node's parent RelNode in the execution stream graph.
+     */
+    public static class RelPathEntry
+    {
+        final RelNode relNode;
+        final int ordinal;
+
+        RelPathEntry(RelNode relNode, int ordinal)
+        {
+            this.relNode = relNode;
+            this.ordinal = ordinal;
+        }
+
+        public int hashCode()
+        {
+            return relNode.hashCode() + ordinal;
+        }
+
+        public boolean equals(Object o)
+        {
+            RelPathEntry relPathEntry = (RelPathEntry) o;
+            return ((relPathEntry.relNode == relNode)
+                && (relPathEntry.ordinal == ordinal));
+        }
+
+        public String toString()
+        {
+            return "RelPathEntry(" + ordinal + ", "
+                + "rel#" + relNode.getId() + ":"
+                + relNode.getRelTypeName() + ")";
+        }
+    }
+
     private static class RelScope
     {
-        Map<FennelRelParamId, FennelDynamicParamId> paramMap;
+        final Map<FennelRelParamId, FennelDynamicParamId> paramMap;
 
         RelScope()
         {

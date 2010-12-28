@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,9 @@
 package net.sf.farrago.util;
 
 import java.io.*;
+import java.security.*;
 
+import org.eigenbase.util.*;
 
 /**
  * Miscellaneous static utilities that don't fit into other categories.
@@ -33,7 +35,6 @@ import java.io.*;
  */
 public abstract class FarragoUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -46,6 +47,27 @@ public abstract class FarragoUtil
     public static int getStringMemoryUsage(String s)
     {
         return s.length() * 2;
+    }
+
+    /**
+     * Estimates the memory used by the Fennel portion of a query plan by taking
+     * the memory used by the XMI representation of the plan and multiplying by
+     * a constant factor. That constant factor is estimated as 2, based on
+     * measurements correlating between the the XMI plan string length and the
+     * actual Fennel memory used to construct the Fennel stream graphs. The
+     * actual measured value was between .6 and .95 of the XMI plan size.
+     * Therefore, we use 1 as a conservative estimate. But since we've already
+     * accounted for half of the XMI plan memory in the cache entry associated
+     * with the SQL statement, we reduce by .5 to arrive at 1.5.
+     *
+     * @param s XMI string
+     *
+     * @return estimated memory usage
+     */
+    public static long getFennelMemoryUsage(String s)
+    {
+        int xmiSize = FarragoUtil.getStringMemoryUsage(s);
+        return (long) ((double) xmiSize * 1.5);
     }
 
     /**
@@ -73,31 +95,65 @@ public abstract class FarragoUtil
         }
     }
 
+    public static String exceptionToString(final Throwable ex)
+    {
+        return exceptionToString(ex, "; ");
+    }
+
     /**
      * Converts any Throwable and its causes to a String.
      *
      * @param ex Throwable to be converted
+     * @param sep String the stack line separator
      *
      * @return ex as a String
      */
-    public static String exceptionToString(final Throwable ex)
+
+    public static String exceptionToString(final Throwable ex, String sep)
     {
+        if (sep == null) {
+            sep = "; ";
+        }
+
         String result = null;
         if (ex != null) {
             Throwable t = ex;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while (t != null) {
                 sb.append(t.getClass().getName());
                 sb.append(":  ");
                 sb.append(t.getLocalizedMessage());
                 t = t.getCause();
                 if (t != null) {
-                    sb.append("; ");
+                    sb.append(sep);
                 }
             }
             result = sb.toString();
         }
         return result;
+    }
+
+    /**
+     * Performs one-way encryption on a password, producing the form stored in
+     * the catalog.
+     *
+     * @param plaintext the password as supplied by the user
+     *
+     * @param algorithmName algorith name to use, as known
+     * by java.security (e.g. SHA-256)
+     *
+     * @return cyphertext
+     */
+    public static String encryptPassword(String plaintext, String algorithmName)
+    {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algorithmName);
+            digest.update(plaintext.getBytes("UTF-16LE"));
+            byte [] hash = digest.digest();
+            return RhBase64.encodeBytes(hash);
+        } catch (Throwable ex) {
+            throw Util.newInternal(ex);
+        }
     }
 }
 

@@ -13,35 +13,60 @@
 
       <test name="crSource">
       <!-- FRG-211 -->
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/cr_source.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/cr_source.sql"/>
       </test>
 
       <test name="computeStatisticsForSchema">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/compute_statistics_for_schema.sql"/>
       </test>
 
+      <test name="estimateStatisticsForSchema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/estimate_statistics_for_schema.sql"/>
+      </test>
+
+      <test name="dropSchemaIfExists">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/drop_schema_if_exists.sql"/>
+      </test>
+
       <test name="doForEntireSchema">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/do_for_entire_schema.sql"/>
+      </test>
+
+      <test name="execSqlIfNoRows">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/exec_sql_if_no_rows.sql"/>
       </test>
 
       <test name="grantSelectForSchema">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/grant_select_for_schema.sql"/>
       </test>
 
+      <test name="replicateMondrian">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/replicate_mondrian.sql"/>
+      </test>
+
+      <test name="exportSchemaToFile">
+        <!-- LDB-148 -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_schema_to_file.sql"/>
+      </test>
+
       <test name="exportLocalSchema" requiresSuccess="crSource">
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_schema.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_local_schema.sql"/>
       </test>
 
       <test name="exportForeignSchema" requiresSuccess="crSource">
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_foreign_schema.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_foreign_schema.sql"/>
       </test>
 
       <test name="misc" requiresSuccess="crSource">
-        <!-- TODO: BKH-29 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/misc.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/misc.sql"/>
+      </test>
+
+      <test name="createTableFromSourceTableUDP">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/create_table_from_source_table.sql"/>
+      </test>
+
+      <test name="createTableAsUDP">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/create_table_as.sql"/>
       </test>
 
       <test name="exportLocalInc" requiresSuccess="crSource">
@@ -49,7 +74,7 @@
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_incremental.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_local_incremental.sql"/>
       </test>
 
       <test name="exportForeignInc" requiresSuccess="crSource" 
@@ -58,7 +83,7 @@
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_foreign_incremental.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_foreign_incremental.sql"/>
       </test>
 
       <test name="exportMergedSchemas" requiresSuccess="crSource">
@@ -66,7 +91,7 @@
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_merged_schemas.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_merged_schemas.sql"/>
       </test>
 
       <test name="bcpTest" requiresSuccess="exportLocalSchema">
@@ -74,7 +99,7 @@
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/bcpTest.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/bcpTest.sql"/>
       </test>
 
       <cleanup-hook>

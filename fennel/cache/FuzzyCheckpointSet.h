@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  * It implements the PagePredicate interface by returning true only for pages
  * which have remained dirty since the last checkpoint.
  */
-class FuzzyCheckpointSet : public PagePredicate
+class FENNEL_CACHE_EXPORT FuzzyCheckpointSet
+    : public PagePredicate
 {
     /**
      * Pages dirty during last checkpoint.
@@ -49,13 +50,13 @@ class FuzzyCheckpointSet : public PagePredicate
     std::vector<BlockId> newDirtyPages;
 
     PagePredicate *pDelegatePagePredicate;
-    
+
 public:
     /**
      * Constructs a new FuzzyCheckpointSet.
      */
     explicit FuzzyCheckpointSet();
-    
+
     /**
      * Forget all dirty pages.
      */

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,16 +24,16 @@ package org.eigenbase.relopt.hep;
 import java.util.*;
 import java.util.logging.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.alg.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.traverse.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
+
+import org.jgrapht.*;
+import org.jgrapht.alg.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 
 /**
@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class HepPlanner
     extends AbstractRelOptPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private HepProgram mainProgram;
@@ -67,30 +66,46 @@ public class HepPlanner
 
     private int nTransformationsLastGC;
 
+    private boolean noDAG;
+
     /**
      * Query graph, with edges directed from parent to child. This is a
      * single-rooted DAG, possibly with additional roots corresponding to
      * discarded plan fragments which remain to be garbage-collected.
      */
-    private DirectedGraph<HepRelVertex, Edge<HepRelVertex>> graph;
+    private DirectedGraph<HepRelVertex, DefaultEdge> graph;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new HepPlanner.
+     * Creates a new HepPlanner that allows DAG.
      *
      * @param program program controlling rule application
      */
     public HepPlanner(HepProgram program)
     {
+        this(program, false);
+    }
+
+    /**
+     * Creates a new HepPlanner with the option to keep the graph a
+     * tree(noDAG=true) or allow DAG(noDAG=false).
+     *
+     * @param program program controlling rule application
+     */
+    public HepPlanner(HepProgram program, boolean noDAG)
+    {
         this.mainProgram = program;
 
         mapDigestToVertex = new HashMap<String, HepRelVertex>();
-        graph = new DefaultDirectedGraph<HepRelVertex, Edge<HepRelVertex>>();
+        graph =
+            new DefaultDirectedGraph<HepRelVertex, DefaultEdge>(
+                DefaultEdge.class);
 
         // NOTE jvs 24-Apr-2006:  We use LinkedHashSet here and below
         // in order to provide deterministic behavior.
         allRules = new LinkedHashSet<RelOptRule>();
+        this.noDAG = noDAG;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -279,6 +294,21 @@ public class HepPlanner
         applyRules(instruction.ruleSet, instruction.guaranteed);
     }
 
+    void executeInstruction(HepInstruction.CommonRelSubExprRules instruction)
+    {
+        assert (currentProgram.group == null);
+        if (instruction.ruleSet == null) {
+            instruction.ruleSet = new LinkedHashSet<RelOptRule>();
+            for (RelOptRule rule : allRules) {
+                if (!(rule instanceof CommonRelSubExprRule)) {
+                    continue;
+                }
+                instruction.ruleSet.add(rule);
+            }
+        }
+        applyRules(instruction.ruleSet, true);
+    }
+
     void executeInstruction(
         HepInstruction.Subprogram instruction)
     {
@@ -312,7 +342,8 @@ public class HepPlanner
         tracer.finest("Leaving group");
     }
 
-    private void applyRules(Collection<RelOptRule> rules,
+    private void applyRules(
+        Collection<RelOptRule> rules,
         boolean forceConversions)
     {
         if (currentProgram.group != null) {
@@ -368,19 +399,17 @@ public class HepPlanner
         // Make sure there's no garbage, because topological sort
         // doesn't start from a specific root, and rules can't
         // deal with firing on garbage.
-        
+
         // FIXME jvs 25-Sept-2006:  I had to move this earlier because
         // of FRG-215, which is still under investigation.  Once we
         // figure that one out, move down to location below for
         // better optimizer performance.
         collectGarbage();
-        
+
         if (currentProgram.matchOrder == HepMatchOrder.ARBITRARY) {
-            return
-                new DepthFirstIterator<HepRelVertex,
-                    Edge<HepRelVertex>, Object>(
-                    graph,
-                    start);
+            return new DepthFirstIterator<HepRelVertex, DefaultEdge>(
+                graph,
+                start);
         }
 
         assert (start == root);
@@ -390,11 +419,8 @@ public class HepPlanner
         collectGarbage();
         */
 
-        // TODO jvs 4-Apr-2006:  streamline JGraphT generics
-
         Iterator<HepRelVertex> iter =
-            new TopologicalOrderIterator<HepRelVertex,
-                Edge<HepRelVertex>, Object>(graph);
+            new TopologicalOrderIterator<HepRelVertex, DefaultEdge>(graph);
 
         if (currentProgram.matchOrder == HepMatchOrder.TOP_DOWN) {
             return iter;
@@ -416,7 +442,8 @@ public class HepPlanner
         HepRelVertex vertex,
         boolean forceConversions)
     {
-        RelTraitSet parentTraits = null;
+        RelTrait parentTrait = null;
+        List<RelNode> parents = null;
         if (rule instanceof ConverterRule) {
             // Guaranteed converter rules require special casing to make sure
             // they only fire where actually needed, otherwise they tend to
@@ -426,16 +453,30 @@ public class HepPlanner
                 if (!doesConverterApply(converterRule, vertex)) {
                     return null;
                 }
-                parentTraits = converterRule.getOutTraits();
+                parentTrait = converterRule.getOutTrait();
+            }
+        } else if (rule instanceof CommonRelSubExprRule) {
+            // Only fire CommonRelSubExprRules if the vertex is a common
+            // subexpression.
+            List<HepRelVertex> parentVertices = getVertexParents(vertex);
+            if (parentVertices.size() < 2) {
+                return null;
+            }
+            parents = new ArrayList<RelNode>();
+            for (HepRelVertex pVertex : parentVertices) {
+                parents.add(pVertex.getCurrentRel());
             }
         }
 
         List<RelNode> bindings = new ArrayList<RelNode>();
+        Map<RelNode, List<RelNode>> nodeChildren =
+            new HashMap<RelNode, List<RelNode>>();
         boolean match =
             matchOperands(
                 rule.getOperand(),
                 vertex.getCurrentRel(),
-                bindings);
+                bindings,
+                nodeChildren);
 
         if (!match) {
             return null;
@@ -445,14 +486,22 @@ public class HepPlanner
             new HepRuleCall(
                 this,
                 rule.getOperand(),
-                bindings.toArray(RelNode.emptyArray));
+                bindings.toArray(new RelNode[bindings.size()]),
+                nodeChildren,
+                parents);
+
+        // Allow the rule to apply its own side-conditions.
+        if (!rule.matches(call)) {
+            return null;
+        }
+
         fireRule(call);
 
         if (!call.getResults().isEmpty()) {
             return applyTransformationResults(
-                    vertex,
-                    call,
-                    parentTraits);
+                vertex,
+                call,
+                parentTrait);
         }
 
         return null;
@@ -462,63 +511,117 @@ public class HepPlanner
         ConverterRule converterRule,
         HepRelVertex vertex)
     {
-        RelTraitSet outTraits = converterRule.getOutTraits();
-        List<HepRelVertex> parents =
-            GraphHelper.predecessorListOf(graph, vertex);
+        RelTrait outTrait = converterRule.getOutTrait();
+        List<HepRelVertex> parents = Graphs.predecessorListOf(graph, vertex);
         for (HepRelVertex parent : parents) {
             RelNode parentRel = parent.getCurrentRel();
             if (parentRel instanceof ConverterRel) {
                 // We don't support converter chains.
                 continue;
             }
-            if (parentRel.getTraits().matches(outTraits)) {
+            if (parentRel.getTraits().contains(outTrait)) {
                 // This parent wants the traits produced by the converter.
                 return true;
             }
         }
-        if ((vertex == root) && (requestedRootTraits != null)) {
-            if (requestedRootTraits.matches(outTraits)) {
-                return true;
+        return (vertex == root)
+            && (requestedRootTraits != null)
+            && requestedRootTraits.contains(outTrait);
+    }
+
+    /**
+     * Retrieves the parent vertices of a vertex.  If a vertex appears multiple
+     * times as an input into a parent, then that counts as multiple parents,
+     * one per input reference.
+     *
+     * @param vertex the vertex
+     *
+     * @return the list of parents for the vertex
+     */
+    private List<HepRelVertex> getVertexParents(HepRelVertex vertex)
+    {
+        List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
+        List<HepRelVertex> parentVertices =
+            Graphs.predecessorListOf(graph, vertex);
+
+        for (HepRelVertex pVertex : parentVertices) {
+            RelNode parent = pVertex.getCurrentRel();
+            for (int i = 0; i < parent.getInputs().length; i++) {
+                HepRelVertex child = (HepRelVertex) parent.getInputs()[i];
+                if (child == vertex) {
+                    parents.add(pVertex);
+                }
             }
         }
-        return false;
+        return parents;
     }
 
     private boolean matchOperands(
         RelOptRuleOperand operand,
         RelNode rel,
-        List<RelNode> bindings)
+        List<RelNode> bindings,
+        Map<RelNode, List<RelNode>> nodeChildren)
     {
         if (!operand.matches(rel)) {
             return false;
         }
         bindings.add(rel);
-        Object [] childOperands = operand.getChildren();
+        RelOptRuleOperand [] childOperands = operand.getChildOperands();
         if (childOperands == null) {
             return true;
         }
         int n = childOperands.length;
         RelNode [] childRels = rel.getInputs();
-        if (childRels.length < n) {
-            return false;
-        }
-        for (int i = 0; i < n; ++i) {
-            boolean match =
-                matchOperands(
-                    (RelOptRuleOperand) childOperands[i],
-                    ((HepRelVertex) childRels[i]).getCurrentRel(),
-                    bindings);
-            if (!match) {
+        if (operand.matchAnyChildren) {
+            // For each operand, at least one child must match. If
+            // matchAnyChildren, usually there's just one operand.
+            for (RelOptRuleOperand childOperand : childOperands) {
+                boolean match = false;
+                for (int i = 0; i < childRels.length; ++i) {
+                    final HepRelVertex childRel = (HepRelVertex) childRels[i];
+                    match =
+                        matchOperands(
+                            childOperand,
+                            childRel.getCurrentRel(),
+                            bindings,
+                            nodeChildren);
+                    if (match) {
+                        break;
+                    }
+                }
+                if (!match) {
+                    return false;
+                }
+            }
+            List<RelNode> children = new ArrayList<RelNode>(childRels.length);
+            for (RelNode childRel : childRels) {
+                children.add(((HepRelVertex) childRel).getCurrentRel());
+            }
+            nodeChildren.put(rel, children);
+            return true;
+        } else {
+            if (childRels.length < n) {
                 return false;
             }
+            for (int i = 0; i < n; ++i) {
+                boolean match =
+                    matchOperands(
+                        childOperands[i],
+                        ((HepRelVertex) childRels[i]).getCurrentRel(),
+                        bindings,
+                        nodeChildren);
+                if (!match) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
     }
 
     private HepRelVertex applyTransformationResults(
         HepRelVertex vertex,
         HepRuleCall call,
-        RelTraitSet parentTraits)
+        RelTrait parentTrait)
     {
         // TODO jvs 5-Apr-2006:  Take the one that gives the best
         // global cost rather than the best local cost.  That requires
@@ -560,13 +663,20 @@ public class HepPlanner
         // we only update the existing parents, not the new parents
         // (otherwise loops can result).  Also take care of filtering
         // out parents by traits in case we're dealing with a converter rule.
-        List<HepRelVertex> allParents =
-            GraphHelper.predecessorListOf(graph, vertex);
+        List<HepRelVertex> allParents = Graphs.predecessorListOf(graph, vertex);
         List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
         for (HepRelVertex parent : allParents) {
-            if (parentTraits != null) {
+            if (parentTrait != null) {
                 RelNode parentRel = parent.getCurrentRel();
-                if (!parentRel.getTraits().matches(parentTraits)) {
+                if (parentRel instanceof ConverterRel) {
+                    // We don't support automatically chaining conversions.
+                    // Treating a converter as a candidate parent here
+                    // can cause the "iParentMatch" check below to
+                    // throw away a new converter needed in
+                    // the multi-parent DAG case.
+                    continue;
+                }
+                if (!parentRel.getTraits().contains(parentTrait)) {
                     // This parent does not want the converted result.
                     continue;
                 }
@@ -642,12 +752,15 @@ public class HepPlanner
             rel.replaceInput(i, childVertex);
         }
 
-        // Now, check if an equivalent vertex already exists in graph.
-        String digest = rel.recomputeDigest();
-        HepRelVertex equivVertex = mapDigestToVertex.get(digest);
-        if (equivVertex != null) {
-            // Use existing vertex.
-            return equivVertex;
+        // try to find equivalent rel only if DAG is allowed
+        if (!noDAG) {
+            // Now, check if an equivalent vertex already exists in graph.
+            String digest = rel.recomputeDigest();
+            HepRelVertex equivVertex = mapDigestToVertex.get(digest);
+            if (equivVertex != null) {
+                // Use existing vertex.
+                return equivVertex;
+            }
         }
 
         // No equivalence:  create a new vertex to represent this rel.
@@ -769,7 +882,7 @@ public class HepPlanner
         // Yer basic mark-and-sweep.
         Set<HepRelVertex> rootSet = new HashSet<HepRelVertex>();
         Iterator<HepRelVertex> iter =
-            new DepthFirstIterator<HepRelVertex, Edge<HepRelVertex>, Object>(
+            new DepthFirstIterator<HepRelVertex, DefaultEdge>(
                 graph,
                 root);
         while (iter.hasNext()) {
@@ -806,8 +919,8 @@ public class HepPlanner
     private void assertNoCycles()
     {
         // Verify that the graph is acyclic.
-        CycleDetector<HepRelVertex, Edge<HepRelVertex>> cycleDetector =
-            new CycleDetector<HepRelVertex, Edge<HepRelVertex>>(graph);
+        CycleDetector<HepRelVertex, DefaultEdge> cycleDetector =
+            new CycleDetector<HepRelVertex, DefaultEdge>(graph);
         Set<HepRelVertex> cyclicVertices = cycleDetector.findCycles();
         if (cyclicVertices.isEmpty()) {
             return;
@@ -827,7 +940,7 @@ public class HepPlanner
         assertNoCycles();
 
         Iterator<HepRelVertex> bfsIter =
-            new BreadthFirstIterator<HepRelVertex, Edge<HepRelVertex>, Object>(
+            new BreadthFirstIterator<HepRelVertex, DefaultEdge>(
                 graph,
                 root);
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,9 @@
 #include "fennel/segment/VersionedSegment.h"
 #include "fennel/segment/ScratchSegment.h"
 #include "fennel/segment/RandomAllocationSegment.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/segment/VersionedRandomAllocationSegment.h"
+#include "fennel/segment/DynamicDelegatingSegment.h"
 #include "fennel/segment/CircularSegment.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/common/ConfigMap.h"
@@ -44,7 +47,7 @@ SharedSegmentFactory SegmentFactory::newSegmentFactory(
     SharedTraceTarget pTraceTarget)
 {
     return SharedSegmentFactory(
-        new SegmentFactory(configMap,pTraceTarget));
+        new SegmentFactory(configMap, pTraceTarget));
 }
 
 SegmentFactory::SegmentFactory(
@@ -58,7 +61,7 @@ SegmentFactory::SegmentFactory(
     firstTempDeviceId = DeviceId(512);
     tempDeviceIdBitset.resize(512);
 }
-    
+
 SegmentFactory::~SegmentFactory()
 {
 }
@@ -73,22 +76,86 @@ SharedSegment SegmentFactory::newLinearDeviceSegment(
     LinearDeviceSegmentParams const &params)
 {
     SharedSegment pSegment(
-        new LinearDeviceSegment(cache,params),
+        new LinearDeviceSegment(cache, params),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"LinearDeviceSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "LinearDeviceSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newRandomAllocationSegment(
     SharedSegment delegateSegment,
-    bool bFormat)
+    bool bFormat,
+    bool deferInit)
 {
-    RandomAllocationSegment *pRandomSegment = 
+    RandomAllocationSegment *pRandomSegment =
         new RandomAllocationSegment(delegateSegment);
-    SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
+    SharedSegment pSegment(pRandomSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "RandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
     if (bFormat) {
-        pSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     }
-    return newTracingSegment(pSegment,"RandomAllocationSegment");
+    if (!deferInit) {
+        tracingSegment->initForUse();
+    }
+    return tracingSegment;
+}
+
+SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment pTempSegment,
+    bool bFormat,
+    bool deferInit)
+{
+    VersionedRandomAllocationSegment *pVersionedRandomSegment =
+        new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
+    SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "VersionedRandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
+    if (bFormat) {
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    }
+    if (!deferInit) {
+        tracingSegment->initForUse();
+    }
+    return tracingSegment;
+}
+
+SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment versionedSegment,
+    TxnId snapshotCsn,
+    bool readOnlyCommittedData)
+{
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        new SnapshotRandomAllocationSegment(
+            delegateSegment,
+            versionedSegment,
+            snapshotCsn,
+            readOnlyCommittedData);
+    SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
+}
+
+SharedSegment SegmentFactory::newDynamicDelegatingSegment(
+    SharedSegment delegateSegment)
+{
+    DynamicDelegatingSegment *pDelegatingSegment =
+        new DynamicDelegatingSegment(WeakSegment(delegateSegment));
+    SharedSegment pSegment(pDelegatingSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "DynamicDelegatingSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newWALSegment(
@@ -97,7 +164,10 @@ SharedSegment SegmentFactory::newWALSegment(
     SharedSegment pSegment(
         new WALSegment(logSegment),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"WALSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "WALSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newLinearViewSegment(
@@ -105,9 +175,12 @@ SharedSegment SegmentFactory::newLinearViewSegment(
     PageId firstPageId)
 {
     SharedSegment pSegment(
-        new LinearViewSegment(delegateSegment,firstPageId),
+        new LinearViewSegment(delegateSegment, firstPageId),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"LinearViewSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "LinearViewSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newVersionedSegment(
@@ -117,9 +190,13 @@ SharedSegment SegmentFactory::newVersionedSegment(
     SegVersionNum versionNumber)
 {
     SharedSegment pSegment(
-        new VersionedSegment(dataSegment,logSegment,onlineUuid,versionNumber),
+        new VersionedSegment(
+            dataSegment, logSegment, onlineUuid, versionNumber),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"VersionedSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "VersionedSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SegmentAccessor SegmentFactory::newScratchSegment(
@@ -127,10 +204,11 @@ SegmentAccessor SegmentFactory::newScratchSegment(
     uint nPagesMax)
 {
     boost::shared_ptr<ScratchSegment> pSegment(
-        new ScratchSegment(pCache,nPagesMax),
+        new ScratchSegment(pCache, nPagesMax),
         ClosableObjectDestructor());
     SegmentAccessor segmentAccessor;
-    segmentAccessor.pSegment = newTracingSegment(pSegment,"ScratchSegment");
+    segmentAccessor.pSegment = newTracingSegment(pSegment, "ScratchSegment");
+    segmentAccessor.pSegment->initForUse();
     segmentAccessor.pCacheAccessor = pSegment;
     return segmentAccessor;
 }
@@ -145,9 +223,12 @@ SharedSegment SegmentFactory::newCircularSegment(
         new CircularSegment(
             delegateSegment,
             pCheckpointProvider,
-            oldestPageId,newestPageId),
+            oldestPageId, newestPageId),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"CircularSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "CircularSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newTracingSegment(
@@ -160,7 +241,7 @@ SharedSegment SegmentFactory::newTracingSegment(
     }
     if (qualifySourceName) {
         std::ostringstream oss;
-        oss << sourceName << "." << pSegment.get();
+        oss << "segment." << sourceName << "." << pSegment.get();
         sourceName = oss.str();
     }
     if (pTraceTarget->getSourceTraceLevel(sourceName) > TRACE_FINE) {
@@ -168,8 +249,11 @@ SharedSegment SegmentFactory::newTracingSegment(
         return pSegment;
     }
     SharedSegment pTracingSegment(
-        new TracingSegment(pSegment,pTraceTarget,sourceName),
+        new TracingSegment(pSegment, pTraceTarget, sourceName),
         ClosableObjectDestructor());
+
+    pSegment->setTracingSegment(WeakSegment(pTracingSegment));
+
     return pTracingSegment;
 }
 
@@ -187,19 +271,22 @@ SharedSegment SegmentFactory::newTempDeviceSegment(
     // TODO: depending on config params?
     // deviceMode.temporary = true;
     SharedRandomAccessDevice pDevice(
-        new RandomAccessFileDevice(deviceFileName,deviceMode));
-    pCache->registerDevice(deviceId,pDevice);
+        new RandomAccessFileDevice(deviceFileName, deviceMode));
+    pCache->registerDevice(deviceId, pDevice);
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,deviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, deviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     deviceParams.nPagesAllocated = 0;
     if (!deviceMode.create) {
         deviceParams.nPagesAllocated = MAXU;
     }
     SharedSegment pSegment(
-        new LinearDeviceSegment(pCache,deviceParams),
+        new LinearDeviceSegment(pCache, deviceParams),
         TempSegDestructor(shared_from_this()));
-    return newTracingSegment(pSegment,"TempLinearDeviceSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "TempLinearDeviceSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 DeviceId SegmentFactory::allocateTempDeviceId()
@@ -239,6 +326,25 @@ void TempSegDestructor::operator()(Segment *pSegment)
     ClosableObjectDestructor::operator()(pSegment);
     pCache->unregisterDevice(deviceId);
     pSegmentFactory->deallocateTempDeviceId(deviceId);
+}
+
+SnapshotRandomAllocationSegment *SegmentFactory::getSnapshotSegment(
+    SharedSegment pSegment)
+{
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+            pSegment);
+    if (pSnapshotSegment == NULL) {
+        DynamicDelegatingSegment *pDynamicSegment =
+            SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
+                pSegment);
+        if (pDynamicSegment != NULL) {
+            pSnapshotSegment =
+                SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                    pDynamicSegment->getDelegateSegment());
+        }
+    }
+    return pSnapshotSegment;
 }
 
 FENNEL_END_CPPFILE("$Id$");

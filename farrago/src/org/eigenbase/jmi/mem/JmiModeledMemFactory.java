@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,6 +27,8 @@ import javax.jmi.reflect.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
+import org.jgrapht.graph.*;
+
 
 /**
  * JmiModeledMemFactory augments {@link JmiMemFactory} with information from an
@@ -38,7 +40,6 @@ import org.eigenbase.util.*;
 public abstract class JmiModeledMemFactory
     extends JmiMemFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JmiModelGraph modelGraph;
@@ -65,12 +66,12 @@ public abstract class JmiModeledMemFactory
     {
         definePackage(
             modelGraph.getRefRootPackage(),
-            getRootPackageImpl().clazz);
+            (Class<? extends RefPackage>) getRootPackageImpl().clazz);
     }
 
     private void definePackage(
         RefPackage refPackageModeled,
-        Class iface)
+        Class<? extends RefPackage> iface)
         throws ClassNotFoundException
     {
         defineMetaObject(
@@ -87,8 +88,10 @@ public abstract class JmiModeledMemFactory
     private void defineClasses()
         throws ClassNotFoundException
     {
-        for (Object vertexObj : modelGraph.vertexSet()) {
-            JmiClassVertex vertex = (JmiClassVertex) vertexObj;
+        for (JmiClassVertex vertex : modelGraph.vertexSet()) {
+            if (vertex.getRefClass() == null) {
+                continue;
+            }
             Class ifaceClass =
                 JmiObjUtil.getJavaInterfaceForRefClass(vertex.getRefClass());
             Class ifaceObj =
@@ -100,25 +103,86 @@ public abstract class JmiModeledMemFactory
             defineMetaObject(
                 ifaceObj,
                 vertex.getMofClass());
+
+            defineAttributes(vertex);
+        }
+    }
+
+    private void defineAttributes(JmiClassVertex classVertex)
+        throws ClassNotFoundException
+    {
+        MofClass mofClass = classVertex.getMofClass();
+        for (Object obj : mofClass.getContents()) {
+            if (!(obj instanceof Attribute)) {
+                continue;
+            }
+            Attribute attr = (Attribute) obj;
+            if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
+                continue;
+            }
+            Classifier attrType = attr.getType();
+            if (!(attrType instanceof MofClass)) {
+                // primitive type:  no relationship needed
+                continue;
+            }
+            MofClass attrClass = (MofClass) attrType;
+            JmiClassVertex attrVertex =
+                modelGraph.getVertexForMofClass(attrClass);
+            if (attrVertex == null) {
+                // some class we don't know about; should probably
+                // assert here
+                continue;
+            }
+
+            // The attribute is actually a class-valued attribute;
+            // create a corresponding relationship to tie
+            // parent and child objects together.
+            Class sourceInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    classVertex.getRefClass());
+            String targetAttrName =
+                parseGetter(JmiObjUtil.getAccessorName(attr));
+            boolean targetMany = (attr.getMultiplicity().getUpper() != 1);
+            Class targetInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    attrVertex.getRefClass());
+            String sourceAttrName = "ParentOf$" + targetAttrName;
+            boolean sourceMany = false;
+            boolean isComposite = true;
+
+            createRelationship(
+                sourceInterface,
+                targetAttrName,
+                targetMany,
+                targetInterface,
+                sourceAttrName,
+                sourceMany,
+                isComposite);
         }
     }
 
     private void defineAssociations()
         throws ClassNotFoundException
     {
-        for (Object edgeObj : modelGraph.getAssocGraph().edgeSet()) {
+        for (DefaultEdge edgeObj : modelGraph.getAssocGraph().edgeSet()) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
 
-            Class ifaceAssoc =
+            if (edge.getRefAssoc() == null) {
+                continue;
+            }
+
+            Class<? extends RefBaseObject> ifaceAssoc =
                 JmiObjUtil.getJavaInterfaceForRefAssoc(
                     edge.getRefAssoc());
             defineMetaObject(
                 ifaceAssoc,
                 edge.getMofAssoc());
 
-            Class sourceInterface =
+            JmiClassVertex sourceClassVertex =
+                modelGraph.getAssocGraph().getEdgeSource(edge);
+            Class<? extends RefBaseObject> sourceInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
-                    ((JmiClassVertex) edge.getSource()).getRefClass());
+                    sourceClassVertex.getRefClass());
             String targetAccessorName =
                 JmiObjUtil.getAccessorName(edge.getTargetEnd());
             Class [] ec = (Class []) null;
@@ -134,18 +198,24 @@ public abstract class JmiModeledMemFactory
             boolean targetMany =
                 (edge.getTargetEnd().getMultiplicity().getUpper() != 1);
 
+            JmiClassVertex targetClassVertex =
+                modelGraph.getAssocGraph().getEdgeTarget(edge);
             Class targetInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
-                    ((JmiClassVertex) edge.getTarget()).getRefClass());
+                    targetClassVertex.getRefClass());
+            String sourceAttrName = null;
             String sourceAccessorName =
                 JmiObjUtil.getAccessorName(edge.getSourceEnd());
             try {
                 targetInterface.getMethod(sourceAccessorName, ec);
+
+                // Unlike the source end of the association, we'll allow
+                // no method here.
+                sourceAttrName = parseGetter(sourceAccessorName);
             } catch (NoSuchMethodException ex) {
-                // No navigation method, so don't create a relationship.
-                continue;
+                // No navigation method, so create a bogus inverse relationship
+                sourceAttrName = "ParentOf$" + targetAttrName;
             }
-            String sourceAttrName = parseGetter(sourceAccessorName);
             boolean sourceMany =
                 (edge.getSourceEnd().getMultiplicity().getUpper() != 1);
 
@@ -162,6 +232,11 @@ public abstract class JmiModeledMemFactory
                 sourceMany,
                 isComposite);
         }
+    }
+
+    protected JmiModelGraph getModelGraph()
+    {
+        return modelGraph;
     }
 }
 

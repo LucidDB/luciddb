@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,9 +33,10 @@ import org.eigenbase.sql.type.*;
  * <p>Rules:
  *
  * <ul>
- * <li>{@link com.disruptivetech.farrago.rel.FarragoMultisetSplitterRule}
- * creates a CollectRel from a call to {@link SqlMultisetValueConstructor} or to
- * {@link SqlMultisetQueryConstructor}.</li>
+ * <li>{@link net.sf.farrago.fennel.rel.FarragoMultisetSplitterRule}
+ * creates a CollectRel from a call to {@link
+ * org.eigenbase.sql.fun.SqlMultisetValueConstructor} or to {@link
+ * org.eigenbase.sql.fun.SqlMultisetQueryConstructor}.</li>
  * </ul>
  * </p>
  *
@@ -46,13 +47,19 @@ import org.eigenbase.sql.type.*;
 public final class CollectRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String fieldName;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a CollectRel.
+     *
+     * @param cluster Cluster
+     * @param child Child relational expression
+     * @param fieldName Name of the sole output field
+     */
     public CollectRel(
         RelOptCluster cluster,
         RelNode child,
@@ -68,17 +75,22 @@ public final class CollectRel
     //~ Methods ----------------------------------------------------------------
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public CollectRel clone()
     {
         CollectRel clone =
             new CollectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 fieldName);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
+    /**
+     * Returns the name of the sole output field.
+     *
+     * @return name of the sole output field
+     */
     public String getFieldName()
     {
         return fieldName;
@@ -89,6 +101,14 @@ public final class CollectRel
         return deriveCollectRowType(this, fieldName);
     }
 
+    /**
+     * Derives the output type of a collect relational expression.
+     *
+     * @param rel relational expression
+     * @param fieldName name of sole output field
+     *
+     * @return output type of a collect relational expression
+     */
     public static RelDataType deriveCollectRowType(
         SingleRel rel,
         String fieldName)
@@ -104,10 +124,9 @@ public final class CollectRel
             rel.getCluster().getTypeFactory().createStructType(
                 new RelDataType[] { ret },
                 new String[] { fieldName });
-        return
-            rel.getCluster().getTypeFactory().createTypeWithNullability(
-                ret,
-                false);
+        return rel.getCluster().getTypeFactory().createTypeWithNullability(
+            ret,
+            false);
     }
 }
 

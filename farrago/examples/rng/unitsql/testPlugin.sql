@@ -111,8 +111,7 @@ select distinct empno from sales.emps order by empno;
 alter session implementation set default;
 
 -- flush query cache
-alter system set "codeCacheMaxBytes" = min;
-alter system set "codeCacheMaxBytes" = max;
+call sys_boot.mgmt.flush_code_cache();
 
 -- verify that DDL personality is wiped out
 -- should fail
@@ -130,9 +129,38 @@ select * from random_udf_view;
 -- verify that DROP CASCADE works correctly even without DDL personality
 -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 drop schema rngtest cascade;
+drop schema sys_boot.old_stuff cascade;
 
 -- verify that SELECT DISTINCT is working again
 select distinct empno from sales.emps order by empno;
+
+-- NOTE jvs 4-Mar-2009:  This doesn't really belong here, but this
+-- test is currently the only place where we restore a clean catalog,
+-- so it's convenient for testing out the procedure for switching to Unicode
+
+create schema typecheck;
+
+create view typecheck.v as
+select "characterSetName","collationName","ordinal"
+from sys_fem."SQL2003"."AbstractColumn"
+where "name" like 'ASC%DESC';
+
+select * from typecheck.v;
+
+-- should fail because tables still exist
+call sys_boot.mgmt.change_default_character_set_to_unicode();
+
+drop schema sales cascade;
+
+-- should succeed now since we dropped all the tables
+call sys_boot.mgmt.change_default_character_set_to_unicode();
+
+create view typecheck.v2 as select 'blah' as asc_or_desc from (values(0));
+
+-- existing column should have switched from ISO-8859-1 to UNICODE,
+-- and new column should also be UNICODE; note that collation
+-- is currently incorrect for new column
+select * from typecheck.v;
 
 -- last thing we do is to prepare for a restore of pre-upgrade catalog contents
 -- NOTE:  this will shut down the system, so don't add any commands

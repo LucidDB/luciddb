@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,9 +36,9 @@ import org.eigenbase.relopt.hep.*;
 
 
 /**
- * FarragoMetadata tests the relational expression metadata queries that require
- * additional sql statement support in order to test, above and beyond what can
- * be tested in {@link org.eigenbase.test.RelMetadataTest}.
+ * FarragoMetadataTest tests the relational expression metadata queries that
+ * require additional sql statement support in order to test, above and beyond
+ * what can be tested in {@link org.eigenbase.test.RelMetadataTest}.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -46,7 +46,6 @@ import org.eigenbase.relopt.hep.*;
 public class FarragoMetadataTest
     extends FarragoSqlToRelTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static boolean doneStaticSetup;
@@ -97,6 +96,7 @@ public class FarragoMetadataTest
     {
         super.setUp();
         if (doneStaticSetup) {
+            localSetUp();
             return;
         }
         doneStaticSetup = true;
@@ -118,6 +118,27 @@ public class FarragoMetadataTest
             + "constraint unique_null unique(c2, c3))");
         stmt.executeUpdate(
             "create index idx on tab(c4)");
+
+        localSetUp();
+    }
+
+    public void tearDown()
+        throws Exception
+    {
+        localTearDown();
+        super.tearDown();
+    }
+
+    private void localSetUp()
+    {
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+    }
+
+    private void localTearDown()
+    {
+        repos.endReposTxn(false);
+        repos.endReposSession();
     }
 
     protected void checkAbstract(
@@ -133,6 +154,18 @@ public class FarragoMetadataTest
         // but then we're going to keep using rootRel after that.  Seems
         // to work, but...
         rootRel = planner.findBestExp();
+    }
+
+    private void transformQueryWithoutImplementation(
+        HepProgram program,
+        String sql)
+        throws Exception
+    {
+        this.program = program;
+
+        String explainQuery = "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql;
+
+        checkQuery(explainQuery);
     }
 
     private void transformQuery(
@@ -152,7 +185,8 @@ public class FarragoMetadataTest
         FarragoSessionPlanner planner =
             new FarragoTestPlanner(
                 program,
-                stmt) {
+                stmt)
+            {
                 // TODO jvs 11-Apr-2006: eliminate this once we switch to Hep
                 // permanently for LucidDB; this is to make sure that
                 // LoptMetadataProvider gets used for the duration of this test
@@ -179,7 +213,8 @@ public class FarragoMetadataTest
             programBuilder.createProgram(),
             sql);
 
-        Double result = RelMetadataQuery.getPopulationSize(
+        Double result =
+            RelMetadataQuery.getPopulationSize(
                 rootRel,
                 groupKey);
         if (expected != null) {
@@ -199,7 +234,8 @@ public class FarragoMetadataTest
         // c0 has a primary key on it
         groupKey.set(0);
         groupKey.set(4);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
+        double expected = TAB_ROWCOUNT;
+        checkPopulation("select * from tab", groupKey, expected);
     }
 
     public void testPopulationTabUniqueNotNull()
@@ -211,7 +247,8 @@ public class FarragoMetadataTest
         groupKey.set(1);
         groupKey.set(2);
         groupKey.set(3);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
+        double expected = TAB_ROWCOUNT;
+        checkPopulation("select * from tab", groupKey, expected);
     }
 
     public void testPopulationTabUniqueNull()
@@ -235,10 +272,7 @@ public class FarragoMetadataTest
         groupKey.set(1);
         groupKey.set(2);
         groupKey.set(3);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = TAB_ROWCOUNT;
         checkPopulation(
             "select * from tab where c4 = 1",
             groupKey,
@@ -253,10 +287,11 @@ public class FarragoMetadataTest
         // c0 has a primary key on it
         groupKey.set(0);
         groupKey.set(4);
+        double expected = TAB_ROWCOUNT;
         checkPopulation(
             "select * from tab order by c4",
             groupKey,
-            TAB_ROWCOUNT);
+            expected);
     }
 
     public void testPopulationJoin()
@@ -264,8 +299,8 @@ public class FarragoMetadataTest
     {
         // this test will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab t1, tab t2 where t1.c4 = t2.c4");
@@ -276,16 +311,13 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(5 + 1);
         groupKey.set(5 + 2);
-        Double result = RelMetadataQuery.getPopulationSize(
+        Double result =
+            RelMetadataQuery.getPopulationSize(
                 rootRel,
                 groupKey);
         double expected =
             RelMdUtil.numDistinctVals(
                 TAB_ROWCOUNT * TAB_ROWCOUNT,
-                TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
-        expected =
-            RelMdUtil.numDistinctVals(
-                expected,
                 TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
         assertEquals(
             expected,
@@ -297,10 +329,7 @@ public class FarragoMetadataTest
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                2 * TAB_ROWCOUNT,
-                2 * TAB_ROWCOUNT);
+        double expected = 2 * TAB_ROWCOUNT;
         checkPopulation(
             "select * from (select * from tab union all select * from tab)",
             groupKey,
@@ -313,8 +342,7 @@ public class FarragoMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
-        expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, expected);
+        double expected = TAB_ROWCOUNT;
         checkPopulation(
             "select c0, count(*) from tab group by c0",
             groupKey,
@@ -323,7 +351,9 @@ public class FarragoMetadataTest
 
     private void checkUniqueKeys(
         String sql,
-        Set<BitSet> expected)
+        Set<BitSet> expected,
+        Set<BitSet> nonUniqueKeys,
+        Boolean nonUniqueExpected)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
@@ -333,6 +363,21 @@ public class FarragoMetadataTest
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
+
+        checkColumnUniqueness(expected, true);
+        checkColumnUniqueness(nonUniqueKeys, nonUniqueExpected);
+    }
+
+    private void checkColumnUniqueness(Set<BitSet> keySet, Boolean expected)
+    {
+        for (BitSet key : keySet) {
+            Boolean result = RelMetadataQuery.areColumnsUnique(rootRel, key);
+            if (expected == null) {
+                assertTrue(result == null);
+            } else {
+                assertTrue(result.equals(expected));
+            }
+        }
     }
 
     public void testUniqueKeysTab()
@@ -352,7 +397,75 @@ public class FarragoMetadataTest
         // this test case tests project, sort, filter, and table
         checkUniqueKeys(
             "select * from tab where c0 = 1 order by c1",
-            expected);
+            expected,
+            new HashSet<BitSet>(),
+            null);
+    }
+
+    public void testUniqueKeysProj1()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet primKey = new BitSet();
+        primKey.set(1);
+        expected.add(primKey);
+
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(0);
+
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c1, c0 from tab where c0 = 1 order by c1",
+            expected,
+            nonUniqueKey,
+            false);
+    }
+
+    public void testUniqueKeysProj2()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(1);
+
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c2, c3, c1 from tab where c0 = 1 order by c1",
+            expected,
+            nonUniqueKey,
+            false);
+    }
+
+    public void testUniqueKeysProj3()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(1);
+        nonUniqueKey.add(key);
+
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c2, c3 + c0, c1 from tab where c0 = 1 order by c1",
+            expected,
+            nonUniqueKey,
+            null);
     }
 
     public void testUniqueKeysAgg()
@@ -365,24 +478,210 @@ public class FarragoMetadataTest
         groupKey.set(1);
         expected.add(groupKey);
 
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(2);
+        nonUniqueKey.add(key);
+
         checkUniqueKeys(
             "select c2, c4, count(*) from tab group by c2, c4",
-            expected);
+            expected,
+            nonUniqueKey,
+            false);
     }
 
-    private void checkUniqueKeysJoin(String sql, Set<BitSet> expected)
+    public void testUniqueKeysFullTableAgg()
+        throws Exception
+    {
+        String sql = "select count(*) from tab";
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+        BitSet emptyKey = new BitSet();
+        boolean result =
+            RelMdUtil.areColumnsDefinitelyUnique(
+                rootRel,
+                emptyKey);
+        assertTrue(result);
+    }
+
+    public void testUniqueKeysCorrelateRel()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        expected.add(groupKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQueryWithoutImplementation(
+            programBuilder.createProgram(),
+            "select t2.c0, (select sum(t1.c0) from tab t1 where t1.c1 = t2.c2) from tab t2");
+
+        Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
+        assertTrue(result.equals(expected));
+
+        checkColumnUniqueness(expected, true);
+    }
+
+    public void testUniqueKeysWhenNullsFiltered()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet primKey = new BitSet();
+        primKey.set(0);
+        expected.add(primKey);
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(1);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+
+        uniqKey = new BitSet();
+        uniqKey.set(2);
+        uniqKey.set(3);
+        expected.add(uniqKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from tab where c2 is not null and c3 is not null "
+            + "order by c1");
+
+        Set<BitSet> result =
+            RelMetadataQuery.getUniqueKeys(rootRel, true);
+        assertTrue(result.equals(expected));
+
+        for (BitSet key : expected) {
+            Boolean res =
+                RelMetadataQuery.areColumnsUnique(rootRel, key, true);
+            assertTrue(res.booleanValue());
+        }
+    }
+
+    public void testAreColumnsUniqueWithLiteral()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet primKey = new BitSet();
+        primKey.set(0);
+        primKey.set(5);
+        expected.add(primKey);
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(1);
+        uniqKey.set(2);
+        uniqKey.set(5);
+        expected.add(uniqKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select *, true from tab where c0 = 1 order by c1");
+
+        // Make sure the key sets are still unique even when they include a
+        // literal column (offset 5).
+        checkColumnUniqueness(expected, true);
+    }
+
+    public void testAreColumnsUniqueWithCast()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(1);
+        expected.add(uniqKey);
+
+        // Make sure the cast to remove non nullability does not affect
+        // uniqueness of the column.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select c1, cast(c2 as int) from tab where "
+            + " c1 is not null and c2 is not null "
+            + "order by c1");
+
+        Boolean res =
+            RelMetadataQuery.areColumnsUnique(rootRel, uniqKey, true);
+        assertTrue(res.booleanValue());
+    }
+
+    private void checkUniqueKeysJoin(
+        String sql,
+        Set<BitSet> expected,
+        Set<BitSet> nonUniqueKeySet)
         throws Exception
     {
         // tests that call this method will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             sql);
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
+
+        checkColumnUniqueness(expected, true);
+        checkColumnUniqueness(nonUniqueKeySet, false);
+    }
+
+    private void addConcatUniqueKeys(
+        Set<BitSet> keySet,
+        Set<BitSet> nonUniqueKeySet)
+    {
+        // add concat unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        BitSet keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);
+
+        // put together a set of keys that aren't unique
+        // (1, 6), (2, 3), (8)
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(6);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(2);
+        keys.set(3);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(8);
+        nonUniqueKeySet.add(keys);
     }
 
     public void testUniqueKeysJoinLeft()
@@ -401,9 +700,22 @@ public class FarragoMetadataTest
         keys.set(5 + 2);
         expected.add(keys);
 
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
+
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c0 = t2.c3",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
 
     public void testUniqueKeysJoinRight()
@@ -422,20 +734,146 @@ public class FarragoMetadataTest
         keys.set(2);
         expected.add(keys);
 
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
+
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c1 and t1.c4 = t2.c2",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
 
     public void testUniqueKeysJoinNotUnique()
         throws Exception
     {
         // no equijoins on unique keys so there should be no unique keys
+        // returned as a result of the join
         Set<BitSet> expected = new HashSet<BitSet>();
+
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
 
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c3",
-            expected);
+            expected,
+            nonUniqueKeySet);
+    }
+
+    public void testUniqueKeysCartesianProduct()
+        throws Exception
+    {
+        // no equijoins on unique keys so there should be no unique keys
+        // returned as a result of the join
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
+
+        checkUniqueKeysJoin(
+            "select * from tab t1, tab t2",
+            expected,
+            nonUniqueKeySet);
+    }
+
+    public void testUniqueKeysLeftOuterJoin()
+        throws Exception
+    {
+        // left side has a unique join key but the right hand side is null
+        // generating, so no unique keys should be returned as a result of
+        // the join
+
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
+
+        checkUniqueKeysJoin(
+            "select * from tab t1 left outer join tab t2 on t1.c0 = t2.c3",
+            expected,
+            nonUniqueKeySet);
+    }
+
+    public void testUniqueKeysRightOuterJoin()
+        throws Exception
+    {
+        // right side has a unique join key but the left hand side is null
+        // generating, so no unique keys should be returned as a result of
+        // the join
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
+
+        checkUniqueKeysJoin(
+            "select * from tab t1 right outer join tab t2 "
+            + "on t1.c3 = t2.c1 and t1.c4 = t2.c2",
+            expected,
+            nonUniqueKeySet);
     }
 
     private void checkDistinctRowCount(
@@ -468,10 +906,7 @@ public class FarragoMetadataTest
             "select * from tab where c1 = 1");
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -484,10 +919,7 @@ public class FarragoMetadataTest
             "select * from tab where c1 = 1 order by c2");
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -502,17 +934,8 @@ public class FarragoMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
 
-        // compute the number of distinct values from applying the filter
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                TAB_ROWCOUNT);
+        double expected = 2 * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
 
-        // then compute the number of distinct values for each union
-        expected =
-            RelMdUtil.numDistinctVals(
-                expected * 2,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY * 2);
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -528,21 +951,11 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(1);
 
-        // number of distinct values from applying the filter
+        // number of distinct values from applying the filter and
+        // having clause
         double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY);
-
-        // number of distinct values from applying the having clause
-        //
-        // REVIEW zfong 6/22/06 - I'm not able to get this test to pass
-        // without applying the where clause filter twice
-        expected =
-            RelMdUtil.numDistinctVals(
-                expected,
-                expected * DEFAULT_EQUAL_SELECTIVITY
-                * DEFAULT_COMP_SELECTIVITY);
+            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY
+            * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -550,8 +963,8 @@ public class FarragoMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab t1, tab t2 where t1.c0 = t2.c0 and t2.c0 = 1");
@@ -568,7 +981,7 @@ public class FarragoMetadataTest
         // - table level filter on t2
         // - semijoin filter on t1
         // - join filter
-        // Because this test does not exercise LucidEra logic that accounts
+        // Because this test does not exercise LucidDB logic that accounts
         // for the double counting of semijoins, that is why the selectivity
         // is multiplied three times
 
@@ -578,13 +991,6 @@ public class FarragoMetadataTest
         double expected =
             RelMdUtil.numDistinctVals(
                 TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED,
-                TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED
-                * DEFAULT_EQUAL_SELECTIVITY);
-
-        // number of distinct rows from the topmost project
-        expected =
-            RelMdUtil.numDistinctVals(
-                expected,
                 TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED
                 * DEFAULT_EQUAL_SELECTIVITY);
         assertTrue(result != null);

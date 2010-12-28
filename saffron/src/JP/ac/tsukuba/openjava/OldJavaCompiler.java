@@ -24,6 +24,11 @@ public class OldJavaCompiler implements JavaCompiler
 		compiler.compile();
     }
 
+    public int getTotalByteCodeSize()
+    {
+        return 0;
+    }
+    
 	public JavaCompilerArgs getArgs() {
 		return args;
 	}

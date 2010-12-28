@@ -129,12 +129,16 @@
       </test>
 
       <test name="like" requiresSuccess="null">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
+      </test>
+
+      <test name="like_UTL-9" requiresSuccess="null">
         <!-- TODO: UTL-9 -->
         <!-- French symbols not supported yet -->
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/like_UTL-9.sql"/>
       </test>
 
       <test name="booleanExpressions" requiresSuccess="null">
@@ -147,12 +151,19 @@
       </test>
 
       <test name="funcMathCover" requiresSuccess="null">
+        <!-- decimal precision different on different VMs -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
+      </test>
+
+      <test name="funcMathCover_FRG-214" requiresSuccess="null">
         <!-- unresolved issue: FRG-214 -->
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
-        <!-- decimal precision different on different VMs -->
-        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover_FRG-214.sql"/>
       </test>
 
       <test name="divisionScale" requiresSuccess="null">
@@ -166,6 +177,10 @@
       </test>
 
       <test name="inList" requiresSuccess="null">
+        <!-- unresolved issue: FRG-224 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
       </test>
 
@@ -183,10 +198,7 @@
       </test>
 
       <test name="bug2380" requiresSuccess="null">
-        <!-- unresolved isssue: FRG-199 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-199 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug2380.sql"/>
       </test>
 
@@ -200,6 +212,10 @@
 
       <test name="bug6604" requiresSuccess="null">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6604.sql"/>
+      </test>
+
+      <test name="bug6255" requiresSuccess="null">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6255.sql"/>
       </test>
 
       <test name="bug8665" requiresSuccess="null">
@@ -281,6 +297,14 @@
           <knownFailure>true</knownFailure>
         </test-metadata>   
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/varbinary.sql"/>
+      </test>
+
+      <test name="floatingPoint">
+        <!-- unresolved issue: FRG-209 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/floatingPoint.sql"/>
       </test>
 
       <test-suite-call testfile="cast/test.xml"/>

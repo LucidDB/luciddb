@@ -33,7 +33,7 @@ public class CreateTestData
         dimension.setName("Store");
 
         schema.getDimension().add(dimension);
-        
+
         LevelBasedHierarchy hierarchy =
             pkg.getLevelBasedHierarchy().createLevelBasedHierarchy();
         hierarchy.setName("Default");
@@ -50,14 +50,14 @@ public class CreateTestData
         dimension.getMemberSelection().add(level2);
 
         HierarchyLevelAssociation level1a =
-            pkg.getHierarchyLevelAssociation().
-            createHierarchyLevelAssociation();
+            pkg.getHierarchyLevelAssociation()
+                .createHierarchyLevelAssociation();
         level1a.setCurrentLevel(level1);
         level1a.setName("level1a");
 
         HierarchyLevelAssociation level2a =
-            pkg.getHierarchyLevelAssociation().
-            createHierarchyLevelAssociation();
+            pkg.getHierarchyLevelAssociation()
+                .createHierarchyLevelAssociation();
         level2a.setCurrentLevel(level2);
         level2a.setName("level2a");
 

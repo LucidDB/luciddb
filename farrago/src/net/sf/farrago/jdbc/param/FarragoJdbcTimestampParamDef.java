@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,11 +25,14 @@ package net.sf.farrago.jdbc.param;
 import java.sql.Timestamp;
 
 import java.util.Calendar;
-import java.util.TimeZone;
+
+import org.eigenbase.util14.*;
 
 
 /**
  * FarragoJdbcEngineTimestampParamDef defines a Timestamp parameter.
+ *
+ * <p>This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -37,13 +40,14 @@ import java.util.TimeZone;
 class FarragoJdbcTimestampParamDef
     extends FarragoJdbcParamDef
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
-
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a FarragoJdbcEngineTimestampParamDef.
+     *
+     * @param paramName Name
+     * @param paramMetaData Meta data
+     */
     FarragoJdbcTimestampParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
@@ -57,8 +61,8 @@ class FarragoJdbcTimestampParamDef
     public Object scrubValue(Object x)
     {
         return scrubValue(
-                x,
-                Calendar.getInstance(gmtZone));
+            x,
+            Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -71,26 +75,39 @@ class FarragoJdbcTimestampParamDef
         }
 
         if (x instanceof String) {
-            try {
-                // TODO: Does this need to take cal into account?
-                return Timestamp.valueOf((String) x);
-            } catch (IllegalArgumentException e) {
+            String s = ((String) x).trim();
+            ZonelessTimestamp ts = ZonelessTimestamp.parse(s);
+            if (ts == null) {
                 throw newInvalidFormat(x);
             }
+            return ts;
         }
 
-        // Only java.sql.Date, java.sql.Timestamp are all OK.
-        // java.sql.Time is not okay (no date information)
-        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Date)) {
-            throw newInvalidType(x);
+        // Of the subtypes of java.util.Date,
+        // only java.sql.Date and java.sql.Timestamp are OK.
+        // java.sql.Time is not okay (no date information).
+        if ((x instanceof Timestamp) || (x instanceof java.sql.Date)) {
+            java.util.Date timestamp = (java.util.Date) x;
+            ZonelessTimestamp zt = new ZonelessTimestamp();
+            zt.setZonedTime(timestamp.getTime(), DateTimeUtil.getTimeZone(cal));
+            return zt;
         }
 
-        java.util.Date timestamp = (java.util.Date) x;
-        long millis = timestamp.getTime();
-        int timeZoneOffset = cal.getTimeZone().getOffset(millis);
+        // ZonelessDatetime is not required by JDBC, but we allow it because
+        // it is a convenient format to serialize values over RMI.
+        // We disallow ZonelessTime for the same reasons we disallow
+        // java.sql.Time above.
+        if (x instanceof ZonelessTimestamp) {
+            // Do not shift time - value has already been shifted.
+            return x;
+        } else if (x instanceof ZonelessDate) {
+            long time = ((ZonelessDatetime) x).getTime();
+            ZonelessTimestamp zt = new ZonelessTimestamp();
+            zt.setZonelessTime(time);
+            return zt;
+        }
 
-        // shift the time into gmt
-        return new Timestamp(millis + timeZoneOffset);
+        throw newInvalidType(x);
     }
 }
 

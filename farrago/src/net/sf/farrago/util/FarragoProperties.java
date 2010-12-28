@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 
 
@@ -48,7 +47,6 @@ import org.eigenbase.util.property.*;
 public class FarragoProperties
     extends Properties
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static FarragoProperties instance;
@@ -121,11 +119,32 @@ public class FarragoProperties
         new StringProperty(this, "net.sf.farrago.fileset.concurrentsql", null);
 
     /**
-     * The string property "com.lucidera.fileset.unitlurql" specifies a
+     * The string property "org.eigenbase.fileset.unitlurql" specifies a
      * newline-separated list of LURQL test script files to run.
      */
     public final StringProperty testFilesetUnitlurql =
-        new StringProperty(this, "com.lucidera.fileset.unitlurql", null);
+        new StringProperty(this, "org.eigenbase.fileset.unitlurql", null);
+
+    /**
+     * The integer property "net.sf.farrago.ddl.DdlReloadTableStmt.sleep"
+     * specifies (if set) the number of milliseconds that ALTER TABLE should
+     * sleep after taking locks and before executing. This is a trap intended
+     * solely for test instrumentation.
+     */
+    public final IntegerProperty testTableReloadSleep =
+        new IntegerProperty(
+            this,
+            "net.sf.farrago.ddl.DdlReloadTableStmt.sleep");
+
+    /**
+     * The boolean property "net.sf.farrago.ddl.DdlReloadTableStmt.crash" causes
+     * ALTER TABLE to fail in a mode which simulates a database crash.
+     */
+    public final BooleanProperty testTableReloadCrash =
+        new BooleanProperty(
+            this,
+            "net.sf.farrago.ddl.DdlReloadTableStmt.crash",
+            false);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -222,7 +241,7 @@ public class FarragoProperties
 
         Matcher matcher = patt.matcher(value);
 
-        StringBuffer result = null;
+        StringBuilder result = null;
         int offset = 0;
         while (matcher.find()) {
             int start = matcher.start();
@@ -241,7 +260,7 @@ public class FarragoProperties
 
             if (replacement != null) {
                 if (result == null) {
-                    result = new StringBuffer(value);
+                    result = new StringBuilder(value);
                 }
 
                 result.replace(start + offset, end + offset, replacement);

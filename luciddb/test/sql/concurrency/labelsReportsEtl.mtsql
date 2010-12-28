@@ -1,0 +1,140 @@
+-- This test attempts to simulate a report session running at the same time
+-- as an ETL session
+
+@nolockstep
+
+@setup
+
+    create schema sales;
+    set schema 'sales';
+    create table emps(
+        empno integer not null,
+        name varchar(128) not null,
+        deptno integer not null,
+        gender char(1) default 'M',
+        city varchar(128),
+        empid integer not null unique,
+        age integer,
+        public_key varbinary(50),
+        slacker boolean,
+        manager boolean not null,
+        primary key(deptno,empno))
+        create index emps_ux on emps(name);
+    insert into emps values
+        (100,'Fred',10,null,null,30,25, x'41626320',true,false),
+        (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
+        (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
+        (120,'Wilma',20,'F',null,1,50,null,null,true);
+
+    create schema "labelsReportsEtl";
+    set schema '"labelsReportsEtl"';
+
+    create table emps(
+        empno int not null unique, name varchar(20) not null, deptno int,
+        gender char(4), city char(30), age int, salary numeric(10,2));
+    create index ideptno on emps(deptno);
+    create index icity on emps(city);
+    create table tempemps(
+        t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+        t_city char(35), t_age int);
+    create table salarytable(empno int, salary int);
+
+    insert into emps(empno, name, deptno, gender, city, age, salary)
+        select case when name = 'John' then 130 else empno end,
+                name, deptno, gender, city, age,
+                age * 900
+            from sales.emps;
+    insert into tempemps values(
+        140, 'Barney', 10, 'M', 'San Mateo', 41);
+    insert into tempemps values(
+        150, 'Betty', 20, 'F', 'San Francisco', 40);
+    insert into tempemps
+        select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'),
+                age
+            from emps;
+
+    analyze table emps compute statistics for all columns;
+    create label l0;
+
+@end
+
+@thread cleanup
+
+   @sync
+   @sync
+   @sync
+   drop schema sales cascade;
+
+@end
+
+-----------------------------------------------------------------------------
+
+-- Run several threads, all running a series of SQL statements, simulating
+-- reports.
+
+@thread r1,r2,r3
+    @sync
+
+    set schema '"labelsReportsEtl"';
+
+    -- First, run with the original label
+    alter session set "label" = 'L0';
+    select count(*) from emps;
+    select deptno, sum(salary) from emps group by deptno order by deptno;
+    select * from emps where age >= 40 order by empno;
+    select gender, count(*) from emps group by gender order by gender;
+    select city, count(*) from emps group by city order by city;
+    select * from emps where age = (select max(age) from emps) / 2;
+    select * from emps where city = 'San Mateo';
+    select * from emps where deptno = 20 order by empno;
+    alter session set "label" = null;
+    @sync
+
+    -- Then, run the same queries with the new label, once it's been created
+    -- and verify that the new data is returned
+    alter session set "label" = 'L1';
+    select count(*) from emps;
+    select deptno, sum(salary) from emps group by deptno order by deptno;
+    select * from emps where age >= 40 order by empno;
+    select gender, count(*) from emps group by gender order by gender;
+    select city, count(*) from emps group by city order by city;
+    select * from emps where age = (select max(age) from emps) / 2;
+    select * from emps where city = 'San Mateo';
+    select * from emps where deptno = 20 order by empno;
+
+    @sync
+@end
+
+-----------------------------------------------------------------------------
+
+-- ETL session
+@thread etl
+    @sync
+
+    set schema '"labelsReportsEtl"';
+
+    merge into emps e
+        using tempemps t on t.t_empno = e.empno
+        when matched then
+            update set deptno = t.t_deptno, city = upper(t.t_city),
+                salary = salary * .25
+        when not matched then
+            insert (empno, name, age, gender, salary, city)
+            values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+                t.t_age * 1000, t.t_city);
+    select * from emps order by empno;
+    analyze table emps compute statistics for all columns;
+    alter table emps rebuild;
+    -- make sure this doesn't deallocate pages still in-use
+    alter system deallocate old;
+    create label l1;
+    @sync
+    
+    -- Wait till the report sessions have finished running so we can drop the
+    -- old label
+    drop label l0;
+    -- this deallocation should drop old pages
+    alter system deallocate old;
+
+    @sync
+@end

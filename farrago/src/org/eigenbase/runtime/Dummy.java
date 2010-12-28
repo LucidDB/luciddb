@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2002-2004 The Eigenbase Project
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2002-2004 LucidEra, Inc.
+// Copyright (C) 2002 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2002 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@
 package org.eigenbase.runtime;
 
 /**
- * <code>Dummy</code> is the default context for code calling {@link
- * net.sf.saffron.oj.stmt.OJStatement#execute}.
+ * <code>Dummy</code> is the default context for code calling the <code>
+ * net.sf.saffron.oj.stmt.OJStatement.execute()</code> method.
  *
  * @author jhyde
  * @version $Id$

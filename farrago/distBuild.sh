@@ -1,10 +1,10 @@
 #!/bin/bash
 # $Id$
 # Farrago is an extensible data management system.
-# Copyright (C) 2005-2006 The Eigenbase Project
-# Copyright (C) 2005-2006 Disruptive Tech
-# Copyright (C) 2005-2006 LucidEra, Inc.
-# Portions Copyright (C) 2003-2006 John V. Sichi
+# Copyright (C) 2005 The Eigenbase Project
+# Copyright (C) 2005 SQLstream, Inc.
+# Copyright (C) 2005 Dynamo BI Corporation
+# Portions Copyright (C) 2003 John V. Sichi
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -41,12 +41,16 @@ case "`uname`" in
   CYGWIN*) cygwin=true ;;
 esac
 
+CP_ARCHIVE_FLAG=-d
 if [ $cygwin = "true" ]; then
-    SO_3P_PATTERN="lib*.dll*"
-    SO_PATTERN="cyg*.dll*"
+    SO_PATTERN="*.dll"
 else
-    SO_3P_PATTERN="lib*.so*"
-    SO_PATTERN=$SO_3P_PATTERN
+    if [ `uname` = "Darwin" ]; then
+        SO_PATTERN="lib*.dylib*"
+        CP_ARCHIVE_FLAG=-PR
+    else
+        SO_PATTERN="lib*.so*"
+    fi
 fi
 
 #default
@@ -115,6 +119,7 @@ BIN_DIR=$RELEASE_DIR/bin
 mkdir $LIB_DIR
 mkdir $PLUGIN_DIR
 mkdir $LIB_DIR/mdrlibs
+mkdir $LIB_DIR/enki
 mkdir $LIB_DIR/fennel
 mkdir $INSTALL_DIR
 mkdir $CATALOG_DIR
@@ -131,33 +136,43 @@ cp resgen/COPYING $LIB_DIR/resgen.license.txt
 cp mdrlibs/* $LIB_DIR/mdrlibs
 rm -f $LIB_DIR/mdrlibs/uml*.jar
 rm -f $LIB_DIR/mdrlibs/mdrant.jar
+cp enki/*.jar enki/*.txt enki/LICENSE $LIB_DIR/enki
+rm -f $LIB_DIR/enki/eigenbase-enki-*-doc.jar
+rm -f $LIB_DIR/enki/enki-src.jar
 cp OpenJava/openjava.jar $LIB_DIR
 cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt
 cp RmiJdbc/dist/lib/*.jar $LIB_DIR
+cp ant/LICENSE $LIB_DIR/commons.license.txt
 cp csvjdbc/csvjdbc.jar $LIB_DIR
 cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
-cp jgrapht/jgrapht-*.jar $LIB_DIR
-cp jgrapht7/jgrapht7-jdk1.5.jar $LIB_DIR
+cp jgrapht/jgrapht-jdk1.5.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
+cp jgrapht/license-LGPL.txt $LIB_DIR/vjdbc.license.txt
+cp jgrapht/license-LGPL.txt $LIB_DIR/RmiJdbc.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
-cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
+if [ -e postgresql-8.4-701.jdbc3.jar ]; then
+    cp postgresql-8.4-701.jdbc3.jar $LIB_DIR
+fi
 cp commons-transaction-1.1.jar $LIB_DIR
 cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
-cp vjdbc/lib/commons-logging.jar $LIB_DIR
-cp vjdbc/lib/commons-pool-1.2.jar $LIB_DIR
+cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
+cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
 cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
+cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
 rm -f stlport/lib/libstlport_gcc_debug.so
 if $dist_fennel; then
-    cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
-    cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} stlport/lib/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} boost/lib/$SO_PATTERN $LIB_DIR/fennel
 fi
+cp jetty/lib/*.jar $LIB_DIR
+cp jetty/LICENSE-APACHE-2.0.txt $LIB_DIR/jetty.license.txt
 
 if $remove_debug; then
     rm -f $LIB_DIR/fennel/*debug*
@@ -167,23 +182,15 @@ cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005
 # if dist_fennel; then
-#   cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+#   cp ${CP_ARCHIVE_FLAG} icu/lib/$SO_PATTERN $LIB_DIR/fennel
 # fi
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
-
-if [ $cygwin = "true" ]; then
-    cp /usr/bin/mingwm10.dll $LIB_DIR/fennel
-fi
 
 # copy fennel libs
 if $dist_fennel; then
     cd $FENNEL_DIR
-    cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} libfennel/$SO_PATTERN $LIB_DIR/fennel
+    cp ${CP_ARCHIVE_FLAG} farrago/$SO_PATTERN $LIB_DIR/fennel
 
     # if possible, strip rpath info
     if [ $cygwin = "false" ]; then
@@ -210,6 +217,7 @@ if [ -e dist/README ]; then
     cp dist/README $RELEASE_DIR
 fi
 cp dist/farrago.jar $LIB_DIR
+cp dist/vjdbc_servlet.war $LIB_DIR
 cp dist/plugin/*.jar $PLUGIN_DIR
 
 # copy other farrago artifacts
@@ -218,11 +226,14 @@ if [ $cygwin = "true" ]; then
 else
     cp dist/install/install.sh $INSTALL_DIR
 fi
-cp catalog/FarragoCatalog.* $CATALOG_DIR
+
+# Make a backup to get a mysql dump in the event that HSQLDB isn't being used
+ant backupCatalog
+cp catalog/backup/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
  
 if $dist_fennel; then
-    cp catalog/*.dat $CATALOG_DIR
+    cp catalog/backup/*.dat $CATALOG_DIR
 fi
 
 if [ $cygwin = "true" ]; then

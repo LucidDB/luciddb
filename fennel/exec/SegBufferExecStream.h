@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,7 +25,6 @@
 #define Fennel_SegBufferExecStream_Included
 
 #include "fennel/exec/ConduitExecStream.h"
-#include "fennel/segment/SegStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -37,7 +36,8 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  support usage of a SpillOutputStream.
  */
-struct SegBufferExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT SegBufferExecStreamParams
+    : public ConduitExecStreamParams
 {
     /**
      * If true, buffer contents are preserved rather than deleted as they are
@@ -50,7 +50,7 @@ struct SegBufferExecStreamParams : public ConduitExecStreamParams
      */
     bool multipass;
 };
-    
+
 /**
  * SegBufferExecStream fully buffers its input (using segment storage as
  * specified in its parameters).  The first execute request causes all input
@@ -60,20 +60,18 @@ struct SegBufferExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SegBufferExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT SegBufferExecStream
+    : public ConduitExecStream
 {
     SegmentAccessor bufferSegmentAccessor;
-    SharedSegOutputStream pByteOutputStream;
-    SharedSegInputStream pByteInputStream;
+    SharedSegBufferReader pSegBufferReader;
+    SharedSegBufferWriter pSegBufferWriter;
     PageId firstPageId;
     bool multipass;
-    SegStreamPosition restartPos;
-    uint cbLastRead;
 
     void destroyBuffer();
     void openBufferForRead(bool destroy);
-    void closeProducers(ExecStreamId streamId);
-    
+
 public:
     virtual void prepare(SegBufferExecStreamParams const &params);
     virtual void getResourceRequirements(

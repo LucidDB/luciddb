@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ import org.eigenbase.sql.*;
 public abstract class DdlSetParamStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String paramName;
@@ -83,23 +82,25 @@ public abstract class DdlSetParamStmt
     }
 
     /**
-     * Prevalidates an "ALTER ... SET "param" = 'value' statement. First
-     * examines <code>primaryConfig</code> to see if the {@link #paramName} is a
-     * valid name. If not and if <code>alternateConfig</code> is not null,
-     * <code>alternateConfig</code> is tested. If either succeeds, {@link
-     * #paraValue} is converted to the appropriate type and the setRefValue
-     * mutator is called on the the RefObject.
+     * Prevalidates an "ALTER ... SET "param" = 'value' statement.
+     *
+     * <p>First examines <code>primaryConfig</code> to see if the {@link
+     * #paramName} is a valid name. If not, and if <code>alternateConfig</code>
+     * is not null, tests <code>alternateConfig</code>. If either succeeds,
+     * converts {@link #paramValue} to the appropriate type and calls the {@link
+     * javax.jmi.reflect.RefFeatured#refSetValue} mutator is called on the the
+     * {@link RefObject}.
      *
      * <p>Calls the following functions in the event of errors:
      *
      * <ul>
-     * <li>{@link #handleInvalidName( FarragoSessionDdlValidator,
-     * InvalideNameException)} - if <code>paramName</code> is not a member of
+     * <li>{@link #handleInvalidName(FarragoSessionDdlValidator,
+     * InvalidNameException)}- if <code>paramName</code> is not a member of
      * either RefObject.</li>
      * <li>{@link #handleReflectionException( FarragoSessionDdlValidator,
      * Exception)} - if there's an error converting {@link #paramValue}.</li>
-     * <li>{@link #handleImmutableParam( FarragoSessionDdlValidator,
-     * InvalidNameException)} - if it turns out the parameter is immutable.</li>
+     * <li>{@link #handleImmutableParameter(FarragoSessionDdlValidator,
+     * InvalidNameException)}- if it turns out the parameter is immutable.</li>
      * <li>{@link #handleTypeMismatch( FarragoSessionDdlValidator,
      * TypeMismatchException)} - if the <code>paramValue</code> is successfully
      * converted but does not match the expected type for the parameter.</li>
@@ -141,24 +142,25 @@ public abstract class DdlSetParamStmt
         String newValueAsString = paramValue.toValue();
 
         // TODO:  use a generic type conversion facility.  Also, this assumes
-        // parameters are never optional.
+        // optional parameters are always String.
         Object newValue;
         try {
-            if (oldValue instanceof RefEnum) {
+            if (oldValue == null) {
+                newValue = newValueAsString;
+            } else if (oldValue instanceof RefEnum) {
                 Method method =
                     oldValue.getClass().getMethod(
                         "forName",
-                        new Class[] { String.class });
+                        String.class);
                 newValue =
                     method.invoke(
                         null,
-                        new Object[] { newValueAsString });
+                        newValueAsString);
             } else {
                 Constructor constructor =
                     oldValue.getClass().getConstructor(
-                        new Class[] { String.class });
-                newValue =
-                    constructor.newInstance(new Object[] { newValueAsString });
+                        String.class);
+                newValue = constructor.newInstance(newValueAsString);
             }
         } catch (Exception ex) {
             handleReflectionException(ddlValidator, ex);
@@ -181,7 +183,7 @@ public abstract class DdlSetParamStmt
      * recognized as a member of the RefObject passed to {@link
      * #preValidate(FarragoSessionDdlValidator, RefObject, RefObject)}.
      *
-     * @param ddlValidator the object passed to {@link #preValidate()}.
+     * @param ddlValidator the object passed to {@link #preValidate}.
      * @param thrown the InvalidNameException generated
      */
     protected abstract void handleInvalidName(
@@ -192,7 +194,7 @@ public abstract class DdlSetParamStmt
      * Handle reflection exception. Called when a reflection error occurs while
      * performing type conversion on {@link #paramValue}.
      *
-     * @param ddlValidator the object passed to {@link #preValidate()}.
+     * @param ddlValidator the object passed to {@link #preValidate}.
      * @param thrown the Exception
      */
     protected abstract void handleReflectionException(
@@ -204,7 +206,7 @@ public abstract class DdlSetParamStmt
      * immutable parameter of the RefObject passed to {@link
      * #preValidate(FarragoSessionDdlValidator, RefObject, RefObject)}.
      *
-     * @param ddlValidator the object passed to {@link #preValidate()}.
+     * @param ddlValidator the object passed to {@link #preValidate}.
      * @param thrown the InvalidNameException generated (which in this case
      * indicates an immutable parameter)
      */
@@ -216,7 +218,7 @@ public abstract class DdlSetParamStmt
      * Handle type mismatch. Called when {@link #paramValue} has successfully
      * undergone type conversion but is not the expected type.
      *
-     * @param ddlValidator the object passed to {@link #preValidate()}.
+     * @param ddlValidator the object passed to {@link #preValidate}.
      * @param thrown the TypeMismatchException thrown
      */
     protected abstract void handleTypeMismatch(

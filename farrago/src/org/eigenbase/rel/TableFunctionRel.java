@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,6 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -38,13 +37,12 @@ import org.eigenbase.sql.type.*;
 public class TableFunctionRel
     extends TableFunctionRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>TableFunctionRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
@@ -66,7 +64,7 @@ public class TableFunctionRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public TableFunctionRel clone()
     {
         TableFunctionRel clone =
             new TableFunctionRel(

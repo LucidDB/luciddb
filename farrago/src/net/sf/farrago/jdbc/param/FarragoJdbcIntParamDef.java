@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,8 @@ import org.eigenbase.util14.*;
 
 
 /**
- * FarragoJdbcEngineIntParamDef defines a integer parameter.
+ * FarragoJdbcEngineIntParamDef defines a integer parameter. This class is JDK
+ * 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -38,7 +39,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcIntParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final long min;
@@ -80,7 +80,12 @@ class FarragoJdbcIntParamDef
 
     private long getLong(Object value)
     {
-        if (value instanceof Number) {
+        if (value instanceof Long) {
+            // Case "value instanceof Number" below is not sufficient for Long:
+            // conversion via double loses precision for values > 2^48. OK for
+            // other types, including int and float.
+            return ((Long) value).longValue();
+        } else if (value instanceof Number) {
             Number n = (Number) value;
             return NumberUtil.round(n.doubleValue());
         } else if (value instanceof Boolean) {
@@ -106,7 +111,18 @@ class FarragoJdbcIntParamDef
         } else {
             long n = getLong(x);
             checkRange(n, min, max);
-            return new Long(n);
+            switch (paramMetaData.type) {
+            case Types.TINYINT:
+                return new Byte((byte) n);
+            case Types.SMALLINT:
+                return new Short((short) n);
+            case Types.INTEGER:
+                return new Integer((int) n);
+            case Types.BIGINT:
+                return new Long(n);
+            default:
+                throw new AssertionError("bad type " + paramMetaData.type);
+            }
         }
     }
 }

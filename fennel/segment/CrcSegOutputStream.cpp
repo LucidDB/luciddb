@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,14 +32,14 @@ SharedSegOutputStream CrcSegOutputStream::newCrcSegOutputStream(
 {
     return SharedSegOutputStream(
         new CrcSegOutputStream(
-            segmentAccessor,onlineUuid),
+            segmentAccessor, onlineUuid),
         ClosableObjectDestructor());
 }
 
 CrcSegOutputStream::CrcSegOutputStream(
     SegmentAccessor const &segmentAccessorInit,
     PseudoUuid onlineUuidInit)
-    : SegOutputStream(segmentAccessorInit,sizeof(SegStreamCrc))
+    : SegOutputStream(segmentAccessorInit, sizeof(SegStreamCrc))
 {
     onlineUuid = onlineUuidInit;
 }
@@ -50,7 +50,7 @@ void CrcSegOutputStream::writeExtraHeaders(SegStreamNode &node)
     pCrc->onlineUuid = onlineUuid;
     pCrc->pageId = lastPageId;
     crcComputer.reset();
-    crcComputer.process_bytes(pCrc+1,node.cbData);
+    crcComputer.process_bytes(pCrc + 1, node.cbData);
     pCrc->checksum = crcComputer.checksum();
 }
 

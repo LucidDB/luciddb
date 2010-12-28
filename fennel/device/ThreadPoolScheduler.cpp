@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ ThreadPoolScheduler::~ThreadPoolScheduler()
 {
 }
 
-void ThreadPoolScheduler::schedule(RandomAccessRequest &request)
+bool ThreadPoolScheduler::schedule(RandomAccessRequest &request)
 {
     RandomAccessRequest::BindingListMutator bindingMutator(request.bindingList);
     FileSize cbOffset = request.cbOffset;
@@ -66,6 +66,7 @@ void ThreadPoolScheduler::schedule(RandomAccessRequest &request)
         pool.submitTask(subRequest);
     }
     assert(cbOffset == request.cbOffset + request.cbTransfer);
+    return true;
 }
 
 void ThreadPoolScheduler::stop()

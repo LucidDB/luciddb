@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ BTreeBuilder::~BTreeBuilder()
 }
 
 uint BTreeBuilder::calculateNodesOnLevel(
-    uint nEntries,uint nEntriesPerNode)
+    uint nEntries, uint nEntriesPerNode)
 {
     uint nNodes = nEntries / nEntriesPerNode;
     if (nEntries % nEntriesPerNode) {
@@ -65,13 +65,13 @@ void BTreeBuilder::build(
         if (pLeafNodeAccessor->hasFixedWidthEntries()
             && pNonLeafNodeAccessor->hasFixedWidthEntries())
         {
-            buildBalanced(sortedInputStream,0,nEntriesTotal,fillFactor);
+            buildBalanced(sortedInputStream, 0, nEntriesTotal, fillFactor);
         } else if (pNonLeafNodeAccessor->hasFixedWidthEntries()) {
             buildTwoPass(
-                sortedInputStream,nEntriesTotal,fillFactor);
+                sortedInputStream, nEntriesTotal, fillFactor);
         } else {
             assert(!pLeafNodeAccessor->hasFixedWidthEntries());
-            buildUnbalanced(sortedInputStream,nEntriesTotal,fillFactor);
+            buildUnbalanced(sortedInputStream, nEntriesTotal, fillFactor);
         }
     } catch (...) {
         try {
@@ -98,14 +98,14 @@ void BTreeBuilder::buildTwoPass(
     assert(!nodeAccessor.hasFixedWidthEntries());
     VariableBuildLevel *pLeafLevel = new VariableBuildLevel(*this,nodeAccessor);
     levels[0].reset(pLeafLevel);
-    
+
     BTreeBuildLevel &level = getLevel(0);
     level.nEntriesTotal = nEntriesTotal;
     level.cbReserved = cbReserved;
 
     level.allocatePage();
 
-    // feed data into the leaf level; this will collect the entries for 
+    // feed data into the leaf level; this will collect the entries for
     // level 1 (the parent of the leaf level) in a temp stream
     level.processInput(sortedInputStream);
 
@@ -138,7 +138,7 @@ void BTreeBuilder::swapRoot()
         treeDescriptor.rootPageId = rootLevel.pageId;
         return;
     }
-    
+
     // We're supposed to preserve the PageId of the existing root, so
     // swap buffers with the original root.
     BTreePageLock reusedRootPageLock(treeDescriptor.segmentAccessor);
@@ -160,7 +160,7 @@ void BTreeBuilder::buildUnbalanced(
     // calculate amount of space to reserve on each leaf from fillfactor
     uint cbReserved = getSegment()->getUsablePageSize() - sizeof(BTreeNode);
     cbReserved = uint(cbReserved*(1-fillFactor));
-    
+
     // start with just a leaf level
     growTree();
     BTreeBuildLevel &level = getLevel(0);
@@ -175,7 +175,7 @@ void BTreeBuilder::buildUnbalanced(
         BTreeBuildLevel &level = getLevel(i);
         level.indexLastKey(true);
     }
-    
+
     swapRoot();
 }
 
@@ -187,7 +187,7 @@ void BTreeBuilder::buildBalanced(
 {
     // First, determine node capacities based on fixed-width entry sizes.  This
     // gives us the maximum fanout.
-    
+
     uint nEntriesPerNonLeaf =
         getSegment()->getUsablePageSize() - sizeof(BTreeNode);
     nEntriesPerNonLeaf /=
@@ -199,10 +199,10 @@ void BTreeBuilder::buildBalanced(
     nEntriesPerLeaf /=
         pLeafNodeAccessor->getEntryByteCount(
             pLeafNodeAccessor->tupleAccessor.getMaxByteCount());
-    
+
     nEntriesPerNonLeaf = uint(nEntriesPerNonLeaf*fillFactor);
     nEntriesPerLeaf = uint(nEntriesPerLeaf*fillFactor);
-    
+
     if (!nEntriesPerNonLeaf) {
         nEntriesPerNonLeaf = 1;
     }
@@ -214,7 +214,7 @@ void BTreeBuilder::buildBalanced(
     // in order to accommodate the expected number of entries.  In most cases
     // the tree won't actually be full, but the height can't be any lower than
     // this.
-    
+
     RecordNum nEntriesFull = iInputLevel ? nEntriesPerNonLeaf : nEntriesPerLeaf;
     uint nLevels = iInputLevel + 1;
     while (nEntriesFull < nEntriesTotal) {
@@ -229,16 +229,16 @@ void BTreeBuilder::buildBalanced(
     // Instead, we calculate the balancing on the fly later.
     RecordNum nEntriesInLevel = nEntriesTotal;
     for (uint i = iInputLevel; i < levels.size(); i++) {
-        BTreeNodeAccessor &nodeAccessor = 
+        BTreeNodeAccessor &nodeAccessor =
             i ? *pNonLeafNodeAccessor : *pLeafNodeAccessor;
 
         assert(nodeAccessor.hasFixedWidthEntries());
         levels[i].reset(new FixedBuildLevel(*this,nodeAccessor));
-        
+
         BTreeBuildLevel &level = getLevel(i);
         level.iLevel = i;
         level.nEntriesTotal = nEntriesInLevel;
-        
+
         // number of parent entries is same as number of child nodes
         nEntriesInLevel = calculateNodesOnLevel(
             nEntriesInLevel,
@@ -246,7 +246,7 @@ void BTreeBuilder::buildBalanced(
 
         if (i == getRootHeight()) {
             // Set up the root info, which can be fully determined ahead of
-            // time.  
+            // time.
             level.nEntriesPerNode = level.nEntriesTotal;
             if (getRootPageId() == NULL_PAGE_ID) {
                 level.allocatePage();
@@ -259,7 +259,7 @@ void BTreeBuilder::buildBalanced(
                 BTreeNode &node = level.pageLock.getNodeForWrite();
                 assert(!node.nEntries);
                 level.nodeAccessor.clearNode(
-                    node,getSegment()->getUsablePageSize());
+                    node, getSegment()->getUsablePageSize());
                 node.height = i;
             }
         } else {
@@ -269,10 +269,10 @@ void BTreeBuilder::buildBalanced(
         if (i) {
             // Prepare the first page of a non-leaf level.
             // Calculate balancing for first child node.
-            BTreeBuildLevel &childLevel = getLevel(i-1);
+            BTreeBuildLevel &childLevel = getLevel(i - 1);
             childLevel.nEntriesPerNode = calculateChildEntriesPerNode(
-                level.nEntriesTotal, 
-                childLevel.nEntriesTotal, 
+                level.nEntriesTotal,
+                childLevel.nEntriesTotal,
                 0);
         }
     }
@@ -329,12 +329,12 @@ void BTreeBuilder::createEmptyRoot()
     treeDescriptor.rootPageId = pageLock.allocatePage(getPageOwnerId());
     BTreeNode &node = pageLock.getNodeForWrite();
     pLeafNodeAccessor->clearNode(
-        node,getSegment()->getUsablePageSize());
+        node, getSegment()->getUsablePageSize());
 }
 
 void BTreeBuilder::growTree()
 {
-    BTreeNodeAccessor &nodeAccessor = 
+    BTreeNodeAccessor &nodeAccessor =
         levels.size() ? *pNonLeafNodeAccessor : *pLeafNodeAccessor;
     levels.resize(levels.size() + 1);
     levels[getRootHeight()].reset(new DynamicBuildLevel(*this,nodeAccessor));
@@ -356,7 +356,23 @@ void BTreeBuilder::truncate(
     }
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
+
     pageLock.lockExclusive(getRootPageId());
+
+    // Try a read-only access to see if we can skip dirtying a page.
+    BTreeNode const &rootReadOnly = pageLock.getNodeForRead();
+    if (!rootReadOnly.height) {
+        if (rootless) {
+            pageLock.deallocateLockedPage();
+            treeDescriptor.rootPageId = NULL_PAGE_ID;
+            return;
+        }
+        if (!rootReadOnly.nEntries) {
+            // root is already empty
+            return;
+        }
+    }
+
     BTreeNode &root = pageLock.getNodeForWrite();
     if (root.height) {
         truncateChildren(root);
@@ -366,7 +382,7 @@ void BTreeBuilder::truncate(
         treeDescriptor.rootPageId = NULL_PAGE_ID;
     } else {
         pLeafNodeAccessor->clearNode(
-            root,getSegment()->getUsablePageSize());
+            root, getSegment()->getUsablePageSize());
     }
 }
 
@@ -374,7 +390,7 @@ void BTreeBuilder::truncateChildren(BTreeNode const &node)
 {
     assert(node.height);
     assert(node.nEntries);
-    PageId pageId = getChild(node,0);
+    PageId pageId = getChild(node, 0);
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
     if (node.height > 1) {
@@ -404,17 +420,19 @@ void BTreeBuilder::truncateExternal(TupleProjection const &leafPageIdProj)
     TupleData projData(projDesc);
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
-    if (reader.searchFirst()) do {
-        projAccessor.unmarshal(projData);
-        for (uint i = 0; i < projData.size(); ++i) {
-            if (!projData[i].pData) {
-                continue;
+    if (reader.searchFirst()) {
+        do {
+            projAccessor.unmarshal(projData);
+            for (uint i = 0; i < projData.size(); ++i) {
+                if (!projData[i].pData) {
+                    continue;
+                }
+                PageId pageId = *reinterpret_cast<PageId const *>(
+                    projData[i].pData);
+                pageLock.deallocateUnlockedPage(pageId);
             }
-            PageId pageId = *reinterpret_cast<PageId const *>(
-                projData[i].pData);
-            pageLock.deallocateUnlockedPage(pageId);
-        }
-    } while (reader.searchNext());
+        } while (reader.searchNext());
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

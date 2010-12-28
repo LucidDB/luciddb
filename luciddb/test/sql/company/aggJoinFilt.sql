@@ -13,16 +13,18 @@ from (
     group by emp.deptno, emp.sex) emp,
   dept
 where dept.deptno = emp.deptno
-and dept.dname = 'Development';
+and dept.dname = 'Development'
+order by sex;
 
 -- as above, after pulling up aggregation
 select emp.deptno, emp.sex, sum(emp.sal)
 from (
-	select emp.deptno, emp.sex, emp.sal from emp) emp,
+        select emp.deptno, emp.sex, emp.sal from emp) emp,
   dept
 where dept.deptno = emp.deptno
 and dept.dname = 'Development'
-group by emp.deptno, emp.sex;
+group by emp.deptno, emp.sex
+order by sex;
 
 -- as above, after join filter
 -- select emp.deptno, emp.sex, sum(emp.sal) sum_sal
@@ -53,7 +55,8 @@ join (
    select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
    group by emp.deptno, emp.sex) emp
 on dept.deptno = emp.deptno
-where dept.dname = 'Development';
+where dept.dname = 'Development'
+order by sex;
 
 -- Left-outer join.
 select *
@@ -62,7 +65,8 @@ from (
    group by emp.deptno, emp.sex) emp
 left join dept
 on dept.deptno = emp.deptno
-where dept.dname = 'Development';
+where dept.dname = 'Development'
+order by sex;
 
 -- Right-outer join.
 select *
@@ -81,7 +85,8 @@ from (
    group by emp.deptno, emp.sex) emp
 full join dept
 on dept.deptno = emp.deptno
-where dept.dname = 'Development';
+where dept.dname = 'Development'
+order by 2;
 
 -- Pull-up aggregation should work through a projection (sum(emp.sal)
 -- + 1).
@@ -91,7 +96,8 @@ from (
    group by emp.deptno, emp.sex) emp
 join dept
 on dept.deptno = emp.deptno
-where dept.dname = 'Development';
+where dept.dname = 'Development'
+order by sex;
 
 -- Pull-up aggregation could work through a filter (having count(*) >
 -- 1), but doesn't yet.
@@ -102,7 +108,8 @@ from (
    having count(*) > 1) emp
 join dept
 on dept.deptno = emp.deptno
-where dept.dname = 'Development';
+where dept.dname = 'Development'
+order by 2;
 
 -- Don't try to pull-up aggregates if join is based upon summary
 -- columns (count_emp).

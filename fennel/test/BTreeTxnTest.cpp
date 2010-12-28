@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,7 +49,7 @@ using namespace fennel;
 class BTreeTxnTest
     : virtual public ThreadedTestBase
 {
-    struct TestThreadData 
+    struct TestThreadData
     {
         std::subtractive_rng randomNumberGenerator;
         SharedBTreeReader pReader;
@@ -67,10 +67,10 @@ class BTreeTxnTest
         OP_CHECKPOINT,
         OP_MAX
     };
-    
+
     // NOTE:  this matches the Fennel Tuple format, so it can be used
     // directly for input into BTreeWriter
-    struct Record 
+    struct Record
     {
         int32_t key;
         int32_t value;
@@ -79,7 +79,7 @@ class BTreeTxnTest
     SharedDatabase pDatabase;
 
     BTreeDescriptor treeDescriptor;
-    
+
     boost::thread_specific_ptr<TestThreadData> pTestThreadData;
     PageId rootPageId;
 
@@ -90,7 +90,7 @@ class BTreeTxnTest
     uint nKeysPerScan;
 
     uint nSecondsBetweenCheckpoints;
-    
+
     void testTxns();
 
     void insertTxn();
@@ -99,7 +99,7 @@ class BTreeTxnTest
     void testCheckpoint();
 
     void endTxn(SharedLogicalTxn pTxn);
-    
+
     uint generateRandomNumber(uint iMax);
 
     void createTree();
@@ -108,13 +108,13 @@ class BTreeTxnTest
     BTreeWriter &getWriter();
     TupleData &getKeyData();
     void bindKey(int32_t &key);
-    
+
 public:
     explicit BTreeTxnTest();
 
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
-    
+
     virtual void threadInit();
     virtual void threadTerminate();
     virtual bool testThreadedOp(int iOp);
@@ -122,13 +122,14 @@ public:
 
 BTreeTxnTest::BTreeTxnTest()
 {
-    nInsertsPerTxn = configMap.getIntParam("insertsPerTxn",5);
-    nDeletesPerTxn = configMap.getIntParam("deletesPerTxn",5);
-    nKeysPerScan = configMap.getIntParam("keysPerScan",5);
-    iKeyMax = configMap.getIntParam("maxKey",1000000);
-    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval",20);
+    nInsertsPerTxn = configMap.getIntParam("insertsPerTxn", 5);
+    nDeletesPerTxn = configMap.getIntParam("deletesPerTxn", 5);
+    nKeysPerScan = configMap.getIntParam("keysPerScan", 5);
+    iKeyMax = configMap.getIntParam("maxKey", 1000000);
+    nSecondsBetweenCheckpoints = configMap.getIntParam(
+        "checkpointInterval", 20);
     testRollback = configMap.getIntParam(
-        "testRollback",1);
+        "testRollback", 1);
 
     threadCounts.resize(OP_MAX,-1);
 
@@ -138,31 +139,31 @@ BTreeTxnTest::BTreeTxnTest()
         "deleteThreads",-1);
     threadCounts[OP_SCAN] = configMap.getIntParam(
         "scanThreads",-1);
-        
+
     if (nSecondsBetweenCheckpoints < nSeconds) {
         threadCounts[OP_CHECKPOINT] = 1;
     } else {
         threadCounts[OP_CHECKPOINT] = 0;
     }
 
-    FENNEL_UNIT_TEST_CASE(BTreeTxnTest,testTxns);
+    FENNEL_UNIT_TEST_CASE(BTreeTxnTest, testTxns);
 }
 
 void BTreeTxnTest::testCaseSetUp()
 {
     // TODO:  cleanup
-    
+
     configMap.setStringParam(
-        Database::paramDatabaseDir,".");
+        Database::paramDatabaseDir, ".");
     configMap.setStringParam(
-        "databaseInitSize","1000");
+        "databaseInitSize", "1000");
     configMap.setStringParam(
-        "tempInitSize","1000");
+        "tempInitSize", "1000");
     configMap.setStringParam(
-        "databaseShadowLogInitSize","2000");
+        "databaseShadowLogInitSize", "2000");
     if (!configMap.isParamSet("databaseTxnLogInitSize")) {
         configMap.setStringParam(
-            "databaseTxnLogInitSize","2000");
+            "databaseTxnLogInitSize", "2000");
     }
 
     CacheParams cacheParams;
@@ -173,10 +174,10 @@ void BTreeTxnTest::testCaseSetUp()
         configMap,
         DeviceMode::createNew,
         shared_from_this());
-    
+
     statsTimer.addSource(pDatabase);
     statsTimer.start();
-    
+
     rootPageId = NULL_PAGE_ID;
     createTree();
     pDatabase->checkpointImpl();
@@ -185,7 +186,7 @@ void BTreeTxnTest::testCaseSetUp()
 void BTreeTxnTest::testCaseTearDown()
 {
     statsTimer.stop();
-    
+
     pDatabase.reset();
     pCache.reset();
 }
@@ -205,7 +206,7 @@ void BTreeTxnTest::createTree()
     treeDescriptor.segmentAccessor.pCacheAccessor = pCache;
     treeDescriptor.rootPageId = rootPageId;
 
-    BTreeBuilder builder(treeDescriptor,pDatabase->getDataSegment());
+    BTreeBuilder builder(treeDescriptor, pDatabase->getDataSegment());
     builder.createEmptyRoot();
     treeDescriptor.rootPageId = builder.getRootPageId();
 }
@@ -221,9 +222,9 @@ void BTreeTxnTest::threadInit()
         pDatabase->getSegmentFactory()->newScratchSegment(
             pCache,
             1);
-    
+
     pTestThreadData->pWriter.reset(
-        new BTreeWriter(treeDescriptor,scratchAccessor));
+        new BTreeWriter(treeDescriptor, scratchAccessor));
 }
 
 void BTreeTxnTest::threadTerminate()
@@ -231,7 +232,7 @@ void BTreeTxnTest::threadTerminate()
     pTestThreadData.reset();
     ThreadedTestBase::threadTerminate();
 }
-    
+
 uint BTreeTxnTest::generateRandomNumber(uint iMax)
 {
     return pTestThreadData->randomNumberGenerator(iMax);
@@ -271,15 +272,12 @@ void BTreeTxnTest::testTxns()
         shared_from_this());
     BOOST_CHECK(pDatabase->isRecoveryRequired());
 
-    statsTimer.addSource(pDatabase);
-    statsTimer.start();
-    
     StandardTypeDescriptorFactory typeFactory;
     SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pCache,
             1);
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     BTreeRecoveryFactory btreeRecoveryFactory(
         segmentAccessor,
         scratchAccessor,
@@ -287,15 +285,20 @@ void BTreeTxnTest::testTxns()
     segmentAccessor.reset();
     scratchAccessor.reset();
     pDatabase->recover(btreeRecoveryFactory);
+
+    // Don't restart the stats timer until after recovery has completed.
+    statsTimer.addSource(pDatabase);
+    statsTimer.start();
+
     treeDescriptor.segmentAccessor.pSegment = pDatabase->getDataSegment();
     RecordNum nEntriesRecovered = verifyTree();
 
     // FIXME jvs 8-Mar-2004:  Turn this back on once NOTE above is taken
     // care of.  Tautological checks are just to shut warnings up.
-    
+
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);
-    BOOST_CHECK_EQUAL(nEntries,nEntries);
-    BOOST_CHECK_EQUAL(nEntriesRecovered,nEntriesRecovered);
+    BOOST_CHECK_EQUAL(nEntries, nEntries);
+    BOOST_CHECK_EQUAL(nEntriesRecovered, nEntriesRecovered);
 }
 
 void BTreeTxnTest::insertTxn()
@@ -322,7 +325,7 @@ void BTreeTxnTest::deleteTxn()
     for (uint i = 0; i < nDeletesPerTxn; ++i) {
         int32_t key = generateRandomNumber(iKeyMax);
         bindKey(key);
-        if (writer.searchForKey(getKeyData(),DUP_SEEK_ANY)) {
+        if (writer.searchForKey(getKeyData(), DUP_SEEK_ANY)) {
             writer.deleteCurrent();
         }
         writer.endSearch();
@@ -335,7 +338,7 @@ void BTreeTxnTest::scanTxn()
     BTreeReader &reader = getReader();
     int32_t key = generateRandomNumber(iKeyMax);
     bindKey(key);
-    if (reader.searchForKey(getKeyData(),DUP_SEEK_ANY)) {
+    if (reader.searchForKey(getKeyData(), DUP_SEEK_ANY)) {
         for (uint i = 0; i < nKeysPerScan; ++i) {
             if (!reader.searchNext()) {
                 break;
@@ -344,7 +347,7 @@ void BTreeTxnTest::scanTxn()
     }
     reader.endSearch();
 }
-    
+
 void BTreeTxnTest::endTxn(SharedLogicalTxn pTxn)
 {
     if (testRollback) {
@@ -361,10 +364,10 @@ void BTreeTxnTest::endTxn(SharedLogicalTxn pTxn)
 bool BTreeTxnTest::testThreadedOp(int iOp)
 {
     SXMutexSharedGuard checkpointSharedGuard(
-        pDatabase->getCheckpointThread()->getActionMutex(),false);
+        pDatabase->getCheckpointThread()->getActionMutex(), false);
     assert(iOp < OP_MAX);
     OpType op = static_cast<OpType>(iOp);
-    switch(op) {
+    switch (op) {
     case OP_INSERT:
         checkpointSharedGuard.lock();
         insertTxn();
@@ -394,12 +397,12 @@ void BTreeTxnTest::testCheckpoint()
 {
     snooze(nSecondsBetweenCheckpoints);
     CheckpointType checkpointType;
-    if (configMap.getIntParam("fuzzyCheckpoint",1)) {
+    if (configMap.getIntParam("fuzzyCheckpoint", 1)) {
         checkpointType = CHECKPOINT_FLUSH_FUZZY;
     } else {
         checkpointType = CHECKPOINT_FLUSH_ALL;
     }
-    pDatabase->requestCheckpoint(checkpointType,false);
+    pDatabase->requestCheckpoint(checkpointType, false);
 }
 
 RecordNum BTreeTxnTest::verifyTree()

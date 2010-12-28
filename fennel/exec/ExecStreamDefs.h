@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  */
 typedef uint ExecStreamId;
 
-enum ExecStreamBufState 
+enum ExecStreamBufState
 {
     EXECBUF_EMPTY,
     EXECBUF_NONEMPTY,
@@ -51,7 +51,20 @@ static std::string ExecStreamBufState_names[] = {
     "EXECBUF_OVERFLOW",
     "EXECBUF_EOS"
 };
-    
+
+static std::string ExecStreamBufState_names_short[] = {
+    "EMP",
+    "NEM",
+    "UND",
+    "OVR",
+    "EOS"
+};
+
+inline std::ostream & operator<< (std::ostream &os, ExecStreamBufState e)
+{
+    return os << ExecStreamBufState_names[e];
+}
+
 enum ExecStreamBufProvision
 {
     BUFPROV_NONE,
@@ -75,14 +88,27 @@ static std::string ExecStreamResult_names[] = {
     "EXECRC_QUANTUM_EXPIRED",
     "EXECRC_YIELD"
 };
-    
+
+static std::string ExecStreamResult_names_short[] = {
+    "UND",
+    "OVR",
+    "EOS",
+    "QNT",
+    "YLD"
+};
+
+inline std::ostream & operator<< (std::ostream &os, ExecStreamResult e)
+{
+    return os << ExecStreamResult_names[e];
+}
+
 /**
  * ExecStreamQuantum defines the quantum for scheduling of an ExecStream.  The
  * exact interpretation of the specified quantities is stream-dependent.  For
  * example, for nTuplesMax, a filter might count number of input tuples, while
  * a join might count number of tuple comparisons.
  */
-struct ExecStreamQuantum
+struct FENNEL_EXEC_EXPORT ExecStreamQuantum
 {
     /**
      * Maximum number of tuples to process per quantum.
@@ -97,7 +123,7 @@ struct ExecStreamQuantum
         nTuplesMax = MAXU;
     }
 };
-    
+
 /**
  * Enumerated type that indicates the nature of a resource requirement setting
  * for an execution stream
@@ -123,7 +149,7 @@ enum ExecStreamResourceSettingType {
  * ExecStreamResourceQuantity quantifies various resources which
  * can be allocated to an ExecStream.
  */
-struct ExecStreamResourceQuantity
+struct FENNEL_EXEC_EXPORT ExecStreamResourceQuantity
 {
     /**
      * Number of dedicated threads the stream may request while executing.
@@ -148,7 +174,7 @@ struct ExecStreamResourceQuantity
 /**
  * Common parameters for instantiating any ExecStream.
  */
-struct ExecStreamParams 
+struct FENNEL_EXEC_EXPORT ExecStreamParams
 {
     /**
      * CacheAccessor to use for any data access.  This will be singular if the

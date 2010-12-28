@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,13 +34,12 @@ import org.eigenbase.rex.*;
 public final class FilterRel
     extends FilterRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a filter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param condition boolean expression which determines whether a row is
@@ -60,13 +59,13 @@ public final class FilterRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public FilterRel clone()
     {
         FilterRel clone =
             new FilterRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
-                RexUtil.clone(getCondition()));
+                getChild().clone(),
+                getCondition().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }

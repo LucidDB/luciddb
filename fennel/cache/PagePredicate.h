@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,11 +34,11 @@ class MappedPageListener;
 /**
  * Callback class for Cache::checkpointPages.
  */
-class PagePredicate
+class FENNEL_CACHE_EXPORT PagePredicate
 {
 public:
     virtual ~PagePredicate();
-    
+
     /**
      * Tests the predicate.
      *
@@ -53,13 +53,14 @@ public:
  * DeviceIdPagePredicate is an implementation of PagePredicate which returns
  * true for pages mapped to a given DeviceId.
  */
-class DeviceIdPagePredicate : public PagePredicate
+class FENNEL_CACHE_EXPORT DeviceIdPagePredicate
+    : public PagePredicate
 {
     DeviceId deviceId;
-    
+
 public:
     explicit DeviceIdPagePredicate(DeviceId);
-    
+
     virtual bool operator()(CachePage const &page);
 };
 
@@ -67,13 +68,14 @@ public:
  * MappedPageListenerPredicate is an implementation of PagePredicate which
  * returns true for pages with a given MappedPageListener
  */
-class MappedPageListenerPredicate : public PagePredicate
+class FENNEL_CACHE_EXPORT MappedPageListenerPredicate
+    : public PagePredicate
 {
     MappedPageListener &listener;
-    
+
 public:
     explicit MappedPageListenerPredicate(MappedPageListener &);
-    
+
     virtual bool operator()(CachePage const &page);
 };
 

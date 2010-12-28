@@ -1,0 +1,187 @@
+@nolockstep
+
+@setup
+
+    create schema sales;
+    set schema 'sales';
+    create table emps(
+        empno integer not null,
+        name varchar(128) not null,
+        deptno integer not null,
+        gender char(1) default 'M',
+        city varchar(128),
+        empid integer not null unique,
+        age integer,
+        public_key varbinary(50),
+        slacker boolean,
+        manager boolean not null,
+        primary key(deptno,empno))
+        create index emps_ux on emps(name);
+    insert into emps values
+        (100,'Fred',10,null,null,30,25, x'41626320',true,false),
+        (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
+        (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
+        (120,'Wilma',20,'F',null,1,50,null,null,true);
+
+@end
+
+@thread cleanup
+    @sync
+    @sync
+    drop schema sales cascade;
+@end
+
+-- Run several threads, each doing the following 5 times, each against a 
+-- different schema.  The contents of the tables are slightly different
+-- in each schema:
+--   create schema
+--   create some tables
+--   insert some rows
+--   execute a merge
+--   drop the schema
+--   alter system deallocate old
+
+-----------------------------------------------------------------------------
+@thread t1
+    @sync
+    @repeat 5
+
+    create schema s1;
+    set schema 's1';
+
+    create table emps(
+        empno int not null unique, name varchar(20) not null, deptno int,
+        gender char(4), city char(30), age int, salary numeric(10,2));
+    create index ideptno on emps(deptno);
+    create index icity on emps(city);
+    create table tempemps(
+        t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+        t_city char(35), t_age int);
+    create table salarytable(empno int, salary int);
+
+    insert into emps(empno, name, deptno, gender, city, age, salary)
+        select case when name = 'John' then 130 else empno end,
+                name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+                age * 900
+            from sales.emps;
+    insert into tempemps values(
+        140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+    insert into tempemps values(
+        150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+    insert into tempemps
+        select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+                age
+            from emps;
+    merge into emps e
+        using tempemps t on t.t_empno = e.empno
+        when matched then
+            update set deptno = t.t_deptno, city = upper(t.t_city),
+                salary = salary * .25
+        when not matched then
+            insert (empno, name, age, gender, salary, city)
+            values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+                t.t_age * 1000, t.t_city);
+    select * from emps order by empno;
+
+    drop schema s1 cascade;
+    alter system deallocate old;
+
+    @end
+    @sync
+@end
+-----------------------------------------------------------------------------
+@thread t2
+    @sync
+    @repeat 5
+
+    create schema s2;
+    set schema 's2';
+
+    create table emps(
+        empno int not null unique, name varchar(20) not null, deptno int,
+        gender char(4), city char(30), age int, salary numeric(10,2));
+    create index ideptno on emps(deptno);
+    create index icity on emps(city);
+    create table tempemps(
+        t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+        t_city char(35), t_age int);
+    create table salarytable(empno int, salary int);
+
+    insert into emps(empno, name, deptno, gender, city, age, salary)
+        select case when name = 'John' then 130 else empno end,
+                name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+                age * 900
+            from sales.emps;
+    insert into tempemps values(
+        140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+    insert into tempemps values(
+        150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+    insert into tempemps
+        select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+                age
+            from emps;
+    merge into emps e
+        using tempemps t on t.t_empno = e.empno
+        when matched then
+            update set deptno = t.t_deptno, city = upper(t.t_city),
+                salary = salary * .25
+        when not matched then
+            insert (empno, name, age, gender, salary, city)
+            values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+                t.t_age * 1000, t.t_city);
+    select * from emps order by empno;
+
+    drop schema s2 cascade;
+    alter system deallocate old;
+
+    @end
+    @sync
+@end
+-----------------------------------------------------------------------------
+@thread t3
+    @sync
+    @repeat 5
+
+    create schema s3;
+    set schema 's3';
+
+    create table emps(
+        empno int not null unique, name varchar(20) not null, deptno int,
+        gender char(4), city char(30), age int, salary numeric(10,2));
+    create index ideptno on emps(deptno);
+    create index icity on emps(city);
+    create table tempemps(
+        t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+        t_city char(35), t_age int);
+    create table salarytable(empno int, salary int);
+
+    insert into emps(empno, name, deptno, gender, city, age, salary)
+        select case when name = 'John' then 130 else empno end,
+                name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+                age * 900
+            from sales.emps;
+    insert into tempemps values(
+        140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+    insert into tempemps values(
+        150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+    insert into tempemps
+        select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+                age
+            from emps;
+    merge into emps e
+        using tempemps t on t.t_empno = e.empno
+        when matched then
+            update set deptno = t.t_deptno, city = upper(t.t_city),
+                salary = salary * .25
+        when not matched then
+            insert (empno, name, age, gender, salary, city)
+            values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+                t.t_age * 1000, t.t_city);
+    select * from emps order by empno;
+
+    drop schema s3 cascade;
+    alter system deallocate old;
+
+    @end
+    @sync
+@end

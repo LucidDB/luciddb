@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,8 @@ import org.eigenbase.rel.*;
 
 /**
  * ChainedRelMetadataProvider implements the {@link RelMetadataProvider}
- * interface via the {@link Glossary#ChainOfResponsibilityPattern}.
+ * interface via the {@link
+ * org.eigenbase.util.Glossary#ChainOfResponsibilityPattern}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -36,7 +37,6 @@ import org.eigenbase.rel.*;
 public class ChainedRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<RelMetadataProvider> providers;
@@ -59,8 +59,6 @@ public class ChainedRelMetadataProvider
      * query is used.
      *
      * @param provider provider to add
-     * @param metadataQueryNames set of metadata query names this provider knows
-     * how to answer; if null, provider will be tried for all queries
      */
     public void addProvider(
         RelMetadataProvider provider)

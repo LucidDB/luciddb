@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class TraitMatchingRule
     extends RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ConverterRule converter;
@@ -47,22 +46,20 @@ public class TraitMatchingRule
     /**
      * Creates a new TraitMatchingRule.
      *
-     * @param rule rule to be restricted; rule must take a single operand
-     * expecting a single input
+     * @param converterRule rule to be restricted; rule must take a single
+     * operand expecting a single input
      */
-    public TraitMatchingRule(ConverterRule converter)
+    public TraitMatchingRule(ConverterRule converterRule)
     {
         super(
             new RelOptRuleOperand(
-                converter.getOperand().getMatchedClass(),
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        null)
-                }));
-        assert (converter.getOperand().getChildren() == null);
-        description = "TraitMatchingRule: " + converter;
-        this.converter = converter;
+                converterRule.getOperand().getMatchedClass(),
+                new RelOptRuleOperand(
+                    RelNode.class,
+                    ANY)),
+            "TraitMatchingRule: " + converterRule);
+        assert (converterRule.getOperand().getChildOperands() == null);
+        this.converter = converterRule;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -76,7 +73,7 @@ public class TraitMatchingRule
     public void onMatch(RelOptRuleCall call)
     {
         RelNode input = call.rels[1];
-        if (input.getTraits().matches(converter.getOutTraits())) {
+        if (input.getTraits().contains(converter.getOutTrait())) {
             converter.onMatch(call);
         }
     }

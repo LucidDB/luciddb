@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,6 +25,7 @@
 #define Fennel_ExecStream_Included
 
 #include "fennel/exec/ExecStreamDefs.h"
+#include "fennel/exec/ErrorSource.h"
 #include "fennel/common/ClosableObject.h"
 #include "fennel/common/TraceSource.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -42,10 +43,11 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStream
+class FENNEL_EXEC_EXPORT ExecStream
     : public boost::noncopyable,
         virtual public ClosableObject,
-        virtual public TraceSource
+        virtual public TraceSource,
+        virtual public ErrorSource
 {
     friend class ExecStreamGraphImpl;
 protected:
@@ -64,7 +66,7 @@ protected:
      * execution, and the extra locking overhead would be frivolous.
      */
     ExecStreamGraph *pGraph;
-    
+
     /**
      * Identifier for this stream; local to its containing graph.
      */
@@ -116,24 +118,43 @@ protected:
 
     // interface methods below are protected because they should only be called
     // indirectly via ExecStreamGraph interface
-    
+
     /**
      * Implements ClosableObject.  ExecStream implementations may
      * override this to release any resources acquired while open.
      */
     virtual void closeImpl();
-    
+
+    /**
+     * Determines the number of scratch pages which should be used by this
+     * ExecStream for cache-conscious data structures, based on
+     * processor cache limits.
+     *
+     * @param allocatedQuantity count of pages already allocated by the
+     * resource governor, which serves as an upper bound on the rationing
+     *
+     * @return number of scratch pages to use
+     */
+    uint getCacheConsciousPageRation(
+        CacheAccessor &cacheAccessor,
+        ExecStreamResourceQuantity const &allocatedQuantity);
+
 public:
+    /**
+     * @return true if the stream can be closed early
+     */
+    virtual bool canEarlyClose();
+
     /**
      * @return reference to containing graph
      */
     inline ExecStreamGraph &getGraph() const;
-    
+
     /**
      * @return the identifier for this stream within containing graph
      */
     inline ExecStreamId getStreamId() const;
-    
+
     /**
      * Initializes the buffer accessors for inputs to this stream.  This
      * method is only ever called once, before prepare.
@@ -178,7 +199,7 @@ public:
      *
      * @param optType Receives the value indicating the accuracy of the
      * optQuantity parameter.  This parameter is optional and defaults to
-     * EXEC_RESOURCE_ACCURATE if omitted.  If the optimum setting is an 
+     * EXEC_RESOURCE_ACCURATE if omitted.  If the optimum setting is an
      * estimate or no value can be specified (e.g., due to lack of statistics),
      * then this parameter needs to be used to indicate a non-accurate
      * optimum resource setting.
@@ -203,7 +224,7 @@ public:
      */
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);
-        
+
     /**
      * Opens this stream, acquiring any resources needed in order to be able to
      * fetch data.  A precondition is that input streams
@@ -213,17 +234,17 @@ public:
      * reset itself to start from the beginning of its result set
      */
     virtual void open(bool restart);
-    
+
     /**
      * Sets unique name of this stream.
      */
     virtual void setName(std::string const &);
-        
+
     /**
      * @return the name of this stream, as known by the optimizer
      */
     virtual std::string const &getName() const;
-        
+
     /**
      * Executes this stream.
      *
@@ -232,7 +253,7 @@ public:
      * @return code indicating reason execution ceased
      */
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum) = 0;
-    
+
     /**
      * Queries whether this stream's implementation may block when execute()
      * is called.  For accurate scheduling, non-blocking implementations
@@ -244,12 +265,30 @@ public:
     virtual bool mayBlock() const;
 
     /**
+     * Checks whether there is an abort request for this stream's
+     * scheduler.  Normally, streams don't need to check this,
+     * since the scheduler services abort requests in between
+     * quanta.  However, streams which enter long-running loops
+     * need to check for themselves.  If an abort is scheduled,
+     * this method will throw an AbortExcn automatically.
+     */
+    virtual void checkAbort() const;
+
+    /**
      * Queries the BufferProvision which this stream is capable of when
      * producing tuples.
      *
      * @return supported model; default is BUFPROV_NONE
      */
     virtual ExecStreamBufProvision getOutputBufProvision() const;
+
+    /**
+     * Queries the BufferProvision to which this stream needs its
+     * output to be converted, if any.
+     *
+     * @return required conversion; default is BUFPROV_NONE
+     */
+    virtual ExecStreamBufProvision getOutputBufConversion() const;
 
     /**
      * Queries the BufferProvision which this stream requires of its inputs when

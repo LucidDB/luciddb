@@ -13,11 +13,14 @@ insert into strdates values
 ('GOOD', '1995.01.05', 'YYYY.MM.DD'),
 ('GOOD', '8 67 1', 'm yy d');
 
-
 -- failures
 values applib.convert_date('JAN, 23 2009', 'mmm, dd yyyy');
 values applib.convert_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
 values applib.convert_date('7-9-97', 'DD-MM-YY');
+
+-- null input
+values applib.convert_date(cast(null as varchar(22)), 'mm.dd.yyyy');
+values applib.convert_date('jan 23, 2003', cast(null as varchar(10)));
 
 -- create view with reference
 create view td as

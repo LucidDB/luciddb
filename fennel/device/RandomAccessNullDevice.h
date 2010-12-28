@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,14 +35,15 @@ class RandomAccessRequest;
  * something like /dev/null, except that it does not allow any transfers at
  * all.
  */
-class RandomAccessNullDevice : public RandomAccessDevice
+class FENNEL_DEVICE_EXPORT RandomAccessNullDevice
+    : public RandomAccessDevice
 {
 public:
     /**
      * Creates a new null device.
      */
     explicit RandomAccessNullDevice();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of RandomAccessDevice interface (q.v.)
 // ----------------------------------------------------------------------

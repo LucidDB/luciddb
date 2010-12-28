@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,17 +27,22 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.jmi.*;
+import org.eigenbase.jmi.mem.*;
+
 import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
 
 
 /**
@@ -49,7 +54,6 @@ import org.netbeans.mdr.*;
 public class FarragoMdrReposImpl
     extends FarragoReposImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getReposTracer();
@@ -74,14 +78,14 @@ public class FarragoMdrReposImpl
     /**
      * The underlying MDR repository.
      */
-    private final MDRepository mdrRepository;
+    private final EnkiMDRepository mdrRepository;
 
     /**
      * MofId for current instance of FemFarragoConfig.
      */
     private final String currentConfigMofId;
 
-    private String memStorageId;
+    protected FarragoMemFactory memFactory;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -132,46 +136,69 @@ public class FarragoMdrReposImpl
 
         super.setRootPackage(farragoPackage);
 
-        mdrRepository = modelLoader.getMdrRepos();
+        mdrRepository = (EnkiMDRepository) modelLoader.getMdrRepos();
 
-        // Create special in-memory storage for transient objects
-        try {
-            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-            Map props = new HashMap();
-            memStorageId =
-                nbRepos.mountStorage(
-                    FarragoTransientStorageFactory.class.getName(),
-                    props);
-            beginReposTxn(true);
-            boolean rollback = true;
-            try {
-                RefPackage memExtent =
-                    nbRepos.createExtent(
-                        "TransientCatalog",
-                        getFarragoPackage().refMetaObject(),
-                        null,
-                        memStorageId);
-                transientFarragoPackage = (FarragoPackage) memExtent;
-                rollback = false;
-            } finally {
-                endReposTxn(rollback);
-            }
-            FarragoTransientStorage.ignoreCommit = true;
-            fennelPackage = transientFarragoPackage.getFem().getFennel();
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
-        }
+        checkModelTimestamp("FarragoCatalog");
 
         // Load configuration
         currentConfigMofId = getDefaultConfig().refMofId();
         initGraph();
+
+        // Create special in-memory storage for transient objects
+        try {
+            memFactory = new FarragoMemFactory(getModelGraph());
+
+            transientFarragoPackage = memFactory.getFarragoPackage();
+            fennelPackage = transientFarragoPackage.getFem().getFennel();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
+        } finally {
+            // End session started in modelLoader.loadModel
+            modelLoader.closeMdrSession();
+        }
+
         tracer.info("Catalog successfully loaded");
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    private void checkModelTimestamp(String extentName)
+    {
+        String prefix = "TIMESTAMP = ";
+
+        mdrRepository.beginTrans(true);
+        boolean rollback = true;
+        try {
+            String storedTimestamp = mdrRepository.getAnnotation(extentName);
+            String compiledTimestamp = prefix + getCompiledModelTimestamp();
+            if ((storedTimestamp == null)
+                || !storedTimestamp.startsWith(prefix))
+            {
+                // first time:  add timestamp
+                mdrRepository.setAnnotation(extentName, compiledTimestamp);
+                rollback = false;
+            } else {
+                // on reload:  verify timestamps
+                if (!storedTimestamp.equals(compiledTimestamp)) {
+                    throw FarragoResource.instance()
+                    .CatalogModelTimestampCheckFailed.ex(
+                        storedTimestamp,
+                        compiledTimestamp);
+                }
+            }
+        } finally {
+            mdrRepository.endTrans(rollback);
+        }
+    }
+
     // implement FarragoRepos
     public MDRepository getMdrRepos()
+    {
+        return mdrRepository;
+    }
+
+    // implement FarragoRepos
+    public EnkiMDRepository getEnkiMdrRepos()
     {
         return mdrRepository;
     }
@@ -194,7 +221,9 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        return (FemFarragoConfig) mdrRepository.getByMofId(currentConfigMofId);
+        return (FemFarragoConfig) getEnkiMdrRepos().getByMofId(
+            currentConfigMofId,
+            getConfigPackage().getFemFarragoConfig());
     }
 
     // implement FarragoAllocation
@@ -205,32 +234,22 @@ public class FarragoMdrReposImpl
             return;
         }
         tracer.fine("Closing catalog");
-        if (memStorageId != null) {
-            mdrRepository.beginTrans(true);
-            FarragoTransientStorage.ignoreCommit = false;
-            if (transientFarragoPackage != null) {
-                transientFarragoPackage.refDelete();
-            }
-            mdrRepository.endTrans();
-            memStorageId = null;
+        if (transientFarragoPackage != null) {
+            transientFarragoPackage.refDelete();
         }
+        memFactory = null;
+
         modelLoader.close();
         modelLoader = null;
         tracer.info("Catalog successfully closed");
     }
 
-    // implement FarragoTransientTxnContext
-    public void beginTransientTxn()
+    // implement FarragoRepos
+    public void beginReposSession()
     {
-        tracer.fine("Begin transient repository transaction");
-        mdrRepository.beginTrans(true);
-    }
-
-    // implement FarragoTransientTxnContext
-    public void endTransientTxn()
-    {
-        tracer.fine("End transient repository transaction");
-        mdrRepository.endTrans(false);
+        tracer.fine("Begin repository session");
+        super.beginReposSession();
+        mdrRepository.beginSession();
     }
 
     // implement FarragoRepos
@@ -256,10 +275,56 @@ public class FarragoMdrReposImpl
     }
 
     // implement FarragoRepos
+    public void endReposSession()
+    {
+        tracer.fine("End repository session");
+        super.endReposSession();
+        mdrRepository.endSession();
+    }
+
+    // implement FarragoRepos
     public FarragoModelLoader getModelLoader()
     {
         return modelLoader;
     }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    protected class FarragoMemFactory
+        extends FarragoMetadataFactoryImpl
+    {
+        private final FactoryImpl factoryImpl;
+
+        public FarragoMemFactory(JmiModelGraph modelGraph)
+        {
+            factoryImpl = new FactoryImpl(modelGraph);
+            this.setRootPackage((FarragoPackage) factoryImpl.getRootPackage());
+        }
+
+        public FactoryImpl getImpl()
+        {
+            return factoryImpl;
+        }
+
+        public <T extends RefPackage> T newRefPackage(Class<T> ifacePackage)
+        {
+            return factoryImpl.newRefPackage(ifacePackage);
+        }
+    }
+
+    private class FactoryImpl
+        extends JmiModeledMemFactory
+    {
+        FactoryImpl(JmiModelGraph modelGraph)
+        {
+            super(modelGraph);
+        }
+
+        protected RefPackageImpl newRootPackage()
+        {
+            return new RefPackageImpl(FarragoPackage.class);
+        }
+    }
 }
 
-// End FarragoReposImpl.java
+// End FarragoMdrReposImpl.java

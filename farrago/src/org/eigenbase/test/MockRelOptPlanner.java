@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class MockRelOptPlanner
     extends AbstractRelOptPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode root;
@@ -63,7 +62,8 @@ public class MockRelOptPlanner
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
-        assert (this.rule == null) : "MockRelOptPlanner only supports a single rule";
+        assert this.rule == null
+            : "MockRelOptPlanner only supports a single rule";
         this.rule = rule;
 
         return false;
@@ -90,21 +90,35 @@ public class MockRelOptPlanner
         return root;
     }
 
+    /**
+     * Recursively matches a rule.
+     *
+     * @param rel Relational expression
+     * @param parent Parent relational expression
+     * @param ordinalInParent Ordinal of relational expression among its
+     * siblings
+     *
+     * @return whether match occurred
+     */
     private boolean matchRecursive(
         RelNode rel,
         RelNode parent,
         int ordinalInParent)
     {
         List<RelNode> bindings = new ArrayList<RelNode>();
-        if (match(rule.getOperand(),
+        if (match(
+                rule.getOperand(),
                 rel,
-                bindings)) {
+                bindings))
+        {
             MockRuleCall call =
                 new MockRuleCall(
                     this,
                     rule.getOperand(),
-                    bindings.toArray(RelNode.emptyArray));
-            rule.onMatch(call);
+                    bindings.toArray(new RelNode[bindings.size()]));
+            if (rule.matches(call)) {
+                rule.onMatch(call);
+            }
         }
 
         if (transformationResult != null) {
@@ -125,6 +139,15 @@ public class MockRelOptPlanner
         return false;
     }
 
+    /**
+     * Matches a relational expression to a rule.
+     *
+     * @param operand Root operand of rule
+     * @param rel Relational expression
+     * @param bindings Bindings, populated on successful match
+     *
+     * @return whether relational expression matched rule
+     */
     private boolean match(
         RelOptRuleOperand operand,
         RelNode rel,
@@ -134,7 +157,7 @@ public class MockRelOptPlanner
             return false;
         }
         bindings.add(rel);
-        Object [] childOperands = operand.getChildren();
+        RelOptRuleOperand [] childOperands = operand.getChildOperands();
         if (childOperands == null) {
             return true;
         }
@@ -144,9 +167,11 @@ public class MockRelOptPlanner
             return false;
         }
         for (int i = 0; i < n; ++i) {
-            if (!match((RelOptRuleOperand) childOperands[i],
+            if (!match(
+                    childOperands[i],
                     childRels[i],
-                    bindings)) {
+                    bindings))
+            {
                 return false;
             }
         }
@@ -178,12 +203,23 @@ public class MockRelOptPlanner
     private class MockRuleCall
         extends RelOptRuleCall
     {
+        /**
+         * Creates a MockRuleCall.
+         *
+         * @param planner Planner
+         * @param operand Operand
+         * @param rels List of matched relational expressions
+         */
         MockRuleCall(
             RelOptPlanner planner,
             RelOptRuleOperand operand,
             RelNode [] rels)
         {
-            super(planner, operand, rels);
+            super(
+                planner,
+                operand,
+                rels,
+                Collections.<RelNode, List<RelNode>>emptyMap());
         }
 
         // implement RelOptRuleCall

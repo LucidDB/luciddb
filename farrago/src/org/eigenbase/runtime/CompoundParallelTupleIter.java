@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,18 +45,18 @@ import org.eigenbase.test.*;
  * <li>items Are now synthetic {@link Object}s.</li>
  * <li>Items would have to become things that expose a {@link Comparable} <i>
  * key</i> value.</li>
- * <li>Even if one input lags behind the other provding a {@link #next()} value,
- * that missing value might sort before its available counterparts from the
- * other inputs. There is no basis to decide to wait for it or not.</li>
+ * <li>Even if one input lags behind the other provding a {@link
+ * Iterator#next()} value, that missing value might sort before its available
+ * counterparts from the other inputs. There is no basis to decide to wait for
+ * it or not.</li>
  * </ul>
  *
  * @author Marc Berkowitz
  * @version $Id$
  */
 public class CompoundParallelTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final private TupleIter [] in;
@@ -156,7 +156,7 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] { "a", "b" }),
-                    makeTupleIter(new String[] { "c" })
+                        makeTupleIter(new String[] { "c" })
                     });
             assertEquals(
                 tupleIter,
@@ -181,8 +181,8 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] { "a", "b", "c" }),
-                    makeTupleIter(new String[] { "d", "e" }),
-                    makeTupleIter(new String[] { "f" }),
+                        makeTupleIter(new String[] { "d", "e" }),
+                        makeTupleIter(new String[] { "f" }),
                     });
             assertEquals(
                 tupleIter,
@@ -204,7 +204,7 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] {}),
-                    makeTupleIter(new String[] { "a", "b" })
+                        makeTupleIter(new String[] { "a", "b" })
                     });
             assertEquals(
                 tupleIter,

@@ -41,12 +41,15 @@ import org.eigenbase.relopt.*;
  * convert a {@link JavaTableAccessRel} to a {@link JdbcQuery}. Then we grow
  * it by grafting on filters to the WHERE clause, projections in the SELECT
  * list, and so forth.
+ *
+ * @version $Id$
+ * @author jhyde
  */
 class TableAccessToQueryRule extends RelOptRule
 {
     TableAccessToQueryRule()
     {
-        super(new RelOptRuleOperand(JavaTableAccessRel.class, null));
+        super(new RelOptRuleOperand(JavaTableAccessRel.class, ANY));
     }
 
     public void onMatch(RelOptRuleCall call)
@@ -59,7 +62,7 @@ class TableAccessToQueryRule extends RelOptRule
         JdbcSchema schema = (JdbcSchema) table.getRelOptSchema();
         final RelOptConnection connection = javaTableAccess.getConnection();
         SqlSelect sql =
-            SqlStdOperatorTable.instance().selectOperator.createCall(
+            SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 null,
                 new SqlIdentifier(

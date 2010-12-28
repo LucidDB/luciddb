@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,8 +21,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.plugin;
-
-import java.net.*;
 
 import java.util.*;
 
@@ -46,10 +44,9 @@ import net.sf.farrago.util.*;
 public abstract class FarragoPluginCache
     extends FarragoCompoundAllocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private final Map mapMofIdToPlugin;
+    private final Map<String, Object> mapMofIdToPlugin;
     private final FarragoObjectCache sharedCache;
     private final FarragoRepos repos;
     private final FarragoPluginClassLoader classLoader;
@@ -74,7 +71,7 @@ public abstract class FarragoPluginCache
         this.sharedCache = sharedCache;
         this.repos = repos;
         this.classLoader = classLoader;
-        mapMofIdToPlugin = new HashMap();
+        this.mapMofIdToPlugin = new HashMap<String, Object>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -93,6 +90,14 @@ public abstract class FarragoPluginCache
     public FarragoObjectCache getSharedCache()
     {
         return sharedCache;
+    }
+
+    /**
+     * @return mapMofIdToPlugin
+     */
+    public Map<String, Object> getMapMofIdToPlugin()
+    {
+        return mapMofIdToPlugin;
     }
 
     /**
@@ -122,7 +127,7 @@ public abstract class FarragoPluginCache
 
         Object obj = entry.getValue();
         mapMofIdToPlugin.put(
-            entry.getKey(),
+            (String) entry.getKey(),
             obj);
         return obj;
     }

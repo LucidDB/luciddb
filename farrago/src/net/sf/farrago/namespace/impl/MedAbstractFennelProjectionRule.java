@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package net.sf.farrago.namespace.impl;
 
 import java.util.*;
 
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -31,7 +32,7 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
+
 
 /**
  * MedAbstractFennelProjectionRule is a base class for implementing projection
@@ -64,26 +65,26 @@ public abstract class MedAbstractFennelProjectionRule
     }
 
     public abstract void onMatch(RelOptRuleCall call);
-    
+
     /**
-     * Creates projection list for scan. If the projection contains 
-     * expressions, then the input references from those expressions are
-     * extracted and that list of references becomes the projection list.
-     * 
+     * Creates projection list for scan. If the projection contains expressions,
+     * then the input references from those expressions are extracted and that
+     * list of references becomes the projection list.
+     *
      * @param origScan row scan underneath the project
      * @param projRel ProjectRel that we will be creating the projection for
      * @param projectedColumns returns a list of the projected column ordinals,
      * if it is possible to project
-     * @param preserveExprs special expressions that should be preserved in
-     * the projection
+     * @param preserveExprCondition condition that identifies special
+     * expressions that should be preserved in the projection
      * @param defaultExpr expression to be used in the projection if no fields
      * or special columns are selected
-     * @param newProjList returns a new projection RelNode corresponding to
-     * a projection that now references a rowscan that is projecting the input
+     * @param newProjList returns a new projection RelNode corresponding to a
+     * projection that now references a rowscan that is projecting the input
      * references that were extracted from the original projection expressions;
-     * if the original expression didn't contain expressions, then this list
-     * is returned empty
-     * 
+     * if the original expression didn't contain expressions, then this list is
+     * returned empty
+     *
      * @return true if columns in projection list from the scan need to be
      * renamed
      */
@@ -91,7 +92,7 @@ public abstract class MedAbstractFennelProjectionRule
         FennelRel origScan,
         ProjectRel projRel,
         List<Integer> projectedColumns,
-        Set<SqlOperator> preserveExprs,
+        PushProjector.ExprCondition preserveExprCondition,
         RexNode defaultExpr,
         List<ProjectRel> newProjList)
     {
@@ -111,23 +112,27 @@ public abstract class MedAbstractFennelProjectionRule
                 // all input references and any special expressions from the
                 // projection
                 PushProjector pushProject =
-                    new PushProjector(projRel, null, origScan, preserveExprs);
+                    new PushProjector(
+                        projRel, null, origScan,
+                        preserveExprCondition);
                 ProjectRel newProject = pushProject.convertProject(defaultExpr);
                 if (newProject == null) {
                     // can't do any further projection
                     return false;
                 }
                 newProjList.add(newProject);
+
                 // using the input references we just extracted, it should now
                 // be possible to create a projection for the row scan
-                needRename = createProjectionList(
-                    origScan,
-                    (ProjectRel) newProject.getChild(),
-                    projectedColumns,
-                    preserveExprs,
-                    defaultExpr,
-                    newProjList);
-                assert(projectedColumns.size() > 0);
+                needRename =
+                    createProjectionList(
+                        origScan,
+                        (ProjectRel) newProject.getChild(),
+                        projectedColumns,
+                        preserveExprCondition,
+                        defaultExpr,
+                        newProjList);
+                assert (projectedColumns.size() > 0);
                 return needRename;
             }
             String projFieldName = projFields[i].getName();
@@ -136,6 +141,7 @@ public abstract class MedAbstractFennelProjectionRule
             }
             tempProjList.add(projIndex);
         }
+
         // now that we've determined it is possible to project, add the
         // ordinals to the return list
         projectedColumns.addAll(tempProjList);
@@ -171,19 +177,19 @@ public abstract class MedAbstractFennelProjectionRule
         RexInputRef fieldAccess = (RexInputRef) exp;
         origFieldName.add(
             rowType.getFields()[fieldAccess.getIndex()].getName());
-        return new Integer(fieldAccess.getIndex());
+        return fieldAccess.getIndex();
     }
 
     /**
      * Creates new RelNodes replacing/removing the original project/row scan
-     * 
+     *
      * @param projectedScan new scan that is now projected
      * @param origProject original projection
      * @param needRename true if fields from the row scan need to be renamed
      * @param newProject projection that contains the new projection
-     * expressions, in the case where the original projection cannot be
-     * removed because it projects expressions
-     * 
+     * expressions, in the case where the original projection cannot be removed
+     * because it projects expressions
+     *
      * @return new RelNode
      */
     public RelNode createNewRelNode(
@@ -199,6 +205,17 @@ public abstract class MedAbstractFennelProjectionRule
             traits.setTrait(
                 CallingConventionTraitDef.instance,
                 FennelRel.FENNEL_EXEC_CONVENTION);
+            if (!traits.equals(projectedScan.getTraits())) {
+                RelNode mergedProjectedScan = convert(projectedScan, traits);
+                RelOptPlanner planner =
+                    projectedScan.getCluster().getPlanner();
+                // register projectedScan == mergedProjectedScan
+                // so mergedProjectedScan will have a set later on
+                projectedScan =
+                    planner.ensureRegistered(
+                        mergedProjectedScan,
+                        projectedScan);
+            }
             scanRel =
                 new FennelRenameRel(
                     origProject.getCluster(),
@@ -214,11 +231,10 @@ public abstract class MedAbstractFennelProjectionRule
         } else {
             // in the case where the projection had expressions, put the
             // new, modified projection on top of the projected row scan
-            return
-                (ProjectRel) CalcRel.createProject(
-                    scanRel,
-                    newProject.getProjectExps(),
-                    RelOptUtil.getFieldNames(newProject.getRowType()));
+            return (ProjectRel) CalcRel.createProject(
+                scanRel,
+                newProject.getProjectExps(),
+                RelOptUtil.getFieldNames(newProject.getRowType()));
         }
     }
 }

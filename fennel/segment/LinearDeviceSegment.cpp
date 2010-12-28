@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,8 +39,8 @@ LinearDeviceSegmentParams::LinearDeviceSegmentParams()
 
 BlockNum LinearDeviceSegment::getAvailableDevicePages() const
 {
-    return pDevice->getSizeInBytes()/getFullPageSize() -
-        CompoundId::getBlockNum(firstBlockId);
+    return pDevice->getSizeInBytes() / getFullPageSize()
+        - CompoundId::getBlockNum(firstBlockId);
 }
 
 LinearDeviceSegment::LinearDeviceSegment(
@@ -54,11 +54,12 @@ LinearDeviceSegment::LinearDeviceSegment(
     nPagesMax = params.nPagesMax;
     nPagesAllocated = params.nPagesAllocated;
     nPagesIncrement = params.nPagesIncrement;
+    nPagesExtended = 0;
     BlockNum nPagesActual = getAvailableDevicePages();
     if (nPagesActual < params.nPagesMin) {
         pDevice->setSizeInBytes(
-            pDevice->getSizeInBytes() +
-            (params.nPagesMin - nPagesActual)*getFullPageSize());
+            pDevice->getSizeInBytes()
+            + (params.nPagesMin - nPagesActual) * getFullPageSize());
         nPagesActual = params.nPagesMin;
     }
     if (isMAXU(nPagesAllocated)) {
@@ -95,21 +96,31 @@ BlockNum LinearDeviceSegment::getAllocatedSizeInPages()
     return nPagesAllocated;
 }
 
+BlockNum LinearDeviceSegment::getNumPagesOccupiedHighWater()
+{
+    return getAllocatedSizeInPages();
+}
+
+BlockNum LinearDeviceSegment::getNumPagesExtended()
+{
+    return nPagesExtended;
+}
+
 PageId LinearDeviceSegment::allocatePageId(PageOwnerId)
 {
     // nothing to do with PageOwnerId
 
     BlockNum newBlockNum = nPagesAllocated;
-    
+
     if (!ensureAllocatedSize(nPagesAllocated + 1)) {
         return NULL_PAGE_ID;
     }
-    
+
     return getLinearPageId(newBlockNum);
 }
 
 void LinearDeviceSegment::deallocatePageRange(
-    PageId startPageId,PageId endPageId)
+    PageId startPageId, PageId endPageId)
 {
     if (endPageId != NULL_PAGE_ID) {
         // REVIEW:  Technically, this should assert; instead, we let it slip so
@@ -134,9 +145,9 @@ PageId LinearDeviceSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void LinearDeviceSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void LinearDeviceSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder LinearDeviceSegment::getAllocationOrder() const
@@ -163,11 +174,13 @@ bool LinearDeviceSegment::ensureAllocatedSize(BlockNum nPages)
         if (!nPagesIncrement) {
             return false;
         }
-        BlockNum nNewPages = std::max(nPagesIncrement,nPages - nPagesAvailable);
+        BlockNum nNewPages =
+            std::max(nPagesIncrement, nPages - nPagesAvailable);
         if (!isMAXU(nPagesMax) && (nPagesAvailable + nNewPages > nPagesMax)) {
             nNewPages = nPagesMax - nPagesAvailable;
         }
         assert(nNewPages);
+        nPagesExtended += nNewPages;
         pDevice->setSizeInBytes(
             pDevice->getSizeInBytes() + nNewPages*getFullPageSize());
     }
@@ -179,7 +192,7 @@ void LinearDeviceSegment::delegatedCheckpoint(
     Segment &delegatingSegment,
     CheckpointType checkpointType)
 {
-    Segment::delegatedCheckpoint(delegatingSegment,checkpointType);
+    Segment::delegatedCheckpoint(delegatingSegment, checkpointType);
     if (checkpointType != CHECKPOINT_DISCARD) {
         pDevice->flush();
     }

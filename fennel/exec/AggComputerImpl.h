@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,18 +31,19 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * CountAggComputer is an abstract base for computing COUNT().
  */
-class CountAggComputer : public AggComputer
+class FENNEL_EXEC_EXPORT CountAggComputer
+    : public AggComputer
 {
 protected:
     inline uint64_t &interpretDatum(TupleDatum &);
-    
+
     inline void clearAccumulatorImpl(
         TupleDatum &accumulatorDatum);
     inline void initAccumulatorImpl(
         TupleDatum &accumulatorDatum);
     inline void updateAccumulatorImpl(
         TupleDatum &accumulatorDatum);
-    
+
 public:
     // implement AggComputer
     virtual void computeOutput(
@@ -54,7 +55,8 @@ public:
  * CountStarAggComputer computes COUNT(*), which counts tuples without
  * regard for null values.
  */
-class CountStarAggComputer : public CountAggComputer
+class FENNEL_EXEC_EXPORT CountStarAggComputer
+    : public CountAggComputer
 {
 public:
     // implement AggComputer
@@ -84,7 +86,8 @@ public:
  * CountNullableAggComputer computes COUNT(X), which does not count tuples
  * for which X IS NULL.
  */
-class CountNullableAggComputer : public CountAggComputer
+class FENNEL_EXEC_EXPORT CountNullableAggComputer
+    : public CountAggComputer
 {
 public:
     // implement AggComputer
@@ -114,7 +117,8 @@ public:
  * ExtremeAggComputer computes MIN/MAX, ignoring null values but returning
  * null if the input is empty.
  */
-class ExtremeAggComputer : public AggComputer
+class FENNEL_EXEC_EXPORT ExtremeAggComputer
+    : public AggComputer
 {
     /**
      * Type descriptor used as comparison functor.
@@ -132,14 +136,14 @@ class ExtremeAggComputer : public AggComputer
     bool isResultNull;
 
     inline void copyInputToAccumulator(
-        TupleDatum &accumulatorDatum, 
+        TupleDatum &accumulatorDatum,
         TupleDatum const &inputDatum);
 
 public:
     explicit ExtremeAggComputer(
         AggFunction aggFunctionInit,
         TupleAttributeDescriptor const &attrDesc);
-    
+
     // implement AggComputer
     virtual void clearAccumulator(
         TupleDatum &accumulatorDatum);
@@ -148,7 +152,7 @@ public:
     virtual void updateAccumulator(
         TupleDatum &accumulatorDatum,
         TupleData const &inputTuple);
-    
+
     // implement AggComputer
     virtual void computeOutput(
         TupleDatum &outputDatum,
@@ -179,21 +183,21 @@ class SumAggComputer : public AggComputer
      * True until a non-null input value is seen.
      */
     bool isResultNull;
-    
+
     inline T &interpretDatum(TupleDatum &datum)
     {
         assert(datum.cbData == sizeof(T));
         assert(datum.pData);
         return *reinterpret_cast<T *>(const_cast<PBuffer>(datum.pData));
     }
-    
+
     inline T const &interpretDatum(TupleDatum const &datum)
     {
         assert(datum.cbData == sizeof(T));
         assert(datum.pData);
         return *reinterpret_cast<T const *>(datum.pData);
     }
-    
+
 public:
     // implement AggComputer
     virtual void clearAccumulator(TupleDatum &accumulatorDatum)
@@ -261,18 +265,18 @@ public:
         TupleData const &inputTuple)
     {
         TupleDatum const &inputDatum = inputTuple[iInputAttr];
-        
+
         if (!accumulatorDatumSrc.pData) {
             accumulatorDatumDest.memCopyFrom(inputDatum);
         } else {
             T sumSrc = interpretDatum(accumulatorDatumSrc);
             T &sumDest = interpretDatum(accumulatorDatumDest);
-            
+
             if (inputDatum.pData) {
                 T sumInput = interpretDatum(inputDatum);
                 sumDest = sumSrc + sumInput;
             } else {
-                sumDest = sumSrc;                
+                sumDest = sumSrc;
             }
         }
     }

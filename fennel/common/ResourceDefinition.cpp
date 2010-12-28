@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,8 +33,9 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace std;
 
-ResourceDefinition::ResourceDefinition(ResourceBundle *bundle,
-                                       const string &key)
+ResourceDefinition::ResourceDefinition(
+    ResourceBundle *bundle,
+    const string &key)
     : _key(key), _bundle(bundle)
 {
     assert(!key.empty());
@@ -56,7 +57,6 @@ string ResourceDefinition::format() const
                 % _bundle->getBaseName()
                 % _bundle->getLocale().getDisplayName()
                 % _key).str();
-
     }
 }
 
@@ -68,7 +68,7 @@ boost::format ResourceDefinition::prepareFormatter(int numArgs) const
     } else {
         stringstream formatSpecifier;
         formatSpecifier << "%1%.%2%.%3%(";
-        for(int i = 0; i < numArgs; i++) {
+        for (int i = 0; i < numArgs; i++) {
             if (i != 0) {
                 formatSpecifier << ", ";
             }
@@ -89,3 +89,5 @@ boost::format ResourceDefinition::prepareFormatter(int numArgs) const
 }
 
 FENNEL_END_CPPFILE("$Id$");
+
+// End ResourceDefinition.cpp

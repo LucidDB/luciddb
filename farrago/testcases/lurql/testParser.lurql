@@ -28,10 +28,12 @@ from
     union
     class "y" as n
     where "beebee" = 'c'
+    and "yo" matches '.*UNIV.*'
+    and not "mama" matches ?wears
     and exists (follow as p)
     and exists blaz in (follow as ee)
     and exists * in (follow as ff)
-    and exists brat, wurst in (follow as ff)
+    and not exists brat, wurst in (follow as ff)
     then (
         recursively (
             follow as t

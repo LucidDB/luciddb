@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,14 +34,13 @@ package org.eigenbase.runtime;
  * </ul>
  *
  * <p>{@link ExclusivePipe} is a simple extension to this class containing a
- * {@link ByteBuffer} as the shared resource.
+ * {@link java.nio.ByteBuffer} as the shared resource.
  *
  * @author jhyde
  * @version $Id$
  */
 public class Interlock
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

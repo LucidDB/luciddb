@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * CacheStats defines performance/activity statistics collected by the cache;
  * these can be obtained as a snapshot from Cache::collectStats().
  */
-class CacheStats 
+class FENNEL_CACHE_EXPORT CacheStats
 {
 public:
     /**
@@ -38,7 +38,7 @@ public:
      * read (since last snapshot).
      */
     uint nHits;
-    
+
     /**
      * Number of times a page access was satisfied without a disk
      * read (since cache initialization).
@@ -91,6 +91,81 @@ public:
      * Number of disk pages written (since cache initialization).
      */
     uint nPageWritesSinceInit;
+
+    /**
+     * Number of rejected cache pre-fetch requests (since last snapshot).
+     */
+    uint nRejectedPrefetches;
+
+    /**
+     * Number of rejected cache pre-fetch requests (since cache initialization).
+     */
+    uint nRejectedPrefetchesSinceInit;
+
+    /**
+     * Number of I/O requests requiring retry (since last snapshot).
+     */
+    uint nIoRetries;
+
+    /**
+     * Number of I/O requests requiring retry (since cache initialization).
+     */
+    uint nIoRetriesSinceInit;
+
+    /**
+     * Number of successful cache pre-fetch requests (since last snapshot).
+     */
+    uint nSuccessfulPrefetches;
+
+    /**
+     * Number of successful cache pre-fetch requests (since cache
+     * initialization).
+     */
+    uint nSuccessfulPrefetchesSinceInit;
+
+    /**
+     * Number of lazy cache page writes (since last snapshot).
+     */
+    uint nLazyWrites;
+
+    /**
+     * Number of lazy cache page writes (since last initialization).
+     */
+    uint nLazyWritesSinceInit;
+
+    /**
+     * Number of lazy write calls that encountered at least one dirty page
+     * (since last snapshot);
+     */
+    uint nLazyWriteCalls;
+
+    /**
+     * Number of lazy write calls that encountered at least one dirty page
+     * (since initialization);
+     */
+    uint nLazyWriteCallsSinceInit;
+
+    /**
+     * Number of cache page writes during page victimization (since last
+     * snapshot).
+     */
+    uint nVictimizationWrites;
+
+    /**
+     * Number of lazy cache page writes during victimizations (since last
+     * initialization).
+     */
+    uint nVictimizationWritesSinceInit;
+
+    /**
+     * Number of cache page writes during checkpoint (since last snapshot).
+     */
+    uint nCheckpointWrites;
+
+    /**
+     * Number of cache page writes during checkpoint (since initialization).
+     */
+    uint nCheckpointWritesSinceInit;
 
     /**
      * Number of memory pages currently allocated in buffer pool

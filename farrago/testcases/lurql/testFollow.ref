@@ -211,11 +211,99 @@ Class: ModelElement
 
 ****
 
+# Same as previous one, but using NOT exists instead
+PARSE RESULT:
+select "c"
+from
+class "Class" as "c"
+where
+    not exists * in (
+        follow composite forward destination class "Attribute"
+        where
+            "name" = 'annotation'
+        union
+        follow composite forward destination class "Attribute"
+        where
+            "name" = 'visibility'
+    );
+
+EXPLANATION:
+anon_2 { Class }
+anon_2:container->Contains->anon_3:containedElement { Attribute }
+anon_2:container->Contains->anon_4:containedElement { Attribute }
+anon_3 { Attribute } where "name" = 'annotation'
+anon_4 { Attribute } where "name" = 'visibility'
+c_1 { Class }
+c_1->notexists->anon_2
+
+EXECUTION RESULT:
+Class: AliasType
+Class: Association
+Class: AssociationEnd
+Class: Attribute
+Class: BehavioralFeature
+Class: Class
+Class: Classifier
+Class: CollectionType
+Class: Constant
+Class: Constraint
+Class: DataType
+Class: EnumerationType
+Class: Exception
+Class: Namespace
+Class: Operation
+Class: Package
+Class: Parameter
+Class: PrimitiveType
+Class: Reference
+Class: StructuralFeature
+Class: StructureField
+Class: StructureType
+Class: Tag
+Class: TypedElement
+
+****
+
 # Test exists with projection:  only get classes which have descendants
 # with an attribute named 'annotation'; we're verifying
 # that the existence of the descendants themselves is ignored
 PARSE RESULT:
 select "c"
+from
+class "Class" as "c"
+where
+    exists "a" in (
+        follow association "Generalizes" forward
+        then (
+            follow composite forward destination class "Attribute" as "a"
+            where
+                "name" = 'annotation'
+        )
+    );
+
+EXPLANATION:
+a_4 { Attribute } where "name" = 'annotation'
+anon_2 { Class }
+anon_2:subtype->Generalizes->anon_3:supertype
+anon_3 { GeneralizableElement }
+anon_3:container->Contains->a_4:containedElement { Attribute }
+c_1 { Class }
+c_1->exists[a]->anon_2
+
+EXECUTION RESULT:
+Class: Constraint
+Class: Feature
+Class: Import
+Class: Namespace
+Class: Tag
+Class: TypedElement
+
+****
+
+# Same as previous, but use select * to verify FRG-179
+# (variables inside of exists should not contribute to results)
+PARSE RESULT:
+select *
 from
 class "Class" as "c"
 where

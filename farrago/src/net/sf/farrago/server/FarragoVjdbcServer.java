@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,9 +26,14 @@ import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.util.*;
 
 import java.io.*;
-import java.util.*;
+
+import java.rmi.*;
+
 import java.sql.*;
 
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 
 
@@ -42,7 +47,10 @@ import net.sf.farrago.jdbc.engine.*;
 public class FarragoVjdbcServer
     extends FarragoAbstractServer
 {
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoJdbcServerDriver jdbcDriver;
+    private FarragoJettyEmbedding jettyEmbedding;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -78,7 +86,7 @@ public class FarragoVjdbcServer
         // REVIEW jvs 7-Sept-2006: seems like we should null this out in
         // stopNetwork, but that causes problems in FarragoVjdbcServerTest.
         this.jdbcDriver = jdbcDriver;
-        
+
         VJdbcConfiguration vjdbcConfig = new VJdbcConfiguration();
         ConnectionConfiguration configFarrago =
             new FarragoConnectionConfiguration();
@@ -89,10 +97,18 @@ public class FarragoVjdbcServer
         configFarrago.setPrefetchResultSetMetaData(true);
         vjdbcConfig.addConnection(configFarrago);
 
+        if (protocol == ListeningProtocol.HTTP) {
+            configureConnectionTimeout(vjdbcConfig);
+            jettyEmbedding = new FarragoJettyEmbedding();
+            jettyEmbedding.startServlet(vjdbcConfig, httpPort);
+            return httpPort;
+        }
+
         // NOTE:  This odd sequence is required because of the
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);
         vjdbcConfig = VJdbcConfiguration.singleton();
+        configureConnectionTimeout(vjdbcConfig);
 
         RmiConfiguration rmiConfig = new RmiConfiguration();
         vjdbcConfig.setRmiConfiguration(rmiConfig);
@@ -112,6 +128,33 @@ public class FarragoVjdbcServer
         return rmiRegistryPort;
     }
 
+    private void configureConnectionTimeout(VJdbcConfiguration vjdbcConfig)
+    {
+        if (connectionTimeoutMillis == -1) {
+            // -1 means never timeout, so set OCCT checking period to 0
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
+        } else {
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                connectionTimeoutMillis);
+        }
+    }
+
+    protected void stopNetwork()
+    {
+        if (protocol == ListeningProtocol.HTTP) {
+            if (jettyEmbedding != null) {
+                jettyEmbedding.stopServlet();
+                jettyEmbedding = null;
+            }
+        } else {
+            super.stopNetwork();
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
     // NOTE jvs 7-Sept-2006:  This is to avoid calling DriverManager,
     // which can deadlock when client and server are in same process.
     private class FarragoConnectionConfiguration
@@ -121,6 +164,14 @@ public class FarragoVjdbcServer
             throws SQLException
         {
             try {
+                // set remoteProtocol to RMI to tell engine driver that
+                // this is a remote connection
+
+                // NOTE: if basing authentication on whether a connection is
+                // remote or not, it is VITAL that the remoteProtocol is
+                // overwritten here. Otherwise this is a potential security
+                // hole!
+                props.setProperty("remoteProtocol", protocol.toString());
                 return jdbcDriver.connect(jdbcDriver.getBaseUrl(), props);
             } catch (Throwable t) {
                 throw SQLExceptionHelper.wrap(t);

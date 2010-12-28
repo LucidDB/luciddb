@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,11 +23,8 @@
 package net.sf.farrago.test.concurrent;
 
 import java.io.*;
-
 import java.util.*;
-
-import net.sf.farrago.jdbc.engine.*;
-
+import org.eigenbase.test.concurrent.*;
 
 /**
  * FarragoTestConcurrentScriptedTestCase is a base class for multi-threaded,
@@ -40,7 +37,6 @@ import net.sf.farrago.jdbc.engine.*;
 public abstract class FarragoTestConcurrentScriptedTestCase
     extends FarragoTestConcurrentTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -61,59 +57,22 @@ public abstract class FarragoTestConcurrentScriptedTestCase
     /**
      * Executes the given multi-threaded test script.
      */
-    protected void runScript(String mtsqlFile, String jdbcUrl)
-        throws Exception
+    protected void runScript(String mtsqlFile, String jdbcURL) throws Exception
     {
-
-        File mtsqlFileSansExt =
-            new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
-
-        FarragoTestConcurrentScriptedCommandGenerator cmdGen =
+        ConcurrentTestCommandScript cmdGen =
             newScriptedCommandGenerator(mtsqlFile);
-
         if (cmdGen.isDisabled()) {
             return;
         }
+        setDataSource(cmdGen, jdbcURL);
+        innerExecuteTest(cmdGen, cmdGen.useLockstep());
 
-        cmdGen.executeSetup(jdbcUrl);
-
-        executeTest(
-            cmdGen, 
-            cmdGen.useLockstep(),
-            jdbcUrl);
-
-        Map results = cmdGen.getResults();
-
-
-        OutputStream outStream = openTestLogOutputStream(mtsqlFileSansExt);
-
+        File mtsqlFileBase =
+            new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
+        OutputStream outStream = openTestLogOutputStream(mtsqlFileBase);
         BufferedWriter out =
             new BufferedWriter(new OutputStreamWriter(outStream));
-
- 
-        for (Iterator i = results.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
-
-            Integer threadId = (Integer) entry.getKey();
-            String [] threadResult = (String []) entry.getValue();
-
-            String threadName = "thread " + threadResult[0];
-            if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID
-                .equals(
-                    threadId)) {
-                threadName = "setup";
-            }
-
-            out.write("-- " + threadName);
-            out.newLine();
-            out.write(threadResult[1]);
-            out.write("-- end of " + threadName);
-            out.newLine();
-            out.newLine();
-        }
-
-        out.flush();
-
+        cmdGen.printResults(out);
         diffTestLog();
     }
 }

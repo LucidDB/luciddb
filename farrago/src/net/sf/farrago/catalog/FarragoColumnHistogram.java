@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.catalog;
 
+import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.fem.med.*;
@@ -28,9 +30,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.stat.*;
-import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
@@ -59,11 +59,11 @@ import org.eigenbase.util14.*;
 public class FarragoColumnHistogram
     implements RelStatColumnStatistics
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FemAbstractColumn column;
     private SargIntervalSequence sequence;
+    private Timestamp labelTimestamp;
     private FemColumnHistogram histogram;
     private int barCount;
     private List<FemColumnHistogramBar> bars;
@@ -79,13 +79,34 @@ public class FarragoColumnHistogram
      *
      * @param column column to analyze
      * @param sequence optional predicate on the column
+     *
+     * @deprecated
      */
     protected FarragoColumnHistogram(
         FemAbstractColumn column,
         SargIntervalSequence sequence)
     {
+        this(column, sequence, null);
+    }
+
+    /**
+     * Initializes a column statistics reader. The statistics are not actually
+     * analyzed until the user calls {@link #evaluate()}.
+     *
+     * @param column column to analyze
+     * @param sequence optional predicate on the column
+     * @param labelTimestamp the creation timestamp of the label setting that
+     * determines which set of stats should be used; null if there is no label
+     * setting
+     */
+    protected FarragoColumnHistogram(
+        FemAbstractColumn column,
+        SargIntervalSequence sequence,
+        Timestamp labelTimestamp)
+    {
         this.column = column;
         this.sequence = sequence;
+        this.labelTimestamp = labelTimestamp;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -108,33 +129,48 @@ public class FarragoColumnHistogram
      */
     protected void evaluate()
     {
-        histogram = column.getHistogram();
+        histogram = FarragoCatalogUtil.getHistogram(column, labelTimestamp);
         if (histogram == null) {
+            return;
+        }
+
+        Long valueCount = histogram.getDistinctValueCount();
+        if (valueCount == null) {
+            selectivity = (sequence == null) ? 1.0 : null;
+            cardinality = null;
             return;
         }
 
         if (sequence == null) {
             selectivity = 1.0;
-            Long valueCount = histogram.getDistinctValueCount();
-            cardinality =
-                (valueCount == null) ? null : Double.valueOf(valueCount);
+            cardinality = Double.valueOf(valueCount);
             return;
         }
-
-        // TODO: return null when SargIntervals contain variables
 
         barCount = histogram.getBarCount();
         bars = histogram.getBar();
         assert (bars.size() == barCount) : "invalid histogram bar count";
 
         List<HistogramBarCoverage> coverages = getCoverage(sequence);
+
+        if (coverages == null) {
+            selectivity = null;
+            cardinality = null;
+            return;
+        }
+
         readCoverages(coverages);
     }
 
     /**
      * Computes the histogram bar coverage of an ordered sequence of intervals.
+     * Coverage can only be computed if the end points of each interval in the
+     * sequence are either literal or infinite.
      *
      * @param sequence sequence to lookup
+     *
+     * @return List of HistogramBarCoverage instance of null if coverage cannot
+     * be computed.
      */
     private List<HistogramBarCoverage> getCoverage(
         SargIntervalSequence sequence)
@@ -147,6 +183,13 @@ public class FarragoColumnHistogram
 
         int minBar = 0;
         for (SargInterval interval : sequence.getList()) {
+            if (!checkEndpoint(interval.getLowerBound())
+                || !checkEndpoint(interval.getUpperBound()))
+            {
+                // Can't handle non-literal endpoints, signal the caller.
+                return null;
+            }
+
             HistogramRange range = new HistogramRange(bars, interval, minBar);
             range.evaluate();
             if (range.isEmpty()) {
@@ -161,6 +204,21 @@ public class FarragoColumnHistogram
     }
 
     /**
+     * Check if the given SargEndpoint is infinite or is bounded by a literal
+     * expression.
+     *
+     * @param endpoint the endpoint to evaluate
+     *
+     * @return true if the endpoint is infinite or bounded by a literal; false
+     * otherwise
+     */
+    private boolean checkEndpoint(SargEndpoint endpoint)
+    {
+        return !endpoint.isFinite()
+            || (endpoint.getCoordinate() instanceof RexLiteral);
+    }
+
+    /**
      * Reads collective coverages finally make estimates on requested
      * attributes. This implementation looks at each bar separately, estimating
      * how much of each bar is covered. It then accounts for that bar's
@@ -172,6 +230,8 @@ public class FarragoColumnHistogram
     {
         // determine a correction factor:
         //     actual values = sampled values * correction
+        // For computed statistics, the correction will be 1.0.  For estimated
+        // statistics it will be >= 1.0.
         Long histValues = histogram.getDistinctValueCount();
         Long sampleValues = 0L;
         for (FemColumnHistogramBar bar : bars) {
@@ -267,7 +327,8 @@ public class FarragoColumnHistogram
          * @param interval the search interval
          * @param minBar the first bar to search
          */
-        protected HistogramRange(List<FemColumnHistogramBar> bars,
+        protected HistogramRange(
+            List<FemColumnHistogramBar> bars,
             SargInterval interval,
             int minBar)
         {
@@ -282,10 +343,12 @@ public class FarragoColumnHistogram
          */
         protected void evaluate()
         {
-            int start = findStartBar(
+            int start =
+                findStartBar(
                     minBar,
                     interval.getLowerBound());
-            int end = findEndBar(
+            int end =
+                findEndBar(
                     start,
                     interval.getUpperBound());
 
@@ -394,7 +457,8 @@ public class FarragoColumnHistogram
                 // if the histogram bar starts starts after the point
                 // we know the bar does not contain the point
                 FemColumnHistogramBar bar = bars.get(end);
-                int comparison = compare(
+                int comparison =
+                    compare(
                         bar.getStartingValue(),
                         coordinate);
                 if ((comparison > 0) || (open && (comparison == 0))) {
@@ -426,7 +490,8 @@ public class FarragoColumnHistogram
          * @param coverages set of coverages for each bar
          * @param range histogram bar range to be tabulated
          */
-        protected static void addRange(List<HistogramBarCoverage> coverages,
+        protected static void addRange(
+            List<HistogramBarCoverage> coverages,
             HistogramRange range,
             String minVal)
         {
@@ -473,7 +538,8 @@ public class FarragoColumnHistogram
                 RexLiteral coordinate = (RexLiteral) lower.getCoordinate();
                 int comparison = compare(minVal, coordinate);
                 if ((comparison == 1)
-                    || ((comparison == 0) && lower.isClosed())) {
+                    || ((comparison == 0) && lower.isClosed()))
+                {
                     coverages.get(0).entireBar = true;
                 }
             }
@@ -547,7 +613,8 @@ public class FarragoColumnHistogram
             // there are no ranges.
             double points = cardinalityPoint;
             if (((points > 0) && (points >= estimatedBarCardinality))
-                || (cardinalityRanges == 0)) {
+                || (cardinalityRanges == 0))
+            {
                 return points;
             }
 

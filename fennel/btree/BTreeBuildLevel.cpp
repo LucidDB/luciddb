@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -109,7 +109,7 @@ void BTreeBuildLevel::indexLastChild()
 
     uint cbTuple = nodeAccessor.tupleAccessor.getByteCount(
         nodeAccessor.tupleData);
-    
+
     BTreeNode *pNode = &(pageLock.getNodeForWrite());
     if (isNodeFull(*pNode,cbTuple)) {
         indexLastKey(false);
@@ -118,7 +118,7 @@ void BTreeBuildLevel::indexLastChild()
         // FIXME: should override fillfactor here, or provide a proper error
         // msg; same thing somewhere else
         assert(!isNodeFull(*pNode,cbTuple));
-        
+
         // indexLastKey used tupleData, so have to rebind it
         builder.getLevel(iLevel - 1).unmarshalLastKey();
     }
@@ -128,14 +128,14 @@ void BTreeBuildLevel::indexLastChild()
         reinterpret_cast<PConstBuffer>(&(builder.getLevel(iLevel-1).pageId));
     PBuffer pEntry = nodeAccessor.allocateEntry(
         *pNode,pNode->nEntries,cbTuple);
-    nodeAccessor.tupleAccessor.marshal(nodeAccessor.tupleData,pEntry);
+    nodeAccessor.tupleAccessor.marshal(nodeAccessor.tupleData, pEntry);
     ++nEntriesProcessed;
 }
 
 void BTreeBuildLevel::unmarshalLastKey()
 {
     BTreeNode const &node = pageLock.getNodeForRead();
-    nodeAccessor.accessTuple(node,node.nEntries - 1);
+    nodeAccessor.accessTuple(node, node.nEntries - 1);
     nodeAccessor.unmarshalKey(builder.pNonLeafNodeAccessor->tupleData);
 }
 
@@ -156,17 +156,17 @@ BTreeNode *BTreeBuildLevel::allocateAndLinkNewNode()
         prevNode,
         prevPageId,
         pageId);
-    
+
     // Let the cache know we're not planning to revisit the page we just
     // finished.
     builder.getCacheAccessor()->nicePage(prevPageLock.getPage());
-    
+
     ++iNode;
     if (nEntriesPerNode) {
         // Recalculate balancing.
         nEntriesPerNode = builder.calculateChildEntriesPerNode(
-            builder.getLevel(iLevel+1).nEntriesTotal, 
-            nEntriesTotal, 
+            builder.getLevel(iLevel + 1).nEntriesTotal,
+            nEntriesTotal,
             iNode);
     }
     return &node;
@@ -174,7 +174,7 @@ BTreeNode *BTreeBuildLevel::allocateAndLinkNewNode()
 
 bool BTreeBuildLevel::isNodeFull(BTreeNode const &node,uint cbTuple)
 {
-    return nodeAccessor.calculateCapacity(node,cbReserved + cbTuple)
+    return nodeAccessor.calculateCapacity(node, cbReserved + cbTuple)
         != BTreeNodeAccessor::CAN_FIT;
 }
 
@@ -183,7 +183,7 @@ BTreeNode &BTreeBuildLevel::allocatePage()
     pageId = pageLock.allocatePage(builder.getPageOwnerId());
     BTreeNode &node = pageLock.getNodeForWrite();
     nodeAccessor.clearNode(
-        node,builder.getSegment()->getUsablePageSize());
+        node, builder.getSegment()->getUsablePageSize());
     node.height = iLevel;
     return node;
 }
@@ -191,7 +191,7 @@ BTreeNode &BTreeBuildLevel::allocatePage()
 FixedBuildLevel::FixedBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
 }
 
@@ -214,11 +214,11 @@ bool FixedBuildLevel::isNodeFull(BTreeNode const &node,uint)
 VariableBuildLevel::VariableBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
     assert(builder.pTempSegment);
     SegmentAccessor tempSegmentAccessor(
-        builder.pTempSegment,builder.getCacheAccessor());
+        builder.pTempSegment, builder.getCacheAccessor());
     pParentKeyStream = SegOutputStream::newSegOutputStream(tempSegmentAccessor);
 }
 
@@ -236,7 +236,7 @@ SharedSegInputStream VariableBuildLevel::getParentKeyStream()
     PageId tempPageId = pParentKeyStream->getFirstPageId();
     pParentKeyStream->close();
     SegmentAccessor tempSegmentAccessor(
-        builder.pTempSegment,builder.getCacheAccessor());
+        builder.pTempSegment, builder.getCacheAccessor());
     SharedSegInputStream pParentInputStream =
         SegInputStream::newSegInputStream(
             tempSegmentAccessor,
@@ -265,7 +265,7 @@ void VariableBuildLevel::indexLastKey(bool)
 DynamicBuildLevel::DynamicBuildLevel(
     BTreeBuilder &builderInit,
     BTreeNodeAccessor &nodeAccessorInit)
-    : BTreeBuildLevel(builderInit,nodeAccessorInit)
+    : BTreeBuildLevel(builderInit, nodeAccessorInit)
 {
 }
 

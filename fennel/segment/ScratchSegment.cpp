@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,7 @@ void ScratchSegment::clearPages()
 
     for (PageListIter ppPage = pages.begin(); ppPage != pages.end(); ++ppPage) {
         CachePage &page = **ppPage;
-        getCache()->unlockPage(page,LOCKMODE_X);
+        getCache()->unlockPage(page, LOCKMODE_X);
     }
     pages.clear();
 }
@@ -58,8 +58,8 @@ void ScratchSegment::clearPages()
 BlockId ScratchSegment::translatePageId(PageId pageId)
 {
     assert(isPageIdAllocated(pageId));
-    BlockId blockId;
-    CompoundId::setDeviceId(blockId,Cache::NULL_DEVICE_ID);
+    BlockId blockId(0);
+    CompoundId::setDeviceId(blockId, Cache::NULL_DEVICE_ID);
     CompoundId::setBlockNum(
         blockId,
         getLinearBlockNum(pageId));
@@ -76,12 +76,22 @@ BlockNum ScratchSegment::getAllocatedSizeInPages()
     return pages.size();
 }
 
+BlockNum ScratchSegment::getNumPagesOccupiedHighWater()
+{
+    return getAllocatedSizeInPages();
+}
+
+BlockNum ScratchSegment::getNumPagesExtended()
+{
+    return BlockNum(0);
+}
+
 PageId ScratchSegment::allocatePageId(PageOwnerId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     // nothing to do with PageOwnerId
-    
+
     if (getAllocatedSizeInPages() >= nPagesMax) {
         return NULL_PAGE_ID;
     }
@@ -92,11 +102,11 @@ PageId ScratchSegment::allocatePageId(PageOwnerId)
     return getLinearPageId(blockNum);
 }
 
-void ScratchSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void ScratchSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     assert(endPageId == NULL_PAGE_ID);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     clearPages();
 }
@@ -111,9 +121,9 @@ PageId ScratchSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void ScratchSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void ScratchSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder ScratchSegment::getAllocationOrder() const
@@ -129,7 +139,7 @@ CachePage *ScratchSegment::lockPage(
     TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     assert(CompoundId::getDeviceId(blockId) == Cache::NULL_DEVICE_ID);
     BlockNum blockNum = CompoundId::getBlockNum(blockId);
     assert(blockNum < pages.size());
@@ -153,14 +163,15 @@ void ScratchSegment::discardPage(
 {
 }
 
-void ScratchSegment::prefetchPage(
+bool ScratchSegment::prefetchPage(
     BlockId,
     MappedPageListener *)
 {
+    return false;
 }
 
 void ScratchSegment::prefetchBatch(
-    BlockId,uint,
+    BlockId, uint,
     MappedPageListener *)
 {
 }
@@ -202,6 +213,17 @@ void ScratchSegment::setTxnId(TxnId)
 TxnId ScratchSegment::getTxnId() const
 {
     return IMPLICIT_TXN_ID;
+}
+
+void ScratchSegment::getPrefetchParams(
+    uint &nPagesPerBatch,
+    uint &nBatchPrefetches)
+{
+}
+
+uint ScratchSegment::getProcessorCacheBytes()
+{
+    return getCache()->getProcessorCacheBytes();
 }
 
 FENNEL_END_CPPFILE("$Id$");

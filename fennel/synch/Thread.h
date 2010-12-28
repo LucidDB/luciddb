@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,7 @@
 #include "fennel/synch/SynchObj.h"
 #include <boost/utility.hpp>
 
-namespace boost 
+namespace boost
 {
 class thread;
 };
@@ -38,18 +38,18 @@ FENNEL_BEGIN_NAMESPACE
  * Thread is a wrapper around boost::thread which allows for the thread object
  * to be created before it is actually started.
  */
-class Thread : public boost::noncopyable
+class FENNEL_SYNCH_EXPORT Thread : public boost::noncopyable
 {
 protected:
     boost::thread *pBoostThread;
     bool bRunning;
     std::string name;
-    
+
     void initAndRun();
     virtual void run() = 0;
     virtual void beforeRun();
     virtual void afterRun();
-    
+
 public:
     explicit Thread(std::string const &description = "anonymous thread");
     virtual ~Thread();

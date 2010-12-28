@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2003-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,12 +26,12 @@ import java.lang.reflect.*;
 
 import java.nio.*;
 
-import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
@@ -86,10 +86,10 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class FennelToIteratorConverter
-    extends ConverterRel
-    implements JavaRel
+    extends ConverterRelImpl
+    implements JavaRel,
+        ConverterRel
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -102,12 +102,13 @@ public class FennelToIteratorConverter
             RelNode.class,
             FennelRel.FENNEL_EXEC_CONVENTION,
             CallingConvention.ITERATOR,
-            "FennelToIteratorRule") {
+            "FennelToIteratorRule")
+        {
             public RelNode convert(RelNode rel)
             {
                 return new FennelToIteratorConverter(
-                        rel.getCluster(),
-                        rel);
+                    rel.getCluster(),
+                    rel);
             }
 
             public boolean isGuaranteed()
@@ -115,7 +116,6 @@ public class FennelToIteratorConverter
                 return true;
             }
         };
-
 
     //~ Constructors -----------------------------------------------------------
 
@@ -140,7 +140,8 @@ public class FennelToIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    @SuppressWarnings({ "CloneDoesntCallSuperClone" })
+    public FennelToIteratorConverter clone()
     {
         FennelToIteratorConverter clone =
             new FennelToIteratorConverter(
@@ -154,7 +155,7 @@ public class FennelToIteratorConverter
     public ParseTree implement(JavaRelImplementor implementor)
     {
         assert (getChild().getConvention().equals(
-                    FennelRel.FENNEL_EXEC_CONVENTION)) : getChild().getClass()
+            FennelRel.FENNEL_EXEC_CONVENTION)) : getChild().getClass()
             .getName();
 
         boolean useTransformer = false;
@@ -263,10 +264,11 @@ public class FennelToIteratorConverter
         RelDataTypeField [] fields = rowType.getFields();
         Variable varPrevEndOffset = null;
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
-        Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
-        for (int i = 0; i < fields.length; ++i) {
-            FemTupleAttrAccessor attrAccessor =
-                (FemTupleAttrAccessor) attrIter.next();
+        int i = -1;
+        for (
+            FemTupleAttrAccessor attrAccessor : tupleAccessor.getAttrAccessor())
+        {
+            ++i;
             if (attrAccessor.getBitValueIndex() != -1) {
                 // bit fields are already handled
                 continue;
@@ -320,7 +322,8 @@ public class FennelToIteratorConverter
                                 "getShort",
                                 new ExpressionList(
                                     Literal.makeLiteral(
-                                        attrAccessor.getEndIndirectOffset()))))));
+                                        attrAccessor
+                                            .getEndIndirectOffset()))))));
                 Expression expStartOffset;
                 if (varPrevEndOffset == null) {
                     expStartOffset =
@@ -390,7 +393,8 @@ public class FennelToIteratorConverter
             // variable-width tuple:  end is same as end of last variable-width
             // field
             expTupleEndOffset =
-                new BinaryExpression(varPrevEndOffset,
+                new BinaryExpression(
+                    varPrevEndOffset,
                     BinaryExpression.MINUS,
                     varTupleStartOffset);
         }
@@ -456,6 +460,8 @@ public class FennelToIteratorConverter
                 memberDeclList);
 
         if (!useTransformer) {
+            registerChildWithAncestor(implementor, rootStream, true);
+
             // Pass tuple reader to FarragoRuntimeContext.newFennelTupleIter to
             // produce a FennelTupleIter, which will invoke our generated
             // FennelTupleReader to unmarshal
@@ -465,11 +471,10 @@ public class FennelToIteratorConverter
             argList.add(Literal.makeLiteral(rootStreamId));
             argList.add(childrenExp);
 
-            return
-                new MethodCall(
-                    connectionVariable,
-                    "newFennelTupleIter",
-                    argList);
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTupleIter",
+                argList);
         } else {
             // Pass tuple reader to
             // FarragoRuntimeContext.newFennelTransformTupleIter to produce
@@ -484,24 +489,18 @@ public class FennelToIteratorConverter
             // assert that the children's code generation didn't place code
             // here -- we want it in a separate class that implements
             // FarragoTransform.
-            assert ((
-                        (childrenExp instanceof Literal)
-                        && (
-                            ((Literal) childrenExp).getLiteralType()
-                            == Literal.NULL
-                           )
-                    )
-                    || (
-                        (childrenExp instanceof MethodCall)
-                        && ((MethodCall) childrenExp).getName().startsWith(
-                            "dummy")
-                       )) : childrenExp.toString();
+            assert (((childrenExp instanceof Literal)
+                    && (((Literal) childrenExp).getLiteralType()
+                        == Literal.NULL))
+                || ((childrenExp instanceof MethodCall)
+                    && ((MethodCall) childrenExp).getName().startsWith(
+                        "dummy"))) : childrenExp.toString();
 
             // Register this stream def with our ancestral
             // IteratorToFennelConverter.  Note that this converter instance
             // might appear in several branches of the planner's tree (e.g.,
             // it can have different ancestors at different times)
-            registerChildWithAncestor(implementor, rootStream);
+            registerChildWithAncestor(implementor, rootStream, false);
 
             ExpressionList argList = new ExpressionList();
             argList.add(newTupleReaderExp);
@@ -513,11 +512,10 @@ public class FennelToIteratorConverter
                     IteratorToFennelConverter.INPUT_BINDINGS_VAR_NAME));
             argList.add(childrenExp);
 
-            return
-                new MethodCall(
-                    connectionVariable,
-                    "newFennelTransformTupleIter",
-                    argList);
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTransformTupleIter",
+                argList);
         }
     }
 
@@ -526,13 +524,15 @@ public class FennelToIteratorConverter
      * into a {@link FemExecutionStreamDef}.
      *
      * <p>Derived classes may override this method.
+     *
+     * @param implementor Context for the implementation process
+     *
+     * @return stream definition
      */
     protected FemExecutionStreamDef childToStreamDef(
         FennelRelImplementor implementor)
     {
-        FemExecutionStreamDef rootStream =
-            implementor.visitFennelChild((FennelRel) getChild());
-        return rootStream;
+        return implementor.visitFennelChild((FennelRel) getChild(), 0);
     }
 
     /**
@@ -547,10 +547,8 @@ public class FennelToIteratorConverter
      */
     protected boolean isTransformerInput(JavaRelImplementor implementor)
     {
-        List ancestors = implementor.getAncestorRels(this);
-        for (Object o : ancestors) {
-            RelNode ancestor = (RelNode) o;
-
+        List<RelNode> ancestors = implementor.getAncestorRels(this);
+        for (RelNode ancestor : ancestors) {
             if (ancestor instanceof FarragoJavaUdxRel) {
                 // NOTE jvs 13-May-2006:  A UDX invocation pulls from
                 // a different thread; it does not participate
@@ -568,22 +566,22 @@ public class FennelToIteratorConverter
         return false;
     }
 
-    private void registerChildWithAncestor(
+    protected final void registerChildWithAncestor(
         JavaRelImplementor implementor,
-        FemExecutionStreamDef streamDef)
+        FemExecutionStreamDef streamDef,
+        boolean implicit)
     {
-        List ancestors = implementor.getAncestorRels(this);
-        for (Object temp : ancestors) {
-            RelNode ancestor = (RelNode) temp;
-
+        List<RelNode> ancestors = implementor.getAncestorRels(this);
+        for (RelNode ancestor : ancestors) {
             if (ancestor instanceof IteratorToFennelConverter) {
                 ((IteratorToFennelConverter) ancestor).registerChildStreamDef(
-                    streamDef);
+                    streamDef,
+                    implicit);
                 return;
             }
         }
 
-        assert (false) : "Ancestor IteratorToFennelConverter not found";
+        assert (implicit) : "Ancestor IteratorToFennelConverter not found";
     }
 
     /**

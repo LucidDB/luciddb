@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,16 +38,20 @@ import org.eigenbase.rex.*;
 public class PushFilterPastSetOpRule
     extends RelOptRule
 {
+    public static final PushFilterPastSetOpRule instance =
+        new PushFilterPastSetOpRule();
+
     //~ Constructors -----------------------------------------------------------
 
-    public PushFilterPastSetOpRule()
+    /**
+     * Creates a PushFilterPastSetOpRule.
+     */
+    private PushFilterPastSetOpRule()
     {
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(SetOpRel.class, null)
-                }));
+                new RelOptRuleOperand(SetOpRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -58,17 +62,17 @@ public class PushFilterPastSetOpRule
         FilterRel filterRel = (FilterRel) call.rels[0];
         SetOpRel setOpRel = (SetOpRel) call.rels[1];
 
-        RelNode[] setOpInputs = setOpRel.getInputs();
+        RelNode [] setOpInputs = setOpRel.getInputs();
         int nSetOpInputs = setOpInputs.length;
-        RelNode[] newSetOpInputs = new RelNode[nSetOpInputs];
+        RelNode [] newSetOpInputs = new RelNode[nSetOpInputs];
         RelOptCluster cluster = setOpRel.getCluster();
         RexNode condition = filterRel.getCondition();
-        
+
         // create filters on top of each setop child, modifying the filter
         // condition to reference each setop child
         RexBuilder rexBuilder = filterRel.getCluster().getRexBuilder();
-        RelDataTypeField[] origFields = setOpRel.getRowType().getFields();
-        int[] adjustments = new int[origFields.length];
+        RelDataTypeField [] origFields = setOpRel.getRowType().getFields();
+        int [] adjustments = new int[origFields.length];
         for (int i = 0; i < nSetOpInputs; i++) {
             RexNode newCondition =
                 condition.accept(
@@ -80,11 +84,11 @@ public class PushFilterPastSetOpRule
             newSetOpInputs[i] =
                 new FilterRel(cluster, setOpInputs[i], newCondition);
         }
-        
+
         // create a new setop whose children are the filters created above
         SetOpRel newSetOpRel =
             RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
-        
+
         call.transformTo(newSetOpRel);
     }
 }

@@ -106,5 +106,5 @@ select * from calctime order by 1
 -- FRG-20
 insert into calcts select cast (cast (s1 as time) as timestamp) from calctypes where n1 + 100 > 0
 ;
-select * from calcts order by 1
+select cast(ts as date) = current_date from calcts order by 1
 ;

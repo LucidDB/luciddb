@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,11 @@
 #include <ostream>
 #include <stdlib.h>
 
-#ifndef __MINGW32__
+#if !defined(__MSVC__) && !defined(__APPLE__)
+#define FENNEL_BACKTRACE_SUPPORTED
+#endif
+
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 #include <signal.h>
 #include <execinfo.h>
 #include <link.h>
@@ -38,18 +42,20 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * A Backtrace represents a backtrace of the run-time stack.
- * The constructor wraps up the backtrace of the current thread at the point of construction.
- * A Backtrace object can be printed to an ostream.
+ *
+ * The constructor wraps up the backtrace of the current thread at the
+ * point of construction.  A Backtrace object can be printed to an
+ * ostream.
  */
-class Backtrace
+class FENNEL_COMMON_EXPORT Backtrace
 {
     size_t depth;                       // actual depth
     const bool ownbuf;                  // the object allocated the addrbuf
     const size_t bufsize;
     void** addrbuf;                     // [bufsize]
 
-#ifndef __MINGW32__
-    struct LibraryInfo 
+#ifdef FENNEL_BACKTRACE_SUPPORTED
+    struct LibraryInfo
     {
         ElfW(Addr) baseAddress;
         char const *pImageName;
@@ -67,9 +73,12 @@ public:
     Backtrace(size_t maxdepth = 32);
 
     /**
-     * Captures the backtrace at the point of construction. The caller provides an
-     * address buffer, probably on the stack.
-     * The buffer should contain an extra item to refer to the Backtrace constructor itself.
+     * Captures the backtrace at the point of construction. The caller provides
+     * an address buffer, probably on the stack.
+     *
+     * The buffer should contain an extra item to refer to the
+     * Backtrace constructor itself.
+     *
      * @param bufsize buffer size, in words (sizeof(void*) = 1 word)
      * @param buffer an array of BUFSIZE (void *) entries.
      */
@@ -77,10 +86,16 @@ public:
 
     ~Backtrace();
 
-    /** prints the backtrace in human readable form. Skips the Backtrace constructor */
+    /**
+     * Prints the backtrace in human readable form. Skips the
+     * Backtrace constructor.
+     */
     std::ostream& print(std::ostream&) const;
 
-    /** prints the backtrace to a unix file descriptor: for use when out of memory */
+    /**
+     * Prints the backtrace to a unix file descriptor: for use when
+     * out of memory.
+     */
     void print(int fd) const;
 
     /**
@@ -100,22 +115,28 @@ inline std::ostream& operator << (std::ostream& os, const Backtrace& bt)
 }
 
 /**
- * AutoBacktrace provides a handler that intercepts fatal errors, prints a backtrace,
- * and passes on the fatal error to other handlers.
- * The backtrace handler has global scope.
- * Fatal errors include abort(), assert(), fennel permAssert(), and runaway C++ exceptions.
+ * AutoBacktrace provides a handler that intercepts fatal errors,
+ * prints a backtrace, and passes on the fatal error to other
+ * handlers.
+ *
+ * The backtrace handler has global scope.  Fatal errors include
+ * abort(), assert(), fennel permAssert(), and runaway C++ exceptions.
  */
-class AutoBacktrace {
+class FENNEL_COMMON_EXPORT AutoBacktrace
+{
     static std::ostream* pstream;
     static SharedTraceTarget ptrace;
     static void signal_handler(int signum);
-#ifndef __MINGW32__
+#ifdef FENNEL_BACKTRACE_SUPPORTED
 #define BACKTRACE_SIG_MAX 32
     static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif
 
-    AutoBacktrace() {}                  // hide constructor
-    
+    // hide constructor
+    AutoBacktrace()
+    {
+    }
+
     static void installSignal(int signum);
 public:
     /**
@@ -140,7 +161,7 @@ public:
      * @param outStream receives backtrace if signal is handled
      */
     static void setOutputStream(std::ostream &outStream);
-    
+
     /**
      * Unsets a target stream for backtrace.
      */
@@ -158,7 +179,7 @@ public:
 };
 
 FENNEL_END_NAMESPACE
-    
+
 #endif
-    
+
 // End Backtrace.h

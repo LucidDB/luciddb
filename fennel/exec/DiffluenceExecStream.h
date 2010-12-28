@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,10 +31,20 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * DiffluenceExecStreamParams defines parameters for DiffluenceExecStream.
  */
-struct DiffluenceExecStreamParams : virtual public SingleInputExecStreamParams
+struct FENNEL_EXEC_EXPORT DiffluenceExecStreamParams
+    : virtual public SingleInputExecStreamParams
 {
+    /**
+     * Output tuple descriptor.  Currently, all outputs must have the same
+     * descriptor.
+     */
+    TupleDescriptor outputTupleDesc;
+
+    TupleFormat outputTupleFormat;
+
+    explicit DiffluenceExecStreamParams();
 };
-    
+
 /**
  * DiffluenceExecStream is an abstract base for any ExecStream with
  * multiple outputs and exactly one input.
@@ -42,7 +52,8 @@ struct DiffluenceExecStreamParams : virtual public SingleInputExecStreamParams
  * @author Rushan Chen
  * @version $Id$
  */
-class DiffluenceExecStream : virtual public SingleInputExecStream
+class FENNEL_EXEC_EXPORT DiffluenceExecStream
+    : virtual public SingleInputExecStream
 {
 protected:
 
@@ -50,6 +61,12 @@ protected:
      * List of output buffer accessors.
      */
     std::vector<SharedExecStreamBufAccessor> outAccessors;
+
+    /**
+     * Output tuple descriptor.  Currently, all outputs must have the same
+     * descriptor.
+     */
+    TupleDescriptor outputTupleDesc;
 
 public:
     // implement ExecStream

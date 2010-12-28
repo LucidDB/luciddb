@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Header stored on each page of a BTree.
  */
-struct BTreeNode : public StoredNode
+struct FENNEL_BTREE_EXPORT BTreeNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0x9d4ec481f86aa93eLL;
 
@@ -43,7 +44,7 @@ struct BTreeNode : public StoredNode
      * knew what was on a page, we wouldn't need to prefetch it!).
      */
     PageId rightSibling;
-    
+
     /**
      * Number of entries stored on this node.
      */
@@ -68,7 +69,7 @@ struct BTreeNode : public StoredNode
     // NOTE:  interpretation of the data is dependent on the node's height in
     // the tree and the way in which the tree is defined.
     // See BTreeNodeAccessor.
-    
+
     /**
      * @return writable start of data after header
      */
@@ -76,7 +77,7 @@ struct BTreeNode : public StoredNode
     {
         return reinterpret_cast<PBuffer>(this + 1);
     }
-    
+
     /**
      * @return read-only start of data after header
      */

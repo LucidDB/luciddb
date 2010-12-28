@@ -47,6 +47,11 @@ public class SunJavaCompiler implements JavaCompiler
 		compiler.compile();
     }
 
+    public int getTotalByteCodeSize()
+    {
+        return 0;
+    }
+    
 	public void compile() {
 		compile(args.getStringArray());
 	}

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,16 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
-import java.util.*;
+import java.math.*;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -44,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlMonotonicBinaryOperator
     extends SqlBinaryOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlMonotonicBinaryOperator(
@@ -68,23 +62,112 @@ public class SqlMonotonicBinaryOperator
 
     //~ Methods ----------------------------------------------------------------
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        SqlValidator val = scope.getValidator();
+        final SqlMonotonicity mono0 = scope.getMonotonicity(call.operands[0]);
+        final SqlMonotonicity mono1 = scope.getMonotonicity(call.operands[1]);
 
-        // First check for (m op c)
-        if (val.isConstant(call.operands[1])) {
-            SqlNode node = (SqlNode) call.operands[0];
-            return scope.isMonotonic(node);
+        // constant <op> constant --> constant
+        if ((mono1 == SqlMonotonicity.Constant)
+            && (mono0 == SqlMonotonicity.Constant))
+        {
+            return SqlMonotonicity.Constant;
         }
 
-        // Check the converse (c op m)
-        if (val.isConstant(call.operands[0])) {
-            SqlNode node = (SqlNode) call.operands[1];
-            return scope.isMonotonic(node);
+        // monotonic <op> constant
+        if (mono1 == SqlMonotonicity.Constant) {
+            // mono0 + constant --> mono0
+            // mono0 - constant --> mono0
+            if (getName().equals("-")
+                || getName().equals("+"))
+            {
+                return mono0;
+            }
+            assert getName().equals("*");
+            if (call.operands[1] instanceof SqlLiteral) {
+                SqlLiteral literal = (SqlLiteral) call.operands[1];
+                switch (literal.signum()) {
+                case -1:
+
+                    // mono0 * negative constant --> reverse mono0
+                    return mono0.reverse();
+                case 0:
+
+                    // mono0 * 0 --> constant (zero)
+                    return SqlMonotonicity.Constant;
+                default:
+
+                    // mono0 * positiove constant --> mono0
+                    return mono0;
+                }
+            }
+            return mono0;
         }
 
-        return super.isMonotonic(call, scope);
+        // constant <op> mono
+        if (mono0 == SqlMonotonicity.Constant) {
+            if (getName().equals("-")) {
+                // constant - mono1 --> reverse mono1
+                return mono1.reverse();
+            }
+            if (getName().equals("+")) {
+                // constant + mono1 --> mono1
+                return mono1;
+            }
+            assert getName().equals("*");
+            if (call.operands[0] instanceof SqlLiteral) {
+                SqlLiteral literal = (SqlLiteral) call.operands[0];
+                switch (literal.signum()) {
+                case -1:
+
+                    // negative constant * mono1 --> reverse mono1
+                    return mono1.reverse();
+                case 0:
+
+                    // 0 * mono1 --> constant (zero)
+                    return SqlMonotonicity.Constant;
+                default:
+
+                    // positive constant * mono1 --> mono1
+                    return mono1;
+                }
+            }
+        }
+
+        // strictly asc + strictly asc --> strictly asc
+        //   e.g. 2 * orderid + 3 * orderid
+        //     is strictly increasing if orderid is strictly increasing
+        // asc + asc --> asc
+        //   e.g. 2 * orderid + 3 * orderid
+        //     is increasing if orderid is increasing
+        // asc + desc --> not monotonic
+        //   e.g. 2 * orderid + (-3 * orderid) is not monotonic
+
+        if (getName().equals("+")) {
+            if (mono0 == mono1) {
+                return mono0;
+            } else if (mono0.unstrict() == mono1.unstrict()) {
+                return mono0.unstrict();
+            } else {
+                return SqlMonotonicity.NotMonotonic;
+            }
+        }
+        if (getName().equals("-")) {
+            if (mono0 == mono1.reverse()) {
+                return mono0;
+            } else if (mono0.unstrict() == mono1.reverse().unstrict()) {
+                return mono0.unstrict();
+            } else {
+                return SqlMonotonicity.NotMonotonic;
+            }
+        }
+        if (getName().equals("*")) {
+            return SqlMonotonicity.NotMonotonic;
+        }
+
+        return super.getMonotonicity(call, scope);
     }
 }
 

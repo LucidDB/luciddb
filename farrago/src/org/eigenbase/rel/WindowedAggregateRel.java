@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,13 +34,12 @@ import org.eigenbase.rex.*;
  *
  * <ul>
  * <li>Created by {@link
- * com.disruptivetech.farrago.rel.WindowedAggSplitterRule}.
- * <li>Triggers {@link com.disruptivetech.farrago.rel.FennelWindowRule}.
+ * net.sf.farrago.fennel.rel.WindowedAggSplitterRule}.
+ * <li>Triggers {@link net.sf.farrago.fennel.rel.FennelWindowRule}.
  */
 public final class WindowedAggregateRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final RexProgram program;
@@ -116,15 +115,14 @@ public final class WindowedAggregateRel
         program.explainCalc(this, pw);
     }
 
-    public Object clone()
+    public WindowedAggregateRel clone()
     {
-        return
-            new WindowedAggregateRel(
-                getCluster(),
-                traits,
-                getChild(),
-                program,
-                rowType);
+        return new WindowedAggregateRel(
+            getCluster(),
+            traits.clone(),
+            getChild(),
+            program,
+            rowType);
     }
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,6 @@ import org.eigenbase.util.*;
 public class SqlNodeToRexConverterImpl
     implements SqlNodeToRexConverter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlRexConvertletTable convertletTable;
@@ -92,78 +91,77 @@ public class SqlNodeToRexConverterImpl
             // Since there is no eq. RexLiteral of SqlLiteral.Unknown we
             // treat it as a cast(null as boolean)
             RelDataType type;
-            if (literal.getTypeName() == SqlTypeName.Boolean) {
-                type = typeFactory.createSqlType(SqlTypeName.Boolean);
+            if (literal.getTypeName() == SqlTypeName.BOOLEAN) {
+                type = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
                 type = typeFactory.createTypeWithNullability(type, true);
             } else {
                 type = validator.getValidatedNodeType(literal);
             }
             return rexBuilder.makeCast(
-                    type,
-                    rexBuilder.constantNull());
+                type,
+                rexBuilder.constantNull());
         }
 
         BitString bitString;
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
+        SqlIntervalLiteral.IntervalValue intervalValue;
+        long l;
+
+        switch (literal.getTypeName()) {
+        case DECIMAL:
 
             // exact number
             BigDecimal bd = (BigDecimal) value;
-            return
-                rexBuilder.makeExactLiteral(
-                    bd,
-                    literal.createSqlType(typeFactory));
-        case SqlTypeName.Double_ordinal:
+            return rexBuilder.makeExactLiteral(
+                bd,
+                literal.createSqlType(typeFactory));
+        case DOUBLE:
 
             // approximate type
             // TODO:  preserve fixed-point precision and large integers
             return rexBuilder.makeApproxLiteral((BigDecimal) value);
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             return rexBuilder.makeCharLiteral((NlsString) value);
-        case SqlTypeName.Boolean_ordinal:
+        case BOOLEAN:
             return rexBuilder.makeLiteral(((Boolean) value).booleanValue());
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             bitString = (BitString) value;
-            Util.permAssert((bitString.getBitCount() % 8) == 0,
+            Util.permAssert(
+                (bitString.getBitCount() % 8) == 0,
                 "incomplete octet");
 
             // An even number of hexits (e.g. X'ABCD') makes whole number
             // of bytes.
             byte [] bytes = bitString.getAsByteArray();
             return rexBuilder.makeBinaryLiteral(bytes);
-        case SqlTypeName.Symbol_ordinal:
-            return rexBuilder.makeFlag((EnumeratedValues.Value) value);
-        case SqlTypeName.Timestamp_ordinal:
-            return
-                rexBuilder.makeTimestampLiteral(
-                    (Calendar) value,
-                    ((SqlTimestampLiteral) literal).getPrec());
-        case SqlTypeName.Time_ordinal:
-            return
-                rexBuilder.makeTimeLiteral(
-                    (Calendar) value,
-                    ((SqlTimeLiteral) literal).getPrec());
-        case SqlTypeName.Date_ordinal:
+        case SYMBOL:
+            return rexBuilder.makeFlag(value);
+        case TIMESTAMP:
+            return rexBuilder.makeTimestampLiteral(
+                (Calendar) value,
+                ((SqlTimestampLiteral) literal).getPrec());
+        case TIME:
+            return rexBuilder.makeTimeLiteral(
+                (Calendar) value,
+                ((SqlTimeLiteral) literal).getPrec());
+        case DATE:
             return rexBuilder.makeDateLiteral((Calendar) value);
 
-        case SqlTypeName.IntervalYearMonth_ordinal:
-            {
-                SqlIntervalLiteral.IntervalValue intervalValue =
-                    (SqlIntervalLiteral.IntervalValue) value;
-                long l = SqlParserUtil.intervalToMonths(intervalValue);
-                return rexBuilder.makeIntervalLiteral(l,
-                    intervalValue.getIntervalQualifier());
-            }
-        case SqlTypeName.IntervalDayTime_ordinal:
-            {
-                SqlIntervalLiteral.IntervalValue intervalValue =
-                    (SqlIntervalLiteral.IntervalValue) value;
-                long l = SqlParserUtil.intervalToMillis(intervalValue);
-                return rexBuilder.makeIntervalLiteral(l,
-                    intervalValue.getIntervalQualifier());
-            }
+        case INTERVAL_YEAR_MONTH:
+            intervalValue =
+                (SqlIntervalLiteral.IntervalValue) value;
+            l = SqlParserUtil.intervalToMonths(intervalValue);
+            return rexBuilder.makeIntervalLiteral(
+                l,
+                intervalValue.getIntervalQualifier());
+        case INTERVAL_DAY_TIME:
+            intervalValue =
+                (SqlIntervalLiteral.IntervalValue) value;
+            l = SqlParserUtil.intervalToMillis(intervalValue);
+            return rexBuilder.makeIntervalLiteral(
+                l,
+                intervalValue.getIntervalQualifier());
         default:
-            throw literal.getTypeName().unexpected();
+            throw Util.unexpected(literal.getTypeName());
         }
     }
 }

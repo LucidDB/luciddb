@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,24 +49,21 @@ LogicalTxnLog::LogicalTxnLog(
     // Set up cache accessor so that all page locks will be taken out
     // with a reserved TxnId.  Just for sanity-checking, set up a quota to make
     // sure logging never locks more than two pages at a time.
-    nextTxnId = FIRST_TXN_ID;
     logSegmentAccessor.pCacheAccessor = SharedCacheAccessor(
         new QuotaCacheAccessor(
             SharedQuotaCacheAccessor(),
             logSegmentAccessor.pCacheAccessor,
             2));
-    logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
-    ++nextTxnId;
-    
+
     // TODO: Support an option to skip CRC's for optimized non-durable logging.
     // Also support a paranoid option for recording CRC's for long logs.
     pOutputStream = CrcSegOutputStream::newCrcSegOutputStream(
-        logSegmentAccessor,onlineUuid);
+        logSegmentAccessor, onlineUuid);
 
     // NOTE:  We only write one page at a time to the main log, and we always
     // need to wait after each page.  So request synchronous writes.
     pOutputStream->setWriteLatency(WRITE_EAGER_SYNC);
-    
+
     pOutputStream->getSegPos(lastCheckpointMemento.logPosition);
     lastCheckpointMemento.nUncommittedTxns = 0;
     nCommittedBeforeLastCheckpoint = 0;
@@ -75,13 +72,19 @@ LogicalTxnLog::LogicalTxnLog(
         "groupCommitInterval", 30);
 }
 
+void LogicalTxnLog::setNextTxnId(TxnId nextTxnIdInit)
+{
+    nextTxnId = nextTxnIdInit;
+    logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
+}
+
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
     SegmentAccessor const &logSegmentAccessor,
     PseudoUuid const &onlineUuid,
     SharedSegmentFactory pSegmentFactory)
 {
     return SharedLogicalTxnLog(
-        new LogicalTxnLog(logSegmentAccessor,onlineUuid,pSegmentFactory));
+        new LogicalTxnLog(logSegmentAccessor, onlineUuid, pSegmentFactory));
 }
 
 LogicalTxnLog::~LogicalTxnLog()
@@ -97,7 +100,6 @@ SharedLogicalTxn LogicalTxnLog::newLogicalTxn(
     // Set up cache accessor so that all page locks will be taken out
     // with the new TxnId.  Just for sanity-checking, set up a quota to make
     // sure logging never locks more than two pages at a time.
-    nextTxnId = FIRST_TXN_ID;
     pCacheAccessor = SharedCacheAccessor(
         new QuotaCacheAccessor(
             SharedQuotaCacheAccessor(),
@@ -105,7 +107,7 @@ SharedLogicalTxn LogicalTxnLog::newLogicalTxn(
             2));
     pCacheAccessor->setTxnId(nextTxnId);
     SharedLogicalTxn pTxn(
-        new LogicalTxn(nextTxnId,shared_from_this(),pCacheAccessor));
+        new LogicalTxn(nextTxnId, shared_from_this(), pCacheAccessor));
     uncommittedTxns.push_back(pTxn);
     ++nextTxnId;
     return pTxn;
@@ -136,6 +138,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             memento.logPosition);
         pTxn->pOutputStream.reset();
         pSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+        StrictMutexGuard mutexGuard(mutex);
         committedLongLogSegments.push_back(pSegment);
     } else {
         if (!pTxn->svpt.cbLogged) {
@@ -146,7 +149,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             removeTxn(pTxn);
             return;
         }
-        CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
+        CompoundId::setPageId(memento.logPosition.segByteId, NULL_PAGE_ID);
         CompoundId::setByteOffset(
             memento.logPosition.segByteId,
             pTxn->svpt.cbLogged);
@@ -160,7 +163,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             pTxn->pOutputStream->getInputStream();
         uint cbActual;
         PConstBuffer pBuffer = pInputStream->getReadPointer(1,&cbActual);
-        pOutputStream->writeBytes(pBuffer,cbActual);
+        pOutputStream->writeBytes(pBuffer, cbActual);
     }
 
     commitTxnWithGroup(mutexGuard);
@@ -171,7 +174,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
 {
     boost::xtime groupCommitExpiration;
     if (groupCommitInterval) {
-        convertTimeout(groupCommitInterval,groupCommitExpiration);
+        convertTimeout(groupCommitInterval, groupCommitExpiration);
     }
     SegStreamPosition logPos;
     pOutputStream->getSegPos(logPos);
@@ -179,7 +182,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
     for (;;) {
         bool timeout = true;
         if (groupCommitInterval) {
-            timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
+            timeout = !condition.timed_wait(mutexGuard, groupCommitExpiration);
 
             pOutputStream->getSegPos(logPos);
             PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
@@ -191,7 +194,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
 
         if (timeout) {
             // timeout:  we're in charge of flushing
-            
+
             // NOTE:  Since we're using synchronous writes, there's no need to
             // checkpoint (assuming the underlying device has been correctly
             // initialized to write through).
@@ -220,8 +223,8 @@ void LogicalTxnLog::rollbackTxn(SharedLogicalTxn pTxn)
     memento.txnId = pTxn->txnId;
     memento.cbActionLast = 0;
     memento.nParticipants = 0;
-    CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
-    CompoundId::setByteOffset(memento.logPosition.segByteId,0);
+    CompoundId::setPageId(memento.logPosition.segByteId, NULL_PAGE_ID);
+    CompoundId::setByteOffset(memento.logPosition.segByteId, 0);
     memento.logPosition.cbOffset = 0;
     memento.longLog = true;
     StrictMutexGuard mutexGuard(mutex);
@@ -243,6 +246,7 @@ void LogicalTxnLog::checkpoint(
     }
     pOutputStream->getSegPos(memento.logPosition);
     memento.nUncommittedTxns = uncommittedTxns.size();
+    memento.nextTxnId = nextTxnId;
     std::for_each(
         uncommittedTxns.begin(),
         uncommittedTxns.end(),
@@ -252,7 +256,7 @@ void LogicalTxnLog::checkpoint(
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         // memento gets lastCheckpointMemento, and lastCheckpointMemento gets
         // new memento just created above
-        std::swap(memento,lastCheckpointMemento);
+        std::swap(memento, lastCheckpointMemento);
     }
 }
 
@@ -271,10 +275,10 @@ void LogicalTxnLog::deallocateCheckpointedLog(
                 lastObsoletePageId))
         {
             logSegmentAccessor.pSegment->deallocatePageRange(
-                NULL_PAGE_ID,lastObsoletePageId);
+                NULL_PAGE_ID, lastObsoletePageId);
         }
     }
-    
+
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         committedLongLogSegments.erase(
             committedLongLogSegments.begin(),
@@ -304,6 +308,29 @@ void LogicalTxnLog::checkpointTxn(SharedLogicalTxn pTxn)
     memento.nParticipants = pTxn->participants.size();
     pOutputStream->writeValue(memento);
     pTxn->checkpointed = true;
+}
+
+TxnId LogicalTxnLog::getOldestActiveTxnId()
+{
+    StrictMutexGuard mutexGuard(mutex);
+    TxnId oldestTxnId = NULL_TXN_ID;
+    for (TxnListIter ppTxn = uncommittedTxns.begin();
+        ppTxn != uncommittedTxns.end();
+        ++ppTxn)
+    {
+        SharedLogicalTxn pTxn = *ppTxn;
+        if (oldestTxnId == NULL_TXN_ID || pTxn->getTxnId() < oldestTxnId) {
+            oldestTxnId = pTxn->getTxnId();
+        }
+    }
+
+    // If there are no active txns, return the txnId that will be assigned to
+    // the next, new txn
+    if (oldestTxnId == NULL_TXN_ID) {
+        return nextTxnId;
+    } else {
+        return oldestTxnId;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

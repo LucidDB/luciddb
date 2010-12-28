@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,20 +29,17 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 // TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
@@ -60,20 +57,20 @@ import org.eigenbase.util.*;
 class FtrsScanToSearchRule
     extends RelOptRule
 {
+    public static final FtrsScanToSearchRule instance =
+        new FtrsScanToSearchRule();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsScanToSearchRule object.
+     * Creates a FtrsScanToSearchRule.
      */
-    public FtrsScanToSearchRule()
+    private FtrsScanToSearchRule()
     {
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
-                }));
+                new RelOptRuleOperand(FtrsIndexScanRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -111,9 +108,9 @@ class FtrsScanToSearchRule
 
         // and make the rest residual for now
         RexNode residualRexNode =
-            rexAnalyzer.getResidualSargRexNode(sargBindingList);
+            rexAnalyzer.getSargBindingListToRexNode(sargBindingList);
 
-        RexNode postFilterRexNode = rexAnalyzer.getPostFilterRexNode();
+        RexNode postFilterRexNode = rexAnalyzer.getNonSargFilterRexNode();
 
         if ((residualRexNode != null) && (postFilterRexNode != null)) {
             extraFilter =
@@ -135,12 +132,12 @@ class FtrsScanToSearchRule
         if (scan.index.isClustered()) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
-            Iterator iter =
-                FarragoCatalogUtil.getTableIndexes(
+            for (
+                FemLocalIndex index
+                : FarragoCatalogUtil.getTableIndexes(
                     repos,
-                    scan.ftrsTable.getCwmColumnSet()).iterator();
-            while (iter.hasNext()) {
-                FemLocalIndex index = (FemLocalIndex) iter.next();
+                    scan.ftrsTable.getCwmColumnSet()))
+            {
                 considerIndex(
                     index,
                     scan,
@@ -166,9 +163,8 @@ class FtrsScanToSearchRule
         FemLocalIndex index,
         CwmColumn column)
     {
-        List indexedFeatures = index.getIndexedFeature();
-        CwmIndexedFeature indexedFeature =
-            (CwmIndexedFeature) indexedFeatures.get(0);
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
+        CwmIndexedFeature indexedFeature = indexedFeatures.get(0);
         CwmColumn indexedColumn = (CwmColumn) indexedFeature.getFeature();
         if (!column.equals(indexedColumn)) {
             return false;
@@ -191,7 +187,7 @@ class FtrsScanToSearchRule
 
         FtrsIndexGuide indexGuide = origScan.ftrsTable.getIndexGuide();
 
-        if (!indexGuide.isValid(index)) {
+        if (index.isInvalid()) {
             return;
         }
 
@@ -225,7 +221,7 @@ class FtrsScanToSearchRule
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
         RelDataType directiveType =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 1);
         RelDataType keyType =
             typeFactory.createTypeWithNullability(
@@ -236,15 +232,15 @@ class FtrsScanToSearchRule
             typeFactory.createStructType(
                 new RelDataType[] {
                     directiveType,
-                keyType,
-                directiveType,
-                keyType
+                    keyType,
+                    directiveType,
+                    keyType
                 },
                 new String[] {
                     "lowerBoundDirective",
-                "lowerBoundKey",
-                "upperBoundDirective",
-                "upperBoundKey"
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
                 });
         RelNode sargRel =
             FennelRelUtil.convertSargExpr(
@@ -252,6 +248,7 @@ class FtrsScanToSearchRule
                 keyRowType,
                 origScan.getCluster(),
                 sargExpr);
+
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits,
@@ -281,7 +278,8 @@ class FtrsScanToSearchRule
                     origScan.isOrderPreserving);
 
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(unclusteredScan,
+                new FtrsIndexSearchRel(
+                    unclusteredScan,
                     keyInput,
                     isUnique,
                     false,
@@ -290,7 +288,8 @@ class FtrsScanToSearchRule
                     inputDirectiveProj);
 
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(origScan,
+                new FtrsIndexSearchRel(
+                    origScan,
                     unclusteredSearch,
                     true,
                     false,
@@ -302,7 +301,8 @@ class FtrsScanToSearchRule
         } else {
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
-                new FtrsIndexSearchRel(origScan,
+                new FtrsIndexSearchRel(
+                    origScan,
                     keyInput,
                     isUnique,
                     false,

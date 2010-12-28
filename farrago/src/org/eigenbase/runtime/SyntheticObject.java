@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,6 +52,9 @@ import java.lang.reflect.*;
 public abstract class SyntheticObject
 {
 
+    //~ Fields ----------------------------------------------------------------
+    Field[] fields = null;
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -75,7 +78,10 @@ public abstract class SyntheticObject
      */
     public Field [] getFields()
     {
-        return getClass().getDeclaredFields();
+        if (fields == null) {
+            fields = getClass().getDeclaredFields();
+        }
+        return fields;
     }
 }
 

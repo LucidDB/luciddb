@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.ddl;
 
+import java.nio.charset.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -34,8 +36,8 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -53,8 +55,8 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public abstract class DdlHandler
+    implements ReflectiveVisitor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
@@ -89,16 +91,16 @@ public abstract class DdlHandler
 
     public void validateAttributeSet(CwmClass cwmClass)
     {
-        List structuralFeatures =
-            FarragoCatalogUtil.getStructuralFeatures(cwmClass);
+        List<FemAbstractAttribute> attributes =
+            Util.filter(
+                cwmClass.getFeature(),
+                FemAbstractAttribute.class);
         validator.validateUniqueNames(
             cwmClass,
-            structuralFeatures,
+            attributes,
             false);
 
-        Iterator iter = structuralFeatures.iterator();
-        while (iter.hasNext()) {
-            FemAbstractAttribute attribute = (FemAbstractAttribute) iter.next();
+        for (FemAbstractAttribute attribute : attributes) {
             validateAttribute(attribute);
         }
     }
@@ -112,9 +114,7 @@ public abstract class DdlHandler
         // Foreign tables should not support constraint definitions.  Eventually
         // we may want to allow this as a hint to the optimizer, but it's not
         // standard so for now we should prevent it.
-        Iterator constraintIter = columnSet.getOwnedElement().iterator();
-        while (constraintIter.hasNext()) {
-            Object obj = constraintIter.next();
+        for (CwmModelElement obj : columnSet.getOwnedElement()) {
             if (!(obj instanceof FemAbstractKeyConstraint)) {
                 continue;
             }
@@ -144,7 +144,8 @@ public abstract class DdlHandler
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
         if (!attribute.getIsNullable().equals(
-                NullableTypeEnum.COLUMN_NO_NULLS)) {
+                NullableTypeEnum.COLUMN_NO_NULLS))
+        {
             if (attribute instanceof FemStoredColumn) {
                 // Store the original user declaration, since we might override
                 // isNullable with derived information (for example, columns in
@@ -203,10 +204,10 @@ public abstract class DdlHandler
 
         element.setType(type);
         if (dataType.getPrecision() >= 0) {
-            element.setPrecision(new Integer(dataType.getPrecision()));
+            element.setPrecision(dataType.getPrecision());
         }
         if (dataType.getScale() >= 0) {
-            element.setScale(new Integer(dataType.getScale()));
+            element.setScale(dataType.getScale());
         }
         if (dataType.getCharSetName() != null) {
             element.setCharacterSetName(dataType.getCharSetName());
@@ -231,23 +232,26 @@ public abstract class DdlHandler
 
         Object typeObj = validator.getSqlDefinition(abstractElement);
 
-        // Special handling for cursor types
+        // Special handling for cursor and columnList types
         if (typeObj == null) {
-            if (element.getType().getName().equals("CURSOR")) {
+            if (element.getType().getName().equals("CURSOR")
+                || element.getType().getName().equals("COLUMN_LIST"))
+            {
                 // previously validated
                 return;
             }
         }
         if (typeObj instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) typeObj;
-            assert (id.getSimple().equals("CURSOR"));
+            assert (id.getSimple().equals("CURSOR")
+                || id.getSimple().equals("COLUMN_LIST"));
             element.setType(
                 validator.getStmtValidator().findSqldataType(id));
             element.setCollationName("");
             element.setCharacterSetName("");
             return;
         }
-        
+
         SqlDataTypeSpec dataType = (SqlDataTypeSpec) typeObj;
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
@@ -281,7 +285,7 @@ public abstract class DdlHandler
             if (cwmNamespace instanceof FemRoutine) {
                 FemRoutine routine = (FemRoutine) cwmNamespace;
                 if (FarragoCatalogUtil.isRoutineMethod(routine)) {
-                    if (routine.getSpecification().getOwner() == type) {
+                    if (routine.getSpecification().getOwner().equals(type)) {
                         // This is a method of the type in question.  In this
                         // case, we don't create a dependency, because the
                         // circularity would foul up DROP.
@@ -302,19 +306,25 @@ public abstract class DdlHandler
         if (typeName != null) {
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
-        if ((typeFamily == SqlTypeFamily.Character)
-            || (typeFamily == SqlTypeFamily.Binary)) {
+        if ((typeFamily == SqlTypeFamily.CHARACTER)
+            || (typeFamily == SqlTypeFamily.BINARY))
+        {
             // convert precision to length
             if (element.getPrecision() != null) {
-                element.setLength(element.getPrecision());
+                // Minimum column length for char and binary is 1
+                if (element.getPrecision().intValue() == 0) {
+                    element.setLength(Integer.valueOf(1));
+                } else {
+                    element.setLength(element.getPrecision());
+                }
                 element.setPrecision(null);
             }
         }
 
-        if (typeFamily == SqlTypeFamily.Character) {
+        if (typeFamily == SqlTypeFamily.CHARACTER) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
-            if (JmiUtil.isBlank(element.getCharacterSetName())) {
+            if (JmiObjUtil.isBlank(element.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
                 element.setCharacterSetName(
@@ -335,10 +345,10 @@ public abstract class DdlHandler
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (Iterator columnIter = rowType.getFeature().iterator();
-                columnIter.hasNext();) {
-                FemAbstractAttribute column =
-                    (FemAbstractAttribute) columnIter.next();
+            for (
+                FemAbstractAttribute column
+                : Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            {
                 validateAttribute(column);
             }
         } else {
@@ -442,7 +452,7 @@ public abstract class DdlHandler
     {
         CwmSqldataType cwmType;
         final SqlTypeName typeName = type.getSqlTypeName();
-        if (typeName == SqlTypeName.Row) {
+        if (typeName == SqlTypeName.ROW) {
             Util.permAssert(
                 type.isStruct(),
                 "type.isStruct()");
@@ -481,9 +491,9 @@ public abstract class DdlHandler
             Util.permAssert(cwmType != null, "cwmType != null");
             if (typeName != null) {
                 if (typeName.allowsPrec()) {
-                    column.setPrecision(new Integer(type.getPrecision()));
+                    column.setPrecision(type.getPrecision());
                     if (typeName.allowsScale()) {
-                        column.setScale(new Integer(type.getScale()));
+                        column.setScale(type.getScale());
                     }
                 }
             } else {
@@ -495,6 +505,14 @@ public abstract class DdlHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         } else {
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+        }
+        Charset charset = type.getCharset();
+        if (charset != null) {
+            column.setCharacterSetName(charset.name());
+        }
+        SqlCollation collation = type.getCollation();
+        if (collation != null) {
+            column.setCollationName(collation.getCollationName());
         }
     }
 
@@ -524,13 +542,12 @@ public abstract class DdlHandler
         }
         endLine += (offsetPos.getLineNum() - 1);
 
-        return
-            SqlUtil.newContextException(
-                line,
-                col,
-                endLine,
-                endCol,
-                ex.getCause());
+        return SqlUtil.newContextException(
+            line,
+            col,
+            endLine,
+            endCol,
+            ex.getCause());
     }
 
     private void validateDefaultClause(
@@ -539,18 +556,27 @@ public abstract class DdlHandler
         String defaultExpression)
     {
         String sql = "VALUES(" + defaultExpression + ")";
+        RelDataType rowType;
 
-        // null param def factory okay because we won't use dynamic params
-        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
-        stmtContext.prepare(sql, false);
-        RelDataType rowType = stmtContext.getPreparedRowType();
-        assert (rowType.getFieldList().size() == 1);
+        FarragoSessionStmtContext stmtContext = null;
+        try {
+            // null param def factory okay because we won't use dynamic params
+            stmtContext = session.newStmtContext(null);
 
-        if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
-            throw validator.newPositionalError(
-                attribute,
-                res.ValidatorBadDefaultParam.ex(
-                    repos.getLocalizedObjectName(attribute)));
+            stmtContext.prepare(sql, false);
+            rowType = stmtContext.getPreparedRowType();
+            assert (rowType.getFieldList().size() == 1);
+
+            if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
+                throw validator.newPositionalError(
+                    attribute,
+                    res.ValidatorBadDefaultParam.ex(
+                        repos.getLocalizedObjectName(attribute)));
+            }
+        } finally {
+            if (stmtContext != null) {
+                stmtContext.closeAllocation();
+            }
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause

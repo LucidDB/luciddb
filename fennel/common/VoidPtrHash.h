@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,17 +24,28 @@
 #ifndef Fennel_VoidPtrHash_Included
 #define Fennel_VoidPtrHash_Included
 
+#include <boost/shared_ptr.hpp>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * VoidPtrHash can be used to create a hash_map or hash_set with pointers as
  * keys.
  */
-struct VoidPtrHash
+struct FENNEL_COMMON_EXPORT VoidPtrHash
 {
     size_t operator() (void *key) const
     {
         return reinterpret_cast<size_t>(key);
+    }
+};
+
+template<typename T>
+struct FENNEL_COMMON_EXPORT VoidSharedPtrHash
+{
+    size_t operator() (boost::shared_ptr<T> key) const
+    {
+        return reinterpret_cast<size_t>(key.get());
     }
 };
 

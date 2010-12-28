@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,13 @@
 */
 package org.eigenbase.util;
 
-import java.awt.HeadlessException;
 import java.awt.Toolkit;
 
 import java.io.*;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.Iterable;
 
 import java.math.*;
 
@@ -37,6 +37,8 @@ import java.net.*;
 import java.nio.charset.*;
 
 import java.sql.*;
+
+import java.text.*;
 
 import java.util.*;
 import java.util.logging.*;
@@ -55,24 +57,26 @@ import org.eigenbase.sql.validate.*;
 
 /**
  * Miscellaneous utility functions.
+ *
+ * @author jhyde
+ * @version $Id$
  */
 public class Util
     extends Toolbox
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Name of the system property that controls whether the AWT work-around
-     * is enabled.  This workaround allows Farrago to load its native 
-     * libraries despite a conflict with AWT and allows applications that
-     * use AWT to function normally.
-     * 
+     * Name of the system property that controls whether the AWT work-around is
+     * enabled. This workaround allows Farrago to load its native libraries
+     * despite a conflict with AWT and allows applications that use AWT to
+     * function normally.
+     *
      * @see #loadLibrary(String)
      */
-    public static final String awtWorkaroundProperty = 
+    public static final String awtWorkaroundProperty =
         "org.eigenbase.util.AWT_WORKAROUND";
-    
+
     /**
      * System-dependent newline character.
      */
@@ -84,6 +88,13 @@ public class Util
      */
     public static final String fileSeparator =
         System.getProperty("file.separator");
+
+    /**
+     * Datetime format string for generating a timestamp string to be used as
+     * part of a filename. Conforms to SimpleDateFormat conventions.
+     */
+    public static final String fileTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
+
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
     public static final SqlMoniker [] emptySqlMonikerArray = new SqlMoniker[0];
@@ -97,8 +108,18 @@ public class Util
     private static final Pattern javaIdPattern =
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
-    /** @see #loadLibrary(String) */
+    /**
+     * @see #loadLibrary(String)
+     */
     private static Toolkit awtToolkit;
+
+    /**
+     * Maps classes to the map of their enum values. Uses a weak map so that
+     * classes are not prevented from being unloaded.
+     */
+    private static final Map<Class, Map<String, ? extends Enum>>
+        mapClazzToMapNameToEnum =
+            new WeakHashMap<Class, Map<String, ? extends Enum>>();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -173,61 +194,18 @@ public class Util
         Object s0,
         Object s1)
     {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
+        if (s0 == s1) {
+            return true;
+        } else if (s0 == null) {
             return false;
         } else {
             return s0.equals(s1);
         }
     }
 
-    /**
-     * Returns whether two arrays are equal or are both null.
-     */
-    public static final boolean equal(
-        Object [] s0,
-        Object [] s1)
-    {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
-            return false;
-        } else if (s0.length != s1.length) {
-            return false;
-        } else {
-            for (int i = 0; i < s0.length; i++) {
-                Object o0 = s0[i];
-                Object o1 = s1[i];
-                if (!equal(o0, o1)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     public static StatementList clone(StatementList e)
     {
         return (StatementList) e.makeCopy();
-    }
-
-    public static String [] clone(String [] a)
-    {
-        String [] a2 = new String[a.length];
-        for (int i = 0; i < a.length; i++) {
-            a2[i] = a[i];
-        }
-        return a2;
-    }
-
-    public static int [] clone(int [] a)
-    {
-        int [] b = new int[a.length];
-        for (int i = 0; i < a.length; i++) {
-            b[i] = a[i];
-        }
-        return b;
     }
 
     /**
@@ -325,14 +303,17 @@ public class Util
         Class clazz = o.getClass();
         if (o instanceof String) {
             printJavaString(pw, (String) o, true);
-        } else if ((clazz == Integer.class) || (clazz == Boolean.class)
+        } else if (
+            (clazz == Integer.class)
+            || (clazz == Boolean.class)
             || (clazz == Character.class)
             || (clazz == Byte.class)
             || (clazz == Short.class)
             || (clazz == Long.class)
             || (clazz == Float.class)
             || (clazz == Double.class)
-            || (clazz == Void.class)) {
+            || (clazz == Void.class))
+        {
             pw.print(o.toString());
         } else if (clazz.isArray()) {
             // o is an array, but we can't cast to Object[] because it may be
@@ -457,6 +438,24 @@ public class Util
     }
 
     /**
+     * Prints a flat array of objects as [e1,e2,...]
+     */
+    public static String flatArrayToString(Object [] a)
+    {
+        StringBuffer sb = new StringBuffer("[");
+        for (int i = 0; i < a.length; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            if (a[i] != null) {
+                sb.append(a[i].toString());
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    /**
      * Formats a {@link BigDecimal} value to a string in scientific notation For
      * example<br>
      *
@@ -480,13 +479,14 @@ public class Util
         int scale = bd.scale();
         int e = len - scale - 1;
 
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         if (bd.signum() < 0) {
             ret.append('-');
         }
 
         //do truncation
-        unscaled = unscaled.substring(
+        unscaled =
+            unscaled.substring(
                 0,
                 Math.min(truncateAt, len));
         ret.append(unscaled.charAt(0));
@@ -525,7 +525,7 @@ public class Util
         if (found == -1) {
             return s;
         }
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         int start = 0;
         for (;;) {
             for (; start < found; start++) {
@@ -543,11 +543,6 @@ public class Util
         }
         return sb.toString();
     }
-
-    //      static final boolean isBlank(String s)
-    //      {
-    //          return s == null || s.equals("");
-    //      }
 
     /**
      * Creates a file-protocol URL for the given file.
@@ -572,6 +567,16 @@ public class Util
         }
         path = "file://" + path;
         return new URL(path);
+    }
+
+    /**
+     * Gets a timestamp string for use in file names. The generated timestamp
+     * string reflects the current time.
+     */
+    public static String getFileTimestamp()
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat(fileTimestampFormat);
+        return sdf.format(new java.util.Date());
     }
 
     public static Expression clone(Expression exp)
@@ -646,7 +651,7 @@ public class Util
         }
 
         // Escape underscores and other undesirables.
-        StringBuffer buf = new StringBuffer(s.length() + 10);
+        StringBuilder buf = new StringBuilder(s.length() + 10);
         buf.append("ID$");
         buf.append(ordinal);
         buf.append("$");
@@ -654,12 +659,12 @@ public class Util
             char c = s.charAt(i);
             if (c == '_') {
                 buf.append("__");
-            } else if ((c < 0x7F) /* Normal ascii character */
+            } else if (
+                (c < 0x7F) /* Normal ascii character */
                 && !Character.isISOControl(c)
-                && (
-                    (i == 0) ? Character.isJavaIdentifierStart(c)
-                    : Character.isJavaIdentifierPart(c)
-                   )) {
+                && ((i == 0) ? Character.isJavaIdentifierStart(c)
+                    : Character.isJavaIdentifierPart(c)))
+            {
                 buf.append(c);
             } else {
                 buf.append("_");
@@ -671,19 +676,6 @@ public class Util
     }
 
     /**
-     * @deprecated Use {@link java.util.Arrays#asList} instead Converts the
-     * elements of an array into a {@link java.util.List}
-     */
-    public static List toList(final Object [] array)
-    {
-        List ret = new ArrayList(array.length);
-        for (int i = 0; i < array.length; i++) {
-            ret.add(array[i]);
-        }
-        return ret;
-    }
-
-    /**
      * Materializes the results of a {@link java.util.Iterator} as a {@link
      * java.util.List}.
      *
@@ -691,44 +683,13 @@ public class Util
      *
      * @return materialized list
      */
-    public static List toList(Iterator iter)
+    public static <T> List<T> toList(Iterator<T> iter)
     {
-        List list = new ArrayList();
+        List<T> list = new ArrayList<T>();
         while (iter.hasNext()) {
             list.add(iter.next());
         }
         return list;
-    }
-
-    /**
-     * @deprecated use {@link Vector#toArray} on Java2
-     */
-    public static Object [] toArray(Vector v)
-    {
-        Object [] objects = new Object[v.size()];
-        v.copyInto(objects);
-        return objects;
-    }
-
-    /**
-     * Equivalent to {@link Vector#toArray(Object[])}.
-     */
-    public static Object [] toArray(
-        Vector v,
-        Object [] a)
-    {
-        int elementCount = v.size();
-        if (a.length < elementCount) {
-            a =
-                (Object []) Array.newInstance(
-                    a.getClass().getComponentType(),
-                    elementCount);
-        }
-        v.copyInto(a);
-        if (a.length > elementCount) {
-            a[elementCount] = null;
-        }
-        return a;
     }
 
     static boolean isStatic(java.lang.reflect.Member member)
@@ -787,9 +748,8 @@ public class Util
      */
     public static Charset getDefaultCharset()
     {
-        return
-            Charset.forName(
-                SaffronProperties.instance().defaultCharset.get());
+        return Charset.forName(
+            SaffronProperties.instance().defaultCharset.get());
     }
 
     public static Error newInternal()
@@ -822,24 +782,41 @@ public class Util
     }
 
     /**
-     * Retrieves messages in a exception and writes them to a string. In the 
+     * Retrieves messages in a exception and writes them to a string. In the
      * string returned, each message will appear on a different line.
+     *
      * @return a non-null string containing all messages of the exception
      */
-    public static String getMessages(Exception ex)
+    public static String getMessages(Throwable t)
     {
         StringBuilder sb = new StringBuilder();
-        for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
-            String msg = 
-                ((curr instanceof EigenbaseException) 
-                    || (curr instanceof SQLException))
-                ? curr.getMessage() : curr.toString();
+        for (Throwable curr = t; curr != null; curr = curr.getCause()) {
+            String msg =
+                ((curr instanceof EigenbaseException)
+                    || (curr instanceof SQLException)) ? curr.getMessage()
+                : curr.toString();
             if (sb.length() > 0) {
                 sb.append("\n");
             }
             sb.append(msg);
         }
         return sb.toString();
+    }
+
+    /**
+     * Returns the stack trace of a throwable. Called from native code.
+     *
+     * @param t Throwable
+     *
+     * @return Stack trace
+     */
+    public static String getStackTrace(Throwable t)
+    {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        pw.flush();
+        return sw.toString();
     }
 
     /**
@@ -968,7 +945,8 @@ public class Util
      * <pre><code>void foo(int x) {
      *     if (x &lt; 0) {
      *         // If this code is executed, an error will be thrown.
-     *         Util.deprecated("no longer need to handle negative numbers", true);
+     *         Util.deprecated(
+     *             "no longer need to handle negative numbers", true);
      *         bar(x);
      *     } else {
      *         baz(x);
@@ -1003,50 +981,44 @@ public class Util
     }
 
     /**
-     * Uses {@link System#loadLibrary(String)} to load a native library 
+     * Uses {@link System#loadLibrary(String)} to load a native library
      * correctly under mingw (Windows/Cygwin) and Linux environments.
-     *  
-     * <p>This method also implements a work-around for applications that 
-     * wish to load AWT.  AWT conflicts with some native libraries in a 
-     * way that requires AWT to be loaded first.  This method checks the
-     * system property named {@link #awtWorkaroundProperty} and if it is
-     * set to "on" (default; case-insensitive) it pre-loads AWT to avoid
-     * the conflict.
-     *  
-     * @param libName the name of the library to load, as in 
-     *                {@link System#loadLibrary(String)}.
+     *
+     * <p>This method also implements a work-around for applications that wish
+     * to load AWT. AWT conflicts with some native libraries in a way that
+     * requires AWT to be loaded first. This method checks the system property
+     * named {@link #awtWorkaroundProperty} and if it is set to "on" (default;
+     * case-insensitive) it pre-loads AWT to avoid the conflict.
+     *
+     * @param libName the name of the library to load, as in {@link
+     * System#loadLibrary(String)}.
      */
     public static void loadLibrary(String libName)
     {
         String awtSetting = System.getProperty(awtWorkaroundProperty, "on");
-        if (awtToolkit == null && awtSetting.equalsIgnoreCase("on")) {
+        if ((awtToolkit == null) && awtSetting.equalsIgnoreCase("on")) {
             // REVIEW jvs 8-Sept-2006:  workaround upon workaround.  This
             // is required because in native code, we sometimes (see Farrago)
             // have to use dlopen("libfoo.so", RTLD_GLOBAL) in order for native
-            // plugins to load correctly.  But the RTLD_GLOBAL causes trouble 
-            // later if someone tries to use AWT from within the same JVM. 
+            // plugins to load correctly.  But the RTLD_GLOBAL causes trouble
+            // later if someone tries to use AWT from within the same JVM.
             // So... preload AWT here unless someone configured explicitly
             // not to do so.
             try {
                 awtToolkit = Toolkit.getDefaultToolkit();
-            } catch (HeadlessException ex) {
-                // I'm not sure if this can actually happen, but if it does,
-                // just suppress it so that a headless server doesn't fail
-                // on startup.
-                
-                // REVIEW: SWZ: 18-Sept-2006: If this exception occurs, we'll
-                // retry the AWT load on each loadLibrary call.  Probably okay,
+            } catch (Throwable ex) {
+                // Suppress problems so that a headless server doesn't fail on
+                // startup.  If AWT is actually needed, the same exception will
+                // show up later, which is fine.
+
+                // NOTE jvs 27-Mar-2007: If this exception occurs, we'll
+                // retry the AWT load on each loadLibrary call.  That's okay,
                 // since there are only a few libraries and they're loaded
                 // via static initializers.
             }
         }
-        
-        if (!System.mapLibraryName(libName).startsWith("lib")) {
-            // assume mingw
-            System.loadLibrary("cyg" + libName + "-0");
-        } else {
-            System.loadLibrary(libName);
-        }
+
+        System.loadLibrary(libName);
     }
 
     public static void restartIterator(Iterator iterator)
@@ -1059,72 +1031,49 @@ public class Util
     }
 
     /**
-     * Searches recursively for a {@link SqlIdentifier}.
+     * Returns whether an array of strings contains a given string among the
+     * first <code>length</code> entries.
      *
-     * @param node in which to look in
+     * @param a Array of strings
+     * @param length Number of entries to search
+     * @param s String to seek
      *
-     * @return null if no Identifier was found.
+     * @return Whether array contains the name
      */
-    public static SqlNodeDescriptor findIdentifier(SqlNode node)
-    {
-        BacktrackVisitor<Void> visitor =
-            new BacktrackVisitor<Void>() {
-                public Void visit(SqlIdentifier id)
-                {
-                    throw new FoundOne(id);
-                }
-            };
-        try {
-            node.accept(visitor);
-        } catch (FoundOne e) {
-            return
-                new SqlNodeDescriptor(
-                    (SqlNode) e.getNode(),
-                    visitor.getCurrentParent(),
-                    visitor.getCurrentOffset());
-        }
-        return null;
-    }
-
-    /**
-     * Generates a unique name
-     *
-     * @param names Array of existing names
-     * @param length Number of existing names
-     * @param s Suggested name
-     *
-     * @return Name which does not match any of the names in the first <code>
-     * length</code> positions of the <code>names</code> array.
-     */
-    public static String uniqueFieldName(
-        String [] names,
-        int length,
-        String s)
-    {
-        if (!contains(names, length, s)) {
-            return s;
-        }
-        int n = length;
-        while (true) {
-            s = "EXPR_" + n;
-            if (!contains(names, length, s)) {
-                return s;
-            }
-            ++n;
-        }
-    }
-
     public static boolean contains(
-        String [] names,
+        String [] a,
         int length,
         String s)
     {
         for (int i = 0; i < length; i++) {
-            if (names[i].equals(s)) {
+            if (a[i].equals(s)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Reads all remaining contents from a {@link java.io.Reader} and returns
+     * them as a string.
+     *
+     * @param reader reader to read from
+     *
+     * @return reader contents as string
+     */
+    public static String readAllAsString(Reader reader)
+        throws IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        char [] buf = new char[4096];
+        for (;;) {
+            int n = reader.read(buf);
+            if (n == -1) {
+                break;
+            }
+            sb.append(buf, 0, n);
+        }
+        return sb.toString();
     }
 
     /**
@@ -1266,7 +1215,6 @@ public class Util
      * Pads a string with spaces up to a given length.
      *
      * @param s string to be padded
-     *
      * @param len desired length
      *
      * @return padded string
@@ -1282,7 +1230,275 @@ public class Util
         }
         return sb.toString();
     }
-    
+
+    /**
+     * Converts a Java timezone to POSIX format, so that the boost C++ library
+     * can instantiate timezone objects.
+     *
+     * <p><a
+     * href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html">POSIX
+     * IEEE 1003.1</a> defines a format for timezone specifications.
+     *
+     * <p>The boost C++ library can read these specifications and instantiate <a
+     * href="http://www.boost.org/doc/html/date_time/local_time.html#date_time.local_time.posix_time_zone">
+     * posix_time_zone</a> objects from them. The purpose of this method,
+     * therefore, is to allow the C++ code such as the fennel calculator to use
+     * the same notion of timezone as Java code.
+     *
+     * <p>The format is as follows:
+     *
+     * <blockquote>"std offset dst [offset],start[/time],end[/time]"
+     * </blockquote>
+     *
+     * where:
+     *
+     * <ul>
+     * <li>'std' specifies the abbrev of the time zone.
+     * <li>'offset' is the offset from UTC, and takes the form <code>
+     * [+|-]hh[:mm[:ss]] {h=0-23, m/s=0-59}</code>
+     * <li>'dst' specifies the abbrev of the time zone during daylight savings
+     * time
+     * <li>The second offset is how many hours changed during DST. Default=1
+     * <li>'start' & 'end' are the dates when DST goes into (and out of) effect.
+     * They can each be one of three forms:
+     *
+     * <ol>
+     * <li>Mm.w.d {month=1-12, week=1-5 (5 is always last), day=0-6}
+     * <li>Jn {n=1-365 Feb29 is never counted}
+     * <li>n {n=0-365 Feb29 is counted in leap years}
+     * </ol>
+     * <li>'time' has the same format as 'offset', and defaults to 02:00:00
+     *
+     * <p>For example:
+     *
+     * <ul>
+     * <li>"PST-8PDT01:00:00,M4.1.0/02:00:00,M10.1.0/02:00:00"; or more tersely
+     * <li>"PST-8PDT,M4.1.0,M10.1.0"
+     * </ul>
+     *
+     * <p>(Real format strings do not contain spaces; they are in the above
+     * template only for readability.)
+     *
+     * <p>Boost apparently diverges from the POSIX standard in how it treats the
+     * sign of timezone offsets. The POSIX standard states '<i>If preceded by a
+     * '-', the timezone shall be east of the Prime Meridian; otherwise, it
+     * shall be west</i>', yet boost requires the opposite. For instance, PST
+     * has offset '-8' above. This method generates timezone strings consistent
+     * with boost's expectations.
+     *
+     * @param tz Timezone
+     * @param verbose Whether to include fields which can be omitted because
+     * they have their default values
+     *
+     * @return Timezone in POSIX format (offset sign reversed, per boost's
+     * idiosyncracies)
+     */
+    public static String toPosix(TimeZone tz, boolean verbose)
+    {
+        StringBuilder buf = new StringBuilder();
+        buf.append(tz.getDisplayName(false, TimeZone.SHORT));
+        appendPosixTime(buf, tz.getRawOffset());
+        final int dstSavings = tz.getDSTSavings();
+        if (dstSavings == 0) {
+            return buf.toString();
+        }
+        buf.append(tz.getDisplayName(true, TimeZone.SHORT));
+        if (verbose || (dstSavings != 3600000)) {
+            // POSIX allows us to omit DST offset if it is 1:00:00
+            appendPosixTime(buf, dstSavings);
+        }
+        String patternString =
+            ".*,"
+            + "startMode=([0-9]*),"
+            + "startMonth=([0-9]*),"
+            + "startDay=([-0-9]*),"
+            + "startDayOfWeek=([0-9]*),"
+            + "startTime=([0-9]*),"
+            + "startTimeMode=([0-9]*),"
+            + "endMode=([0-9]*),"
+            + "endMonth=([0-9]*),"
+            + "endDay=([-0-9]*),"
+            + "endDayOfWeek=([0-9]*),"
+            + "endTime=([0-9]*),"
+            + "endTimeMode=([0-9]*).*";
+        Pattern pattern = Pattern.compile(patternString);
+        String tzString = tz.toString();
+        Matcher matcher = pattern.matcher(tzString);
+        if (!matcher.matches()) {
+            throw new AssertionError(
+                "tz.toString not of expected format: "
+                + tzString);
+        }
+        int j = 0;
+        int startMode = Integer.valueOf(matcher.group(++j));
+        int startMonth = Integer.valueOf(matcher.group(++j));
+        int startDay = Integer.valueOf(matcher.group(++j));
+        int startDayOfWeek = Integer.valueOf(matcher.group(++j));
+        int startTime = Integer.valueOf(matcher.group(++j));
+        int startTimeMode = Integer.valueOf(matcher.group(++j));
+        int endMode = Integer.valueOf(matcher.group(++j));
+        int endMonth = Integer.valueOf(matcher.group(++j));
+        int endDay = Integer.valueOf(matcher.group(++j));
+        int endDayOfWeek = Integer.valueOf(matcher.group(++j));
+        int endTime = Integer.valueOf(matcher.group(++j));
+        int endTimeMode = Integer.valueOf(matcher.group(++j));
+        appendPosixDaylightTransition(
+            tz,
+            buf,
+            startMode,
+            startDay,
+            startMonth,
+            startDayOfWeek,
+            startTime,
+            startTimeMode,
+            verbose,
+            false);
+        appendPosixDaylightTransition(
+            tz,
+            buf,
+            endMode,
+            endDay,
+            endMonth,
+            endDayOfWeek,
+            endTime,
+            endTimeMode,
+            verbose,
+            true);
+        return buf.toString();
+    }
+
+    /**
+     * Writes a daylight savings time transition to a POSIX timezone
+     * description.
+     *
+     * @param tz Timezone
+     * @param buf Buffer to append to
+     * @param mode Transition mode
+     * @param day Day of transition
+     * @param month Month of transition
+     * @param dayOfWeek Day of week of transition
+     * @param time Time of transition in millis
+     * @param timeMode Mode of time transition
+     * @param verbose Verbose
+     * @param isEnd Whether this transition is leaving DST
+     */
+    private static void appendPosixDaylightTransition(
+        TimeZone tz,
+        StringBuilder buf,
+        int mode,
+        int day,
+        int month,
+        int dayOfWeek,
+        int time,
+        int timeMode,
+        boolean verbose,
+        boolean isEnd)
+    {
+        buf.append(',');
+        int week = day;
+        switch (mode) {
+        case 1: // SimpleTimeZone.DOM_MODE
+            throw Util.needToImplement(0);
+
+        case 3: // SimpleTimeZone.DOW_GE_DOM_MODE
+
+            // If the day is 1, 8, 15, 22, we can translate this to case 2.
+            switch (day) {
+            case 1:
+                week = 1; // 1st week of month
+                break;
+            case 8:
+                week = 2; // 2nd week of month
+                break;
+            case 15:
+                week = 3; // 3rd week of month
+                break;
+            case 22:
+                week = 4; // 4th week of month
+                break;
+            default:
+                throw new AssertionError(
+                    "POSIX timezone format cannot represent " + tz);
+            }
+            // fall through
+
+        case 2: // SimpleTimeZone.DOW_IN_MONTH_MODE
+            buf.append('M');
+            buf.append(month + 1); // 1 <= m <= 12
+            buf.append('.');
+            if (week == -1) {
+                // java represents 'last week' differently from POSIX
+                week = 5;
+            }
+            buf.append(week); // 1 <= n <= 5, 5 means 'last'
+            buf.append('.');
+            buf.append(dayOfWeek - 1); // 0 <= d <= 6, 0=Sunday
+            break;
+
+        case 4: // SimpleTimeZone.DOW_LE_DOM_MODE
+            throw Util.needToImplement(0);
+        default:
+            throw new AssertionError("unexpected value: " + mode);
+        }
+        switch (timeMode) {
+        case 0: // SimpleTimeZone.WALL_TIME
+            break;
+        case 1: // SimpleTimeZone.STANDARD_TIME, e.g. Australia/Sydney
+            if (isEnd) {
+                time += tz.getDSTSavings();
+            }
+            break;
+        case 2: // SimpleTimeZone.UTC_TIME, e.g. Europe/Paris
+            time += tz.getRawOffset();
+            if (isEnd) {
+                time += tz.getDSTSavings();
+            }
+            break;
+        }
+        if (verbose || (time != 7200000)) {
+            // POSIX allows us to omit the time if it is 2am (the default)
+            buf.append('/');
+            appendPosixTime(buf, time);
+        }
+    }
+
+    /**
+     * Given a time expressed in milliseconds, append the time formatted as
+     * "hh[:mm[:ss]]".
+     *
+     * @param buf Buffer to append to
+     * @param millis Milliseconds
+     */
+    private static void appendPosixTime(StringBuilder buf, int millis)
+    {
+        if (millis < 0) {
+            buf.append('-');
+            millis = -millis;
+        }
+        int hours = millis / 3600000;
+        buf.append(hours);
+        millis -= (hours * 3600000);
+        if (millis == 0) {
+            return;
+        }
+        buf.append(':');
+        int minutes = millis / 60000;
+        if (minutes < 10) {
+            buf.append('0');
+        }
+        buf.append(minutes);
+        millis -= (minutes * 60000);
+        if (millis == 0) {
+            return;
+        }
+        buf.append(':');
+        int seconds = millis / 1000;
+        if (seconds < 10) {
+            buf.append('0');
+        }
+        buf.append(seconds);
+    }
+
     /**
      * Runs an external application.
      *
@@ -1304,7 +1520,24 @@ public class Util
         Writer appOutput)
         throws IOException, InterruptedException
     {
-        StringBuffer buf = new StringBuffer();
+        return runAppProcess(
+            newAppProcess(cmdarray),
+            logger,
+            appInput,
+            appOutput);
+    }
+
+    /**
+     * Constructs a {@link ProcessBuilder} to run an external application.
+     *
+     * @param cmdarray command and arguments.
+     * @return a ProcessBuilder.
+     */
+    public static ProcessBuilder newAppProcess(String [] cmdarray)
+    {
+        // Concatenate quoted words from cmdarray.
+        // REVIEW mb 2/24/09 Why is this needed?
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < cmdarray.length; ++i) {
             if (i > 0) {
                 buf.append(" ");
@@ -1315,11 +1548,33 @@ public class Util
         }
         String fullcmd = buf.toString();
         buf.setLength(0);
+        return new ProcessBuilder(cmdarray);
+    }
 
-        ProcessBuilder pb = new ProcessBuilder(cmdarray);
+
+    /**
+     * Runs an external application process.
+     *
+     * @param pb {@link ProcessBuilder} for the application; might be returned by {@link #newAppProcess}.
+     * @param logger if not null, command and exit status will be logged here
+     * @param appInput if not null, data will be copied to application's stdin
+     * @param appOutput if not null, data will be captured from application's
+     * stdout and stderr
+     *
+     * @return application process exit value
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static int runAppProcess(
+        ProcessBuilder pb,
+        Logger logger,
+        Reader appInput,
+        Writer appOutput)
+        throws IOException, InterruptedException
+    {
         pb.redirectErrorStream(true);
         if (logger != null) {
-            logger.info("start process: " + fullcmd);
+            logger.info("start process: " + pb.command());
         }
         Process p = pb.start();
 
@@ -1359,9 +1614,421 @@ public class Util
 
         int status = p.exitValue();
         if (logger != null) {
-            logger.info("exit status=" + status + " from " + fullcmd);
+            logger.info("exit status=" + status + " from " + pb.command());
         }
         return status;
+    }
+
+    /**
+     * Converts a list whose members are automatically down-cast to a given
+     * type.
+     *
+     * <p>If a member of the backing list is not an instanceof <code>E</code>,
+     * the accessing method (such as {@link List#get}) will throw a {@link
+     * ClassCastException}.
+     *
+     * <p>All modifications are automatically written to the backing list. Not
+     * synchronized.
+     *
+     * @param list Backing list.
+     * @param clazz Class to cast to.
+     *
+     * @return A list whose members are of the desired type.
+     */
+    public static <E> List<E> cast(List<? super E> list, Class<E> clazz)
+    {
+        return new CastingList<E>(list, clazz);
+    }
+
+    /**
+     * Converts a iterator whose members are automatically down-cast to a given
+     * type.
+     *
+     * <p>If a member of the backing iterator is not an instanceof <code>
+     * E</code>, {@link Iterator#next()}) will throw a {@link
+     * ClassCastException}.
+     *
+     * <p>All modifications are automatically written to the backing iterator.
+     * Not synchronized.
+     *
+     * @param iter Backing iterator.
+     * @param clazz Class to cast to.
+     *
+     * @return An iterator whose members are of the desired type.
+     */
+    public static <E> Iterator<E> cast(
+        final Iterator<?> iter,
+        final Class<E> clazz)
+    {
+        return new Iterator<E>() {
+            public boolean hasNext()
+            {
+                return iter.hasNext();
+            }
+
+            public E next()
+            {
+                return clazz.cast(iter.next());
+            }
+
+            public void remove()
+            {
+                iter.remove();
+            }
+        };
+    }
+
+    /**
+     * Converts an {@link Iterable} whose members are automatically down-cast to
+     * a given type.
+     *
+     * <p>All modifications are automatically written to the backing iterator.
+     * Not synchronized.
+     *
+     * @param iterable Backing iterable
+     * @param clazz Class to cast to
+     *
+     * @return An iterable whose members are of the desired type.
+     */
+    public static <E> Iterable<E> cast(
+        final Iterable<? super E> iterable,
+        final Class<E> clazz)
+    {
+        return new Iterable<E>() {
+            public Iterator<E> iterator()
+            {
+                return cast(iterable.iterator(), clazz);
+            }
+        };
+    }
+
+    /**
+     * Makes a collection of untyped elements appear as a list of strictly typed
+     * elements, by filtering out those which are not of the correct type.
+     *
+     * <p>The returned object is an {@link org.eigenbase.runtime.Iterable},
+     * which makes it ideal for use with the 'foreach' construct. For example,
+     *
+     * <blockquote><code>List&lt;Number&gt; numbers = Arrays.asList(1, 2, 3.14,
+     * 4, null, 6E23);<br/>
+     * for (int myInt : filter(numbers, Integer.class)) {<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;print(i);<br/>
+     * }</code></blockquote>
+     *
+     * will print 1, 2, 4.
+     *
+     * @param iterable
+     * @param includeFilter
+     */
+    public static <E> Iterable<E> filter(
+        final Iterable<? extends Object> iterable,
+        final Class<E> includeFilter)
+    {
+        return new Iterable<E>() {
+            public Iterator<E> iterator()
+            {
+                return new Filterator<E>(iterable.iterator(), includeFilter);
+            }
+        };
+    }
+
+    public static <E> Collection<E> filter(
+        final Collection<?> collection,
+        final Class<E> includeFilter)
+    {
+        return new AbstractCollection<E>() {
+            private int size = -1;
+
+            public Iterator<E> iterator()
+            {
+                return new Filterator<E>(collection.iterator(), includeFilter);
+            }
+
+            public int size()
+            {
+                if (size == -1) {
+                    // Compute size.  This is expensive, but the value
+                    // collection.size() is not correct since we're
+                    // filtering values.  (Some java.util algorithms
+                    // call next() on the result of iterator() size() times.)
+                    int s = 0;
+                    Iterator<E> iter = iterator();
+                    while (iter.hasNext()) {
+                        iter.next();
+                        s++;
+                    }
+                    size = s;
+                }
+
+                return size;
+            }
+        };
+    }
+
+    /**
+     * Returns a subset of a list containing only elements of a given type.
+     *
+     * <p>Modifications to the list are NOT written back to the source list.
+     *
+     * @param list List of objects
+     * @param includeFilter Class to filter for
+     *
+     * @return List of objects of given class (or a subtype)
+     */
+    public static <E> List<E> filter(
+        final List<?> list,
+        final Class<E> includeFilter)
+    {
+        List<E> result = new ArrayList<E>();
+        for (Object o : list) {
+            if (includeFilter.isInstance(o)) {
+                result.add(includeFilter.cast(o));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Converts a {@link Properties} object to a <code>{@link Map}&lt;String,
+     * String&gt;</code>.
+     *
+     * <p>This is necessary because {@link Properties} is a dinosaur class. It
+     * ought to extend <code>Map&lt;String,String&gt;</code>, but instead
+     * extends <code>{@link Hashtable}&lt;Object,Object&gt;</code>.
+     *
+     * <p>Typical usage, to iterate over a {@link Properties}:
+     *
+     * <blockquote>
+     * <code>
+     * Properties properties;<br/>
+     * for (Map.Entry&lt;String, String&gt; entry =
+     * Util.toMap(properties).entrySet()) {<br/>
+     *   println("key=" + entry.getKey() + ", value=" + entry.getValue());<br/>
+     * }
+     * </code>
+     * </blockquote>
+     */
+    public static Map<String, String> toMap(
+        final Properties properties)
+    {
+        return (Map) properties;
+    }
+
+    /**
+     * Returns an exception indicating that we didn't expect to find this
+     * enumeration here.
+     *
+     * @param value Enumeration value which was not expected
+     *
+     * @return an error, to be thrown
+     */
+    public static <E extends Enum<E>> Error unexpected(E value)
+    {
+        return new AssertionError(
+            "Was not expecting value '" + value
+            + "' for enumeration '" + value.getDeclaringClass().getName()
+            + "' in this context");
+    }
+
+    /**
+     * Creates a map of the values of an enumeration by name.
+     *
+     * @param clazz Enumeration class
+     *
+     * @return map of values
+     */
+    public static <T extends Enum<T>> Map<String, T> enumConstants(
+        Class<T> clazz)
+    {
+        final T [] ts = clazz.getEnumConstants();
+        if (ts == null) {
+            // not an enum type
+            return null;
+        }
+        Map<String, T> map = new HashMap<String, T>(ts.length * 2);
+        for (T t : ts) {
+            map.put(t.name(), t);
+        }
+        return Collections.unmodifiableMap(map);
+    }
+
+    /**
+     * Returns the value of an enumeration with a particular name.
+     *
+     * <p>Similar to {@link Enum#valueOf(Class, String)}, but returns {@code
+     * null} rather than throwing {@link IllegalArgumentException}.
+     *
+     * @param clazz Enum class
+     * @param name Name of enum constant
+     * @param <T> Enum class type
+     *
+     * @return Enum constant or null
+     */
+    @SuppressWarnings({ "unchecked" })
+    public static synchronized <T extends Enum<T>> T enumVal(
+        Class<T> clazz,
+        String name)
+    {
+        Map<String, T> mapNameToEnum =
+            (Map<String, T>) mapClazzToMapNameToEnum.get(clazz);
+        if (mapNameToEnum == null) {
+            mapNameToEnum = enumConstants(clazz);
+            mapClazzToMapNameToEnum.put(clazz, mapNameToEnum);
+        }
+        return mapNameToEnum.get(name);
+    }
+
+    /**
+     * Returns an iterable over the bits in a bitmap that are set to '1'.
+     *
+     * <p>This allows you to iterate over a bit set using a 'foreach' construct.
+     * For instance:
+     *
+     * <blockquote><code>
+     * BitSet bitSet;<br/>
+     * for (int i : Util.toIter(bitSet)) {<br/>
+     * &nbsp;&nbsp;print(i);<br/>
+     * }<br/></code></blockquote>
+     *
+     * @param bitSet Bit set
+     * @return Iterable
+     */
+    public static Iterable<Integer> toIter(final BitSet bitSet)
+    {
+        return new Iterable<Integer>()
+        {
+            public Iterator<Integer> iterator()
+            {
+                return new Iterator<Integer>()
+                {
+                    int i = bitSet.nextSetBit(0);
+
+                    public boolean hasNext()
+                    {
+                        return i >= 0;
+                    }
+
+                    public Integer next()
+                    {
+                        int prev = i;
+                        i = bitSet.nextSetBit(i + 1);
+                        return prev;
+                    }
+
+                    public void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+
+    /**
+     * Converts a bitset to a list.
+     *
+     * <p>The list is mutable, and future changes to the list do not affect the
+     * contents of the bit set.
+     *
+     * @param bitSet Bit set
+     * @return List of set bits
+     */
+    public static List<Integer> toList(final BitSet bitSet)
+    {
+        final List<Integer> list = new ArrayList<Integer>();
+        for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1))
+        {
+            list.add(i);
+        }
+        return list;
+    }
+
+    /**
+     * Converts a bitset to an array.
+     *
+     * @param bitSet Bit set
+     * @return List of set bits
+     */
+    public static Integer[] toArray(final BitSet bitSet)
+    {
+        final List<Integer> list = toList(bitSet);
+        return list.toArray(new Integer[list.size()]);
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(0, 3)} returns a bit set with bits {0, 3}
+     * set.
+     *
+     * @param bits Array of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(int... bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(new Integer[] {0, 3})} returns a bit set
+     * with bits {0, 3} set.
+     *
+     * @param bits Array of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(Integer[] bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with given bits set.
+     *
+     * <p>For example, {@code bitSetOf(Arrays.asList(0, 3)) } returns a bit set
+     * with bits {0, 3} set.
+     *
+     * @param bits Collection of bits to set
+     * @return Bit set
+     */
+    public static BitSet bitSetOf(Collection<Integer> bits)
+    {
+        final BitSet bitSet = new BitSet();
+        for (int bit : bits) {
+            bitSet.set(bit);
+        }
+        return bitSet;
+    }
+
+    /**
+     * Creates a bitset with bits from {@code fromIndex} (inclusive) to
+     * specified {@code toIndex} (exclusive) set to {@code true}.
+     *
+     * <p>For example, {@code bitSetBetween(0, 3)} returns a bit set with bits
+     * {0, 1, 2} set.
+     *
+     * @param fromIndex Index of the first bit to be set.
+     * @param toIndex   Index after the last bit to be set.
+     * @return Bit set
+     */
+    public static BitSet bitSetBetween(int fromIndex, int toIndex)
+    {
+        final BitSet bitSet = new BitSet();
+        if (toIndex > fromIndex) {
+            // Avoid http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222207
+            // "BitSet internal invariants may be violated"
+            bitSet.set(fromIndex, toIndex);
+        }
+        return bitSet;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1385,107 +2052,115 @@ public class Util
         }
     }
 
+    // Experimental support for functional programming follows...
+
     /**
-     * Describes a node, its parent and if and where in the parent a node lives.
-     * If parent is null, the offset value is not valid.
+     * Function of arity 0.
+     *
+     * @param <R> Result type.
      */
-    public static class SqlNodeDescriptor
+    interface Function0<R> {
+        /**
+         * Applies the function.
+         *
+         * @return Result value.
+         */
+        R apply();
+    }
+
+    /**
+     * Function of arity 1.
+     *
+     * @param <R> Result type.
+     * @param <T0> Type of parameter 0.
+     */
+    public interface Function1<R, T0> {
+        /**
+         * Applies the function.
+         *
+         * @param p0 Parameter 0.
+         * @return Result value.
+         */
+        R apply(T0 p0);
+    }
+
+    /**
+     * Function of arity 2.
+     *
+     * @param <R> Result type.
+     * @param <T0> Type of parameter 0.
+     * @param <T1> Type of parameter 1.
+     */
+    public interface Function2<R, T0, T1> {
+        /**
+         * Applies the function.
+         *
+         * @param p0 Parameter 0.
+         * @param p1 Parameter 1.
+         * @return Result value.
+         */
+        R apply(T0 p0, T1 p1);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public static class Functions
     {
-        private final SqlNode node;
-        private final SqlNode parent;
-        private final Integer parentOffset;
-
-        public SqlNodeDescriptor(SqlNode node,
-            SqlNode parent,
-            Integer parentOffset)
-        {
-            assert ((null == parent) || (parent instanceof SqlCall)
-                    || (parent instanceof SqlNodeList));
-            this.node = node;
-            this.parent = parent;
-            this.parentOffset = parentOffset;
+        /**
+         * Returns a function of arity 0 that does nothing.
+         *
+         * @param <R> Return type
+         * @return Function that does nothing.
+         */
+        public static <R> Function0<R> ignore0() {
+            return Ignore.INSTANCE;
         }
 
-        public SqlNode getNode()
-        {
-            return node;
+        /**
+         * Returns a function of arity 1 that does nothing.
+         *
+         * @param <R> Return type
+         * @param <T0> Type of parameter 0
+         * @return Function that does nothing.
+         */
+        public static <R, T0> Function1<R, T0> ignore1() {
+            return Ignore.INSTANCE;
         }
 
-        public SqlNode getParent()
-        {
-            return parent;
-        }
-
-        public Integer getParentOffset()
-        {
-            return parentOffset;
+        /**
+         * Returns a function of arity 2 that does nothing.
+         *
+         * @param <R> Return type
+         * @param <T0> Type of parameter 0
+         * @param <T1> Type of parameter 1
+         * @return Function that does nothing.
+         */
+        public static <R, T0, T1> Function2<R, T0, T1> ignore2() {
+            return Ignore.INSTANCE;
         }
     }
 
-    private static class BacktrackVisitor<R>
-        extends SqlBasicVisitor<R>
+    private static final class Ignore<R, T0, T1>
+        implements
+        Function0<R>,
+        Function1<R, T0>,
+        Function2<R, T0, T1>
     {
-        /**
-         * Used to keep track of the current SqlNode parent of a visiting node.
-         * A value of null mean no parent. NOTE: In case of extending
-         * SqlBasicVisitor, remember that parent value might not be set
-         * depending on if and how visit(SqlCall) and visit(SqlNodeList) is
-         * implemented.
-         */
-        protected SqlNode currentParent = null;
-
-        /**
-         * Only valid if currentParrent is a SqlCall or SqlNodeList Describes
-         * the offset within the parent
-         */
-        protected int currentOffset;
-
-        public SqlNode getCurrentParent()
+        public R apply()
         {
-            return currentParent;
+            return null;
         }
 
-        public Integer getCurrentOffset()
+        public R apply(T0 p0)
         {
-            return currentOffset;
+            return null;
         }
 
-        public R visit(SqlNodeList nodeList)
+        public R apply(T0 p0, T1 p1)
         {
-            R result = null;
-            for (int i = 0; i < nodeList.size(); i++) {
-                currentParent = nodeList;
-                currentOffset = i;
-                SqlNode node = nodeList.get(i);
-                result = node.accept(this);
-            }
-            currentParent = null;
-            return result;
+            return null;
         }
 
-        public R visit(final SqlCall call)
-        {
-            ArgHandler<R> argHandler =
-                new ArgHandler<R>() {
-                    public R result()
-                    {
-                        return null;
-                    }
-
-                    public R visitChild(SqlVisitor<R> visitor,
-                        SqlNode expr,
-                        int i,
-                        SqlNode operand)
-                    {
-                        currentParent = call;
-                        currentOffset = i;
-                        return operand.accept(BacktrackVisitor.this);
-                    }
-                };
-            call.getOperator().acceptCall(this, call, false, argHandler);
-            currentParent = null;
-            return argHandler.result();
-        }
+        static final Ignore INSTANCE = new Ignore();
     }
 }
 

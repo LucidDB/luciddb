@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,9 @@
 */
 package org.eigenbase.sql.type;
 
+import java.io.*;
+
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -34,9 +35,9 @@ import org.eigenbase.sql.*;
  */
 public abstract class AbstractSqlType
     extends RelDataTypeImpl
-    implements Cloneable
+    implements Cloneable,
+        Serializable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SqlTypeName typeName;
@@ -44,6 +45,13 @@ public abstract class AbstractSqlType
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AbstractSqlType.
+     *
+     * @param typeName Type name
+     * @param isNullable Whether nullable
+     * @param fields Fields of type, or null if not a record type
+     */
     protected AbstractSqlType(
         SqlTypeName typeName,
         boolean isNullable,
@@ -51,11 +59,7 @@ public abstract class AbstractSqlType
     {
         super(fields);
         this.typeName = typeName;
-        if (typeName == SqlTypeName.Null) {
-            this.isNullable = true;
-        } else {
-            this.isNullable = isNullable;
-        }
+        this.isNullable = isNullable || (typeName == SqlTypeName.NULL);
     }
 
     //~ Methods ----------------------------------------------------------------

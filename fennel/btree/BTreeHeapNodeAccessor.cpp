@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ BTreeHeapNodeAccessor::BTreeHeapNodeAccessor()
 
 void BTreeHeapNodeAccessor::clearNode(BTreeNode &node,uint cbPage)
 {
-    BTreeNodeAccessor::clearNode(node,cbPage);
+    BTreeNodeAccessor::clearNode(node, cbPage);
     node.cbCompactFree = node.cbTotalFree;
 }
 
@@ -40,7 +40,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint cbEntry)
 {
     uint cbEntryWithOverhead = getEntrySizeWithOverhead(cbEntry);
-    assert(iEntry < node.nEntries+1);
+    assert(iEntry < node.nEntries + 1);
     assert(node.cbCompactFree >= cbEntryWithOverhead);
 
     EntryOffset *pFirstEntryOffset = getEntryOffsetPointer(node,0);
@@ -64,18 +64,18 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     node.nEntries++;
     node.cbTotalFree -= cbEntryWithOverhead;
     node.cbCompactFree -= cbEntryWithOverhead;
-        
+
     return pAllocation;
 }
 
 void BTreeHeapNodeAccessor::deallocateEntry(
     BTreeNode &node,uint iEntry)
 {
-    tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node,iEntry));
+    tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node, iEntry));
     uint cbEntry = tupleAccessor.getCurrentByteCount();
-    
+
     // see comments in BTreeCompactNodeAccessor::deallocateEntry
-    if (iEntry != node.nEntries-1) {
+    if (iEntry != node.nEntries - 1) {
         // delete the entry from the offset array
         EntryOffset *pEntryOffset = getEntryOffsetPointer(node,iEntry);
         memmove(
@@ -118,6 +118,6 @@ uint BTreeHeapNodeAccessor::getEntryByteCount(uint cb)
     return getEntrySizeWithOverhead(cb);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/btree/BTreeHeapNodeAccessor.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeHeapNodeAccessor.cpp

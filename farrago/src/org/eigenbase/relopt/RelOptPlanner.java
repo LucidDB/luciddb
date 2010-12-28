@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -38,7 +39,6 @@ import org.eigenbase.trace.*;
  */
 public interface RelOptPlanner
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final Logger tracer = EigenbaseTrace.getPlannerTracer();
@@ -52,6 +52,11 @@ public interface RelOptPlanner
      */
     public void setRoot(RelNode rel);
 
+    /**
+     * Returns the root node of this query.
+     *
+     * @return Root node
+     */
     public RelNode getRoot();
 
     /**
@@ -92,6 +97,15 @@ public interface RelOptPlanner
      * filtering
      */
     public void setRuleDescExclusionFilter(Pattern exclusionFilter);
+
+    /**
+     * Installs the cancellation-checking flag for this planner. The planner
+     * should periodically check this flag and terminate the planning process if
+     * it sees a cancellation request.
+     *
+     * @param cancelFlag flag which the planner should periodically check
+     */
+    public void setCancelFlag(CancelFlag cancelFlag);
 
     /**
      * Changes a relational expression to an equivalent one with a different set
@@ -241,6 +255,20 @@ public interface RelOptPlanner
      * @return timestamp of last change which might affect metadata derivation
      */
     public long getRelMetadataTimestamp(RelNode rel);
+
+    /**
+     * Sets the importance of a relational expression.
+     *
+     * <p>An important use of this method is when a {@link RelOptRule} has
+     * created a relational expression which is indisputably better than the
+     * original relational expression. The rule set the original relational
+     * expression's importance to zero, to reduce the search space. Pending rule
+     * calls are cancelled, and future rules will not fire.
+     *
+     * @param rel Relational expression
+     * @param importance Importance
+     */
+    void setImportance(RelNode rel, double importance);
 }
 
 // End RelOptPlanner.java

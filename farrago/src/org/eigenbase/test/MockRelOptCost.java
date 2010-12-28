@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,6 @@ import org.eigenbase.relopt.*;
 public class MockRelOptCost
     implements RelOptCost
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public double getCpu()
@@ -72,6 +71,11 @@ public class MockRelOptCost
         return true;
     }
 
+    public boolean isEqWithEpsilon(RelOptCost cost)
+    {
+        return true;
+    }
+
     public RelOptCost minus(RelOptCost cost)
     {
         return this;
@@ -80,6 +84,11 @@ public class MockRelOptCost
     public RelOptCost multiplyBy(double factor)
     {
         return this;
+    }
+
+    public double divideBy(RelOptCost cost)
+    {
+        return 1;
     }
 
     public RelOptCost plus(RelOptCost cost)

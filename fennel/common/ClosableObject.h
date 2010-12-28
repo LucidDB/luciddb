@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,18 +33,18 @@ FENNEL_BEGIN_NAMESPACE
  * makes it easier to instantiate a shared_ptr which takes care of automatic
  * close on destruction (see ClosableObjectDestructor).
  */
-class ClosableObject 
+class FENNEL_COMMON_EXPORT ClosableObject
 {
 protected:
     /**
      * Must be implemented by derived class to release any resources.
      */
     virtual void closeImpl() = 0;
-    
+
     bool needsClose;
 
     explicit ClosableObject();
-    
+
 public:
     /**
      * Destructor.  An assertion violation will result if the object has not
@@ -70,7 +70,7 @@ public:
  * A destructor functor for use as the "D" parameter to a
  * boost::shared_ptr constructor.
  */
-class ClosableObjectDestructor 
+class FENNEL_COMMON_EXPORT ClosableObjectDestructor
 {
 public:
     void operator()(ClosableObject *pClosableObject)

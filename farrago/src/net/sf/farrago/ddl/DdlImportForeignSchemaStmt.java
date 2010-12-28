@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,10 +31,10 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -46,14 +46,13 @@ import org.eigenbase.sql.*;
 public class DdlImportForeignSchemaStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FemLocalSchema localSchema;
     private final FemDataServer femServer;
     private final SqlIdentifier foreignSchemaName;
     private final boolean exclude;
-    private final List roster;
+    private final List<SqlIdentifier> roster;
     private final String pattern;
 
     //~ Constructors -----------------------------------------------------------
@@ -75,7 +74,7 @@ public class DdlImportForeignSchemaStmt
         FemDataServer femServer,
         SqlIdentifier foreignSchemaName,
         boolean exclude,
-        List roster,
+        List<SqlIdentifier> roster,
         String pattern)
     {
         super(localSchema);
@@ -120,7 +119,7 @@ public class DdlImportForeignSchemaStmt
                         foreignSchemaName.getSimple()));
             }
 
-            Set requiredSet = null;
+            Set<String> requiredSet = null;
 
             // Create a metadata query to retrieve column descriptors, using
             // any table name filters requested.
@@ -145,7 +144,8 @@ public class DdlImportForeignSchemaStmt
             }
 
             // Create a sink to receive query results
-            ImportSink sink = new ImportSink(
+            ImportSink sink =
+                new ImportSink(
                     ddlValidator,
                     query,
                     schemaDir);
@@ -176,15 +176,16 @@ public class DdlImportForeignSchemaStmt
         }
     }
 
-    private Set convertRoster()
+    private Set<String> convertRoster()
     {
         if (roster == null) {
             return null;
         }
-        Set set = new HashSet();
-        Iterator iter = roster.iterator();
-        while (iter.hasNext()) {
-            SqlIdentifier id = (SqlIdentifier) iter.next();
+
+        // keep roster as a sorted set so can report any missing
+        // entries in a deterministic order (esp. for unit tests)
+        Set<String> set = new TreeSet<String>();
+        for (SqlIdentifier id : roster) {
             set.add(id.getSimple());
         }
         return set;
@@ -203,7 +204,7 @@ public class DdlImportForeignSchemaStmt
     {
         private final FarragoSessionDdlValidator ddlValidator;
 
-        private final Map tableMap;
+        private final Map<String, FemBaseColumnSet> tableMap;
 
         private DdlMedHandler medHandler;
 
@@ -221,7 +222,7 @@ public class DdlImportForeignSchemaStmt
             this.ddlValidator = ddlValidator;
             this.directory = directory;
 
-            tableMap = new HashMap();
+            tableMap = new HashMap<String, FemBaseColumnSet>();
             medHandler = new DdlMedHandler(ddlValidator);
         }
 
@@ -230,7 +231,7 @@ public class DdlImportForeignSchemaStmt
             String name,
             String typeName,
             String remarks,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(name, typeName, false)) {
                 return false;
@@ -249,22 +250,24 @@ public class DdlImportForeignSchemaStmt
             RelDataType type,
             String remarks,
             String defaultValue,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(
                     tableName,
                     FarragoMedMetadataQuery.OTN_TABLE,
-                    true)) {
+                    true))
+            {
                 return false;
             }
             if (!shouldInclude(
                     columnName,
                     FarragoMedMetadataQuery.OTN_COLUMN,
-                    false)) {
+                    false))
+            {
                 return false;
             }
 
-            FemBaseColumnSet table = (FemBaseColumnSet) tableMap.get(tableName);
+            FemBaseColumnSet table = tableMap.get(tableName);
             if (table == null) {
                 return false;
             }
@@ -299,9 +302,7 @@ public class DdlImportForeignSchemaStmt
         void dropStragglers()
         {
             // Drop all tables with no columns.
-            Iterator iter = tableMap.values().iterator();
-            while (iter.hasNext()) {
-                FemBaseColumnSet table = (FemBaseColumnSet) iter.next();
+            for (FemBaseColumnSet table : tableMap.values()) {
                 if (table.getFeature().isEmpty()) {
                     table.refDelete();
                 }
@@ -323,15 +324,15 @@ public class DdlImportForeignSchemaStmt
 
         private void setStorageOptions(
             FemElementWithStorageOptions element,
-            Map props)
+            Properties props)
         {
-            Iterator entryIter = props.entrySet().iterator();
-            while (entryIter.hasNext()) {
-                Map.Entry entry = (Map.Entry) entryIter.next();
+            for (Map.Entry<String, String> entry
+                : Util.toMap(props).entrySet())
+            {
                 FemStorageOption opt =
                     ddlValidator.getRepos().newFemStorageOption();
-                opt.setName(entry.getKey().toString());
-                opt.setValue(entry.getValue().toString());
+                opt.setName(entry.getKey());
+                opt.setValue(entry.getValue());
                 element.getStorageOptions().add(opt);
             }
         }

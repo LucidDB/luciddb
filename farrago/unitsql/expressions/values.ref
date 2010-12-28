@@ -1,139 +1,233 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries with VALUES
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single-row
-0: jdbc:farrago:> select * from (values ('hi',2,'bye'));
+> -- $Id$
+> -- Test queries with VALUES
+> 
+> -- single-row
+> select * from (values ('hi',2,'bye'));
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
 | hi      | 2       | bye     |
 +---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- top-level
-0: jdbc:farrago:> values ('hi',2,'bye');
+> 
+> -- top-level
+> values ('hi',2,'bye');
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
 | hi      | 2       | bye     |
 +---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- multi-row
-0: jdbc:farrago:> select * from (values ('hi',2,'bye'), ('foo',3,'bar')) order by 1;
-+---------+---------+---------+
-| EXPR$0  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| foo     | 3       | bar     |
-| hi      | 2       | bye     |
-+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- top-level ordered
-0: jdbc:farrago:> values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
+> 
+> -- multi-row
+> select * from (values ('hi',2,'bye'), ('foo',3,'bar')) order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
 | foo     | 3       | bar     |
 | hi      | 2       | bye     |
 +---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- values with expressions
-0: jdbc:farrago:> values (1+2);
+> 
+> -- top-level ordered
+> values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| foo     | 3       | bar     |
+| hi      | 2       | bye     |
++---------+---------+---------+
+> 
+> -- values with expressions
+> values (1+2);
 +---------+
 | EXPR$0  |
 +---------+
 | 3       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  identifiers in values
-0: jdbc:farrago:> values (x,2);
+> 
+> -- bad:  identifiers in values
+> values (x,2);
 Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  expressions on identifiers in values
-0: jdbc:farrago:> values (x+1,2);
+> 
+> -- bad:  expressions on identifiers in values
+> values (x+1,2);
 Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test SESSION_USER
-0: jdbc:farrago:> values (session_user);
+> 
+> -- test SESSION_USER
+> values (session_user);
 +---------------+
 | SESSION_USER  |
 +---------------+
 | sa            |
 +---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test CURRENT_USER (should be same as SESSION_USER)
-0: jdbc:farrago:> values (current_user);
+> 
+> -- test CURRENT_USER (should be same as SESSION_USER)
+> values (current_user);
 +---------------+
 | CURRENT_USER  |
 +---------------+
 | sa            |
 +---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test USER (should be same as CURRENT_USER)
-0: jdbc:farrago:> values (user);
+> 
+> -- test USER (should be same as CURRENT_USER)
+> values (user);
 +-------+
 | USER  |
 +-------+
 | sa    |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
-0: jdbc:farrago:> explain plan for values (system_user);
-+--------------------------------------------------------------------------+
-|                                 column0                                  |
-+--------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], expr#1=[SYSTEM_USER], SYSTEM_USER=[$t1])  |
-|   IterOneRowRel                                                          |
-+--------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Janino had problems with this one (fixed in their 2.0.5 release)
-0: jdbc:farrago:> values true and true;
+> 
+> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
+> -- (zfong 5/9/07) - Commented out test since we now convert system_user and
+> -- other context dependent functions to constants during optimization
+> -- explain plan for values (system_user);
+> 
+> -- Janino had problems with this one (fixed in their 2.0.5 release)
+> values true and true;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test empty CURRENT_PATH
-0: jdbc:farrago:> values current_path;
+> 
+> -- test empty CURRENT_PATH
+> values current_path;
 +---------------+
 | CURRENT_PATH  |
 +---------------+
 |               |
 +---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test single-schema CURRENT_PATH
-0: jdbc:farrago:> set path 'sales';
-0: jdbc:farrago:> values current_path;
+> 
+> -- test single-schema CURRENT_PATH
+> set path 'sales';
+> values current_path;
 +--------------------+
 |    CURRENT_PATH    |
 +--------------------+
 | "LOCALDB"."SALES"  |
 +--------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test two-schema CURRENT_PATH
-0: jdbc:farrago:> set path 'sys_boot.jdbc_metadata, sales';
-0: jdbc:farrago:> values current_path;
+> 
+> -- test two-schema CURRENT_PATH
+> set path 'sys_boot.jdbc_metadata, sales';
+> values current_path;
 +-----------------------------------------------+
 |                 CURRENT_PATH                  |
 +-----------------------------------------------+
 | "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES"  |
 +-----------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test no-op SET PATH
-0: jdbc:farrago:> set path current_path;
-0: jdbc:farrago:> values current_path;
+> 
+> -- test no-op SET PATH
+> set path current_path;
+> values current_path;
 +-----------------------------------------------+
 |                 CURRENT_PATH                  |
 +-----------------------------------------------+
 | "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES"  |
 +-----------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test complex SET PATH
-0: jdbc:farrago:> set path current_path || ', sys_cwm."Relational"';
-0: jdbc:farrago:> values current_path;
+> 
+> -- test complex SET PATH
+> set path current_path || ', sys_cwm."Relational"';
+> values current_path;
 +----------------------------------------------------------------------+
 |                             CURRENT_PATH                             |
 +----------------------------------------------------------------------+
 | "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES","SYS_CWM"."Relational"  |
 +----------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- test CURRENT_CATALOG and CURRENT_SCHEMA from SQL:2008
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| LOCALDB          |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+|                 |
++-----------------+
+> 
+> set catalog 'sys_boot';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| SYS_BOOT         |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+|                 |
++-----------------+
+> 
+> set schema 'localdb.sales';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| LOCALDB          |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+| SALES           |
++-----------------+
+> 
+> -- note that changing the catalog does not affect the schema
+> set catalog 'sys_boot';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| SYS_BOOT         |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+| SALES           |
++-----------------+
+> 
+> -- test LucidDB's standard-bending for 
+> -- SQL:2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
+> -- (see http://sf.net/mailarchive/message.php?msg_id=13337379)
+> -- and some numeric type derivation
+> 
+> values (1/3);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> -- if type union results in loss of digits, verify that rounding occurs
+> values 100000.0, 0.555555555555555555;
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| 100000.0000000000000  |
+| 0.5555555555556       |
++-----------------------+
+> 
+> !set outputformat csv
+> 
+> values ('no'), ('yes'), ('maybe');
+'EXPR$0'
+'no   '
+'yes  '
+'maybe'
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> values (1/7);
+'EXPR$0'
+'0.142857'
+> 
+> values ('no'), ('si'), ('es posible');
+'EXPR$0'
+'no'
+'si'
+'es posible'
+> 
+> !quit

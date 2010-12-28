@@ -380,8 +380,16 @@ signature.
 <li><code>[NOT] DETERMINISTIC</code>: specifies whether the routine
 always produces the same result given the same inputs and persistent state.
 
+<li><code>[NOT] DYNAMIC_FUNCTION</code>: specifies whether it is safe
+to cache query plans referring to the routine; default is false (NOT
+DYNAMIC_FUNCTION), indicating that plan caching is safe.  An example
+of a DYNAMIC_FUNCTION would be an external value lookup routine
+(similar to the CURRENT_DATE expression) which should be re-evaluated
+for each query execution, but not for each row.  Note that this is a
+Farrago-specific extension (not defined by SQL:2003).
+
 <li><code>{NO SQL | CONTAINS SQL | READS SQL DATA | MODIFIES SQL DATA
-}</code>: constraints the usage of SQL within the implementation of
+}</code>: constrains the usage of SQL within the implementation of
 the routine.
 
 <li><code>DYNAMIC RESULT SETS</code>: for procedures, whether result
@@ -548,10 +556,11 @@ class MathFuncs {
 
 <li>From SQL, <code>CALL</code> the system-defined
 <code>SQLJ.INSTALL_JAR</code> routine to install the JAR into the
-DBMS.
+DBMS.  (The last parameter, which controls whether deployment descriptors
+are used, is currently ignored since these aren't supported yet.)
 
 <pre><code>
-CALL SQLJ.INSTALL_JAR('file:/home/jvs/MathFuncs.jar','MathFuncsJavaLib');
+CALL SQLJ.INSTALL_JAR('file:/home/jvs/MathFuncs.jar','MathFuncsJavaLib', 0);
 </code></pre>
 
 <li>Issue a <code>CREATE {FUNCTION|PROCEDURE}</code> statement

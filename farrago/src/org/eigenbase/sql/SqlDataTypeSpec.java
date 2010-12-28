@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,7 +58,6 @@ import org.eigenbase.util.*;
 public class SqlDataTypeSpec
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier collectionsTypeName;
@@ -114,8 +113,7 @@ public class SqlDataTypeSpec
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            (collectionsTypeName == null)
+        return (collectionsTypeName == null)
             ? new SqlDataTypeSpec(
                 collectionsTypeName,
                 typeName,
@@ -130,6 +128,11 @@ public class SqlDataTypeSpec
                 charSetName,
                 timeZone,
                 pos);
+    }
+
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
+    {
+        return SqlMonotonicity.Constant;
     }
 
     public SqlIdentifier getCollectionsTypeName()
@@ -174,14 +177,13 @@ public class SqlDataTypeSpec
         Util.pre(
             null != getCollectionsTypeName(),
             "null != getCollectionsTypeName()");
-        return
-            new SqlDataTypeSpec(
-                typeName,
-                precision,
-                scale,
-                charSetName,
-                timeZone,
-                getParserPosition());
+        return new SqlDataTypeSpec(
+            typeName,
+            precision,
+            scale,
+            charSetName,
+            timeZone,
+            getParserPosition());
     }
 
     public void unparse(
@@ -190,7 +192,7 @@ public class SqlDataTypeSpec
         int rightPrec)
     {
         String name = typeName.getSimple();
-        if (SqlTypeName.containsName(name)) {
+        if (SqlTypeName.get(name) != null) {
             SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
             // we have a built-in data type
@@ -198,7 +200,7 @@ public class SqlDataTypeSpec
 
             if (sqlTypeName.allowsPrec() && (precision >= 0)) {
                 final SqlWriter.Frame frame =
-                    writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
+                    writer.startList(SqlWriter.FrameTypeEnum.FunCall, "(", ")");
                 writer.print(precision);
                 if (sqlTypeName.allowsScale() && (scale >= 0)) {
                     writer.sep(",", true);
@@ -241,7 +243,8 @@ public class SqlDataTypeSpec
         if (!SqlNode.equalDeep(
                 this.collectionsTypeName,
                 that.collectionsTypeName,
-                fail)) {
+                fail))
+        {
             return false;
         }
         if (!this.typeName.equalsDeep(that.typeName, fail)) {
@@ -274,7 +277,7 @@ public class SqlDataTypeSpec
         String name = typeName.getSimple();
 
         //for now we only support builtin datatypes
-        if (!SqlTypeName.containsName(name)) {
+        if (SqlTypeName.get(name) == null) {
             throw validator.newValidationError(
                 this,
                 EigenbaseResource.instance().UnknownDatatypeName.ex(name));
@@ -282,7 +285,7 @@ public class SqlDataTypeSpec
 
         if (null != collectionsTypeName) {
             final String collectionName = collectionsTypeName.getSimple();
-            if (!SqlTypeName.containsName(collectionName)) {
+            if (!(SqlTypeName.get(collectionName) != null)) {
                 throw validator.newValidationError(
                     this,
                     EigenbaseResource.instance().UnknownDatatypeName.ex(
@@ -303,8 +306,9 @@ public class SqlDataTypeSpec
 
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
-        // TODO jvs 13-Dec-2004:  these assertions should be real
-        // validation errors instead; need to share code with DDL
+        // NOTE jvs 15-Jan-2009:  earlier validation is supposed to
+        // have caught these, which is why it's OK for them
+        // to be assertions rather than user-level exceptions.
         RelDataType type;
         if ((precision >= 0) && (scale >= 0)) {
             assert (sqlTypeName.allowsPrecScale(true, true));
@@ -329,12 +333,15 @@ public class SqlDataTypeSpec
 
             Charset charset;
             if (null == charSetName) {
-                charset = Util.getDefaultCharset();
+                charset = typeFactory.getDefaultCharset();
             } else {
-                charset = Charset.forName(charSetName);
+                String javaCharSetName =
+                    SqlUtil.translateCharacterSetName(charSetName);
+                charset = Charset.forName(javaCharSetName);
             }
             type =
-                typeFactory.createTypeWithCharsetAndCollation(type,
+                typeFactory.createTypeWithCharsetAndCollation(
+                    type,
                     charset,
                     collation);
         }
@@ -345,13 +352,13 @@ public class SqlDataTypeSpec
             SqlTypeName collectionsSqlTypeName =
                 SqlTypeName.get(collectionName);
 
-            switch (collectionsSqlTypeName.getOrdinal()) {
-            case SqlTypeName.Multiset_ordinal:
+            switch (collectionsSqlTypeName) {
+            case MULTISET:
                 type = typeFactory.createMultisetType(type, -1);
                 break;
 
             default:
-                Util.permAssert(false, "should never come here");
+                throw Util.unexpected(collectionsSqlTypeName);
             }
         }
 

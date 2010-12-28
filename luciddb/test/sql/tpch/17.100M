@@ -1,12 +1,12 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> -- Q17 (tpch2.6.1)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'tpch';
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- rewritten query before subquery support
+0: jdbc:luciddb:> --
 0: jdbc:luciddb:> SELECT SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
-. . . . . . . . > FROM LINEITEM L, PART,
+. . . . . . . . > FROM TPCH.LINEITEM L, TPCH.PART,
 . . . . . . . . >      (SELECT L1.L_PARTKEY, (0.2 * AVG(L_QUANTITY)) AS AVGQTY 
-. . . . . . . . >       FROM LINEITEM L1
+. . . . . . . . >       FROM TPCH.LINEITEM L1
 . . . . . . . . >       GROUP BY L1.L_PARTKEY) AS TEMP
 . . . . . . . . > WHERE
 . . . . . . . . >     P_PARTKEY = L.L_PARTKEY AND
@@ -14,10 +14,32 @@
 . . . . . . . . >     P_CONTAINER = 'MED BOX' AND
 . . . . . . . . >     P_PARTKEY = TEMP.L_PARTKEY AND
 . . . . . . . . >     L.L_QUANTITY < TEMP.AVGQTY;
-+--------------+
-|  AVG_YEARLY  |
-+--------------+
-| 23512.75285  |
-+--------------+
++---------------+
+|  AVG_YEARLY   |
++---------------+
+| 23512.752857  |
++---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- original tpch query
+0: jdbc:luciddb:> -- still has cartesian product
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --SELECT
+0: jdbc:luciddb:> --    SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
+0: jdbc:luciddb:> --FROM
+0: jdbc:luciddb:> --    TPCH.LINEITEM,
+0: jdbc:luciddb:> --    TPCH.PART
+0: jdbc:luciddb:> --WHERE
+0: jdbc:luciddb:> --    P_PARTKEY = L_PARTKEY
+0: jdbc:luciddb:> --    AND P_BRAND = 'Brand#23'
+0: jdbc:luciddb:> --    AND P_CONTAINER = 'MED BOX'
+0: jdbc:luciddb:> --    AND L_QUANTITY < (
+0: jdbc:luciddb:> --        SELECT
+0: jdbc:luciddb:> --            0.2 * AVG(L_QUANTITY)
+0: jdbc:luciddb:> --        FROM
+0: jdbc:luciddb:> --            TPCH.LINEITEM
+0: jdbc:luciddb:> --        WHERE
+0: jdbc:luciddb:> --            L_PARTKEY = P_PARTKEY
+0: jdbc:luciddb:> --   );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

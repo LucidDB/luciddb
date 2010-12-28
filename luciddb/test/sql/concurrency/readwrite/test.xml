@@ -1,0 +1,145 @@
+<project name="bh" default="rwconcurrency">
+  <target name="rwconcurrency">
+    <test-suite name="rwconcurrency">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="rwconcurrency"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="gen-all-sql"/>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="create-db"/>
+      </init-hook>
+
+      <test name="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/setup.sql"/>
+      </test>
+    
+      <test name="analyze" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/analyze.mtsql"/>
+      </test>
+
+      <test name="insertSelect" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/insert-select.mtsql"/>
+      </test>
+
+      <test name="insertQuery" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/insert-query.mtsql"/>
+      </test>
+
+      <test name="deleteSelect" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/delete-select.mtsql"/>
+      </test>
+
+      <test name="deleteInsert" requiresSuccess="setup">
+        <test-metadata>
+          <runDuration>long</runDuration>
+        </test-metadata>
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/delete-insert.mtsql"/>
+      </test>
+
+      <test name="alterTable1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/altertable1.mtsql"/>
+      </test>
+
+      <test name="alterTable2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/altertable2.mtsql"/>
+      </test>
+
+      <test name="truncate" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/truncate.mtsql"/>
+      </test>
+
+      <test name="deallocateRead" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deallocate-read.mtsql"/>
+      </test>
+
+      <test name="deallocateWrite" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deallocate-write.mtsql"/>
+      </test>
+
+      <test name="deallocateWrite1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deallocate-write1.mtsql"/>
+      </test>
+
+      <test name="incMergeSelect" requiresSuccess="setup">
+        <test-metadata>
+          <runDuration>long</runDuration>
+        </test-metadata>
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/incmerge-select.mtsql"/>
+      </test>
+
+      <test name="incMergeRebuildSelect" requiresSuccess="setup">
+        <test-metadata>
+          <runDuration>long</runDuration>
+        </test-metadata>
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/incmerge-rebuild-select.mtsql"/>
+      </test>
+
+      <test name="tpchThroughputReadOnly" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/tpch-throughput-readonly.mtsql"/>
+      </test>
+
+      <test name="tpchThroughput" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/tpch-throughput.mtsql"/>
+      </test>
+
+      <!-- test added for delete and sub-queries -->
+
+      <test name="deletes" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes.mtsql"/>
+      </test>
+
+      <test name="deletes1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes1.mtsql"/>
+      </test>
+
+      <test name="deletes2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes2.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch1.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch2.mtsql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="rwconcurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

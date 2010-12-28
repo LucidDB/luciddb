@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,8 @@
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/Segment.h"
+#include "fennel/segment/SegmentAccessor.h"
+#include "fennel/segment/SegmentMap.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -37,11 +39,32 @@ Segment::Segment(SharedCache pCacheInit)
 
 Segment::~Segment()
 {
+    close();
 }
 
 void Segment::closeImpl()
 {
     checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+}
+
+SharedSegment Segment::getTracingSegment()
+{
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        return sharedPtr;
+    } else {
+        return shared_from_this();
+    }
+}
+
+void Segment::setTracingSegment(WeakSegment pTracingSegmentInit)
+{
+    pTracingSegment = pTracingSegmentInit;
+}
+
+MappedPageListener *Segment::getTracingListener()
+{
+    return getTracingSegment().get();
 }
 
 void Segment::setUsablePageSize(uint cb)
@@ -69,7 +92,7 @@ PageId Segment::getLinearPageSuccessor(PageId pageId)
     return pageId;
 }
 
-void Segment::setLinearPageSuccessor(PageId pageId,PageId successorId)
+void Segment::setLinearPageSuccessor(PageId pageId, PageId successorId)
 {
     assert(isPageIdAllocated(pageId));
     assert(isPageIdAllocated(successorId));
@@ -87,7 +110,16 @@ bool Segment::isLinearPageIdAllocated(PageId pageId)
 
 void Segment::checkpoint(CheckpointType checkpointType)
 {
-    delegatedCheckpoint(*this,checkpointType);
+    // Note that we can't use getTracingSegment() here because that method
+    // references the shared ptr associated with this segment, and the
+    // shared segment may have already been freed during shutdown by the
+    // time this method is called.
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        delegatedCheckpoint(*(sharedPtr.get()),checkpointType);
+    } else {
+        delegatedCheckpoint(*this,checkpointType);
+    }
 }
 
 void Segment::delegatedCheckpoint(
@@ -95,7 +127,7 @@ void Segment::delegatedCheckpoint(
     CheckpointType checkpointType)
 {
     MappedPageListenerPredicate pagePredicate(delegatingSegment);
-    pCache->checkpointPages(pagePredicate,checkpointType);
+    pCache->checkpointPages(pagePredicate, checkpointType);
 }
 
 uint Segment::getFullPageSize() const
@@ -112,6 +144,33 @@ bool Segment::ensureAllocatedSize(BlockNum nPages)
     }
     return true;
 }
+
+PageId Segment::updatePage(PageId pageId, bool needsTranslation)
+{
+    return NULL_PAGE_ID;
+}
+
+MappedPageListener *Segment::getMappedPageListener(BlockId blockId)
+{
+    return this;
+}
+
+bool Segment::isWriteVersioned()
+{
+    return false;
+}
+
+void Segment::initForUse()
+{
+}
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedSegmentStructs
+{
+    SegmentMap &segmentMap;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

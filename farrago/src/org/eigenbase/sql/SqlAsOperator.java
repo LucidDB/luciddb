@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,16 +35,18 @@ import org.eigenbase.sql.validate.*;
  * @version $Id$
  */
 public class SqlAsOperator
-    extends SqlBinaryOperator
+    extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AS operator.
+     */
     public SqlAsOperator()
     {
         super(
             "AS",
-            SqlKind.As,
+            SqlKind.AS,
             20,
             true,
             SqlTypeStrategies.rtiFirstArgType,
@@ -53,6 +55,41 @@ public class SqlAsOperator
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public void unparse(
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
+    {
+        assert operands.length >= 2;
+        final SqlWriter.Frame frame =
+            writer.startList(
+                SqlWriter.FrameTypeEnum.Simple);
+        operands[0].unparse(
+            writer,
+            leftPrec,
+            getLeftPrec());
+        final boolean needsSpace = true;
+        writer.setNeedWhitespace(needsSpace);
+        writer.sep("AS");
+        writer.setNeedWhitespace(needsSpace);
+        operands[1].unparse(
+            writer,
+            getRightPrec(),
+            rightPrec);
+        if (operands.length > 2) {
+            final SqlWriter.Frame frame1 =
+                writer.startList(SqlWriter.FrameTypeEnum.Simple, "(", ")");
+            for (int i = 2; i < operands.length; i++) {
+                SqlNode operand = operands[i];
+                writer.sep(",", false);
+                operand.unparse(writer, 0, 0);
+            }
+            writer.endList(frame1);
+        }
+        writer.endList(frame);
+    }
 
     public void validateCall(
         SqlCall call,
@@ -74,7 +111,8 @@ public class SqlAsOperator
         }
     }
 
-    public <R> void acceptCall(SqlVisitor<R> visitor,
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
@@ -95,13 +133,14 @@ public class SqlAsOperator
         // special case for AS:  never try to derive type for alias
         RelDataType nodeType = validator.deriveType(scope, call.operands[0]);
         assert nodeType != null;
-        RelDataType type = validateOperands(validator, scope, call);
-        return type;
+        return validateOperands(validator, scope, call);
     }
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return call.operands[0].isMonotonic(scope);
+        return call.operands[0].getMonotonicity(scope);
     }
 }
 

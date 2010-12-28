@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package org.eigenbase.test;
 
 import java.nio.charset.*;
 
+import java.util.List;
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -56,7 +57,6 @@ import org.eigenbase.util.*;
 public class SqlValidatorTestCase
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -68,17 +68,9 @@ public class SqlValidatorTestCase
         Pattern.compile(
             "(?s)From line ([0-9]+), column ([0-9]+) to line ([0-9]+), column ([0-9]+): (.*)");
 
-    /**
-     * Whether to assert if a test doesn't specify the location of the error.
-     *
-     * <p/>todo: Set this to true, make all the tests succeed, then remove it.
-     */
-    private static final boolean FailIfNoPosition = Bug.Dt315Fixed;
-
     //~ Instance fields --------------------------------------------------------
 
-    protected final Tester tester = getTester();
-    private final SqlValidator.Compatible compatible;
+    protected final Tester tester;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,12 +85,11 @@ public class SqlValidatorTestCase
     public SqlValidatorTestCase(String name)
     {
         super(splitName(name));
-        SqlValidator.Compatible compatible = splitCompatible(name);
-        if (compatible == null) {
-            this.compatible = SqlValidator.Compatible.Default;
-        } else {
-            this.compatible = compatible;
+        SqlConformance conformance = splitConformance(name);
+        if (conformance == null) {
+            conformance = SqlConformance.Default;
         }
+        this.tester = getTester(conformance);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -113,31 +104,26 @@ public class SqlValidatorTestCase
         }
     }
 
-    private static SqlValidator.Compatible splitCompatible(String name)
+    private static SqlConformance splitConformance(String name)
     {
         int colon = name.indexOf(':');
         if (colon < 0) {
             return null;
         } else {
-            String compatibleName = name.substring(0, colon);
-            return
-                (SqlValidator.Compatible) SqlValidator.Compatible.enumeration
-                .getValue(compatibleName);
+            String conformanceName = name.substring(0, colon);
+            return SqlConformance.valueOf(conformanceName);
         }
-    }
-
-    private String buildQuery(String expression)
-    {
-        return "values (" + expression + ")";
     }
 
     /**
      * Returns a tester. Derived classes should override this method to run the
      * same set of tests in a different testing environment.
+     *
+     * @param conformance Language version tests should check compatibility with
      */
-    public Tester getTester()
+    public Tester getTester(SqlConformance conformance)
     {
-        return new TesterImpl();
+        return new TesterImpl(conformance);
     }
 
     public void check(String sql)
@@ -148,13 +134,13 @@ public class SqlValidatorTestCase
     public void checkExp(String sql)
     {
         tester.assertExceptionIsThrown(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             null);
     }
 
     /**
-     * Checks that a SQL query gives a particular error, but without specifying
-     * the location of that error.
+     * Checks that a SQL query gives a particular error, or succeeds if {@code
+     * expected} is null.
      */
     public final void checkFails(
         String sql,
@@ -171,7 +157,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         tester.assertExceptionIsThrown(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -192,7 +178,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         checkColumnType(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -244,7 +230,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         tester.checkIntervalConv(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -270,18 +256,13 @@ public class SqlValidatorTestCase
         tester.checkCollation(sql, expectedCollationName, expectedCoercibility);
     }
 
-    protected SqlValidator.Compatible getCompatible()
-    {
-        return compatible;
-    }
-
     /**
-     * Checks whether an exception matches the pattern and expected position
-     * expected.
+     * Checks whether an exception matches the expected pattern. If <code>
+     * sap</code> contains an error location, checks this too.
      *
      * @param ex Exception thrown
      * @param expectedMsgPattern Expected pattern
-     * @param sap Query and position in query
+     * @param sap Query and (optional) position in query
      */
     public static void checkEx(
         Throwable ex,
@@ -323,7 +304,8 @@ public class SqlValidatorTestCase
         SqlParseException spe = null;
         for (Throwable x = ex; x != null; x = x.getCause()) {
             if ((x instanceof SqlParseException)
-                && (((SqlParseException) x).getPos() != null)) {
+                && (((SqlParseException) x).getPos() != null))
+            {
                 spe = (SqlParseException) x;
                 break;
             }
@@ -374,7 +356,7 @@ public class SqlValidatorTestCase
             if (null != actualException) {
                 actualException.printStackTrace();
                 fail(
-                    "SqlValidationTest: Validator threw unexpected exception"
+                    "Validator threw unexpected exception"
                     + "; query [" + sap.sql
                     + "]; exception [" + actualMessage
                     + "]; pos [line " + actualLine
@@ -385,17 +367,20 @@ public class SqlValidatorTestCase
         } else if (null != expectedMsgPattern) {
             if (null == actualException) {
                 fail(
-                    "SqlValidationTest: Expected validator to throw "
+                    "Expected validator to throw "
                     + "exception, but it did not; query [" + sap.sql
                     + "]; expected [" + expectedMsgPattern + "]");
             } else {
                 String sqlWithCarets;
-                if ((actualColumn <= 0) || (actualLine <= 0)
+                if ((actualColumn <= 0)
+                    || (actualLine <= 0)
                     || (actualEndColumn <= 0)
-                    || (actualEndLine <= 0)) {
-                    if (FailIfNoPosition) {
+                    || (actualEndLine <= 0))
+                {
+                    if (sap.pos != null) {
                         throw new AssertionFailedError(
-                            "Error did not have position: "
+                            "Expected error to have position,"
+                            + " but actual error did not: "
                             + " actual pos [line " + actualLine
                             + " col " + actualColumn
                             + " thru line " + actualEndLine
@@ -410,19 +395,23 @@ public class SqlValidatorTestCase
                             actualColumn,
                             actualEndLine,
                             actualEndColumn + 1);
-                }
-                if (FailIfNoPosition && (sap.pos == null)) {
-                    throw new AssertionFailedError(
-                        "todo: add carets to sql: " + sqlWithCarets);
+                    if (sap.pos == null) {
+                        throw new AssertionFailedError(
+                            "Actual error had a position, but expected error"
+                            + " did not. Add error position carets to sql:\n"
+                            + sqlWithCarets);
+                    }
                 }
                 if ((actualMessage == null)
-                    || !actualMessage.matches(expectedMsgPattern)) {
+                    || !actualMessage.matches(expectedMsgPattern))
+                {
                     actualException.printStackTrace();
                     final String actualJavaRegexp =
-                        TestUtil.quoteForJava(
+                        (actualMessage == null) ? "null"
+                        : TestUtil.quoteForJava(
                             TestUtil.quotePattern(actualMessage));
                     fail(
-                        "SqlValidationTest: Validator threw different "
+                        "Validator threw different "
                         + "exception than expected; query [" + sap.sql
                         + "];" + NL
                         + " expected pattern [" + expectedMsgPattern
@@ -435,21 +424,21 @@ public class SqlValidatorTestCase
                         + " thru line " + actualEndLine
                         + " col " + actualEndColumn
                         + "]; sql [" + sqlWithCarets + "]");
-                } else if ((sap.pos != null)
-                    && (
-                        (actualLine != sap.pos.getLineNum())
+                } else if (
+                    (sap.pos != null)
+                    && ((actualLine != sap.pos.getLineNum())
                         || (actualColumn != sap.pos.getColumnNum())
                         || (actualEndLine != sap.pos.getEndLineNum())
-                        || (actualEndColumn != sap.pos.getEndColumnNum())
-                       )) {
+                        || (actualEndColumn != sap.pos.getEndColumnNum())))
+                {
                     fail(
-                        "SqlValidationTest: Validator threw expected "
+                        "Validator threw expected "
                         + "exception [" + actualMessage
-                        + "]; but at pos [line " + actualLine
+                        + "];\nbut at pos [line " + actualLine
                         + " col " + actualColumn
                         + " thru line " + actualEndLine
                         + " col " + actualEndColumn
-                        + "]; sql [" + sqlWithCarets + "]");
+                        + "];\nsql [" + sqlWithCarets + "]");
                 }
             }
         }
@@ -477,13 +466,14 @@ public class SqlValidatorTestCase
          * Checks that a query is valid, or, if invalid, throws the right
          * message at the right location.
          *
-         * <p>If <code>expectedMsgPattern</code> is null, the query must succeed.
+         * <p>If <code>expectedMsgPattern</code> is null, the query must
+         * succeed.
          *
          * <p>If <code>expectedMsgPattern</code> is not null, the query must
          * fail, and give an error location of (expectedLine, expectedColumn)
          * through (expectedEndLine, expectedEndColumn).
          *
-         * @param sql
+         * @param sql SQL statement
          * @param expectedMsgPattern If this parameter is null the query must be
          * valid for the test to pass; If this parameter is not null the query
          * must be malformed and the message given must match the pattern
@@ -531,6 +521,16 @@ public class SqlValidatorTestCase
             String expected);
 
         /**
+         * Given a SQL query, returns a list of the origins of each result
+         * field.
+         *
+         * @param sql SQL query
+         * @param fieldOriginList Field origin list, e.g.
+         *   "{(CATALOG.SALES.EMP.EMPNO, null)}"
+         */
+        void checkFieldOrigin(String sql, String fieldOriginList);
+
+        /**
          * Checks that a query gets rewritten to an expected form.
          *
          * @param validator validator to use; null for default
@@ -559,6 +559,18 @@ public class SqlValidatorTestCase
         void checkIntervalConv(
             String sql,
             String expected);
+
+        /**
+         * Given a SQL query, returns the monotonicity of the first item in the
+         * SELECT clause.
+         *
+         * @param sql SQL query
+         *
+         * @return Monotonicity
+         */
+        SqlMonotonicity getMonotonicity(String sql);
+
+        SqlConformance getConformance();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -571,15 +583,23 @@ public class SqlValidatorTestCase
      * {@link SqlOperatorTests}. It can parse and validate queries, but it does
      * not invoke Farrago, so it is very fast but cannot execute functions.
      */
-    public class TesterImpl
+    public static class TesterImpl
         implements Tester,
             SqlTester
     {
         protected final SqlOperatorTable opTab;
+        protected final SqlConformance conformance;
 
-        public TesterImpl()
+        public TesterImpl(SqlConformance conformance)
         {
-            opTab = createOperatorTable();
+            assert conformance != null;
+            this.conformance = conformance;
+            this.opTab = createOperatorTable();
+        }
+
+        public SqlConformance getConformance()
+        {
+            return conformance;
         }
 
         protected SqlOperatorTable createOperatorTable()
@@ -593,11 +613,10 @@ public class SqlValidatorTestCase
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return
-                SqlValidatorUtil.newValidator(
-                    opTab,
-                    new MockCatalogReader(typeFactory),
-                    typeFactory);
+            return SqlValidatorUtil.newValidator(
+                opTab,
+                new MockCatalogReader(typeFactory),
+                typeFactory);
         }
 
         public void assertExceptionIsThrown(
@@ -610,22 +629,27 @@ public class SqlValidatorTestCase
             try {
                 sqlNode = parseQuery(sap.sql);
                 validator = getValidator();
-            } catch (SqlParseException ex) {
-                String errMessage = ex.getMessage();
-                if ((null == errMessage) || (expectedMsgPattern == null)
-                    || !errMessage.matches(expectedMsgPattern)) {
-                    ex.printStackTrace();
-                    fail(
-                        "SqlValidationTest: Parse Error while parsing query="
-                        + sap.sql + "\n" + errMessage);
+            } catch (SqlParseException e) {
+                String errMessage = e.getMessage();
+                if (expectedMsgPattern == null) {
+                    e.printStackTrace();
+                    throw new AssertionFailedError(
+                        "Error while parsing query [" + sap.sql + "]");
+                } else if (
+                    (null == errMessage)
+                    || !errMessage.matches(expectedMsgPattern))
+                {
+                    e.printStackTrace();
+                    throw new AssertionFailedError(
+                        "Error did not match expected ["
+                        + expectedMsgPattern + "] while parsing query ["
+                        + sap.sql + "]");
                 }
                 return;
             } catch (Throwable e) {
-                e.printStackTrace(System.err);
-                fail(
-                    "SqlValidationTest: Failed while trying to connect or "
-                    + "get statement");
-                return;
+                e.printStackTrace();
+                throw new AssertionFailedError(
+                    "Error while parsing query [" + sap.sql + "]");
             }
 
             Throwable thrown = null;
@@ -664,40 +688,57 @@ public class SqlValidatorTestCase
             SqlNode sqlNode;
             try {
                 sqlNode = parseQuery(sql);
-            } catch (SqlParseException ex) {
-                ex.printStackTrace();
+            } catch (SqlParseException e) {
+                e.printStackTrace();
                 throw new AssertionFailedError(
-                    "SqlValidationTest: "
-                    + "Parse Error while parsing query=" + sql
-                    + "\n" + ex.getMessage());
+                    "Error while parsing query [" + sql + "]");
             } catch (Throwable e) {
-                e.printStackTrace(System.err);
+                e.printStackTrace();
                 throw new AssertionFailedError(
-                    "SqlValidationTest: "
-                    + "Failed while trying to connect or get statement");
+                    "Error while parsing query [" + sql + "]");
             }
-            SqlNode n = validator.validate(sqlNode);
-            return n;
+            return validator.validate(sqlNode);
         }
 
         public SqlNode parseQuery(String sql)
             throws SqlParseException
         {
             SqlParser parser = new SqlParser(sql);
-            SqlNode sqlNode = parser.parseQuery();
-            return sqlNode;
+            return parser.parseQuery();
         }
 
         public void checkColumnType(String sql, String expected)
         {
             RelDataType actualType = getColumnType(sql);
-            if (expected.startsWith("todo:")) {
-                Util.permAssert(!Bug.Dt315Fixed,
-                    "After bug 315 is fixed, no type should start 'todo:'");
-                return; // don't check the type for now
-            }
             String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
+        }
+
+        public void checkFieldOrigin(String sql, String fieldOriginList)
+        {
+            SqlValidator validator = getValidator();
+            SqlNode n = parseAndValidate(validator, sql);
+            final List<List<String>> list = validator.getFieldOrigins(n);
+            final StringBuilder buf = new StringBuilder("{");
+            int i = 0;
+            for (List<String> strings : list) {
+                if (i++ > 0) {
+                    buf.append(", ");
+                }
+                if (strings == null) {
+                    buf.append("null");
+                } else {
+                    int j = 0;
+                    for (String s : strings) {
+                        if (j++ > 0) {
+                            buf.append('.');
+                        }
+                        buf.append(s);
+                    }
+                }
+            }
+            buf.append("}");
+            assertEquals(fieldOriginList, buf.toString());
         }
 
         public void checkResultType(String sql, String expected)
@@ -710,13 +751,13 @@ public class SqlValidatorTestCase
         public void checkIntervalConv(String sql, String expected)
         {
             SqlValidator validator = getValidator();
-            SqlNode n = parseAndValidate(validator, sql);
+            final SqlSelect n = (SqlSelect) parseAndValidate(validator, sql);
 
             SqlNode node = null;
-            for (int i = 0; i < ((SqlSelect) n).getOperands().length; i++) {
-                node = ((SqlSelect) n).getOperands()[i];
+            for (int i = 0; i < n.getOperands().length; i++) {
+                node = n.getOperands()[i];
                 if (node instanceof SqlCall) {
-                    if (node.isA(SqlKind.As)) {
+                    if (node.getKind() == SqlKind.AS) {
                         node = ((SqlCall) node).operands[0];
                     }
                     node =
@@ -727,12 +768,12 @@ public class SqlValidatorTestCase
             }
 
             SqlIntervalLiteral.IntervalValue interval =
-            (SqlIntervalLiteral.IntervalValue)
-                    ((SqlIntervalLiteral) node).getValue();
+                (SqlIntervalLiteral.IntervalValue) ((SqlIntervalLiteral) node)
+                .getValue();
             long l =
-                interval.getIntervalQualifier().isYearMonth()?
-                SqlParserUtil.intervalToMonths(interval):
-                SqlParserUtil.intervalToMillis(interval);
+                interval.getIntervalQualifier().isYearMonth()
+                ? SqlParserUtil.intervalToMonths(interval)
+                : SqlParserUtil.intervalToMillis(interval);
             String actual = l + "";
             assertEquals(expected, actual);
         }
@@ -752,18 +793,15 @@ public class SqlValidatorTestCase
             RelDataType actualType = getColumnType(buildQuery(sql));
             SqlCollation collation = actualType.getCollation();
 
-            String actualName = collation.getCollationName();
-            int actualCoercibility = collation.getCoercibility().getOrdinal();
-            int expectedCoercibilityOrd = expectedCoercibility.getOrdinal();
-            assertEquals(expectedCollationName, actualName);
-            assertEquals(expectedCoercibilityOrd, actualCoercibility);
+            assertEquals(expectedCollationName, collation.getCollationName());
+            assertEquals(expectedCoercibility, collation.getCoercibility());
         }
 
         public void checkCharset(
             String sql,
             Charset expectedCharset)
         {
-            RelDataType actualType = tester.getColumnType(buildQuery(sql));
+            RelDataType actualType = getColumnType(buildQuery(sql));
             Charset actualCharset = actualType.getCharset();
 
             if (!expectedCharset.equals(actualCharset)) {
@@ -775,7 +813,9 @@ public class SqlValidatorTestCase
 
         // SqlTester methods
 
-        public void setFor(SqlOperator operator)
+        public void setFor(
+            SqlOperator operator,
+            VmName ... unimplementedVmNames)
         {
             // do nothing
         }
@@ -784,10 +824,26 @@ public class SqlValidatorTestCase
             String expr,
             String [] inputValues,
             Object result,
-            int delta)
+            double delta)
         {
             String query =
                 AbstractSqlTester.generateAggQuery(expr, inputValues);
+            check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
+        }
+
+        public void checkWinAgg(
+            String expr,
+            String [] inputValues,
+            String windowSpec,
+            String type,
+            Object result,
+            double delta)
+        {
+            String query =
+                AbstractSqlTester.generateWinAggQuery(
+                    expr,
+                    windowSpec,
+                    inputValues);
             check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
         }
 
@@ -831,9 +887,7 @@ public class SqlValidatorTestCase
         {
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
-                (expectedType.startsWith("todo:")
-                    && !Bug.Dt315Fixed) ? AbstractSqlTester.AnyTypeChecker
-                : new AbstractSqlTester.StringTypeChecker(expectedType);
+                new AbstractSqlTester.StringTypeChecker(expectedType);
             check(
                 sql,
                 typeChecker,
@@ -864,9 +918,7 @@ public class SqlValidatorTestCase
         {
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
-                (expectedType.startsWith("todo:")
-                    && !Bug.Dt315Fixed) ? AbstractSqlTester.AnyTypeChecker
-                : new AbstractSqlTester.StringTypeChecker(expectedType);
+                new AbstractSqlTester.StringTypeChecker(expectedType);
             check(sql, typeChecker, result, 0);
         }
 
@@ -876,11 +928,22 @@ public class SqlValidatorTestCase
             check(sql, AbstractSqlTester.AnyTypeChecker, null, 0);
         }
 
-        public void check(
+        public final void check(
             String query,
             TypeChecker typeChecker,
             Object result,
             double delta)
+        {
+            check(
+                query,
+                typeChecker,
+                AbstractSqlTester.createChecker(result, delta));
+        }
+
+        public void check(
+            String query,
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
         {
             // This implementation does NOT check the result!
             // (It can't because we're pure Java.)
@@ -898,34 +961,49 @@ public class SqlValidatorTestCase
             String query,
             String expectedRewrite)
         {
-            SqlNode rewrittenNode = tester.parseAndValidate(validator, query);
+            SqlNode rewrittenNode = parseAndValidate(validator, query);
             String actualRewrite =
-                rewrittenNode.toSqlString(SqlUtil.dummyDialect, false);
-            assertEquals(expectedRewrite, actualRewrite);
+                rewrittenNode.toSqlString(SqlDialect.DUMMY, false).getSql();
+            TestUtil.assertEqualsVerbose(expectedRewrite, actualRewrite);
         }
 
-        public void checkInvalid(String expression, String expectedError)
+        public void checkFails(
+            String expression,
+            String expectedError,
+            boolean runtime)
         {
-            // After bug 315 is fixed, take this assert out: the other assert
-            // will be sufficient.
-            if (!Bug.Dt315Fixed) {
-                assertTrue(
-                    "All negative tests must contain an error location",
-                    expression.indexOf('^') >= 0);
+            if (runtime) {
+                // We need to test that the expression fails at runtime.
+                // Ironically, that means that it must succeed at prepare time.
+                SqlValidator validator = getValidator();
+                final String sql = buildQuery(expression);
+                SqlNode n = parseAndValidate(validator, sql);
+                assertNotNull(n);
+            } else {
+                assertExceptionIsThrown(
+                    buildQuery(expression),
+                    expectedError);
             }
-            SqlValidatorTestCase.this.checkFails(
-                buildQuery(expression),
-                expectedError);
         }
 
-        public void checkFails(String expression, String expectedError)
+        public SqlMonotonicity getMonotonicity(String sql)
         {
-            // We need to test that the expression fails at runtime.
-            // Ironically, that means that it must succeed at prepare time.
-            SqlValidator validator = getValidator();
-            final String sql = buildQuery(expression);
-            SqlNode n = parseAndValidate(validator, sql);
-            assertNotNull(n);
+            final SqlValidator validator = getValidator();
+            final SqlNode node = parseAndValidate(validator, sql);
+            final SqlSelect select = (SqlSelect) node;
+            final SqlNode selectItem0 = select.getSelectList().get(0);
+            final SqlValidatorScope scope = validator.getSelectScope(select);
+            return selectItem0.getMonotonicity(scope);
+        }
+
+        private static String buildQuery(String expression)
+        {
+            return "values (" + expression + ")";
+        }
+
+        public boolean isVm(VmName vmName)
+        {
+            return false;
         }
     }
 }

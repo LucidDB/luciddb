@@ -28,10 +28,38 @@
 +------------------------+
 | This shouldn't change  |
 +------------------------+
+0: jdbc:luciddb:> values applib.str_replace('0013000000BvwzRAAR~TEST1~TEST2~TEST3~TEST5~TEST6~TEST7~TEST8~TEST10~TEST11~TEST14~TEST1_PERF~TEST1_PERF1~TEST1_PERF2~TEST1_PARTNER~','PARTNER~','12345678');
++--------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                EXPR$0                                                                |
++--------------------------------------------------------------------------------------------------------------------------------------+
+| 0013000000BvwzRAAR~TEST1~TEST2~TEST3~TEST5~TEST6~TEST7~TEST8~TEST10~TEST11~TEST14~TEST1_PERF~TEST1_PERF1~TEST1_PERF2~TEST1_12345678  |
++--------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
 0: jdbc:luciddb:> values applib.str_replace(3434, 3, 5);
 Error: From line 1, column 15 to line 1, column 37: No match found for function signature STR_REPLACE(<NUMERIC>, <NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.str_replace(cast(null as varchar(22)), 'null', 'new');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.str_replace(
+. . . . . . . . >   'This is not a null value', cast(null as varchar(20)), 'nonono');
++---------------------------+
+|          EXPR$0           |
++---------------------------+
+| This is not a null value  |
++---------------------------+
+0: jdbc:luciddb:> values applib.str_replace(
+. . . . . . . . >   'This is not a null value', 'is', cast(null as varchar(10)));
++-------------------------------+
+|            EXPR$0             |
++-------------------------------+
+| Thnull null not a null value  |
++-------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.str_replace
 0: jdbc:luciddb:> create view changedph (fname, phone, chphone)as
@@ -77,13 +105,13 @@ Error: From line 1, column 15 to line 1, column 37: No match found for function 
 +---------------+-----------------------------------------------+
 |     FNAME     |                    EXPR$1                     |
 +---------------+-----------------------------------------------+
-| 2Tito1        | 888 888 8888          888 888 8888            |
-| Dirk the 3rd  | 8622399175            8622399175              |
-| Ephram        | (321)3454321          (321)3454321            |
-| Gregory       | (342) ###-2355        (342) 999-2355          |
+| 2Tito1        | 888 888 8888888 888 8888                      |
+| Dirk the 3rd  | 86223991758622399175                          |
+| Ephram        | (321)3454321(321)3454321                      |
+| Gregory       | (342) ###-2355(342) 999-2355                  |
 | Lilah         |    ###    412   344  2   999    412   344  2  |
-| Mark          | 1###567890            1999567890              |
-| Mary          | ###-456-7843          999-456-7843            |
+| Mark          | 1###5678901999567890                          |
+| Mary          | ###-456-7843999-456-7843                      |
 +---------------+-----------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested

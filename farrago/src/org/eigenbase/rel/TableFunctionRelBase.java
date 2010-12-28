@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,14 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
+import java.util.*;
+
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
-import java.util.*;
 
 /**
  * <code>TableFunctionRelBase</code> is an abstract base class for
@@ -39,7 +40,6 @@ import java.util.*;
 public abstract class TableFunctionRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexNode rexCall;
@@ -55,7 +55,7 @@ public abstract class TableFunctionRelBase
     /**
      * Creates a <code>TableFunctionRelBase</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
@@ -95,6 +95,26 @@ public abstract class TableFunctionRelBase
             };
     }
 
+    public double getRows()
+    {
+        // Calculate result as the sum of the input rowcount estimates,
+        // assuming there are any, otherwise use the superclass default.  So
+        // for a no-input UDX, behave like an AbstractRelNode; for a one-input
+        // UDX, behave like a SingleRel; for a multi-input UDX, behave like
+        // UNION ALL.  TODO jvs 10-Sep-2007: UDX-supplied costing metadata.
+        if (inputs.length == 0) {
+            return super.getRows();
+        }
+        double nRows = 0.0;
+        for (int i = 0; i < inputs.length; i++) {
+            Double d = RelMetadataQuery.getRowCount(inputs[i]);
+            if (d != null) {
+                nRows += d;
+            }
+        }
+        return nRows;
+    }
+
     public RexNode getCall()
     {
         // NOTE jvs 7-May-2006:  Within this rexCall, instances
@@ -115,8 +135,8 @@ public abstract class TableFunctionRelBase
     }
 
     /**
-     * @return set of mappings known for this table function, or
-     * null if unknown (not the same as empty!)
+     * @return set of mappings known for this table function, or null if unknown
+     * (not the same as empty!)
      */
     public Set<RelColumnMapping> getColumnMappings()
     {
@@ -124,10 +144,9 @@ public abstract class TableFunctionRelBase
     }
 
     /**
-     * Declares the column mappings associated with this function.
-     *
-     * REVIEW jvs 11-Aug-2006:  Should this be set only on construction,
-     * made part of digest, etc?
+     * Declares the column mappings associated with this function. REVIEW jvs
+     * 11-Aug-2006: Should this be set only on construction, made part of
+     * digest, etc?
      *
      * @param columnMappings new mappings to set
      */

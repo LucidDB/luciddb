@@ -3,7 +3,6 @@
 
 @setup
 -- tests ddl vs read and write
--- a part of thread w1 is commented out; fixed by LDB-118
 
   SET SCHEMA 'concurrency';
   delete from t1;
@@ -110,8 +109,8 @@
   set schema 'concurrency';
   
   @sync
---  insert into t1 values (1),(2),(3);
---  insert into t2 select * from t1;
+    insert into t1 values (1),(2),(3);
+    insert into t2 select * from t1;
   @sync
 
 @end

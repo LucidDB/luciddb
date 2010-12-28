@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlFunction
     extends SqlOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlFunctionCategory functionType;
@@ -68,7 +67,8 @@ public class SqlFunction
         SqlOperandTypeChecker operandTypeChecker,
         SqlFunctionCategory funcType)
     {
-        super(name,
+        super(
+            name,
             kind,
             100,
             100,
@@ -76,10 +76,8 @@ public class SqlFunction
             operandTypeInference,
             operandTypeChecker);
 
-        assert !(
-                (funcType == SqlFunctionCategory.UserDefinedConstructor)
-                && (returnTypeInference == null)
-                );
+        assert !((funcType == SqlFunctionCategory.UserDefinedConstructor)
+            && (returnTypeInference == null));
 
         this.functionType = funcType;
 
@@ -111,14 +109,14 @@ public class SqlFunction
     {
         super(
             sqlIdentifier.names[sqlIdentifier.names.length - 1],
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             100,
             100,
             returnTypeInference,
             operandTypeInference,
             operandTypeChecker);
 
-        //       assert !(funcType == SqlFunctionCategory.UserDefinedConstructor
+        // assert !(funcType == SqlFunctionCategory.UserDefinedConstructor
         // &&           returnTypeInference == null);
 
         this.sqlIdentifier = sqlIdentifier;
@@ -150,8 +148,8 @@ public class SqlFunction
             return sqlIdentifier;
         }
         return new SqlIdentifier(
-                getName(),
-                SqlParserPos.ZERO);
+            getName(),
+            SqlParserPos.ZERO);
     }
 
     /**
@@ -226,50 +224,114 @@ public class SqlFunction
         SqlValidatorScope scope,
         SqlCall call)
     {
+        return deriveType(validator, scope, call, true);
+    }
+
+    private RelDataType deriveType(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call,
+        boolean convertRowArgToColumnList)
+    {
         final SqlNode [] operands = call.operands;
         RelDataType [] argTypes = new RelDataType[operands.length];
 
         // Scope for operands. Usually the same as 'scope'.
         final SqlValidatorScope operandScope = scope.getOperandScope(call);
 
-        for (int i = 0; i < operands.length; ++i) {
-            RelDataType nodeType =
-                validator.deriveType(operandScope, operands[i]);
-            validator.setValidatedNodeType(operands[i], nodeType);
-            argTypes[i] = nodeType;
-        }
+        // Indicate to the validator that we're validating a new function call
+        validator.pushFunctionCall();
 
-        SqlFunction function =
-            SqlUtil.lookupRoutine(
-                validator.getOperatorTable(),
-                getNameAsId(),
-                argTypes,
-                getFunctionType());
-        if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
-            return
-                validator.deriveConstructorType(
+        try {
+            boolean containsRowArg = false;
+            for (int i = 0; i < operands.length; ++i) {
+                RelDataType nodeType;
+
+                // for row arguments that should be converted to ColumnList
+                // types, set the nodeType to a ColumnList type but defer
+                // validating the arguments of the row constructor until we know
+                // for sure that the row argument maps to a ColumnList type
+                if (operands[i].getKind() == SqlKind.ROW
+                    && convertRowArgToColumnList)
+                {
+                    containsRowArg = true;
+                    RelDataTypeFactory typeFactory = validator.getTypeFactory();
+                    nodeType =
+                        typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
+                } else {
+                    nodeType = validator.deriveType(operandScope, operands[i]);
+                }
+                validator.setValidatedNodeType(operands[i], nodeType);
+                argTypes[i] = nodeType;
+            }
+
+            SqlFunction function =
+                SqlUtil.lookupRoutine(
+                    validator.getOperatorTable(),
+                    getNameAsId(),
+                    argTypes,
+                    getFunctionType());
+
+            // if we have a match on function name and parameter count, but
+            // couldn't find a function with  a COLUMN_LIST type, retry, but
+            // this time, don't convert the row argument to a COLUMN_LIST type;
+            // if we did find a match, go back and revalidate the row operands
+            // (corresponding to column references), now that we can set the
+            // scope to that of the source cursor referenced by that ColumnList
+            // type
+            if (containsRowArg) {
+                if ((function == null)
+                    && SqlUtil.matchRoutinesByParameterCount(
+                        validator.getOperatorTable(),
+                        getNameAsId(),
+                        argTypes,
+                        getFunctionType()))
+                {
+                    // remove the already validated node types corresponding to
+                    // row arguments before revalidating
+                    for (SqlNode operand : operands) {
+                        if (operand.getKind() == SqlKind.ROW) {
+                            validator.removeValidatedNodeType(operand);
+                        }
+                    }
+                    return deriveType(validator, scope, call, false);
+                } else if (function != null) {
+                    validator.validateColumnListParams(
+                        function,
+                        argTypes,
+                        operands);
+                }
+            }
+
+            if (getFunctionType()
+                == SqlFunctionCategory.UserDefinedConstructor)
+            {
+                return validator.deriveConstructorType(
                     scope,
                     call,
                     this,
                     function,
                     argTypes);
-        }
-        if (function == null) {
-            validator.handleUnresolvedFunction(
-                call,
-                this,
-                argTypes);
-        }
+            }
+            if (function == null) {
+                validator.handleUnresolvedFunction(
+                    call,
+                    this,
+                    argTypes);
+            }
 
-        // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
-        // identifiers, but we ignore shouldExpandIdentifiers()
-        // because otherwise later validation code will
-        // choke on the unresolved function.
-        call.setOperator(function);
-        return function.validateOperands(
+            // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
+            // identifiers, but we ignore shouldExpandIdentifiers()
+            // because otherwise later validation code will
+            // choke on the unresolved function.
+            call.setOperator(function);
+            return function.validateOperands(
                 validator,
                 operandScope,
                 call);
+        } finally {
+            validator.popFunctionCall();
+        }
     }
 }
 

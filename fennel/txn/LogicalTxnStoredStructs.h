@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,7 @@ class LogicalTxnParticipant;
 /**
  * LogicalTxnSavepoint defines all state for a savepoint within a LogicalTxn.
  */
-struct LogicalTxnSavepoint
+struct FENNEL_TXN_EXPORT LogicalTxnSavepoint
 {
     /**
      * Log size up to end of last action logged.
@@ -52,7 +52,7 @@ struct LogicalTxnSavepoint
 /**
  * Log record describing a transaction event.
  */
-struct LogicalTxnEventMemento
+struct FENNEL_TXN_EXPORT LogicalTxnEventMemento
 {
     enum Event {
         EVENT_ROLLBACK,
@@ -64,7 +64,7 @@ struct LogicalTxnEventMemento
      * Transaction event which caused this memento to be created.
      */
     Event event;
-    
+
     /**
      * Unique identifier for committed transaction.
      */
@@ -95,7 +95,7 @@ struct LogicalTxnEventMemento
 /**
  * Logged header for a single logical action.
  */
-struct LogicalTxnActionHeader
+struct FENNEL_TXN_EXPORT LogicalTxnActionHeader
 {
     /**
      * Stored pointer to the participant initiating the action.  While
@@ -122,7 +122,7 @@ struct LogicalTxnActionHeader
  * Global information recorded during LogicalTxnLog::checkpoint; this is all
  * the information needed to begin recovery.
  */
-struct LogicalTxnLogCheckpointMemento
+struct FENNEL_TXN_EXPORT LogicalTxnLogCheckpointMemento
 {
     /**
      * Log stream position of first LogicalTxnCheckpointHeader.
@@ -133,6 +133,11 @@ struct LogicalTxnLogCheckpointMemento
      * Number of uncommitted transactions active at time of checkpoint.
      */
     uint nUncommittedTxns;
+
+    /**
+     * TxnId of the next new transaction
+     */
+    TxnId nextTxnId;
 };
 
 /**

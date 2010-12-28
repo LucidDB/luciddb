@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@
   <property name="gensql.dir" value="${concurrency.dir}/gen" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${concurrency.dir}/csv" />
   <property name="csv.copy.dir" value="${concurrency.dir}/csv-copy" />
 
@@ -55,6 +55,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -110,27 +111,14 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <condition property="sql.generated">
-      <and>
-        <available file="${concurrency.dir}/fds/oraclecreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/sqlservercreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/flatfilecreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/csvjdbccreserver.sql" type="file"/>
-      </and>
-    </condition>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc"
-          param="prop.source"
-          target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+      param="prop.source"
+      target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${concurrency.dir}"
       testscript="${testfile}"
@@ -178,12 +166,21 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean"/>
+    <ant dir="${concurrency.dir}/backupRestore" target="clean"/>
+  </target>
+
+  <target name="clean-each">
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.sql"/>
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.ref"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
-    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
-      param="prop.source"
-      target="clean-each"/>
     <delete>
       <fileset dir="${concurrency.dir}" includes="*.log"/>
     </delete>
@@ -193,18 +190,12 @@
     <delete>
       <fileset dir="${concurrency.dir}/local" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete dir="${csv.copy.dir}"/>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+      param="prop.source"
+      target="clean-each"/>
     <delete file="config.properties"/>
-  </target>
-
-  <target name="clean-each">
-    <delete file="${concurrency.dir}/fds/${prop.source}creserver.sql"/>
-    <delete file="${concurrency.dir}/fds/${prop.source}creserver.ref"/>
-  </target>
-
-  <target name="clean-csv">
-    <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean-test"/>
   </target>
 
 </project>

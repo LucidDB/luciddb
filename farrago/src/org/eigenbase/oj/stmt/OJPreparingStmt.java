@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,8 +26,7 @@ import java.io.*;
 
 import java.lang.reflect.*;
 
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.*;
 import java.util.logging.*;
 
 import openjava.mop.*;
@@ -44,6 +43,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.runtime.Iterable;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.trace.*;
@@ -57,7 +57,6 @@ import org.eigenbase.util.*;
  */
 public abstract class OJPreparingStmt
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String connectionVariable = "connection";
@@ -65,7 +64,7 @@ public abstract class OJPreparingStmt
 
     //~ Instance fields --------------------------------------------------------
 
-    private String queryString = null;
+    protected String queryString = null;
     protected Environment env;
 
     /**
@@ -77,6 +76,13 @@ public abstract class OJPreparingStmt
     protected final RelOptConnection connection;
 
     protected EigenbaseTimingTracer timingTracer;
+
+    /**
+     * True if the statement contains java RelNodes
+     */
+    protected boolean containsJava;
+
+    protected java.util.List<java.util.List<String>> fieldOrigins;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -94,12 +100,19 @@ public abstract class OJPreparingStmt
             ((connection == null) && (this instanceof RelOptConnection))
             ? (RelOptConnection) this
             : connection;
-        Util.pre(this.connection != null,
+        Util.pre(
+            this.connection != null,
             "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
+        this.containsJava = true;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public RelOptSchema getRelOptSchema()
+    {
+        return connection.getRelOptSchema();
+    }
 
     public Environment getEnvironment()
     {
@@ -147,7 +160,6 @@ public abstract class OJPreparingStmt
     {
         env = OJSystem.env;
 
-        javaCompiler = createCompiler();
         String packageName = getTempPackageName();
         String className = getTempClassName();
         env = new FileEnvironment(env, packageName, className);
@@ -176,7 +188,8 @@ public abstract class OJPreparingStmt
                     argument.clazz = argument.value.getClass();
                 }
                 if ((argument.value instanceof Iterator)
-                    && !(argument.value instanceof Iterable)) {
+                    && !(argument.value instanceof Iterable))
+                {
                     argument.value =
                         new BufferedIterator((Iterator) argument.value);
                     argument.clazz = argument.value.getClass();
@@ -211,13 +224,12 @@ public abstract class OJPreparingStmt
         SqlValidator validator,
         boolean needsValidation)
     {
-        return
-            prepareSql(
-                sqlQuery,
-                sqlQuery,
-                runtimeContextClass,
-                validator,
-                needsValidation);
+        return prepareSql(
+            sqlQuery,
+            sqlQuery,
+            runtimeContextClass,
+            validator,
+            needsValidation);
     }
 
     /**
@@ -237,23 +249,25 @@ public abstract class OJPreparingStmt
             runtimeContextClass = connection.getClass();
         }
 
-        final Argument [] arguments =
-            {
-                new Argument(connectionVariable,
-                    runtimeContextClass,
-                    connection)
-            };
+        final Argument [] arguments = {
+            new Argument(
+                connectionVariable,
+                runtimeContextClass,
+                connection)
+        };
         ClassDeclaration decl = init(arguments);
-
-        SqlExplain sqlExplain = null;
-        if (sqlQuery.isA(SqlKind.Explain)) {
-            // dig out the underlying SQL statement
-            sqlExplain = (SqlExplain) sqlQuery;
-            sqlQuery = sqlExplain.getExplicandum();
-        }
 
         SqlToRelConverter sqlToRelConverter =
             getSqlToRelConverter(validator, connection);
+
+        SqlExplain sqlExplain = null;
+        if (sqlQuery.getKind() == SqlKind.EXPLAIN) {
+            // dig out the underlying SQL statement
+            sqlExplain = (SqlExplain) sqlQuery;
+            sqlQuery = sqlExplain.getExplicandum();
+            sqlToRelConverter.setIsExplain(sqlExplain.getDynamicParamCount());
+        }
+
         RelNode rootRel =
             sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
 
@@ -261,54 +275,80 @@ public abstract class OJPreparingStmt
             timingTracer.traceTime("end sql2rel");
         }
 
-        RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
+        final RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
+        fieldOrigins = validator.getFieldOrigins(sqlQuery);
+        assert fieldOrigins.size() == resultType.getFieldCount();
 
+        // Display logical plans before view expansion, plugging in physical
+        // storage and decorrelation
         if (sqlExplain != null) {
             SqlExplain.Depth explainDepth = sqlExplain.getDepth();
             boolean explainAsXml = sqlExplain.isXml();
             SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
             switch (explainDepth) {
             case Type:
-                return
-                    new PreparedExplanation(
-                        resultType,
-                        null,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    resultType,
+                    null,
+                    explainAsXml,
+                    detailLevel);
             case Logical:
-                return
-                    new PreparedExplanation(
-                        null,
-                        rootRel,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    null,
+                    rootRel,
+                    explainAsXml,
+                    detailLevel);
+            default:
+            }
+        }
+
+        // Structured type flattening, view expansion, and plugging in physical
+        // storage.
+        rootRel = flattenTypes(rootRel, true);
+
+        // Subquery decorrelation.
+        rootRel = decorrelate(sqlQuery, rootRel);
+
+        // Display physical plan after decorrelation.
+        if (sqlExplain != null) {
+            SqlExplain.Depth explainDepth = sqlExplain.getDepth();
+            boolean explainAsXml = sqlExplain.isXml();
+            SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
+            switch (explainDepth) {
             case Physical:
             default:
-                rootRel = optimize(
+                rootRel =
+                    optimize(
                         rootRel.getRowType(),
                         rootRel);
-                return
-                    new PreparedExplanation(
-                        null,
-                        rootRel,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    null,
+                    rootRel,
+                    explainAsXml,
+                    detailLevel);
             }
         }
 
         rootRel = optimize(resultType, rootRel);
+        containsJava = treeContainsJava(rootRel);
 
         if (timingTracer != null) {
             timingTracer.traceTime("end optimization");
         }
 
-        return
-            implement(
-                resultType,
-                rootRel,
-                sqlNodeOriginal.getKind(),
-                decl,
-                arguments);
+        // For transformation from DML -> DML, use result of rewrite
+        // (e.g. UPDATE -> MERGE).  For anything else (e.g. CALL -> SELECT),
+        // use original kind.
+        SqlKind kind = sqlQuery.getKind();
+        if (!kind.belongsTo(SqlKind.DML)) {
+            kind = sqlNodeOriginal.getKind();
+        }
+        return implement(
+            resultType,
+            rootRel,
+            kind,
+            decl,
+            arguments);
     }
 
     /**
@@ -347,13 +387,60 @@ public abstract class OJPreparingStmt
     }
 
     /**
+     * Determines if the RelNode tree contains Java RelNodes. Also, if the row
+     * contains an interval type, then effectively, the tree is treated as
+     * containing Java, since we currently cannot read raw interval columns.
+     *
+     * @param rootRel root of the RelNode tree
+     *
+     * @return true if the tree contains Java RelNodes or returns an interval
+     * type
+     */
+    protected boolean treeContainsJava(RelNode rootRel)
+    {
+        JavaRelFinder javaFinder = new JavaRelFinder();
+        javaFinder.go(rootRel);
+        if (javaFinder.containsJavaRel()) {
+            return true;
+        }
+        RelDataTypeField [] fields = rootRel.getRowType().getFields();
+        for (int i = 0; i < fields.length; i++) {
+            if (SqlTypeUtil.isInterval(fields[i].getType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void halfImplement(
+        RelNode rootRel,
+        ClassDeclaration decl)
+    {
+        Class runtimeContextClass = null;
+        final Argument [] arguments = {
+            new Argument(
+                connectionVariable,
+                runtimeContextClass,
+                connection)
+        };
+        assert containsJava;
+        javaCompiler = createCompiler();
+        JavaRelImplementor relImplementor =
+            getRelImplementor(rootRel.getCluster().getRexBuilder());
+        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
+        BoundMethod boundMethod;
+        boundMethod = compileAndBind(decl, expr, arguments);
+        Util.discard(boundMethod);
+    }
+
+    /**
      * Implements a physical query plan.
      *
+     * @param rowType original rowtype returned by query validator
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
      * @param args argument list of the generated result.
-     *
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
@@ -361,38 +448,94 @@ public abstract class OJPreparingStmt
         RelNode rootRel,
         SqlKind sqlKind,
         ClassDeclaration decl,
-        Argument [] args)
+        Argument[] args)
     {
-        JavaRelImplementor relImplementor =
-            getRelImplementor(rootRel.getCluster().getRexBuilder());
-        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
+        BoundMethod boundMethod;
+        ParseTree parseTree;
+        RelDataType resultType = rootRel.getRowType();
+        boolean isDml = sqlKind.belongsTo(SqlKind.DML);
+        if (containsJava) {
+            javaCompiler = createCompiler();
+            JavaRelImplementor relImplementor =
+                getRelImplementor(rootRel.getCluster().getRexBuilder());
+            Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
 
-        if (timingTracer != null) {
-            timingTracer.traceTime("end codegen");
-        }
+            if (timingTracer != null) {
+                timingTracer.traceTime("end codegen");
+            }
 
-        boolean isDml = sqlKind.isA(SqlKind.Dml);
-        ParseTree parseTree = expr;
-        BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
+            parseTree = expr;
+            boundMethod = compileAndBind(decl, parseTree, args);
 
-        if (timingTracer != null) {
-            timingTracer.traceTime("end compilation");
+            if (timingTracer != null) {
+                timingTracer.traceTime("end compilation");
+            }
+        } else {
+            boundMethod = null;
+            parseTree = null;
+
+            // Need to create a new result rowtype where the field names of
+            // the row originate from the original projection list. E.g,
+            // if you have a query like:
+            //      select col1 as x, col2 as x from tab;
+            // the field names of the resulting tuples should be "x" and "x",
+            // rather than "x" and "x0".
+            //
+            // This only needs to be done for non-DML statements.  For DML, the
+            // resultant row is a single rowcount column, so we don't want to
+            // change the field name in those cases.
+            if (!isDml) {
+                assert (rowType.getFieldCount() == resultType.getFieldCount());
+                String [] fieldNames = RelOptUtil.getFieldNames(rowType);
+                RelDataType [] types = RelOptUtil.getFieldTypes(resultType);
+                resultType =
+                    rootRel.getCluster().getTypeFactory().createStructType(
+                        types,
+                        fieldNames);
+            }
+
+            // strip off the topmost, special converter RelNode, now that we no
+            // longer need it
+            rootRel = rootRel.getInput(0);
         }
 
         final PreparedExecution plan =
             new PreparedExecution(
                 parseTree,
-                rootRel.getRowType(),
+                rootRel,
+                resultType,
                 isDml,
+                mapTableModOp(isDml, sqlKind),
                 boundMethod);
         return plan;
+    }
+
+    private TableModificationRel.Operation mapTableModOp(
+        boolean isDml,
+        SqlKind sqlKind)
+    {
+        if (!isDml) {
+            return null;
+        }
+        switch (sqlKind) {
+        case INSERT:
+            return TableModificationRel.Operation.INSERT;
+        case DELETE:
+            return TableModificationRel.Operation.DELETE;
+        case MERGE:
+            return TableModificationRel.Operation.MERGE;
+        case UPDATE:
+            return TableModificationRel.Operation.UPDATE;
+        default:
+            return null;
+        }
     }
 
     /**
      * Prepares a statement for execution, starting from a relational expression
      * (ie a logical or a physical query plan).
      *
-     * @param rowType
+     * @param rowType Row type
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind for the relational expression: only
      * SqlKind.Explain and SqlKind.Dml are special cases.
@@ -411,7 +554,9 @@ public abstract class OJPreparingStmt
         Argument [] args)
     {
         if (needOpt) {
-            rootRel = optimize(
+            rootRel = flattenTypes(rootRel, true);
+            rootRel =
+                optimize(
                     rootRel.getRowType(),
                     rootRel);
         }
@@ -449,7 +594,15 @@ public abstract class OJPreparingStmt
 
     protected abstract boolean shouldSetConnectionInfo();
 
-    private JavaCompiler createCompiler()
+    protected abstract RelNode flattenTypes(
+        RelNode rootRel,
+        boolean restructure);
+
+    protected abstract RelNode decorrelate(
+        SqlNode query,
+        RelNode rootRel);
+
+    protected JavaCompiler createCompiler()
     {
         String compilerClassName = getCompilerClassName();
         try {
@@ -484,7 +637,8 @@ public abstract class OJPreparingStmt
                 pakkage = Object.class.getPackage();
             }
             if (!Modifier.isPrivate(modifiers)
-                && pakkage.getName().equals(fromPackageName)) {
+                && pakkage.getName().equals(fromPackageName))
+            {
                 return c;
             }
         }
@@ -510,18 +664,15 @@ public abstract class OJPreparingStmt
                 "Before compile, parse tree",
                 new Object[] { parseTree });
         }
-        ClassCollector classCollector = new ClassCollector(env);
-        Util.discard(OJUtil.go(classCollector, parseTree));
-        OJClass [] classes = classCollector.getClasses();
-        OJSyntheticClass.addMembers(decl, classes);
 
         // NOTE jvs 14-Jan-2004:  DynamicJava doesn't correctly handle
         // the FINAL modifier on parameters.  So I made the codegen
         // for the method body copy the parameter to a final local
         // variable instead.  The only side-effect is that the parameter
         // names in the method signature is different.
-        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
-        // gets tossed
+        // TODO jvs 18-Oct-2006:  get rid of this since we tossed DynamicJava
+        // long ago
+
         // form parameter list
         String [] parameterNames = new String[arguments.length];
         String [] javaParameterNames = new String[arguments.length];
@@ -601,16 +752,23 @@ public abstract class OJPreparingStmt
 
         if (queryString != null) {
             // use single line comments to avoid issues with */ in literals
+            queryString = queryString.replaceAll("\n", "\n// ");
+
+            // have to escape backslashes, because Java thinks
+            // backslash-u means Unicode escape (LDB-141)
+            queryString = queryString.replaceAll("\\\\", "\\\\\\\\");
             compUnit.setComment(
-                "// "
-                + queryString.replaceAll("\n", "\n// ") + "\n");
+                "// " + queryString + "\n");
         }
         String s = compUnit.toString();
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
-        return
-            compile(packageName, className, s, parameterTypes,
-                parameterNames);
+        return compile(
+            packageName,
+            className,
+            s,
+            parameterTypes,
+            parameterNames);
     }
 
     private BoundMethod compile(
@@ -697,18 +855,20 @@ public abstract class OJPreparingStmt
                 fw.write(source);
                 fw.close();
             } catch (java.io.IOException e2) {
-                throw Util.newInternal(e2,
+                throw Util.newInternal(
+                    e2,
                     "while writing java file '" + javaFile + "'");
             }
         }
 
+        EigenbaseTrace.getDynamicHandler().get().apply(javaFile, source);
+
         javaCompiler.compile();
         try {
-            return
-                Class.forName(
-                    fullClassName,
-                    true,
-                    javaCompiler.getClassLoader());
+            return Class.forName(
+                fullClassName,
+                true,
+                javaCompiler.getClassLoader());
         } catch (ClassNotFoundException e) {
             throw Util.newInternal(e);
         }
@@ -780,6 +940,39 @@ public abstract class OJPreparingStmt
         public String getName()
         {
             return name;
+        }
+    }
+
+    /**
+     * Walks a {@link RelNode} tree and determines if it contains any {@link
+     * JavaRel}s.
+     *
+     * @author Zelaine Fong
+     */
+    public static class JavaRelFinder
+        extends RelVisitor
+    {
+        private boolean javaRelFound;
+
+        public JavaRelFinder()
+        {
+            javaRelFound = false;
+        }
+
+        public void visit(
+            RelNode node,
+            int ordinal,
+            RelNode parent)
+        {
+            if (node instanceof JavaRel) {
+                javaRelFound = true;
+            }
+            node.childrenAccept(this);
+        }
+
+        public boolean containsJavaRel()
+        {
+            return javaRelFound;
         }
     }
 }

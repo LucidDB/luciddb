@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,11 +23,9 @@ package net.sf.farrago.server;
 
 import java.io.*;
 
-import java.rmi.*;
 import java.rmi.registry.*;
 
-import java.util.*;
-
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -46,10 +44,18 @@ import net.sf.farrago.util.*;
  */
 public abstract class FarragoAbstractServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static Registry rmiRegistry;
+
+    /**
+     * Enumeration of supported listening protocols.
+     */
+    public static enum ListeningProtocol
+    {
+        HTTP,
+        RMI
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -58,6 +64,14 @@ public abstract class FarragoAbstractServer
     protected int rmiRegistryPort;
 
     protected int singleListenerPort;
+
+    protected int httpPort;
+
+    protected long connectionTimeoutMillis;
+
+    protected ListeningProtocol protocol;
+
+    private ListeningProtocol defaultProtocol = ListeningProtocol.HTTP;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -85,16 +99,53 @@ public abstract class FarragoAbstractServer
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Sets the default protocol to use when no port is explicitly configured
+     * in the catalog, and when the subclass is not protocol-specific.  If this
+     * method is not called, the default is HTTP.
+     *
+     * @param defaultProtocol new default
+     */
+    public void setDefaultProtocol(ListeningProtocol defaultProtocol)
+    {
+        this.defaultProtocol = defaultProtocol;
+    }
+
     protected void configureNetwork(
         FarragoReleaseProperties releaseProps,
         FemFarragoConfig config)
     {
         rmiRegistryPort = config.getServerRmiRegistryPort();
-
         singleListenerPort = config.getServerSingleListenerPort();
+        httpPort = config.getServerHttpPort();
 
-        if (rmiRegistryPort == -1) {
+        Long longObjValue = config.getConnectionTimeoutMillis();
+        connectionTimeoutMillis =
+            ((longObjValue == null)
+                ? FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS
+                : longObjValue.longValue());
+
+
+        if (defaultProtocol == ListeningProtocol.HTTP) {
+            if (rmiRegistryPort <= 0) {
+                // use HTTP unless RMI port is set explicitly
+                protocol = ListeningProtocol.HTTP;
+            } else {
+                protocol = ListeningProtocol.RMI;
+            }
+        } else {
+            if (httpPort <= 0) {
+                // use RMI unless HTTP port is set explicitly
+                protocol = ListeningProtocol.RMI;
+            } else {
+                protocol = ListeningProtocol.HTTP;
+            }
+        }
+        if (rmiRegistryPort <= 0) {
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
+        }
+        if (httpPort <= 0) {
+            httpPort = releaseProps.jdbcUrlHttpPortDefault.get();
         }
     }
 
@@ -180,11 +231,19 @@ public abstract class FarragoAbstractServer
         // Load the database instance
         FarragoDatabase db = FarragoDbSingleton.pinReference(sessionFactory);
 
-        FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(db.getSystemRepos(), true);
+        try {
+            txn.beginReadTxn();
 
-        configureNetwork(
-            releaseProps,
-            config);
+            FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
+
+            configureNetwork(
+                releaseProps,
+                config);
+        } finally {
+            txn.commit();
+        }
 
         pw.println(res.ServerStartingNetwork.str());
 
@@ -193,7 +252,7 @@ public abstract class FarragoAbstractServer
             int port = startNetwork(jdbcDriver);
 
             pw.println(
-                res.ServerListening.str(new Integer(port)));
+                res.ServerListening.str(protocol.toString(), port));
             success = true;
         } finally {
             if (!success) {
@@ -262,6 +321,29 @@ public abstract class FarragoAbstractServer
         return pw;
     }
 
+    protected enum ConsoleCommandResult {
+        UNKNOWN_COMMAND, SERVER_QUIT, SERVER_CONTINUE
+    }
+
+    /**
+     * Handles a console command.
+     * @param cmd command-line typed at the console.
+     * @return command result.
+     */
+    protected ConsoleCommandResult doConsoleCommand(String cmd)
+    {
+        if (cmd.equals("!quit")) {
+            boolean stopped = stopSoft();
+            return stopped ? ConsoleCommandResult.SERVER_QUIT
+                           : ConsoleCommandResult.SERVER_CONTINUE;
+        } else if (cmd.equals("!kill")) {
+            stopHard();
+            return ConsoleCommandResult.SERVER_QUIT;
+        } else {
+            return ConsoleCommandResult.UNKNOWN_COMMAND;
+        }
+    }
+
     /**
      * Implements console interaction from stdin after the server has
      * successfully started.
@@ -273,27 +355,27 @@ public abstract class FarragoAbstractServer
         // TODO:  install signal handlers also
         InputStreamReader inReader = new InputStreamReader(System.in);
         LineNumberReader lineReader = new LineNumberReader(inReader);
+        cmdloop:
         for (;;) {
             String cmd;
             try {
                 cmd = lineReader.readLine();
             } catch (IOException ex) {
-                break;
+                break cmdloop;
             }
             if (cmd == null) {
                 // interpret end-of-stream as meaning we are supposed to
                 // run forever as a daemon
                 return;
             }
-            if (cmd.equals("!quit")) {
-                if (stopSoft()) {
-                    break;
-                }
-            } else if (cmd.equals("!kill")) {
-                stopHard();
-                break;
-            } else {
+            switch (doConsoleCommand(cmd)) {
+            case UNKNOWN_COMMAND:
                 pw.println(res.ServerBadCommand.str(cmd));
+                // fall through
+            case SERVER_CONTINUE:
+                continue cmdloop;
+            case SERVER_QUIT:
+                break cmdloop;
             }
         }
         System.exit(0);

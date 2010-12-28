@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,10 @@
 #include "fennel/common/FileStatsTarget.h"
 #include "fennel/synch/StatsTimer.h"
 
+#define BOOST_TEST_DYN_LINK
+
 #include <boost/shared_ptr.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -44,17 +47,17 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TestBase is the common base for all Fennel tests.
  */
-class TestBase
+class FENNEL_TEST_EXPORT TestBase
     : public TraceTarget,
         public boost::enable_shared_from_this<TestBase>
-    
+
 {
 protected:
     /**
      * Boost test suite.
      */
     TestSuite *pTestSuite;
-    
+
     boost::shared_ptr<TestBase> pTestObj;
 
     /**
@@ -66,7 +69,7 @@ protected:
      * Protects traceStream.
      */
     StrictMutex traceMutex;
-    
+
     /**
      * Name of test.
      */
@@ -116,14 +119,14 @@ protected:
      * Collects a group of named test-case definitions.
      * Preserves the order; allows lookup by name.
      */
-    class TestCaseGroup 
+    class FENNEL_TEST_EXPORT TestCaseGroup
     {
-        struct Item 
+        struct Item
         {
             std::string name;
             boost::unit_test::test_unit * tu;
             Item(std::string name, boost::unit_test::test_unit* tu)
-                :name(name), tu(tu) {}
+                : name(name), tu(tu) {}
         };
         /** the test cases, in order of definition */
         std::vector<Item> items;
@@ -143,7 +146,8 @@ public:
     static ParamName paramTraceLevel;
     static ParamName paramStatsFileName;
     static ParamName paramTraceStdout;
-    
+    static ParamName paramDegreeOfParallelism;
+
     /**
      * Configuration parameters.  The reason this is static is so that no
      * constructor parameters (which burden virtual bases) are needed.
@@ -154,7 +158,7 @@ public:
     virtual ~TestBase();
 
     // helpers for FENNEL_UNIT_TEST_SUITE etc. below
-    static void readParams(int argc,char **argv);
+    static void readParams(int argc, char **argv);
     TestSuite *releaseTestSuite();
     void beforeTestCase(std::string testCaseName);
     void afterTestCase(std::string testCaseName);
@@ -164,16 +168,16 @@ public:
      * method is invoked.  Default is no-op.
      */
     virtual void testCaseSetUp();
-    
+
     /**
      * Equivalent to JUnit TestCase.tearDown; this is called after each test
      * case method is invoked.  Default is no-op.
      */
     virtual void testCaseTearDown();
-    
+
     // implement TraceTarget
     virtual void notifyTrace(
-        std::string source,TraceLevel level,std::string message);
+        std::string source, TraceLevel level, std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
 };
 
@@ -190,7 +194,7 @@ public:
 private:
     std::string name;
     boost::shared_ptr<UserTestClass> pUserTestCase;
-    
+
 public:
     // Constructor
     TestWrapperTemplate(
@@ -235,33 +239,44 @@ public:
 // derived class name.
 
 #define FENNEL_UNIT_TEST_SUITE(UserTestClass) \
-TestSuite* init_unit_test_suite(int argc,char **argv) \
+bool init_unit_test() \
 { \
-    TestBase::readParams(argc,argv); \
+    TestBase::readParams( \
+        boost::unit_test::framework::master_test_suite().argc, \
+        boost::unit_test::framework::master_test_suite().argv); \
     std::string paramKey(TestBase::paramTestSuiteName); \
     std::string paramVal(#UserTestClass); \
-    TestBase::configMap.setStringParam(paramKey,paramVal); \
+    TestBase::configMap.setStringParam(paramKey, paramVal); \
     UserTestClass *pTestObj = new UserTestClass(); \
-    return pTestObj->releaseTestSuite(); \
+    TestBase::configMap.disableTracing(); \
+    boost::unit_test::framework::master_test_suite().add( \
+        pTestObj->releaseTestSuite()); \
+    return true; \
+} \
+\
+int main(int argc, char **argv) \
+{ \
+    return ::boost::unit_test::unit_test_main(&init_unit_test, argc, argv); \
 }
 
 
+
 // In the test class constructor, invoke either FENNEL_UNIT_TEST_CASE or
-// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call FENNEL_UNIT_TEST_CASE
-// to define a test case that is run by default. Call FENNEL_EXTRA_UNIT_TEST_CASE to
-// define an extra test case that is run only when selected from the command line,
-// either by "-t TESTNAME" or by "-all".
+// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call
+// FENNEL_UNIT_TEST_CASE to define a test case that is run by default. Call
+// FENNEL_EXTRA_UNIT_TEST_CASE to define an extra test case that is run only
+// when selected from the command line, either by "-t TESTNAME" or by "-all".
 
-#define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
-  FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests,UserTestClass,testMethodName)
+#define FENNEL_UNIT_TEST_CASE(UserTestClass, testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests, UserTestClass, testMethodName)
 
-#define FENNEL_EXTRA_UNIT_TEST_CASE(UserTestClass,testMethodName) \
-  FENNEL_DEFINE_UNIT_TEST_CASE(extraTests,UserTestClass,testMethodName)
+#define FENNEL_EXTRA_UNIT_TEST_CASE(UserTestClass, testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(extraTests, UserTestClass, testMethodName)
 
 // This macro is based on BOOST_PARAM_CLASS_TEST_CASE():
-// make_test_case() below actually returns a test_unit_generator, not a test_case.
-// The generator emits one test.
-#define FENNEL_DEFINE_UNIT_TEST_CASE(group,UserTestClass,testMethodName) \
+// make_test_case() below actually returns a test_unit_generator, not a
+// test_case. The generator emits one test.
+#define FENNEL_DEFINE_UNIT_TEST_CASE(group, UserTestClass, testMethodName) \
 do { \
     typedef TestWrapperTemplate<UserTestClass> TestWrapper; \
     boost::shared_ptr<UserTestClass> pDerivedTestObj = \
@@ -269,10 +284,10 @@ do { \
     TestWrapper::FunctionType params [] = \
         { &UserTestClass::testMethodName }; \
     boost::unit_test::test_unit *tu = \
-        boost::unit_test::make_test_case<TestWrapper>( \
+        boost::unit_test::make_test_case<TestWrapper>(\
             &TestWrapper::runTest, \
             #testMethodName, \
-            boost::shared_ptr<TestWrapper>(new TestWrapper( \
+            boost::shared_ptr<TestWrapper>(new TestWrapper(\
                 #testMethodName, \
                 pDerivedTestObj)), \
             params, \

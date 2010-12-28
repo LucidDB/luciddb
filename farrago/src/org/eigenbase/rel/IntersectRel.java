@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public final class IntersectRel
     extends SetOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public IntersectRel(
@@ -61,7 +60,8 @@ public final class IntersectRel
         // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
         double dRows = Double.MAX_VALUE;
         for (int i = 0; i < inputs.length; i++) {
-            dRows = Math.min(
+            dRows =
+                Math.min(
                     dRows,
                     RelMetadataQuery.getRowCount(inputs[i]));
         }
@@ -82,7 +82,8 @@ public final class IntersectRel
 
     public IntersectRel clone(RelNode [] inputs, boolean all)
     {
-        final IntersectRel clone = new IntersectRel(
+        final IntersectRel clone =
+            new IntersectRel(
                 getCluster(),
                 inputs,
                 all);

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,8 @@ package org.eigenbase.jmi;
  * @author John Sichi
  * @version $Id$
  */
-public enum JmiAssocMapping {
+public enum JmiAssocMapping
+{
     /**
      * The association should be left out of the transformed graph.
      */
@@ -40,16 +41,23 @@ public enum JmiAssocMapping {
     COPY,
 
     /**
-     * The association edge should be preserved in the transformed graph,
-     * but its direction should be reversed.
+     * The association edge should be preserved in the transformed graph, but
+     * its direction should be reversed.
      */
     REVERSAL,
 
     /**
-     * The two ends of the association should be contracted into
-     * one vertex in the transformed graph.
+     * The two ends of the association should be contracted into one vertex in
+     * the transformed graph.
      */
-    CONTRACTION
+    CONTRACTION,
+
+    /**
+     * The association edge should be interpreted as a hierarchical structure to
+     * be superimposed on the graph, with the source as parent and the target as
+     * child.
+     */
+    HIERARCHY
 }
 
 // End JmiAssocMapping.java

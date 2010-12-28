@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import junit.framework.*;
 public class OptionsListTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String NL = System.getProperty("line.separator");
@@ -49,7 +48,8 @@ public class OptionsListTest
         checkIt(
             "flag=true",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     null,
                     "xxx",
                     false,
@@ -65,7 +65,8 @@ public class OptionsListTest
         checkIt(
             "",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     null,
                     "xxx",
                     false,
@@ -81,7 +82,8 @@ public class OptionsListTest
         checkIt(
             "?",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     null,
                     "xxx",
                     false,
@@ -97,7 +99,8 @@ public class OptionsListTest
         checkIt(
             "?",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     null,
                     "xxx",
                     false,
@@ -113,7 +116,8 @@ public class OptionsListTest
         checkIt(
             "foo=default",
             new OptionsList.Option[] {
-                new OptionsList.StringOption("foo",
+                new OptionsList.StringOption(
+                    "foo",
                     "foo",
                     "xxx",
                     false,
@@ -129,7 +133,8 @@ public class OptionsListTest
         checkIt(
             "foo=default (default)",
             new OptionsList.Option[] {
-                new OptionsList.StringOption("foo",
+                new OptionsList.StringOption(
+                    "foo",
                     "foo",
                     "xxx",
                     false,
@@ -208,7 +213,8 @@ public class OptionsListTest
                     Color.RED,
                     Color.RED.getEnumeratedType(),
                     null),
-            new OptionsList.NumberOption("x",
+                new OptionsList.NumberOption(
+                    "x",
                     "x",
                     "",
                     false,
@@ -224,7 +230,8 @@ public class OptionsListTest
         checkIt(
             "missing x",
             new OptionsList.Option[] {
-                new OptionsList.NumberOption("x",
+                new OptionsList.NumberOption(
+                    "x",
                     "x",
                     "",
                     true,
@@ -238,7 +245,8 @@ public class OptionsListTest
     public void _testGroupOptionsMustBeOptional()
     {
         final OptionsList.NumberOption optionX =
-            new OptionsList.NumberOption("x",
+            new OptionsList.NumberOption(
+                "x",
                 "x",
                 "",
                 false,
@@ -267,7 +275,8 @@ public class OptionsListTest
         final StringBufferOptionsHandler handler =
             new StringBufferOptionsHandler();
         final OptionsList.NumberOption optionX =
-            new OptionsList.NumberOption("x",
+            new OptionsList.NumberOption(
+                "x",
                 "x",
                 "",
                 false,
@@ -275,7 +284,8 @@ public class OptionsListTest
                 null,
                 null);
         final OptionsList.NumberOption optionY =
-            new OptionsList.NumberOption("y",
+            new OptionsList.NumberOption(
+                "y",
                 "y",
                 "",
                 false,
@@ -283,7 +293,8 @@ public class OptionsListTest
                 null,
                 null);
         final OptionsList.NumberOption optionZ =
-            new OptionsList.NumberOption("z",
+            new OptionsList.NumberOption(
+                "z",
                 "z",
                 "",
                 false,
@@ -309,14 +320,16 @@ public class OptionsListTest
         checkIt(
             "verbose=true" + NL + "file=file.txt",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     "flag",
                     "",
                     false,
                     false,
                     false,
                     null),
-            new OptionsList.StringOption("file",
+                new OptionsList.StringOption(
+                    "file",
                     "file",
                     "",
                     false,
@@ -332,14 +345,16 @@ public class OptionsListTest
         checkIt(
             "verbose=true" + NL + "file=foo.txt" + NL + "file=bar.txt",
             new OptionsList.Option[] {
-                new OptionsList.BooleanOption("flag",
+                new OptionsList.BooleanOption(
+                    "flag",
                     "flag",
                     "",
                     false,
                     false,
                     false,
                     null),
-            new OptionsList.StringOption("file",
+                new OptionsList.StringOption(
+                    "file",
                     "file",
                     "",
                     false,

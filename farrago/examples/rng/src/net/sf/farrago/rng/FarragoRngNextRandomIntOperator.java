@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,6 @@ import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 import net.sf.farrago.query.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.rngmodel.rngschema.RngRandomNumberGenerator;
 
@@ -45,15 +44,13 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
     {
         super(
             "NEXT_RANDOM_INT",
-            SqlKind.Other,
+            SqlKind.OTHER,
             SqlTypeStrategies.rtiInteger,
             null,
             new FamilyOperandTypeChecker(
-                new SqlTypeFamily [] {
-                    SqlTypeFamily.Integer,
-                    SqlTypeFamily.Character,
-                    SqlTypeFamily.Character
-                }),
+                SqlTypeFamily.INTEGER,
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.CHARACTER),
             SqlFunctionCategory.System);
     }
 

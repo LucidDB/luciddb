@@ -1,25 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Delegating build script used by Cruise Control to build thirdparty. -->
 <project name="build-thirdparty" default="build">
-    <taskdef resource="net/sf/antcontrib/antlib.xml" />
 	<property environment="env"/>
-
-    <osfamily property="osfamily"/>
-
-    <condition property="notWindows">
-        <not><os family="windows"/></not>
-    </condition>
-
-    <if>
-        <equals arg1="${osfamily}" arg2="unix"/>
-        <then>
-            <property name="make.exe" location="/usr/bin/make"/>
-        </then>
-        <else>
-            <property name="make.exe" location="c:/cygwin/bin/make.exe"/>
-        </else>
-    </if>
-
 
 	<!-- perforce properties -->
 	<property file="${open_propfile}"/>
@@ -40,7 +22,7 @@
 	<!-- basic build targets -->
 	<target name="build">
 		<property name="build.home" location="${default.build.home}"/>
-        <exec dir="${build.home}/thirdparty" executable="${make.exe}" failonerror="true">
+		<exec dir="${build.home}/thirdparty" executable="make" failonerror="true">
 			<arg value="fennel"/>
 			<arg value="farrago"/>
 			<arg value="optional"/>
@@ -65,14 +47,13 @@
 			<arg value="-rf"/>
 			<arg value="${integration.build.home}/thirdparty"/>
 		</exec>
-		<mkdir dir="${integration.build.home}/thirdparty"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./thirdparty to ${integration.build.home}/"/>
+		<echo message="Copying ${srcdir}/thirdparty to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="./thirdparty/"/>
-			<arg value="${integration.build.home}/"/>
+			<arg value="${srcdir}/thirdparty"/>
+			<arg value="${integration.build.home}"/>
 		</exec>
 	</target>
 

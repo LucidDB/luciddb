@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,7 +52,7 @@ LogicalTxn::LogicalTxn(
     // states, eliminating the overhead of a full-cache checkpoint when log is
     // committed.
     pOutputStream->setWriteLatency(WRITE_EAGER_ASYNC);
-    
+
     state = STATE_LOGGING_TXN;
     svpt.cbActionPrev = 0;
     svpt.cbLogged = 0;
@@ -61,7 +61,7 @@ LogicalTxn::LogicalTxn(
 
 LogicalTxn::~LogicalTxn()
 {
-    assert(state == STATE_ROLLED_BACK || state == STATE_COMMITTED);
+    assert(isEnded());
     assert(participants.empty());
 }
 
@@ -130,18 +130,19 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
     if (pSvptId) {
         uint iSvpt = opaqueToInt(*pSvptId);
         assert(iSvpt < savepoints.size());
-        savepoints.resize(iSvpt+1);
+        savepoints.resize(iSvpt + 1);
         rollbackToSavepoint(savepoints[iSvpt]);
         return;
     }
 
     // NOTE:  this protects against implicit self-delete until end-of-method
     SharedLogicalTxn pThis = shared_from_this();
-
-    // do this now so that participants don't try to write to log during
-    // rollback
+    std::vector<SharedLogicalTxnParticipant> toRollback(participants);
+    // forget the participants so that participants don't try to write
+    // to log during rollback, but we keep the references
+    // until after we finish using them
     forgetAllParticipants();
-    
+
     SharedSegment pLongLogSegment = pOutputStream->getSegment();
     SharedByteInputStream pInputStream =
         pOutputStream->getInputStream(SEEK_STREAM_END);
@@ -150,9 +151,11 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
 
     {
         state = STATE_ROLLING_BACK;
-        LogicalRecoveryTxn recoveryTxn(pInputStream,NULL);
+        LogicalRecoveryTxn recoveryTxn(pInputStream, NULL);
         recoveryTxn.undoActions(svpt);
     }
+    // clear out the participants
+    toRollback.clear();
 
     svpt.cbLogged = pInputStream->getOffset();
     state = STATE_ROLLED_BACK;
@@ -211,7 +214,7 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
         participants.begin(),
         participants.end(),
         boost::bind(&LogicalTxnParticipant::enableLogging,_1,false));
-    
+
     // TODO:  for short logs, could just reuse memory
 
     SharedByteInputStream pInputStream =
@@ -219,8 +222,8 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
     assert(svpt.cbLogged == pInputStream->getOffset());
     {
         state = STATE_ROLLING_BACK;
-        LogicalRecoveryTxn recoveryTxn(pInputStream,NULL);
-        recoveryTxn.undoActions(svpt,MAXU,oldSvpt.cbLogged);
+        LogicalRecoveryTxn recoveryTxn(pInputStream, NULL);
+        recoveryTxn.undoActions(svpt, MAXU, oldSvpt.cbLogged);
         state = STATE_LOGGING_TXN;
     }
     pInputStream.reset();
@@ -229,10 +232,10 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
     std::for_each(
         participants.begin(),
         participants.end(),
-        boost::bind(&LogicalTxnParticipant::enableLogging,_1,true));
+        boost::bind(&LogicalTxnParticipant::enableLogging, _1, true));
 
     // write log entry noting the partial rollback
-    beginLogicalAction(NULL,ACTION_TXN_ROLLBACK_TO_SAVEPOINT);
+    beginLogicalAction(NULL, ACTION_TXN_ROLLBACK_TO_SAVEPOINT);
     pOutputStream->writeValue(oldSvpt);
     endLogicalAction();
 }
@@ -240,6 +243,11 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
 SharedLogicalTxnLog LogicalTxn::getLog()
 {
     return pLog;
+}
+
+bool LogicalTxn::isEnded() const
+{
+    return state == STATE_ROLLED_BACK || state == STATE_COMMITTED;
 }
 
 TxnId LogicalTxn::getTxnId() const

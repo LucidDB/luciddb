@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.session;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
@@ -38,7 +39,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoSessionRuntimeContext
     extends FarragoAllocationOwner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -67,9 +67,48 @@ public interface FarragoSessionRuntimeContext
     public void checkCancel();
 
     /**
+     * Associates an execution handle with the runtime context.
+     *
+     * @param execHandle the execution handle
+     */
+    public void setExecutionHandle(FennelExecutionHandle execHandle);
+
+    /**
+     * Sets the state of the top-level cursor associated with this context.
+     * {@link #checkCancel} is called both before the fetch request
+     * (active=true) and after the fetch (active=false). Not called for internal
+     * cursors such as UDX inputs and cursors opened via reentrant SQL from
+     * UDRs.
+     *
+     * @param active true if cursor is beginning a fetch request; false if
+     * cursor is ending a fetch request
+     */
+    public void setCursorState(boolean active);
+
+    /**
+     * Waits for cursor state to be reset to active=false (returns immediately
+     * if cursor is not currently active).
+     */
+    public void waitForCursor();
+
+    /**
      * @return FennelStreamGraph pinned by loadFennelPlan
      */
     public FennelStreamGraph getFennelStreamGraph();
+
+    /**
+     * Retrieves the FennelStreamHandle corresponding to a stream
+     *
+     * @param globalStreamName name of the stream
+     * @param isInput
+     *   true: find the adapter intepolated after the stream;
+     *   false: find the stream itself.
+     * @return FennelStreamHandle corresponding to the stream specified by the
+     * name parameter
+     */
+    public FennelStreamHandle getStreamHandle(
+        String globalStreamName,
+        boolean isInput);
 
     /**
      * Pushes a routine invocation onto the context stack.
@@ -119,6 +158,29 @@ public interface FarragoSessionRuntimeContext
      * @return session on behalf of which this runtime context is executing
      */
     public FarragoSession getSession();
+
+    /**
+     * @return FarragoRepos for use by extension projects
+     */
+    public FarragoRepos getRepos();
+
+    /**
+     * Detaches the current MDR session from the running thread. The detached
+     * session is stored for later re-attachment and is automatically
+     * re-attached and closed if when the runtime context is closed.
+     */
+    public void detachMdrSession();
+
+    /**
+     * Re-attaches a detached MDR session to the currently running thread, if
+     * any was previously detached.
+     */
+    public void reattachMdrSession();
+
+    /**
+     * @return queue of warnings posted to this runtime context
+     */
+    public FarragoWarningQueue getWarningQueue();
 }
 
 // End FarragoSessionRuntimeContext.java

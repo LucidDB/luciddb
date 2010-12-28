@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,9 +25,9 @@ import java.sql.*;
 
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -36,7 +36,6 @@ import net.sf.farrago.session.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -48,8 +47,70 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoMedUDR
 {
-
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Tests that a connection can be established to a particular SQL/MED local
+     * or foreign data server. If no exception is thrown, the test was
+     * successful.
+     *
+     * @param serverName name of data server to test
+     */
+    public static void testServer(
+        String serverName)
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            FemDataServer femServer =
+                stmtValidator.findDataServer(
+                    new SqlIdentifier(serverName, SqlParserPos.ZERO));
+            stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                femServer);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+
+    /**
+     * Tests that a connection can be established for all SQL/MED servers
+     * instantiated from a particular data wrapper. If no exception is thrown,
+     * the test was successful.
+     *
+     * @param wrapperName name of data wrapper to test
+     */
+    public static void testAllServersForWrapper(
+        String wrapperName)
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            FemDataWrapper femWrapper =
+                stmtValidator.findDataWrapper(
+                    new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
+                    true);
+            for (FemDataServer femServer : femWrapper.getServer()) {
+                try {
+                    stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                        femServer);
+                } catch (Throwable ex) {
+                    throw FarragoResource.instance().ServerTestConnFailed.ex(
+                        femServer.getName(),
+                        ex);
+                }
+            }
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
 
     /**
      * Queries SQL/MED connection information for a foreign data server.
@@ -77,6 +138,9 @@ public abstract class FarragoMedUDR
         }
 
         FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         try {
             browseConnectServerImpl(
@@ -85,6 +149,7 @@ public abstract class FarragoMedUDR
                 serverProps,
                 resultInserter);
         } finally {
+            txn.commit();
             stmtValidator.closeAllocation();
         }
     }
@@ -156,6 +221,9 @@ public abstract class FarragoMedUDR
         throws SQLException
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn =
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         try {
             browseForeignSchemasImpl(
@@ -163,6 +231,7 @@ public abstract class FarragoMedUDR
                 serverName,
                 resultInserter);
         } finally {
+            txn.commit();
             stmtValidator.closeAllocation();
         }
     }
@@ -218,7 +287,7 @@ public abstract class FarragoMedUDR
             String name,
             String typeName,
             String remarks,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(name, typeName, false)) {
                 return false;
@@ -246,7 +315,7 @@ public abstract class FarragoMedUDR
             RelDataType type,
             String remarks,
             String defaultValue,
-            Map properties)
+            Properties properties)
         {
             return false;
         }

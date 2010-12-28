@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,27 +21,20 @@
 */
 package net.sf.farrago.test;
 
-import java.io.*;
-
-import junit.framework.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.defimpl.FarragoDefaultSessionPersonality;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
-import openjava.ptree.*;
-
-import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rex.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql2rel.*;
 
 
 /**
@@ -56,7 +49,6 @@ import org.eigenbase.sql2rel.*;
 public abstract class FarragoSqlToRelTestBase
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoSqlToRelTestBase(String testName)
@@ -75,8 +67,15 @@ public abstract class FarragoSqlToRelTestBase
         RelNode topRel)
         throws Exception;
 
-    protected void checkQuery(
-        String explainQuery)
+    protected void checkQuery(String explainQuery)
+        throws Exception
+    {
+        addRulesAndCheckQuery(explainQuery, null);
+    }
+
+    protected void addRulesAndCheckQuery(
+        final String explainQuery,
+        List<RelOptRule> rules)
         throws Exception
     {
         // hijack necessary internals
@@ -84,37 +83,47 @@ public abstract class FarragoSqlToRelTestBase
             (FarragoJdbcEngineConnection) connection;
         FarragoDbSession session =
             (FarragoDbSession) farragoConnection.getSession();
+        final FarragoDefaultSessionPersonality personality =
+            (FarragoDefaultSessionPersonality) session.getPersonality();
 
         // guarantee release of any resources we allocate on the way
         FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
+        FarragoReposTxnContext reposTxn = repos.newTxnContext(true);
         try {
             reposTxn.beginReadTxn();
 
             // create a private code cache: don't pollute the real
             // database code cache
             FarragoObjectCache objCache =
-                new FarragoObjectCache(allocations, 0);
+                new FarragoObjectCache(
+                    allocations,
+                    0,
+                    new FarragoLruVictimPolicy());
 
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =
-                new FarragoStmtValidator(
-                    repos,
-                    session.getDatabase().getFennelDbHandle(),
-                    session,
-                    objCache,
-                    objCache,
-                    session.getSessionIndexMap(),
-                    session.getDatabase().getDdlLockManager());
+                session.newStmtValidator(
+                    objCache, objCache);
             allocations.addAllocation(stmtValidator);
-            FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
-            stmt.enablePartialImplementation();
+            FarragoPreparingStmt stmt =
+                (FarragoPreparingStmt) personality.newPreparingStmtForTesting(
+                    explainQuery, stmtValidator);
 
             initPlanner(stmt);
 
+            // add any additional rules needed in the planner
+            if (rules != null) {
+                for (RelOptRule rule : rules) {
+                    stmt.getPlanner().addRule(rule);
+                }
+            }
+
             // parse the EXPLAIN PLAN statement
-            SqlParser sqlParser = new SqlParser(explainQuery);
-            SqlNode sqlNode = sqlParser.parseStmt();
+            final FarragoSessionParser parser =
+                session.getPersonality().newParser(session);
+            SqlNode sqlNode =
+                (SqlNode) parser.parseSqlText(
+                    stmtValidator, null, explainQuery, true);
 
             // prepare it
             PreparedExplanation explanation =

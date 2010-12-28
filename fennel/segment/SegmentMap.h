@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,19 +30,26 @@ FENNEL_BEGIN_NAMESPACE
  * SegmentMap defines an interface for mapping a SegmentId to a loaded Segment
  * instance.
  */
-class SegmentMap 
+class FENNEL_SEGMENT_EXPORT SegmentMap
 {
 public:
-    virtual ~SegmentMap() {};
+    virtual ~SegmentMap()
+    {
+    }
 
     /**
      * Finds a segment by its SegmentId.
      *
      * @param segmentId the SegmentId to find
      *
+     * @param pDataSegment the specific segment associated with a statement,
+     * if a specific segment must be used
+     *
      * @return loaded segment, or a singular SharedSegment if not found
      */
-    virtual SharedSegment getSegmentById(SegmentId segmentId) = 0;
+    virtual SharedSegment getSegmentById(
+        SegmentId segmentId,
+        SharedSegment pDataSegment) = 0;
 };
 
 FENNEL_END_NAMESPACE

@@ -1,0 +1,96 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- Test script for dynamic_function using application variables UDF/UDP
+0: jdbc:luciddb:> create or replace schema functest;
+0: jdbc:luciddb:> set schema 'functest';
+0: jdbc:luciddb:> set path 'functest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace jar functest.myApplib
+. . . . . . . . > library 'file:${FARRAGO_HOME}/plugin/applib.jar'
+. . . . . . . . > options(0);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace function functest.get_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128)) 
+. . . . . . . . > returns varchar(65535)
+. . . . . . . . > language java
+. . . . . . . . > deterministic
+. . . . . . . . > not dynamic_function
+. . . . . . . . > no sql
+. . . . . . . . > external name 'functest.myApplib:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- use xmlattr format so we can distinguish nulls from blanks
+0: jdbc:luciddb:> !set outputformat xmlattr
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- for this test, enable code cache to make sure that changes
+0: jdbc:luciddb:> -- in variables do not get ignored due to stale plan cache
+0: jdbc:luciddb:> alter system set "codeCacheMaxBytes" = max;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create a context
+0: jdbc:luciddb:> call applib.create_var('ctx', null, 'very explicit');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create a variable in that context
+0: jdbc:luciddb:> call applib.create_var('ctx', 'var1', 'rather moody');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- default value should be null
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set a new value and verify value gotten from cache
+0: jdbc:luciddb:> call applib.set_var('ctx', 'var1', 'foo');
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- get cached value again
+0: jdbc:luciddb:> call applib.set_var('ctx', 'var1', 'bar');
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace function functest.get_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128)) 
+. . . . . . . . > returns varchar(65535)
+. . . . . . . . > language java
+. . . . . . . . > deterministic
+. . . . . . . . > dynamic_function
+. . . . . . . . > no sql
+. . . . . . . . > external name 'functest.myApplib:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- get values again with dynamic_function specified
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="bar"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set a new value and verify value is not retrieved from cache
+0: jdbc:luciddb:> call applib.set_var('ctx', 'var1', 'foo');
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="foo"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set a new value and verify value is not retrieved from cache
+0: jdbc:luciddb:> call applib.set_var('ctx', 'var1', 'bar');
+0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
+<resultset>
+  <result EXPR$0="bar"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call applib.create_var('ctx2', null, 'uncomfortably implicit');
+0: jdbc:luciddb:> call applib.create_var('ctx2', 'var2', 'uncomfortably implicit');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- default value should be null
+0: jdbc:luciddb:> values (functest.get_var('ctx2', 'var2'));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema functest cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -40,7 +41,6 @@ import org.eigenbase.rex.*;
  */
 public class FarragoRoutineInvocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoUserDefinedRoutine routine;
@@ -62,10 +62,15 @@ public class FarragoRoutineInvocation
 
         RelDataType [] paramTypes = routine.getParamTypes();
         argCastExprs = new RexNode[argExprs.length];
-        List paramNames = new ArrayList();
-        Iterator paramIter = routine.getFemRoutine().getParameter().iterator();
-        for (int i = 0; paramIter.hasNext(); ++i) {
-            FemRoutineParameter param = (FemRoutineParameter) paramIter.next();
+        List<String> paramNames = new ArrayList<String>();
+        int i = -1;
+        for (
+            CwmParameter param
+            : Util.cast(
+                routine.getFemRoutine().getParameter(),
+                FemRoutineParameter.class))
+        {
+            ++i;
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 break;
             }
@@ -73,7 +78,8 @@ public class FarragoRoutineInvocation
             RexBuilder rexBuilder =
                 routine.getPreparingStmt().getSqlToRelConverter()
                 .getRexBuilder();
-            RexNode argCast = rexBuilder.makeCast(
+            RexNode argCast =
+                rexBuilder.makeCast(
                     paramTypes[i],
                     argExprs[i]);
             paramNameToArgMap.put(

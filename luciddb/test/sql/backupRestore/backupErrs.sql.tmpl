@@ -1,0 +1,24 @@
+-- Test error conditions for backups
+
+-- non-existent archive directory
+call sys_root.backup_database('@TEST_DIR@/badArchive', 'FULL', 'UNCOMPRESSED');
+
+-- non-writable archive directory
+call sys_root.backup_database(
+    '@TEST_DIR@/nonWritableArchive', 'FULL', 'UNCOMPRESSED');
+
+-- invalid backup type
+call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FOO', 'UNCOMPRESSED');
+
+-- invalid compression mode
+call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESED');
+
+-- attempt to backup when a session label is set
+create label "archiveLabel";
+alter session set "label" = 'archiveLabel';
+call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESSED');
+alter session set "label" = null;
+drop label "archiveLabel";
+
+-- attempt to use a backup directory that has already been used
+call sys_root.backup_database('@TEST_DIR@/fullArchive', 'FULL', 'UNCOMPRESSED');

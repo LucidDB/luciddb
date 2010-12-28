@@ -29,6 +29,7 @@ select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
 -- simple casting (not fully supported in java calc)
 values cast(date '1994-07-08' as varchar(10));
 values cast(time '17:05:08' as varchar(10));
+// NOTE: this shows precision with Jdbc formatting
 values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
 values cast('1994-07-08 17:05:08' as timestamp);
 values cast('1994-07-08' as date);
@@ -37,6 +38,16 @@ values cast('17:05:08' as time);
 values cast(null as date);
 values cast(null as time);
 values cast(null as timestamp);
+
+-- nullability testing (FRG-237)
+create table initial_null(i int primary key, d date);
+insert into initial_null values
+  (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
+select * from initial_null order by i;
+select extract(day from ((DATE'2006-11-21' - d)day)) 
+  from initial_null order by i;
+
+values cast( cast(null as time) as timestamp);
 
 -- now test with Fennel calc, which supports casts
 alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
@@ -51,10 +62,12 @@ values cast(timestamp '2004-12-21 12:01:01' as varchar(10));
 values cast(timestamp '2004-12-21 12:01:01' as char(10));
 
 -- should succeed
+
 values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
 values cast(timestamp '2004-12-21 12:01:01' as char(20));
 
-values cast('2004-12-21 12:01:01' as timestamp);
+-- values cast('2004-12-21 12:01:01' as timestamp);
+
 values cast('2004-12-21' as date);
 values cast('12:01:01' as time);
 
@@ -78,3 +91,88 @@ select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
 values cast(null as date);
 values cast(null as time);
 values cast(null as timestamp);
+
+-- a few more Java Calc tests involving insertions
+alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+
+create table d (
+  d date primary key);
+insert into d values (
+  date'2006-09-27');
+
+-- should fail
+insert into d values (
+  time'19:31:00');
+insert into d values (
+  timestamp'2006-09-27 20:31:00');
+insert into d values (
+  cast(timestamp'2006-09-27 20:31:00' as date));
+
+select * from d;
+
+truncate table d;
+
+create table t (
+  t time primary key);
+insert into t values (
+  time'19:31:00');
+
+-- should fail
+insert into t values (
+  date'2006-09-27');
+insert into t values (
+  timestamp'2006-09-27 19:31:00');
+insert into t values (
+  cast(timestamp'2006-09-27 19:31:00' as time));
+
+select * from t;
+
+create table ts(
+  ts timestamp primary key);
+insert into ts values (
+  timestamp'2006-09-27 19:31:00');
+insert into ts values (
+  cast(date'2006-09-27' as timestamp));
+
+-- should fail
+insert into ts values (
+  date'2006-09-27');
+insert into ts values (
+  time'19:31:00');
+-- Note: duplicate key value changes with time
+-- insert into ts values 
+--   (current_timestamp),
+--   (cast (current_time as timestamp));
+
+select * from ts order by 1;
+
+-- current_timestamp is converted to a constant during query optimization;
+-- make sure the statement is not cached and therefore the current_timestamp
+-- call returns unique values for each insert; use the select with the sleep
+-- in the where clause to ensure a time gap between the two inserts
+insert into ts values(current_timestamp);
+select * from sales.emps where empno = sys_boot.mgmt.sleep(1000);
+insert into ts values(current_timestamp);
+-- should return 4 rows
+select count(*) from ts;
+
+-- boundary cases
+values cast (timestamp'2006-09-27 00:00:00' as date);
+values cast (timestamp'2006-09-27 23:59:59' as date);
+
+values cast (timestamp'2006-09-27 00:00:00' as time);
+values cast (timestamp'2006-09-27 23:59:59' as time);
+
+-- test comparison
+
+-- should set date to current_date
+values cast(
+  cast(time'19:31:00' as timestamp)
+  as date) = current_date;
+
+-- ensure time does not keep unecessary components
+values cast (timestamp'2006-09-27 23:59:59' as time) = time'23:59:59';
+
+-- Tests monotonicity evaluation for x * interval constant.
+select age, age * interval '1' second, age * interval '1' year from sales.emps;
+select age, interval '1' second * age, interval '1' year * age from sales.emps;

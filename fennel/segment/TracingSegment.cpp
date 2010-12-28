@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,14 +36,14 @@ TracingSegment::TracingSegment(
     SharedTraceTarget pTraceTarget,
     std::string sourceName)
     : DelegatingSegment(pDelegateSegment),
-      TraceSource(pTraceTarget,"segment."+sourceName)
+      TraceSource(pTraceTarget, sourceName)
 {
-    FENNEL_TRACE(TRACE_FINE,"constructor");
+    FENNEL_TRACE(TRACE_FINE, "constructor");
 }
 
 TracingSegment::~TracingSegment()
 {
-    FENNEL_TRACE(TRACE_FINE,"destructor");
+    FENNEL_TRACE(TRACE_FINE, "destructor");
 }
 
 void TracingSegment::setPageSuccessor(PageId pageId, PageId successorId)
@@ -52,7 +52,7 @@ void TracingSegment::setPageSuccessor(PageId pageId, PageId successorId)
         TRACE_FINER,
         "setPageSuccessor of PageId " << std::hex << pageId
         << " to PageId " << std::hex << successorId);
-    DelegatingSegment::setPageSuccessor(pageId,successorId);
+    DelegatingSegment::setPageSuccessor(pageId, successorId);
 }
 
 BlockId TracingSegment::translatePageId(PageId pageId)
@@ -95,13 +95,13 @@ bool TracingSegment::ensureAllocatedSize(BlockNum nPages)
     return b;
 }
 
-void TracingSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void TracingSegment::deallocatePageRange(PageId startPageId, PageId endPageId)
 {
     FENNEL_TRACE(
         TRACE_FINE,
         "deallocatePageRange " << std::hex << startPageId << ", "
         << std::hex << endPageId);
-    DelegatingSegment::deallocatePageRange(startPageId,endPageId);
+    DelegatingSegment::deallocatePageRange(startPageId, endPageId);
 }
 
 void TracingSegment::notifyPageMap(CachePage &page)
@@ -137,7 +137,7 @@ void TracingSegment::notifyPageDirty(CachePage &page,bool bDataValid)
         TRACE_FINER,
         "notifyPageDirty @" << &page << " BlockId "
         << std::hex << page.getBlockId());
-    DelegatingSegment::notifyPageDirty(page,bDataValid);
+    DelegatingSegment::notifyPageDirty(page, bDataValid);
 }
 
 void TracingSegment::notifyBeforePageFlush(CachePage &page)
@@ -165,7 +165,52 @@ void TracingSegment::delegatedCheckpoint(
     FENNEL_TRACE(
         TRACE_FINER,
         "checkpoint type=" << checkpointType);
-    DelegatingSegment::delegatedCheckpoint(delegatingSegment,checkpointType);
+    DelegatingSegment::delegatedCheckpoint(delegatingSegment, checkpointType);
+}
+
+MappedPageListener *TracingSegment::getMappedPageListener(BlockId blockId)
+{
+    // We need to retrieve the listener associated with the delegating
+    // segment, and then map the return value back to the parent tracing
+    // segment.
+    MappedPageListener *pListener =
+        getDelegateSegment()->getMappedPageListener(blockId);
+    FENNEL_TRACE(
+        TRACE_FINEST,
+        "getMappedPageListener for blockId " << std::hex << blockId
+            << " = " << std::hex << pListener);
+
+    return pListener->getTracingListener();
+}
+
+MappedPageListener *TracingSegment::notifyAfterPageCheckpointFlush(
+    CachePage &page)
+{
+    // We need to retrieve the listener associated with the delegating
+    // segment, and then map the return value back to the parent tracing
+    // segment.
+    MappedPageListener *pListener =
+        getDelegateSegment()->notifyAfterPageCheckpointFlush(page);
+    if (pListener == NULL) {
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex
+            << page.getBlockId() << " = NULL");
+        return pListener;
+    } else {
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex
+            << page.getBlockId() << " = " << std::hex << pListener);
+        return pListener->getTracingListener();
+    }
+}
+
+bool TracingSegment::isWriteVersioned()
+{
+    bool b = getDelegateSegment()->isWriteVersioned();
+    FENNEL_TRACE(TRACE_FINEST, "isWriteVersioned returns " << b);
+    return b;
 }
 
 FENNEL_END_CPPFILE("$Id$");

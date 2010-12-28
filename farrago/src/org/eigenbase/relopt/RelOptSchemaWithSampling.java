@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,14 +33,24 @@ package org.eigenbase.relopt;
 public interface RelOptSchemaWithSampling
     extends RelOptSchema
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves a {@link RelOptTable} based upon a member access, using a
      * sample dataset if it exists.
+     *
+     * @param names Compound name of table
+     * @param datasetName Name of sample dataset to substitute, if it exists;
+     * null to not look for a sample
+     * @param usedDataset Output parameter which is set to true if a sample
+     * dataset is found; may be null
+     *
+     * @return Table, or null if not found
      */
-    RelOptTable getTableForMember(String [] names, String datasetName);
+    RelOptTable getTableForMember(
+        String [] names,
+        String datasetName,
+        boolean [] usedDataset);
 }
 
 // End RelOptSchemaWithSampling.java

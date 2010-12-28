@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.sql;
+
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -38,7 +40,6 @@ import org.eigenbase.util.*;
 public class SqlCallBinding
     extends SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidator validator;
@@ -47,6 +48,13 @@ public class SqlCallBinding
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a call binding.
+     *
+     * @param validator Validator
+     * @param scope Scope of call
+     * @param call Call node
+     */
     public SqlCallBinding(
         SqlValidator validator,
         SqlValidatorScope scope,
@@ -62,16 +70,25 @@ public class SqlCallBinding
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the validator.
+     */
     public SqlValidator getValidator()
     {
         return validator;
     }
 
+    /**
+     * Returns the scope of the call.
+     */
     public SqlValidatorScope getScope()
     {
         return scope;
     }
 
+    /**
+     * Returns the call node.
+     */
     public SqlCall getCall()
     {
         return call;
@@ -94,7 +111,7 @@ public class SqlCallBinding
             return sqlLiteral.intValue(true);
         } else if (node instanceof SqlCall) {
             final SqlCall c = (SqlCall) node;
-            if (c.isA(SqlKind.MinusPrefix)) {
+            if (c.getKind() == SqlKind.MINUS_PREFIX) {
                 SqlNode child = c.operands[0];
                 if (child instanceof SqlLiteral) {
                     return -((SqlLiteral) child).intValue(true);
@@ -119,7 +136,13 @@ public class SqlCallBinding
     // implement SqlOperatorBinding
     public RelDataType getOperandType(int ordinal)
     {
-        return validator.deriveType(scope, call.operands[ordinal]);
+        final SqlNode operand = call.operands[ordinal];
+        final RelDataType type = validator.deriveType(scope, operand);
+        final SqlValidatorNamespace namespace = validator.getNamespace(operand);
+        if (namespace != null) {
+            return namespace.getRowTypeSansSystemColumns();
+        }
+        return type;
     }
 
     public RelDataType getCursorOperand(int ordinal)
@@ -133,6 +156,30 @@ public class SqlCallBinding
         return validator.deriveType(scope, query);
     }
 
+    // implement SqlOperatorBinding
+    public String getColumnListParamInfo(
+        int ordinal,
+        String paramName,
+        List<String> columnList)
+    {
+        final SqlNode operand = call.operands[ordinal];
+        if (!SqlUtil.isCallTo(operand, SqlStdOperatorTable.rowConstructor)) {
+            return null;
+        }
+        SqlNode [] operands = ((SqlCall) operand).getOperands();
+        for (int i = 0; i < operands.length; i++) {
+            SqlIdentifier id = (SqlIdentifier) operands[i];
+            columnList.add(id.getSimple());
+        }
+        return validator.getParentCursor(paramName);
+    }
+
+    public EigenbaseException newError(
+        SqlValidatorException e)
+    {
+        return validator.newValidationError(call, e);
+    }
+
     /**
      * Constructs a new validation signature error for the call.
      *
@@ -140,13 +187,12 @@ public class SqlCallBinding
      */
     public EigenbaseException newValidationSignatureError()
     {
-        return
-            validator.newValidationError(
-                call,
-                EigenbaseResource.instance().CanNotApplyOp2Type.ex(
-                    getOperator().getName(),
-                    call.getCallSignature(validator, scope),
-                    getOperator().getAllowedSignatures()));
+        return validator.newValidationError(
+            call,
+            EigenbaseResource.instance().CanNotApplyOp2Type.ex(
+                getOperator().getName(),
+                call.getCallSignature(validator, scope),
+                getOperator().getAllowedSignatures()));
     }
 
     /**

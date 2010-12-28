@@ -21,19 +21,28 @@ set -e
 
 usage() {
     echo "Usage:  initBuild.sh "
+    echo "            [--without-fennel[-thirdparty]-build] (default w/both) "
     echo "            [--with[out]-fennel] (default with) "
     echo "            [--with[out]-optimization] (default without) "
     echo "            [--with[out]-debug] (default with) "
-    echo "            [--without-fennel[-thirdparty]-build] (default w/both) "
+    echo "            [--with[out]-aio-required] (default with) "
     echo ""
     echo "            [--with[out]-tests] (default without) "
     echo "            [--with-nightly-tests] (default without) "
     echo ""
     echo "            [--without-farrago-build] (default with) "
     echo "            [--without-dist-build] (default with) "
+    echo "            [--with-repos-type=REPOS_TYPE]"
+    echo "              where REPOS_TYPE may be:"
+    echo "                 default            (Enki/Hibernate + HSQLDB)"
+    echo "                 mysql/hibernate    (Enki/Hibernate + MySQL)"
+    echo "                 hsqldb/hibernate   (Enki/Hibernate + HSQLDB)"
+    echo "                 hsqldb/netbeans    (Enki/Netbeans + HSQLDB)"
+    echo "                 psql/netbeans      (Enki/Netbeans + psql)"
 }
 
 with_fennel=true
+with_aio=true
 without_farrago_build=false
 without_dist_build=false
 without_tests=true
@@ -41,6 +50,7 @@ with_nightly_tests=false
 FARRAGO_FLAGS=""
 FARRAGO_DIST_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
+with_repos_type=false
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -66,10 +76,21 @@ while [ -n "$1" ]; do
             with_fennel=true;;
         --without-fennel)
             with_fennel=false;;
+
+        --with-aio-required)
+            with_aio=true;;
+        --without-aio-required)
+            with_aio=false;;
             
         --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --with?(out)-debug) 
             FARRAGO_DIST_FLAGS="${FARRAGO_DIST_FLAGS} $1";
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
+        # We match all the possibilities here so that we don't get a 
+        # confusing usage message from Farrago's initBuild.sh
+        --with-repos-type=@(default|mysql/hibernate|hsqldb/hibernate|psql/netbeans|hsqldb/netbeans))
+            with_repos_type=true
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
@@ -77,7 +98,7 @@ while [ -n "$1" ]; do
         --skip-fennel-build|--without-fennel-build) 
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
-        *) usage; exit -1;;
+        *) echo "Unknown option: $1"; usage; exit -1;;
     esac
 
     shift
@@ -91,6 +112,12 @@ else
     FARRAGO_FLAGS="${FARRAGO_FLAGS} --without-fennel"
 fi
 
+if $with_aio ; then
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --with-aio-required"
+else
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --without-aio-required"
+fi
+
 if $with_nightly_tests ; then
     # make the build/test processes go further
     set +e
@@ -101,6 +128,9 @@ fi
 
 if $without_farrago_build ; then
     echo Skipping Farrago build.
+    if $with_repos_type; then
+        echo "** Ignoring --with-repos-type"
+    fi
 else
     cd ${luciddb_dir}/../farrago
     ./initBuild.sh ${FARRAGO_FLAGS}
@@ -137,6 +167,9 @@ fi
 nightlylog_dir=${luciddb_dir}/nightlylog
 nightly_test_list="\
 test-nondb \
+test-nondb-concurrency \
+test-nondb-backupRestore \
+test-nondb-concurrency-backupRestore \
 test-flatfile \
 test-oracle \
 test-sqlserver \

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -32,22 +32,20 @@ import org.eigenbase.rex.*;
  * Relational expression which imposes a particular sort order on its input
  * without otherwise changing its content.
  */
-public final class SortRel
+public class SortRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RelFieldCollation [] collations;
     protected final RexNode [] fieldExps;
-    protected final Double estimatedNumRows;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a sorter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param collations array of sort specifications
@@ -72,18 +70,16 @@ public final class SortRel
                     fields[iField].getType(),
                     iField);
         }
-        // save the input row count while we still have logical RelNodes
-        estimatedNumRows = RelMetadataQuery.getRowCount(child);
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public SortRel clone()
     {
         SortRel clone =
             new SortRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 collations);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -101,14 +97,6 @@ public final class SortRel
     public RelFieldCollation [] getCollations()
     {
         return collations;
-    }
-    
-    /**
-     * @return estimated number of rows in the sort input
-     */
-    public Double getEstimatedNumRows()
-    {
-        return estimatedNumRows;
     }
 
     public void explain(RelOptPlanWriter pw)

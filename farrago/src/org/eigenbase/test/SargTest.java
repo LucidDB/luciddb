@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,6 @@
 package org.eigenbase.test;
 
 import java.math.*;
-
-import java.util.*;
 
 import junit.framework.*;
 
@@ -47,10 +45,10 @@ import org.eigenbase.sql.type.*;
 public class SargTest
     extends TestCase
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    enum Zodiac {
+    enum Zodiac
+    {
         AQUARIUS, ARIES, CANCER, CAPRICORN, GEMINI, LEO, LIBRA, PISCES,
         SAGITTARIUS, SCORPIO, TAURUS, VIRGO
     }
@@ -94,15 +92,15 @@ public class SargTest
         // create some reusable fixtures
 
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-        intType = typeFactory.createSqlType(SqlTypeName.Integer);
+        intType = typeFactory.createSqlType(SqlTypeName.INTEGER);
         intType = typeFactory.createTypeWithNullability(intType, true);
-        stringType = typeFactory.createSqlType(SqlTypeName.Varchar, 20);
+        stringType = typeFactory.createSqlType(SqlTypeName.VARCHAR, 20);
         stringType = typeFactory.createTypeWithNullability(stringType, true);
 
         rexBuilder = new RexBuilder(typeFactory);
         intLiteral7 = rexBuilder.makeExactLiteral(
-                new BigDecimal(7),
-                intType);
+            new BigDecimal(7),
+            intType);
         intLiteral490 =
             rexBuilder.makeExactLiteral(
                 new BigDecimal(490),
@@ -499,18 +497,18 @@ public class SargTest
                 SargSetOperator.INTERSECTION);
         intersectExpr1.addChild(complementExpr1);
         intersectExpr1.addChild(complementExpr2);
-       
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
             intersectExpr1.evaluate().toString());
-        
+
         SargSetExpr intersectExpr2 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.INTERSECTION);
         intersectExpr2.addChild(complementExpr2);
         intersectExpr2.addChild(complementExpr1);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
             intersectExpr2.evaluate().toString());
@@ -521,7 +519,7 @@ public class SargTest
                 SargSetOperator.INTERSECTION);
         intersectExpr3.addChild(complementExpr1);
         intersectExpr3.addChild(interval3);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) )",
             intersectExpr3.evaluate().toString());
@@ -532,24 +530,24 @@ public class SargTest
                 SargSetOperator.UNION);
         unionExpr1.addChild(interval1);
         unionExpr1.addChild(interval2);
-        
+
         SargSetExpr complementExpr3 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.COMPLEMENT);
         complementExpr3.addChild(unionExpr1);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
-            complementExpr3.evaluate().toString());        
-        
+            complementExpr3.evaluate().toString());
+
         SargSetExpr unionExpr2 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.UNION);
         unionExpr2.addChild(interval2);
         unionExpr2.addChild(interval1);
-        
+
         SargSetExpr complementExpr4 =
             sargFactory.newSetExpr(
                 intType,
@@ -557,9 +555,9 @@ public class SargTest
         complementExpr4.addChild(unionExpr2);
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
-            complementExpr4.evaluate().toString());        
+            complementExpr4.evaluate().toString());
     }
-    
+
     public void testUnion()
     {
         exprs = new SargIntervalExpr[11];
@@ -619,67 +617,67 @@ public class SargTest
             0,
             2,
             5,
-            "[null, _ISO-8859-1'CAPRICORN']");
+            "[null, 'CAPRICORN']");
 
         checkUnion(
             2,
             5,
             0,
-            "[null, _ISO-8859-1'CAPRICORN']");
+            "[null, 'CAPRICORN']");
 
         checkUnion(
             5,
             6,
             7,
-            "UNION( [null] [_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO'] )");
+            "UNION( [null] ['GEMINI', 'SCORPIO'] )");
 
         checkUnion(
             8,
             4,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
+            "UNION( [null] ['ARIES', +infinity) )");
 
         checkUnion(
             9,
             4,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
+            "UNION( [null] ['ARIES', +infinity) )");
 
         checkUnion(
             7,
             8,
             9,
-            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
+            "['ARIES', 'SCORPIO']");
 
         checkUnion(
             6,
             7,
             10,
-            "[_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO']");
+            "['GEMINI', 'SCORPIO']");
 
         checkUnion(
             5,
             6,
             0,
-            "UNION( [null] [_ISO-8859-1'AQUARIUS'] [_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES'] )");
+            "UNION( [null] ['AQUARIUS'] ['GEMINI', 'PISCES'] )");
 
         checkUnion(
             10,
             9,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') )");
+            "UNION( [null] ['ARIES', 'GEMINI') )");
 
         checkUnion(
             9,
             8,
             7,
-            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
+            "['ARIES', 'SCORPIO']");
 
         checkUnion(
             3,
             9,
             1,
-            "UNION( [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') (_ISO-8859-1'GEMINI', +infinity) )");
+            "UNION( ['ARIES', 'GEMINI') ('GEMINI', +infinity) )");
     }
 
     public void testIntersection()
@@ -741,31 +739,31 @@ public class SargTest
             2,
             3,
             0,
-            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
+            "('CANCER', 'CAPRICORN']");
 
         checkIntersection(
             0,
             3,
             2,
-            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
+            "('CANCER', 'CAPRICORN']");
 
         checkIntersection(
             6,
             7,
             0,
-            "[_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES']");
+            "['GEMINI', 'PISCES']");
 
         checkIntersection(
             6,
             7,
             8,
-            "[_ISO-8859-1'GEMINI']");
+            "['GEMINI']");
 
         checkIntersection(
             8,
             7,
             6,
-            "[_ISO-8859-1'GEMINI']");
+            "['GEMINI']");
 
         checkIntersection(
             9,
@@ -799,7 +797,8 @@ public class SargTest
         int i3,
         String expected)
     {
-        SargSetExpr setExpr = sargFactory.newSetExpr(
+        SargSetExpr setExpr =
+            sargFactory.newSetExpr(
                 stringType,
                 setOp);
         setExpr.addChild(exprs[i1]);
@@ -873,7 +872,8 @@ public class SargTest
             binding.getExpr().toString());
 
         // test NOT
-        pred3 = rexBuilder.makeCall(
+        pred3 =
+            rexBuilder.makeCall(
                 SqlStdOperatorTable.notOperator,
                 pred1);
         binding = rexAnalyzer.analyze(pred3);

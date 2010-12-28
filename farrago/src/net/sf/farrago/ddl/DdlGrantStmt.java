@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,13 +46,12 @@ import org.eigenbase.util.*;
 public abstract class DdlGrantStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected boolean grantOption;
     protected boolean currentRoleOption;
     protected boolean currentUserOption;
-    protected List granteeList;
+    protected List<SqlIdentifier> granteeList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,7 +71,7 @@ public abstract class DdlGrantStmt
         visitor.visit(this);
     }
 
-    public void setGranteeList(List granteeList)
+    public void setGranteeList(List<SqlIdentifier> granteeList)
     {
         this.granteeList = granteeList;
     }

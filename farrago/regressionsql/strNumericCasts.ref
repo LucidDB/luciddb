@@ -1,390 +1,390 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test casts between string types
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test basic integer conversions
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('1' as smallint);
+> -- $Id$
+> -- Test casts between string types
+> 
+> --
+> -- test basic integer conversions
+> --
+> values cast('1' as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> values cast('1' as integer);
+> values cast('1' as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> values cast('1' as bigint);
+> values cast('1' as bigint);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast('-1' as smallint);
+> 
+> values cast('-1' as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | -1      |
 +---------+
-0: jdbc:farrago:> values cast('-1' as integer);
+> values cast('-1' as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | -1      |
 +---------+
-0: jdbc:farrago:> values cast('-1' as bigint);
+> values cast('-1' as bigint);
 +---------+
 | EXPR$0  |
 +---------+
 | -1      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast('0' as smallint);
+> 
+> values cast('0' as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> values cast('0' as integer);
+> values cast('0' as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> values cast('0' as bigint);
+> values cast('0' as bigint);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test smallint limits (signed 16-bit ints: -32768 to 32767)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('32767' as smallint);
+> 
+> --
+> -- test smallint limits (signed 16-bit ints: -32768 to 32767)
+> --
+> values cast('32767' as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | 32767   |
 +---------+
-0: jdbc:farrago:> values cast('-32768' as smallint);
+> values cast('-32768' as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | -32768  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> values cast('32768' as smallint);
+> 
+> -- these should fail (numeric out of range)
+> values cast('32768' as smallint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('65535' as smallint);
+> values cast('65535' as smallint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('-32769' as smallint);
+> values cast('-32769' as smallint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test integer/int limits (signed 32-bit ints: -2147483648 to 2147483647)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('2147483647' as integer);
+> 
+> --
+> -- test integer/int limits (signed 32-bit ints: -2147483648 to 2147483647)
+> --
+> values cast('2147483647' as integer);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2147483647  |
 +-------------+
-0: jdbc:farrago:> values cast('-2147483648' as integer);
+> values cast('-2147483648' as integer);
 +--------------+
 |    EXPR$0    |
 +--------------+
 | -2147483648  |
 +--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> values cast('2147483648' as integer);
+> 
+> -- these should fail (numeric out of range)
+> values cast('2147483648' as integer);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('4294967295' as integer);
+> values cast('4294967295' as integer);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('-2147483649' as integer);
+> values cast('-2147483649' as integer);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test bigint limits (signed 64-bit int: -9223372036854775808 to 9223372036854775807)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('9223372036854775807' as bigint);
+> 
+> --
+> -- test bigint limits (signed 64-bit int: -9223372036854775808 to 9223372036854775807)
+> --
+> values cast('9223372036854775807' as bigint);
 +----------------------+
 |        EXPR$0        |
 +----------------------+
 | 9223372036854775807  |
 +----------------------+
-0: jdbc:farrago:> values cast('-9223372036854775808' as bigint);
+> values cast('-9223372036854775808' as bigint);
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | -9223372036854775808  |
 +-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test decimal(N, 0) limits (signed N-digit integers)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('99999' as decimal(5, 0));
+> 
+> --
+> -- test decimal(N, 0) limits (signed N-digit integers)
+> --
+> values cast('99999' as decimal(5, 0));
 +---------+
 | EXPR$0  |
 +---------+
 | 99999   |
 +---------+
-0: jdbc:farrago:> values cast('-99999' as decimal(5, 0));
+> values cast('-99999' as decimal(5, 0));
 +---------+
 | EXPR$0  |
 +---------+
 | -99999  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> values cast('100000' as decimal(5, 0));
+> 
+> -- these should fail (numeric out of range)
+> values cast('100000' as decimal(5, 0));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('-100000' as decimal(5, 0));
+> values cast('-100000' as decimal(5, 0));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test decimal(N, M) (exact numeric) conversions
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('1.0' as decimal(2,1));
+> 
+> 
+> --
+> -- test decimal(N, M) (exact numeric) conversions
+> --
+> values cast('1.0' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1.0' as decimal(2,1));
+> values cast('-1.0' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0.0' as decimal(2,1));
+> values cast('0.0' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> values cast('12.34' as decimal(4, 2));
+> values cast('12.34' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | 12.34   |
 +---------+
-0: jdbc:farrago:> values cast('-43.21' as decimal(4, 2));
+> values cast('-43.21' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | -43.21  |
 +---------+
-0: jdbc:farrago:> values cast('5.67' as decimal(4, 2));
+> values cast('5.67' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | 5.67    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast('1' as decimal(2,1));
+> 
+> values cast('1' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1' as decimal(2,1));
+> values cast('-1' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0' as decimal(2,1));
+> values cast('0' as decimal(2,1));
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> values cast('12' as decimal(4, 2));
+> values cast('12' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | 12.00   |
 +---------+
-0: jdbc:farrago:> values cast('-43' as decimal(4, 2));
+> values cast('-43' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | -43.00  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: spec says that numeric out of range error only occurs when
-0: jdbc:farrago:> -- the most significant digits are lost: these are okay
-0: jdbc:farrago:> values cast('12.345' as decimal(4, 2));
+> 
+> -- REVIEW: spec says that numeric out of range error only occurs when
+> -- the most significant digits are lost: these are okay
+> values cast('12.345' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | 12.35   |
 +---------+
-0: jdbc:farrago:> values cast('-12.345' as decimal(4, 2));
+> values cast('-12.345' as decimal(4, 2));
 +---------+
 | EXPR$0  |
 +---------+
 | -12.35  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> values cast('123.45' as decimal(4, 2));
+> 
+> -- these should fail (numeric out of range)
+> values cast('123.45' as decimal(4, 2));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('-123.45' as decimal(4, 2));
+> values cast('-123.45' as decimal(4, 2));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test double (approximate numeric) conversions
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('1.0' as double);
+> 
+> --
+> -- test double (approximate numeric) conversions
+> --
+> values cast('1.0' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1.0' as double);
+> values cast('-1.0' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0.0' as double);
+> values cast('0.0' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: I presume these should work as well.
-0: jdbc:farrago:> values cast('1' as double);
+> 
+> -- REVIEW: I presume these should work as well.
+> values cast('1' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1' as double);
+> values cast('-1' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0' as double);
+> values cast('0' as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: determine limits of DOUBLE and test them
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test real (approximate numeric) conversions
-0: jdbc:farrago:> --
-0: jdbc:farrago:> values cast('1.0' as real);
+> 
+> -- TODO: determine limits of DOUBLE and test them
+> 
+> 
+> --
+> -- test real (approximate numeric) conversions
+> --
+> values cast('1.0' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1.0' as real);
+> values cast('-1.0' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0.0' as real);
+> values cast('0.0' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: I presume these should work as well.
-0: jdbc:farrago:> values cast('1' as real);
+> 
+> -- REVIEW: I presume these should work as well.
+> values cast('1' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast('-1' as real);
+> values cast('-1' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | -1.0    |
 +---------+
-0: jdbc:farrago:> values cast('0' as real);
+> values cast('0' as real);
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: determine limits of REAL and test them
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
+> 
+> -- TODO: determine limits of REAL and test them
+> 
+> -- these should fail (numeric out of range)
+> 
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> values cast('9223372036854775808' as bigint);
 Error: java.lang.NumberFormatException: For input string: "9223372036854775808" (state=,code=0)
-0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
+> values cast('18446744073709551615' as bigint);
 Error: java.lang.NumberFormatException: For input string: "18446744073709551615" (state=,code=0)
-0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
+> values cast('-9223372036854775809' as bigint);
 Error: java.lang.NumberFormatException: For input string: "-9223372036854775809" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
+> 
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> values cast('9223372036854775808' as bigint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
+> values cast('18446744073709551615' as bigint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
+> values cast('-9223372036854775809' as bigint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> 
+> !quit

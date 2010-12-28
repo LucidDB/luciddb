@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,11 +29,11 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Base class for all Fennel exceptions.
  */
-class FennelExcn : public std::exception
+class FENNEL_COMMON_EXPORT FennelExcn : public std::exception
 {
 protected:
     std::string msg;
-    
+
 public:
     /**
      * Construct a new FennelExcn.
@@ -46,6 +46,8 @@ public:
 
     // implement std::exception
     virtual const char *what() const throw();
+
+    virtual void throwSelf();
 
     std::string const &getMessage()
     {

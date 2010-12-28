@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,11 +29,10 @@ import java.util.*;
  * FennelTupleData is an in-memory collection of independent data values, as
  * explained in the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
- * design document</a>.
+ * design document</a>. This class is JDK 1.4 compatible.
  */
 public class FennelTupleData
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -92,7 +91,16 @@ public class FennelTupleData
         datums.clear();
         int i;
         for (i = 0; i < tupleDesc.getAttrCount(); ++i) {
-            add(new FennelTupleDatum(tupleDesc.getAttr(i).storageSize));
+            FennelTupleAttributeDescriptor attrDesc = tupleDesc.getAttr(i);
+            FennelTupleDatum datum = new FennelTupleDatum(attrDesc.storageSize);
+            int ordinal = attrDesc.typeDescriptor.getOrdinal();
+            switch (ordinal) {
+            case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
+            case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
+                datum.setUnicode(true);
+                break;
+            }
+            add(datum);
         }
     }
 
@@ -110,6 +118,5 @@ public class FennelTupleData
         return false;
     }
 }
-;
 
 // End FennelTupleData.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,9 @@ package org.eigenbase.sql.validate;
 import java.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -91,7 +93,6 @@ import org.eigenbase.sql.parser.*;
 public class SelectScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlSelect select;
@@ -105,19 +106,28 @@ public class SelectScope
      */
     private SqlNodeList orderList;
 
+    /**
+     * Scope to use to resolve windows
+     */
+    private final SqlValidatorScope windowParent;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a scope corresponding to a SELECT clause.
      *
-     * @param parent Parent scope, or null
-     * @param select
+     * @param parent Parent scope, must not be null
+     * @param winParent Scope for window parent, may be null
+     * @param select Select clause
      */
-    SelectScope(SqlValidatorScope parent,
+    SelectScope(
+        SqlValidatorScope parent,
+        SqlValidatorScope winParent,
         SqlSelect select)
     {
         super(parent);
         this.select = select;
+        this.windowParent = winParent;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -127,7 +137,7 @@ public class SelectScope
         return null;
     }
 
-    public SqlNode getNode()
+    public SqlSelect getNode()
     {
         return select;
     }
@@ -143,23 +153,40 @@ public class SelectScope
                 return window;
             }
         }
-        return super.lookupWindow(name);
+
+        // if not in the select scope, then check window scope
+        if (windowParent != null) {
+            return windowParent.lookupWindow(name);
+        } else {
+            return null;
+        }
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        if (expr.isMonotonic(this)) {
-            return true;
+        SqlMonotonicity monotonicity = expr.getMonotonicity(this);
+        if (monotonicity != SqlMonotonicity.NotMonotonic) {
+            return monotonicity;
         }
 
         // TODO: compare fully qualified names
         final SqlNodeList orderList = getOrderList();
-        if ((orderList.size() == 1)
-            && expr.equalsDeep((SqlNode) orderList.get(0), false)) {
-            return true;
+        if ((orderList.size() > 0)) {
+            SqlNode order0 = (SqlNode) orderList.get(0);
+            monotonicity = SqlMonotonicity.Increasing;
+            if ((order0 instanceof SqlCall)
+                && (((SqlCall) order0).getOperator()
+                    == SqlStdOperatorTable.descendingOperator))
+            {
+                monotonicity = monotonicity.reverse();
+                order0 = ((SqlCall) order0).getOperands()[0];
+            }
+            if (expr.equalsDeep(order0, false)) {
+                return monotonicity;
+            }
         }
 
-        return super.isMonotonic(expr);
+        return SqlMonotonicity.NotMonotonic;
     }
 
     public SqlNodeList getOrderList()
@@ -168,10 +195,10 @@ public class SelectScope
             // Compute on demand first call.
             orderList = new SqlNodeList(SqlParserPos.ZERO);
             if (children.size() == 1) {
-                final SqlNodeList monotonicExprs =
+                final List<Pair<SqlNode, SqlMonotonicity>> monotonicExprs =
                     children.get(0).getMonotonicExprs();
                 if (monotonicExprs.size() > 0) {
-                    orderList.add(monotonicExprs.get(0));
+                    orderList.add(monotonicExprs.get(0).left);
                 }
             }
         }

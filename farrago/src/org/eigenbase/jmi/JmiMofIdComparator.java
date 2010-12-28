@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ import javax.jmi.reflect.*;
 
 /**
  * JmiMofIdComparator implements the {@link Comparator} interface by comparing
- * pairs of {@link RefBaseObject} instances.
+ * pairs of {@link RefBaseObject} instances according to their MOFID attribute.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -36,7 +36,6 @@ import javax.jmi.reflect.*;
 public class JmiMofIdComparator
     implements Comparator<RefBaseObject>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final JmiMofIdComparator instance = new JmiMofIdComparator();

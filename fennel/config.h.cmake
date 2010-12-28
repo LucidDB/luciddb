@@ -1,0 +1,10 @@
+#cmakedefine HAVE_AIO_H 1
+#cmakedefine HAVE_LIBAIO_H 1
+#cmakedefine HAVE_UUID_H 1
+#cmakedefine HAVE_UUID_UUID_H 1
+#cmakedefine HAVE_SCHED_H 1
+#cmakedefine HAVE_MMAP 1
+#cmakedefine HAVE_MPROTECT 1
+#cmakedefine HAVE_LIBAIO 1
+#cmakedefine HAVE_LIBUUID 1
+#cmakedefine HAVE_LIBUUID_NEW 1

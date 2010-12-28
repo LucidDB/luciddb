@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,11 +36,12 @@ FENNEL_BEGIN_NAMESPACE
  * only if the underlying segment supports CONSECUTIVE_ALLOCATION or
  * LINEAR_ALLOCATION.
  */
-class SegInputStream : public SegStream, public ByteInputStream
+class FENNEL_SEGMENT_EXPORT SegInputStream
+    : public SegStream, public ByteInputStream
 {
 protected:
     SegPageIter pageIter;
-    
+
     /**
      * PageId of current page.
      */
@@ -57,10 +58,10 @@ protected:
     virtual void closeImpl();
 
     explicit SegInputStream(
-        SegmentAccessor const &,PageId,uint cbExtraHeader = 0);
-    
+        SegmentAccessor const &, PageId, uint cbExtraHeader = 0);
+
     virtual void lockBuffer();
-    
+
 public:
     /**
      * Creates a new SegInputStream, positioned
@@ -68,7 +69,7 @@ public:
      *
      * @param segmentAccessor accessor for the segment containing the stream
      * data
-     * 
+     *
      * @param beginPageId the first page of stream data; if the default
      * FIRST_LINEAR_PAGE_ID is passed, the segment must support
      * LINEAR_ALLOCATION, and the stream starts at the first page of the
@@ -117,19 +118,13 @@ public:
 
     // override ByteInputStream
     virtual SharedByteStreamMarker newMarker();
-    
+
     // override ByteInputStream
     virtual void mark(ByteStreamMarker &marker);
 
     // override ByteInputStream
     virtual void reset(ByteStreamMarker const &marker);
 };
-
-/**
- * Number of cache pages to reserve for pre-fetches.  Currently set to
- * allow for one batch of pre-fetch.
- */
-static const uint SEG_NUM_PREFETCH_PAGES = 4;
 
 FENNEL_END_NAMESPACE
 

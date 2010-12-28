@@ -1,9 +1,9 @@
 /*
  // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import java.util.*;
  */
 public class SargIntervalSequence
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final List<SargInterval> list;
@@ -70,11 +69,8 @@ public class SargIntervalSequence
      */
     public boolean isRange()
     {
-        return
-            (
-                (list.size() > 1)
-                || ((list.size() == 1) && list.get(0).isRange())
-            );
+        return ((list.size() > 1)
+            || ((list.size() == 1) && list.get(0).isRange()));
     }
 
     /**

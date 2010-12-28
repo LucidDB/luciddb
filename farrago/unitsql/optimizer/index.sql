@@ -440,7 +440,8 @@ drop table ftrsemps cascade;
 -- Part 1. index created on empty column store table --
 -------------------------------------------------------
 -- Use LucidDB personality
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter session implementation set jar
+    sys_boot.sys_boot.luciddb_index_only_plugin;
 
 create table lbmemps(
     empno integer not null,
@@ -473,6 +474,9 @@ explain plan for
 select * from lbmemps order by empno;
 
 select * from lbmemps order by empno;
+
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'LBMEMPS', 100);
 
 -- the most simple case
 explain plan for
@@ -538,6 +542,14 @@ order by ename;
 
 -- OR on same column is supported
 explain plan for
+select *
+from lbmemps
+where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
+order by empno;
+
+-- same explain as above but with all attributes so deletion index scan should
+-- appear in the plan
+explain plan including all attributes for
 select *
 from lbmemps
 where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
@@ -625,6 +637,9 @@ insert into multikey values (1, 4);
 insert into multikey values (2, 2);
 create index imultikey on multikey(a, b);
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MULTIKEY', 100);
+
 !set outputformat csv
 explain plan for select * from multikey where a = 1 and b > 1;
 explain plan for select * from multikey where a = 1 and b <= 3;
@@ -644,6 +659,11 @@ create table person(
 server sys_column_store_data_server
 create index age_idx on person(age);
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'PERSON', 100);
+
+!set outputformat csv
+
 -- index search
 explain plan for
 select id from person where id = 30;
@@ -651,6 +671,10 @@ select id from person where id = 30;
 -- index search with merge
 explain plan for
 select id from person where id > 30;
+
+-- full-table count
+explain plan for
+select count(*) from person;
 
 -- histogram type aggregate
 explain plan for 
@@ -780,6 +804,254 @@ create index itb on t(b);
 insert into t values(1, 2, 3);
 create view v as select * from t where a = 1 and b = 2;
 select * from v v1, v v2; 
+drop table t cascade;
+
+----------------------------------------
+-- Test for cost based index access   --
+-- 1.1 Single table index access path --
+--     with stats                     --
+----------------------------------------
+!set outputformat csv
+
+-- analyze table
+create table test(a int, b int, c int, d int);
+
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
+
+-- create index test_ab on test(a, b);
+create index test_cb on test(c, b);
+create index test_b on test(b);
+create index test_ba on test(b, a);
+
+-- plan without analyze
+explain plan for
+select * from test
+where a = 10 and b = 20 and c > 30;
+
+explain plan for
+select * from test
+where b = 20;
+
+select * from test
+where a = 10 and b = 20 and c > 10
+order by a;
+
+select * from test
+where b = 20
+order by a;
+
+-- plan with analyze
+analyze table test compute statistics for all columns;
+
+explain plan for
+select * from test
+where a = 10 and b = 20 and c > 30;
+
+explain plan for
+select * from test
+where b = 20;
+
+select * from test
+where a = 10 and b = 20 and c > 10
+order by a;
+
+select * from test
+where b = 20
+order by a;
+
+drop table test cascade;
+
+----------------------------------------
+-- Test for cost based index access   --
+-- 1.2 Single table index access path --
+--     with fake stats                --
+----------------------------------------
+create table t(a varchar(20), b char(20), c varchar(20), d varchar(20));
+
+create index t_abcd on t(a,b,c,d);
+create index t_a on t(a);
+create index t_b on t(b);
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'A', 2, 100, 2, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'B', 3, 100, 3, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'C', 200, 100, 200, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'D', 300, 100, 300, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$A', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 3);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 200);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 300);
+
+-- unclustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 1000);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_A', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_B', 2);
+
+
+explain plan for
+select * from t
+where a= 'a' and b= 'b';
+
+-- change stats and try again
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 20);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 30);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 20);
+
+explain plan for
+select * from t
+where a= 'a' and b= 'b';
+
+drop table t cascade;
+
+----------------------------------------
+-- Test for cost based index access   --
+-- 2. Semijoin index access path      --
+--     with fake stats                --
+----------------------------------------
+create table t(b char(20), d varchar(20) not null);
+
+create index it_b on t(b);
+create index it_bd on t(b, d);
+create index it_d on t(d);
+create index it_db on t(d, b);
+
+insert into t values('abcdef', 'this is row 1');
+insert into t values('abcdef', 'this is row 2');
+insert into t values('abcdef', 'this is row 3');
+insert into t values(null, 'this is row 4');
+insert into t values(null, 'no match');
+
+-- although this table has the same number of rows as t, we will force this
+-- to be the dimension table in the semijoin by putting a dummy filter on
+-- the table
+
+create table smalltable(s1 varchar(128) not null, s3 varchar(128) not null);
+
+insert into smalltable values('this is row 1', 'abcdef');
+insert into smalltable values('this is row 2', 'abcdef');
+insert into smalltable values('this is row 3', 'abcdef');
+insert into smalltable values('this is row 4', 'abcdef');
+insert into smalltable values('this is row 5', 'abcdef');
+
+-- plan without stats
+explain plan for
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+explain plan for 
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+-- Create fake statistics.  The stats do not match the actual data in the
+-- tables and are meant to force the optimizer to choose semijoins
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 10000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'SMALLTABLE', 10);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 2);
+
+-- unclustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_B', 10);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_BD', 20);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_D', 1);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_DB', 2);
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$SMALLTABLE', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S1', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S3', 2);
+
+explain plan for
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+explain plan for 
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+drop table t cascade;
+drop table smalltable cascade;
+
+-- Test to make sure index only scans aren't enabled by default.  Earlier, we
+-- verified that when index only scans are enabled, it is used with the
+-- following select query.
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+explain plan for
+    select deptno from lbmemps where deptno = 20 order by deptno;
 
 --------------
 -- Clean up --

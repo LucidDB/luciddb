@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,10 +26,8 @@ import openjava.mop.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -58,7 +56,6 @@ import org.eigenbase.util.*;
 public class SqlMinMaxAggFunction
     extends SqlAggFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int MINMAX_INVALID = -1;
@@ -81,7 +78,7 @@ public class SqlMinMaxAggFunction
     {
         super(
             isMin ? "MIN" : "MAX",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcComparableOrdered,
@@ -140,38 +137,6 @@ public class SqlMinMaxAggFunction
         default:
             throw Util.newInternal("bad kind: " + kind);
         }
-    }
-
-    public boolean checkOperandTypes(
-        SqlCallBinding callBinding,
-        boolean throwOnFailure)
-    {
-        boolean ok = super.checkOperandTypes(callBinding, throwOnFailure);
-
-        // REVIEW (jhyde, 2006/6/13): Remove this piece of code.
-        // SqlTypeStrategies.otcComparableOrdered should be sufficient.
-        // Currently, BOOLEAN thinks it is comparable, and the following code
-        // thinks it isn't, so one of them is wrong.
-        final SqlValidator validator = callBinding.getValidator();
-        RelDataType opType = callBinding.getOperandType(0);
-        assert null != opType;
-        SqlTypeFamily typeFamily =
-            SqlTypeFamily.getFamilyForSqlType(opType.getSqlTypeName());
-        if ((typeFamily == SqlTypeFamily.Boolean)
-            || (typeFamily == SqlTypeFamily.Binary)
-            || (typeFamily == SqlTypeFamily.Multiset)) {
-            if (throwOnFailure) {
-                throw validator.newValidationError(
-                    callBinding.getCall(),
-                    EigenbaseResource.instance().MinMaxBadType.ex(
-                        getName(),
-                        opType.getSqlTypeName().getName()));
-            } else {
-                ok = false;
-            }
-        }
-
-        return ok;
     }
 }
 

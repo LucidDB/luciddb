@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,6 @@ import org.eigenbase.sql.parser.*;
 public class IntervalSqlType
     extends AbstractSqlType
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlIntervalQualifier intervalQualifier;
@@ -52,8 +51,8 @@ public class IntervalSqlType
         boolean isNullable)
     {
         super(
-            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
-            : SqlTypeName.IntervalDayTime,
+            intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
+            : SqlTypeName.INTERVAL_DAY_TIME,
             isNullable,
             null);
         this.intervalQualifier = intervalQualifier;
@@ -63,7 +62,7 @@ public class IntervalSqlType
     //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         sb.append("INTERVAL ");
         sb.append(intervalQualifier.toString());
@@ -102,29 +101,35 @@ public class IntervalSqlType
         assert null != thisStart;
         assert null != thatStart;
 
-        int secondPrec = intervalQualifier.getStartPrecision();
+        int secondPrec =
+            this.intervalQualifier.getStartPrecisionPreservingDefault();
         int fracPrec =
-            Math.max(
-                this.intervalQualifier.getFractionalSecondPrecision(),
-                that.intervalQualifier.getFractionalSecondPrecision());
+            SqlIntervalQualifier
+            .combineFractionalSecondPrecisionPreservingDefault(
+                this.intervalQualifier,
+                that.intervalQualifier);
 
-        if (thisStart.getOrdinal() > thatStart.getOrdinal()) {
+        if (thisStart.ordinal() > thatStart.ordinal()) {
             thisEnd = thisStart;
             thisStart = thatStart;
-            secondPrec = that.intervalQualifier.getStartPrecision();
-        } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
             secondPrec =
-                Math.max(
-                    secondPrec,
-                    that.intervalQualifier.getStartPrecision());
-        } else if ((null == thisEnd)
-            || (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
+                that.intervalQualifier.getStartPrecisionPreservingDefault();
+        } else if (thisStart.ordinal() == thatStart.ordinal()) {
+            secondPrec =
+                SqlIntervalQualifier.combineStartPrecisionPreservingDefault(
+                    this.intervalQualifier,
+                    that.intervalQualifier);
+        } else if (
+            (null == thisEnd)
+            || (thisEnd.ordinal() < thatStart.ordinal()))
+        {
             thisEnd = thatStart;
         }
 
         if (null != thatEnd) {
             if ((null == thisEnd)
-                || (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
+                || (thisEnd.ordinal() < thatEnd.ordinal()))
+            {
                 thisEnd = thatEnd;
             }
         }
@@ -137,8 +142,10 @@ public class IntervalSqlType
                     thisEnd,
                     fracPrec,
                     SqlParserPos.ZERO));
-        intervalType = typeFactory.createTypeWithNullability(
-            intervalType, nullable);
+        intervalType =
+            typeFactory.createTypeWithNullability(
+                intervalType,
+                nullable);
         return (IntervalSqlType) intervalType;
     }
 
@@ -147,6 +154,14 @@ public class IntervalSqlType
     {
         return intervalQualifier.getStartPrecision();
     }
+
+    @Override
+    public int getScale()
+    {
+        // TODO Auto-generated method stub
+        return intervalQualifier.getFractionalSecondPrecision();
+    }
+
 }
 
 // End IntervalSqlType.java

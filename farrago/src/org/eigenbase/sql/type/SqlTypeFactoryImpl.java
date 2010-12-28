@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlTypeFactoryImpl
     extends RelDataTypeFactoryImpl
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlTypeFactoryImpl()
@@ -62,7 +61,8 @@ public class SqlTypeFactoryImpl
         int precision)
     {
         assertBasic(typeName);
-        Util.pre(precision >= 0, "precision >= 0");
+        assert (precision >= 0)
+            || (precision == BasicSqlType.PRECISION_NOT_SPECIFIED);
         RelDataType newType = new BasicSqlType(typeName, precision);
         newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
@@ -75,14 +75,16 @@ public class SqlTypeFactoryImpl
         int scale)
     {
         assertBasic(typeName);
-        Util.pre(precision >= 0, "precision >= 0");
+        assert (precision >= 0)
+            || (precision == BasicSqlType.PRECISION_NOT_SPECIFIED);
         RelDataType newType = new BasicSqlType(typeName, precision, scale);
         newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createMultisetType(RelDataType type,
+    public RelDataType createMultisetType(
+        RelDataType type,
         long maxCardinality)
     {
         assert (maxCardinality == -1);
@@ -151,7 +153,7 @@ public class SqlTypeFactoryImpl
         boolean anyNullable = resultType.isNullable();
         for (int i = 1; i < types.length; i++) {
             RelDataType type = types[i];
-            if (type.getSqlTypeName() == SqlTypeName.Null) {
+            if (type.getSqlTypeName() == SqlTypeName.NULL) {
                 anyNullable = true;
                 continue;
             }
@@ -199,9 +201,12 @@ public class SqlTypeFactoryImpl
     private void assertBasic(SqlTypeName typeName)
     {
         assert (typeName != null);
-        assert (typeName != SqlTypeName.Multiset) : "use createMultisetType() instead";
-        assert (typeName != SqlTypeName.IntervalDayTime) : "use createSqlIntervalType() instead";
-        assert (typeName != SqlTypeName.IntervalYearMonth) : "use createSqlIntervalType() instead";
+        assert typeName != SqlTypeName.MULTISET
+            : "use createMultisetType() instead";
+        assert typeName != SqlTypeName.INTERVAL_DAY_TIME
+            : "use createSqlIntervalType() instead";
+        assert typeName != SqlTypeName.INTERVAL_YEAR_MONTH
+            : "use createSqlIntervalType() instead";
     }
 
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
@@ -222,13 +227,13 @@ public class SqlTypeFactoryImpl
                 anyNullable = true;
             }
 
-            if (typeName == SqlTypeName.Null) {
+            if (typeName == SqlTypeName.NULL) {
                 continue;
             }
 
             if (resultType == null) {
                 resultType = type;
-                if (resultType.getSqlTypeName() == SqlTypeName.Row) {
+                if (resultType.getSqlTypeName() == SqlTypeName.ROW) {
                     return leastRestrictiveStructuredType(types);
                 }
             }
@@ -240,7 +245,12 @@ public class SqlTypeFactoryImpl
                 return null;
             }
             if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {
-                // TODO:  character set, collation
+                Charset charset1 = type.getCharset();
+                Charset charset2 = resultType.getCharset();
+                SqlCollation collation1 = type.getCollation();
+                SqlCollation collation2 = resultType.getCollation();
+
+                // TODO:  refine collation combination rules
                 int precision =
                     Math.max(
                         resultType.getPrecision(),
@@ -260,10 +270,50 @@ public class SqlTypeFactoryImpl
                             precision);
                 } else {
                     // this catch-all case covers type variable, and both fixed
+
+                    SqlTypeName newTypeName = type.getSqlTypeName();
+
+                    if (shouldRaggedFixedLengthValueUnionBeVariable()) {
+                        if (resultType.getPrecision() != type.getPrecision()) {
+                            if (newTypeName == SqlTypeName.CHAR) {
+                                newTypeName = SqlTypeName.VARCHAR;
+                            } else if (newTypeName == SqlTypeName.BINARY) {
+                                newTypeName = SqlTypeName.VARBINARY;
+                            }
+                        }
+                    }
+
                     resultType =
                         createSqlType(
-                            type.getSqlTypeName(),
+                            newTypeName,
                             precision);
+                }
+                Charset charset = null;
+                SqlCollation collation = null;
+                if ((charset1 != null) || (charset2 != null)) {
+                    if (charset1 == null) {
+                        charset = charset2;
+                        collation = collation2;
+                    } else if (charset2 == null) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else if (charset1.equals(charset2)) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else if (charset1.contains(charset2)) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else {
+                        charset = charset2;
+                        collation = collation2;
+                    }
+                }
+                if (charset != null) {
+                    resultType =
+                        createTypeWithCharsetAndCollation(
+                            resultType,
+                            charset,
+                            collation);
                 }
             } else if (SqlTypeUtil.isExactNumeric(type)) {
                 if (SqlTypeUtil.isExactNumeric(resultType)) {
@@ -278,10 +328,12 @@ public class SqlTypeFactoryImpl
                     }
                     if (!type.equals(resultType)) {
                         if (!typeName.allowsPrec()
-                            && !resultTypeName.allowsPrec()) {
+                            && !resultTypeName.allowsPrec())
+                        {
                             // use the bigger primitive
                             if (type.getPrecision()
-                                > resultType.getPrecision()) {
+                                > resultType.getPrecision())
+                            {
                                 resultType = type;
                             }
                         } else {
@@ -296,23 +348,26 @@ public class SqlTypeFactoryImpl
 
                             int dout = Math.max(p1 - s1, p2 - s2);
                             dout =
-                                Math.min(dout,
+                                Math.min(
+                                    dout,
                                     SqlTypeName.MAX_NUMERIC_PRECISION);
 
                             int scale = Math.max(s1, s2);
                             scale =
-                                Math.min(scale,
+                                Math.min(
+                                    scale,
                                     SqlTypeName.MAX_NUMERIC_PRECISION - dout);
                             scale =
                                 Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
 
                             int precision = dout + scale;
                             assert (precision
-                                    <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                                <= SqlTypeName.MAX_NUMERIC_PRECISION);
                             assert (precision > 0);
 
                             resultType =
-                                createSqlType(SqlTypeName.Decimal,
+                                createSqlType(
+                                    SqlTypeName.DECIMAL,
                                     precision,
                                     scale);
                         }
@@ -358,10 +413,12 @@ public class SqlTypeFactoryImpl
                     Object type1 = resultType;
                     resultType =
                         ((IntervalSqlType) resultType).combine(
-                            this, (IntervalSqlType) type);
+                            this,
+                            (IntervalSqlType) type);
                     resultType =
                         ((IntervalSqlType) resultType).combine(
-                            this, (IntervalSqlType) type1);
+                            this,
+                            (IntervalSqlType) type1);
                 }
             } else if (SqlTypeUtil.isDatetime(type)) {
                 // TODO: come up with a cleaner way to support
@@ -369,7 +426,8 @@ public class SqlTypeFactoryImpl
                 if (types.length > (i + 1)) {
                     RelDataType type1 = types[i + 1];
                     if (SqlTypeUtil.isInterval(type1)
-                        || SqlTypeUtil.isIntType(type1)) {
+                        || SqlTypeUtil.isIntType(type1))
+                    {
                         resultType = type;
                         return resultType;
                     }
@@ -387,9 +445,25 @@ public class SqlTypeFactoryImpl
         }
     }
 
+    /**
+     * Controls behavior discussed <a
+     * href="http://sf.net/mailarchive/message.php?msg_id=13337379">here</a>.
+     *
+     * @return false (the default) to provide strict SQL:2003 behavior; true to
+     * provide pragmatic behavior
+     *
+     * @sql.2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
+     */
+    protected boolean shouldRaggedFixedLengthValueUnionBeVariable()
+    {
+        // TODO jvs 30-Nov-2006:  implement SQL-Flagger support
+        // for warning about non-standard usage
+        return false;
+    }
+
     private RelDataType createDoublePrecisionType()
     {
-        return createSqlType(SqlTypeName.Double);
+        return createSqlType(SqlTypeName.DOUBLE);
     }
 
     private RelDataType copyMultisetType(RelDataType type, boolean nullable)
@@ -402,19 +476,18 @@ public class SqlTypeFactoryImpl
     private RelDataType copyIntervalType(RelDataType type, boolean nullable)
     {
         return new IntervalSqlType(
-                type.getIntervalQualifier(),
-                nullable);
+            type.getIntervalQualifier(),
+            nullable);
     }
 
     private RelDataType copyObjectType(RelDataType type, boolean nullable)
     {
-        return
-            new ObjectSqlType(
-                type.getSqlTypeName(),
-                type.getSqlIdentifier(),
-                nullable,
-                type.getFields(),
-                type.getComparability());
+        return new ObjectSqlType(
+            type.getSqlTypeName(),
+            type.getSqlIdentifier(),
+            nullable,
+            type.getFields(),
+            type.getComparability());
     }
 
     // override RelDataTypeFactoryImpl

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,7 +20,7 @@
 */
 package com.lucidera.luciddb.test;
 
-import com.lucidera.jdbc.*;
+import org.luciddb.jdbc.*;
 import java.io.*;
 import java.sql.*;
 import java.util.regex.*;
@@ -32,6 +32,8 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.util.*;
 import sqlline.SqlLine;
 
+import org.eigenbase.test.*;
+
 /**
  * Simple sql test for bh-base test in the luciddb area
  *
@@ -39,20 +41,11 @@ import sqlline.SqlLine;
  * @version $Id$
  */
 
-public class SqlTest extends TestCase {
+public class SqlTest extends DiffTestCase {
 
     String[] args;
     String sqlFile;
-    private OutputStream logOutputStream;
     File sqlFileSansExt;
-    File logFile;
-    File refFile;
-    /** Diff masks defined so far */
-    // private List diffMasks;
-    private String diffMasks;
-    Matcher compiledDiffMatcher;
-    private String ignorePatterns;
-    Matcher compiledIgnoreMatcher;
     String urlPrefix;
     String username;
     String passwd;
@@ -63,9 +56,9 @@ public class SqlTest extends TestCase {
 
         // set luciddb-specific properties
         System.setProperty("net.sf.farrago.defaultSessionFactoryLibraryName",
-            "class:com.lucidera.farrago.LucidDbSessionFactory");
+            "class:org.luciddb.session.LucidDbSessionFactory");
         System.setProperty("net.sf.farrago.test.jdbcDriverClass",
-            "com.lucidera.jdbc.LucidDbLocalDriver");
+            "org.luciddb.jdbc.LucidDbLocalDriver");
 
         String eigenhome = System.getenv("EIGEN_HOME");
         System.setProperty("java.util.logging.config.file",
@@ -122,7 +115,6 @@ public class SqlTest extends TestCase {
 
     public void testSql()
     {
-        diffMasks = "";
         addDiffMask("\\$Id.*\\$");
 
         Logger tracer = LucidDbTestHarness.tracer;
@@ -191,7 +183,7 @@ public class SqlTest extends TestCase {
                 urlPrefix, username, passwd);
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(
-                "alter system set \"codeCacheMaxBytes\" = min");
+                "call sys_boot.mgmt.flush_code_cache()");
         }
         SqlLine.mainWithInputRedirection(args, sequenceStream);
         printStream.flush();
@@ -208,159 +200,11 @@ public class SqlTest extends TestCase {
     }
 
     /**
-     * NOTE: cut and pasted from DiffTestCase.java
-     * Initializes a diff-based test, overriding the default
-     * log file naming scheme altogether.
-     *
-     * @param testFileSansExt full path to log filename, without .log/.ref
-     * extension
+     * Dummy method not used
      */
-    protected OutputStream openTestLogOutputStream(File testFileSansExt)
-        throws IOException
+    protected File getTestlogRoot()
     {
-        assert (logOutputStream == null);
-
-        logFile = new File(testFileSansExt.toString() + ".log");
-        logFile.delete();
-
-        refFile = new File(testFileSansExt.toString() + ".ref");
-
-        logOutputStream = new FileOutputStream(logFile);
-        return logOutputStream;
-    }
-
-    /**
-     * Finishes a diff-based test.  Output that was written to the Writer
-     * returned by openTestLog is diffed against a .ref file, and if any
-     * differences are detected, the test case fails.  Note that the diff
-     * used is just a boolean test, and does not create any .dif ouput.
-     *
-     * <p>
-     * NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
-     * PrintWriter), be sure to flush the wrapping Writer before calling this
-     * method.
-     * </p>
-     */
-    protected void diffTestLog()
-        throws IOException, Exception
-    {
-        int n = 0;
-        assert (logOutputStream != null);
-        logOutputStream.close();
-        logOutputStream = null;
-
-        if (!refFile.exists()) {
-            throw new Exception("Reference file " + refFile +
-                " does not exist");
-        }
-
-        // TODO:  separate utility method somewhere
-        FileReader logReader = null;
-        FileReader refReader = null;
-        try {
-/** don't do the gc trick for now
-    if (compiledIgnoreMatcher != null) {
-    if (gcInterval != 0) {
-    n++;
-    if ( n == gcInterval) {
-    n = 0;
-    System.gc();
-    }
-    }
-    }
-**/
-            logReader = new FileReader(logFile);
-            refReader = new FileReader(refFile);
-            LineNumberReader logLineReader = new LineNumberReader(logReader);
-            LineNumberReader refLineReader = new LineNumberReader(refReader);
-            for (;;) {
-                String logLine = logLineReader.readLine();
-                String refLine = refLineReader.readLine();
-                while (logLine != null && matchIgnorePatterns(logLine)) {
-                    // System.out.println("logMatch Line:" + logLine);
-                    logLine = logLineReader.readLine();
-                }
-                while (refLine != null && matchIgnorePatterns(refLine)) {
-                    // System.out.println("refMatch Line:" + logLine);
-                    refLine = refLineReader.readLine();
-                }
-                if ((logLine == null) || (refLine == null)) {
-                    if (logLine != null) {
-                        diffFail(logFile, logLineReader.getLineNumber());
-                    }
-                    if (refLine != null) {
-                        diffFail(logFile, refLineReader.getLineNumber());
-                    }
-                    break;
-                }
-                logLine = applyDiffMask(logLine);
-                refLine = applyDiffMask(refLine);
-                if (!logLine.equals(refLine)) {
-                    diffFail(logFile, logLineReader.getLineNumber());
-                }
-            }
-        } finally {
-            if (logReader != null) {
-                logReader.close();
-            }
-            if (refReader != null) {
-                refReader.close();
-            }
-        }
-
-        // no diffs detected, so delete redundant .log file
-        logFile.delete();
-    }
-
-    /**
-     * Adds a diff mask.  Strings matching the given regular expression
-     * will be masked before diffing.  This can be used to suppress
-     * spurious diffs on a case-by-case basis.
-     *
-     * @param mask a regular expression, as per String.replaceAll
-     */
-    protected void addDiffMask(String mask)
-    {
-        // diffMasks.add(mask);
-        if (diffMasks.length() == 0) {
-            diffMasks = mask;
-        } else {
-            diffMasks = diffMasks + "|" + mask;
-        }
-        Pattern compiledDiffPattern = Pattern.compile(diffMasks);
-        compiledDiffMatcher = compiledDiffPattern.matcher("");
-    }
-
-    protected void addIgnorePattern(String javaPattern)
-    {
-        if (ignorePatterns.length() == 0) {
-            ignorePatterns = javaPattern;
-        } else {
-            ignorePatterns = ignorePatterns + "|" + javaPattern;
-        }
-        Pattern compiledIgnorePattern = Pattern.compile(ignorePatterns);
-        compiledIgnoreMatcher = compiledIgnorePattern.matcher("");
-    }
-
-    private String applyDiffMask(String s)
-    {
-        if (compiledDiffMatcher != null) {
-            compiledDiffMatcher.reset(s);
-            // we assume most of lines do not match
-            // so compiled matches will be faster than replaceAll.
-            if (compiledDiffMatcher.find()) {
-                return s.replaceAll(diffMasks, "XYZZY");
-            }
-        }
-        return s;
-    }
-    private boolean matchIgnorePatterns(String s)
-    {
-        if (compiledIgnoreMatcher != null) {
-            compiledIgnoreMatcher.reset(s);
-            return compiledIgnoreMatcher.matches();
-        }
-        return false;
+        return null;
     }
 
     private void diffFail (
@@ -373,25 +217,6 @@ public class SqlTest extends TestCase {
         throw new Exception(message +
             fileContents(refFile) +
             fileContents(logFile));
-    }
-
-    /**
-     * Returns the contents of a file as a string.
-     */
-    private static String fileContents(File file)
-    {
-        try {
-            char[] buf = new char[2048];
-            final FileReader reader = new FileReader(file);
-            int readCount;
-            final StringWriter writer = new StringWriter();
-            while ((readCount = reader.read(buf)) >= 0) {
-                writer.write(buf, 0, readCount);
-            }
-            return writer.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -414,7 +239,4 @@ public class SqlTest extends TestCase {
         }
     }
 }
-
-
-
 // End SqlTest.java

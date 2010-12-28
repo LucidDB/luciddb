@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,11 +45,12 @@ public class SqlValidatorException
     extends Exception
     implements EigenbaseValidatorException
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static Logger tracer =
         Logger.getLogger("org.eigenbase.util.EigenbaseException");
+
+    static final long serialVersionUID = -831683113957131387L;
 
     //~ Constructors -----------------------------------------------------------
 

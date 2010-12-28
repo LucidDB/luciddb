@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.rel.*;
  */
 public interface OJAggImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -50,7 +49,7 @@ public interface OJAggImplementor
     Expression implementStart(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
      * Generates code to create a new total and to add the first value. For
@@ -60,12 +59,15 @@ public interface OJAggImplementor
     Expression implementStartAndNext(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
-     * @return whether this aggregation can merge together two accumulators.
-     * <code>count</code> can (you just add the accumulators); <code>avg</code>
-     * and {@link net.sf.saffron.ext.Nth} cannot
+     * Returns whether this aggregation can merge together two accumulators.
+     *
+     * <p>For example, <code>COUNT</code> can (you just add the accumulators);
+     * <code>AVG</code> and <code>MEDIAN</code> cannot.
+     *
+     * @return whether this aggregation can merge together two accumulators
      */
     boolean canMerge();
 
@@ -110,7 +112,7 @@ public interface OJAggImplementor
         JavaRelImplementor implementor,
         JavaRel rel,
         Expression accumulator,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
      * Generates the expression which gets called when a total is complete. For
@@ -120,7 +122,7 @@ public interface OJAggImplementor
     Expression implementResult(
         JavaRelImplementor implementor,
         Expression accumulator,
-        AggregateRel.Call call);
+        AggregateCall call);
 }
 
 // End OJAggImplementor.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,14 @@
 package org.eigenbase.jmi;
 
 /**
- * JmiDeletionAction enumerates the possible actions to take when a {@link
- * JmiDeletionRule} applies.
+ * JmiDeletionAction enumerates the possible actions to take when a
+ * JmiDeletionRule applies.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum JmiDeletionAction {
+public enum JmiDeletionAction
+{
     /**
      * Prevent the original modification from taking place.
      */
@@ -41,8 +42,8 @@ public enum JmiDeletionAction {
     INVALIDATE,
 
     /**
-     * Cascade the modification recursively to the object on the
-     * other side of the association.
+     * Cascade the modification recursively to the object on the other side of
+     * the association.
      */
     CASCADE
 }

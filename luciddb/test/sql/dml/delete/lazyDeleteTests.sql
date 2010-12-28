@@ -23,7 +23,7 @@ where table_name = 'FISH'
 order by 1,2,3,6;
 
 -- try to drop the deletion index (should fail)
-drop index SYS$DELETION_INDEX$DT2$FISH;
+drop index "SYS$DELETION_INDEX$FISH";
 
 -- delete and recreate entries
 delete from fish where is_ocean=true;

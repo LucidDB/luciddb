@@ -36,6 +36,11 @@ create foreign table mock_java_table(
 server mock_foreign_server
 options (executor_impl 'JAVA', row_count '3');
 
+create foreign table mock_java_table_with_warning(
+    id int not null)
+server mock_foreign_server
+options (executor_impl 'JAVA', row_count '-2');
+
 create function ramp(n int)
 returns table(i int)
 language java
@@ -90,6 +95,8 @@ options (foreign_table_name 'BACH_TABLE');
 
 -- test create index on mock table
 
+!set showwarnings true
+
 create index mock_index on mock_empty_table(id);
 
 insert into mock_empty_table values (5);
@@ -97,6 +104,8 @@ insert into mock_empty_table values (5);
 select * from mock_fennel_table;
 
 select * from mock_java_table;
+
+select * from mock_java_table_with_warning;
 
 select * from mock_ramp_udx_table;
 
@@ -116,6 +125,7 @@ select * from mock_foreign_metadata_server.bach_schema.mock_table;
 -- should fail:  unknown table name
 select * from mock_foreign_metadata_server.mock_schema.bach_table;
 
+!set outputformat csv
 explain plan for select * from mock_fennel_table;
 
 explain plan for select * from mock_java_table;
@@ -123,6 +133,7 @@ explain plan for select * from mock_java_table;
 explain plan for select * from mock_empty_table;
 
 explain plan for insert into mock_empty_table values (5);
+!set outputformat table
 
 create schema mock_local_schema;
 
@@ -191,7 +202,7 @@ update mock_schema.dynamic_row_count set current_row_count=21;
 -- have to flush the plan cache, because the value 7 is still burned
 -- into the old plan and the optimizer doesn't know that it's supposed
 -- to read the new value
-alter system set "codeCacheMaxBytes" = min;
+call sys_boot.mgmt.flush_code_cache();
 
 select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
 
@@ -232,3 +243,56 @@ order by schema_name;
 select * from table(sys_boot.mgmt.browse_foreign_schemas(
     'SYS_MOCK_FOREIGN_DATA_SERVER'))
 order by schema_name;
+
+
+-- test create or replace niceties
+
+-- should succeed
+create foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'TRUE');
+
+-- should fail
+create server mock_bad_server
+foreign data wrapper mock_flaky;
+
+create or replace foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'FALSE');
+
+-- should succeed
+create server mock_flaky_server
+foreign data wrapper mock_flaky;
+
+-- should succeed
+create or replace foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'TRUE');
+
+-- should fail
+create or replace server mock_flaky_server
+foreign data wrapper mock_flaky;
+
+-- test table with no columns extracted
+
+create server mock_no_columns_server
+foreign data wrapper sys_mock_foreign
+options (
+foreign_schema_name 'MOCK_SCHEMA', 
+foreign_table_name 'MOCK_TABLE',
+extract_columns 'false',
+executor_impl 'JAVA',
+row_count '3');
+
+create schema mock_no_columns_schema;
+
+import foreign schema mock_schema
+from server mock_no_columns_server
+into mock_no_columns_schema;
+
+-- should fail:  no columns
+select * from mock_no_columns_schema.mock_table;
+

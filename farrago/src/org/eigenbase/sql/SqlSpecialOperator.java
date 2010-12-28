@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlSpecialOperator
     extends SqlOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlSpecialOperator(
@@ -61,7 +60,8 @@ public class SqlSpecialOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name,
+        super(
+            name,
             kind,
             prec,
             leftAssoc,
@@ -97,13 +97,18 @@ public class SqlSpecialOperator
      *
      * @param ordinal indicating the ordinal of the current operator in the list
      * on which a possible reduction can be made
+     * @param list List of alternating {@link
+     * org.eigenbase.sql.parser.SqlParserUtil.ToTreeListItem} and {@link
+     * SqlNode}
+     *
+     * @return ordinal of the node which replaced the expression
      */
     public int reduceExpr(
         int ordinal,
-        List list)
+        List<Object> list)
     {
         throw Util.needToImplement(this);
     }
 }
 
-// End SqlExplainOperator.java
+// End SqlSpecialOperator.java

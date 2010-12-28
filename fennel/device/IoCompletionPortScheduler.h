@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,7 @@
 #ifndef Fennel_IoCompletionPortScheduler_Included
 #define Fennel_IoCompletionPortScheduler_Included
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 
 #include <vector>
 #include "fennel/device/DeviceAccessScheduler.h"
@@ -40,14 +40,15 @@ class IoCompletionPortThread;
  * IoCompletionPortScheduler implements DeviceAccessScheduler via
  * the Win32 IoCompletionPort facility.
  */
-class IoCompletionPortScheduler : public DeviceAccessScheduler
+class FENNEL_DEVICE_EXPORT IoCompletionPortScheduler
+    : public DeviceAccessScheduler
 {
     friend class IoCompletionPortThread;
-    
+
     HANDLE hCompletionPort;
     std::vector<IoCompletionPortThread *> threads;
     bool quit;
-    
+
     bool isStarted() const
     {
         return !threads.empty();
@@ -58,7 +59,7 @@ public:
      * Constructor.
      */
     explicit IoCompletionPortScheduler(DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */
@@ -68,7 +69,7 @@ public:
 // Implementation of DeviceAccessScheduler interface (q.v.)
 // ----------------------------------------------------------------------
     virtual void registerDevice(SharedRandomAccessDevice pDevice);
-    virtual void schedule(RandomAccessRequest &request);
+    virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
 };
 

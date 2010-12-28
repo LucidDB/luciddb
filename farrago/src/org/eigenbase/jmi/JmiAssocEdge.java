@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,7 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -47,9 +47,8 @@ import org._3pq.jgrapht.edge.*;
  * @version $Id$
  */
 public class JmiAssocEdge
-    extends DirectedEdge
+    extends DefaultEdge
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Association mofAssoc;
@@ -62,13 +61,8 @@ public class JmiAssocEdge
 
     JmiAssocEdge(
         Association mofAssoc,
-        JmiClassVertex source,
-        JmiClassVertex target,
         AssociationEnd [] mofAssocEnds)
     {
-        super(
-            source,
-            target);
         this.mofAssoc = mofAssoc;
         this.mofAssocEnds = mofAssocEnds;
     }
@@ -130,8 +124,7 @@ public class JmiAssocEdge
     // implement Object
     public String toString()
     {
-        return
-            mofAssocEnds[0].getType().getName() + ":"
+        return mofAssocEnds[0].getType().getName() + ":"
             + mofAssocEnds[0].getName()
             + "_" + mofAssoc.getName() + "_"
             + mofAssocEnds[1].getType().getName() + ":"

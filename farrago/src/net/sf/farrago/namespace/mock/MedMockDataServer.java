@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,29 +22,20 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.lang.reflect.*;
-
 import java.sql.*;
 
 import java.util.*;
 
 import javax.sql.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -57,9 +48,9 @@ import org.eigenbase.util.*;
 class MedMockDataServer
     extends MedAbstractDataServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
+    public static final String PROP_SIMULATE_BAD = "SIMULATE_BAD_CONNECTION";
     public static final String PROP_SCHEMA_NAME = "FOREIGN_SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
     public static final String PROP_ROW_COUNT = "ROW_COUNT";
@@ -68,10 +59,13 @@ class MedMockDataServer
     public static final String PROP_EXECUTOR_IMPL = "EXECUTOR_IMPL";
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
+    public static final String PROP_EXTRACT_COLUMNS = "EXTRACT_COLUMNS";
+    public static final boolean DEFAULT_EXTRACT_COLUMNS = true;
 
     //~ Instance fields --------------------------------------------------------
 
     private MedAbstractDataWrapper wrapper;
+    protected boolean extractColumns;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -82,6 +76,12 @@ class MedMockDataServer
     {
         super(serverMofId, props);
         this.wrapper = wrapper;
+
+        extractColumns =
+            getBooleanProperty(
+                props,
+                PROP_EXTRACT_COLUMNS,
+                DEFAULT_EXTRACT_COLUMNS);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -89,6 +89,14 @@ class MedMockDataServer
     void initialize()
         throws SQLException
     {
+        boolean simulateBadConnection =
+            getBooleanProperty(
+                wrapper.getProperties(),
+                PROP_SIMULATE_BAD,
+                false);
+        if (simulateBadConnection) {
+            throw new SQLException("Let's pretend something bad happened.");
+        }
     }
 
     // implement FarragoMedDataServer
@@ -98,10 +106,9 @@ class MedMockDataServer
         if (getForeignSchemaName() == null) {
             return null;
         }
-        return
-            new MedMockNameDirectory(
-                this,
-                FarragoMedMetadataQuery.OTN_SCHEMA);
+        return new MedMockNameDirectory(
+            this,
+            FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -110,7 +117,7 @@ class MedMockDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         if (rowType == null) {
@@ -168,7 +175,7 @@ class MedMockDataServer
                     PROP_EXECUTOR_IMPL,
                     PROPVAL_JAVA));
         assert (executorImpl.equals(PROPVAL_JAVA)
-                || executorImpl.equals(PROPVAL_FENNEL));
+            || executorImpl.equals(PROPVAL_FENNEL));
 
         String udxSpecificName = tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
 
@@ -184,14 +191,13 @@ class MedMockDataServer
             getForeignTableName(),
             tableProps.getProperty(PROP_TABLE_NAME));
 
-        return
-            new MedMockColumnSet(
-                this,
-                localName,
-                rowType,
-                nRows,
-                executorImpl,
-                udxSpecificName);
+        return new MedMockColumnSet(
+            this,
+            localName,
+            rowType,
+            nRows,
+            executorImpl,
+            udxSpecificName);
     }
 
     private void checkNameMatch(String expectedName, String actualName)
@@ -211,7 +217,7 @@ class MedMockDataServer
     {
         if (param instanceof Integer) {
             // Double the input.
-            return new Integer(2 * ((Integer) param).intValue());
+            return 2 * (Integer) param;
         } else {
             return null;
         }
@@ -246,15 +252,14 @@ class MedMockDataServer
 
     RelDataType createMockRowType(FarragoTypeFactory typeFactory)
     {
-        return
-            typeFactory.createStructType(
-                new RelDataType[] { createMockColumnType(typeFactory), },
-                new String[] { MedMockNameDirectory.COLUMN_NAME });
+        return typeFactory.createStructType(
+            new RelDataType[] { createMockColumnType(typeFactory), },
+            new String[] { MedMockNameDirectory.COLUMN_NAME });
     }
 
     RelDataType createMockColumnType(FarragoTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(SqlTypeName.Integer);
+        return typeFactory.createSqlType(SqlTypeName.INTEGER);
     }
 }
 

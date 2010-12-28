@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,14 +39,20 @@ import org.eigenbase.relopt.*;
 public class AddRedundantSemiJoinRule
     extends RelOptRule
 {
+    public static final AddRedundantSemiJoinRule instance =
+        new AddRedundantSemiJoinRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    public AddRedundantSemiJoinRule()
+    /**
+     * Creates an AddRedundantSemiJoinRule.
+     */
+    private AddRedundantSemiJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -54,8 +60,7 @@ public class AddRedundantSemiJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel origJoinRel = (JoinRel) call.rels[0];
-
-        if (origJoinRel.isSemiJoinDone() || origJoinRel.isMultiJoinDone()) {
+        if (origJoinRel.isSemiJoinDone()) {
             return;
         }
 
@@ -93,9 +98,9 @@ public class AddRedundantSemiJoinRule
                 origJoinRel.getRight(),
                 origJoinRel.getCondition(),
                 JoinRelType.INNER,
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 true,
-                origJoinRel.isMultiJoinDone());
+                origJoinRel.getSystemFieldList());
 
         call.transformTo(newJoinRel);
     }

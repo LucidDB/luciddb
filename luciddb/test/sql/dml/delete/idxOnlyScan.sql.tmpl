@@ -1,0 +1,274 @@
+-- Test index only scans, with and without deleted rows
+
+-- create foreign server
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '9',
+    log_directory '@DIR@'
+);
+
+create schema idxOnlyScan;
+set schema 'idxOnlyScan';
+
+-- Create indexes on every column so index-only scans can be done on columns
+-- with different cardinalities
+
+create table BENCH1M (
+"kseq" bigint primary key,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint);
+create index ik2 on bench1m("k2");
+create index ik4 on bench1m("k4");
+create index ik5 on bench1m("k5");
+create index ik10 on bench1m("k10");
+create index ik25 on bench1m("k25");
+create index ik100 on bench1m("k100");
+create index ik1k on bench1m("k1k");
+create index ik10k on bench1m("k10k");
+create index ik40k on bench1m("k40k");
+create index ik100k on bench1m("k100k");
+create index ik250k on bench1m("k250k");
+create index ik500k on bench1m("k500k");
+
+-- download
+INSERT INTO BENCH1M SELECT * FROM ff_server."BCP"."bench1M";
+
+-- check the download
+select count(*) from bench1M;
+
+-- analyze
+analyze table bench1m estimate statistics for all columns;
+
+-- Use the plugin that will force usage of index-only scans
+alter session implementation
+    set jar sys_boot.sys_boot.luciddb_index_only_plugin;
+
+----------------------------------------------------------------------------
+-- First, exercise the most extreme case where the key values are in reverse
+-- order relative to the rid values
+----------------------------------------------------------------------------
+
+create table reverse(
+    a bigint generated always as identity (start with 1000000 increment by -1)
+        primary key,
+    b bigint);
+insert into reverse(b) select "kseq" from bench1m;
+analyze table reverse estimate statistics for all columns;
+select count(distinct a) from reverse;
+delete from reverse where 
+    b in (1, 2, 5, 7, 10, 17, 24, 885, 3201, 9708, 12024, 191842, 612844);
+select count(distinct a) from reverse;
+delete from reverse where b in
+    (select "kseq" from bench1m where
+        "k100" = 1 or "k1k" = 1 or "k10k" = 1 or "k40k" = 1 or "k100k" = 1 or
+        "k250k" = 1 or "k500k" = 1 or "kseq" = 1);
+select count(distinct a) from reverse;
+delete from reverse where b in
+    (select "kseq" from bench1m where
+        "k100" = 99 or "k1k" = 99 or "k10k" = 99 or "k40k" = 99 or
+        "k100k" = 99 or "k250k" = 99 or "k500k" = 99 or "kseq" = 99);
+select count(distinct a) from reverse;
+
+------------------------------------------------------------------------
+-- Now, do tests against all the different columns to exercise different
+-- key cardinalities
+------------------------------------------------------------------------
+
+select count(distinct "kseq") from bench1m;
+select "k2", count(*) from bench1m group by "k2" order by "k2";
+select "k4", count(*) from bench1m group by "k4" order by "k4";
+select "k5", count(*) from bench1m group by "k5" order by "k5";
+select "k10", count(*) from bench1m group by "k10" order by "k10";
+select count(distinct "k25") from bench1m;
+select "k25", count(*) from bench1m group by "k25" having count(*) > 40000
+    order by "k25";
+select count(distinct "k100") from bench1m;
+select "k100", count(*) from bench1m group by "k100" having count(*) > 10150
+    order by "k100";
+select count(distinct "k1k") from bench1m;
+select "k1k", count(*) from bench1m group by "k1k" having count(*) > 1080
+    order by "k1k";
+select count(distinct "k10k") from bench1m;
+select "k10k", count(*) from bench1m group by "k10k" having count(*) > 130
+    order by "k10k";
+select count(distinct "k40k") from bench1m;
+select "k40k", count(*) from bench1m group by "k40k" having count(*) > 45
+    order by "k40k";
+select count(distinct "k100k") from bench1m;
+select "k100k", count(*) from bench1m group by "k100k" having count(*) > 23
+    order by "k100k";
+select count(distinct "k250k") from bench1m;
+select "k250k", count(*) from bench1m group by "k250k" having count(*) > 14
+    order by "k250k";
+select count(distinct "k500k") from bench1m;
+select "k500k", count(*) from bench1m group by "k500k" having count(*) > 10
+    order by "k500k";
+
+-- delete some random records and then rerun the count queries
+delete from bench1m where 
+    "kseq" in (1, 2, 5, 7, 10, 17, 24, 885, 3201, 9708, 12024, 191842, 612844);
+select count(distinct "kseq") from bench1m;
+select "k2", count(*) from bench1m group by "k2" order by "k2";
+select "k4", count(*) from bench1m group by "k4" order by "k4";
+select "k5", count(*) from bench1m group by "k5" order by "k5";
+select "k10", count(*) from bench1m group by "k10" order by "k10";
+select count(distinct "k25") from bench1m;
+select "k25", count(*) from bench1m group by "k25" having count(*) > 40000
+    order by "k25";
+select count(distinct "k100") from bench1m;
+select "k100", count(*) from bench1m group by "k100" having count(*) > 10150
+    order by "k100";
+select count(distinct "k1k") from bench1m;
+select "k1k", count(*) from bench1m group by "k1k" having count(*) > 1080
+    order by "k1k";
+select count(distinct "k10k") from bench1m;
+select "k10k", count(*) from bench1m group by "k10k" having count(*) > 130
+    order by "k10k";
+select count(distinct "k40k") from bench1m;
+select "k40k", count(*) from bench1m group by "k40k" having count(*) > 45
+    order by "k40k";
+select count(distinct "k100k") from bench1m;
+select "k100k", count(*) from bench1m group by "k100k" having count(*) > 23
+    order by "k100k";
+select count(distinct "k250k") from bench1m;
+select "k250k", count(*) from bench1m group by "k250k" having count(*) > 14
+    order by "k250k";
+select count(distinct "k500k") from bench1m;
+select "k500k", count(*) from bench1m group by "k500k" having count(*) > 10
+    order by "k500k";
+
+-- delete a larger number of records, then rerun the count queries
+delete from bench1m where
+    "k100" = 1 or "k1k" = 1 or "k10k" = 1 or "k40k" = 1 or "k100k" = 1 or
+    "k250k" = 1 or "k500k" = 1 or "kseq" = 1;
+select count(distinct "kseq") from bench1m;
+select "k2", count(*) from bench1m group by "k2" order by "k2";
+select "k4", count(*) from bench1m group by "k4" order by "k4";
+select "k5", count(*) from bench1m group by "k5" order by "k5";
+select "k10", count(*) from bench1m group by "k10" order by "k10";
+select count(distinct "k25") from bench1m;
+select "k25", count(*) from bench1m group by "k25" having count(*) > 40000
+    order by "k25";
+select count(distinct "k100") from bench1m;
+select "k100", count(*) from bench1m group by "k100" having count(*) > 10150
+    order by "k100";
+select count(distinct "k1k") from bench1m;
+select "k1k", count(*) from bench1m group by "k1k" having count(*) > 1080
+    order by "k1k";
+select count(distinct "k10k") from bench1m;
+select "k10k", count(*) from bench1m group by "k10k" having count(*) > 130
+    order by "k10k";
+select count(distinct "k40k") from bench1m;
+select "k40k", count(*) from bench1m group by "k40k" having count(*) > 45
+    order by "k40k";
+select count(distinct "k100k") from bench1m;
+select "k100k", count(*) from bench1m group by "k100k" having count(*) > 23
+    order by "k100k";
+select count(distinct "k250k") from bench1m;
+select "k250k", count(*) from bench1m group by "k250k" having count(*) > 14
+    order by "k250k";
+select count(distinct "k500k") from bench1m;
+select "k500k", count(*) from bench1m group by "k500k" having count(*) > 9
+    order by "k500k";
+
+-- delete some more records, and rerun the count queries
+delete from bench1m where
+    "k100" = 99 or "k1k" = 99 or "k10k" = 99 or "k40k" = 99 or
+    "k100k" = 99 or "k250k" = 99 or "k500k" = 99 or "kseq" = 99;
+select count(distinct "kseq") from bench1m;
+select "k2", count(*) from bench1m group by "k2" order by "k2";
+select "k4", count(*) from bench1m group by "k4" order by "k4";
+select "k5", count(*) from bench1m group by "k5" order by "k5";
+select "k10", count(*) from bench1m group by "k10" order by "k10";
+select count(distinct "k25") from bench1m;
+select "k25", count(*) from bench1m group by "k25" having count(*) > 39000
+    order by "k25";
+select count(distinct "k100") from bench1m;
+select "k100", count(*) from bench1m group by "k100" having count(*) > 10150
+    order by "k100";
+select count(distinct "k1k") from bench1m;
+select "k1k", count(*) from bench1m group by "k1k" having count(*) > 1070
+    order by "k1k";
+select count(distinct "k10k") from bench1m;
+select "k10k", count(*) from bench1m group by "k10k" having count(*) > 130
+    order by "k10k";
+select count(distinct "k40k") from bench1m;
+select "k40k", count(*) from bench1m group by "k40k" having count(*) > 45
+    order by "k40k";
+select count(distinct "k100k") from bench1m;
+select "k100k", count(*) from bench1m group by "k100k" having count(*) > 23
+    order by "k100k";
+select count(distinct "k250k") from bench1m;
+select "k250k", count(*) from bench1m group by "k250k" having count(*) > 14
+    order by "k250k";
+select count(distinct "k500k") from bench1m;
+select "k500k", count(*) from bench1m group by "k500k" having count(*) > 9
+    order by "k500k";
+
+-------------------------------------------------------------------
+-- Verify that index-only scans are being used in the queries above
+-------------------------------------------------------------------
+
+!set outputformat csv
+explain plan for
+    select count(distinct "kseq") from bench1m;
+explain plan for
+    select "k2", count(*) from bench1m group by "k2";
+explain plan for
+    select "k4", count(*) from bench1m group by "k4";
+explain plan for
+    select "k5", count(*) from bench1m group by "k5";
+explain plan for
+    select "k10", count(*) from bench1m group by "k10";
+explain plan for
+    select count(distinct "k25") from bench1m;
+explain plan for
+    select "k25", count(*) from bench1m group by "k25" having count(*) > 39000;
+explain plan for
+    select count(distinct "k100") from bench1m;
+explain plan for
+    select "k100", count(*) from bench1m group by "k100"
+    having count(*) > 10150;
+explain plan for
+    select count(distinct "k1k") from bench1m;
+explain plan for
+    select "k1k", count(*) from bench1m group by "k1k" having count(*) > 1070;
+explain plan for
+    select count(distinct "k10k") from bench1m;
+explain plan for
+    select "k10k", count(*) from bench1m group by "k10k" having count(*) > 130;
+explain plan for
+    select count(distinct "k40k") from bench1m;
+explain plan for
+    select "k40k", count(*) from bench1m group by "k40k" having count(*) > 45;
+explain plan for
+    select count(distinct "k100k") from bench1m;
+explain plan for
+    select "k100k", count(*) from bench1m group by "k100k" having count(*) > 23;
+explain plan for
+    select count(distinct "k250k") from bench1m;
+explain plan for
+    select "k250k", count(*) from bench1m group by "k250k" having count(*) > 14;
+explain plan for
+    select count(distinct "k500k") from bench1m;
+explain plan for
+    select "k500k", count(*) from bench1m group by "k500k" having count(*) > 9;

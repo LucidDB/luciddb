@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -83,10 +83,10 @@ int TupleDescriptor::compareTuples(
     TupleData const &tuple1,
     TupleData const &tuple2) const
 {
-    int keyComp;    
+    int keyComp;
     // REVIEW:  should pass n as a param instead of recalculating it each time
-    size_t keyCount = std::min(tuple1.size(),tuple2.size());
-    keyCount = std::min(keyCount,size());
+    size_t keyCount = std::min(tuple1.size(), tuple2.size());
+    keyCount = std::min(keyCount, size());
     keyComp = compareTuplesKey(tuple1, tuple2, keyCount);
     return keyComp;
 }
@@ -112,20 +112,22 @@ int TupleDescriptor::compareTuples(
             if (!datum2.pData) {
                 continue;
             }
-            return -1;
+            return -(i + 1);
         } else if (!datum2.pData) {
             if (containsNullKey) {
                 *containsNullKey = true;
             }
-            return 1;
+            return (i + 1);
         }
         int c = (*this)[i].pTypeDescriptor->compareValues(
             datum1.pData,
             datum1.cbData,
             datum2.pData,
             datum2.cbData);
-        if (c) {
-            return c;
+        if (c > 0) {
+            return (i + 1);
+        } else if (c < 0) {
+            return -(i + 1);
         }
     }
     return 0;
@@ -138,7 +140,7 @@ int TupleDescriptor::compareTuplesKey(
     uint keyCount) const
 {
     assert(keyCount <= std::min(tuple1.size(), tuple2.size()));
-    
+
     for (uint i = 0; i < keyCount; ++i) {
         TupleDatum const &datum1 = tuple1[i];
         TupleDatum const &datum2 = tuple2[i];
@@ -147,17 +149,19 @@ int TupleDescriptor::compareTuplesKey(
             if (!datum2.pData) {
                 continue;
             }
-            return -1;
+            return -(i + 1);
         } else if (!datum2.pData) {
-            return 1;
+            return (i + 1);
         }
         int c = (*this)[i].pTypeDescriptor->compareValues(
             datum1.pData,
             datum1.cbData,
             datum2.pData,
             datum2.cbData);
-        if (c) {
-            return c;
+        if (c > 0) {
+            return (i + 1);
+        } else if (c < 0) {
+            return -(i + 1);
         }
     }
     return 0;
@@ -173,7 +177,7 @@ void TupleDescriptor::visit(
             if (visitLengths) {
                 dataVisitor.visitUnsignedInt(0);
             }
-            dataVisitor.visitBytes(NULL,0);
+            dataVisitor.visitBytes(NULL, 0);
         } else {
             if (visitLengths) {
                 dataVisitor.visitUnsignedInt(tuple[i].cbData);
@@ -187,7 +191,7 @@ void TupleDescriptor::visit(
 }
 
 // NOTE: read comments on struct StoredNode before modifying the persistence
-// code below.  Also note that we use specific type sizes and network byte
+// code below.  Also note that we use specific type sizes and network byte order
 // since TupleDescriptors may be transmitted as binary over the network/JNI.
 // May want to use XML for that instead and make this code perform better
 // (since it's used by transaction logging).
@@ -219,7 +223,7 @@ void TupleDescriptor::readPersistent(
     for (uint i = 0; i < n; ++i) {
         uint32_t iData;
         stream.readValue(iData);
-        StoredTypeDescriptor const &typeDescriptor = 
+        StoredTypeDescriptor const &typeDescriptor =
             typeFactory.newDataType(ntohl(iData));
         stream.readValue(iData);
         bool isNullable = ntohl(iData);
@@ -227,7 +231,7 @@ void TupleDescriptor::readPersistent(
         TupleStorageByteLength cbStorage = ntohl(iData);
         push_back(
             TupleAttributeDescriptor(
-                typeDescriptor,isNullable,cbStorage));
+                typeDescriptor, isNullable, cbStorage));
     }
 }
 
@@ -241,7 +245,7 @@ void TupleProjection::writePersistent(
         stream.writeValue(iData);
     }
 }
-    
+
 void TupleProjection::readPersistent(
     ByteInputStream &stream)
 {
@@ -253,6 +257,16 @@ void TupleProjection::readPersistent(
         uint32_t iData;
         stream.readValue(iData);
         push_back(ntohl(iData));
+    }
+}
+
+void TupleProjection::projectFrom(
+    TupleProjection const &sourceProjection,
+    TupleProjection const &tupleProjection)
+{
+    clear();
+    for (uint i = 0; i < tupleProjection.size(); ++i) {
+        push_back(sourceProjection[tupleProjection[i]]);
     }
 }
 
@@ -276,13 +290,14 @@ bool TupleDescriptor::storageEqual(
 
     TupleAttributeDescriptor const * us;
     TupleAttributeDescriptor const * them;
-    
+
     for (uint i = 0; i < sz; ++i) {
         us = &(*this)[i];
         them = &other[i];
-        if ((us->pTypeDescriptor->getOrdinal() != 
-             them->pTypeDescriptor->getOrdinal()) ||
-            us->cbStorage != them->cbStorage) {
+        if ((us->pTypeDescriptor->getOrdinal()
+             != them->pTypeDescriptor->getOrdinal())
+            || us->cbStorage != them->cbStorage)
+        {
             return false;
         }
     }
@@ -317,7 +332,7 @@ std::ostream &operator<<(
 {
     StoredTypeDescriptor::Ordinal ordinal =
         attrDesc.pTypeDescriptor->getOrdinal();
-    
+
     if (ordinal < STANDARD_TYPE_END) {
         str << "type = " << StandardTypeDescriptor::toString(
             StandardTypeDescriptorOrdinal(ordinal));

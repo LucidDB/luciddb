@@ -5,7 +5,7 @@
 
 source ./defineFarragoRuntime.sh
 
-CLIENT_DRIVER_URL=jdbc:farrago:rmi://localhost
+CLIENT_DRIVER_URL=jdbc:farrago:http://localhost
 # add optional port number
 if [ -n "$1" ]; then
     PORT=`(expr $1 + 0 2>/dev/null)` || (unset PORT)
@@ -24,5 +24,5 @@ CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}'"
 # so CLIENT_DRIVER_URL must not contain embedded blanks
 java -Dprocess.id=$$ ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u ${CLIENT_DRIVER_URL} \
-    -d net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver \
+    -d net.sf.farrago.jdbc.client.FarragoVjdbcHttpClientDriver \
     -n sa $*

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ void TuplePrinter::print(
     pStream = &stream;
     iValue = 0;
     (*pStream) << "[ ";
-    tupleDesc.visit(tupleData,*this,false);
+    tupleDesc.visit(tupleData, *this, false);
     (*pStream) << " ]";
     pStream = NULL;
 }
@@ -70,8 +70,14 @@ void TuplePrinter::visitString(std::string s)
 
 void TuplePrinter::visitChars(char const *c, TupleStorageByteLength n)
 {
-    std::string s(c,n);
+    std::string s(c, n);
     visitString(s);
+}
+
+void TuplePrinter::visitUnicodeChars(Ucs2ConstBuffer c, uint n)
+{
+    // TODO jvs 13-Jan-2009:  something prettier
+    visitBytes(c, n*2);
 }
 
 void TuplePrinter::visitUnsignedInt(uint64_t i)

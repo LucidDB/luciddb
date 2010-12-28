@@ -1,17 +1,17 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test ROW constructor
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE:  sales.depts is used because optimizer fails
-0: jdbc:farrago:> -- when onerow is replaced with values().  
-0: jdbc:farrago:> -- Should change once optimizer is fixed.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE:  field names of ROW constructors are implementation-defined.
-0: jdbc:farrago:> -- These tests rely on Farrago implementation specifics.  Once
-0: jdbc:farrago:> -- supported, should use ROW CAST in most cases to assign names.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test row single field access
-0: jdbc:farrago:> select t.r."EXPR$0"
-. . . . . . . . > from (select row(1,2) r from sales.depts) t;
+> -- $Id$
+> -- Test ROW constructor
+> 
+> -- NOTE:  sales.depts is used because optimizer fails
+> -- when onerow is replaced with values().  
+> -- Should change once optimizer is fixed.
+> 
+> -- NOTE:  field names of ROW constructors are implementation-defined.
+> -- These tests rely on Farrago implementation specifics.  Once
+> -- supported, should use ROW CAST in most cases to assign names.
+> 
+> -- test row single field access
+> select t.r."EXPR$0"
+> from (select row(1,2) r from sales.depts) t;
 +---------+
 | EXPR$0  |
 +---------+
@@ -19,10 +19,10 @@
 | 1       |
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test row multiple field access
-0: jdbc:farrago:> select t.r."EXPR$1", t.r."EXPR$0"
-. . . . . . . . > from (select row(1,2) r from sales.depts) t;
+> 
+> -- test row multiple field access
+> select t.r."EXPR$1", t.r."EXPR$0"
+> from (select row(1,2) r from sales.depts) t;
 +---------+---------+
 | EXPR$1  | EXPR$0  |
 +---------+---------+
@@ -30,10 +30,10 @@
 | 2       | 1       |
 | 2       | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test without ROW noiseword
-0: jdbc:farrago:> select t.r."EXPR$1", t.r."EXPR$0"
-. . . . . . . . > from (select (1,2) r from sales.depts) t;
+> 
+> -- test without ROW noiseword
+> select t.r."EXPR$1", t.r."EXPR$0"
+> from (select (1,2) r from sales.depts) t;
 +---------+---------+
 | EXPR$1  | EXPR$0  |
 +---------+---------+
@@ -41,10 +41,10 @@
 | 2       | 1       |
 | 2       | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- something deeper
-0: jdbc:farrago:> select t.r."EXPR$1"."EXPR$2"
-. . . . . . . . > from (select ((1,2),(3,4,5)) r from sales.depts) t;
+> 
+> -- something deeper
+> select t.r."EXPR$1"."EXPR$2"
+> from (select ((1,2),(3,4,5)) r from sales.depts) t;
 +---------+
 | EXPR$2  |
 +---------+
@@ -52,15 +52,26 @@
 | 5       |
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test whether optimizer expands expressions redundantly
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select t.r."EXPR$1", t.r."EXPR$0"
-. . . . . . . . > from (select row(1,2) r from sales.depts) t;
+> 
+> -- test whether optimizer expands expressions redundantly
+> !set outputformat csv
+> explain plan for
+> select t.r."EXPR$1", t.r."EXPR$0"
+> from (select row(1,2) r from sales.depts) t;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[1], EXPR$1=[$t1], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> -- aliased columns
+> select a + c as d
+> from (values (1, 2, 3), (4, 5, 6)) as t(a, b, c)
+> where b > 0
+> order by a;
+'D'
+'4'
+'10'
+> 
+> -- End row.sql
+> 
+> !quit

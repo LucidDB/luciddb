@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,7 +23,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/ftrs/BTreeSortExecStream.h"
-#include "fennel/btree/BTreeBuilder.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
@@ -34,25 +33,16 @@ void BTreeSortExecStream::prepare(BTreeSortExecStreamParams const &params)
 {
     assert(params.rootPageId == NULL_PAGE_ID);
     assert(!params.pRootMap);
-    
+
     BTreeInsertExecStream::prepare(params);
+    dynamicBTree = true;
+    truncateOnRestart = true;
 }
 
 // REVIEW:  do we ever want to save results on restart?
 void BTreeSortExecStream::open(bool restart)
 {
     sorted = false;
-    if (restart) {
-        truncateTree(false);
-    } else {
-        BTreeBuilder builder(
-            treeDescriptor,
-            treeDescriptor.segmentAccessor.pSegment);
-        builder.createEmptyRoot();
-        treeDescriptor.rootPageId = builder.getRootPageId();
-    }
-
-    // NOTE:  do this last so that rootPageId is available
     BTreeInsertExecStream::open(restart);
 }
 
@@ -70,7 +60,7 @@ ExecStreamResult BTreeSortExecStream::execute(
             return BTreeInsertExecStream::execute(quantum);
         }
     }
-    
+
     if (!pWriter->isPositioned()) {
         pOutAccessor->markEOS();
         return EXECRC_EOS;
@@ -82,7 +72,7 @@ ExecStreamResult BTreeSortExecStream::execute(
 
     uint nTuples = 0;
     TupleAccessor const &readAccessor = pWriter->getTupleAccessorForRead();
-    
+
     do {
         uint cbBuffer = pOutAccessor->getProductionAvailable();
         PBuffer pBuffer = pOutAccessor->getProductionStart();
@@ -105,28 +95,6 @@ ExecStreamResult BTreeSortExecStream::execute(
         }
     } while (pWriter->isPositioned());
     return EXECRC_EOS;
-}
-
-void BTreeSortExecStream::truncateTree(bool rootless)
-{
-    if (treeDescriptor.rootPageId == NULL_PAGE_ID) {
-        // nothing to do
-        assert(rootless);
-        return;
-    }
-    BTreeBuilder builder(
-        treeDescriptor,
-        treeDescriptor.segmentAccessor.pSegment);
-    builder.truncate(rootless);
-    if (rootless) {
-        treeDescriptor.rootPageId = NULL_PAGE_ID;
-    }
-}
-
-void BTreeSortExecStream::closeImpl()
-{
-    BTreeInsertExecStream::closeImpl();
-    truncateTree(true);
 }
 
 FENNEL_END_CPPFILE("$Id$");

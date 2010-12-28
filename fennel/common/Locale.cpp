@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,15 +54,19 @@ Locale::Locale(const string &language, const string &country)
     assert(country.empty() || country.length() == 2);
 }
 
-Locale::Locale(const string &language,
-               const string &country,
-               const string &variant)
+Locale::Locale(
+    const string &language,
+    const string &country,
+    const string &variant)
     : _lang(language), _country(country), _variant(variant)
 {
     // either language, country and variant are empty or language must
     // be non-empty
-    assert((language.empty() && country.empty() && variant.empty()) ||
-           !language.empty());
+    assert(
+        (language.empty()
+         && country.empty()
+         && variant.empty())
+        || !language.empty());
 
     assert(language.empty() || language.length() == 2);
     assert(country.empty() || country.length() == 2);
@@ -74,31 +78,41 @@ Locale::~Locale()
 
 bool Locale::operator==(const Locale &rhs) const
 {
-    return (_lang == rhs._lang &&
-            _country == rhs._country &&
-            _variant == rhs._variant);
+    return _lang == rhs._lang
+        && _country == rhs._country
+        && _variant == rhs._variant;
 }
 
 bool Locale::operator!=(const Locale &rhs) const {
-    return (_lang != rhs._lang ||
-            _country != rhs._country ||
-            _variant != rhs._variant);
+    return _lang != rhs._lang
+        || _country != rhs._country
+        || _variant != rhs._variant;
 }
 
 bool Locale::operator<(const Locale &rhs) const
 {
     int langCmp = this->getLanguage().compare(rhs.getLanguage());
-    if (langCmp < 0) return true;
-    if (langCmp > 0) return false;
-    
+    if (langCmp < 0) {
+        return true;
+    }
+    if (langCmp > 0) {
+        return false;
+    }
+
     // same language, check country
     int countryCmp = this->getCountry().compare(rhs.getCountry());
-    if (countryCmp < 0) return true;
-    if (countryCmp > 0) return false;
-    
+    if (countryCmp < 0) {
+        return true;
+    }
+    if (countryCmp > 0) {
+        return false;
+    }
+
     // same country, check variant
     int variantCmp = this->getVariant().compare(rhs.getVariant());
-    if (variantCmp < 0) return true;
+    if (variantCmp < 0) {
+        return true;
+    }
     return false;
 }
 
@@ -119,9 +133,11 @@ const string &Locale::getVariant() const
 
 string Locale::getDisplayName() const
 {
-    if (_lang.empty()) return DEFAULT_LOCALE_DISPLAY;
+    if (_lang.empty()) {
+        return DEFAULT_LOCALE_DISPLAY;
+    }
 
-    return 
+    return
         _lang
         + (_country.empty() ? "" : (string("_") + _country))
         + (_variant.empty() ? "" : (string("_") + _variant));
@@ -164,3 +180,4 @@ ostream &operator<<(ostream &str, const Locale &loc)
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End Locale.cpp

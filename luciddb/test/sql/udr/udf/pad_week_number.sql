@@ -11,6 +11,9 @@ values applib.padweeknumber(3423);
 values applib.padweeknumber(01234567890123456789);
 values applib.padweeknumber(-40);
 
+-- null input
+values applib.padweeknumber(cast(null as integer));
+
 -- view test
 select TIME_KEY_SEQ, WEEK_NUMBER_IN_YEAR, applib.padweeknumber("WEEK_NUMBER_IN_YEAR") 
 from table(applib.time_dimension(2006, 1, 14, 2006, 2, 15));

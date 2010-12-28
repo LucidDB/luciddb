@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,6 @@ package org.eigenbase.rex;
 public class RexVisitorImpl<R>
     implements RexVisitor<R>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final boolean deep;
@@ -122,7 +121,8 @@ public class RexVisitorImpl<R>
      * @see #visitArrayOr
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayAnd(RexVisitor<Boolean> visitor,
+    public static boolean visitArrayAnd(
+        RexVisitor<Boolean> visitor,
         RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {
@@ -145,7 +145,8 @@ public class RexVisitorImpl<R>
      * @see #visitArrayAnd
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayOr(RexVisitor<Boolean> visitor,
+    public static boolean visitArrayOr(
+        RexVisitor<Boolean> visitor,
         RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {

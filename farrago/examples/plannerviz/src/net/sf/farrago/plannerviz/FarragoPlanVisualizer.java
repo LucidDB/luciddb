@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,15 +27,13 @@ import java.awt.event.*;
 import java.awt.geom.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.ext.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.*;
+import org.jgrapht.ext.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.graph.DefaultEdge;
 
 import org.jgraph.*;
-import org.jgraph.util.*;
 import org.jgraph.graph.*;
 import org.jgraph.layout.*;
 import org.jgraph.algebra.*;
@@ -43,18 +41,16 @@ import org.jgraph.algebra.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
-import org.eigenbase.util.*;
 
 import java.util.*;
 import java.util.logging.*;
 
 // TODO jvs 18-Feb-2005:  avoid these two dependencies
-import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.relopt.volcano.*;
 import org.eigenbase.relopt.hep.*;
 
 import net.sf.farrago.trace.*;
 
-import org._3pq.jgrapht.Edge;
 import java.util.List;
 
 /**
@@ -70,11 +66,11 @@ public class FarragoPlanVisualizer
 {
     private static final Logger tracer =
         FarragoTrace.getPlannerVizTracer();
-    
+
     private static final int STATE_CRAWLING = 0;
 
     private static final int STATE_STEPPING = 1;
-    
+
     private static final int STATE_WALKING = 2;
 
     private static final int STATE_RUNNING = 3;
@@ -94,32 +90,32 @@ public class FarragoPlanVisualizer
     private int detail;
 
     private int currentGenerationNumber;
-    
+
     private Object stepVar;
 
     private JFrame frame;
 
     private JScrollPane scrollPane;
-    
+
     private JGraph graph;
 
     private GraphLayoutCache graphView;
-    
+
     private JGraphModelAdapter graphAdapter;
-    
-    private ListenableDirectedGraph graphModel;
-    
+
+    private ListenableDirectedGraph<VisualVertex, VisualEdge> graphModel;
+
     private JMenuItem status;
-    
+
     private UnionFind physicalEquivMap;
 
     private UnionFind logicalEquivMap;
 
     private double scale;
 
-    private Set rels;
+    private Set<RelNode> rels;
 
-    private Map objToVertexMap;
+    private Map<Object, VisualVertex> objToVertexMap;
 
     private AttributeMap normalVertexAttributes;
 
@@ -129,14 +125,14 @@ public class FarragoPlanVisualizer
 
     private AttributeMap finalVertexAttributes;
 
-    private List highlightList;
+    private List<VisualVertex> highlightList;
 
     private String ruleName;
 
     public FarragoPlanVisualizer()
     {
         status = new JMenuItem("Building abstract plan");
-        
+
         JMenuBar menuBar = new JMenuBar();
         addStateButton(menuBar, "CRAWL", STATE_CRAWLING);
         addStateButton(menuBar, "STEP", STATE_STEPPING);
@@ -144,8 +140,8 @@ public class FarragoPlanVisualizer
         addStateButton(menuBar, "RUN", STATE_RUNNING);
         addStateButton(menuBar, "FLY", STATE_FLYING);
         addZoomButton(menuBar, "ZOOMIN", 1.5);
-        addZoomButton(menuBar, "ZOOMOUT", 1.0/1.5);
-        
+        addZoomButton(menuBar, "ZOOMOUT", 1.0 / 1.5);
+
         frame = new JFrame();
         frame.setJMenuBar(menuBar);
         frame.addWindowListener(this);
@@ -158,11 +154,11 @@ public class FarragoPlanVisualizer
         stepVar = new Object();
         state = STATE_CRAWLING;
         scale = 1;
-        rels = new HashSet();
-        objToVertexMap = new HashMap();
+        rels = new HashSet<RelNode>();
+        objToVertexMap = new HashMap<Object, VisualVertex>();
         physicalEquivMap = new UnionFind();
         logicalEquivMap = new UnionFind();
-        highlightList = new ArrayList();
+        highlightList = new ArrayList<VisualVertex>();
 
         if (tracer.getLevel() == Level.FINEST) {
             detail = DETAIL_PHYSIOLOGICAL;
@@ -178,7 +174,7 @@ public class FarragoPlanVisualizer
     {
         JMenuItem button = new JMenuItem(name);
         button.addActionListener(
-            new ActionListener() 
+            new ActionListener()
             {
                 public void actionPerformed(ActionEvent e)
                 {
@@ -193,7 +189,7 @@ public class FarragoPlanVisualizer
     {
         JMenuItem button = new JMenuItem(name);
         button.addActionListener(
-            new ActionListener() 
+            new ActionListener()
             {
                 public void actionPerformed(ActionEvent e)
                 {
@@ -216,13 +212,13 @@ public class FarragoPlanVisualizer
     public void windowClosing(WindowEvent e)
     {
     }
-    
+
     // implement WindowListener
     public void windowClosed(WindowEvent e)
     {
         changeState(STATE_CLOSED);
     }
-    
+
     // implement WindowListener
     public void windowOpened(WindowEvent e)
     {
@@ -263,13 +259,13 @@ public class FarragoPlanVisualizer
         if (!includeRel(event.getRel())) {
             return;
         }
-        
+
         setStatus("Adding node to final plan");
         VisualVertex vertex = makeVertex(event.getRel());
         paintVertex(vertex, finalVertexAttributes);
         waitForInput();
     }
-    
+
     // implement RelOptListener
     public void relDiscarded(RelDiscardedEvent event)
     {
@@ -281,14 +277,14 @@ public class FarragoPlanVisualizer
         }
         rels.remove(event.getRel());
     }
-    
+
     // implement RelOptListener
     public void relEquivalenceFound(RelEquivalenceEvent event)
     {
         if (state > STATE_RUNNING) {
             return;
         }
-        
+
         if (detail == DETAIL_LOGICAL) {
             if (event.isPhysical()) {
                 return;
@@ -302,7 +298,7 @@ public class FarragoPlanVisualizer
         if (!includeRel(event.getRel())) {
             return;
         }
-        
+
         UnionFind equivMap;
         String type;
         if (event.isPhysical()) {
@@ -335,7 +331,7 @@ public class FarragoPlanVisualizer
             // For Hep, we don't care about equivalences much.
             newRel = true;
         }
-        
+
         if ((state == STATE_CRAWLING)
             || (!newRel && (state == STATE_STEPPING)))
         {
@@ -344,8 +340,8 @@ public class FarragoPlanVisualizer
                 newStatus = "New expression added to "
                     + type.toLowerCase() + " equivalence class";
             } else {
-                newStatus = type + " equivalence found for " +
-                    event.getEquivalenceClass();
+                newStatus = type + " equivalence found for "
+                    + event.getEquivalenceClass();
             }
             if (ruleName != null) {
                 newStatus += " by rule " + ruleName;
@@ -366,7 +362,7 @@ public class FarragoPlanVisualizer
             ruleName = null;
         }
     }
-    
+
     // implement RelOptListener
     public void ruleProductionSucceeded(RuleProductionEvent event)
     {
@@ -384,7 +380,7 @@ public class FarragoPlanVisualizer
         if (!includeRel(event.getRel())) {
             return;
         }
-        
+
         String verb;
         if (!event.isBefore()) {
             if (!rels.contains(event.getRel())) {
@@ -413,9 +409,7 @@ public class FarragoPlanVisualizer
     private void setStatus(String text)
     {
         status.setText(text);
-        Iterator iter = highlightList.iterator();
-        while (iter.hasNext()) {
-            VisualVertex vertex = (VisualVertex) iter.next();
+        for (VisualVertex vertex : highlightList) {
             paintVertex(vertex, normalVertexAttributes);
         }
         highlightList.clear();
@@ -432,9 +426,9 @@ public class FarragoPlanVisualizer
         }
 
         RelNode [] rels = event.getRuleCall().rels;
-        for (int i = 0; i < rels.length; ++i) {
-            if (includeRel(rels[i])) {
-                highlightVertex(makeVertex(rels[i]), oldVertexAttributes);
+        for (RelNode rel : rels) {
+            if (includeRel(rel)) {
+                highlightVertex(makeVertex(rel), oldVertexAttributes);
             }
         }
     }
@@ -465,7 +459,7 @@ public class FarragoPlanVisualizer
         }
     }
 
-    private void highlightVertex(VisualVertex vertex, AttributeMap attributes) 
+    private void highlightVertex(VisualVertex vertex, AttributeMap attributes)
     {
         paintVertex(vertex, attributes);
         highlightList.add(vertex);
@@ -473,7 +467,7 @@ public class FarragoPlanVisualizer
 
     private void paintVertex(VisualVertex vertex, AttributeMap map)
     {
-        Object cell = graphAdapter.getVertexCell(vertex);
+        DefaultGraphCell cell = graphAdapter.getVertexCell(vertex);
         if (cell == null) {
             return;
         }
@@ -490,13 +484,11 @@ public class FarragoPlanVisualizer
         if (state != STATE_RUNNING) {
             graph.setVisible(false);
         }
-        
+
         // update the graph model to reflect current state
         ++currentGenerationNumber;
-        
-        Iterator relIter = rels.iterator();
-        while (relIter.hasNext()) {
-            RelNode rel = (RelNode) relIter.next();
+
+        for (RelNode rel : rels) {
             VisualVertex v1 = makeVertex(rel);
             if (rel instanceof RelSubset) {
                 Object set = logicalEquivMap.find(rel);
@@ -520,7 +512,7 @@ public class FarragoPlanVisualizer
             // converters can lead to cycles around subsets, so
             // omit the edges for their inputs
             if (!isConverterRel(rel)) {
-                RelNode [] inputs = rel.getInputs();
+                RelNode[] inputs = rel.getInputs();
                 for (int i = 0; i < inputs.length; ++i) {
                     Object inputSet = equivMap.find(inputs[i]);
                     if (inputSet instanceof HepRelVertex) {
@@ -540,31 +532,25 @@ public class FarragoPlanVisualizer
             }
         }
 
-        List recyclingList = new ArrayList();
+        List<Object> recyclingList = new ArrayList<Object>();
 
         // collect obsolete edges
-        Iterator edgeIter = graphModel.edgeSet().iterator();
-        while (edgeIter.hasNext()) {
-            VisualEdge edge = (VisualEdge) edgeIter.next();
+        for (VisualEdge edge : graphModel.edgeSet()) {
             if (edge.generationNumber != currentGenerationNumber) {
                 recyclingList.add(edge);
             }
         }
 
         // dispose of obsolete edges
-        Iterator recyclingIter = recyclingList.iterator();
-        while (recyclingIter.hasNext()) {
-            Object obj = recyclingIter.next();
+        for (Object obj : recyclingList) {
             graphModel.removeEdge((VisualEdge) obj);
         }
 
         recyclingList.clear();
 
         // collect roots and obsolete vertices
-        List roots = new ArrayList();
-        Iterator vertexIter = graphModel.vertexSet().iterator();
-        while (vertexIter.hasNext()) {
-            VisualVertex vertex = (VisualVertex) vertexIter.next();
+        List<DefaultGraphCell> roots = new ArrayList<DefaultGraphCell>();
+        for (VisualVertex vertex : graphModel.vertexSet()) {
             if (vertex.generationNumber != currentGenerationNumber) {
                 recyclingList.add(vertex);
                 continue;
@@ -575,9 +561,8 @@ public class FarragoPlanVisualizer
         }
 
         // dispose of obsolete vertices
-        recyclingIter = recyclingList.iterator();
-        while (recyclingIter.hasNext()) {
-            VisualVertex visualVertex = (VisualVertex) recyclingIter.next();
+        for (Object obj : recyclingList) {
+            VisualVertex visualVertex = (VisualVertex) obj;
             graphModel.removeVertex(visualVertex);
             objToVertexMap.remove(visualVertex.obj);
         }
@@ -585,14 +570,14 @@ public class FarragoPlanVisualizer
         // compute graph layout
         assert (!roots.isEmpty());
         JGraphLayoutAlgorithm layout = new SugiyamaLayoutAlgorithm();
-        layout.applyLayout(graph, layout, roots.toArray(), null);
+        JGraphLayoutAlgorithm.applyLayout(graph, layout, roots.toArray(), null);
 
         // SugiyamaLayoutAlgorithm doesn't normalize its output, leading to a
         // cumulative bias for each round.  We compensate for this by computing
         // the bounding rectangle and applying a corresponding negative
         // translation.
         Rectangle2D bounds = graph.getCellBounds(graph.getRoots());
-        graphView.translateViews(
+        GraphLayoutCache.translateViews(
             graphView.getCellViews(),
             -bounds.getX(),
             -bounds.getY());
@@ -606,9 +591,9 @@ public class FarragoPlanVisualizer
 
     private void waitForInput()
     {
-        synchronized(stepVar) {
+        synchronized (stepVar) {
             try {
-                switch(state) {
+                switch (state) {
                 case STATE_CRAWLING:
                 case STATE_STEPPING:
                     stepVar.wait();
@@ -626,7 +611,7 @@ public class FarragoPlanVisualizer
 
     private VisualVertex makeVertex(Object obj)
     {
-        VisualVertex vertex = (VisualVertex) objToVertexMap.get(obj);
+        VisualVertex vertex = objToVertexMap.get(obj);
         if (vertex == null) {
             vertex = new VisualVertex(obj);
             objToVertexMap.put(obj, vertex);
@@ -638,10 +623,10 @@ public class FarragoPlanVisualizer
 
     private VisualEdge makeEdge(VisualVertex v1, VisualVertex v2, String label)
     {
-        VisualEdge edge = (VisualEdge) graphModel.getEdge(v1, v2);
+        VisualEdge edge = graphModel.getEdge(v1, v2);
         if (edge == null) {
-            edge = new VisualEdge(v1, v2, label);
-            graphModel.addEdge(edge);
+            edge = new VisualEdge(label);
+            graphModel.addEdge(v1, v2, edge);
         } else {
             // e.g. self-join
             if (!edge.toString().contains(label)) {
@@ -654,8 +639,10 @@ public class FarragoPlanVisualizer
 
     public void init()
     {
-        graphModel = new ListenableDirectedGraph(
-            new DefaultDirectedGraph(new VisualEdgeFactory()));
+        graphModel =
+            new ListenableDirectedGraph<VisualVertex, VisualEdge>(
+                new DefaultDirectedGraph<VisualVertex, VisualEdge>(
+                    new VisualEdgeFactory()));
         AttributeMap defaultVertexAttributes =
             JGraphModelAdapter.createDefaultVertexAttributes();
         GraphConstants.setBounds(
@@ -680,7 +667,7 @@ public class FarragoPlanVisualizer
         GraphConstants.setBackground(
             newVertexAttributes,
             Color.RED);
-        graphAdapter = new JGraphModelAdapter(
+        graphAdapter = new JGraphModelAdapter<VisualVertex, VisualEdge>(
             graphModel,
             defaultVertexAttributes,
             JGraphModelAdapter.createDefaultEdgeAttributes(graphModel));
@@ -694,13 +681,13 @@ public class FarragoPlanVisualizer
         frame.pack();
     }
 
-    private static class VisualVertex 
+    private static class VisualVertex
     {
         int generationNumber;
         final RelNode rel;
         final String name;
         final Object obj;
-        
+
         VisualVertex(Object obj)
         {
             this.obj = obj;
@@ -718,18 +705,15 @@ public class FarragoPlanVisualizer
             return name;
         }
     }
-    
-    private static class VisualEdge extends DirectedEdge 
+
+    private static class VisualEdge extends DefaultEdge
     {
         private String label;
         int generationNumber;
-        
+
         VisualEdge(
-            Object sourceVertex,
-            Object targetVertex,
             String label)
         {
-            super(sourceVertex, targetVertex);
             this.label = label;
         }
 
@@ -737,21 +721,21 @@ public class FarragoPlanVisualizer
         {
             this.label = label;
         }
-        
+
         public String toString()
         {
             return label;
         }
     }
 
-    private static class VisualEdgeFactory implements EdgeFactory
+    private static class VisualEdgeFactory
+        implements EdgeFactory<VisualVertex, VisualEdge>
     {
-        public Edge createEdge(Object sourceVertex, Object targetVertex)
+        public VisualEdge createEdge(
+            VisualVertex sourceVertex,
+            VisualVertex targetVertex)
         {
-            return new VisualEdge(
-                sourceVertex,
-                targetVertex,
-                "");
+            return new VisualEdge("");
         }
     }
 }

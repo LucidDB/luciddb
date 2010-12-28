@@ -1,0 +1,161 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+> insert into supplier select * from "supplier";
+1000 rows affected.
+> insert into orders select * from "orders";
+150000 rows affected.
+> insert into nation select * from "nation";
+25 rows affected.
+> create view revenue0 (supplier_no, total_revenue) as
+> select l_suppkey, sum(l_extendedprice * (1 - l_discount))
+> from lineitem, supplier, orders
+> where
+> l_suppkey = s_suppkey and
+> l_orderkey = o_orderkey and
+> l_shipdate >= date'1996-01-01' and
+> l_shipdate < date'1996-04-01'
+> group by l_suppkey;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+> select count(*) from supplier;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000                |
++---------------------+
+
+> select count(*) from orders;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 150000              |
++---------------------+
+
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> truncate table supplier;
+0 rows affected.
+> truncate table orders;
+0 rows affected.
+> truncate table nation;
+0 rows affected.
+> drop view revenue0;
+0 rows affected.
+> create table region  ( r_regionkey  integer primary key,
+> r_name       varchar(25) not null,
+> r_comment    varchar(152));
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread query15
+> set schema 'rwconcur';
+0 rows affected.
+> select
+> s_suppkey,
+> s_name,
+> s_address,
+> s_phone,
+> total_revenue
+> from
+> supplier,
+> revenue0
+> where
+> s_suppkey = supplier_no
+> and total_revenue = (
+> select
+> max(total_revenue) + sys_boot.mgmt.sleep(5000)
+> from
+> revenue0
+> )
+> order by
+> s_suppkey;
++------------+---------------------------+------------------------------------------+-----------------+---------------------+
+| S_SUPPKEY  | S_NAME                    | S_ADDRESS                                | S_PHONE         | TOTAL_REVENUE       |
++------------+---------------------------+------------------------------------------+-----------------+---------------------+
+| 677        | Supplier#000000677        | 8mhrffG7D2WJBSQbOGstQ                    | 23-290-639-3315 | 1614410.2928        |
++------------+---------------------------+------------------------------------------+-----------------+---------------------+
+
+-- end of thread query15
+
+-- thread deletelineitem
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem where l_orderkey in
+> (select o_orderkey from orders
+> where o_orderdate < date '1998-01-01' and
+> o_custkey in
+> (select c_custkey from customer where c_nationkey =
+> (select n_nationkey from nation where n_name = 'ALGERIA')));
+0 rows affected.
+> select * from lineitem where l_orderkey in
+> (select o_orderkey from orders
+> where o_orderdate < date '1998-01-01' and
+> o_custkey in
+> (select c_custkey from customer where c_nationkey =
+> (select n_nationkey from nation where n_name = 'ALGERIA')));
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+
+| L_ORDERKEY | L_PARTKEY  | L_SUPPKEY  | L_LINENUMBER | L_QUANTITY      | L_EXTENDEDPRICE | L_DISCOUNT      | L_TAX           | L_RETURNFLAG | L_LINESTATUS | L_SHIPDATE | L_COMMITDATE | L_RECEIPTDATE | L_SHIPINSTRUCT            | L_SHIPMODE | L_COMMENT                                    |
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+
+
+-- end of thread deletelineitem
+
+-- thread deletesupplier
+> set schema 'rwconcur';
+0 rows affected.
+> delete from supplier;
+1000 rows affected.
+> select * from supplier;
++------------+---------------------------+------------------------------------------+-------------+-----------------+-----------------+-------------------------------------------------------------------------------------------------------+
+| S_SUPPKEY  | S_NAME                    | S_ADDRESS                                | S_NATIONKEY | S_PHONE         | S_ACCTBAL       | S_COMMENT                                                                                             |
++------------+---------------------------+------------------------------------------+-------------+-----------------+-----------------+-------------------------------------------------------------------------------------------------------+
++------------+---------------------------+------------------------------------------+-------------+-----------------+-----------------+-------------------------------------------------------------------------------------------------------+
+
+-- end of thread deletesupplier
+
+-- thread dropview
+> set schema 'rwconcur';
+0 rows affected.
+> drop view revenue0;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop view "RWCONCUR"."REVENUE0" because it is currently in use by a statement
+-- end of thread dropview
+
+-- thread droporders
+> set schema 'rwconcur';
+0 rows affected.
+> drop table orders cascade;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop table "RWCONCUR"."ORDERS" because it is currently in use by a statement
+-- end of thread droporders
+
+-- thread dropregion
+> set schema 'rwconcur';
+0 rows affected.
+> drop table region cascade;
+0 rows affected.
+> select * from region;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: From line 1, column 15 to line 1, column 20: Table 'REGION' not found
+-- end of thread dropregion
+
+-- thread deallocate
+> set schema 'rwconcur';
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread deallocate
+

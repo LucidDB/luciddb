@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.xom.*;
 public class RelOptXmlPlanWriter
     extends RelOptPlanWriter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final XMLOutput xmlOutput;
@@ -73,26 +72,33 @@ public class RelOptXmlPlanWriter
      * Generates generic XML (sometimes called 'element-oriented XML'). Like
      * this:
      *
-     * <pre>
-     * &lt;RelNode id="1" type="Join"&gt;
-     *   &lt;Property name="condition"&gt;EMP.DEPTNO = DEPT.DEPTNO&lt;/Property&gt;
-     *   &lt;Inputs&gt;
-     *     &lt;RelNode id="2" type="Project"&gt;
-     *       &lt;Property name="expr1"&gt;x + y&lt;/Property&gt;
-     *       &lt;Property name="expr2"&gt;45&lt;/Property&gt;
-     *     &lt;/RelNode&gt;
-     *     &lt;RelNode id="3" type="TableAccess"&gt;
-     *       &lt;Property name="table"&gt;SALES.EMP&lt;/Property&gt;
-     *     &lt;/RelNode&gt;
-     *   &lt;/Inputs&gt;
-     * &lt;/RelNode&gt;
-     * </pre>
+     * <blockquote>
+     * <code>
+     * &lt;RelNode id="1" type="Join"&gt;<br/>
+     * &nbsp;&nbsp;&lt;Property name="condition"&gt;EMP.DEPTNO =
+     * DEPT.DEPTNO&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&lt;Inputs&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;RelNode id="2" type="Project"&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property name="expr1"&gt;x +
+     * y&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property
+     * name="expr2"&gt;45&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;/RelNode&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;RelNode id="3" type="TableAccess"&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Property
+     * name="table"&gt;SALES.EMP&lt;/Property&gt;<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&lt;/RelNode&gt;<br/>
+     * &nbsp;&nbsp;&lt;/Inputs&gt;<br/>
+     * &lt;/RelNode&gt;<br/>
+     * </code>
+     * </blockquote>
      *
-     * @param rel
-     * @param terms
-     * @param values
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
      */
-    private void explainGeneric(RelNode rel,
+    private void explainGeneric(
+        RelNode rel,
         String [] terms,
         Object [] values)
     {
@@ -121,11 +127,13 @@ public class RelOptXmlPlanWriter
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
-            xmlOutput.beginBeginTag("Property");
-            xmlOutput.attribute("name", terms[inputs.length + j++]);
-            xmlOutput.endBeginTag("Property");
-            xmlOutput.cdata(value.toString());
-            xmlOutput.endTag("Property");
+            if (value != null) {
+                xmlOutput.beginBeginTag("Property");
+                xmlOutput.attribute("name", terms[inputs.length + j++]);
+                xmlOutput.endBeginTag("Property");
+                xmlOutput.cdata(value.toString());
+                xmlOutput.endTag("Property");
+            }
         }
         xmlOutput.beginTag("Inputs", null);
         level++;
@@ -149,11 +157,12 @@ public class RelOptXmlPlanWriter
      * &lt;/Join&gt;
      * </pre>
      *
-     * @param rel
-     * @param terms
-     * @param values
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
      */
-    private void explainSpecific(RelNode rel,
+    private void explainSpecific(
+        RelNode rel,
         String [] terms,
         Object [] values)
     {
@@ -177,9 +186,11 @@ public class RelOptXmlPlanWriter
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
-            xmlOutput.attribute(
-                terms[inputs.length + j++],
-                value.toString());
+            if (value != null) {
+                xmlOutput.attribute(
+                    terms[inputs.length + j++],
+                    value.toString());
+            }
         }
         xmlOutput.endBeginTag(tagName);
         level++;

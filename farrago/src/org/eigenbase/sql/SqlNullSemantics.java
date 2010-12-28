@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,17 +29,18 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlNullSemantics {
+public enum SqlNullSemantics
+{
     /**
-     * Predicate semantics:  e.g. in the expression (WHERE X=5),
-     * if X is NULL, the comparison result is unknown, and so
-     * a filter used to evaluate the WHERE clause rejects the row.
+     * Predicate semantics: e.g. in the expression (WHERE X=5), if X is NULL,
+     * the comparison result is unknown, and so a filter used to evaluate the
+     * WHERE clause rejects the row.
      */
     NULL_MATCHES_NOTHING,
 
     /**
-     * GROUP BY key semantics:  e.g. in the expression (GROUP BY A,B),
-     * the key (null,5) is treated as equal to another key (null,5).
+     * GROUP BY key semantics: e.g. in the expression (GROUP BY A,B), the key
+     * (null,5) is treated as equal to another key (null,5).
      */
     NULL_MATCHES_NULL,
 

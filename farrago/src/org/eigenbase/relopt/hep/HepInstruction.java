@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
  */
 abstract class HepInstruction
 {
-
     //~ Methods ----------------------------------------------------------------
 
     void initialize(boolean clearCache)
@@ -97,6 +96,17 @@ abstract class HepInstruction
          * Actual rule set instantiated during planning by filtering all of the
          * planner's rules, looking for the desired converters.
          */
+        Set<RelOptRule> ruleSet;
+
+        void execute(HepPlanner planner)
+        {
+            planner.executeInstruction(this);
+        }
+    }
+
+    static class CommonRelSubExprRules
+        extends HepInstruction
+    {
         Set<RelOptRule> ruleSet;
 
         void execute(HepPlanner planner)

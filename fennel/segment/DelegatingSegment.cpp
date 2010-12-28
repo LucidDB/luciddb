@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,6 +49,16 @@ BlockNum DelegatingSegment::getAllocatedSizeInPages()
     return pDelegateSegment->getAllocatedSizeInPages();
 }
 
+BlockNum DelegatingSegment::getNumPagesOccupiedHighWater()
+{
+    return pDelegateSegment->getNumPagesOccupiedHighWater();
+}
+
+BlockNum DelegatingSegment::getNumPagesExtended()
+{
+    return pDelegateSegment->getNumPagesExtended();
+}
+
 PageId DelegatingSegment::getPageSuccessor(PageId pageId)
 {
     return pDelegateSegment->getPageSuccessor(pageId);
@@ -56,7 +66,7 @@ PageId DelegatingSegment::getPageSuccessor(PageId pageId)
 
 void DelegatingSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    pDelegateSegment->setPageSuccessor(pageId,successorId);
+    pDelegateSegment->setPageSuccessor(pageId, successorId);
 }
 
 BlockId DelegatingSegment::translatePageId(PageId pageId)
@@ -79,9 +89,10 @@ bool DelegatingSegment::ensureAllocatedSize(BlockNum nPages)
     return pDelegateSegment->ensureAllocatedSize(nPages);
 }
 
-void DelegatingSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void DelegatingSegment::deallocatePageRange(
+    PageId startPageId, PageId endPageId)
 {
-    pDelegateSegment->deallocatePageRange(startPageId,endPageId);
+    pDelegateSegment->deallocatePageRange(startPageId, endPageId);
 }
 
 bool DelegatingSegment::isPageIdAllocated(PageId pageId)
@@ -111,7 +122,7 @@ void DelegatingSegment::notifyAfterPageRead(CachePage &page)
 
 void DelegatingSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
-    pDelegateSegment->notifyPageDirty(page,bDataValid);
+    pDelegateSegment->notifyPageDirty(page, bDataValid);
 }
 
 void DelegatingSegment::notifyBeforePageFlush(CachePage &page)
@@ -132,7 +143,12 @@ bool DelegatingSegment::canFlushPage(CachePage &page)
 void DelegatingSegment::delegatedCheckpoint(
     Segment &delegatingSegment,CheckpointType checkpointType)
 {
-    pDelegateSegment->delegatedCheckpoint(delegatingSegment,checkpointType);
+    pDelegateSegment->delegatedCheckpoint(delegatingSegment, checkpointType);
+}
+
+PageId DelegatingSegment::updatePage(PageId pageId, bool needsTranslation)
+{
+    return pDelegateSegment->updatePage(pageId, needsTranslation);
 }
 
 FENNEL_END_CPPFILE("$Id$");

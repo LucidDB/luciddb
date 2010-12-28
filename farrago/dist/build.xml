@@ -2,9 +2,9 @@
 <!-- 
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,7 @@
 
 <project name="farragoDistribution" basedir="." default="mustSpecify">
 
-  <import file="../buildMacros.xml"/>
+  <import file="./../buildMacros.xml"/>
 
   <!-- Load properties needed to derive release spec. -->
   <property file="FarragoRelease.properties"/>
@@ -56,9 +56,11 @@
       <fileset dir="${farrago.classes.dir}">
         <include name="**/*.class"/>
         <include name="**/*.properties"/>
+        <include name="FarragoEhCache.xml"/>
       </fileset>
       <fileset dir="${farrago.catalog.src.dir}">
         <include name="**/*.class"/>
+        <include name="META-INF/enki/**"/>
       </fileset>
       <fileset dir="${dist.dir}">
         <include name="FarragoRelease.properties"/>
@@ -72,6 +74,17 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
+    <war destfile="${dist.dir}/vjdbc_servlet.war" 
+      webxml="${farrago.dir}/ext/vjdbc/web.xml">
+      <fileset dir="${thirdparty.dir}/vjdbc/conf/servlet">
+        <include name="*.html"/>
+        <exclude name="applet.html"/>
+      </fileset>
+      <webinf dir="${farrago.dir}/ext/vjdbc">
+        <include name="vjdbc-config"/>
+      </webinf>
+      <lib dir="${thirdparty.dir}/vjdbc/lib" excludes="j2ee_api.jar,junit.jar"/>
+    </war>
   </target>
 
   <!-- TODO jvs 26-June-2005:  this isn't used yet -->

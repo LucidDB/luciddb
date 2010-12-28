@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,6 +37,7 @@
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+  <taskdef name="switch" classname="net.sf.antcontrib.logic.Switch" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${tpch.dir}/gen" />
@@ -45,8 +46,8 @@
   <property name="bh.log.basedir" value="${tpch.dir}/testlog" />
 
   <!-- directory of flat files -->
-  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/data"/>
-  <property name="ff.copy.dir" value="${tpch.dir}/ff-copy"/>
+  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
+  <property name="ff.dir" value="${tpch.dir}/ff"/>
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -54,23 +55,43 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="gen-sql">
-    <!-- copy over sql.tmpl and template reference files -->
+  <target name="set-sf">
+    <switch value="${datasize}">
+      <case value="100M"> <property name="sf" value="0.1"/> </case>
+      <case value="1G"> <property name="sf" value="1"/> </case>
+      <case value="10G"> <property name="sf" value="10"/> </case>
+      <case value="30G"> <property name="sf" value="30"/> </case>
+      <case value="100G"> <property name="sf" value="100"/> </case>
+      <case value="300G"> <property name="sf" value="300"/> </case>
+      <case value="1000G"> <property name="sf" value="1000"/> </case>
+      <case value="3000G"> <property name="sf" value="3000"/> </case>
+      <case value="10000G"> <property name="sf" value="10000"/> </case>
+      <case value="30000G"> <property name="sf" value="30000"/> </case>
+      <case value="100000G"> <property name="sf" value="100000"/> </case>
+    </switch>
+  </target>
+
+  <target name="gen-sql" depends="set-sf">
+    <!-- copy over sql.tmpl, and template reference and shell script files -->
     <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
       <fileset dir="${tpch.dir}">
         <include name="*.${datasize.param}"/>
         <include name="*.tmpl"/>
+        <include name="*.sh"/>
       </fileset>
       <compositemapper>
+        <globmapper from="*.${datasize.param}.sh" to="*.sh"/>
         <globmapper from="*.${datasize.param}" to="*.ref"/>
         <globmapper from="*.tmpl" to="*"/>
       </compositemapper>
       <filterset>
-        <filter token="FFDIR" value="${ff.copy.dir}/${datasize.param}"/>
+        <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
         <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+        <filter token="SF" value="${sf}"/>
       </filterset>
     </copy>
 
@@ -81,6 +102,13 @@
         <include name="*.ref"/>
       </fileset>
     </copy>
+
+    <!-- change permissions on executables -->
+    <chmod perm="u+x">
+      <fileset dir="${gensql.dir}/${datasize.param}">
+        <include name="*.sh"/>
+      </fileset>
+    </chmod>
 
   </target>
 
@@ -96,18 +124,12 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="100M" param="datasize.param" target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="${datasize}" param="datasize.param" target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${tpch.dir}"
       testscript="${testfile}"
@@ -116,38 +138,53 @@
 
   <target name="create-db">
     <condition property="db.created">
-      <and>
-        <available file="${ffsource.dir}/datasize" type="file"/>
-        <isfileselected file="${ffsource.dir}/datasize">
-          <contains text="${datasize}" casesensitive="no"/>
-        </isfileselected>
-      </and>
+      <available file="${ffsource.dir}/${datasize}" type="dir"/>
     </condition>
 
     <if>
       <istrue value="${db.created}"/>
       <then/>
       <else>
-        <exec executable="${thirdparty.dir}/tpch/createdb"
+        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
           dir="${thirdparty.dir}/tpch">
           <arg line="${datasize}"/>
         </exec>
       </else>
     </if>
 
-    <sync todir="${ff.copy.dir}/${datasize}" verbose="true">
-      <fileset dir="${ffsource.dir}"/>
+    <sync todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}"/>
     </sync>
   </target>
 
+  <target name="alloc-space" depends="gen-all-sql">
+    <!-- Make sure the server isn't running by doing a dummy extend of a
+         single page.  The server can't be running while file space is
+         being extended.
+    -->
+    <exec executable="${open.dir}/luciddb/lucidDbAllocFile" failonerror="true">
+      <arg value="--append-pages=1"/>
+      <arg value="${open.dir}/luciddb/catalog/db.dat"/>
+    </exec>
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <exec executable="${gensql.dir}/${datasize}/allocSpace.sh"
+      failonerror="true"/>
+  </target>
+
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
-    <delete dir="${gensql.dir}"/>
+    <antcall target="clean-test"/>
+    <delete dir="${ff.dir}"/>
+    <delete file="datasize"/>
     <delete file="run.properties"/>
   </target>
 
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${gensql.dir}"/>
+  </target>
+
   <target name="clean-ff" depends="clean">
-    <delete dir="${ff.copy.dir}"/>
+    <delete dir="${ff.dir}"/>
   </target>
 
 </project>

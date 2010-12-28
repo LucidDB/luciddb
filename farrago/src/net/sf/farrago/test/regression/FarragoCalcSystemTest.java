@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,12 +21,11 @@
 */
 package net.sf.farrago.test.regression;
 
-import com.disruptivetech.farrago.calc.*;
-
 import java.util.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.test.*;
 
@@ -48,7 +47,6 @@ import org.eigenbase.util.*;
 public class FarragoCalcSystemTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlStdOperatorTable opTab =
@@ -57,36 +55,6 @@ public class FarragoCalcSystemTest
         new FarragoOJRexImplementorTable(opTab);
     private static CalcRexImplementorTable fennelTab =
         CalcRexImplementorTableImpl.std();
-
-    // Table of operators to be tested using auto VM that
-    // may not have been explicitly registered in the java and fennel calcs
-    private static Map<SqlOperator,Boolean> autoTab =
-        new HashMap<SqlOperator,Boolean>();
-
-    static {
-        // TODO: Should also test these operators for java and fennel calcs
-        // if they the rewrites only involve operators that are implemented
-        // in the java and fennel calcs
-        autoTab.put(SqlStdOperatorTable.betweenOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.notBetweenOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.selectOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.literalChainOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.isDistinctFromOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.isNotDistinctFromOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.overlapsOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.isUnknownOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.isNotUnknownOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.valuesOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.nullIfFunc, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.coalesceFunc, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.windowOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.countOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.sumOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.avgOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.firstValueOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.lastValueOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.extractFunc, Boolean.TRUE);
-    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -176,6 +144,8 @@ public class FarragoCalcSystemTest
         exclude.add(SqlStdOperatorTable.histogramMinFunction);
         exclude.add(SqlStdOperatorTable.histogramFirstValueFunction);
         exclude.add(SqlStdOperatorTable.histogramLastValueFunction);
+        exclude.add(SqlStdOperatorTable.isDifferentFromOperator);
+        exclude.add(SqlStdOperatorTable.divideIntegerOperator);
 
         // Eventually need to include these when cast is working
         exclude.add(SqlStdOperatorTable.overlapsOperator);
@@ -189,7 +159,9 @@ public class FarragoCalcSystemTest
         // test for it elsewhere.
         // ------------
         // iterating over all operators
-        for (SqlOperator op : SqlStdOperatorTable.instance().getOperatorList()) {
+        for (SqlOperator op
+            : SqlStdOperatorTable.instance().getOperatorList())
+        {
             if (exclude.contains(op)) {
                 continue;
             }
@@ -201,7 +173,8 @@ public class FarragoCalcSystemTest
         return wrappedSuite(suite);
     }
 
-    private static void addTestsForOp(SqlOperator op,
+    private static void addTestsForOp(
+        SqlOperator op,
         TestSuite suite,
         VirtualMachine vm)
         throws Exception
@@ -231,8 +204,8 @@ public class FarragoCalcSystemTest
             for (int i = 0; i < n; i++) {
                 SqlTypeName typeName =
                     (SqlTypeName) families[i].getTypeNames().iterator().next();
-                if (typeName.equals(SqlTypeName.Any)) {
-                    typeName = SqlTypeName.Boolean;
+                if (typeName.equals(SqlTypeName.ANY)) {
+                    typeName = SqlTypeName.BOOLEAN;
                 }
 
                 int precision = 0;
@@ -242,7 +215,7 @@ public class FarragoCalcSystemTest
                 SqlDataTypeSpec dt =
                     new SqlDataTypeSpec(
                         new SqlIdentifier(
-                            typeName.getName(),
+                            typeName.name(),
                             SqlParserPos.ZERO),
                         precision,
                         0,
@@ -252,9 +225,9 @@ public class FarragoCalcSystemTest
 
                 operands[i] =
                     SqlStdOperatorTable.castFunc.createCall(
+                        SqlParserPos.ZERO,
                         SqlLiteral.createNull(SqlParserPos.ZERO),
-                        dt,
-                        SqlParserPos.ZERO);
+                        dt);
             }
 
             if (operands.length == 0) {
@@ -264,7 +237,7 @@ public class FarragoCalcSystemTest
                 // operator.
                 continue;
             }
-            SqlCall call = op.createCall(operands, SqlParserPos.ZERO);
+            SqlCall call = op.createCall(SqlParserPos.ZERO, operands);
 
             String sql = "SELECT " + call.toString() + " FROM (VALUES(1))";
             String testName = "NULL-TEST-" + op.getName() + "-";
@@ -286,7 +259,7 @@ public class FarragoCalcSystemTest
             Integer nOperands =
                 (Integer) otc.getOperandCountRange().getAllowedList().get(0);
             SqlTypeFamily [] families = new SqlTypeFamily[nOperands.intValue()];
-            Arrays.fill(families, SqlTypeFamily.Boolean);
+            Arrays.fill(families, SqlTypeFamily.BOOLEAN);
             return families;
         }
     }
@@ -334,29 +307,16 @@ public class FarragoCalcSystemTest
 
         public String getAlterSystemCommand()
         {
-            return
-                "alter system set \"calcVirtualMachine\" = '"
+            return "alter system set \"calcVirtualMachine\" = '"
                 + "CALCVM_" + name + "'";
         }
 
         public boolean canImplement(SqlOperator op)
         {
-            if (((this == Java) || (this == Auto))
-                && (javaTab.get(op) != null)) {
-                return true;
-            }
-            if (((this == Fennel) || (this == Auto))
-                && (fennelTab.get(op) != null)) {
-                return true;
-            }
-            if (this == Auto)  {
-                if (autoTab.get(op) != null) {
-                    return true;
-                }
-                // This operator cannot be implemented at all!
-                assert(false) : op + " cannot be implemented";
-            }
-            return false;
+            return (((this == Java) || (this == Auto))
+                && (javaTab.get(op) != null))
+                || (((this == Fennel) || (this == Auto))
+                    && (fennelTab.get(op) != null));
         }
     }
 }

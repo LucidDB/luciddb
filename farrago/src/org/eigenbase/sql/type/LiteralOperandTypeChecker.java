@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,12 +21,8 @@
 */
 package org.eigenbase.sql.type;
 
-import java.util.*;
-
-import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -42,7 +38,6 @@ import org.eigenbase.util.*;
 public class LiteralOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean allowNull;
@@ -69,15 +64,17 @@ public class LiteralOperandTypeChecker
                 return true;
             }
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().ArgumentMustNotBeNull.ex(
-                    callBinding.getOperator().getName());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().ArgumentMustNotBeNull.ex(
+                        callBinding.getOperator().getName()));
             }
             return false;
         }
         if (!SqlUtil.isLiteral(node) && !SqlUtil.isLiteralChain(node)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().ArgumentMustBeLiteral.ex(
-                    callBinding.getOperator().getName());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().ArgumentMustBeLiteral.ex(
+                        callBinding.getOperator().getName()));
             }
             return false;
         }
@@ -89,12 +86,11 @@ public class LiteralOperandTypeChecker
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        return
-            checkSingleOperandType(
-                callBinding,
-                callBinding.getCall().operands[0],
-                0,
-                throwOnFailure);
+        return checkSingleOperandType(
+            callBinding,
+            callBinding.getCall().operands[0],
+            0,
+            throwOnFailure);
     }
 
     public SqlOperandCountRange getOperandCountRange()

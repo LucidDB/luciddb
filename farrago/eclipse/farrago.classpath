@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="catalog/java"/>
+	<classpathentry kind="lib" path="catalog/java" exported="true"/>
 	<classpathentry kind="src" path="src" excluding="org/eigenbase/inventory/*.java|**/namespace/jdbc/**/*.java"/>
 	<classpathentry kind="lib" path="@LIBPATH@"/>
+	<classpathentry kind="lib" path="@ECLIPSEDIR@/plugins/org.eclipse.core.contenttype_3.2.100.v20070319.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="classes"/>
 	<classpathentry kind="output" path="classes"/>

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -55,7 +55,6 @@ import org.eigenbase.util.*;
 public class JavaRelImplementor
     implements RelImplementor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -67,19 +66,21 @@ public class JavaRelImplementor
      * Maps a {@link String} to the {@link Frame} whose {@link
      * Frame#rel}.correlVariable == correlName.
      */
-    final HashMap mapCorrel2Frame = new HashMap();
-    final HashMap mapCorrelNameToVariable = new HashMap();
+    final Map<String, Frame> mapCorrel2Frame = new HashMap<String, Frame>();
+
+    final HashMap<String, Variable> mapCorrelNameToVariable =
+        new HashMap<String, Variable>();
 
     /**
      * Maps a {@link RelNode} to the unique frame whose {@link Frame#rel} is
      * that relational expression.
      */
-    final HashMap mapRel2Frame = new HashMap();
+    final Map<RelNode, Frame> mapRel2Frame = new HashMap<RelNode, Frame>();
 
     /**
      * Stack of {@link StatementList} objects.
      */
-    final Stack stmtListStack = new Stack();
+    final Stack<StatementList> stmtListStack = new Stack<StatementList>();
     Statement exitStatement;
     private final RexBuilder rexBuilder;
     private int nextVariableId;
@@ -119,7 +120,7 @@ public class JavaRelImplementor
 
     public StatementList getStatementList()
     {
-        return (StatementList) stmtListStack.peek();
+        return stmtListStack.peek();
     }
 
     public RexBuilder getRexBuilder()
@@ -163,6 +164,7 @@ public class JavaRelImplementor
                     return initializer;
                 }
             };
+
         Variable variable = newVariable();
         LazyBind bind =
             new LazyBind(
@@ -212,8 +214,8 @@ public class JavaRelImplementor
             // should have at least a comment!
             if ((rel instanceof JoinRelBase) && false) {
                 return (JavaRel) findInputRel(
-                        rel,
-                        variable.getIndex());
+                    rel,
+                    variable.getIndex());
             } else {
                 return (JavaRel) rel.getInput(variable.getIndex());
             }
@@ -291,7 +293,7 @@ public class JavaRelImplementor
         if (stmtList != null) {
             pushStatementList(stmtList);
         }
-        Frame frame = (Frame) mapRel2Frame.get(rel);
+        Frame frame = mapRel2Frame.get(rel);
         bindDeferred(frame, rel);
         ((JavaLoopRel) frame.parent).implementJavaParent(this, frame.ordinal);
         if (stmtList != null) {
@@ -323,13 +325,15 @@ public class JavaRelImplementor
                     new VariableInitializerThunk() {
                         public VariableInitializer getInitializer()
                         {
-                            return
-                                selfRel.implementSelf(JavaRelImplementor.this);
+                            return selfRel.implementSelf(
+                                JavaRelImplementor.this);
                         }
                     });
             bind(rel, lazyBind);
-        } else if ((frame.bind instanceof LazyBind)
-            && (((LazyBind) frame.bind).statementList != statementList)) {
+        } else if (
+            (frame.bind instanceof LazyBind)
+            && (((LazyBind) frame.bind).statementList != statementList))
+        {
             // Frame is already bound, but to a variable declared in a different
             // scope. Re-bind it.
             final LazyBind lazyBind = (LazyBind) frame.bind;
@@ -359,7 +363,7 @@ public class JavaRelImplementor
             assert (child == parent.getInputs()[ordinal]);
         }
         createFrame(parent, ordinal, child);
-        return visitChildInternal(child);
+        return visitChildInternal(child, ordinal);
     }
 
     protected void createFrame(RelNode parent, int ordinal, RelNode child)
@@ -382,6 +386,11 @@ public class JavaRelImplementor
     }
 
     public Object visitChildInternal(RelNode child)
+    {
+        return visitChildInternal(child, 0);
+    }
+
+    public Object visitChildInternal(RelNode child, int ordinal)
     {
         final CallingConvention convention = child.getConvention();
         if (!(child instanceof JavaRel)) {
@@ -426,8 +435,8 @@ public class JavaRelImplementor
         Frame frame = (Frame) mapCorrel2Frame.get(correlName);
         assert (frame != null);
         assert (Util.equal(
-                    frame.rel.getCorrelVariable(),
-                    correlName));
+            frame.rel.getCorrelVariable(),
+            correlName));
         assert (frame.hasVariable());
         return frame.getVariable();
     }
@@ -631,10 +640,9 @@ public class JavaRelImplementor
     {
         final RelDataType rowType = rel.getRowType();
         int fieldOffset = computeFieldOffset(rel, ordinal);
-        return
-            translate(
-                rel,
-                rexBuilder.makeRangeReference(rowType, fieldOffset, false));
+        return translate(
+            rel,
+            rexBuilder.makeRangeReference(rowType, fieldOffset, false));
     }
 
     /**
@@ -700,7 +708,7 @@ public class JavaRelImplementor
         Bind bind)
     {
         tracer.log(Level.FINE, "Bind " + rel.toString() + " to " + bind);
-        Frame frame = (Frame) mapRel2Frame.get(rel);
+        Frame frame = mapRel2Frame.get(rel);
         frame.bind = bind;
         boolean stupid = SaffronProperties.instance().stupid.get();
         if (stupid) {
@@ -715,9 +723,9 @@ public class JavaRelImplementor
         int offset)
     {
         return findInputRel(
-                rel,
-                offset,
-                new int[] { 0 });
+            rel,
+            offset,
+            new int[] { 0 });
     }
 
     private RelNode findInputRel(
@@ -752,7 +760,7 @@ public class JavaRelImplementor
     public Variable findInputVariable(RelNode rel)
     {
         while (true) {
-            Frame frame = (Frame) mapRel2Frame.get(rel);
+            Frame frame = mapRel2Frame.get(rel);
             if ((frame != null) && frame.hasVariable()) {
                 return frame.getVariable();
             }
@@ -766,7 +774,7 @@ public class JavaRelImplementor
     }
 
     public Expression implementStart(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
@@ -775,7 +783,7 @@ public class JavaRelImplementor
     }
 
     public Expression implementStartAndNext(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
@@ -784,7 +792,7 @@ public class JavaRelImplementor
     }
 
     public void implementNext(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel,
         Expression accumulator)
     {
@@ -797,7 +805,7 @@ public class JavaRelImplementor
      * Generates the expression to retrieve the result of this aggregation.
      */
     public Expression implementResult(
-        AggregateRel.Call call,
+        AggregateCall call,
         Expression accumulator)
     {
         OJAggImplementor aggImplementor =
@@ -811,11 +819,12 @@ public class JavaRelImplementor
      *
      * @pre // rel must be on the implementation stack
      */
-    public List getAncestorRels(RelNode rel)
+    public List<RelNode> getAncestorRels(RelNode rel)
     {
-        final ArrayList ancestorList = new ArrayList();
-        Frame frame = (Frame) mapRel2Frame.get(rel);
-        Util.pre(frame != null,
+        final List<RelNode> ancestorList = new ArrayList<RelNode>();
+        Frame frame = mapRel2Frame.get(rel);
+        Util.pre(
+            frame != null,
             "rel must be on the current implementation stack");
         while (true) {
             ancestorList.add(frame.rel);
@@ -823,7 +832,7 @@ public class JavaRelImplementor
             if (parentRel == null) {
                 break;
             }
-            frame = (Frame) mapRel2Frame.get(parentRel);
+            frame = mapRel2Frame.get(parentRel);
             Util.permAssert(frame != null, "ancestor rel must have frame");
         }
         return ancestorList;
@@ -899,9 +908,10 @@ public class JavaRelImplementor
         {
             RelNode previous = rel;
             while (true) {
-                Frame frame = (Frame) mapRel2Frame.get(previous);
+                Frame frame = mapRel2Frame.get(previous);
                 if (frame.bind != null) {
-                    tracer.log(Level.FINE,
+                    tracer.log(
+                        Level.FINE,
                         "Bind " + rel.toString() + " to "
                         + previous.toString() + "(" + frame.bind + ")");
                     return frame;
@@ -1001,8 +1011,7 @@ public class JavaRelImplementor
 
         public String toString()
         {
-            return
-                super.toString() + "(variable=" + variable.toString()
+            return super.toString() + "(variable=" + variable.toString()
                 + ", thunk=" + thunk.toString() + ")";
         }
 
@@ -1056,9 +1065,8 @@ public class JavaRelImplementor
         }
 
         /**
-         * Walks over an expression, and throws {@link
-         * org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate
-         * } if expression cannot be translated.
+         * Walks over an expression, and throws <code>CannotTranslate</code>
+         * if expression cannot be translated.
          *
          * @param rex Expression
          *

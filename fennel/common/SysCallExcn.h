@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,10 +31,12 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Exception class for failed system calls.
  */
-class SysCallExcn : public FennelExcn
+class FENNEL_COMMON_EXPORT SysCallExcn : public FennelExcn
 {
 private:
     int errCode;
+
+    void init();
 
 public:
     /**
@@ -48,9 +50,32 @@ public:
     explicit SysCallExcn(std::string msgInit);
 
     /**
+     * Constructs a new SysCallExcn.  This may be deferred until some time
+     * after the failed system call, as long as the OS error code has been
+     * saved.
+     *
+     * @param msgInit a description of the failure from the program's point of
+     * view; SysCallExcn will append additional information from the OS
+     *
+     * @param errCodeInit OS error code used to generate additional
+     * information
+     */
+    explicit SysCallExcn(std::string msgInit, int errCodeInit);
+
+    /**
      * Returns the error code that caused this SysCallExcn.
      */
     int getErrorCode();
+
+    /**
+     * Returns the current OS error code.  This function may be used to
+     * retrieve an error code for use with the 2 argument constructor.
+     * The function should be called immediately after the failed system
+     * call in order to get the correct information from the OS.
+     *
+     * @return the current OS error code
+     */
+    static int getCurrentErrorCode();
 };
 
 FENNEL_END_NAMESPACE

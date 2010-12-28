@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -73,10 +73,10 @@ public abstract class ThreadIterator
         Runnable,
         Iterable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Thread thread;
+    private String threadName;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -90,6 +90,14 @@ public abstract class ThreadIterator
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public void setThreadName(String s)
+    {
+        threadName = s;
+        if (thread != null) {
+            thread.setName(threadName);
+        }
+    }
 
     // implement Iterable
     public Iterator iterator()
@@ -122,6 +130,9 @@ public abstract class ThreadIterator
     {
         assert (thread == null);
         thread = new Thread(this);
+        if (threadName != null) {
+            thread.setName(threadName);
+        }
 
         // Make the thread a daemon so that we don't have to worry
         // about cleaning it up.  This is important since we can't

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,17 +39,18 @@ import net.sf.farrago.fem.fennel.*;
  */
 public interface FennelCmdExecutor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Executes one FemCmd.
+     * Executes one FemCmd with an optional execution handle.
      *
      * @param cmd the command to be executed
+     * @param execHandle the execution handle used to communicate state
+     * information from Farrago to Fennel; set to null if there is no handle
      *
      * @return result handle as primitive
      */
-    public long executeJavaCmd(FemCmd cmd)
+    public long executeJavaCmd(FemCmd cmd, FennelExecutionHandle execHandle)
         throws SQLException;
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,16 +43,117 @@ FENNEL_BEGIN_NAMESPACE
  * visitor infrastructure (see CmdInterpreter and TupleStreamBuilder for
  * examples).
  */
-class JniProxy
+class FENNEL_FARRAGO_EXPORT JniProxy
 {
+    inline void checkNull(jobject o)
+    {
+        if (!o) {
+            throw FennelExcn("java null");
+        }
+    }
+
+
 protected:
-    // helper for methods which return strings
+    // Helpers that convert java String, Integer, etc from and to C++.
+    // All java to C++ helpers throw a FennelExcn if the arg. is null.
+
     std::string constructString(jobject jStringObj)
     {
+        checkNull(jStringObj);
         jstring jString = reinterpret_cast<jstring>(jStringObj);
-        return JniUtil::toStdString(pEnv,jString);
+        return JniUtil::toStdString(pEnv, jString);
     }
-    
+
+    // helper for setters which take strings (returns local JNI reference)
+    jstring constructJavaString(const std::string &stringObj)
+    {
+        return pEnv->NewStringUTF(stringObj.c_str());
+    }
+
+    int32_t int32Value(jobject jIntegerObj)
+    {
+        checkNull(jIntegerObj);
+        return pEnv->CallIntMethod(jIntegerObj, JniUtil::methIntValue);
+    }
+
+    jobject constructJavaInteger(const int32_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classInteger,
+            JniUtil::methIntegerValueOf,
+            static_cast<jint>(value));
+    }
+
+    int64_t int64Value(jobject jLongObj)
+    {
+        checkNull(jLongObj);
+        return pEnv->CallLongMethod(jLongObj, JniUtil::methLongValue);
+    }
+
+    jobject constructJavaLong(const int64_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classLong,
+            JniUtil::methLongValueOf,
+            static_cast<jlong>(value));
+    }
+
+    int16_t int16Value(jobject jShortObj)
+    {
+        checkNull(jShortObj);
+        return pEnv->CallShortMethod(jShortObj, JniUtil::methShortValue);
+    }
+
+    jobject constructJavaShort(const int16_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classShort,
+            JniUtil::methShortValueOf,
+            static_cast<jshort>(value));
+    }
+
+    double doubleValue(jobject jDoubleObj)
+    {
+        checkNull(jDoubleObj);
+        return pEnv->CallDoubleMethod(jDoubleObj, JniUtil::methDoubleValue);
+    }
+
+    jobject constructJavaDouble(const double &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classDouble,
+            JniUtil::methDoubleValueOf,
+            static_cast<jdouble>(value));
+    }
+
+    float floatValue(jobject jFloatObj)
+    {
+        checkNull(jFloatObj);
+        return pEnv->CallFloatMethod(jFloatObj, JniUtil::methFloatValue);
+    }
+
+    jobject constructJavaFloat(const float &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classFloat,
+            JniUtil::methFloatValueOf,
+            static_cast<jfloat>(value));
+    }
+
+    bool boolValue(jobject jBooleanObj)
+    {
+        checkNull(jBooleanObj);
+        return pEnv->CallBooleanMethod(jBooleanObj, JniUtil::methBooleanValue);
+    }
+
+    jobject constructJavaBoolean(const bool &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classBoolean,
+            JniUtil::methBooleanValueOf,
+            static_cast<jboolean>(value));
+    }
+
 public:
     /**
      * The JniEnvRef for the thread in which this proxy operates.
@@ -63,9 +164,9 @@ public:
      * The Java object being proxied.
      */
     jobject jObject;
-    
+
     explicit JniProxy();
-    
+
     virtual ~JniProxy();
 
     /**
@@ -75,15 +176,15 @@ public:
      *
      * @param jObject the Java object to be proxied
      */
-    void init(JniEnvRef pEnv,jobject jObject);
+    void init(JniEnvRef pEnv, jobject jObject);
 
     /**
-     * @return name of the Java class instantiated by this proxy
+     * @return name of the Java interface implemented by this proxy
      */
-    std::string getClassName()
+    std::string getInterfaceName()
     {
         jclass jClass = pEnv->GetObjectClass(jObject);
-        return JniUtil::getClassName(jClass);
+        return JniUtil::getFirstPublicInterfaceName(jClass);
     }
 };
 
@@ -117,8 +218,8 @@ public:
     void operator ++ ()
     {
         assert(jIter);
-        boost::shared_ptr<T>::get()->jObject = 
-            JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv,jIter);
+        boost::shared_ptr<T>::get()->jObject =
+            JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv, jIter);
         if (!(boost::shared_ptr<T>::get()->jObject)) {
             // iteration exhausted, so become singular
             boost::shared_ptr<T>::reset();
@@ -130,7 +231,7 @@ public:
  * JniProxyVisitor is the base for all classes which need to visit one or more
  * instances of JniProxy polymorphically.
  */
-class JniProxyVisitor 
+class FENNEL_FARRAGO_EXPORT JniProxyVisitor
 {
 public:
     virtual ~JniProxyVisitor();
@@ -143,7 +244,7 @@ public:
     virtual void unhandledVisit();
 };
 
-class JniProxyVisitTableBase
+class FENNEL_FARRAGO_EXPORT JniProxyVisitTableBase
 {
 public:
     /**
@@ -154,10 +255,10 @@ public:
         virtual ~VisitorMethod()
         {
         }
-        
+
         virtual void execute(JniProxyVisitor &visitor,JniProxy &) = 0;
     };
-    
+
     /**
      * Use shared_ptr to manage allocation of VisitorMethods.
      */
@@ -167,13 +268,13 @@ public:
      * Dispatch table type.  The key is the Java class name, and the
      * value is the corresponding visit functor to be called.
      */
-    typedef std::map<std::string,SharedVisitorMethod> MethodMap;
+    typedef std::map<std::string, SharedVisitorMethod> MethodMap;
 
     /**
      * The dispatch table.
      */
     MethodMap methodMap;
-    
+
     /**
      * Called by generated code once for each proxy class.
      *
@@ -181,13 +282,10 @@ public:
      *
      * @param pMethod corresponding visit method to call
      */
-    void addMethod(jclass jClass,SharedVisitorMethod pMethod)
+    void addMethod(jclass jClass, SharedVisitorMethod pMethod)
     {
-        // TODO:  make this less MDR-dependent.  ProxyGen passes in a
-        // JMI interface, but at runtime we're going to see the name of the
-        // real implementation class, so use the class name in the map.
         assert(pMethod);
-        methodMap[JniUtil::getClassName(jClass)+"$Impl"] = pMethod;
+        methodMap[JniUtil::getClassName(jClass)] = pMethod;
     }
 
 
@@ -205,13 +303,14 @@ public:
         // NOTE:  it's OK to use operator [] here since it's an error to call
         // with the wrong proxy type, so in the non-error case we should always
         // find something
-        std::string className = proxy.getClassName();
+        std::string className = proxy.getInterfaceName();
         SharedVisitorMethod pMethod = methodMap[className];
         if (!pMethod) {
-            throw std::string("error: unknown method for proxy class '") +
-                className + "'";
+            throw std::logic_error(
+                std::string("error: unknown method for proxy class '")
+                + className + "'");
         }
-        pMethod->execute(visitor,proxy);
+        pMethod->execute(visitor, proxy);
     }
 };
 
@@ -245,7 +344,7 @@ public:
             // realize that the proxies themselves don't share the same
             // identity.
             ProxyImpl proxyImpl;
-            proxyImpl.init(proxy.pEnv,proxy.jObject);
+            proxyImpl.init(proxy.pEnv, proxy.jObject);
             // This binds to the correct visit overload.
             Visitor &visitorImpl = dynamic_cast<Visitor &>(visitor);
             visitorImpl.visit(proxyImpl);

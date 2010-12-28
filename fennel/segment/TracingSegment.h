@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TracingSegment implements tracing for the Segment interface.
  */
-class TracingSegment : public DelegatingSegment, public TraceSource
+class FENNEL_SEGMENT_EXPORT TracingSegment
+    : public DelegatingSegment, public TraceSource
 {
 public:
     /**
@@ -50,16 +51,18 @@ public:
         std::string sourceName);
 
     virtual ~TracingSegment();
-    
+
     // implement the Segment interface
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId = ANON_PAGE_OWNER_ID);
     virtual bool ensureAllocatedSize(BlockNum nPages);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
+    virtual MappedPageListener *getMappedPageListener(BlockId blockId);
+    virtual bool isWriteVersioned();
 
     // delegate the MappedPageListener interface
     virtual void notifyPageMap(CachePage &page);
@@ -68,6 +71,7 @@ public:
     virtual void notifyPageDirty(CachePage &page,bool bDataValid);
     virtual void notifyBeforePageFlush(CachePage &page);
     virtual void notifyAfterPageFlush(CachePage &page);
+    virtual MappedPageListener *notifyAfterPageCheckpointFlush(CachePage &page);
 };
 
 FENNEL_END_NAMESPACE

@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="backupRestore" basedir="." default="test">
+  <dirname property="backupRestore.dir" file="${ant.file.backupRestore}"/>
+  <property name="open.dir" location="${backupRestore.dir}/../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.catalog.schema" value="luciddb" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+  <property name="build.init.properties" location="${backupRestore.dir}/build.init.properties" />
+  <property name="luciddb.dir" location="${open.dir}/luciddb" />
+  <import file="${luciddb.dir}/properties.xml" />
+
+  <!-- directory of csv files -->
+  <property name="data.dir" value="${open.dir}/luciddb/test/data"/>
+  <property name="csv.copy.dir" value="${backupRestore.dir}/csv-copy"/>
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <property name="testlog.dir" value="${backupRestore.dir}" />
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
+    <copy todir="${backupRestore.dir}" overwrite="true">
+      <fileset dir="${backupRestore.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <filterset>
+        <filter token="TEST_DIR" value="${backupRestore.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+  </target>
+
+  <target name="create-archive-dirs">
+    <!-- create directories used by backup and restore test -->
+    <mkdir dir="${backupRestore.dir}/fullArchive"/>
+    <mkdir dir="${backupRestore.dir}/incrArchive1"/>
+    <mkdir dir="${backupRestore.dir}/incrArchive2"/>
+    <mkdir dir="${backupRestore.dir}/diffArchive"/>
+    <mkdir dir="${backupRestore.dir}/tmpArchive"/>
+    <mkdir dir="${backupRestore.dir}/nonWritableArchive"/>
+    <chmod dir="${backupRestore.dir}/nonWritableArchive" perm="u-w"/>
+  </target>
+
+  <target name="test-sanity" depends="clean-test">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-backupRestoreSanity" />
+    <!-- Clean out old archive data from the system catalog because one of
+         error testcases executed as part of this target assumes no backups
+         have been done.
+    -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="sanity.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test">
+
+    <!-- This set of sanity tests creates the backups used by subsequent
+         restore tests.
+    -->
+    <antcall target="test-sanity"/>
+
+    <antcall target="restoreErrs"/>
+
+    <antcall target="restoreFulla"/>
+    <antcall target="validateFulla"/>
+
+    <antcall target="restoreFullb"/>
+    <antcall target="restoreIncr1a"/>
+    <antcall target="validateIncr1"/>
+
+    <antcall target="restoreFullc"/>
+    <antcall target="restoreIncr1b"/>
+    <antcall target="restoreIncr2a"/>
+    <antcall target="validateIncr2a"/>
+
+    <antcall target="restoreFulld"/>
+    <antcall target="restoreDiff"/>
+    <antcall target="validateDiff"/>
+
+    <antcall target="restoreFulle"/>
+    <antcall target="badRestore1"/>
+    <!-- make sure the database is still in a valid state after the
+         restore failure
+    -->
+    <antcall target="validateFullb"/>
+
+    <antcall target="restoreFullf"/>
+    <antcall target="badRestore2"/>
+    <!-- make sure the database is still in a valid state after the
+         restore failure
+    -->
+    <antcall target="validateFullc"/>
+
+    <!-- Do a couple of restores without restoring the catalog and then do
+         a final restore with the catalog.
+    -->
+    <antcall target="restoreFullWithoutCataloga"/>
+    <antcall target="restoreIncr1WithoutCatalog"/>
+    <antcall target="restoreIncr2b"/>
+    <antcall target="validateIncr2b"/>
+
+    <!-- Make sure the data is inaccessible after a partial restore -->
+    <antcall target="restoreFullWithoutCatalogb"/>
+    <antcall target="partialRestoreAccess"/>
+
+  </target>
+
+  <target name="restoreErrs">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreErrs" />
+    <!-- Clean out old archive data from the system catalog.  The non-readable
+         directory needs to be created as part of this target because some
+         other test-related targets error out when they encounter non-readable
+         directories.
+    -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <mkdir dir="${backupRestore.dir}/nonReadableArchive"/>
+    <chmod dir="${backupRestore.dir}/nonReadableArchive" perm="u-r"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreErrs.xml"
+      classpathref="test.classpath"/>
+    <chmod dir="${backupRestore.dir}/nonReadableArchive" perm="u+r"/>
+    <delete dir="${backupRestore.dir}/nonReadableArchive"/>
+  </target>
+
+  <target name="restoreFulla">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFulla" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullb">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullb" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullc">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullc" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFulld">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFulld" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFulle">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFulle" />
+    <!-- restoreCatalog is needed so the error test that follows this returns
+         a consistent commit sequence number
+    -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullf">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullf" />
+    <!-- restoreCatalog is needed so the error test that follows this returns
+         a consistent commit sequence number
+    -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullWithoutCataloga">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullWithoutCataloga" />
+    <!-- do a restoreCatalog so we're starting from scratch -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFullWithoutCatalog.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreFullWithoutCatalogb">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreFullWithoutCatalogb" />
+    <!-- don't do a restoreCatalog so we'll retain the original catalog data -->
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreFullWithoutCatalog.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr1a">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr1a" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr1.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr1b">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr1b" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr1.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr1WithoutCatalog">
+      <property name="bh.log.basedir"
+          value="${testlog.dir}/bh-restoreIncr1WithoutCatalog" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr1WithoutCatalog.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr2a">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr2a" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreIncr2b">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreIncr2b" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreDiff">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-restoreDiff" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="restoreDiff.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="badRestore1">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-badRestore1" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="badRestore1.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="badRestore2">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-badRestore2" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="badRestore2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="partialRestoreAccess">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-partialRestoreAccess" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="partialRestoreAccess.xml"
+      classpathref="test.classpath"/>
+    <!-- put the catalog back into a usable state -->
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>
+
+  <target name="validateFulla">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateFulla" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateFullb">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateFullb" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateFullc">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateFullc" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateFull.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateIncr1">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr1" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateIncr1.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateIncr2a">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr2a" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateIncr2b">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateIncr2b" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateDiff">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-validateDiff" />
+    <blackhawk.fork
+      basedir="${backupRestore.dir}"
+      testscript="validateIncr2.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="EMP.csv"/>
+        <include name="DEPT.csv"/>
+        <include name="LOCATION.csv"/>
+      </fileset>
+    </sync>
+  </target>
+
+  <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${backupRestore.dir}/bh-backupRestoreSanity" />
+    <delete dir="${backupRestore.dir}/bh-restoreErrs" />
+    <delete dir="${backupRestore.dir}/bh-restoreFulla" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullb" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullc" />
+    <delete dir="${backupRestore.dir}/bh-restoreFulld" />
+    <delete dir="${backupRestore.dir}/bh-restoreFulle" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullf" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullWithoutCataloga" />
+    <delete dir="${backupRestore.dir}/bh-restoreFullWithoutCatalogb" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr1a" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr1b" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr1WithoutCatalog" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr2a" />
+    <delete dir="${backupRestore.dir}/bh-restoreIncr2b" />
+    <delete dir="${backupRestore.dir}/bh-badRestore1" />
+    <delete dir="${backupRestore.dir}/bh-badRestore2" />
+    <delete dir="${backupRestore.dir}/bh-restoreDiff" />
+    <delete dir="${backupRestore.dir}/bh-partialRestoreAccess" />
+    <delete dir="${backupRestore.dir}/bh-validateFulla" />
+    <delete dir="${backupRestore.dir}/bh-validateFullb" />
+    <delete dir="${backupRestore.dir}/bh-validateFullc" />
+    <delete dir="${backupRestore.dir}/bh-validateIncr1" />
+    <delete dir="${backupRestore.dir}/bh-validateIncr2a" />
+    <delete dir="${backupRestore.dir}/bh-validateIncr2b" />
+    <delete dir="${backupRestore.dir}/bh-validateDiff" />
+    <delete>
+      <fileset dir="${backupRestore.dir}" includes="*.log"/>
+    </delete>
+    <delete file="backups.sql"/>
+    <delete file="backupErrs.sql"/>
+    <delete file="restoreErr1.mtsql"/>
+    <delete file="restoreErr2.mtsql"/>
+    <delete file="restoreErr3.mtsql"/>
+    <delete file="restoreErr4.mtsql"/>
+    <delete file="restoreErr5.mtsql"/>
+    <delete file="badRestore1.mtsql"/>
+    <delete file="badRestore2.mtsql"/>
+    <delete file="restoreFull.mtsql"/>
+    <delete file="restoreFullWithoutCatalog.mtsql"/>
+    <delete file="restoreIncr1.mtsql"/>
+    <delete file="restoreIncr1WithoutCatalog.mtsql"/>
+    <delete file="restoreIncr2.mtsql"/>
+    <delete file="restoreDiff.mtsql"/>
+    <delete file="backups.ref"/>
+    <delete file="backupErrs.ref"/>
+    <delete file="restoreErr1.ref"/>
+    <delete file="restoreErr2.ref"/>
+    <delete file="restoreErr3.ref"/>
+    <delete file="restoreErr4.ref"/>
+    <delete file="restoreErr5.ref"/>
+    <delete file="badRestore1.ref"/>
+    <delete file="badRestore2.ref"/>
+    <delete file="restoreFull.ref"/>
+    <delete file="restoreFullWithoutCatalog.ref"/>
+    <delete file="restoreIncr1.ref"/>
+    <delete file="restoreIncr1WithoutCatalog.ref"/>
+    <delete file="restoreIncr2.ref"/>
+    <delete file="restoreDiff.ref"/>
+    <delete dir="${csv.copy.dir}"/>
+    <delete dir="${backupRestore.dir}/fullArchive"/>
+    <delete dir="${backupRestore.dir}/incrArchive1"/>
+    <delete dir="${backupRestore.dir}/incrArchive2"/>
+    <delete dir="${backupRestore.dir}/diffArchive"/>
+    <delete dir="${backupRestore.dir}/tmpArchive"/>
+    <chmod perm="u+w">
+      <dirset dir="${backupRestore.dir}" includes="nonWritableArchive"/>
+    </chmod>
+    <delete dir="${backupRestore.dir}/nonWritableArchive"/>
+    <!-- this should have been done earlier, but just in case -->
+    <chmod perm="u+r">
+      <dirset dir="${backupRestore.dir}" includes="nonReadableArchive"/>
+    </chmod>
+    <delete dir="${backupRestore.dir}/nonReadableArchive"/>
+  </target>
+
+</project>

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,9 @@
 */
 package net.sf.farrago.fennel.tuple;
 
+import java.io.*;
+
+
 /**
  * A FennelTupleDatum is a component of FennelTupleData; see the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
@@ -33,7 +36,8 @@ package net.sf.farrago.fennel.tuple;
  *
  * <p>Internally, this object attempts to bypass object creation during normal
  * use. It does this by wrangling all numeric primitive types into a 64-bit
- * (long) value and all array data into a byte array.
+ * (long) value and all array data into a byte array. This class is JDK 1.4
+ * compatible.
  */
 // NOTE: things incomplete at this time: (11jan05)
 //  - numerics and byte arrays are tracked independently; we should
@@ -45,18 +49,23 @@ package net.sf.farrago.fennel.tuple;
 //
 public class FennelTupleDatum
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * length of this data in externallized form.
+     * length of this data in externalized form.
      */
     private int dataLen;
 
     /**
-     * maximum size of this data in externallized form.
+     * maximum size of this data in externalized form.
      */
     private int capacity;
+
+    /**
+     * if character data, whether the attribute descriptor is Unicode; otherwise
+     * false
+     */
+    private boolean isUnicode;
 
     /**
      * the numeric object kept by this tuple; this holds all the numeric
@@ -91,11 +100,7 @@ public class FennelTupleDatum
      */
     public FennelTupleDatum()
     {
-        dataLen = 0;
-        capacity = 0;
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
+        this(0);
     }
 
     /**
@@ -104,11 +109,7 @@ public class FennelTupleDatum
      */
     public FennelTupleDatum(int capacity)
     {
-        dataLen = 0;
         setCapacity(capacity);
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
     }
 
     /**
@@ -126,7 +127,7 @@ public class FennelTupleDatum
      */
     public void setCapacity(int capacity)
     {
-        if (this.capacity != capacity) {
+        if ((this.capacity != capacity) || (initialBytes == null)) {
             initialBytes = new byte[capacity];
             this.capacity = capacity;
             rawBytes = initialBytes;
@@ -464,7 +465,37 @@ public class FennelTupleDatum
         setLength(rawBytes.length);
         rawBytesSet = true;
     }
+
+    public void setString(String str, String charsetName)
+        throws UnsupportedEncodingException
+    {
+        if (charsetName != null) {
+            // Before adding multi-byte support,
+            // always use single byte charset here
+            rawBytes = str.getBytes(charsetName);
+        } else {
+            rawBytes = str.getBytes();
+        }
+        setLength(rawBytes.length);
+        rawBytesSet = true;
+    }
+
+    /**
+     * Sets the isUnicode flag; this is non-public because it is private to
+     * TupleData initialization.
+     */
+    void setUnicode(boolean isUnicode)
+    {
+        this.isUnicode = isUnicode;
+    }
+
+    /**
+     * Whether character data is stored as Unicode.
+     */
+    public boolean isUnicode()
+    {
+        return isUnicode;
+    }
 }
-;
 
 // End FennelTupleDatum.java

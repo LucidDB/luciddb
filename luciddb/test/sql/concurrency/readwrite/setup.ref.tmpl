@@ -1,0 +1,251 @@
+0: jdbc:luciddb:> create schema rwconcur;
+0: jdbc:luciddb:> set schema 'rwconcur';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >     directory '@FFDIR@',
+. . . . . . . . >     file_extension '.tbl',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter '|',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'no',
+. . . . . . . . >     num_rows_scan '1',
+. . . . . . . . >     log_directory '@DIR@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "BCP" from server ff_server into rwconcur;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------
+0: jdbc:luciddb:> -- create tables
+0: jdbc:luciddb:> --------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.NATION  ( N_NATIONKEY  INTEGER PRIMARY KEY,
+. . . . . . . . >                             N_NAME       VARCHAR(25) NOT NULL,
+. . . . . . . . >                             N_REGIONKEY  INTEGER NOT NULL,
+. . . . . . . . >                             N_COMMENT    VARCHAR(152));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.REGION  ( R_REGIONKEY  INTEGER PRIMARY KEY,
+. . . . . . . . >                             R_NAME       VARCHAR(25) NOT NULL,
+. . . . . . . . >                             R_COMMENT    VARCHAR(152));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.PART  ( P_PARTKEY     INTEGER PRIMARY KEY,
+. . . . . . . . >                           P_NAME        VARCHAR(55) NOT NULL,
+. . . . . . . . >                           P_MFGR        VARCHAR(25) NOT NULL,
+. . . . . . . . >                           P_BRAND       VARCHAR(10) NOT NULL,
+. . . . . . . . >                           P_TYPE        VARCHAR(25) NOT NULL,
+. . . . . . . . >                           P_SIZE        INTEGER NOT NULL,
+. . . . . . . . >                           P_CONTAINER   VARCHAR(10) NOT NULL,
+. . . . . . . . >                           P_RETAILPRICE DECIMAL(15,2) NOT NULL,
+. . . . . . . . >                           P_COMMENT     VARCHAR(23) NOT NULL );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.SUPPLIER ( S_SUPPKEY     INTEGER PRIMARY KEY,
+. . . . . . . . >                              S_NAME        VARCHAR(25) NOT NULL,
+. . . . . . . . >                              S_ADDRESS     VARCHAR(40) NOT NULL,
+. . . . . . . . >                              S_NATIONKEY   INTEGER NOT NULL,
+. . . . . . . . >                              S_PHONE       VARCHAR(15) NOT NULL,
+. . . . . . . . >                              S_ACCTBAL     DECIMAL(15,2) NOT NULL,
+. . . . . . . . >                              S_COMMENT     VARCHAR(101) NOT NULL);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.PARTSUPP ( PS_PARTKEY     INTEGER,
+. . . . . . . . >                              PS_SUPPKEY     INTEGER,
+. . . . . . . . >                              PS_AVAILQTY    INTEGER NOT NULL,
+. . . . . . . . >                              PS_SUPPLYCOST  DECIMAL(15,2)  NOT NULL,
+. . . . . . . . >                              PS_COMMENT     VARCHAR(199) NOT NULL,
+. . . . . . . . >                              PRIMARY KEY(PS_PARTKEY, PS_SUPPKEY) );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.CUSTOMER ( C_CUSTKEY     INTEGER PRIMARY KEY,
+. . . . . . . . >                              C_NAME        VARCHAR(25) NOT NULL,
+. . . . . . . . >                              C_ADDRESS     VARCHAR(40) NOT NULL,
+. . . . . . . . >                              C_NATIONKEY   INTEGER NOT NULL,
+. . . . . . . . >                              C_PHONE       VARCHAR(15) NOT NULL,
+. . . . . . . . >                              C_ACCTBAL     DECIMAL(15,2)   NOT NULL,
+. . . . . . . . >                              C_MKTSEGMENT  VARCHAR(10) NOT NULL,
+. . . . . . . . >                              C_COMMENT     VARCHAR(117) NOT NULL);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.ORDERS  ( O_ORDERKEY       INTEGER PRIMARY KEY,
+. . . . . . . . >                            O_CUSTKEY        INTEGER NOT NULL,
+. . . . . . . . >                            O_ORDERSTATUS    VARCHAR(1) NOT NULL,
+. . . . . . . . >                            O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+. . . . . . . . >                            O_ORDERDATE      DATE NOT NULL,
+. . . . . . . . >                            O_ORDERPRIORITY  VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_CLERK          VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_SHIPPRIORITY   INTEGER NOT NULL,
+. . . . . . . . >                            O_COMMENT        VARCHAR(79) NOT NULL);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.LINEITEM (
+. . . . . . . . > L_ORDERKEY    INTEGER,
+. . . . . . . . > L_PARTKEY     INTEGER NOT NULL,
+. . . . . . . . > L_SUPPKEY     INTEGER NOT NULL,
+. . . . . . . . > L_LINENUMBER  INTEGER,
+. . . . . . . . > L_QUANTITY    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_DISCOUNT    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_TAX         DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_RETURNFLAG  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_LINESTATUS  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_SHIPDATE    DATE NOT NULL,
+. . . . . . . . > L_COMMITDATE  DATE NOT NULL,
+. . . . . . . . > L_RECEIPTDATE DATE NOT NULL,
+. . . . . . . . > L_SHIPINSTRUCT VARCHAR(25) NOT NULL, 
+. . . . . . . . > L_SHIPMODE    VARCHAR(10) NOT NULL,
+. . . . . . . . > L_COMMENT      VARCHAR(44) NOT NULL,
+. . . . . . . . > PRIMARY KEY(L_ORDERKEY, L_LINENUMBER)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.ORDERSU1  ( O_ORDERKEY       INTEGER PRIMARY KEY,
+. . . . . . . . >                            O_CUSTKEY        INTEGER NOT NULL,
+. . . . . . . . >                            O_ORDERSTATUS    VARCHAR(1) NOT NULL,
+. . . . . . . . >                            O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+. . . . . . . . >                            O_ORDERDATE      DATE NOT NULL,
+. . . . . . . . >                            O_ORDERPRIORITY  VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_CLERK          VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_SHIPPRIORITY   INTEGER NOT NULL,
+. . . . . . . . >                            O_COMMENT        VARCHAR(79) NOT NULL);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.ORDERSU2  ( O_ORDERKEY       INTEGER PRIMARY KEY,
+. . . . . . . . >                            O_CUSTKEY        INTEGER NOT NULL,
+. . . . . . . . >                            O_ORDERSTATUS    VARCHAR(1) NOT NULL,
+. . . . . . . . >                            O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+. . . . . . . . >                            O_ORDERDATE      DATE NOT NULL,
+. . . . . . . . >                            O_ORDERPRIORITY  VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_CLERK          VARCHAR(15) NOT NULL,
+. . . . . . . . >                            O_SHIPPRIORITY   INTEGER NOT NULL,
+. . . . . . . . >                            O_COMMENT        VARCHAR(79) NOT NULL);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.LINEITEMU1 (
+. . . . . . . . > L_ORDERKEY    INTEGER,
+. . . . . . . . > L_PARTKEY     INTEGER NOT NULL,
+. . . . . . . . > L_SUPPKEY     INTEGER NOT NULL,
+. . . . . . . . > L_LINENUMBER  INTEGER,
+. . . . . . . . > L_QUANTITY    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_DISCOUNT    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_TAX         DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_RETURNFLAG  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_LINESTATUS  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_SHIPDATE    DATE NOT NULL,
+. . . . . . . . > L_COMMITDATE  DATE NOT NULL,
+. . . . . . . . > L_RECEIPTDATE DATE NOT NULL,
+. . . . . . . . > L_SHIPINSTRUCT VARCHAR(25) NOT NULL, 
+. . . . . . . . > L_SHIPMODE    VARCHAR(10) NOT NULL,
+. . . . . . . . > L_COMMENT      VARCHAR(44) NOT NULL,
+. . . . . . . . > PRIMARY KEY(L_ORDERKEY, L_LINENUMBER)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE RWCONCUR.LINEITEMU2 (
+. . . . . . . . > L_ORDERKEY    INTEGER,
+. . . . . . . . > L_PARTKEY     INTEGER NOT NULL,
+. . . . . . . . > L_SUPPKEY     INTEGER NOT NULL,
+. . . . . . . . > L_LINENUMBER  INTEGER,
+. . . . . . . . > L_QUANTITY    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_DISCOUNT    DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_TAX         DECIMAL(15,2) NOT NULL,
+. . . . . . . . > L_RETURNFLAG  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_LINESTATUS  VARCHAR(1) NOT NULL,
+. . . . . . . . > L_SHIPDATE    DATE NOT NULL,
+. . . . . . . . > L_COMMITDATE  DATE NOT NULL,
+. . . . . . . . > L_RECEIPTDATE DATE NOT NULL,
+. . . . . . . . > L_SHIPINSTRUCT VARCHAR(25) NOT NULL, 
+. . . . . . . . > L_SHIPMODE    VARCHAR(10) NOT NULL,
+. . . . . . . . > L_COMMENT      VARCHAR(44) NOT NULL,
+. . . . . . . . > PRIMARY KEY(L_ORDERKEY, L_LINENUMBER)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DELETE1(D_ORDERKEY INTEGER);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DELETE2(D_ORDERKEY INTEGER);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ---------------------------
+0: jdbc:luciddb:> -- indices for foreign keys
+0: jdbc:luciddb:> ---------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table NATION: N_REGIONKEY
+0: jdbc:luciddb:> CREATE INDEX N_REGIONKEY_IDX ON NATION(N_REGIONKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table REGION: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table PART: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table SUPPLIER: S_NATIONKEY
+0: jdbc:luciddb:> CREATE INDEX S_NATIONKEY_IDX ON SUPPLIER(S_NATIONKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table PARTSUPP: PS_PARTKEY, PS_SUPPKEY
+0: jdbc:luciddb:> CREATE INDEX PS_PARTKEY_IDX ON PARTSUPP(PS_PARTKEY);
+0: jdbc:luciddb:> CREATE INDEX PS_SUPPKEY_IDX ON PARTSUPP(PS_SUPPKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table CUSTOMER:C_NATIONKEY
+0: jdbc:luciddb:> CREATE INDEX C_NATIONKEY_IDX ON CUSTOMER(C_NATIONKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table ORDERS: O_CUSTKEY
+0: jdbc:luciddb:> CREATE INDEX O_CUSTKEY_IDX ON ORDERS(O_CUSTKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table LINEITEM: L_ORDERKEY, <L_PARTKEY,L_SUPPKEY>
+0: jdbc:luciddb:> CREATE INDEX L_ORDERKEY_IDX ON LINEITEM(L_ORDERKEY);
+0: jdbc:luciddb:> CREATE INDEX L_PARTSUPPKEY_IDX ON LINEITEM(L_PARTKEY,L_SUPPKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------
+0: jdbc:luciddb:> -- indices for WHERE clauses
+0: jdbc:luciddb:> ----------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 1
+0: jdbc:luciddb:> CREATE INDEX L_SHIPDATE_IDX ON LINEITEM(L_SHIPDATE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 3
+0: jdbc:luciddb:> CREATE INDEX C_MKTSEGMENT_IDX ON CUSTOMER(C_MKTSEGMENT);
+0: jdbc:luciddb:> CREATE INDEX O_ORDERDATE_IDX ON ORDERS(O_ORDERDATE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 5
+0: jdbc:luciddb:> CREATE INDEX L_SUPPKEY_IDX ON LINEITEM(L_SUPPKEY);
+0: jdbc:luciddb:> CREATE INDEX R_NAME_IDX ON REGION(R_NAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 6
+0: jdbc:luciddb:> CREATE INDEX L_DISCOUNT_IDX ON LINEITEM(L_DISCOUNT);
+0: jdbc:luciddb:> CREATE INDEX L_QUANTITY_IDX ON LINEITEM(L_QUANTITY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 10
+0: jdbc:luciddb:> CREATE INDEX L_RETURNFLAG_IDX ON LINEITEM(L_RETURNFLAG);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 12
+0: jdbc:luciddb:> CREATE INDEX L_SHIPMODE_IDX ON LINEITEM(L_SHIPMODE);
+0: jdbc:luciddb:> CREATE INDEX L_COMMITDATE_IDX ON LINEITEM(L_COMMITDATE);
+0: jdbc:luciddb:> CREATE INDEX L_RECEIPTDATE_IDX ON LINEITEM(L_RECEIPTDATE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 14
+0: jdbc:luciddb:> CREATE INDEX L_PARTKEY_IDX ON LINEITEM(L_PARTKEY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 2
+0: jdbc:luciddb:> CREATE INDEX P_SIZE_IDX ON PART(P_SIZE);
+0: jdbc:luciddb:> CREATE INDEX P_TYPE_IDX ON PART(P_TYPE);
+0: jdbc:luciddb:> CREATE INDEX PS_SUPPLYCOST_IDX ON PARTSUPP(PS_SUPPLYCOST);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 4: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 7
+0: jdbc:luciddb:> CREATE INDEX N_NAME_IDX ON NATION(N_NAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 8: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 9
+0: jdbc:luciddb:> CREATE INDEX P_NAME_IDX ON PART(P_NAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 11: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 13
+0: jdbc:luciddb:> CREATE INDEX O_CLERK_IDX ON ORDERS(O_CLERK);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 15: none
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 16
+0: jdbc:luciddb:> CREATE INDEX P_BRAND_IDX ON PART(P_BRAND);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 17
+0: jdbc:luciddb:> CREATE INDEX P_CONTAINER_IDX ON PART(P_CONTAINER);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

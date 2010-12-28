@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 Xiaoyang Luo
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 Xiaoyang Luo
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,9 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import net.sf.farrago.type.*;
-import net.sf.farrago.type.runtime.*;
-
 import openjava.mop.*;
 
 import openjava.ptree.*;
@@ -32,13 +29,12 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
 /**
  * FarragoOJRexCaseImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for CASE expressions.
+ * org.eigenbase.oj.rex.OJRexImplementor} for <code>CASE</code> expressions.
  *
  * @author Xiaoyang Luo
  * @version $Id$
@@ -46,7 +42,6 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexCaseImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
@@ -87,28 +82,19 @@ public class FarragoOJRexCaseImplementor
         IfStatement prevIfStatement = null;
 
         for (i = 0; i < (operands.length - 1); i = i + 2) {
-            boolean bHasElseAndLastOne = false;
             Expression cond = operands[i];
             Expression value = operands[i + 1];
             boolean isCondNullable = call.operands[i].getType().isNullable();
-            StatementList caseCondStmtList = translator.getCaseStmtList(i);
-            StatementList stmtList = translator.getCaseStmtList(i + 1);
-            if (stmtList == null) {
-                stmtList = new StatementList();
-            }
-            if (i == 0) {
-                for (int k = 0; k < caseCondStmtList.size(); k++) {
-                    translator.addStatement(caseCondStmtList.get(k));
-                }
-            }
+            final FarragoRexToOJTranslator.Frame caseCondFrame =
+                translator.getSubFrame(i);
+            final StatementList caseCondStmtList = caseCondFrame.stmtList;
+            FarragoRexToOJTranslator.Frame frame =
+                translator.getSubFrame(i + 1);
+            assert frame != null;
             IfStatement ifStmt = null;
 
-            if (i == (operands.length - 3)) {
-                bHasElseAndLastOne = true;
-            }
-
             translator.convertCastOrAssignmentWithStmtList(
-                stmtList,
+                frame.stmtList,
                 call.toString(),
                 call.getType(),
                 call.operands[i + 1].getType(),
@@ -139,9 +125,11 @@ public class FarragoOJRexCaseImplementor
                 cond = condition;
             }
 
+            final boolean bHasElseAndLastOne = (i == (operands.length - 3));
             if (bHasElseAndLastOne) {
-                StatementList elseStmtList =
-                    translator.getCaseStmtList(operands.length - 1);
+                final FarragoRexToOJTranslator.Frame elseFrame =
+                    translator.getSubFrame(operands.length - 1);
+                final StatementList elseStmtList = elseFrame.stmtList;
                 translator.convertCastOrAssignmentWithStmtList(
                     elseStmtList,
                     call.toString(),
@@ -149,9 +137,9 @@ public class FarragoOJRexCaseImplementor
                     call.operands[operands.length - 1].getType(),
                     varResult,
                     operands[operands.length - 1]);
-                ifStmt = new IfStatement(cond, stmtList, elseStmtList);
+                ifStmt = new IfStatement(cond, frame.stmtList, elseStmtList);
             } else {
-                ifStmt = new IfStatement(cond, stmtList);
+                ifStmt = new IfStatement(cond, frame.stmtList);
             }
             if (wholeStatement == null) {
                 wholeStatement = ifStmt;

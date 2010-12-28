@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,26 +39,35 @@ import org.eigenbase.sql.util.*;
 class AggChecker
     extends SqlBasicVisitor<Void>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Stack<SqlValidatorScope> scopes =
         new Stack<SqlValidatorScope>();
     private final List<SqlNode> groupExprs;
+    private boolean distinct;
     private SqlValidatorImpl validator;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AggChecker.
+     *
+     * @param validator Validator
+     * @param scope Scope
+     * @param groupExprs Expressions in GROUP BY (or SELECT DISTINCT) clause,
+     * that are therefore available
+     * @param distinct Whether aggregation checking is because of a SELECT
+     * DISTINCT clause
      */
     AggChecker(
         SqlValidatorImpl validator,
         AggregatingScope scope,
-        List<SqlNode> groupExprs)
+        List<SqlNode> groupExprs,
+        boolean distinct)
     {
         this.validator = validator;
         this.groupExprs = groupExprs;
+        this.distinct = distinct;
         this.scopes.push(scope);
     }
 
@@ -86,7 +95,8 @@ class AggChecker
         }
 
         // Is it a call to a parentheses-free function?
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 id);
         if (call != null) {
@@ -105,12 +115,26 @@ class AggChecker
         final String exprString = originalExpr.toString();
         throw validator.newValidationError(
             originalExpr,
-            EigenbaseResource.instance().NotGroupExpr.ex(exprString));
+            distinct
+            ? EigenbaseResource.instance().NotSelectDistinctExpr.ex(
+                exprString)
+            : EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
     public Void visit(SqlCall call)
     {
         if (call.getOperator().isAggregator()) {
+            if (distinct) {
+                // Cannot use agg fun in ORDER BY clause if have SELECT
+                // DISTINCT.
+                SqlNode originalExpr = validator.getOriginal(call);
+                final String exprString = originalExpr.toString();
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().NotSelectDistinctExpr.ex(
+                        exprString));
+            }
+
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
             return null;
@@ -119,7 +143,7 @@ class AggChecker
             // This call matches an expression in the GROUP BY clause.
             return null;
         }
-        if (call.isA(SqlKind.Query)) {
+        if (call.isA(SqlKind.QUERY)) {
             // Allow queries for now, even though they may contain
             // references to forbidden columns.
             return null;
@@ -131,7 +155,8 @@ class AggChecker
         scopes.push(newScope);
 
         // Visit the operands (only expressions).
-        call.getOperator().acceptCall(this,
+        call.getOperator().acceptCall(
+            this,
             call,
             true,
             ArgHandlerImpl.instance);

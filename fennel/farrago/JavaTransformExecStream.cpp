@@ -1,20 +1,20 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,8 +37,15 @@ JavaTransformExecStreamParams::JavaTransformExecStreamParams()
 JavaTransformExecStream::JavaTransformExecStream()
 {
     pStreamGraphHandle = NULL;
-    outputByteBuffer = NULL;
+    outputByteBuffer1 = NULL;
+    outputByteBuffer2 = NULL;
+    pBuffer1 = NULL;
+    pBuffer2 = NULL;
     farragoTransform = NULL;
+}
+
+JavaTransformExecStream::~JavaTransformExecStream()
+{
 }
 
 void JavaTransformExecStream::setInputBufAccessors(
@@ -76,36 +83,16 @@ void JavaTransformExecStream::prepare(
         assert(inAccessors[i]->getProvision() == getInputBufProvision());
     }
 
-    JniEnvAutoRef pEnv;
-
-    farragoTransformClassName = params.javaClassName;
+    javaClassName = params.javaClassName;
     pStreamGraphHandle = params.pStreamGraphHandle;
-
-    // TODO: SWZ: 3/17/06: Avoid allocating scratch space when there's
-    // no output accessor.  Also need to change getResourceRequirements.
-    scratchAccessor = params.scratchAccessor;
-    bufferLock.accessSegment(scratchAccessor);
-}
-
-void JavaTransformExecStream::getResourceRequirements(
-    ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
-{
-    ExecStream::getResourceRequirements(minQuantity,optQuantity);
-
-    // one page for scratch buffer
-    minQuantity.nCachePages += 1;
-    optQuantity = minQuantity;
 }
 
 void JavaTransformExecStream::open(bool restart)
 {
-    FENNEL_TRACE(TRACE_FINER, "open" << (restart? " (restart)" : ""));
-
+    FENNEL_TRACE(TRACE_FINER, "open" << (restart ? " (restart)" : ""));
     ExecStream::open(restart);
 
     JniEnvAutoRef pEnv;
-
     if (restart) {
         if (pOutAccessor) {
             pOutAccessor->clear();
@@ -114,11 +101,10 @@ void JavaTransformExecStream::open(bool restart)
         // restart inputs
         for (uint i = 0; i < inAccessors.size(); ++i) {
             inAccessors[i]->clear();
-            pGraph->getStreamInput(getStreamId(),i)->open(true);
+            pGraph->getStreamInput(getStreamId(), i)->open(true);
         }
 
         assert(farragoTransform);
-
         pEnv->CallVoidMethod(
             farragoTransform,
             JniUtil::methFarragoTransformRestart,
@@ -126,94 +112,17 @@ void JavaTransformExecStream::open(bool restart)
         return;
     }
 
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "java class name: " << farragoTransformClassName.c_str());
-
-    // Need to use a call on the FarragoRuntimeContext to get the
-    // class (we need the right class loader).
-    
-    jstring javaClassName = 
-        pEnv->NewStringUTF(farragoTransformClassName.c_str());
-
-    // net.sf.farrago.runtime.FarragoTransform implementation (can't be done
-    // in JniUtil because it's different for each transform)
-    jclass classFarragoTransform =
-        reinterpret_cast<jclass>(
-            pEnv->CallObjectMethod(
-                pStreamGraphHandle->javaRuntimeContext,
-                JniUtil::methFarragoRuntimeContextStatementClassForName,
-                javaClassName));
-    assert(classFarragoTransform);
-
-    // FarragoTransform implementation constructor
-    jmethodID methFarragoTransformCons =
-        pEnv->GetMethodID(classFarragoTransform, "<init>", "()V");
-    assert(methFarragoTransformCons);
-
-    // initialize parameters for FarragoTransform.init()
-    jobjectArray inputBindingArray = NULL;
-
-    if (inAccessors.size() > 0) {
-        inputBindingArray =
-            pEnv->NewObjectArray(
-                inAccessors.size(), 
-                JniUtil::classFarragoTransformInputBinding,
-                NULL);
-        
-        ExecStreamGraph &streamGraph = getGraph();
-        
-        for(uint ordinal = 0; ordinal < inAccessors.size(); ordinal++) {
-            std::string inputStreamName =
-                streamGraph.getStreamInput(getStreamId(), ordinal)->getName();
-
-            jstring jInputStreamName =
-                pEnv->NewStringUTF(inputStreamName.c_str());
-            jint jOrdinal = static_cast<jint>(ordinal);
-
-            jobject inputBinding = 
-                pEnv->NewObject(
-                    JniUtil::classFarragoTransformInputBinding,
-                    JniUtil::methFarragoTransformInputBindingCons,
-                    jInputStreamName,
-                    jOrdinal);
-            assert(inputBinding);
-
-            pEnv->SetObjectArrayElement(
-                inputBindingArray, jOrdinal, inputBinding);
-        }
-    }
-
-    // Create FarragoTransform instance and initialize it
-    jobject xformRef =
-        pEnv->NewObject(classFarragoTransform, methFarragoTransformCons);
-    assert(xformRef);
-
-    farragoTransform = pEnv->NewGlobalRef(xformRef);
-    assert(farragoTransform);
-
-    const std::string &streamName = getName();
-
-    jstring javaStreamName = pEnv->NewStringUTF(streamName.c_str());
-
-    pEnv->CallVoidMethod(
-        farragoTransform,
-        JniUtil::methFarragoTransformInit,
-        pStreamGraphHandle->javaRuntimeContext,
-        javaStreamName,
-        inputBindingArray);
-
-
-    // Allocate output buffer.
-    bufferLock.allocatePage();
-    outputByteBuffer = pEnv->NewDirectByteBuffer(
-        bufferLock.getPage().getWritableData(),
-        bufferLock.getPage().getCache().getPageSize());
-    outputByteBuffer = pEnv->NewGlobalRef(outputByteBuffer);
-    FENNEL_TRACE(
-        TRACE_FINER, "allocated 1 java ByteBuffer " << outputByteBuffer);
-    assert(outputByteBuffer);
+    // find java peer (a FarragoTransform)
+    FENNEL_TRACE(TRACE_FINER, "finding java peer, class " << javaClassName);
+    jobject o =
+        pEnv->CallObjectMethod(
+            pStreamGraphHandle->javaRuntimeContext,
+            JniUtil::methFarragoRuntimeContextFindFarragoTransform,
+            pEnv->NewStringUTF(javaClassName.c_str()));
+    assert(o);
+    farragoTransform = pEnv->NewGlobalRef(o);
 }
+
 
 ExecStreamResult JavaTransformExecStream::execute(
     ExecStreamQuantum const &quantum)
@@ -221,51 +130,74 @@ ExecStreamResult JavaTransformExecStream::execute(
     FENNEL_TRACE(TRACE_FINEST, "execute");
 
     if (pOutAccessor) {
-        switch(pOutAccessor->getState()) {
+        switch (pOutAccessor->getState()) {
         case EXECBUF_NONEMPTY:
         case EXECBUF_OVERFLOW:
-            FENNEL_TRACE(TRACE_FINEST, "overflow");
+            FENNEL_TRACE(TRACE_FINER, "overflow");
             return EXECRC_BUF_OVERFLOW;
         case EXECBUF_EOS:
-            FENNEL_TRACE(TRACE_FINEST, "eos");
+            FENNEL_TRACE(TRACE_FINER, "eos");
             return EXECRC_EOS;
         default:
             break;
         }
     }
 
-    for (uint i = 0; i < inAccessors.size(); ++i) {
-        SharedExecStreamBufAccessor inAccessor = inAccessors[i];
-        
-        // Request production on empty inputs.  
-        if (inAccessor->getState() == EXECBUF_EMPTY) {
-            inAccessor->requestProduction();
-        }
-    }
-    
+    checkEmptyInputs();
+
+    jlong jquantum = static_cast<jlong>(quantum.nTuplesMax);
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
+    PBuffer pBuffer;
+    if (pOutAccessor) {
+        pBuffer = pOutAccessor->getProductionStart();
+        if (!outputByteBuffer1) {
+            outputByteBuffer1 = pEnv->NewDirectByteBuffer(
+                pBuffer,
+                pOutAccessor->getProductionAvailable());
+            outputByteBuffer1 = pEnv->NewGlobalRef(outputByteBuffer1);
+            pBuffer1 = pBuffer;
+        } else if (!outputByteBuffer2) {
+            if (pBuffer1 != pBuffer) {
+                outputByteBuffer2 = pEnv->NewDirectByteBuffer(
+                    pBuffer,
+                    pOutAccessor->getProductionAvailable());
+                outputByteBuffer2 = pEnv->NewGlobalRef(outputByteBuffer2);
+                pBuffer2 = pBuffer;
+            }
+        }
+    } else {
+        pBuffer = NULL;
+    }
+
+    // If this assertion fails, it means we're dealing with something
+    // other than a ScratchBufferExecStream or DoubleBufferExecStream
+    // immediately downstream.
+    assert((pBuffer == pBuffer1) || (pBuffer == pBuffer2));
+
+    // REVIEW jvs 18-Dec-2008:  Is it OK to pass NULL for the buffer
+    // in the case where no outputs are defined?  There are no
+    // unit tests demonstrating this pattern in Fennel, but
+    // there should be.
+
     int cb = pEnv->CallIntMethod(
         farragoTransform,
-        JniUtil::methFarragoTransformExecute, 
-        outputByteBuffer);
-
-    FENNEL_TRACE(TRACE_FINER, "read " << cb << " bytes");
+        JniUtil::methFarragoTransformExecute,
+        (pBuffer == pBuffer1) ? outputByteBuffer1 : outputByteBuffer2,
+        jquantum);
 
     if (cb > 0) {
         assert(pOutAccessor);
-        pOutAccessor->provideBufferForConsumption(
-            bufferLock.getPage().getWritableData(),
-            bufferLock.getPage().getWritableData() + cb);
-
-        FENNEL_TRACE(TRACE_FINER, "write overflow");
+        pOutAccessor->produceData(pBuffer + cb);
+        FENNEL_TRACE(TRACE_FINER, "wrote " << cb << " bytes");
         return EXECRC_BUF_OVERFLOW;
     } else if (cb < 0) {
-        FENNEL_TRACE(TRACE_FINEST, "underflow");
-        return EXECRC_BUF_UNDERFLOW;
+        FENNEL_TRACE(TRACE_FINER, "underflow or adapter (sink) queue is full.");
+        // if inputs are empty, request for more data from upstream.
+        checkEmptyInputs();
+        return EXECRC_QUANTUM_EXPIRED;
     } else {
-        FENNEL_TRACE(TRACE_FINEST, "marking EOS");
-
+        FENNEL_TRACE(TRACE_FINER, "marking EOS");
         if (pOutAccessor) {
             pOutAccessor->markEOS();
         }
@@ -273,24 +205,33 @@ ExecStreamResult JavaTransformExecStream::execute(
     }
 }
 
+void JavaTransformExecStream::checkEmptyInputs()
+{
+    for (uint i = 0; i < inAccessors.size(); ++i) {
+        SharedExecStreamBufAccessor inAccessor = inAccessors[i];
+        if (inAccessor->getState() == EXECBUF_EMPTY) {
+            inAccessor->requestProduction();
+        }
+    }
+}
+
 void JavaTransformExecStream::closeImpl()
 {
     JniEnvAutoRef pEnv;
-
-    // REVIEW: SWZ: 3/8/2006: Call closeAllocation on farragoTransform?
-
     if (farragoTransform) {
         pEnv->DeleteGlobalRef(farragoTransform);
         farragoTransform = NULL;
     }
-
-    if (outputByteBuffer) {
-        pEnv->DeleteGlobalRef(outputByteBuffer);
-        outputByteBuffer = NULL;
+    if (outputByteBuffer1) {
+        pEnv->DeleteGlobalRef(outputByteBuffer1);
+        outputByteBuffer1 = NULL;
     }
-
-    bufferLock.unlock();
-
+    if (outputByteBuffer2) {
+        pEnv->DeleteGlobalRef(outputByteBuffer2);
+        outputByteBuffer2 = NULL;
+    }
+    pBuffer1 = NULL;
+    pBuffer2 = NULL;
     ExecStream::closeImpl();
 }
 
@@ -301,6 +242,16 @@ ExecStreamBufProvision JavaTransformExecStream::getInputBufProvision() const
 
 ExecStreamBufProvision JavaTransformExecStream::getOutputBufProvision() const
 {
+    return BUFPROV_CONSUMER;
+}
+
+ExecStreamBufProvision JavaTransformExecStream::getOutputBufConversion() const
+{
+    // Although JavaTransformExecStream itself does not provide buffers,
+    // it relies on having either ScratchBufferExecStream or
+    // DoubleBufferExecStream available immediately downstream; it cannot
+    // handle any other kind of buffers such as those from
+    // SegBufferExecStream.
     return BUFPROV_PRODUCER;
 }
 

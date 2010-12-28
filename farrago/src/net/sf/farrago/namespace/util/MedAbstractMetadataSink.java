@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,8 +29,6 @@ import java.util.regex.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
 
-import org.eigenbase.util.*;
-
 
 /**
  * MedAbstractMetadataSink is an abstract base class for implementations of the
@@ -42,12 +40,11 @@ import org.eigenbase.util.*;
 public abstract class MedAbstractMetadataSink
     implements FarragoMedMetadataSink
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoMedMetadataQuery query;
     private final FarragoTypeFactory typeFactory;
-    private final Map patternMap;
+    private final Map<String, Pattern> patternMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -64,7 +61,7 @@ public abstract class MedAbstractMetadataSink
     {
         this.query = query;
         this.typeFactory = typeFactory;
-        patternMap = new HashMap();
+        this.patternMap = new HashMap<String, Pattern>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -79,7 +76,8 @@ public abstract class MedAbstractMetadataSink
      *
      * @return true if the inclusion test passes
      */
-    protected boolean shouldInclude(String objectName,
+    protected boolean shouldInclude(
+        String objectName,
         String typeName,
         boolean qualifier)
     {
@@ -116,7 +114,7 @@ public abstract class MedAbstractMetadataSink
 
     Pattern getPattern(String likePattern)
     {
-        Pattern pattern = (Pattern) patternMap.get(likePattern);
+        Pattern pattern = patternMap.get(likePattern);
         if (pattern == null) {
             // TODO jvs 6-Aug-2005:  move this to a common location
             // where it can be used for LIKE evaluations in SQL expressions,

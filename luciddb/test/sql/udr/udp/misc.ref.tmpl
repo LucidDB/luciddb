@@ -47,10 +47,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- negative test
 0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportSchemaToCsv failed
-No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false table_list=null table_pattern=t____ (state=,code=0)
+Error: No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false table_list=null table_pattern=t____ (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
 0: jdbc:luciddb:> 
@@ -97,60 +94,33 @@ No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false table_list
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- table_list and table_pattern both not null
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportSchemaToCsv failed
-Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
+Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportForeignSchemaToCsv failed
-Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
+Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect table within table_list
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportSchemaToCsv failed
-One or more tables in table_list not found: [emp, nonexistant] (state=,code=0)
+Error: One or more tables in table_list not found: [emp, nonexistant] (state=,code=0)
 0: jdbc:luciddb:>  
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportForeignSchemaToCsv failed
-Error during import foreign schema into temp schema _TMP_LOCAL_SCHEMA96d8605f-7b76-421c-8a0a-0ac6c9d336ad: One or more tables not found while importing foreign schema "BCP":  [nonexistant, EMP, DEPT]
-One or more tables not found while importing foreign schema "BCP":  [nonexistant, EMP, DEPT] (state=,code=0)
+Error: One or more tables not found while importing foreign schema "BCP":  [DEPT, EMP, nonexistant] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect catalog name
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportSchemaToCsv failed
-One or more tables in table_list not found: [DEPT] (state=,code=0)
+Error: One or more tables in table_list not found: [DEPT] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect schema name
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportSchemaToCsv failed
-One or more tables in table_list not found: [bench] (state=,code=0)
+Error: One or more tables in table_list not found: [bench] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect server name
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportForeignSchemaToCsv failed
-Error during import foreign schema into temp schema _TMP_LOCAL_SCHEMA160934aa-68b8-4dd2-bfed-012d15cc4d6a: DDL validation error near line 1, column 63: Reference to unknown data server "FF_SERV"
-DDL validation error near line 1, column 63: Reference to unknown data server "FF_SERV" (state=,code=0)
+Error: DDL validation error near line 1, column 63: Reference to unknown data server "FF_SERV" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect foreign schema name
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method exportForeignSchemaToCsv failed
-Error during import foreign schema into temp schema _TMP_LOCAL_SCHEMA70913401-b6fa-4311-9078-6385c4d4bdac: Unknown foreign schema "FILE"
-Unknown foreign schema "FILE" (state=,code=0)
+Error: Unknown foreign schema "FILE" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- check export directory
 0: jdbc:luciddb:> create server neg_server

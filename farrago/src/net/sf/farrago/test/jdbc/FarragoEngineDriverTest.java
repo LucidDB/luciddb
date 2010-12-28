@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,8 +27,11 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
+
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -41,7 +44,6 @@ import net.sf.farrago.test.*;
 public class FarragoEngineDriverTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoEngineDriverTest(String testname)
@@ -58,9 +60,10 @@ public class FarragoEngineDriverTest
     public void testURIs()
         throws Exception
     {
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
 
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
         String uri = null;
         assertFalse(
             "driver accepts " + uri,
@@ -133,8 +136,8 @@ public class FarragoEngineDriverTest
         // create a sample connect string with various complications.
         // note that the parser itself is tested in eigenbase.
         final int maxParams = 6;
-        HashMap ref = new HashMap();
-        StringBuffer params = new StringBuffer();
+        HashMap<String, String> ref = new HashMap<String, String>();
+        StringBuilder params = new StringBuilder();
         for (int i = 0; i < maxParams; ++i) {
             String key = "name" + i;
             String val = "value" + i;
@@ -160,8 +163,10 @@ public class FarragoEngineDriverTest
         tracer.info("loaded: " + uri);
 
         // test the driver's use of the connect string parser
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
+
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
 
@@ -170,7 +175,7 @@ public class FarragoEngineDriverTest
         for (int i = 0; i < maxParams; ++i) {
             String key = "name" + i;
             String val = (String) parsedProps.get(key);
-            String expval = (String) ref.get(key);
+            String expval = ref.get(key);
             assertEquals("param " + key + ", ", expval, val);
         }
 
@@ -184,7 +189,8 @@ public class FarragoEngineDriverTest
         Properties props = newProperties();
         Connection conn = driver.connect(uri, props);
         assertNotNull("null connection", conn);
-        assertTrue("FarragoJdbcEngineConnection",
+        assertTrue(
+            "FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
         assertEquals(
             "user's props changed,",
@@ -203,7 +209,8 @@ public class FarragoEngineDriverTest
         String loginUri = uri + ";user=" + FarragoCatalogInit.SA_USER_NAME;
         conn = driver.connect(loginUri, empty);
         assertNotNull("null connection", conn);
-        assertTrue("FarragoJdbcEngineConnection",
+        assertTrue(
+            "FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
         assertEquals(
             "empty props changed",
@@ -229,7 +236,7 @@ public class FarragoEngineDriverTest
     }
 
     /**
-     * tests that session parameter values make it to sessions_view.
+     * Tests that session parameter values make it to sessions_view.
      */
     public void testSessionParams()
         throws Exception
@@ -239,8 +246,10 @@ public class FarragoEngineDriverTest
         final String sessQuery =
             "SELECT * FROM sys_boot.mgmt.sessions_view "
             + " WHERE session_name = '" + sessionName + "'";
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
+
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
 
         Properties sessionProps = new Properties(newProperties());
         sessionProps.setProperty("sessionName", sessionName);
@@ -275,6 +284,127 @@ public class FarragoEngineDriverTest
     }
 
     /**
+     * Tests special connection initialization based on connection properties.
+     *
+     * @throws Exception
+     *
+     * @see FarragoJdbcEngineConnection#initConnection(Properties)
+     */
+    public void testConnectionInit()
+        throws Exception
+    {
+        final String driverURI = "jdbc:farrago:";
+        final String initialSchema = "sales";
+        final String query = "SELECT * FROM emps";
+        FarragoAbstractJdbcDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
+
+        Properties props = newProperties();
+        Connection conn = driver.connect(driverURI, props);
+
+        // test query that assumes a schema
+        Statement stmt = conn.createStatement();
+        try {
+            stmt.executeQuery(query);
+            fail("query should have required a default schema");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, "No default schema specified.*");
+        }
+        stmt.close();
+        conn.close();
+
+        // test good initial schema; could also be param on URI string
+        props.setProperty("schema", initialSchema);
+        conn = driver.connect(driverURI, props);
+        stmt = conn.createStatement();
+        try {
+            ResultSet rset = stmt.executeQuery(query);
+            assertTrue("expected at last one row", rset.next());
+        } catch (SQLException e) {
+            assertExceptionMatches(e, "No default schema specified.*");
+        }
+        stmt.close();
+        conn.close();
+
+        // test wrong initial schema; could also be param on URI string
+        props.setProperty("schema", "SAILS");
+        conn = driver.connect(driverURI, props);
+        stmt = conn.createStatement();
+        try {
+            stmt.executeQuery(query);
+            fail("query should have required the SALES schema");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, ".*Table 'EMPS' not found");
+        }
+        stmt.close();
+        conn.close();
+
+        // test invalid initial schema; could also be param on URI string
+        props.setProperty("schema", "unquoted phrase");
+        try {
+            conn = driver.connect(driverURI, props);
+            fail("connection should fail with syntax error");
+        } catch (SQLException e) {
+            assertTrue(
+                "got " + e.getClass().getName()
+                + " but expected FarragoSqlException,",
+                e instanceof FarragoJdbcUtil.FarragoSqlException);
+            FarragoJdbcUtil.FarragoSqlException fse =
+                (FarragoJdbcUtil.FarragoSqlException) e;
+            Throwable orig = fse.getOriginalThrowable();
+            assertNotNull("null original throwable", orig);
+            assertTrue(
+                "got " + orig.getClass().getName()
+                + " but expected SqlParseException,",
+                orig instanceof SqlParseException);
+        }
+    }
+
+    public void testLabelInFarragoConnection()
+        throws Exception
+    {
+        final String driverURI = "jdbc:farrago:";
+        FarragoAbstractJdbcDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
+        Properties props = newProperties();
+        props.setProperty("label", "foo");
+        try {
+            driver.connect(driverURI, props);
+            fail(
+                "connection should fail because snapshots aren't supported "
+                + "in Farrago");
+        } catch (Exception ex) {
+            FarragoJdbcTest.assertExceptionMatches(
+                ex,
+                ".*Personality does not support snapshot reads");
+        }
+    }
+
+    /**
+     * For background on this test, please see
+     * http://n2.nabble.com/SqlParseException.getCause%28%29-td1616492.html
+     */
+    public void testExcnStack()
+        throws Exception
+    {
+        // Do something we know will cause Util.needToImplement
+        // to be invoked, since that produces a generic RuntimeException
+        // rather than a Farrago-specific excn.  If you are seeing
+        // this test fail because you are implementing
+        // ALTER TABLE ADD c INT UNIQUE, please find another excn cause
+        // to keep this test coverage.
+        String sql = "alter table sales.depts add dcode int unique";
+
+        // For the engine driver, we should get full exception stacks,
+        // because they don't have to go over the wire.
+        try {
+            stmt.execute(sql);
+        } catch (FarragoJdbcUtil.FarragoSqlException ex) {
+            assertNotNull(ex.getOriginalThrowable().getCause());
+        }
+    }
+
+    /**
      * creates test connection properties.
      */
     private static Properties newProperties()
@@ -290,21 +420,33 @@ public class FarragoEngineDriverTest
      */
     private static String toStringProperties(Properties props)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("{");
-        Enumeration enumer = props.propertyNames();
+        Enumeration<?> enumer = props.propertyNames();
         int cnt = 0;
         while (enumer.hasMoreElements()) {
             if (cnt++ > 0) {
                 buf.append(", ");
             }
-            String key = (String) enumer.nextElement();
+            Object key = enumer.nextElement();
             String val = (String) props.get(key);
             buf.append(key).append(" => ");
             buf.append("\"").append(val).append("\"");
         }
         buf.append("}");
         return buf.toString();
+    }
+
+    /**
+     * asserts that exception message matches the specified pattern.
+     */
+    private static void assertExceptionMatches(Throwable e, String match)
+        throws Exception
+    {
+        String msg = e.getMessage();
+        assertTrue(
+            "Got exception \"" + msg + "\" but expected \"" + match + "\"",
+            msg.matches(match));
     }
 }
 

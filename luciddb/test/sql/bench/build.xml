@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@
   <property name="bh.log.basedir" value="${bench.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${bench.dir}/csv" />
   <property name="csv.copy.dir" value="${bench.dir}/csv-copy" />
 
@@ -55,6 +55,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -116,20 +117,12 @@
       </else>
     </if>
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir"
-      property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc"
-          param="prop.source"
-          target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+      param="prop.source"
+      target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${bench.dir}"
       testscript="${testfile}"
@@ -147,7 +140,7 @@
           overwrite="false"
           failonerror="false"
           verbose="true">
-          <fileset dir="${csvsource.dir}"/>
+          <fileset dir="${csvsource.dir}" includes="*.csv"/>
         </sync>
       </then>
     </if>
@@ -163,12 +156,6 @@
           failonerror="true">
           <fileset dir="${csv.dir}"/>
         </sync>
-        <!-- copy bcp -->
-        <copy todir="${csv.copy.dir}" overwrite="true">
-           <fileset dir="${bench.dir}">
-            <include name="**/*.bcp"/>
-          </fileset>
-        </copy>
       </then>
       <else>
         <echo message="!! NO CSV FILES !!"/>
@@ -177,16 +164,16 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
     <delete file="config.properties"/>
-  </target>
-
-  <target name="clean-csv">
-    <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
   </target>
 
 </project>

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ import org.eigenbase.util.*;
  * A character string literal.
  *
  * <p>Its {@link #value} field is an {@link NlsString} and {@link #typeName} is
- * {@link SqlTypeName#Char}.
+ * {@link SqlTypeName#CHAR}.
  *
  * @author wael
  * @version $Id$
@@ -38,14 +38,13 @@ import org.eigenbase.util.*;
 public class SqlCharStringLiteral
     extends SqlAbstractStringLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlCharStringLiteral(
         NlsString val,
         SqlParserPos pos)
     {
-        super(val, SqlTypeName.Char, pos);
+        super(val, SqlTypeName.CHAR, pos);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,10 +91,9 @@ public class SqlCharStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlCharStringLiteral) lits[i]).getNlsString();
         }
-        return
-            new SqlCharStringLiteral(
-                NlsString.concat(args),
-                lits[0].getParserPosition());
+        return new SqlCharStringLiteral(
+            NlsString.concat(args),
+            lits[0].getParserPosition());
     }
 }
 

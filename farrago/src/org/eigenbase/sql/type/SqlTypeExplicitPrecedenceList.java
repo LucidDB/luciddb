@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.reltype.*;
 public class SqlTypeExplicitPrecedenceList
     implements RelDataTypePrecedenceList
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -46,89 +45,89 @@ public class SqlTypeExplicitPrecedenceList
      *
      * @sql.2003 Part 2 Section 9.5
      */
-    private static final Map typeNameToPrecedenceList;
+    private static final Map<SqlTypeName, SqlTypeExplicitPrecedenceList>
+        typeNameToPrecedenceList;
 
     static {
         // NOTE jvs 25-Jan-2005:  the null entries delimit equivalence
         // classes
-        List numericList =
+        List<SqlTypeName> numericList =
             Arrays.asList(
-                new SqlTypeName[] {
-                    SqlTypeName.Tinyint,
+                SqlTypeName.TINYINT,
                 null,
-                SqlTypeName.Smallint,
+                SqlTypeName.SMALLINT,
                 null,
-                SqlTypeName.Integer,
+                SqlTypeName.INTEGER,
                 null,
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 null,
-                SqlTypeName.Decimal,
+                SqlTypeName.DECIMAL,
                 null,
-                SqlTypeName.Real,
+                SqlTypeName.REAL,
                 null,
-                SqlTypeName.Float,
-                SqlTypeName.Double
-                });
-        typeNameToPrecedenceList = new HashMap();
+                SqlTypeName.FLOAT,
+                SqlTypeName.DOUBLE);
+        typeNameToPrecedenceList =
+            new HashMap<SqlTypeName, SqlTypeExplicitPrecedenceList>();
         addList(
-            SqlTypeName.Boolean,
-            new SqlTypeName[] { SqlTypeName.Boolean });
+            SqlTypeName.BOOLEAN,
+            new SqlTypeName[] { SqlTypeName.BOOLEAN });
         addNumericList(
-            SqlTypeName.Tinyint,
+            SqlTypeName.TINYINT,
             numericList);
         addNumericList(
-            SqlTypeName.Smallint,
+            SqlTypeName.SMALLINT,
             numericList);
         addNumericList(
-            SqlTypeName.Integer,
+            SqlTypeName.INTEGER,
             numericList);
         addNumericList(
-            SqlTypeName.Bigint,
+            SqlTypeName.BIGINT,
             numericList);
         addNumericList(
-            SqlTypeName.Decimal,
+            SqlTypeName.DECIMAL,
             numericList);
         addNumericList(
-            SqlTypeName.Real,
+            SqlTypeName.REAL,
             numericList);
         addNumericList(
-            SqlTypeName.Float,
+            SqlTypeName.FLOAT,
             numericList);
         addNumericList(
-            SqlTypeName.Double,
+            SqlTypeName.DOUBLE,
             numericList);
         addList(
-            SqlTypeName.Char,
-            new SqlTypeName[] { SqlTypeName.Char, SqlTypeName.Varchar });
+            SqlTypeName.CHAR,
+            new SqlTypeName[] { SqlTypeName.CHAR, SqlTypeName.VARCHAR });
         addList(
-            SqlTypeName.Varchar,
-            new SqlTypeName[] { SqlTypeName.Varchar });
+            SqlTypeName.VARCHAR,
+            new SqlTypeName[] { SqlTypeName.VARCHAR });
         addList(
-            SqlTypeName.Binary,
-            new SqlTypeName[] { SqlTypeName.Binary, SqlTypeName.Varbinary });
+            SqlTypeName.BINARY,
+            new SqlTypeName[] { SqlTypeName.BINARY, SqlTypeName.VARBINARY });
         addList(
-            SqlTypeName.Varbinary,
-            new SqlTypeName[] { SqlTypeName.Varbinary });
+            SqlTypeName.VARBINARY,
+            new SqlTypeName[] { SqlTypeName.VARBINARY });
         addList(
-            SqlTypeName.Date,
-            new SqlTypeName[] { SqlTypeName.Date });
+            SqlTypeName.DATE,
+            new SqlTypeName[] { SqlTypeName.DATE });
         addList(
-            SqlTypeName.Time,
-            new SqlTypeName[] { SqlTypeName.Time });
+            SqlTypeName.TIME,
+            new SqlTypeName[] { SqlTypeName.TIME });
         addList(
-            SqlTypeName.Timestamp,
-            new SqlTypeName[] { SqlTypeName.Timestamp });
+            SqlTypeName.TIMESTAMP,
+            new SqlTypeName[] { SqlTypeName.TIMESTAMP });
         addList(
-            SqlTypeName.IntervalYearMonth,
-            new SqlTypeName[] { SqlTypeName.IntervalYearMonth });
+            SqlTypeName.INTERVAL_YEAR_MONTH,
+            new SqlTypeName[] { SqlTypeName.INTERVAL_YEAR_MONTH });
         addList(
-            SqlTypeName.IntervalDayTime,
-            new SqlTypeName[] { SqlTypeName.IntervalDayTime });
+            SqlTypeName.INTERVAL_DAY_TIME,
+            new SqlTypeName[] { SqlTypeName.INTERVAL_DAY_TIME });
     }
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List typeNames;
+    private final List<SqlTypeName> typeNames;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -150,14 +149,11 @@ public class SqlTypeExplicitPrecedenceList
 
     private static void addNumericList(
         SqlTypeName typeName,
-        List numericList)
+        List<SqlTypeName> numericList)
     {
         int i = getListPosition(typeName, numericList);
-        SqlTypeName [] array =
-            (SqlTypeName []) numericList.subList(
-                i,
-                numericList.size()).toArray(
-                SqlTypeName.EMPTY_ARRAY);
+        List<SqlTypeName> subList = numericList.subList(i, numericList.size());
+        SqlTypeName [] array = subList.toArray(new SqlTypeName[subList.size()]);
         addList(typeName, array);
     }
 
@@ -177,16 +173,18 @@ public class SqlTypeExplicitPrecedenceList
         assert (containsType(type1));
         assert (containsType(type2));
 
-        int p1 = getListPosition(
+        int p1 =
+            getListPosition(
                 type1.getSqlTypeName(),
                 typeNames);
-        int p2 = getListPosition(
+        int p2 =
+            getListPosition(
                 type2.getSqlTypeName(),
                 typeNames);
         return p2 - p1;
     }
 
-    private static int getListPosition(SqlTypeName type, List list)
+    private static int getListPosition(SqlTypeName type, List<SqlTypeName> list)
     {
         int i = list.indexOf(type);
         assert (i != -1);
@@ -206,8 +204,7 @@ public class SqlTypeExplicitPrecedenceList
         if (typeName == null) {
             return null;
         }
-        return
-            (RelDataTypePrecedenceList) typeNameToPrecedenceList.get(typeName);
+        return typeNameToPrecedenceList.get(typeName);
     }
 }
 

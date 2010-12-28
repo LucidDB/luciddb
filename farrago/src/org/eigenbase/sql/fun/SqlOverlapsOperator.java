@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,18 +41,18 @@ import org.eigenbase.sql.validate.*;
 public class SqlOverlapsOperator
     extends SqlSpecialOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType OverlapsFrameType =
-        SqlWriter.FrameType.create("OVERLAPS");
+        SqlWriter.FrameTypeEnum.create("OVERLAPS");
 
     //~ Constructors -----------------------------------------------------------
 
     public SqlOverlapsOperator()
     {
-        super("OVERLAPS",
-            SqlKind.Overlaps,
+        super(
+            "OVERLAPS",
+            SqlKind.OVERLAPS,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
@@ -101,13 +101,13 @@ public class SqlOverlapsOperator
         final String d = "DATETIME";
         final String i = "INTERVAL";
         String [] typeNames = {
-                d, d,
-                d, i,
-                i, d,
-                i, i
-            };
+            d, d,
+            d, i,
+            i, d,
+            i, i
+        };
 
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int y = 0; y < typeNames.length; y += 2) {
             if (y > 0) {
                 ret.append(NL);
@@ -133,14 +133,16 @@ public class SqlOverlapsOperator
                 callBinding,
                 call.operands[0],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
         if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
                 callBinding,
                 call.operands[2],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 

@@ -157,4 +157,17 @@
 . . . . . . . . >         a.acct_no = 10
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LER-8051:  problem with digests for EmptyRel
+0: jdbc:luciddb:> create schema ler8051;
+0: jdbc:luciddb:> set schema 'ler8051';
+0: jdbc:luciddb:> create table y (y varchar(10) NOT NULL);
+0: jdbc:luciddb:> create view yy as select cast(y.y as varchar(10)) as blah from y;
+0: jdbc:luciddb:> create table x (x varchar(10));
+0: jdbc:luciddb:> create view yx as select * from yy union all select * from x; 
+0: jdbc:luciddb:> select * from yx where false;
++-------+
+| BLAH  |
++-------+
++-------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

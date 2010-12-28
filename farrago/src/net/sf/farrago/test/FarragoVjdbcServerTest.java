@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,8 @@ import net.sf.farrago.server.*;
 
 
 /**
- * FarragoServerTest tests Farrago client/server connections via VJDBC.
+ * FarragoServerTest tests Farrago client/server connections via VJDBC's
+ * RMI implementation.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -35,7 +36,6 @@ import net.sf.farrago.server.*;
 public class FarragoVjdbcServerTest
     extends FarragoServerTest
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -53,12 +53,26 @@ public class FarragoVjdbcServerTest
 
     protected FarragoAbstractServer newServer()
     {
-        return new FarragoVjdbcServer();
+        FarragoVjdbcServer server = new FarragoVjdbcServer();
+        server.setDefaultProtocol(FarragoVjdbcServer.ListeningProtocol.RMI);
+        return server;
     }
 
     protected FarragoAbstractJdbcDriver newClientDriver()
     {
         return new FarragoVjdbcClientDriver();
+    }
+
+    public void testExceptionContents()
+        throws Throwable
+    {
+        // JDF 02/06/08 This override is due to a limititation imposed by Vjdbc.
+        // FarragoSqlException inherits SQLException.  Vjdbc will only pass
+        // generic SQLExceptions.  If it is an exception that extends
+        // SQLException a new SQLException is allocated and populated from the
+        // original exception. See vjdbc.util.SqlExceptionHelper.wrap().
+        // Bascially this is a bad method name since either it returns the
+        // original exception or creates a whole new one and discards the old.
     }
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,9 +29,9 @@ import java.util.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -50,7 +50,6 @@ import org.eigenbase.sql.*;
 public interface FarragoSessionStmtContext
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -118,6 +117,19 @@ public interface FarragoSessionStmtContext
     public RelDataType getPreparedRowType();
 
     /**
+     * Returns a description of how each field in the row type maps to a
+     * catalog, schema, table and column in the schema.
+     *
+     * <p>The returned list has one element for each field in the row type. Each
+     * element is a list of four elements (catalog, schema, table, column), or
+     * may be null if the column is an expression.
+     *
+     * @return Description of how each field in the row type maps to a schema
+     * object
+     */
+    List<List<String>> getPreparedFieldOrigins();
+
+    /**
      * @return the input parameter row type for the currently prepared statement
      */
     public RelDataType getPreparedParamType();
@@ -166,7 +178,7 @@ public interface FarragoSessionStmtContext
      * @return number of rows affected, or -1 if statement is non-DML or its
      * update count was already returned
      */
-    public int getUpdateCount();
+    public long getUpdateCount();
 
     /**
      * Closes any result set associated with this statement context.
@@ -179,16 +191,74 @@ public interface FarragoSessionStmtContext
     public void cancel();
 
     /**
+     * Gets the cancellation flag for this context. This is part of the
+     * implementation of cancel-checking; callers who actually want to request
+     * cancellation should use the {@link #cancel()} method instead.
+     *
+     * @return the cancellation flag for this context
+     */
+    public CancelFlag getCancelFlag();
+
+    /**
+     * Cancels execution and destroys the statement.
+     */
+    public void kill();
+
+    /**
      * Releases any resources (including result sets) associated with this
      * statement context.
      */
     public void unprepare();
+
+    /**
+     * Gets the warning queue for this statement.
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
 
     public void setQueryTimeout(int milliseconds);
 
     public int getQueryTimeout();
 
     public String getSql();
+
+    /**
+     * @return the current time for this statement
+     */
+    long getStmtCurrentTime();
+
+    /**
+     * Indicates that the context needs to retrieve and save the commit sequence
+     * number for the very first transaction initiated by a stmt context
+     * associated with a root context. Can only be called on the root context.
+     */
+    public void setSaveFirstTxnCsn();
+
+    /**
+     * @return whether the context needs to retrieve and save the commit
+     * sequence number for the very first transaction initiated by a stmt
+     * context associated with a root context; can only be called on the root
+     * context
+     */
+    public boolean needToSaveFirstTxnCsn();
+
+    /**
+     * Saves the commit sequence number associated with the first transaction
+     * initiated by a stmt associated with a root context. Can only be called on
+     * the root context.
+     *
+     * @param csn the commit sequence number
+     */
+    public void saveFirstTxnCsn(long csn);
+
+    /**
+     * Adds a child statement context to the list of children context for a
+     * statement. Can only be called on the root context.
+     *
+     * @param childStmtContext
+     */
+    public void addChildStmtContext(FarragoSessionStmtContext childStmtContext);
 }
 
 // End FarragoSessionStmtContext.java

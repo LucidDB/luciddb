@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,6 @@ import net.sf.farrago.trace.*;
  */
 public abstract class FarragoKillUDR
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static Logger tracer = FarragoTrace.getSyslibTracer();
@@ -52,34 +51,62 @@ public abstract class FarragoKillUDR
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Kills a running session
+     * Kills a running session, destroying it and releasing any resources
+     * associated with it.
      *
      * @param id unique session identifier
      */
     public static void killSession(long id)
         throws SQLException
     {
+        killSession(id, false);
+    }
+
+    /**
+     * Kills a running session.
+     *
+     * @param id unique session identifier
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy session
+     */
+    public static void killSession(long id, boolean cancelOnly)
+        throws SQLException
+    {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
-            db.killSession(id);
+            db.killSession(id, cancelOnly);
         } catch (Throwable e) {
             throw FarragoJdbcUtil.newSqlException(e, tracer);
         }
     }
 
     /**
-     * Kills an executing statement.
+     * Kills an executing statement, destroying it and releasing any resources
+     * associated with it.
      *
      * @param id unique statement identifier
      */
     public static void killStatement(long id)
         throws SQLException
     {
+        killStatement(id, false);
+    }
+
+    /**
+     * Kills an executing statement.
+     *
+     * @param id unique statement identifier
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy statement
+     */
+    public static void killStatement(long id, boolean cancelOnly)
+        throws SQLException
+    {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
-            db.killExecutingStmt(id);
+            db.killExecutingStmt(id, cancelOnly);
         } catch (Throwable e) {
             throw FarragoJdbcUtil.newSqlException(e, tracer);
         }
@@ -88,15 +115,31 @@ public abstract class FarragoKillUDR
     /**
      * Kills all statements executing SQL that matches a given substring.
      *
-     * @param s
+     * @param s substring to look for in statement SQL text
      */
     public static void killStatementMatch(String s)
+        throws SQLException
+    {
+        killStatementMatch(s, false);
+    }
+
+    /**
+     * Kills all statements executing SQL that matches a given substring.
+     *
+     * @param s substring to look for in statement SQL text
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy statement
+     */
+    public static void killStatementMatch(String s, boolean cancelOnly)
         throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
-            db.killExecutingStmtMatching(s, "call sys_boot.mgmt.kill_"); // exclude self
+            db.killExecutingStmtMatching(
+                s,
+                "call sys_boot.mgmt.kill_",
+                cancelOnly); // exclude self
         } catch (Throwable e) {
             throw FarragoJdbcUtil.newSqlException(e, tracer);
         }

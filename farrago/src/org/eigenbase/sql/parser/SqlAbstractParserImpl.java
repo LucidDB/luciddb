@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,42 +41,7 @@ import org.eigenbase.util.*;
  */
 public abstract class SqlAbstractParserImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
-
-    /**
-     * Accept any kind of expression in this context.
-     */
-    protected static final ExprContext EXPR_ACCEPT_ALL = new ExprContext();
-
-    /**
-     * Accept any kin of expression in this context, with the exception of
-     * CURSOR constructors.
-     */
-    protected static final ExprContext EXPR_ACCEPT_NONCURSOR =
-        new ExprContext();
-
-    /**
-     * Accept only query expressions in this context.
-     */
-    protected static final ExprContext EXPR_ACCEPT_QUERY = new ExprContext();
-
-    /**
-     * Accept only non-query expressions in this context.
-     */
-    protected static final ExprContext EXPR_ACCEPT_NONQUERY = new ExprContext();
-
-    /**
-     * Accept only parenthesized queries or non-query expressions in this
-     * context.
-     */
-    protected static final ExprContext EXPR_ACCEPT_SUBQUERY = new ExprContext();
-
-    /**
-     * Accept only CURSOR constructors, parenthesized queries, or non-query
-     * expressions in this context.
-     */
-    protected static final ExprContext EXPR_ACCEPT_CURSOR = new ExprContext();
 
     private static final Set<String> sql92ReservedWordSet;
 
@@ -312,6 +277,47 @@ public abstract class SqlAbstractParserImpl
         sql92ReservedWordSet = Collections.unmodifiableSet(set);
     }
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Type-safe enum for context of acceptable expressions.
+     */
+    protected enum ExprContext
+    {
+        /**
+         * Accept any kind of expression in this context.
+         */
+        ACCEPT_ALL,
+
+        /**
+         * Accept any kind of expression in this context, with the exception of
+         * CURSOR constructors.
+         */
+        ACCEPT_NONCURSOR,
+
+        /**
+         * Accept only query expressions in this context.
+         */
+        ACCEPT_QUERY,
+
+        /**
+         * Accept only non-query expressions in this context.
+         */
+        ACCEPT_NONQUERY,
+
+        /**
+         * Accept only parenthesized queries or non-query expressions in this
+         * context.
+         */
+        ACCEPT_SUBQUERY,
+
+        /**
+         * Accept only CURSOR constructors, parenthesized queries, or non-query
+         * expressions in this context.
+         */
+        ACCEPT_CURSOR;
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -333,12 +339,23 @@ public abstract class SqlAbstractParserImpl
         return sql92ReservedWordSet;
     }
 
+    /**
+     * Creates a call.
+     *
+     * @param funName Name of function
+     * @param pos Position in source code
+     * @param funcType Type of function
+     * @param functionQualifier Qualifier
+     * @param operands Operands to call
+     *
+     * @return Call
+     */
     protected SqlCall createCall(
         SqlIdentifier funName,
-        SqlNode [] operands,
         SqlParserPos pos,
         SqlFunctionCategory funcType,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier,
+        SqlNode [] operands)
     {
         SqlOperator fun = null;
 
@@ -363,7 +380,7 @@ public abstract class SqlAbstractParserImpl
             fun = new SqlFunction(funName, null, null, null, null, funcType);
         }
 
-        return fun.createCall(operands, pos, functionQualifier);
+        return fun.createCall(functionQualifier, pos, operands);
     }
 
     /**
@@ -387,6 +404,13 @@ public abstract class SqlAbstractParserImpl
      * @param reader provides new input
      */
     public abstract void ReInit(Reader reader);
+
+    /**
+     * Sets the tab stop size.
+     *
+     * @param tabSize Tab stop size
+     */
+    public abstract void setTabSize(int tabSize);
 
     //~ Inner Interfaces -------------------------------------------------------
 
@@ -456,13 +480,6 @@ public abstract class SqlAbstractParserImpl
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Type-safe enum for context of acceptable expressions.
-     */
-    protected static class ExprContext
-    {
-    }
-
-    /**
      * Default implementation of the {@link Metadata} interface.
      */
     public static class MetadataImpl
@@ -484,6 +501,11 @@ public abstract class SqlAbstractParserImpl
         private final Set<String> reservedWords = new HashSet<String>();
         private final String sql92ReservedWords;
 
+        /**
+         * Creates a MetadataImpl.
+         *
+         * @param sqlParser Parser
+         */
         public MetadataImpl(SqlAbstractParserImpl sqlParser)
         {
             initList(sqlParser, reservedFunctionNames, "ReservedFunctionName");
@@ -529,7 +551,8 @@ public abstract class SqlAbstractParserImpl
                 final int [][] expectedTokenSequences =
                     parseException.getExpectedTokenSequences();
                 for (int i = 0; i
-                    < expectedTokenSequences.length; i++) {
+                    < expectedTokenSequences.length; i++)
+                {
                     final int [] expectedTokenSequence =
                         expectedTokenSequences[i];
                     assert expectedTokenSequence.length == 1;
@@ -551,7 +574,7 @@ public abstract class SqlAbstractParserImpl
          * Uses reflection to invoke a method on this parser. The method must be
          * public and have no parameters.
          *
-         * @param parserImpl
+         * @param parserImpl Parser
          * @param name Name of method. For example "ReservedFunctionName".
          *
          * @return Result of calling method
@@ -580,14 +603,16 @@ public abstract class SqlAbstractParserImpl
          */
         private String constructSql92ReservedWordList()
         {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             TreeSet<String> jdbcReservedSet = new TreeSet<String>();
             jdbcReservedSet.addAll(tokenSet);
             jdbcReservedSet.removeAll(sql92ReservedWordSet);
             jdbcReservedSet.removeAll(nonReservedKeyWordSet);
             int j = 0;
-            for (Iterator<String> jdbcReservedIter = jdbcReservedSet.iterator();
-                jdbcReservedIter.hasNext();) {
+            for (
+                Iterator<String> jdbcReservedIter = jdbcReservedSet.iterator();
+                jdbcReservedIter.hasNext();)
+            {
                 String jdbcReserved = jdbcReservedIter.next();
                 if (j++ > 0) {
                     sb.append(",");
@@ -614,8 +639,7 @@ public abstract class SqlAbstractParserImpl
 
         public boolean isKeyword(String token)
         {
-            return
-                isNonReservedKeyword(token)
+            return isNonReservedKeyword(token)
                 || isReservedFunctionName(token)
                 || isContextVariableName(token)
                 || isReservedWord(token);

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,11 +25,14 @@ package net.sf.farrago.jdbc.param;
 import java.sql.Timestamp;
 
 import java.util.Calendar;
-import java.util.TimeZone;
+
+import org.eigenbase.util14.*;
 
 
 /**
  * FarragoJdbcEngineDateParamDef defines a date parameter.
+ *
+ * <p>This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -37,11 +40,6 @@ import java.util.TimeZone;
 class FarragoJdbcDateParamDef
     extends FarragoJdbcParamDef
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoJdbcDateParamDef(
@@ -57,8 +55,8 @@ class FarragoJdbcDateParamDef
     public Object scrubValue(Object x)
     {
         return scrubValue(
-                x,
-                Calendar.getInstance(gmtZone));
+            x,
+            Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -71,45 +69,36 @@ class FarragoJdbcDateParamDef
         }
 
         if (x instanceof String) {
-            try {
-                // TODO: Does this need to take cal into account?
-                return java.sql.Date.valueOf((String) x);
-            } catch (IllegalArgumentException e) {
+            String s = ((String) x).trim();
+            ZonelessDate zd = ZonelessDate.parse(s);
+            if (zd == null) {
                 throw newInvalidFormat(x);
             }
+            return zd;
         }
 
-        // Only java.sql.Date, java.sql.Timestamp are all OK.
-        // java.sql.Time is not okay (no date information)
-        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Date)) {
-            throw newInvalidType(x);
+        // Of the subtypes of java.util.Date,
+        // only java.sql.Date and java.sql.Timestamp are OK.
+        // java.sql.Time is not okay (no date information).
+        if ((x instanceof Timestamp) || (x instanceof java.sql.Date)) {
+            java.util.Date d = (java.util.Date) x;
+            ZonelessDate zd = new ZonelessDate();
+            zd.setZonedTime(d.getTime(), DateTimeUtil.getTimeZone(cal));
+            return zd;
         }
 
-        java.util.Date date = (java.util.Date) x;
-        final long millis = date.getTime();
-        final long shiftedMillis;
+        // ZonelessDatetime is not required by JDBC, but we allow it because
+        // it is a convenient format to serialize values over RMI.
+        // We disallow ZonelessTime for the same reasons we disallow
+        // java.sql.Time above.
+        if ((x instanceof ZonelessTimestamp) || (x instanceof ZonelessDate)) {
+            ZonelessDate zd = new ZonelessDate();
+            long time = ((ZonelessDatetime) x).getTime();
+            zd.setZonedTime(time, DateTimeUtil.getTimeZone(cal));
+            return zd;
+        }
 
-        // Shift time into gmt and truncate to previous midnight.
-        // (There's probably a more efficient way of doing this.)
-        cal = (Calendar) cal.clone();
-        cal.setTimeInMillis(millis);
-
-        // Truncate to midnight before we shift into GMT, just in case
-        // the untruncated date falls in a different day in GMT.
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        // Shift into gmt and truncate again.
-        cal.setTimeZone(gmtZone);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        shiftedMillis = cal.getTimeInMillis();
-
-        return new java.sql.Date(shiftedMillis);
+        throw newInvalidType(x);
     }
 }
 

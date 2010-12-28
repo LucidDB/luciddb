@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,16 +26,18 @@
 
 #include "fennel/synch/Thread.h"
 #include "fennel/synch/SynchMonitoredObject.h"
+#include "fennel/synch/ThreadTracker.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * TimerThreadClient receives callbacks from a TimerThread.
  */
-class TimerThreadClient 
+class FENNEL_SYNCH_EXPORT TimerThreadClient : public ThreadTracker
 {
 public:
-    virtual ~TimerThreadClient() {};
+    virtual ~TimerThreadClient();
+
     /**
      * Calculates the interval which should elapse before the next call to
      * onTimerInterval.  This can be different each time.  A return value of 0
@@ -53,17 +55,18 @@ public:
  * TimerThread implements a timer callback via a dedicated thread.  Once
  * started, the thread runs until stop() is called.
  */
-class TimerThread : public Thread, private SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT TimerThread
+    : public Thread, private SynchMonitoredObject
 {
     TimerThreadClient &client;
     bool bStop;
-    
+
     virtual void run();
 
 public:
     explicit TimerThread(
         TimerThreadClient &clientInit);
-    
+
     /**
      * Stops (and joins) the timer thread.
      */

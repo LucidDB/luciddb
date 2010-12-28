@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 public class SqlBetweenOperator
     extends SqlInfixOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String [] betweenNames =
@@ -90,7 +89,18 @@ public class SqlBetweenOperator
             3,
             RelDataTypeComparability.All);
     private static final SqlWriter.FrameType BetweenFrameType =
-        SqlWriter.FrameType.create("BETWEEN");
+        SqlWriter.FrameTypeEnum.create("BETWEEN");
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
+     */
+    public enum Flag
+        implements SqlLiteral.SqlSymbol
+    {
+        ASYMMETRIC, SYMMETRIC;
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -113,8 +123,9 @@ public class SqlBetweenOperator
         Flag flag,
         boolean negated)
     {
-        super(negated ? notBetweenNames : betweenNames,
-            SqlKind.Between,
+        super(
+            negated ? notBetweenNames : betweenNames,
+            SqlKind.BETWEEN,
             30,
             null,
             null,
@@ -141,11 +152,11 @@ public class SqlBetweenOperator
                 scope,
                 call.operands);
         RelDataType [] newArgTypes =
-            {
-                argTypes[VALUE_OPERAND],
-                argTypes[LOWER_OPERAND],
-                argTypes[UPPER_OPERAND]
-            };
+        {
+            argTypes[VALUE_OPERAND],
+            argTypes[LOWER_OPERAND],
+            argTypes[UPPER_OPERAND]
+        };
         return newArgTypes;
     }
 
@@ -160,9 +171,8 @@ public class SqlBetweenOperator
                     callBinding.getValidator(),
                     callBinding.getScope(),
                     callBinding.getCall()));
-        return
-            SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
-                newOpBinding);
+        return SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
+            newOpBinding);
     }
 
     public String getSignatureTemplate(final int operandsCount)
@@ -217,7 +227,7 @@ public class SqlBetweenOperator
 
     public int reduceExpr(
         int opOrdinal,
-        List list)
+        List<Object> list)
     {
         final SqlParserUtil.ToTreeListItem betweenNode =
             (SqlParserUtil.ToTreeListItem) list.get(opOrdinal);
@@ -236,7 +246,7 @@ public class SqlBetweenOperator
         final SqlParserPos pos =
             ((SqlNode) list.get(opOrdinal + 1)).getParserPosition();
         SqlNode exp1 =
-            SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
+            SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.AND);
         if ((opOrdinal + 2) >= list.size()) {
             SqlParserPos lastPos =
                 ((SqlNode) list.get(list.size() - 1)).getParserPosition();
@@ -255,7 +265,8 @@ public class SqlBetweenOperator
                 EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind()
-            != SqlKind.And) {
+            != SqlKind.AND)
+        {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
             throw SqlUtil.newContextException(
                 errPos,
@@ -275,22 +286,21 @@ public class SqlBetweenOperator
                 list,
                 opOrdinal + 3,
                 getRightPrec(),
-                SqlKind.Other);
+                SqlKind.OTHER);
 
         // Create the call.
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlCall newExp =
             createCall(
-                new SqlNode[] {
-                    exp0,
+                betweenNode.getPos(),
+                exp0,
                 exp1,
                 exp2,
-                SqlLiteral.createSymbol(flag, SqlParserPos.ZERO)
-                },
-                betweenNode.getPos());
+                SqlLiteral.createSymbol(flag, SqlParserPos.ZERO));
 
         // Replace all of the matched nodes with the single reduced node.
-        SqlParserUtil.replaceSublist(list,
+        SqlParserUtil.replaceSublist(
+            list,
             opOrdinal - 1,
             opOrdinal + 4,
             newExp);
@@ -300,27 +310,6 @@ public class SqlBetweenOperator
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
-     */
-    public static class Flag
-        extends EnumeratedValues.BasicValue
-    {
-        public static final int Asymmetric_ordinal = 0;
-        public static final Flag Asymmetric =
-            new Flag("Asymmetric", Asymmetric_ordinal);
-        public static final int Symmetric_ordinal = 1;
-        public static final Flag Symmetric =
-            new Flag("Symmetric", Symmetric_ordinal);
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Flag[] { Asymmetric, Symmetric });
-
-        private Flag(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-    }
 
     /**
      * Finds an AND operator in an expression.

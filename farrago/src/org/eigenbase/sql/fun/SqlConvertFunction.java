@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,16 +21,7 @@
 */
 package org.eigenbase.sql.fun;
 
-import java.util.*;
-
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -43,13 +34,13 @@ import org.eigenbase.util.*;
 public class SqlConvertFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlConvertFunction(String name)
     {
-        super(name,
-            SqlKind.Function,
+        super(
+            name,
+            SqlKind.OTHER_FUNCTION,
             null,
             null,
             null,

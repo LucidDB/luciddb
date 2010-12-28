@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import net.sf.farrago.util.*;
 public class FarragoTestConcurrentTest
     extends FarragoTestConcurrentScriptedTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoTestConcurrentTest(String name)
@@ -53,17 +52,16 @@ public class FarragoTestConcurrentTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetConcurrent.get(true),
-                new FarragoConcurrentSqlTestFactory() {
-                    public FarragoTestConcurrentTestCase createSqlTest(
-                        String testName)
-                        throws Exception
-                    {
-                        return new FarragoTestConcurrentTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetConcurrent.get(true),
+            new FarragoConcurrentSqlTestFactory() {
+                public FarragoTestConcurrentTestCase createSqlTest(
+                    String testName)
+                    throws Exception
+                {
+                    return new FarragoTestConcurrentTest(testName);
+                }
+            });
     }
 
     // REVIEW: SZ: 10/21/2004: Copied this from FarragoSqlTest.  If
@@ -122,9 +120,8 @@ public class FarragoTestConcurrentTest
         // mask out source control Id
         addDiffMask("\\$Id.*\\$");
 
-        runScript(getName(), newJdbcEngineDriver().getUrlPrefix());
+        runScript(getName(), getJdbcUri(newJdbcEngineDriver()));
     }
-
 
     //~ Inner Interfaces -------------------------------------------------------
 

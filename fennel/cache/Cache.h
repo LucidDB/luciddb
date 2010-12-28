@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,7 +53,7 @@ class CacheStats;
  * synchronization points, so callers should be aware of the potential
  * for deadlock.
  */
-class Cache
+class FENNEL_CACHE_EXPORT Cache
     : public ClosableObject,
         public CacheAccessor, public StatsSource,
         public boost::enable_shared_from_this<Cache>
@@ -72,9 +72,9 @@ public:
      * can ever be mapped to this device.
      */
     static const DeviceId NULL_DEVICE_ID;
-    
+
     /**
-     * Factory method.  This creates a cache which uses LRUVictimPolicy.
+     * Factory method.  This creates a cache which uses TwoQVictimPolicy.
      * To create a cache with custom policies, include CacheImpl.h and
      * instantiate CacheImpl directly.
      *
@@ -130,7 +130,7 @@ public:
 // ----------------------------------------------------------------------
 // Accessor Methods
 // ----------------------------------------------------------------------
-    
+
     /**
      * @return the size of cached pages (in bytes)
      */
@@ -144,7 +144,7 @@ public:
 // ----------------------------------------------------------------------
 // Device Registration and Operations
 // ----------------------------------------------------------------------
-    
+
     /**
      * Registers the given device with the Cache; must be called exactly
      * once before any other caching operations can be requested for pages of
@@ -155,7 +155,7 @@ public:
      * @param pDevice the device to be registered
      */
     virtual void registerDevice(
-        DeviceId deviceId,SharedRandomAccessDevice pDevice) = 0;
+        DeviceId deviceId, SharedRandomAccessDevice pDevice) = 0;
 
     /**
      * Unregisters the given device from the Cache, asserting
@@ -178,7 +178,7 @@ public:
 // ----------------------------------------------------------------------
 // Global Operations on Pages; also see CacheAccessor methods
 // ----------------------------------------------------------------------
-    
+
     /**
      * Flushes and/or unmaps selected pages.
      *
@@ -223,6 +223,13 @@ public:
      */
     virtual CachePage &lockScratchPage(BlockNum blockNum = 0) = 0;
 
+    /**
+     * Gets the correct access scheduler for a given device.  Currently
+     * the same scheduler is used for all devices.
+     */
+    virtual DeviceAccessScheduler &getDeviceAccessScheduler(
+        RandomAccessDevice &) = 0;
+
     // partial implementation of CacheAccessor
     virtual SharedCache getCache();
     virtual uint getMaxLockedPages();
@@ -232,7 +239,7 @@ public:
 
     // implementation of StatsSource
     virtual void writeStats(StatsTarget &target);
-    
+
 private:
     // notification methods called from friend Page
     virtual void notifyTransferCompletion(CachePage &,bool bSuccess) = 0;

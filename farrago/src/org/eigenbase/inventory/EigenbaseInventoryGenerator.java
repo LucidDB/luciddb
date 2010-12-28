@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,8 +42,8 @@ import static com.sun.mirror.util.DeclarationVisitors.*;
 public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
 {
     // Process any set of annotations
-    private static final Collection<String> supportedAnnotations
-        = unmodifiableCollection(Arrays.asList("*"));
+    private static final Collection<String> supportedAnnotations =
+        unmodifiableCollection(Arrays.asList("*"));
 
     // No supported options
     private static final Collection<String> supportedOptions = emptySet();
@@ -68,9 +68,8 @@ public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
     private static class InventoryProcessor implements AnnotationProcessor
     {
         private final AnnotationProcessorEnvironment env;
-        
         private final Set<String> packageNames = new HashSet<String>();
-            
+
         InventoryProcessor(AnnotationProcessorEnvironment env)
         {
             this.env = env;
@@ -78,19 +77,19 @@ public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
 
         public void process()
         {
-	    for (TypeDeclaration decl : env.getSpecifiedTypeDeclarations()) {
-		decl.accept(
+            for (TypeDeclaration decl : env.getSpecifiedTypeDeclarations()) {
+                decl.accept(
                     getDeclarationScanner(
                         new InventoryVisitor(),
                         NO_OP));
             }
         }
 
-	private class InventoryVisitor extends SimpleDeclarationVisitor
+        private class InventoryVisitor extends SimpleDeclarationVisitor
         {
-	    public void visitClassDeclaration(ClassDeclaration d) {
+            public void visitClassDeclaration(ClassDeclaration d) {
                 visitPackageDeclaration(d.getPackage());
-	    }
+            }
 
             public void visitPackageDeclaration(PackageDeclaration d)
             {
@@ -98,7 +97,7 @@ public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
                     return;
                 }
                 packageNames.add(d.getQualifiedName());
-		System.out.println(d.getQualifiedName());
+                System.out.println(d.getQualifiedName());
                 for (AnnotationMirror m : d.getAnnotationMirrors()) {
                     for (Map.Entry<AnnotationTypeElementDeclaration,
                              AnnotationValue> e
@@ -110,7 +109,7 @@ public class EigenbaseInventoryGenerator implements AnnotationProcessorFactory
                     }
                 }
             }
-	}
+        }
     }
 }
 

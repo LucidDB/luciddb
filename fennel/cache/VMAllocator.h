@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,12 +32,13 @@ FENNEL_BEGIN_NAMESPACE
  * VMAllocator is an implementation of the CacheAllocator interface in
  * terms of OS page allocation calls.
  */
-class VMAllocator : public CacheAllocator
+class FENNEL_CACHE_EXPORT VMAllocator
+    : public CacheAllocator
 {
     size_t cbAlloc;
     size_t nAllocs;
     bool bLockPages;
-    
+
 public:
     /**
      * Constructs a new VMAllocator.
@@ -49,16 +50,17 @@ public:
      * locked in memory, and that no more than the specified number
      * will be allocated at any one time
      */
-    explicit VMAllocator(size_t cbAlloc,size_t nLocked = 0);
-    
+    explicit VMAllocator(size_t cbAlloc, size_t nLocked = 0);
+
     virtual ~VMAllocator();
 
 // ----------------------------------------------------------------------
 // Implementation of CacheAllocator interface
 // ----------------------------------------------------------------------
-    virtual void *allocate();
-    virtual void deallocate(void *pMem);
-    virtual void setProtection(void *pMem, uint cb, bool readOnly);
+    virtual void *allocate(int *pErrorCode = NULL);
+    virtual int deallocate(void *pMem, int *pErrorCode = NULL);
+    virtual int setProtection(
+        void *pMem, uint cb, bool readOnly, int *pErrorCode = NULL);
     virtual size_t getBytesAllocated() const;
 };
 

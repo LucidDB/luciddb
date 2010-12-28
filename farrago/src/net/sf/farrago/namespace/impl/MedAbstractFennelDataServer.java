@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,10 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
+
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -41,7 +44,6 @@ import net.sf.farrago.util.*;
 public abstract class MedAbstractFennelDataServer
     extends MedAbstractLocalDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected FarragoRepos repos;
@@ -67,15 +69,27 @@ public abstract class MedAbstractFennelDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
     {
-        repos.beginTransientTxn();
+        FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index creation will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've created the index.
+            implicitTxn = true;
+        }
         try {
-            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-            initIndexCmd(cmd, index);
-            return getFennelDbHandle().executeCmd(cmd);
+            initIndexCmd(cmd, index, txnContext);
+            long rc = getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+            return rc;
         } finally {
-            repos.endTransientTxn();
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
         }
     }
 
@@ -83,51 +97,80 @@ public abstract class MedAbstractFennelDataServer
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
     {
-        repos.beginTransientTxn();
+        FemCmdDropIndex cmd;
+        if (truncate) {
+            cmd = repos.newFemCmdTruncateIndex();
+        } else {
+            cmd = repos.newFemCmdDropIndex();
+        }
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index drop will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've dropped the index.
+            implicitTxn = true;
+        }
         try {
-            FemCmdDropIndex cmd;
-            if (truncate) {
-                cmd = repos.newFemCmdTruncateIndex();
-            } else {
-                cmd = repos.newFemCmdDropIndex();
-            }
-            initIndexCmd(cmd, index);
+            initIndexCmd(cmd, index, txnContext);
             cmd.setRootPageId(rootPageId);
             getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
         } finally {
-            repos.endTransientTxn();
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
         }
     }
 
     // implement FarragoMedLocalDataServer
-    public void computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
     {
-        repos.beginTransientTxn();
+        FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index verification will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've verified the index.
+            implicitTxn = true;
+        }
         try {
-            FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
-            initIndexCmd(cmd, index);
+            initIndexCmd(cmd, index, txnContext);
             cmd.setRootPageId(rootPageId);
             cmd.setEstimate(estimate);
             cmd.setIncludeTuples(getIncludeTuples(index));
-            long pageCount = getFennelDbHandle().executeCmd(cmd);
-            FarragoCatalogUtil.updatePageCount(index, pageCount);
+            getFennelDbHandle().executeCmd(cmd);
+            long pageCount = cmd.getResultPageCount();
+            long uniqueKeyCount =
+                (cmd.getResultUniqueKeyCount() == null) ? -1
+                : cmd.getResultUniqueKeyCount().longValue();
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+            return new FarragoMedLocalIndexStats(pageCount, uniqueKeyCount);
         } finally {
-            repos.endTransientTxn();
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
         }
     }
 
     private void initIndexCmd(
         FemIndexCmd cmd,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        FennelTxnContext txnContext)
     {
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
+        cmd.setTxnHandle(txnContext.getTxnHandle());
         cmd.setSegmentId(getIndexSegmentId(index));
-        cmd.setIndexId(JmiUtil.getObjectId(index));
+        cmd.setIndexId(JmiObjUtil.getObjectId(index));
         prepareIndexCmd(cmd, index);
     }
 
@@ -164,6 +207,32 @@ public abstract class MedAbstractFennelDataServer
             return 2;
         } else {
             return 1;
+        }
+    }
+
+    //  implement FarragoMedLocalDataServer
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+    {
+        FemCmdVersionIndexRoot cmd = repos.newFemCmdVersionIndexRoot();
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            implicitTxn = true;
+        }
+        try {
+            cmd.setOldRootPageId(oldRoot);
+            cmd.setNewRootPageId(newRoot);
+            cmd.setTxnHandle(txnContext.getTxnHandle());
+            getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+        } finally {
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
         }
     }
 }

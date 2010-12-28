@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import net.sf.farrago.session.*;
 public class FarragoJdbcEnginePreparedDdl
     extends FarragoJdbcEnginePreparedStatement
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -47,7 +46,7 @@ public class FarragoJdbcEnginePreparedDdl
      * @param stmtContext the underyling FarragoSessionStmtContext (unprepared)
      * @param sql the text of the DDL statement
      */
-    FarragoJdbcEnginePreparedDdl(
+    public FarragoJdbcEnginePreparedDdl(
         FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)

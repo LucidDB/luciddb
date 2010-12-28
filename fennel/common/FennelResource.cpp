@@ -52,6 +52,19 @@ FennelResource::FennelResource(Locale locale)
       _invalidParam(this, "invalidParam"),
       _scalarQueryReturnedMultipleRows(this, "scalarQueryReturnedMultipleRows"),
       _scratchMemExhausted(this, "scratchMemExhausted"),
+      _uniqueConstraintViolated(this, "uniqueConstraintViolated"),
+      _incompatibleDataFormat(this, "incompatibleDataFormat"),
+      _libaioRequired(this, "libaioRequired"),
+      _unsupportedOperation(this, "unsupportedOperation"),
+      _outOfBackupSpace(this, "outOfBackupSpace"),
+      _mismatchedRestore(this, "mismatchedRestore"),
+      _openBackupFileFailed(this, "openBackupFileFailed"),
+      _readBackupFileFailed(this, "readBackupFileFailed"),
+      _writeBackupFileFailed(this, "writeBackupFileFailed"),
+      _readDataPageFailed(this, "readDataPageFailed"),
+      _writeDataPageFailed(this, "writeDataPageFailed"),
+      _outOfSpaceDuringRestore(this, "outOfSpaceDuringRestore"),
+      _bitmapEntryTooLong(this, "bitmapEntryTooLong"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -67,7 +80,8 @@ FennelResource::FennelResource(Locale locale)
       _flatfileNoHeader(this, "flatfileNoHeader"),
       _flatfileMappedRequiresLenient(this, "flatfileMappedRequiresLenient"),
       _flatfileNoMappedColumns(this, "flatfileNoMappedColumns")
-{ }
+{
+}
 
 string FennelResource::sysCallFailed(const std::string &p0) const
 {
@@ -100,6 +114,58 @@ string FennelResource::scalarQueryReturnedMultipleRows() const
 string FennelResource::scratchMemExhausted() const
 {
     return _scratchMemExhausted.format();
+}
+string FennelResource::uniqueConstraintViolated() const
+{
+    return _uniqueConstraintViolated.format();
+}
+string FennelResource::incompatibleDataFormat() const
+{
+    return _incompatibleDataFormat.format();
+}
+string FennelResource::libaioRequired() const
+{
+    return _libaioRequired.format();
+}
+string FennelResource::unsupportedOperation(const std::string &p0) const
+{
+    return _unsupportedOperation.format(p0);
+}
+string FennelResource::outOfBackupSpace() const
+{
+    return _outOfBackupSpace.format();
+}
+string FennelResource::mismatchedRestore() const
+{
+    return _mismatchedRestore.format();
+}
+string FennelResource::openBackupFileFailed(const std::string &p0) const
+{
+    return _openBackupFileFailed.format(p0);
+}
+string FennelResource::readBackupFileFailed(const std::string &p0) const
+{
+    return _readBackupFileFailed.format(p0);
+}
+string FennelResource::writeBackupFileFailed(const std::string &p0) const
+{
+    return _writeBackupFileFailed.format(p0);
+}
+string FennelResource::readDataPageFailed() const
+{
+    return _readDataPageFailed.format();
+}
+string FennelResource::writeDataPageFailed() const
+{
+    return _writeDataPageFailed.format();
+}
+string FennelResource::outOfSpaceDuringRestore() const
+{
+    return _outOfSpaceDuringRestore.format();
+}
+string FennelResource::bitmapEntryTooLong(int p0, int p1, const std::string &p2) const
+{
+    return _bitmapEntryTooLong.format(p0, p1, p2);
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {
@@ -163,3 +229,5 @@ string FennelResource::flatfileNoMappedColumns(const std::string &p0, const std:
 }
 
 } // end namespace fennel
+
+// End FennelResource.cpp

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,12 +22,14 @@
 */
 package net.sf.farrago.query;
 
-import java.math.*;
+import java.util.*;
 
+import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
@@ -44,18 +46,49 @@ import org.eigenbase.util.*;
 public class FarragoSqlValidator
     extends SqlValidatorImpl
 {
+    //~ Instance fields --------------------------------------------------------
+
+    final FarragoPreparingStmt preparingStmt;
 
     //~ Constructors -----------------------------------------------------------
 
-    FarragoSqlValidator(
+    /**
+     * Constructor that allows caller to specify dependant objects rather than
+     * relying on the preparingStmt to supply them. This constructor is is
+     * friendlier to class extension as well as providing more control during
+     * test setup.
+     */
+    public FarragoSqlValidator(
+        SqlOperatorTable opTab,
+        SqlValidatorCatalogReader catalogReader,
+        RelDataTypeFactory typeFactory,
+        SqlConformance conformance,
+        FarragoPreparingStmt preparingStmt)
+    {
+        super(
+            opTab,
+            catalogReader,
+            typeFactory,
+            conformance);
+
+        this.preparingStmt = preparingStmt;
+    }
+
+    /**
+     * Constructor that relies on the preparingStmt object to provide various
+     * other objects during initialization.
+     */
+    public FarragoSqlValidator(
         FarragoPreparingStmt preparingStmt,
-        Compatible compatible)
+        SqlConformance conformance)
     {
         super(
             preparingStmt.getSqlOperatorTable(),
             preparingStmt,
             preparingStmt.getFarragoTypeFactory(),
-            compatible);
+            conformance);
+
+        this.preparingStmt = preparingStmt;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -63,13 +96,18 @@ public class FarragoSqlValidator
     // override SqlValidator
     public SqlNode validate(SqlNode topNode)
     {
-        SqlNode node = super.validate(topNode);
-        getPreparingStmt().analyzeRoutineDependencies(node);
-        return node;
+        try {
+            SqlNode node = super.validate(topNode);
+            getPreparingStmt().analyzeRoutineDependencies(node);
+            return node;
+        } catch (EigenbaseContextException e) {
+            e.setOriginalStatement(preparingStmt.getSql());
+            throw e;
+        }
     }
 
     // override SqlValidator
-    protected boolean shouldExpandIdentifiers()
+    public boolean shouldExpandIdentifiers()
     {
         // Farrago always wants to expand stars and identifiers during
         // validation since we use the validated representation as a canonical
@@ -84,55 +122,6 @@ public class FarragoSqlValidator
         return false;
     }
 
-    // override SqlValidator
-    public void validateLiteral(SqlLiteral literal)
-    {
-        super.validateLiteral(literal);
-
-        // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
-        // available calculator implementations to see what they support.  For
-        // now use ESP instead.
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-
-            // decimal and long have the same precision (as 64-bit integers),
-            // so the unscaled value of a decimal must fit into a long.
-            BigDecimal bd = (BigDecimal) literal.getValue();
-            BigInteger unscaled = bd.unscaledValue();
-            long longValue = unscaled.longValue();
-            if (!BigInteger.valueOf(longValue).equals(unscaled)) {
-                // overflow
-                throw newValidationError(
-                    literal,
-                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                        bd.toString()));
-            }
-            break;
-        case SqlTypeName.Double_ordinal:
-            validateLiteralAsDouble(literal);
-            break;
-        default:
-
-            // no validation needed
-            return;
-        }
-    }
-
-    private void validateLiteralAsDouble(SqlLiteral literal)
-    {
-        BigDecimal bd = (BigDecimal) literal.getValue();
-        double d = bd.doubleValue();
-        if (Double.isInfinite(d) || Double.isNaN(d)) {
-            // overflow
-            throw newValidationError(
-                literal,
-                EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                    Util.toScientificNotation(bd)));
-        }
-
-        // REVIEW jvs 4-Aug-2004:  what about underflow?
-    }
-
     public void validateDataType(SqlDataTypeSpec dataType)
     {
         super.validateDataType(dataType);
@@ -144,9 +133,9 @@ public class FarragoSqlValidator
         }
     }
 
-    private FarragoPreparingStmt getPreparingStmt()
+    protected FarragoPreparingStmt getPreparingStmt()
     {
-        return (FarragoPreparingStmt) getCatalogReader();
+        return preparingStmt;
     }
 
     // override SqlValidatorImpl
@@ -198,6 +187,61 @@ public class FarragoSqlValidator
         getPreparingStmt().getStmtValidator().validateFeature(
             feature,
             context);
+    }
+
+    // override SqlValidatorImpl
+    public void validateColumnListParams(
+        SqlFunction function,
+        RelDataType [] argTypes,
+        SqlNode [] operands)
+    {
+        // get the UDR that the function corresponds to
+        FarragoUserDefinedRoutine routine =
+            (FarragoUserDefinedRoutine) function;
+        FemRoutine femRoutine = routine.getFemRoutine();
+        List<CwmParameter> params = femRoutine.getParameter();
+        FunctionParamInfo funcParamInfo = functionCallStack.peek();
+        Map<Integer, SqlSelect> cursorMap = funcParamInfo.cursorPosToSelectMap;
+        Map<String, String> parentCursorMap =
+            funcParamInfo.columnListParamToParentCursorMap;
+
+        // locate arguments that are COLUMN_LIST types; locate the select
+        // scope corresponding to the source cursor and revalidate the
+        // function operand using that scope
+        for (int i = 0; i < argTypes.length; i++) {
+            if (argTypes[i].getSqlTypeName() == SqlTypeName.COLUMN_LIST) {
+                FemColumnListRoutineParameter clParam =
+                    (FemColumnListRoutineParameter) params.get(i);
+                String sourceCursor = clParam.getSourceCursorName();
+                int cursorPosition = -1;
+                for (
+                    FemRoutineParameter p
+                    : Util.cast(params, FemRoutineParameter.class))
+                {
+                    if (p.getType().getName().equals("CURSOR")) {
+                        cursorPosition++;
+                        if (p.getName().equals(sourceCursor)) {
+                            SqlSelect sourceSelect =
+                                cursorMap.get(cursorPosition);
+                            SqlValidatorScope cursorScope =
+                                getCursorScope(sourceSelect);
+
+                            // save the original node type so we can reset it
+                            // after we've validated the column references
+                            RelDataType origNodeType =
+                                getValidatedNodeType(operands[i]);
+                            removeValidatedNodeType(operands[i]);
+                            deriveType(cursorScope, operands[i]);
+                            setValidatedNodeType(operands[i], origNodeType);
+                            parentCursorMap.put(
+                                clParam.getName(),
+                                sourceCursor);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

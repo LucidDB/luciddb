@@ -7,7 +7,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -15,7 +15,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -23,7 +23,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -31,7 +31,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -39,7 +39,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -47,7 +47,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -55,7 +55,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -63,7 +63,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -71,7 +71,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -79,7 +79,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 -- end of thread t1
@@ -90,7 +90,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -98,7 +98,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -106,7 +106,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -114,7 +114,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -122,7 +122,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -130,7 +130,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -138,7 +138,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -146,7 +146,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -154,7 +154,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 > explain plan for select * from sales.depts;
@@ -162,7 +162,7 @@
 | column0 |
 +---------+
 | FennelToIteratorConverter |
-|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]) |
+|   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]) |
 +---------+
 
 -- end of thread t2

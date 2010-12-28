@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,18 +27,18 @@ import java.math.*;
 import java.nio.*;
 
 import java.util.*;
+import java.util.List;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -52,12 +52,14 @@ import org.eigenbase.util.*;
 public class RexToOJTranslator
     implements RexVisitor<Expression>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JavaRelImplementor implementor;
     private final RelNode contextRel;
     private final OJRexImplementorTable implementorTable;
+
+    // TODO jvs 16-Oct-2006:  Eliminate this now that RexVisitor
+    // can return values.
     private Expression translatedExpr;
 
     /**
@@ -72,22 +74,6 @@ public class RexToOJTranslator
      */
     private RexProgram program;
 
-    /**
-     * stmtLists for case expression. each when, then or else has one
-     * statmentList.
-     */
-    private StatementList [] stmtLists;
-
-    /**
-     * Maps expressions to the variable which has been assigned their value.
-     *
-     * <p>FIXME: Map may be too specific (if we're using identity rather than
-     * structural equivalence to match expressions) and simultaneously not
-     * specific enough (we might mistakenly match expressions which are
-     * equivalent but which come from different programs).
-     */
-    private final Map<Expression, Variable> exprMap =
-        new HashMap<Expression, Variable>();
     private final Stack<RexProgram> programStack = new Stack<RexProgram>();
 
     //~ Constructors -----------------------------------------------------------
@@ -116,20 +102,6 @@ public class RexToOJTranslator
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Returns the corresponding StatementList.
-     */
-    public StatementList getCaseStmtList(int i)
-    {
-        if (stmtLists == null) {
-            return null;
-        }
-        if (i < stmtLists.length) {
-            return stmtLists[i];
-        }
-        return null;
-    }
 
     protected Expression setTranslation(Expression expr)
     {
@@ -162,7 +134,7 @@ public class RexToOJTranslator
         return implementor;
     }
 
-    protected RelNode getContextRel()
+    public RelNode getContextRel()
     {
         return contextRel;
     }
@@ -175,19 +147,43 @@ public class RexToOJTranslator
     // implement RexVisitor
     public Expression visitLocalRef(RexLocalRef localRef)
     {
-        final int index = localRef.getIndex();
         assert program != null;
-        if (program.getInputRowType().isStruct()
-            && (index < program.getInputRowType().getFields().length)) {
-            // It's a reference to an input field.
+        if (isInputRef(localRef)) {
             return translateInput(localRef.getIndex());
         } else {
             // It's a reference to a common sub-expression. Recursively
             // translate that expression.
-            final RexNode expr = program.getExprList().get(index);
-            assert expr.getType() == localRef.getType();
-            return expr.accept(this);
+            return setTranslation(translateSubExpression(localRef));
         }
+    }
+
+    /**
+     * Translates a common subexpression.
+     *
+     * @param localRef common subexpression to be translated
+     *
+     * @return translation
+     */
+    public Expression translateSubExpression(RexLocalRef localRef)
+    {
+        final RexNode expr = program.getExprList().get(localRef.getIndex());
+        assert expr.getType() == localRef.getType();
+        return translateRexNode(expr);
+    }
+
+    /**
+     * Tests whether a RexLocalRef refers to an input.
+     *
+     * @param localRef reference to test
+     *
+     * @return true if an input reference; false if a reference to a common
+     * subexpression
+     */
+    protected boolean isInputRef(RexLocalRef localRef)
+    {
+        final int index = localRef.getIndex();
+        return program.getInputRowType().isStruct()
+            && (index < program.getInputRowType().getFields().length);
     }
 
     // implement RexVisitor
@@ -198,12 +194,6 @@ public class RexToOJTranslator
             // Lookup the expression.
             final RexNode expanded = program.getExprList().get(index);
             assert expanded.getType() == inputRef.getType();
-            final Variable v = exprMap.get(expanded);
-            if (v != null) {
-                // Expression is has already been calculated and assigned to a
-                // variable.
-                return setTranslation(v);
-            }
 
             // Unset program because the new expression is in terms of the
             // program's inputs. This also prevents infinite expansion.
@@ -240,31 +230,51 @@ public class RexToOJTranslator
         final Object value = literal.getValue();
         Calendar calendar;
         long timeInMillis;
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Null_ordinal:
+        switch (literal.getTypeName()) {
+        case NULL:
             setTranslation(Literal.constantNull());
             break;
-        case SqlTypeName.Char_ordinal:
-            setTranslation(
-                Literal.makeLiteral(((NlsString) value).getValue()));
+        case CHAR:
+            Literal lit = Literal.makeLiteral(((NlsString) value).getValue());
+
+            // Replace non-ASCII characters with Java Unicode escape
+            // sequences to avoid encoding glitches in the generated
+            // Java code.
+            String s = lit.toString();
+            int n = s.length();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < n; ++i) {
+                char c = s.charAt(i);
+                int v = (int) c;
+                if (v < 128) {
+                    sb.append(c);
+                } else {
+                    sb.append("\\u");
+                    sb.append(String.format("%1$04X", v));
+                }
+            }
+            lit = new Literal(Literal.STRING, sb.toString());
+            setTranslation(lit);
             break;
-        case SqlTypeName.Boolean_ordinal:
+        case BOOLEAN:
             setTranslation(Literal.makeLiteral((Boolean) value));
             break;
-        case SqlTypeName.Decimal_ordinal:
+        case DECIMAL:
             BigDecimal bd = (BigDecimal) value;
             if (bd.scale() == 0) {
-                // Honor the requested type (if long) to prevent 
+                // Honor the requested type (if long) to prevent
                 // unexpected overflow during arithmetic.
                 SqlTypeName type = literal.getType().getSqlTypeName();
                 long longValue = bd.longValue();
-                if (type == SqlTypeName.Tinyint
-                    || type == SqlTypeName.Smallint
-                    || type == SqlTypeName.Integer)
-                {
+                switch (type) {
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
                     setTranslation(Literal.makeLiteral((int) longValue));
-                } else {
+                    break;
+                default:
                     setTranslation(Literal.makeLiteral(longValue));
+                    break;
                 }
                 break;
             }
@@ -273,8 +283,8 @@ public class RexToOJTranslator
             long unscaled = bd.unscaledValue().longValue();
             setTranslation(Literal.makeLiteral(unscaled));
             break;
-        case SqlTypeName.Double_ordinal:
-            if (literal.getType().getSqlTypeName() == SqlTypeName.Real) {
+        case DOUBLE:
+            if (literal.getType().getSqlTypeName() == SqlTypeName.REAL) {
                 setTranslation(
                     Literal.makeLiteral(((BigDecimal) value).floatValue()));
             } else {
@@ -282,26 +292,25 @@ public class RexToOJTranslator
                     Literal.makeLiteral(((BigDecimal) value).doubleValue()));
             }
             break;
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             setTranslation(
                 convertByteArrayLiteral(((ByteBuffer) value).array()));
             break;
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
             calendar = (Calendar) value;
             timeInMillis = calendar.getTimeInMillis();
             setTranslation(Literal.makeLiteral(timeInMillis));
             break;
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             BigDecimal interval = (BigDecimal) value;
             setTranslation(Literal.makeLiteral(interval.longValue()));
             break;
-        case SqlTypeName.Symbol_ordinal:
-            EnumeratedValues.BasicValue ord =
-                (EnumeratedValues.BasicValue) value;
-            setTranslation(Literal.makeLiteral(ord.getOrdinal()));
+        case SYMBOL:
+            SqlLiteral.SqlSymbol ord = (SqlLiteral.SqlSymbol) value;
+            setTranslation(Literal.makeLiteral(ord.ordinal()));
             break;
         default:
             throw Util.newInternal(
@@ -315,50 +324,39 @@ public class RexToOJTranslator
     // implement RexVisitor
     public Expression visitCall(RexCall call)
     {
-        boolean bInsideCase;
-        RexNode [] operands = call.getOperands();
-        Expression [] exprs = new Expression[operands.length];
-        StatementList [] bkupStmtLists = stmtLists;
-        StatementList outStmtList = null;
-        bInsideCase = false;
-        if (call.getOperator() instanceof SqlCaseOperator) {
-            bInsideCase = true;
-            stmtLists = new StatementList[operands.length];
-        }
-        for (int i = 0; i < operands.length; i++) {
-            RexNode operand = operands[i];
-            if (bInsideCase) {
-                stmtLists[i] = new StatementList();
-                RexToOJTranslator subTranslator = push(stmtLists[i]);
-                exprs[i] = subTranslator.translateRexNode(operand);
-            } else {
-                exprs[i] = translateRexNode(operand);
-            }
-        }
-        Expression callExpr = convertCall(call, exprs);
-        if (bInsideCase) {
-            stmtLists = bkupStmtLists;
-        }
+        final Expression callExpr = convertCallAndOperands(call);
         return setTranslation(callExpr);
+    }
+
+    protected Expression convertCallAndOperands(
+        RexCall call)
+    {
+        List<Expression> exprs = new ArrayList<Expression>();
+        for (RexNode operand : call.getOperands()) {
+            exprs.add(translateRexNode(operand));
+        }
+        return convertCall(call, exprs);
     }
 
     /**
      * Converts a call after its operands have already been translated.
      *
      * @param call call to be translated
-     * @param operandExprs translated operands
+     * @param operandExprList translated operands
      *
      * @return converted call
      */
     protected Expression convertCall(
         RexCall call,
-        Expression [] operandExprs)
+        List<Expression> operandExprList)
     {
         OJRexImplementor implementor = implementorTable.get(call.getOperator());
         if (implementor == null) {
             throw Util.needToImplement(call);
         }
-        return implementor.implement(this, call, operandExprs);
+        final Expression[] operandExprs2 =
+            operandExprList.toArray(new Expression[operandExprList.size()]);
+        return implementor.implement(this, call, operandExprs2);
     }
 
     // implement RexVisitor
@@ -411,13 +409,12 @@ public class RexToOJTranslator
             final String javaFieldName = Util.toJavaId(fieldName, i);
             args.add(new FieldAccess(inputExpr, javaFieldName));
         }
-        return
-            setTranslation(
-                new AllocationExpression(
-                    OJUtil.typeToOJClass(
-                        rangeType,
-                        getTypeFactory()),
-                    args));
+        return setTranslation(
+            new AllocationExpression(
+                OJUtil.typeToOJClass(
+                    rangeType,
+                    getTypeFactory()),
+                args));
     }
 
     // implement RexVisitor
@@ -427,11 +424,10 @@ public class RexToOJTranslator
             Util.toJavaId(
                 fieldAccess.getName(),
                 fieldAccess.getField().getIndex());
-        return
-            setTranslation(
-                new FieldAccess(
-                    translateRexNode(fieldAccess.getReferenceExpr()),
-                    javaFieldName));
+        return setTranslation(
+            new FieldAccess(
+                translateRexNode(fieldAccess.getReferenceExpr()),
+                javaFieldName));
     }
 
     /**
@@ -487,11 +483,10 @@ public class RexToOJTranslator
 
     protected Expression convertByteArrayLiteral(byte [] bytes)
     {
-        return
-            new ArrayAllocationExpression(
-                TypeName.forOJClass(OJSystem.BYTE),
-                new ExpressionList(null),
-                convertByteArrayLiteralToInitializer(bytes));
+        return new ArrayAllocationExpression(
+            TypeName.forOJClass(OJSystem.BYTE),
+            new ExpressionList(null),
+            convertByteArrayLiteralToInitializer(bytes));
     }
 
     public boolean canConvertCall(RexCall call)
@@ -523,8 +518,11 @@ public class RexToOJTranslator
     {
         assert fieldIndex >= 0;
         final RelNode [] inputs = rel.getInputs();
-        for (int inputIndex = 0, firstFieldIndex = 0;
-            inputIndex < inputs.length; inputIndex++) {
+        for (
+            int inputIndex = 0, firstFieldIndex = 0;
+            inputIndex < inputs.length;
+            inputIndex++)
+        {
             RelNode input = inputs[inputIndex];
 
             // Index of first field in next input. Special case if this
@@ -533,7 +531,8 @@ public class RexToOJTranslator
             final int fieldCount = input.getRowType().getFieldList().size();
             final int lastFieldIndex = firstFieldIndex + fieldCount;
             if ((lastFieldIndex > fieldIndex)
-                || ((fieldCount == 0) && (lastFieldIndex == fieldIndex))) {
+                || ((fieldCount == 0) && (lastFieldIndex == fieldIndex)))
+            {
                 final int fieldIndex2 = fieldIndex - firstFieldIndex;
                 return new WhichInputResult(input, inputIndex, fieldIndex2);
             }
@@ -553,7 +552,8 @@ public class RexToOJTranslator
      * @param lhs target field as OpenJava
      * @param rhs the source expression (as RexNode)
      */
-    public void translateAssignment(RelDataTypeField lhsField,
+    public void translateAssignment(
+        RelDataTypeField lhsField,
         Expression lhs,
         RexNode rhs)
     {

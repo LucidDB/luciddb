@@ -25,7 +25,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- gets UDX directly
 0: jdbc:luciddb:> select * 
@@ -40,6 +40,7 @@
 | calcVirtualMachine        | 12       | VARCHAR      |
 | checkpointInterval        | 4        | INTEGER      |
 | codeCacheMaxBytes         | -5       | BIGINT       |
+| connectionTimeoutMillis   | -5       | BIGINT       |
 | fennelDisabled            | 16       | BOOLEAN      |
 | javaCompilerClassName     | 12       | VARCHAR      |
 | mofClassName              | 12       | VARCHAR      |
@@ -67,6 +68,7 @@
 | calcVirtualMachine        | 12       | VARCHAR      |
 | checkpointInterval        | 4        | INTEGER      |
 | codeCacheMaxBytes         | -5       | BIGINT       |
+| connectionTimeoutMillis   | -5       | BIGINT       |
 | fennelDisabled            | 16       | BOOLEAN      |
 | javaCompilerClassName     | 12       | VARCHAR      |
 | mofClassName              | 12       | VARCHAR      |
@@ -95,6 +97,7 @@
 | CALCVIRTUALMACHINE        | 12       | VARCHAR      |
 | CHECKPOINTINTERVAL        | 4        | INTEGER      |
 | CODECACHEMAXBYTES         | -5       | BIGINT       |
+| CONNECTIONTIMEOUTMILLIS   | -5       | BIGINT       |
 | FENNELCONFIG              | 12       | VARCHAR      |
 | FENNELDISABLED            | 16       | BOOLEAN      |
 | JAVACOMPILERCLASSNAME     | 12       | VARCHAR      |
@@ -141,6 +144,7 @@
 | CALCVIRTUALMACHINE        | 12       | VARCHAR      |
 | CHECKPOINTINTERVAL        | 4        | INTEGER      |
 | CODECACHEMAXBYTES         | -5       | BIGINT       |
+| CONNECTIONTIMEOUTMILLIS   | -5       | BIGINT       |
 | EXPR$0                    | 4        | INTEGER      |
 | EXPR$1                    | 1        | CHAR         |
 | EXPR$2                    | 12       | VARCHAR      |
@@ -176,14 +180,14 @@
 . . . . . . . . >   two_cursor_test(
 . . . . . . . . >     cursor(select * from t1),
 . . . . . . . . >     cursor(select * from t2)))
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1,2;
 +-------+--------+
 | COL1  |  COL2  |
 +-------+--------+
 | 1     | one    |
 | 2     | dos    |
-| 3     | tres   |
 | 3     | three  |
+| 3     | tres   |
 | 10    | ten    |
 +-------+--------+
 0: jdbc:luciddb:> 
@@ -208,14 +212,14 @@
 . . . . . . . . >   when not matched then
 . . . . . . . . >     insert (c1, c2) values (temp.col1, temp.col2);
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from t12 order by 1;
+0: jdbc:luciddb:> select * from t12 order by 1,2;
 +-----+--------+
 | C1  |   C2   |
 +-----+--------+
 | 1   | ONE    |
 | 2   | dos    |
-| 3   | tres   |
 | 3   | three  |
+| 3   | tres   |
 | 10  | TEN    |
 +-----+--------+
 0: jdbc:luciddb:> drop table t12;
@@ -266,12 +270,10 @@
 . . . . . . . . >     insert (d, dow)
 . . . . . . . . >     values (temp.time_key, temp.day_of_week);
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from dt;
+0: jdbc:luciddb:> select * from dt order by 1,2,3,4;
 +-------------+------------+----------+---------+
 |      D      |    DOW     | WEEKEND  |   CQT   |
 +-------------+------------+----------+---------+
-| 1997-03-06  |            |          | Q1CY97  |
-| 1997-03-07  |            |          | Q1CY97  |
 | 1997-02-25  | Tuesday    |          |         |
 | 1997-02-26  | Wednesday  |          |         |
 | 1997-02-27  | Thursday   | N        | Q1CY97  |
@@ -281,6 +283,8 @@
 | 1997-03-03  | Monday     | N        | Q1CY97  |
 | 1997-03-04  | Tuesday    | N        | Q1CY97  |
 | 1997-03-05  | Wednesday  | N        | Q1CY97  |
+| 1997-03-06  |            |          | Q1CY97  |
+| 1997-03-07  |            |          | Q1CY97  |
 +-------------+------------+----------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table dt;
@@ -394,4 +398,5 @@
 0: jdbc:luciddb:> drop table period;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema ct cascade;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

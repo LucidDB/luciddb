@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,11 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 
 import net.sf.farrago.jdbc.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
+
+import org.eigenbase.jdbc4.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -37,15 +41,9 @@ import net.sf.farrago.session.*;
  * @version $Id$
  */
 public class FarragoJdbcEngineStatement
+    extends Unwrappable
     implements FarragoStatement
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    protected static final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
-    protected static final String ERRMSG_IS_A_QUERY =
-        "Can't executeUpdate a query:  ";
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -57,6 +55,11 @@ public class FarragoJdbcEngineStatement
      * Underlying statement context.
      */
     protected FarragoSessionStmtContext stmtContext;
+
+    /**
+     * @see Statement#setMaxRows
+     */
+    private int maxRows;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -95,20 +98,21 @@ public class FarragoJdbcEngineStatement
     public int getUpdateCount()
         throws SQLException
     {
-        return stmtContext.getUpdateCount();
+        return (int) stmtContext.getUpdateCount();
     }
 
     // implement Statement
     public boolean execute(String sql)
         throws SQLException
     {
+        validateSession();
         boolean unprepare = true;
         try {
             stmtContext.prepare(sql, true);
             if (stmtContext.isPrepared()) {
                 stmtContext.execute();
 
-                if (stmtContext.getResultSet() != null) {
+                if (openCursorResultSet() != null) {
                     unprepare = false;
                     return true;
                 } else {
@@ -133,6 +137,7 @@ public class FarragoJdbcEngineStatement
     public int executeUpdate(String sql)
         throws SQLException
     {
+        validateSession();
         try {
             stmtContext.prepare(sql, true);
             if (stmtContext.isPrepared()) {
@@ -141,7 +146,7 @@ public class FarragoJdbcEngineStatement
                 }
                 stmtContext.execute();
                 assert (stmtContext.getResultSet() == null);
-                int count = stmtContext.getUpdateCount();
+                int count = (int) stmtContext.getUpdateCount();
                 if (count == -1) {
                     count = 0;
                 }
@@ -162,16 +167,19 @@ public class FarragoJdbcEngineStatement
     public ResultSet executeQuery(String sql)
         throws SQLException
     {
+        validateSession();
         boolean unprepare = true;
         try {
             stmtContext.prepare(sql, true);
             if (!stmtContext.isPrepared() || stmtContext.isPreparedDml()) {
-                throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
+                throw FarragoJdbcEngineDriver.newSqlException(
+                    ERRMSG_NOT_A_QUERY + sql);
             }
             stmtContext.execute();
-            assert (stmtContext.getResultSet() != null);
+            ResultSet resultSet = openCursorResultSet();
+            assert (resultSet != null);
             unprepare = false;
-            return stmtContext.getResultSet();
+            return resultSet;
         } catch (SQLException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -253,14 +261,18 @@ public class FarragoJdbcEngineStatement
     public void setMaxRows(int max)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        if (max < 0) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                ERRMSG_REQ_NON_NEG + "max=" + max);
+        }
+        maxRows = max;
     }
 
     // implement Statement
     public int getMaxRows()
         throws SQLException
     {
-        return 0;
+        return maxRows;
     }
 
     // implement Statement
@@ -274,6 +286,11 @@ public class FarragoJdbcEngineStatement
     public void setQueryTimeout(int seconds)
         throws SQLException
     {
+        // Statement API specifies must throw for negative timeout
+        if (seconds < 0) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                ERRMSG_REQ_NON_NEG + "seconds=" + seconds);
+        }
         stmtContext.setQueryTimeout(seconds * 1000);
     }
 
@@ -287,6 +304,19 @@ public class FarragoJdbcEngineStatement
             timeoutMillis = 1000;
         }
         return timeoutMillis / 1000;
+    }
+
+    protected ResultSet openCursorResultSet()
+    {
+        ResultSet resultSet = stmtContext.getResultSet();
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet instanceof AbstractResultSet) {
+            AbstractResultSet abstractResultSet = (AbstractResultSet) resultSet;
+            abstractResultSet.setMaxRows(maxRows);
+        }
+        return resultSet;
     }
 
     // implement Statement
@@ -318,13 +348,6 @@ public class FarragoJdbcEngineStatement
     }
 
     // implement Statement
-    public SQLWarning getWarnings()
-        throws SQLException
-    {
-        return null;
-    }
-
-    // implement Statement
     public void addBatch(String sql)
         throws SQLException
     {
@@ -342,12 +365,6 @@ public class FarragoJdbcEngineStatement
 
     // implement Statement
     public void clearBatch()
-        throws SQLException
-    {
-    }
-
-    // implement Statement
-    public void clearWarnings()
         throws SQLException
     {
     }
@@ -442,6 +459,70 @@ public class FarragoJdbcEngineStatement
         }
         return info.getId();
     }
+
+    // implement Statement
+    public SQLWarning getWarnings()
+        throws SQLException
+    {
+        if (stmtContext == null) {
+            return null;
+        }
+        return stmtContext.getWarningQueue().getWarnings();
+    }
+
+    // implement Statement
+    public void clearWarnings()
+        throws SQLException
+    {
+        if (stmtContext == null) {
+            return;
+        }
+        stmtContext.getWarningQueue().clearWarnings();
+    }
+
+    /**
+     * Validates statement's session and throws if session closed.
+     *
+     * @throws SQLException {@link FarragoResource#JdbcConnSessionClosed}
+     */
+    protected void validateSession()
+        throws SQLException
+    {
+        final FarragoSession sess = stmtContext.getSession();
+        if (sess.isClosed()) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                FarragoResource.instance().JdbcConnSessionClosed.ex());
+        }
+    }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Statement
+    public boolean isPoolable()
+        throws SQLException
+    {
+        return false;
+    }
+
+    // implement Statement
+    public void setPoolable(boolean poolable)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setPoolable");
+    }
+
+    // implement Statement
+    public boolean isClosed()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("isClosed");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End FarragoJdbcEngineStatement.java

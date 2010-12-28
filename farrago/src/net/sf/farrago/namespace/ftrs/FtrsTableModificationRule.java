@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,6 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -39,17 +38,20 @@ import org.eigenbase.util.*;
 class FtrsTableModificationRule
     extends RelOptRule
 {
+    public static final FtrsTableModificationRule instance =
+        new FtrsTableModificationRule();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableModificationRule object.
+     * Creates a FtrsTableModificationRule.
      */
-    public FtrsTableModificationRule()
+    private FtrsTableModificationRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableModificationRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,7 +83,8 @@ class FtrsTableModificationRule
         if (!RelOptUtil.areRowTypesEqual(
                 inputRel.getRowType(),
                 tableModification.getExpectedInputRowType(0),
-                false)) {
+                false))
+        {
             return;
         }
 

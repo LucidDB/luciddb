@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,27 +26,28 @@ import java.nio.*;
 
 /**
  * A piece of generated code must implement this interface if it is to be
- * callable from a Fennel JavaTransformExecStream wrapper.
+ * callable from a Fennel JavaTransformExecStream wrapper. See {@link
+ * net.sf.farrago.query.FarragoTransformDef}, which manages the construction of
+ * a FarragoTransform during statement preparation, in {@link
+ * net.sf.farrago.query.FarragoPreparingStmt}.
  *
  * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
 public interface FarragoTransform
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Binds all inputs and initializes the transform.
+     * Binds all inputs and initializes the transform. This method is typically
+     * generated. It is called by {@link
+     * net.sf.farrago.query.FarragoExecutableJavaStmt#execute}.
      *
-     * <p>This method is typically generated. It is called by Fennel's
-     * JavaTransformExecStream.
-     *
-     * @param connection the FarragoRuntimeContext associated with the query
-     * this transform is participating in.
+     * @param connection the FarragoRuntimeContext of the query that contains
+     * this transform.
      * @param farragoTransformStreamName the globally unique name of the
-     * ExecStream invoking this method
-     * @param inputBindings bindings between the transforms input streamIds and
+     * ExecStream that implements this transform.
+     * @param inputBindings bindings between the transform's input streamIds and
      * the ordinal assigned to them in the stream graph
      */
     void init(
@@ -55,12 +56,36 @@ public interface FarragoTransform
         InputBinding [] inputBindings);
 
     /**
-     * Does a quantum of work. Called by Fennel's JavaTransformExecStream.
+     * Does a quantum of work. Called by the Fennel peer, a
+     * JavaTransformExecStream.
+     *
+     * @param outputBuffer output ByteBuffer into which tuples are marshaled
+     * @param quantum the maximum number of tuples that should be processed
+     * before returning (in practice this is limited to 2^32)
      *
      * @return bytes marshalled into outputBuffer; 0 means end of stream, less
      * than 0 indicates an input underflow
      */
-    int execute(ByteBuffer outputBuffer);
+    int execute(ByteBuffer outputBuffer, long quantum);
+
+    /**
+     * Sets a timeout for fetching an input row.
+     * @param timeout  0 means poll, infinity (ie Long.MAX_VALUE) means block.
+     * The default is to block;
+     */
+    void setInputFetchTimeout(long timeout);
+
+    /**
+     * Requests a signal when data appears after an underflow.
+     *
+     * The FarragoTransform will call ExecStreamScheduler::makeRunnable() on its
+     * fennel peer.
+     *
+     * If the peer returns EXECRC_YIELD on input underflow, it needs a wake-up
+     * signal when more input appears, so it calls this (once, when it opens).
+     */
+    void pleaseSignalOnMoreData();
+
 
     /**
      * Restarts this transform's underlying TupleIter(s).
@@ -71,9 +96,9 @@ public interface FarragoTransform
 
     /**
      * InputBinding binds a JavaTransformExecStream input's streamId to the
-     * ordinal assigned to that input by the stream graph. InputBinding objects
-     * are instantiated via JNI during initialization of
-     * JavaTransformExecStream.
+     * ordinal assigned to that input by the stream graph. The InputBinding
+     * objects are created by
+     * {@link net.sf.farrago.query.FarragoTransformDef#init}.
      */
     public static class InputBinding
     {

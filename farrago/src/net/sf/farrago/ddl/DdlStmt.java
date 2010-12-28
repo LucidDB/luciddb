@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,16 +37,29 @@ import net.sf.farrago.session.*;
 public abstract class DdlStmt
     implements FarragoSessionDdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final CwmModelElement modelElement;
+
+    /**
+     * True if the DDL statement is treated as a DML statement with respect to
+     * how locking behaves
+     */
+    private final boolean runsAsDml;
+
+    protected FarragoSessionStmtContext rootStmtContext;
 
     //~ Constructors -----------------------------------------------------------
 
     protected DdlStmt(CwmModelElement modelElement)
     {
+        this(modelElement, false);
+    }
+
+    protected DdlStmt(CwmModelElement modelElement, boolean runsAsDml)
+    {
         this.modelElement = modelElement;
+        this.runsAsDml = runsAsDml;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -93,12 +106,24 @@ public abstract class DdlStmt
         return true;
     }
 
+    // implement FarragoSessionDdlStmt
+    public boolean runsAsDml()
+    {
+        return runsAsDml;
+    }
+
     /**
      * Invokes a visitor on this statement.
      *
      * @param visitor DdlVisitor to invoke
      */
     public abstract void visit(DdlVisitor visitor);
+
+    // implement FarragoSessionDdlStmt
+    public void setRootStmtContext(FarragoSessionStmtContext rootStmtContext)
+    {
+        this.rootStmtContext = rootStmtContext;
+    }
 }
 
 // End DdlStmt.java

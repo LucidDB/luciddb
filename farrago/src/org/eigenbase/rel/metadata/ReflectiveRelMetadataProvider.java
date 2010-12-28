@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,18 +41,28 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public abstract class ReflectiveRelMetadataProvider
-    implements RelMetadataProvider
+    implements RelMetadataProvider,
+        ReflectiveVisitor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, List<Class>> parameterTypeMap;
 
+    private final ReflectiveVisitDispatcher<ReflectiveRelMetadataProvider,
+        RelNode> visitDispatcher;
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a ReflectiveRelMetadataProvider.
+     */
     protected ReflectiveRelMetadataProvider()
     {
         parameterTypeMap = new HashMap<String, List<Class>>();
+        visitDispatcher =
+            ReflectUtil.createDispatcher(
+                ReflectiveRelMetadataProvider.class,
+                RelNode.class);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -79,10 +89,10 @@ public abstract class ReflectiveRelMetadataProvider
     {
         List<Class> parameterTypes = parameterTypeMap.get(metadataQueryName);
         if (parameterTypes == null) {
-            parameterTypes = Collections.EMPTY_LIST;
+            parameterTypes = Collections.emptyList();
         }
         Method method =
-            ReflectUtil.lookupVisitMethod(
+            visitDispatcher.lookupVisitMethod(
                 getClass(),
                 rel.getClass(),
                 metadataQueryName,

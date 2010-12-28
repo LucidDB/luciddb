@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,31 +28,37 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 RandomAccessFileDevice::RandomAccessFileDevice(
-    std::string filename,DeviceMode mode)
-    : FileDevice(filename,mode)
+    std::string filename, DeviceMode mode, FileSize initialSize)
+    : FileDevice(filename, mode, initialSize)
+{
+}
+
+RandomAccessFileDevice::RandomAccessFileDevice(
+    std::string filename, DeviceMode mode)
+    : FileDevice(filename, mode, FileSize(0))
 {
 }
 
 RandomAccessDevice::~RandomAccessDevice()
 {
 }
-    
+
 FileSize RandomAccessFileDevice::getSizeInBytes()
 {
     return FileDevice::getSizeInBytes();
 }
-    
+
 void RandomAccessFileDevice::setSizeInBytes(FileSize cbNew)
 {
     FileDevice::setSizeInBytes(cbNew);
 }
-    
+
 void RandomAccessFileDevice::transfer(RandomAccessRequest const &request)
 {
     assert(request.pDevice == this);
     FileDevice::transfer(request);
 }
-    
+
 void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
 {
     assert(request.pDevice == this);
@@ -101,7 +107,7 @@ void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
     assert(cbOffset == request.cbOffset + request.cbTransfer);
 #endif
 }
-    
+
 void RandomAccessFileDevice::flush()
 {
     FileDevice::flush();

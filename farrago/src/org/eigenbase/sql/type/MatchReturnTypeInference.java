@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -37,7 +36,6 @@ import org.eigenbase.util.*;
 public class MatchReturnTypeInference
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int start;
@@ -46,20 +44,20 @@ public class MatchReturnTypeInference
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Returns the type at element start (zero based)
+     * Returns the type at element start (zero based).
      *
-     * @see {@link TypeMatchReturnTypeInference(int, SqlTypeName[])}
+     * @see #MatchReturnTypeInference(int, SqlTypeName[])
      */
     public MatchReturnTypeInference(int start)
     {
-        this(start, SqlTypeName.Any);
+        this(start, SqlTypeName.ANY);
     }
 
     /**
      * Returns the first type of typeName at or after position start (zero
-     * based)
+     * based).
      *
-     * @see {@link TypeMatchReturnTypeInference(int, SqlTypeName[])}
+     * @see #MatchReturnTypeInference(int, SqlTypeName[])
      */
     public MatchReturnTypeInference(int start, SqlTypeName typeName)
     {

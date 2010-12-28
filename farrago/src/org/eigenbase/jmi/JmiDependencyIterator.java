@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,8 +21,9 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 
 /**
@@ -33,10 +34,8 @@ import org._3pq.jgrapht.traverse.*;
  * @version $Id$
  */
 public class JmiDependencyIterator
-    extends TopologicalOrderIterator<JmiDependencyVertex,
-        Edge<JmiDependencyVertex>, Object>
+    extends TopologicalOrderIterator<JmiDependencyVertex, DefaultEdge>
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public JmiDependencyIterator(JmiDependencyGraph graph)

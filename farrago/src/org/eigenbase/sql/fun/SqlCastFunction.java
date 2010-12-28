@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,15 +22,20 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.nio.charset.*;
+
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
  * SqlCastFunction. Note that the std functions are really singleton objects,
- * because they always get fetched via the StdOperatorTable. So you can't story
+ * because they always get fetched via the StdOperatorTable. So you can't store
  * any local info in the class and hence the return type data is maintained in
  * operand[1] through the validation phase.
  *
@@ -41,13 +46,18 @@ import org.eigenbase.sql.type.*;
 public class SqlCastFunction
     extends SqlFunction
 {
+    //~ Instance fields --------------------------------------------------------
+
+    private final Set<TypeFamilyCast> nonMonotonicPreservingCasts =
+        createNonMonotonicPreservingCasts();
 
     //~ Constructors -----------------------------------------------------------
 
     public SqlCastFunction()
     {
-        super("CAST",
-            SqlKind.Cast,
+        super(
+            "CAST",
+            SqlKind.CAST,
             null,
             SqlTypeStrategies.otiFirstKnown,
             null,
@@ -55,6 +65,71 @@ public class SqlCastFunction
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /*
+     * List all casts that do not preserve monotonicity
+     */
+    private Set<TypeFamilyCast> createNonMonotonicPreservingCasts()
+    {
+        Set<TypeFamilyCast> result = new HashSet<TypeFamilyCast>();
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.EXACT_NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.APPROXIMATE_NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.DATETIME_INTERVAL,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.EXACT_NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.APPROXIMATE_NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.DATETIME_INTERVAL));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.DATETIME,
+                SqlTypeFamily.TIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIMESTAMP,
+                SqlTypeFamily.TIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIME,
+                SqlTypeFamily.DATETIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIME,
+                SqlTypeFamily.TIMESTAMP));
+        return result;
+    }
+
+    private boolean isMonotonicPreservingCast(
+        RelDataTypeFamily castFrom,
+        RelDataTypeFamily castTo)
+    {
+        return !nonMonotonicPreservingCasts.contains(
+            new TypeFamilyCast(castFrom, castTo));
+    }
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
@@ -68,9 +143,18 @@ public class SqlCastFunction
                 firstType.isNullable());
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding callBinding = (SqlCallBinding) opBinding;
-            callBinding.getValidator().setValidatedNodeType(
-                callBinding.getCall().operands[0],
-                ret);
+            SqlNode operand0 = callBinding.getCall().operands[0];
+
+            // dynamic parameters and null constants need their types assigned
+            // to them using the type they are casted to.
+            if (((operand0 instanceof SqlLiteral)
+                    && (((SqlLiteral) operand0).getValue() == null))
+                || (operand0 instanceof SqlDynamicParam))
+            {
+                callBinding.getValidator().setValidatedNodeType(
+                    operand0,
+                    ret);
+            }
         }
         return ret;
     }
@@ -111,9 +195,24 @@ public class SqlCastFunction
                 callBinding.getCall().operands[1]);
         if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().CannotCastValue.ex(
-                    validatedNodeType.toString(),
-                    returnType.toString());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().CannotCastValue.ex(
+                        validatedNodeType.toString(),
+                        returnType.toString()));
+            }
+            return false;
+        }
+        if (SqlTypeUtil.areCharacterSetsMismatched(
+                validatedNodeType,
+                returnType))
+        {
+            if (throwOnFailure) {
+                // Include full type string to indicate character
+                // set mismatch.
+                throw callBinding.newError(
+                    EigenbaseResource.instance().CannotCastValue.ex(
+                        validatedNodeType.getFullTypeString(),
+                        returnType.getFullTypeString()));
             }
             return false;
         }
@@ -140,6 +239,56 @@ public class SqlCastFunction
         }
         operands[1].unparse(writer, 0, 0);
         writer.endFunCall(frame);
+    }
+
+    @Override public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
+    {
+        RelDataTypeFamily castFrom =
+            scope.getValidator().deriveType(scope, call.operands[0])
+            .getFamily();
+        RelDataTypeFamily castTo =
+            scope.getValidator().deriveType(scope, call.operands[1])
+            .getFamily();
+        if (isMonotonicPreservingCast(castFrom, castTo)) {
+            return call.operands[0].getMonotonicity(scope);
+        } else {
+            return SqlMonotonicity.NotMonotonic;
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class TypeFamilyCast
+    {
+        private final RelDataTypeFamily castFrom;
+        private final RelDataTypeFamily castTo;
+
+        public TypeFamilyCast(
+            RelDataTypeFamily castFrom,
+            RelDataTypeFamily castTo)
+        {
+            this.castFrom = castFrom;
+            this.castTo = castTo;
+        }
+
+        @Override public boolean equals(Object obj)
+        {
+            // TODO Auto-generated method stub
+            if (obj.getClass() != TypeFamilyCast.class) {
+                return false;
+            }
+            TypeFamilyCast other = (TypeFamilyCast) obj;
+            return this.castFrom.equals(other.castFrom)
+                && this.castTo.equals(other.castTo);
+        }
+
+        @Override public int hashCode()
+        {
+            // TODO Auto-generated method stub
+            return castFrom.hashCode() + castTo.hashCode();
+        }
     }
 }
 

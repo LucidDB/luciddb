@@ -4,23 +4,24 @@
 <project name="build-luciddb" default="build">
 	<property environment="env"/>
 
+	<!-- perforce properties -->
+	<property file="${open_propfile}"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
 	<!-- regular vs. integration build locations -->
 	<property name="default.build.home" location="."/>
 	<property name="integration.build.home" location="./build"/>
 
+
 	<!-- by default we build "with fennel" and "with tests" -->
 	<property name="luciddb.init.arg" value="--with-fennel"/>
-	<property name="luciddb.init.tests.arg" value="${with.tests}"/>
-
-    <!--
-    <condition property="luciddb.init.tests.arg"  value="${with.tests}">
-        <not><os family="windows"/></not>
-    </condition>
-    -->
+        <property name="luciddb.init.tests.arg" value="--with-tests"/>
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Luciddb project" unless="no-sync">
-        <p4sync view="${open_root}/luciddb/..." failonerror="true"/>
+		<p4sync view="${open_root}/luciddb/..." failonerror="true"/>
+		<p4sync view="//open/blackhawk/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -49,8 +50,12 @@
 
 	<!-- continuous intregration targets -->
 	<target name="integration-build-and-test"
-	        depends="integration-build"
+	        depends="integration-test"
 	        description="Build and test the Luciddb project and its dependencies in a clean tree"/>
+
+	<target name="integration-test" depends="integration-build">
+		<!-- clean build runs tests automagically -->
+	</target>
 
 	<target name="integration-build"
 	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
@@ -71,6 +76,19 @@
 			<arg value="./luciddb/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
+
+                <!-- copy blackhawk -->
+		<delete dir="${integration.build.home}/blackhawk"/>
+		<mkdir dir="${integration.build.home}/blackhawk"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./blackhawk to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./blackhawk/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+
 	</target>
 
 	<target name="integration-farrago">
@@ -107,6 +125,7 @@
 
 	<target name="do-build">
 		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/blackhawk" inheritAll="false"/>
 		<ant dir="${build.home}/luciddb" inheritAll="false"/>
 	</target>
 
@@ -116,13 +135,9 @@
 		<exec dir="${build.home}/luciddb" executable="bash" failonerror="true">
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
-			<arg value="--with-debug"/>
-			<arg value="${with.optimization}"/>
 			<arg value="${luciddb.init.tests.arg}"/>
-            <env key="EIGEN_HOME" file="${eigen_home}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
-			<env key="LUCIDERA_PLATFORM_HOME" path="${lucidera_platform_home}"/>
 		</exec>		
 	</target>
 

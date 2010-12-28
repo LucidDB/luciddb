@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,6 @@ class FarragoRJMedDataWrapper
     implements FarragoMedDataWrapperInfo,
         java.io.Serializable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoRJMedDataWrapperInterface rmiDataWrapper_;
@@ -64,11 +63,10 @@ class FarragoRJMedDataWrapper
         Properties wrapperProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getPluginPropertyInfo(
-                        locale,
-                        wrapperProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getPluginPropertyInfo(
+                    locale,
+                    wrapperProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -82,12 +80,11 @@ class FarragoRJMedDataWrapper
         Properties serverProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getServerPropertyInfo(
-                        locale,
-                        wrapperProps,
-                        serverProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getServerPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -102,13 +99,12 @@ class FarragoRJMedDataWrapper
         Properties tableProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getColumnSetPropertyInfo(
-                        locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getColumnSetPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -124,13 +120,13 @@ class FarragoRJMedDataWrapper
         Properties columnProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getColumnPropertyInfo(locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps,
-                        columnProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getColumnPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps,
+                    columnProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new

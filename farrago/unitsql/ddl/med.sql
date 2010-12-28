@@ -16,8 +16,9 @@ language java;
 create server mof_server
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
 description 'a server';
 
@@ -25,16 +26,18 @@ description 'a server';
 create server mof_server
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 
 -- test name uniqueness relative to a real catalog:  should fail
 create server localdb
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 
 -- test a direct table reference without creating a foreign table
@@ -154,6 +157,40 @@ options(schema_name 'SALES', table_name 'DEPT');
 -- test same query as above, but against foreign table with inferred types
 select * from demo_schema.dept_inferred order by deptno;
 
+-- test SCHEMA_NAME of server specified
+create server hsqldb_schema_qual
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    table_types 'TABLE,VIEW');
+
+-- create a foreign table without schema name: should fail
+create foreign table demo_schema.dept_server_schema
+server hsqldb_schema_qual
+options(object 'DEPT');
+
+-- test schema of server with USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER set
+create or replace server hsqldb_schema_qual
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW');
+
+-- create a foreign table without schema name: should pass
+create foreign table demo_schema.dept_server_schema
+server hsqldb_schema_qual
+options(object 'DEPT');
+
+-- test same query as above, but against foreign table with schema name gotten from server
+select * from demo_schema.dept_server_schema order by deptno;
+
 create schema demo_import_schema;
 
 -- test full import
@@ -266,3 +303,131 @@ select * from demo_schema.dept_nosub;
 
 -- should succeed: query against said view
 select * from demo_schema.dept_nosub_view order by dno;
+
+-- should succeed: chained string literals
+create foreign table demo_schema.dept_chained_literals(
+    dno integer options (
+      foo 'bar'
+          ''
+          'baz'),
+    dname char(20),
+    loc char(20))
+server hsqldb_nosub
+options (
+    schema_name 'SALES',
+    table_name 'DE' // trailing line comment
+         'PT')
+description 'a '
+            'foreign '   'table';
+
+-- test lenient option
+create server hsqldb_orig
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    lenient 'true'
+);
+
+create foreign table demo_schema.dept_changing
+server hsqldb_orig
+options (object 'DEPT');
+
+!set showwarnings true
+select * from demo_schema.dept_changing;
+
+create or replace server hsqldb_orig
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb_modified/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    lenient 'true');
+
+select * from demo_schema.dept_changing;
+
+-- test strictness
+-- missing columns, should fail
+create foreign table demo_schema.dept_missing_col(
+    dno integer,
+    dname char(20))
+server hsqldb_demo
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- extra columns, should fail
+create foreign table demo_schema.dept_extra_col(
+    dno integer,
+    dname char(20),
+    loc char(20),
+    extra_col integer)
+server hsqldb_demo
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- test trusting mode (skip type check when local catalog already has type
+-- info)
+create server hsqldb_trusting
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    skip_type_check 'true'
+);
+
+-- should succeed even though column names are wrong
+create foreign table demo_schema.dept_missing_col_trust(
+    dno integer,
+    dname char(20))
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed even though column type mismatch
+create foreign table demo_schema.dept_wrong_col_trust(
+    dno date,
+    dname char(20))
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed even though column doesn't exist
+create foreign table demo_schema.dept_extra_col_trust(
+    dno integer,
+    dname char(20),
+    loc char(20),
+    extra_col integer)
+server hsqldb_trusting
+options(schema_name 'SALES', table_name 'DEPT');
+
+select * from demo_schema.dept_missing_col_trust;
+
+-- failure will be deferred to execution time instead
+select * from demo_schema.dept_wrong_col_trust;
+select * from demo_schema.dept_extra_col_trust;
+
+-- various options
+create server hsqldb_opts1
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    autocommit 'false',
+    fetch_size '3');
+
+select deptno from hsqldb_opts1.sales.dept order by deptno;
+
+select dname from hsqldb_opts1.sales.dept order by dname;
+
+-- End med.sql

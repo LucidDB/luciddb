@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,10 +25,9 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -49,7 +48,6 @@ import org.eigenbase.rex.*;
 class FtrsIndexSearchRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -111,12 +109,12 @@ class FtrsIndexSearchRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FtrsIndexSearchRel clone()
     {
         FtrsIndexSearchRel clone =
             new FtrsIndexSearchRel(
                 scanRel,
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 isUniqueKey,
                 isOuter,
                 inputKeyProj,
@@ -131,8 +129,8 @@ class FtrsIndexSearchRel
     {
         // TODO:  refined costing
         return scanRel.computeCost(
-                planner,
-                RelMetadataQuery.getRowCount(this));
+            planner,
+            RelMetadataQuery.getRowCount(this));
     }
 
     // implement RelNode
@@ -168,13 +166,13 @@ class FtrsIndexSearchRel
             // for outer join, have to make left side nullable
             if (isOuter) {
                 rightType =
-                    getFarragoTypeFactory().createTypeWithNullability(rightType,
+                    getFarragoTypeFactory().createTypeWithNullability(
+                        rightType,
                         true);
             }
 
-            return
-                getCluster().getTypeFactory().createJoinType(
-                    new RelDataType[] { leftType, rightType });
+            return getCluster().getTypeFactory().createJoinType(
+                new RelDataType[] { leftType, rightType });
         } else {
             assert (!isOuter);
             return scanRel.getRowType();
@@ -216,15 +214,15 @@ class FtrsIndexSearchRel
             this,
             new String[] {
                 "child", "table", "projection", "index", "uniqueKey",
-            "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
-            "inputDirectiveProj"
+                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
+                "inputDirectiveProj"
             },
             new Object[] {
                 Arrays.asList(scanRel.ftrsTable.getQualifiedName()), projection,
-            scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
-            Boolean.valueOf(scanRel.isOrderPreserving),
-            Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
-            inputDirectiveProjObj
+                scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
+                Boolean.valueOf(scanRel.isOrderPreserving),
+                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
+                inputDirectiveProjObj
             });
     }
 
@@ -238,6 +236,7 @@ class FtrsIndexSearchRel
         scanRel.defineScanStream(searchStream);
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
+        searchStream.setPrefetch(false);
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
                 FennelRelUtil.createTupleProjection(repos, inputKeyProj));
@@ -252,7 +251,7 @@ class FtrsIndexSearchRel
         }
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             searchStream);
 
         return searchStream;

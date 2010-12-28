@@ -1,14 +1,14 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test DDL on views
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 's';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test * expansion
-0: jdbc:farrago:> create view v1 as select * from sales.depts;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from v1 order by deptno;
+> -- $Id$
+> -- Test DDL on views
+> 
+> create schema s;
+> 
+> set schema 's';
+> 
+> -- test * expansion
+> create view v1 as select * from sales.depts;
+> 
+> select * from v1 order by deptno;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -16,11 +16,11 @@
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test explicit column names
-0: jdbc:farrago:> create view v2(ename) as select name from sales.emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from v2 order by 1;
+> 
+> -- test explicit column names
+> create view v2(ename) as select name from sales.emps;
+> 
+> select * from v2 order by 1;
 +--------+
 | ENAME  |
 +--------+
@@ -29,133 +29,132 @@
 | John   |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  column mismatch
-0: jdbc:farrago:> create view v3(empno, name, id) as select empno, name from sales.emps;
+> 
+> -- bad:  column mismatch
+> create view v3(empno, name, id) as select empno, name from sales.emps;
 Error: Column name count does not match query (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  duplicate column names
-0: jdbc:farrago:> create view v4(empno,empno) as select empno, name from sales.emps;
+> 
+> -- bad:  duplicate column names
+> create view v4(empno,empno) as select empno, name from sales.emps;
 Error: DDL validation error near line 1, column 22: Duplicate definition for column "EMPNO" within view "S"."V4"; earlier definition was near line 1, column 22 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  invalid view def
-0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
+> 
+> -- bad:  invalid view def
+> create view v5 as select * from nonexistent_table;
 Error: From line 1, column 33 to line 1, column 49: Table 'NONEXISTENT_TABLE' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  view with dynamic params
-0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;
+> 
+> -- bad:  view with dynamic params
+> create view v6 as select * from sales.emps where empno = ?;
 Error: Dynamic parameters are illegal in views (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  duplicate view name
-0: jdbc:farrago:> create view v1 as select * from sales.emps;
+> 
+> -- bad:  duplicate view name
+> create view v1 as select * from sales.emps;
 Error: DDL validation error near line 1, column 13: Target schema "LOCALDB"."S" already contains view "V1" with same name (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  duplicate view name (views and tables conflict)
-0: jdbc:farrago:> create view sales.depts as select * from sales.emps;
+> 
+> -- bad:  duplicate view name (views and tables conflict)
+> create view sales.depts as select * from sales.emps;
 Error: DDL validation error near line 1, column 19: Target schema "LOCALDB"."SALES" already contains table "DEPTS" with same name (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  ORDER BY in view
-0: jdbc:farrago:> create view v7 as select * from sales.emps order by name;
+> 
+> -- bad:  ORDER BY in view
+> create view v7 as select * from sales.emps order by name;
 Error: ORDER BY is illegal in views (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- add extra dependencies to make drop schema cascade work harder
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v22 as select * from v2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v23 as select * from v22;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v24 as select * from v22,v23;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema s cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t1(i int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v7 as select * from t1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  can't drop without cascade
-0: jdbc:farrago:> drop table t1;
+> 
+> -- add extra dependencies to make drop schema cascade work harder
+> 
+> create view v22 as select * from v2;
+> 
+> create view v23 as select * from v22;
+> 
+> create view v24 as select * from v22,v23;
+> 
+> drop schema s cascade;
+> 
+> create schema s;
+> 
+> create table t1(i int not null primary key);
+> 
+> create view v7 as select * from t1;
+> 
+> -- bad:  can't drop without cascade
+> drop table t1;
 Error: Dropping table "S"."T1" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> drop table t1 restrict;
+> drop table t1 restrict;
 Error: Dropping table "S"."T1" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> drop table t1 cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  v7 shouldn't be there any more
-0: jdbc:farrago:> select * from v7;
+> 
+> -- should work
+> drop table t1 cascade;
+> 
+> -- bad:  v7 shouldn't be there any more
+> select * from v7;
 Error: From line 1, column 15 to line 1, column 16: Table 'V7' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t2(i int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v8 as select * from t2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v9 as select * from v8;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v10 as select * from v9;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view v11 as select * from v8;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad: can't drop without cascade
-0: jdbc:farrago:> drop view v8;
+> 
+> create table t2(i int not null primary key);
+> 
+> create view v8 as select * from t2;
+> 
+> create view v9 as select * from v8;
+> 
+> create view v10 as select * from v9;
+> 
+> create view v11 as select * from v8;
+> 
+> -- bad: can't drop without cascade
+> drop view v8;
 Error: Dropping view "S"."V8" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> drop view v8 restrict;
+> drop view v8 restrict;
 Error: Dropping view "S"."V8" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad: can't drop without cascade
-0: jdbc:farrago:> drop view v9;
+> 
+> -- bad: can't drop without cascade
+> drop view v9;
 Error: Dropping view "S"."V9" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> drop view v9 cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  no longer exists
-0: jdbc:farrago:> select * from v10;
+> 
+> -- should work
+> drop view v9 cascade;
+> 
+> -- bad:  no longer exists
+> select * from v10;
 Error: From line 1, column 15 to line 1, column 17: Table 'V10' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t2 cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- bad:  no longer exists
-0: jdbc:farrago:> select * from v8;
+> 
+> drop table t2 cascade;
+> 
+> -- bad:  no longer exists
+> select * from v8;
 Error: From line 1, column 15 to line 1, column 16: Table 'V8' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from v11;
+> 
+> select * from v11;
 Error: From line 1, column 15 to line 1, column 17: Table 'V11' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- make sure dependencies got dropped too
-0: jdbc:farrago:> select "name" from sys_cwm."Core"."Dependency" where "name"='V8$DEP';
+> 
+> -- make sure dependencies got dropped too
+> select "name" from sys_cwm."Core"."Dependency" where "name"='V8$DEP';
 +-------+
 | name  |
 +-------+
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- multi-line view including comments and description
-0: jdbc:farrago:> create view v12 
-. . . . . . . . > description 'foo'
-. . . . . . . . >    'bar' as
-. . . . . . . . > select empno, /* a comment */ name
-. . . . . . . . >   from sales.emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- make sure that the original text is stored correctly
-0: jdbc:farrago:> select "originalDefinition", "description"
-. . . . . . . . > from sys_fem."SQL2003"."LocalView"
-. . . . . . . . > where "name" = 'V12';
+> 
+> -- multi-line view including comments and description
+> create view v12 
+> description 'foo'
+>    'bar' as
+> select empno, /* a comment */ name
+>   from sales.emps;
+> 
+> !set outputformat csv
+> 
+> -- make sure that the original text is stored correctly
+> select "originalDefinition", "description"
+> from sys_fem."SQL2003"."LocalView"
+> where "name" = 'V12';
 'originalDefinition','description'
-'
-select empno, /* a comment */ name
+'select empno, /* a comment */ name
   from sales.emps','foobar'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- view containing scalar subquery
-0: jdbc:farrago:> create view scalarSelectView as
-. . . . . . . . >   select empno, (select 1 from (values (true))) as x from sales.emps;
-0: jdbc:farrago:> explain plan with type for select * from scalarSelectView;
+> 
+> -- view containing scalar subquery
+> create view scalarSelectView as
+>   select empno, (select 1 from (values (true))) as x from sales.emps;
+> explain plan with type for select * from scalarSelectView;
 'column0'
 'EMPNO INTEGER NOT NULL,'
 'X INTEGER'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End view.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- End view.sql
+> 
+> !quit

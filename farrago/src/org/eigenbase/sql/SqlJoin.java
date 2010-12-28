@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.sql.parser.*;
 public class SqlJoin
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int LEFT_OPERAND = 0;
@@ -48,14 +47,14 @@ public class SqlJoin
 
     /**
      * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * JoinType}.
+     * SqlJoinOperator.JoinType}.
      */
     public static final int TYPE_OPERAND = 2;
     public static final int RIGHT_OPERAND = 3;
 
     /**
      * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * ConditionType}.
+     * SqlJoinOperator.ConditionType}.
      */
     public static final int CONDITION_TYPE_OPERAND = 4;
     public static final int CONDITION_OPERAND = 5;
@@ -84,9 +83,8 @@ public class SqlJoin
      */
     public final SqlJoinOperator.ConditionType getConditionType()
     {
-        return
-            (SqlJoinOperator.ConditionType) SqlLiteral.symbolValue(
-                operands[CONDITION_TYPE_OPERAND]);
+        return (SqlJoinOperator.ConditionType) SqlLiteral.symbolValue(
+            operands[CONDITION_TYPE_OPERAND]);
     }
 
     /**
@@ -96,9 +94,8 @@ public class SqlJoin
      */
     public final SqlJoinOperator.JoinType getJoinType()
     {
-        return
-            (SqlJoinOperator.JoinType) SqlLiteral.symbolValue(
-                operands[TYPE_OPERAND]);
+        return (SqlJoinOperator.JoinType) SqlLiteral.symbolValue(
+            operands[TYPE_OPERAND]);
     }
 
     public final SqlNode getLeft()

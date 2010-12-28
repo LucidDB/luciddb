@@ -1,112 +1,112 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test time literal
-0: jdbc:farrago:> values TIME '12:01:01';
+> -- $Id$ 
+> 
+> -- test time literal
+> values TIME '12:01:01';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> values TIME '00:00';
+> values TIME '00:00';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '00:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '01:00';
+> values TIME '01:00';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '01:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '02:03 PST';
+> values TIME '02:03 PST';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '02:03 PST' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '11:59 EDT';
+> values TIME '11:59 EDT';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '11:59 EDT' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '12:00';
+> values TIME '12:00';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '12:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '12:01';
+> values TIME '12:01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '12:01' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '23:59';
+> values TIME '23:59';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23:59' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values TIME '11:59:59.99 PM';
+> values TIME '11:59:59.99 PM';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '11:59:59.99 PM' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- more ISO format tests that should work
-0: jdbc:farrago:> values time '3:4:5';
+> 
+> -- more ISO format tests that should work
+> values time '3:4:5';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 03:04:05  |
 +-----------+
-0: jdbc:farrago:> values time '0003:0005:0002';
+> values time '0003:0005:0002';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 03:05:02  |
 +-----------+
-0: jdbc:farrago:> -- with precision
-0: jdbc:farrago:> values time '10:00:00.5';
+> -- with precision
+> values time '10:00:00.5';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 10:00:00  |
 +-----------+
-0: jdbc:farrago:> values time '10:00:00.35';
+> values time '10:00:00.35';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 10:00:00  |
 +-----------+
-0: jdbc:farrago:> values time '10:00:00.3523';
+> values time '10:00:00.3523';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 10:00:00  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail
-0: jdbc:farrago:> values time '1003:1005:1002';
+> 
+> -- these should fail
+> values time '1003:1005:1002';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '1003:1005:1002' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values time '23.54.43..';
+> values time '23.54.43..';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43..' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values time '23.54.43.';
+> values time '23.54.43.';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43.' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> values time '23.54.43.1,000';
+> values time '23.54.43.1,000';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43.1,000' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_time(time_col time(0) not null primary key, time_col2 time(0));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_time values('string value',null);
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_time(time_col time(0) not null primary key, time_col2 time(0));
+> 
+> -- negative test
+> insert into t_time values('string value',null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type CHAR(12) (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(true,null);
+> insert into t_time values(true,null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(1234,null);
+> insert into t_time values(1234,null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(1e400,null);
+> insert into t_time values(1e400,null);
 Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(-1.2345678901234e-200,null);
+> insert into t_time values(-1.2345678901234e-200,null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type DOUBLE (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(-1234.03,null);
+> insert into t_time values(-1234.03,null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
-0: jdbc:farrago:> insert into t_time values(x'ff',null);
+> insert into t_time values(x'ff',null);
 Error: Cannot assign to target field 'TIME_COL' of type TIME(0) from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
+> insert into t_date values(date '1999-01-08',null);
 Error: From line 1, column 13 to line 1, column 18: Table 'T_DATE' not found (state=,code=0)
-0: jdbc:farrago:> -- the following line should be allowed.
-0: jdbc:farrago:> -- insert into t_time values(timestamp '2004-12-01 12:01:01',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right values
-0: jdbc:farrago:> insert into t_time values(time '12:01:01',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_time values(null, null); 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_time;
+> -- the following line should be allowed.
+> -- insert into t_time values(timestamp '2004-12-01 12:01:01',null);
+> 
+> -- insert the right values
+> insert into t_time values(time '12:01:01',null);
+> 
+> -- null value test
+> --insert into t_time values(null, null); 
+> 
+> select * from t_time;
 +-----------+------------+
 | TIME_COL  | TIME_COL2  |
 +-----------+------------+
 | 12:01:01  |            |
 +-----------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_time;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table t_time;
+> 
+> drop schema test;
+> 
+> !quit

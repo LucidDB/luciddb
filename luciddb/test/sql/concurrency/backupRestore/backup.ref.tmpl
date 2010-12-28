@@ -1,0 +1,95 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+> insert into lineitemu1 select * from "lineitem";
+600572 rows affected.
+> select count(*), sys_boot.mgmt.sleep(1000) from lineitem;
++---------------------+------------+
+| EXPR$0              | EXPR$1     |
++---------------------+------------+
+| 600572              | 0          |
++---------------------+------------+
+
+> select count(*), sys_boot.mgmt.sleep(1000) from lineitemu1;
++---------------------+------------+
+| EXPR$0              | EXPR$1     |
++---------------------+------------+
+| 600572              | 0          |
++---------------------+------------+
+
+> call applib.create_var('RWCONCUR', null, 'backup context');
+0 rows affected.
+> call applib.create_var('RWCONCUR', 'pageCount', 'used as a page counter');
+0 rows affected.
+> call applib.set_var(
+> 'RWCONCUR',
+> 'pageCount',
+> (select counter_value from sys_root.dba_performance_counters
+> where counter_name = 'DatabasePagesAllocated'));
+0 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> truncate table lineitemu1;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> select sys_boot.mgmt.sleep(1000) from "lineitem" where f1 = 1 and f4 = 1;
++------------+
+| EXPR$0     |
++------------+
+| 0          |
++------------+
+
+> select (cast(counter_value as bigint) <
+> cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
+> from sys_root.dba_performance_counters
+> where counter_name = 'DatabasePagesAllocated';
++--------+
+| EXPR$0 |
++--------+
+| true   |
++--------+
+
+> call applib.delete_var('RWCONCUR', 'pageCount');
+0 rows affected.
+-- end of thread cleanup
+
+-- thread backup
+> call sys_root.backup_database('@TEST_DIR@/fullArchive', 'FULL', 'COMPRESSED');
+0 rows affected.
+-- end of thread backup
+
+-- thread backup2
+> call sys_root.backup_database('@TEST_DIR@/fullArchive2', 'FULL', 'UNCOMPRESSED');
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Another database backup is already in progress
+-- end of thread backup2
+
+-- thread truncate
+> truncate table rwconcur.lineitem;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> select (cast(counter_value as bigint) >
+> cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
+> from sys_root.dba_performance_counters
+> where counter_name = 'DatabasePagesAllocated';
++--------+
+| EXPR$0 |
++--------+
+| true   |
++--------+
+
+-- end of thread truncate
+

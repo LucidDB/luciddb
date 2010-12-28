@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,16 +21,17 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.rel.metadata.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-
 import java.util.*;
 
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+
+
 /**
- * TableFunctionReturnTypeInference implements rules for deriving
- * table function output row types by expanding references to cursor
- * parameters.
+ * TableFunctionReturnTypeInference implements rules for deriving table function
+ * output row types by expanding references to cursor parameters.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -38,10 +39,14 @@ import java.util.*;
 public class TableFunctionReturnTypeInference
     extends ExplicitReturnTypeInference
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final List<String> paramNames;
 
     private Set<RelColumnMapping> columnMappings;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public TableFunctionReturnTypeInference(
         RelDataType unexpandedOutputType,
         List<String> paramNames)
@@ -50,11 +55,13 @@ public class TableFunctionReturnTypeInference
         this.paramNames = paramNames;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Set<RelColumnMapping> getColumnMappings()
     {
         return columnMappings;
     }
-    
+
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
@@ -65,11 +72,12 @@ public class TableFunctionReturnTypeInference
         for (RelDataTypeField field : unexpandedOutputType.getFieldList()) {
             RelDataType fieldType = field.getType();
             String fieldName = field.getName();
-            if (fieldType.getSqlTypeName() != SqlTypeName.Cursor) {
+            if (fieldType.getSqlTypeName() != SqlTypeName.CURSOR) {
                 expandedOutputTypes.add(fieldType);
                 expandedFieldNames.add(fieldName);
                 continue;
             }
+
             // Look up position of cursor parameter with same name as output
             // field, also counting how many cursors appear before it
             // (need this for correspondence with RelNode child position).
@@ -85,33 +93,123 @@ public class TableFunctionReturnTypeInference
                     ++iCursor;
                 }
             }
-            assert(paramOrdinal != -1);
+            assert (paramOrdinal != -1);
+
             // Translate to actual argument type.
+            boolean isRowOp = false;
+            List<String> columnNames = new ArrayList<String>();
             RelDataType cursorType = opBinding.getCursorOperand(paramOrdinal);
-            // And expand (function output is always nullable).
-            int iInputColumn = -1;
-            for (RelDataTypeField cursorField : cursorType.getFieldList()) {
-                ++iInputColumn;
-                RelColumnMapping columnMapping = new RelColumnMapping();
-                columnMapping.iOutputColumn = expandedFieldNames.size();
-                columnMapping.iInputColumn = iInputColumn;
-                columnMapping.iInputRel = iCursor;
-                // we don't have any metadata on transformation effect,
-                // so assume the worst
-                columnMapping.isDerived = true;
-                columnMappings.add(columnMapping);
-                
-                RelDataType nullableType =
-                    opBinding.getTypeFactory().createTypeWithNullability(
-                        cursorField.getType(),
-                        true);
-                expandedOutputTypes.add(nullableType);
-                expandedFieldNames.add(cursorField.getName());
+            if (cursorType == null) {
+                isRowOp = true;
+                String parentCursorName =
+                    opBinding.getColumnListParamInfo(
+                        paramOrdinal,
+                        fieldName,
+                        columnNames);
+                assert (parentCursorName != null);
+                paramOrdinal = -1;
+                iCursor = 0;
+                for (int i = 0; i < paramNames.size(); ++i) {
+                    if (paramNames.get(i).equals(parentCursorName)) {
+                        paramOrdinal = i;
+                        break;
+                    }
+                    cursorType = opBinding.getCursorOperand(i);
+                    if (cursorType != null) {
+                        ++iCursor;
+                    }
+                }
+                cursorType = opBinding.getCursorOperand(paramOrdinal);
+                assert (cursorType != null);
+            }
+
+            // And expand. Function output is always nullable... except system
+            // fields.
+            int iInputColumn;
+            if (isRowOp) {
+                for (String columnName : columnNames) {
+                    iInputColumn = -1;
+                    RelDataTypeField cursorField = null;
+                    for (RelDataTypeField cField : cursorType.getFieldList()) {
+                        ++iInputColumn;
+                        if (cField.getName().equals(columnName)) {
+                            cursorField = cField;
+                            break;
+                        }
+                    }
+                    addOutputColumn(
+                        expandedFieldNames,
+                        expandedOutputTypes,
+                        iInputColumn,
+                        iCursor,
+                        opBinding,
+                        cursorField);
+                }
+            } else {
+                iInputColumn = -1;
+                for (RelDataTypeField cursorField : cursorType.getFieldList()) {
+                    ++iInputColumn;
+                    addOutputColumn(
+                        expandedFieldNames,
+                        expandedOutputTypes,
+                        iInputColumn,
+                        iCursor,
+                        opBinding,
+                        cursorField);
+                }
             }
         }
         return opBinding.getTypeFactory().createStructType(
             expandedOutputTypes,
             expandedFieldNames);
+    }
+
+    private void addOutputColumn(
+        List<String> expandedFieldNames,
+        List<RelDataType> expandedOutputTypes,
+        int iInputColumn,
+        int iCursor,
+        SqlOperatorBinding opBinding,
+        RelDataTypeField cursorField)
+    {
+        RelColumnMapping columnMapping = new RelColumnMapping();
+        columnMapping.iOutputColumn = expandedFieldNames.size();
+        columnMapping.iInputColumn = iInputColumn;
+        columnMapping.iInputRel = iCursor;
+
+        // we don't have any metadata on transformation effect,
+        // so assume the worst
+        columnMapping.isDerived = true;
+        columnMappings.add(columnMapping);
+
+        // As a special case, system fields are implicitly NOT NULL.
+        // A badly behaved UDX can still provide NULL values, so the
+        // system must ensure that each generated system field has a
+        // reasonable value.
+        boolean nullable = true;
+        if (opBinding instanceof SqlCallBinding) {
+            SqlCallBinding sqlCallBinding = (SqlCallBinding) opBinding;
+            if (sqlCallBinding.getValidator().isSystemField(
+                    cursorField))
+            {
+                nullable = false;
+            }
+        }
+        RelDataType nullableType =
+            opBinding.getTypeFactory().createTypeWithNullability(
+                cursorField.getType(),
+                nullable);
+
+        // Make sure there are no duplicates in the output column names
+        for (String fieldName : expandedFieldNames) {
+            if (fieldName.equals(cursorField.getName())) {
+                throw opBinding.newError(
+                    EigenbaseResource.instance().DuplicateColumnName.ex(
+                        cursorField.getName()));
+            }
+        }
+        expandedOutputTypes.add(nullableType);
+        expandedFieldNames.add(cursorField.getName());
     }
 }
 

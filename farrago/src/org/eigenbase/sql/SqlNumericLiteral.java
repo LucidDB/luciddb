@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlNumericLiteral
     extends SqlLiteral
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Integer prec;
@@ -55,7 +54,9 @@ public class SqlNumericLiteral
         boolean isExact,
         SqlParserPos pos)
     {
-        super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
+        super(
+            value,
+            isExact ? SqlTypeName.DECIMAL : SqlTypeName.DOUBLE,
             pos);
         this.prec = prec;
         this.scale = scale;
@@ -81,13 +82,12 @@ public class SqlNumericLiteral
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlNumericLiteral(
-                (BigDecimal) value,
-                getPrec(),
-                getScale(),
-                isExact,
-                pos);
+        return new SqlNumericLiteral(
+            (BigDecimal) value,
+            getPrec(),
+            getScale(),
+            isExact,
+            pos);
     }
 
     public void unparse(
@@ -116,24 +116,23 @@ public class SqlNumericLiteral
                 SqlTypeName result;
                 long l = bd.longValue();
                 if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
-                    result = SqlTypeName.Integer;
+                    result = SqlTypeName.INTEGER;
                 } else {
-                    result = SqlTypeName.Bigint;
+                    result = SqlTypeName.BIGINT;
                 }
                 return typeFactory.createSqlType(result);
             }
 
             //else we have a decimal
-            return
-                typeFactory.createSqlType(
-                    SqlTypeName.Decimal,
-                    prec.intValue(),
-                    scaleValue);
+            return typeFactory.createSqlType(
+                SqlTypeName.DECIMAL,
+                prec.intValue(),
+                scaleValue);
         }
 
         // else we have a a float, real or double.  make them all double for
         // now.
-        return typeFactory.createSqlType(SqlTypeName.Double);
+        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
     }
 
     public boolean isInteger()

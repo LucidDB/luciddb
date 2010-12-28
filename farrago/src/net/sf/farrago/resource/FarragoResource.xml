@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl"
  href="http://eigenbase.sourceforge.net/resgen/Resource.xsl" ?>
-<!-- 
+<!--
   $Id$
   Farrago is an extensible data management system.
-  Copyright (C) 2005-2005 The Eigenbase Project
-  Copyright (C) 2004-2005 Disruptive Tech
-  Copyright (C) 2005-2005 LucidEra, Inc.
-  Portions Copyright (C) 2003-2005 John V. Sichi
+  Copyright (C) 2005 The Eigenbase Project
+  Copyright (C) 2004 SQLstream, Inc.
+  Copyright (C) 2005 Dynamo BI Corporation
+  Portions Copyright (C) 2003 John V. Sichi
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
@@ -92,9 +92,25 @@
 <text>Failed reading boot URL list</text>
 </exception>
 
-<exception id="400110" name="CatalogBootUrlUpdateFailed">
+<exception id="400120" name="CatalogBootUrlUpdateFailed">
 <text>Failed to modify boot URL list</text>
 </exception>
+
+<exception id="400130" name="CatalogModelTimestampCheckFailed">
+<text>Stored catalog model timestamp ''{0}'' does not match compiled catalog timestamp ''{1}''</text>
+</exception>
+
+<exception id="400140" name="PartialRestore">
+    <text>Data is not accessible.  A partial restore has been executed.</text>
+</exception>
+
+<exception id="400150" name="CatalogReadOnly">
+    <text>Catalog data is readonly.</text>
+</exception>
+
+<message name="CatalogBootstrapObjDescription">
+<text>Created by system initialization</text>
+</message>
 
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
@@ -110,6 +126,10 @@
 
 <exception id ="410020" name="JdbcConnSessionKilled">
 <text>Session killed</text>
+</exception>
+
+<exception id ="410021" name="JdbcConnSessionClosed">
+<text>Session closed</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -208,7 +228,22 @@
 
 <exception id="420180" name="ValidatorDropClusteredIndex"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Clustered {0} cannot be dropped</text>
+<text>Cannot drop clustered {0}</text>
+</exception>
+
+<exception id="420181" name="ValidatorDropPrimaryKeyIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop primary key {0}</text>
+</exception>
+
+<exception id="420182" name="ValidatorDropDeletionIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop deletion {0}</text>
+</exception>
+
+<exception id="420183" name="ValidatorDropUniqueConstraintIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop unique constraint {0}</text>
 </exception>
 
 <exception id="420190" name="ValidatorNoDefaultSchema">
@@ -268,6 +303,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid definition for {0}</text>
 </exception>
 
+<exception id="420321" name="ValidatorInvalidObjectAttributeDefinition">
+<text>Cannot create {0} because attribute "{1}" exceeds {2,number,#} characters in length</text>
+</exception>
+
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">
 <text>Dynamic parameters are illegal in views</text>
 </exception>
@@ -284,7 +323,7 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to validate definition for {0}</text>
 </exception>
 
-<exception id="420360" name="ValidatorDataServerTableInvalid">
+<exception id="420361" name="ValidatorDataServerTableInvalid">
 <text>Failed to validate data server definition for {0}</text>
 </exception>
 
@@ -585,12 +624,20 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot drop {0} because it is currently in use by a statement</text>
 </exception>
 
+<exception id="420981" name="ValidatorDropObjectInUseBySession">
+<text>Cannot drop {0} because it is currently in use by a session</text>
+</exception>
+
 <exception id="420990" name="ValidatorAnalyzeFailed">
 <text>Unable to execute ANALZYE statement</text>
 </exception>
 
 <exception id="420991" name="ValidatorAnalyzeNotSupported">
 <text>Cannot analyze {0} because analysis is not supported for objects of that type</text>
+</exception>
+
+<exception id="420992" name="ValidatorAnalyzeInvalidRowCount">
+<text>Cannot analyze {0} because its row count metadata is incorrect</text>
 </exception>
 
 <exception id="421000" name="ValidatorDuplicateSequenceOption">
@@ -606,7 +653,7 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="421030" name="ValidatorMultipleTableSequences">
-<text>Multiple identity columns are specified in definition of {0}</text>
+<text>Cannot specify more than one identity column in definition of {0}</text>
 </exception>
 
 <exception id="421040" name="ValidatorInvalidSequenceStart">
@@ -621,10 +668,55 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unable to execute ALTER statement</text>
 </exception>
 
+<exception id="421065" name="ValidatorAlterForeignTable">
+<text>ALTER TABLE cannot be used on a foreign table</text>
+</exception>
+
+<exception id="421066" name="ValidatorAlterTempTable">
+<text>ALTER TABLE cannot be used on a temporary table</text>
+</exception>
+
+<exception id="421068" name="ValidatorAlterTableDataServer">
+<text>ALTER TABLE is not supported by local {0}</text>
+</exception>
+
 <exception id="421070" name="ValidatorAlterIdentityFailed">
 <text>Cannot alter sequence for {0} because it was not defined as an identity column</text>
 </exception>
 
+<exception id="421080" name="ValidatorUniqueKeyUpdate">
+<text>Cannot update unique key column ({0})</text>
+</exception>
+
+<exception id="421090" name="ValidatorNoMatchingSourceCursor"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot locate source cursor {0} for COLUMN_LIST {1}</text>
+</exception>
+
+<exception id="421100" name="ValidatorInvalidColumnListParam"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>COLUMN_LIST parameters for {0} must be declared as java.util.List&lt;String&gt; in the external Java method {1}</text>
+</exception>
+
+<exception id="421110" name="ValidatorIndexedColumnsNotDistinct">
+<text>Cannot create {0} because columns must be distinct.</text>
+</exception>
+
+<exception id="421120" name="ValidatorAccessObjectNonVisibleToLabel">
+    <text>Attempt to access {0}, which is not visible to the current session label setting.</text>
+</exception>
+
+<exception id="421130" name="ValidatorSetLabelInUdr">
+<text>A label cannot be set inside a UDR.</text>
+</exception>
+
+<exception id="421140" name="ValidatorCircularLabelChain">
+<text>Cannot create a circular label chain.</text>
+</exception>
+
+<exception id="421150" name="NonExistentCursorParam">
+<text>Cursor parameter {0} does not exist.</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
@@ -738,9 +830,29 @@ Messages: {3}</text>
 Messages: {1}</text>
 </exception>
 
+<exception id="450152" name="JavaRowError">
+<text>Could not process input:
+{0}
+Messages: {1}</text>
+</exception>
+
 <exception id="450160" name="ErrorLimitExceeded">
-<text>Exceeded limit of {0,number,#} errors. Last error was: 
+<text>Exceeded limit of {0,number,#} errors. Last error was:
 {1}</text>
+</exception>
+
+<exception id="450170" name="RecoverableErrorWarning"
+    className="java.sql.SQLWarning">
+<text>Statement execution encountered recoverable exceptions; errors: {0,number,#}; warnings: {1,number,#}; see {2} for details
+</text>
+</exception>
+
+<exception id="450180" name="JavaRowTooLong">
+<text>Row size exceeds maximum ({0,number,#} bytes); row data:  {1}</text>
+</exception>
+
+<exception id="450190" name="QueryAccessNewColumn">
+<text>Cannot query new column (via {0}) currently being added by ALTER TABLE</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -788,15 +900,67 @@ Messages: {1}</text>
 </exception>
 
 <exception id="460120" name="MedInvalidUdxId">
-<text>Invalid specific name for SQL/MED UDX:  {0}</text>
+<text>Invalid specific name for UDX loaded via SQL/MED or optimizer:  {0}</text>
 </exception>
 
 <exception id="460130" name="MedUnknownUdx">
-<text>Unknown specific name {0} for SQL/MED UDX</text>
+<text>Unknown specific name {0} for UDX loaded via SQL/MED or optimizer</text>
 </exception>
 
 <exception id="460140" name="MedPropertyMismatch">
 <text>Values (''{0}'', ''{1}'') for property {2} do not match</text>
+</exception>
+
+<exception id="460150" name="RetryableFailure">
+<text>Retryable communication failure</text>
+</exception>
+
+<exception id="460160" name="DeletedFieldWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' does not exist in external data source. It will be filled in with nulls.</text>
+</exception>
+
+<exception id="460170" name="TypeChangeWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' has datatype ''{2}'' in external data source; it will be cast to datatype ''{3}''.</text>
+</exception>
+
+<exception id="460180" name="IncompatibleTypeChangeWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' has datatype ''{2}'' in external data source which cannot be cast to datatype ''{3}''. It will be filled in with nulls.</text>
+</exception>
+
+<exception id="460190" name="AddedFieldWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' has field ''{1}'' added in external data source.</text>
+</exception>
+
+<exception id="460200" name="NumberOfColumnsMismatch">
+<text>Number of fields in foreign table: ''{0}''. Number of fields in external data source: {1}''.</text>
+</exception>
+
+<exception id="460210" name="TypesOfColumnsMismatch">
+<text>External data source field ''{0}'' has datatype ''{1}'' which cannot be cast to datatype ''{2}'' of foreign table field ''{3}''.</text>
+</exception>
+
+<exception id="460220" name="DataServerIndexVersionFailed">
+<text>Failed to version index root page for {0}</text>
+</exception>
+
+<exception id="460230" name="MedJdbc_InvalidTableSchemaMapping">
+<text>Cannot specify more than one of SCHEMA_MAPPING, TABLE_MAPPING, or TABLE_PREFIX_MAPPING</text>
+</exception>
+
+<exception id="460240" name="MedJdbc_InvalidTableMapping">
+<text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
+<exception id="460245" name="MedJdbc_InvalidTablePrefixMapping">
+<text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
+<exception id="460250" name="MedJdbc_InvalidDataSource">
+<text>Cannot find JNDI resource ''{0}''</text>
 </exception>
 
 <!-- NOTE:  Mock resources don't really need localization; this one is
@@ -822,8 +986,16 @@ Messages: {1}</text>
 <text>Password for authentication in source DBMS</text>
 </message>
 
+<message name="MedJdbc_JNDI_NAME_Description">
+<text>Name of the JNDI resource containing the DataSource for the source DBMS</text>
+</message>
+
 <message name="MedJdbc_EXTENDED_OPTIONS_Description">
 <text>Whether driver-specific options should be accepted</text>
+</message>
+
+<message name="MedJdbc_SCHEMA_NAME_Description">
+<text>Artificial foreign schema name for servers which don''t support schemas</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -870,6 +1042,14 @@ Messages: {1}</text>
 <text>Invalid row {1} in control file {0}</text>
 </exception>
 
+<exception id="469100" name="FlatFileMappedRequiresWithHeader">
+<text>Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers.</text>
+</exception>
+
+<exception id="469110" name="FlatFileMappedRequiresLenient">
+<text>Mapping source columns in data files to target columns specified by control files requires server to be lenient.</text>
+</exception>
+
 <message name="MedFlatFile_DIRECTORY_Description">
 <text>OS directory path containing flat files</text>
 </message>
@@ -912,6 +1092,30 @@ Messages: {1}</text>
 
 <message name="MedFlatFile_LOG_DIRECTORY_Description">
 <text>OS directory path for writing log files</text>
+</message>
+
+<message name="MedFlatFile_TRIM_Description">
+<text>Whether to trim column values</text>
+</message>
+
+<message name="MedFlatFile_LENIENT_Description">
+<text>Whether to fill in missing columns at the end of rows with null and discard extra columns</text>
+</message>
+
+<message name="MedFlatFile_MAPPED_Description">
+<text>Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.</text>
+</message>
+
+<message name="MedFlatFile_DATE_FORMAT_Description">
+<text>A custom datetime format for date columns</text>
+</message>
+
+<message name="MedFlatFile_TIME_FORMAT_Description">
+<text>A custom datetime format for time columns</text>
+</message>
+
+<message name="MedFlatFile_TIMESTAMP_FORMAT_Description">
+<text>A custom datetime format for timestamp columns</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -962,8 +1166,12 @@ Messages: {1}</text>
 <text>Login failed for {0}: invalid username/password combination</text>
 </exception>
 
+<exception id="470101" name="SessionLogoutFailed">
+<text>There was an error when logging out user {0}</text>
+</exception>
+
 <exception id="470110" name="SessionOptimizerFailed">
-<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan</text>
+<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan. Details: reason is [{1}]; while preparing statement [{2}].</text>
 </exception>
 
 <exception id="470120" name="SessionNotFound">
@@ -972,6 +1180,28 @@ Messages: {1}</text>
 
 <exception id="470130" name="SessionReentrantStmtFailed">
 <text>Failed while executing internal statement</text>
+</exception>
+
+<exception id ="470140" name="SessionClientProcessIdNotNumeric"
+    className="java.sql.SQLWarning">
+<text>clientProcessId ''{0}'' could not be parsed as an integer</text>
+</exception>
+
+<!-- Duplicates FennelResource.xml's 440060 -->
+<exception id="470150" name="InvalidParam">
+<text>Invalid parameter setting.  Setting must be between {0} and {1}.</text>
+</exception>
+
+<exception id="470160" name="NoDatabaseLoaded">
+<text>Existing database server required</text>
+</exception>
+
+<exception id="470170" name="InvalidLabelProperty">
+<text>Invalid label property "{0}".</text>
+</exception>
+
+<exception id="470180" name="ReadOnlySession">
+<text>Session is read-only because it has a label setting.</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -987,7 +1217,7 @@ Messages: {1}</text>
 </message>
 
 <message id="480020" name="ServerListening">
-<text>Server now listening for RMI connections on port {0,number,#}; enter !quit to stop</text>
+<text>Server now listening for {0} connections on port {1,number,#}; enter !quit to stop</text>
 </message>
 
 <message id="480030" name="ServerBadCommand">
@@ -1022,6 +1252,30 @@ Messages: {1}</text>
 <text>Invalid value ''{0}'' for integer property {1}</text>
 </exception>
 
+<exception id="490001" name="PluginInvalidLongProp">
+<text>Invalid value ''{0}'' for long property {1}</text>
+</exception>
+
+<exception id="490002" name="PluginInvalidShortProp">
+<text>Invalid value ''{0}'' for short property {1}</text>
+</exception>
+
+<exception id="490003" name="PluginInvalidFloatProp">
+<text>Invalid value ''{0}'' for float property {1}</text>
+</exception>
+
+<exception id="490004" name="PluginInvalidDoubleProp">
+<text>Invalid value ''{0}'' for double property {1}</text>
+</exception>
+
+<exception id="490005" name="PluginInvalidByteProp">
+<text>Invalid value ''{0}'' for byte property {1}</text>
+</exception>
+
+<exception id="490006" name="PluginInvalidStringProp">
+<text>Invalid value ''{0}'' for string property {1}</text>
+</exception>
+
 <exception id="490010" name="PluginJarLoadFailed">
 <text>Failed to load plugin jar ''{0}''</text>
 </exception>
@@ -1044,6 +1298,14 @@ Messages: {1}</text>
 
 <exception id="490060" name="PluginPropRequired">
 <text>Value required for property {0}</text>
+</exception>
+
+<exception id="490070" name="PluginPropsConflict">
+<text>Property {0} conflicts with property {1}</text>
+</exception>
+
+<exception id="490080" name="PluginManifestMissing">
+<text>Plugin jar ''{0}'' manifest lacks attribute ''{1}''</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -1289,6 +1551,14 @@ Messages: {1}</text>
 <text>PRIMARY KEY constraint</text>
 </message>
 
+<message id="510056" name="UmlColumnListRoutineParameter">
+<text>routine parameter</text>
+</message>
+
+<message id="510057" name="UmlLabel">
+<text>label</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- User defined routine resources 520,000 - 530,000 -->
 <!-- ====================================================================== -->
@@ -1319,7 +1589,7 @@ Messages: {1}</text>
 
 <exception id="520006" name="ExportSchemaNoTablesImported">
 <text>No tables to export for foreign_server={0} foreign_schema={1} exclude={2} table_list={3} table_pattern={4} temp schema={5}</text>
-</exception>  
+</exception>
 
 <exception id="520007" name="ExportSchemaCreateDirFailed">
 <text>Failed to create export directory {0}: {1}</text>
@@ -1343,6 +1613,79 @@ Messages: {1}</text>
 
 <exception id="520012" name="ExportSchemaMergeTablesDiffer">
 <text>Tables differ in schemas to be merged</text>
+</exception>
+
+<exception id="520013" name="InvalidDateString">
+<text>Date format ''{0}'' could not be applied to string ''{1}''</text>
+</exception>
+
+<exception id="520014" name="InvalidConvertDatetimeCaller">
+<text>Caller type ''{0}'' for datetime conversion functions is unknown</text>
+</exception>
+
+<exception id="520015" name="InvalidBackupType">
+<text>Invalid backup type ''{0}''.  Must be either FULL, INCREMENTAL, or DIFFERENTIAL.</text>
+</exception>
+
+<exception id="520016" name="InvalidCompressionMode">
+<text>Invalid compression mode ''{0}''.  Must be either COMPRESSED or UNCOMPRESSED.</text>
+</exception>
+
+<exception id="520017" name="InvalidBackupPropertyValue">
+<text>Invalid backup property value ''{0}''</text>
+</exception>
+
+<exception id="520018" name="InvalidBackupPropertySetting">
+<text>Invalid backup property setting ''{0}''</text>
+</exception>
+
+<exception id="520019" name="NoFullBackup">
+<text>A full backup has not been executed yet</text>
+</exception>
+
+<exception id="520020" name="BackupInProgress">
+<text>Another database backup is already in progress</text>
+</exception>
+
+<exception id="520021" name="NeedExclusiveAccess">
+<text>Exclusive database access required</text>
+</exception>
+
+<exception id="520022" name="MissingPropertySetting">
+<text>Backup property file is missing a property setting for ''{0}''</text>
+</exception>
+
+<exception id="520024" name="BackupFileAlreadyExists">
+<text>The file ''{0}'' already exists in the archive directory</text>
+</exception>
+
+<exception id="520025" name="BackupFileDoesNotExist">
+<text>The file ''{0}'' does not exist in the archive directory</text>
+</exception>
+
+<exception id="520026" name="BackupFileNotReadable">
+<text>The file ''{0}'' is not readable in the archive directory</text>
+</exception>
+
+<exception id="520027" name="BackupArchiveDirNotWritable">
+<text>The backup archive directory ''{0}'' is not writable</text>
+</exception>
+
+<exception id="520028" name="BackupArchiveDirNotReadable">
+<text>The backup archive directory ''{0}'' is not readable</text>
+</exception>
+
+<exception id="520030" name="FileDeletionFailed">
+<text>Failed to delete ''{0}''</text>
+</exception>
+
+<exception id="520040" name="ServerTestConnFailed">
+<text>Failed testing connection to data server ''{0}''</text>
+</exception>
+
+<exception id="520050" name="ChangeToUnicodeFailed">
+<text>Cannot change default character set to Unicode because local tables
+have already been defined</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

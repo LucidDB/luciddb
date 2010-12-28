@@ -1,0 +1,24 @@
+-- $Id$
+-- This script creates the builtin storage data servers for repository object
+-- access when Enki/Hibernate is used for repository storage.
+
+!set verbose true
+
+set schema 'sys_boot.sys_boot';
+set path 'sys_boot.sys_boot';
+
+-- create access to system's own CWM repository
+create or replace server sys_cwm
+foreign data wrapper sys_jdbc
+options(
+  jndi_name 'java:ENKI_DATASOURCE',
+  schema_name 'DUMMY',
+  table_prefix_mapping '%.FEM_VT_Behavioral_%:Behavioral.%;%.FEM_VT_Core_%:Core.%;%.FEM_VT_DataTypes_%:DataTypes.%;%.FEM_VT_Instance_%:Instance.%;%.FEM_VT_KeysIndexes_%:KeysIndexes.%;%.FEM_VT_Relational_%:Relational.%');
+
+-- create access to system's own Farrago-specific portion of repository
+create or replace server sys_fem
+foreign data wrapper sys_jdbc
+options(
+  jndi_name 'java:ENKI_DATASOURCE',
+  schema_name 'DUMMY',
+  table_prefix_mapping '%.FEM_VT_Config_%:Config.%;%.FEM_VT_Med_%:MED.%;%.FEM_VT_Security_%:Security.%;%.FEM_VT_Sql2003_%:SQL2003.%');

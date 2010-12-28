@@ -14,6 +14,11 @@ values applib.fiscal_quarter(date'2000-7-30', 3, 2);
 values applib.fiscal_quarter('2001-9-12', 3);
 values applib.fiscal_quarter(timestamp'1800-13-01 12:45:38', 1);
 
+-- null input
+values applib.fiscal_quarter(cast (null as timestamp), 3);
+values applib.fiscal_quarter(cast (null as date), 2);
+values applib.fiscal_quarter(2002, cast(null as integer), 8);
+
 -- create view with reference to applib.fiscal_quarter
 create view fiscal(fm, fromdt, fromts) as
 select fm, applib.fiscal_quarter(datecol, fm), applib.fiscal_quarter(tscol, fm)

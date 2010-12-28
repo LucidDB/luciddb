@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,7 +62,9 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
     nRowsMax = params.nRows;
     saveTuples = params.saveTuples;
     echoTuples = params.echoTuples;
-    if (saveTuples||echoTuples) assert(pGenerator);
+    if (saveTuples || echoTuples) {
+        assert(pGenerator);
+    }
 }
 
 void MockProducerExecStream::open(bool restart)
@@ -70,18 +72,22 @@ void MockProducerExecStream::open(bool restart)
     SingleOutputExecStream::open(restart);
     nRowsProduced = 0;
     savedTuples.clear();
-    if (saveTuples) savedTuples.reserve(nRowsMax); // assume it's not too big
+    if (saveTuples) {
+        // assume it's not too big
+        savedTuples.reserve(nRowsMax);
+    }
 }
 
 ExecStreamResult MockProducerExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     if (pGenerator) {
-        TuplePrinter tuplePrinter; 
+        TuplePrinter tuplePrinter;
         uint nTuples = 0;
         boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
-        for(int col=0;col<outputData.size();++col) {
-            outputData[col].pData = reinterpret_cast<PConstBuffer>(&(values.get()[col]));
+        for (int col = 0; col < outputData.size(); ++col) {
+            outputData[col].pData = reinterpret_cast<PConstBuffer>(
+                &(values.get()[col]));
         }
         while (nRowsProduced < nRowsMax) {
             if (pOutAccessor->getProductionAvailable() < cbTuple) {
@@ -95,19 +101,24 @@ ExecStreamResult MockProducerExecStream::execute(
                 }
             }
 
-            for (int col=0;col<outputData.size();++col) {
-                values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
+            for (int col = 0; col < outputData.size(); ++col) {
+                values.get()[col] =
+                    pGenerator->generateValue(nRowsProduced, col);
             }
-            
+
             bool rc = pOutAccessor->produceTuple(outputData);
             assert(rc);
             ++nTuples;
             ++nRowsProduced;
-            if (echoTuples)
-                tuplePrinter.print(*echoTuples, pOutAccessor->getTupleDesc(), outputData);
+            if (echoTuples) {
+                tuplePrinter.print(
+                    *echoTuples,
+                    pOutAccessor->getTupleDesc(), outputData);
+            }
             if (saveTuples) {
                 std::ostringstream oss;
-                tuplePrinter.print(oss, pOutAccessor->getTupleDesc(), outputData);
+                tuplePrinter.print(
+                    oss, pOutAccessor->getTupleDesc(), outputData);
                 savedTuples.push_back(oss.str());
             }
             if (nTuples >= quantum.nTuplesMax) {
@@ -117,7 +128,7 @@ ExecStreamResult MockProducerExecStream::execute(
         pOutAccessor->markEOS();
         return EXECRC_EOS;
     }
-    
+
     // NOTE: implementation below is kept lean and mean
     // intentionally so that it can be used to drive other streams with minimal
     // overhead during profiling
@@ -125,16 +136,16 @@ ExecStreamResult MockProducerExecStream::execute(
     uint cb = pOutAccessor->getProductionAvailable();
     uint nRows = std::min<uint64_t>(nRowsMax - nRowsProduced, cb / cbTuple);
     uint cbBatch = nRows * cbTuple;
-    
+
     // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
         cb -= cbBatch;
         nRowsProduced += nRows;
         PBuffer pBuffer = pOutAccessor->getProductionStart();
-        memset(pBuffer,0,cbBatch);
+        memset(pBuffer, 0, cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
-    } 
+    }
     if (nRowsProduced == nRowsMax) {
         pOutAccessor->markEOS();
         return EXECRC_EOS;
@@ -143,7 +154,7 @@ ExecStreamResult MockProducerExecStream::execute(
     }
 }
 
-uint64_t MockProducerExecStream::getProducedRowCount() 
+uint64_t MockProducerExecStream::getProducedRowCount()
 {
     uint waitingRowCount = pOutAccessor->getConsumptionTuplesAvailable();
     return nRowsProduced - waitingRowCount;

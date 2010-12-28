@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="concurBackupRestore" basedir="." default="test">
+  <dirname property="concurBackupRestore.dir" file="${ant.file.concurBackupRestore}" />
+
+  <property name="open.dir" location="${concurBackupRestore.dir}/../../../../.." />
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+  <!-- somewhat redundant but needed because the backup/restore test targets
+       don't always inherit the properties in this file
+  -->
+  <property name="luciddb.dir" location="${open.dir}/luciddb" />
+  <property name="build.init.properties" location="${concurBackupRestore.dir}/build.init.properties" />
+  <import file="${luciddb.dir}/properties.xml" />
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${concurBackupRestore.dir}/gen"/>
+
+  <!-- directory of flat files -->
+  <property name="ffsource.tpch.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
+  <property name="ff.dir" value="${concurBackupRestore.dir}/ff" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <property name="testlog.dir" value="${concurBackupRestore.dir}"/>
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql files -->
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${concurBackupRestore.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="FFDIR" value="${ff.dir}"/>
+        <filter token="TEST_DIR" value="${concurBackupRestore.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${concurBackupRestore.dir}">
+        <include name="*.sql"/>
+        <include name="*.mtsql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="create-archive-dirs">
+    <mkdir dir="${concurBackupRestore.dir}/fullArchive"/>
+    <mkdir dir="${concurBackupRestore.dir}/fullArchive2"/>
+  </target>
+
+  <target name="test" depends="clean-test,create-archive-dirs">
+    <antcall target="backup"/>
+    <antcall target="restoreBackup"/>
+    <antcall target="validateRestore"/>
+    <antcall target="cancelBackup"/>
+  </target>
+  
+  <target name="backup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${concurBackupRestore.dir}"
+      testscript="backup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurRestore" />
+    <property file="run.properties"/>
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${concurBackupRestore.dir}"
+      testscript="restoreBackup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateRestore">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurValidate" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${concurBackupRestore.dir}"
+      testscript="validateRestore.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="cancelBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-cancelBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${concurBackupRestore.dir}"
+      testscript="cancelBackup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="create-db">
+    <available file="${ff.dir}" type="dir" property="ff.created"/>
+    <condition property="db.created">
+      <available file="${ffsource.tpch.dir}/100M" type="dir"/>
+    </condition>
+
+    <if>
+      <isset property="ff.created"/>
+      <then/>
+      <else>
+        <if>
+          <istrue value="${db.created}"/>
+          <then/>
+          <else>
+            <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
+              dir="${thirdparty.dir}/tpch">
+              <arg line="100M"/>
+            </exec>
+          </else>
+        </if>
+        <sync todir="${ff.dir}" verbose="true">
+          <fileset dir="${ffsource.tpch.dir}/100M"/>
+        </sync>
+      </else>
+    </if>
+
+  </target>
+
+  <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="${concurBackupRestore.dir}/run.properties"/>
+    <delete dir="${ff.dir}"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${gensql.dir}"/>
+    <delete dir="${concurBackupRestore.dir}/bh-concurBackup"/>
+    <delete dir="${concurBackupRestore.dir}/bh-concurRestore"/>
+    <delete dir="${concurBackupRestore.dir}/bh-concurValidate"/>
+    <delete dir="${concurBackupRestore.dir}/bh-cancelBackup"/>
+    <delete dir="${concurBackupRestore.dir}/fullArchive"/>
+    <delete dir="${concurBackupRestore.dir}/fullArchive2"/>
+  </target>
+
+</project>

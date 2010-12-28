@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,19 +34,28 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class SetopNamespace
+public class SetopNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall call;
 
     //~ Constructors -----------------------------------------------------------
 
-    SetopNamespace(SqlValidatorImpl validator, SqlCall call)
+    /**
+     * Creates a <code>SetopNamespace</code>.
+     *
+     * @param validator Validator
+     * @param call Call to set operator
+     * @param enclosingNode Enclosing node
+     */
+    protected SetopNamespace(
+        SqlValidatorImpl validator,
+        SqlCall call,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.call = call;
     }
 
@@ -59,25 +68,24 @@ class SetopNamespace
 
     public RelDataType validateImpl()
     {
-        switch (call.getKind().getOrdinal()) {
-        case SqlKind.UnionORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.ExceptORDINAL:
-            for (int i = 0; i < call.operands.length; i++) {
-                SqlNode operand = call.operands[i];
-                if (!operand.getKind().isA(SqlKind.Query)) {
+        switch (call.getKind()) {
+        case UNION:
+        case INTERSECT:
+        case EXCEPT:
+            final SqlValidatorScope scope = validator.scopes.get(call);
+            for (SqlNode operand : call.operands) {
+                if (!(operand.isA(SqlKind.QUERY))) {
                     throw validator.newValidationError(
                         operand,
                         EigenbaseResource.instance().NeedQueryOp.ex(
                             operand.toString()));
                 }
-                validator.validateQuery(operand);
+                validator.validateQuery(operand, scope);
             }
-            final SqlValidatorScope scope = validator.scopes.get(call);
             return call.getOperator().validateOperands(
-                    validator,
-                    scope,
-                    call);
+                validator,
+                scope,
+                call);
         default:
             throw Util.newInternal("Not a query: " + call.getKind());
         }

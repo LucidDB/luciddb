@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class SqlBasicVisitor<R>
     implements SqlVisitor<R>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public R visit(SqlLiteral literal)
@@ -90,7 +89,8 @@ public class SqlBasicVisitor<R>
     {
         R result();
 
-        R visitChild(SqlVisitor<R> visitor,
+        R visitChild(
+            SqlVisitor<R> visitor,
             SqlNode expr,
             int i,
             SqlNode operand);
@@ -115,7 +115,8 @@ public class SqlBasicVisitor<R>
             return null;
         }
 
-        public R visitChild(SqlVisitor<R> visitor,
+        public R visitChild(
+            SqlVisitor<R> visitor,
             SqlNode expr,
             int i,
             SqlNode operand)

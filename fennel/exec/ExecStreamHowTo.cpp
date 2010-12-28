@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -87,12 +87,12 @@ pre-sorted input stream, and removes duplicates by comparing
 successive pairs of tuples.  This is clearly a ConduitExecStream, so
 we now know enough to write:
 
-<pre><code>
+\verbatim
 class UniqExecStream : public ConduitExecStream
 {
     // TODO
 };
-</code></pre>
+\endverbatim
 
 So, given an input data stream like
 
@@ -137,7 +137,7 @@ corresponding parameter class, even no new parameters are required; the
 rationale for this rule will be explained later when we cover how streams are
 instantiated.  For now, here is a parameter class for our running example:
 
-<pre><code>
+\verbatim
 struct UniqExecStreamParams : public ConduitExecStreamParams
 {
     bool failOnDuplicate;
@@ -147,7 +147,7 @@ struct UniqExecStreamParams : public ConduitExecStreamParams
         failOnDuplicate = false;
     }
 };
-</code></pre>
+\endverbatim
 
 It is polite (though not strictly required) to define a default constructor for
 your parameters class which assigns sensible values to all parameters.
@@ -162,7 +162,7 @@ necessarily be quite different from the final code, but should be enough to get
 an idea of the state variables required.  Here's pseudocode for
 UniqExecStream:
 
-<pre><code>
+\verbatim
 lastTuple = null;
 while (!input.EOS()) {
     currentTuple = input.readTuple();
@@ -177,7 +177,7 @@ while (!input.EOS()) {
     lastTuple = currentTuple;
     output.writeTuple(currentTuple);
 }
-</code></pre>
+\endverbatim
 
 One difficult aspect of ExecStream implementation is transforming active
 code (as above) into a passive state machine.  In the real implementation,
@@ -218,7 +218,7 @@ Finally, we need to remember the value of parameter
 
 So, at a minimum, our class will have the following members:
 
-<pre><code>
+\verbatim
 class UniqExecStream : public ConduitExecStream
 {
     bool failOnDuplicate;
@@ -226,7 +226,7 @@ class UniqExecStream : public ConduitExecStream
     TupleData previousTuple;
     TupleData currentTuple;
     boost::scoped_array<FixedBuffer> pLastTupleSaved;
-    
+
 public:
     // implement ExecStream
     virtual void prepare(UniqExecStreamParams const &params);
@@ -234,8 +234,8 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
 };
-</code></pre>
-    
+\endverbatim
+
 Note that the open, execute and closeImpl methods override base
 ExecStream methods, while the prepare method overloads instead since
 its parameter signature is different.  So even though prepare is
@@ -281,19 +281,19 @@ it needs to preserve.
 
 Here is the code for UniqExecStream:
 
-<pre><code>
+\verbatim
 void UniqExecStream::prepare(UniqExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     assert(pInAccessor->getTupleDesc() == pOutAccessor->getTupleDesc();
-    
+
     failOnDuplicate = params.failOnDuplicate;
-    
+
     previousTuple.compute(pInAccessor->getTupleDesc());
     currentTuple.compute(pInAccessor->getTupleDesc());
 }
-</code></pre>
+\endverbatim
 
 So, where did pInAccessor and pOutAccessor come from?  They were inherited
 from ConduitExecStream, which guarantees that these instances of
@@ -333,22 +333,22 @@ otherwise, leftover state from an earlier execution could pollute a later
 execution.  For our example, we need to clear the previousTupleValid flag
 and allocate the pLastTupleSaved buffer:
 
-<pre><code>
+\verbatim
 void UniqExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     previousTupleValid = false;
-    if (!restart) {
+    if (!pLastTupleSaved) {
         uint cbTupleMax =
             pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
         pLastTupleSaved.reset(new FixedBuffer[cbTupleMax]);
     }
 }
-</code></pre>
+\endverbatim
 
 The restart flag is only true when a stream is restarted in the middle of an
-execution (e.g. as part of a nested loop join).  In the restart case,
-UniqExecStream can skip reallocating its private buffer.
+execution (e.g. as part of a nested loop join).  Note that in rare cases,
+open may be called with restart=true even after a close.
 
 <hr>
 
@@ -364,7 +364,7 @@ from there it is straightforward to generalize to streams with any number of
 inputs.  We will start with a complete listing of the method body, and then
 walk through line by line.
 
-<pre><code>
+\verbatim
 ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitBuffers();
@@ -378,7 +378,7 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
                 return EXECRC_BUF_UNDERFLOW;
             }
             pInAccessor->unmarshalTuple(currentTuple);
-            
+
             if (previousTupleValid) {
                 int c = pInAccessor->getTupleDesc().compareTuples(
                     lastTuple, currentTuple);
@@ -393,17 +393,18 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
             } else {
                 previousTupleValid = true;
             }
-            
-            TupleAccessor &tupleAccessor = 
+
+            TupleAccessor &tupleAccessor =
                 pInAccessor->getScratchTupleAccessor();
             memcpy(
                 pLastTupleSaved.get(),
                 pInAccessor->getConsumptionStart(),
-                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+                pInAccessor->getConsumptionTupleAccessor()
+                    .getCurrentByteCount());
             tupleAccessor.setCurrentTupleBuf(pLastTupleSaved.get());
             tupleAccessor.unmarshal(lastTuple);
         }
-        
+
         if (!pOutAccessor->produceTuple(lastTuple)) {
             return EXECRC_BUF_OVERFLOW;
         }
@@ -411,17 +412,17 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
     }
     return EXECRC_QUANTUM_EXPIRED;
 }
-</code></pre>
+\endverbatim
 
 In comparison with the pseudocode presented earlier, this is a bit
 more complicated.  Examining the first few lines,
 
-<pre><code>
+\verbatim
     ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
     }
-</code></pre>
+\endverbatim
 
 we find a call to the base class helper method
 ConduitExecStream::precheckConduitBuffers.  This ensures that there is
@@ -434,29 +435,29 @@ EXECRC_EOS.
 
 Next we come to the beginning of the outer loop:
 
-<pre><code>
+\verbatim
     for (uint nTuples = 0; nTuples < quantum.nTuplesMax; ++nTuples) {
-</code></pre>
+\endverbatim
 
 This loop keeps count of the number of tuples produced so far during the
 current invocation of execute, yielding once the requested quantum
 has expired.  Within this outer loop is nested an inner loop:
 
-<pre><code>
+\verbatim
         while (!pInAccessor->isTupleConsumptionPending()) {
-</code></pre>
+\endverbatim
 
 This inner loop is executed once per input tuple consumed (approximately).  The
 while test causes the loop body to be skipped altogether if a previous
 invocation of execute already accessed an input tuple but had to yield
 before completly processing it (due to output buffer overflow).
 
-<pre><code>
+\verbatim
             if (!pInAccessor->demandData()) {
                 return EXECRC_BUF_UNDERFLOW;
             }
             pInAccessor->unmarshalTuple(currentTuple);
-</code></pre>
+\endverbatim
 
 Now that the stream is ready to process a new input tuple, the first thing to
 do is to make sure that one is available.  (precheckConduitBuffers guarantees
@@ -471,7 +472,7 @@ reused until we are done accessing it).
 
 The next block of code is the heart of the algorithm:
 
-<pre><code>
+\verbatim
             if (previousTupleValid) {
                 int c = pInAccessor->getTupleDesc().compareTuples(
                     lastTuple, currentTuple);
@@ -486,7 +487,7 @@ The next block of code is the heart of the algorithm:
             } else {
                 previousTupleValid = true;
             }
-</code></pre>
+\endverbatim
 
 If a previous tuple has been seen, it is compared to the current one.  The
 assertion verifies that our input stream was actually sorted in ascending order
@@ -501,16 +502,17 @@ requested the stream will skip past the offending tuple.)
 Once the distinctness test has passed, it is necessary to save a copy
 of the new values in currentTuple as lastTuple:
 
-<pre><code>
-            TupleAccessor &tupleAccessor = 
+\verbatim
+            TupleAccessor &tupleAccessor =
                 pInAccessor->getScratchTupleAccessor();
             memcpy(
                 pLastTupleSaved.get(),
                 pInAccessor->getConsumptionStart(),
-                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+                pInAccessor->getConsumptionTupleAccessor()
+                    .getCurrentByteCount());
             tupleAccessor.setCurrentTupleBuf(pLastTupleSaved.get());
             tupleAccessor.unmarshal(lastTuple);
-</code></pre>
+\endverbatim
 
 ExecStreamBufAccessor::getScratchTupleAccessor provides a spare instance of
 TupleAccessor for just such purposes.  The code uses a straight memcpy for
@@ -524,12 +526,12 @@ At this point, it would be valid to insert a break statement to drop out
 of the inner loop, since the while test is guaranteed to be false.  Either
 way, it is now time to write out the new tuple:
 
-<pre><code>
+\verbatim
         if (!pOutAccessor->produceTuple(lastTuple)) {
             return EXECRC_BUF_OVERFLOW;
         }
         pInAccessor->consumeTuple();
-</code></pre>
+\endverbatim
 
 Unfortunately, there may be insufficient space in the output buffer.  When that
 happens, the stream must yield, going into suspended animation until the
@@ -552,10 +554,10 @@ referencing memory from the input tuple, so the pattern shown here is safest.
 Finally, execution continues around the outer for loop unless the quantum has
 expired:
 
-<pre><code>
+\verbatim
     }
     return EXECRC_QUANTUM_EXPIRED;
-</code></pre>
+\endverbatim
 
 <p>
 
@@ -592,13 +594,13 @@ re-execution.
 For UniqExecStream, we should deallocate pLastTupleSaved so that excess
 memory is not tied down while the stream is inactive:
 
-<pre><code>
+\verbatim
 void UniqExecStream::closeImpl()
 {
     pLastTupleSaved.reset();
     ConduitExecStream::closeImpl();
 }
-</code></pre>
+\endverbatim
 
 <hr>
 
@@ -627,7 +629,7 @@ be half the number of input tuples.
 
 The code for this is shown below.
 
-<pre><code>
+\verbatim
 class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
 {
 public:
@@ -647,11 +649,11 @@ void UniqExecStreamTest::testWithDuplicates()
     mockParams.outputTupleDesc.push_back(attrDesc);
     mockParams.nRows = 5000;     // at least two buffers
     mockParams.pGenerator.reset(new RampDuplicateExecStreamGenerator());
-    
+
     ExecStreamEmbryo mockStreamEmbryo;
     mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
-    
+
     UniqExecStreamParams uniqParams;
     uniqParams.failOnDuplicate = false;
 
@@ -669,7 +671,7 @@ void UniqExecStreamTest::testWithDuplicates()
         mockParams.nRows/2,
         expectedGen);
 }
-</code></pre>
+\endverbatim
 
 Other test cases for UniqExecStream would
 
@@ -682,7 +684,7 @@ through unchanged.
 when the failOnDuplicate parameter is set to true.
 
 </ul>
-    
+
 <hr>
 
 <h3>Models and Factories</h3>
@@ -732,7 +734,7 @@ Follow the example of other visit methods nearby.
 
 <h3>Optimizer Rules</h3>
 
-Of course, even though Farrago now knows how to instantiate your stream, 
+Of course, even though Farrago now knows how to instantiate your stream,
 you are not done yet, because Farrago does not yet know anything about
 the semantics of your stream.  So the next step is to write an
 optimizer rule.  Such a big topic is out of scope for this document
@@ -779,8 +781,7 @@ to allocate pLastTupleSaved from the heap, we instead wanted to pin a cache
 page for this purpose.  In that case, we would change
 UniqExecStream as follows:
 
-<pre><code>
-
+\verbatim
 class UniqExecStream : public ConduitExecStream
 {
     bool failOnDuplicate;
@@ -790,14 +791,14 @@ class UniqExecStream : public ConduitExecStream
     SegPageLock bufferLock;     // NEW
     SegmentAccessor scratchAccessor; // NEW
     PBuffer pLastTupleSaved;    // CHANGED
-    
+
 public:
     // implement ExecStream
     virtual void prepare(UniqExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
-    
+
     // NEW
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
@@ -807,14 +808,14 @@ public:
 void UniqExecStream::prepare(UniqExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     assert(pInAccessor->getTupleDesc() == pOutAccessor->getTupleDesc();
-    
+
     failOnDuplicate = params.failOnDuplicate;
-    
+
     previousTuple.compute(pInAccessor->getTupleDesc());
     currentTuple.compute(pInAccessor->getTupleDesc());
-    
+
     // NEW
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
@@ -837,7 +838,7 @@ void UniqExecStream::open(bool restart)
     if (!restart) {
         uint cbTupleMax =
             pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
-            
+
         // CHANGED
         bufferLock.allocatePage();
         assert(bufferLock.getPage().getCache().getPageSize() >= cbTupleMax);
@@ -850,11 +851,10 @@ void UniqExecStream::closeImpl()
     // CHANGED
     pLastTupleSaved = NULL;
     bufferLock.unlock();
-    
+
     ConduitExecStream::closeImpl();
 }
-
-</code></pre>
+\endverbatim
 
 TODO:  scheduler interface for centralized thread pooling
 

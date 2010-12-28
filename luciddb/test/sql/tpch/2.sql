@@ -1,21 +1,71 @@
-set schema 'tpch';
+-- Q2 (tpch2.6.1)
 
-SELECT S.s_acctbal, S.s_name, n_name, PS.ps_partkey, P.p_mfgr,
-       S.s_address, S.s_phone, S.s_comment
-FROM Part P, Supplier S, Partsupp PS, Nation, Region,
-     (SELECT PS1.ps_partkey, min(PS1.ps_supplycost) as mincost
-      FROM Partsupp PS1, Supplier S1, Nation N1, Region R1
-      WHERE PS1.ps_suppkey = S1.s_suppkey AND
-            S1.s_nationkey = N1.n_nationkey AND
-            N1.n_regionkey = R1.r_regionkey AND
-            R1.r_name = 'EUROPE'
-      GROUP BY PS1.ps_partkey) AS Temp
-WHERE P.p_partkey = PS.ps_partkey AND
-      S.s_suppkey = PS.ps_suppkey AND
-      P.p_size = 15 AND
-      P.p_type LIKE '%BRASS' AND
-      S.s_nationkey = n_nationkey AND
-      n_regionkey = r_regionkey AND
-      PS.ps_partkey = Temp.ps_partkey AND
-      PS.ps_supplycost = Temp.mincost
-ORDER BY S.s_acctbal, n_name, S.s_name, PS.ps_partkey;
+!set rowlimit 100
+
+--
+-- rewritten query before subquery support
+--
+SELECT S.S_ACCTBAL, S.S_NAME, N_NAME, PS.PS_PARTKEY, P.P_MFGR,
+       S.S_ADDRESS, S.S_PHONE, S.S_COMMENT
+FROM TPCH.PART P, TPCH.SUPPLIER S, TPCH.PARTSUPP PS, TPCH.NATION, TPCH.REGION,
+     (SELECT PS1.PS_PARTKEY, MIN(PS1.PS_SUPPLYCOST) AS MINCOST
+      FROM TPCH.PARTSUPP PS1, TPCH.SUPPLIER S1, TPCH.NATION N1, TPCH.REGION R1
+      WHERE PS1.PS_SUPPKEY = S1.S_SUPPKEY AND
+            S1.S_NATIONKEY = N1.N_NATIONKEY AND
+            N1.N_REGIONKEY = R1.R_REGIONKEY AND
+            R1.R_NAME = 'EUROPE'
+      GROUP BY PS1.PS_PARTKEY) AS TEMP
+WHERE P.P_PARTKEY = PS.PS_PARTKEY AND
+      S.S_SUPPKEY = PS.PS_SUPPKEY AND
+      P.P_SIZE = 15 AND
+      P.P_TYPE LIKE '%BRASS' AND
+      S.S_NATIONKEY = N_NATIONKEY AND
+      N_REGIONKEY = R_REGIONKEY AND
+      PS.PS_PARTKEY = TEMP.PS_PARTKEY AND
+      PS.PS_SUPPLYCOST = TEMP.MINCOST
+ORDER BY S.S_ACCTBAL DESC, N_NAME, S.S_NAME, PS.PS_PARTKEY;
+
+--
+-- original TPC-H query
+--
+--SELECT
+--    S_ACCTBAL,
+--    S_NAME,
+--    N_NAME,
+--    P_PARTKEY,
+--    P_MFGR,
+--    S_ADDRESS,
+--    S_PHONE,
+--    S_COMMENT
+--FROM
+--    TPCH.PART,
+--    TPCH.SUPPLIER,
+--    TPCH.PARTSUPP,
+--    TPCH.NATION,
+--    TPCH.REGION
+--WHERE
+--    P_PARTKEY = PS_PARTKEY
+--    AND S_SUPPKEY = PS_SUPPKEY
+--    AND P_SIZE = 15
+--    AND P_TYPE LIKE '%BRASS'
+--    AND S_NATIONKEY = N_NATIONKEY
+--    AND N_REGIONKEY = R_REGIONKEY
+--    AND R_NAME = 'EUROPE'
+--    AND PS_SUPPLYCOST = (
+--        SELECT
+--            MIN(PS_SUPPLYCOST)
+--        FROM
+--            TPCH.PARTSUPP, TPCH.SUPPLIER,
+--            TPCH.NATION, TPCH.REGION
+--        WHERE
+--            P_PARTKEY = PS_PARTKEY
+--            AND S_SUPPKEY = PS_SUPPKEY
+--            AND S_NATIONKEY = N_NATIONKEY
+--            AND N_REGIONKEY = R_REGIONKEY
+--            AND R_NAME = 'EUROPE'
+--    )
+--ORDER BY
+--    S_ACCTBAL DESC,
+--    N_NAME,
+--    S_NAME,
+--    P_PARTKEY;

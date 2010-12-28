@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,11 +32,9 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
+import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -49,7 +47,6 @@ import org.eigenbase.util.*;
 class MedMdrNameDirectory
     extends MedAbstractNameDirectory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final MedMdrDataServer server;
@@ -87,7 +84,7 @@ class MedMdrNameDirectory
             }
             return rootPackage;
         }
-        return JmiUtil.getSubPackage(rootPackage, names, prefix);
+        return JmiObjUtil.getSubPackage(rootPackage, names, prefix);
     }
 
     /**
@@ -140,12 +137,11 @@ class MedMdrNameDirectory
         String [] localName)
         throws SQLException
     {
-        return
-            lookupColumnSetAndImposeType(
-                typeFactory,
-                new String[] { foreignName },
-                localName,
-                null);
+        return lookupColumnSetAndImposeType(
+            typeFactory,
+            new String[] { foreignName },
+            localName,
+            null);
     }
 
     FarragoMedColumnSet lookupColumnSetAndImposeType(
@@ -164,13 +160,13 @@ class MedMdrNameDirectory
             rowType = computeRowType(typeFactory, refClass);
         }
 
-        return
-            new MedMdrClassExtent(this,
-                typeFactory,
-                refClass,
-                foreignName,
-                localName,
-                rowType);
+        return new MedMdrClassExtent(
+            this,
+            typeFactory,
+            refClass,
+            foreignName,
+            localName,
+            rowType);
     }
 
     private RelDataType computeRowType(
@@ -178,7 +174,7 @@ class MedMdrNameDirectory
         RefClass refClass)
     {
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(refClass, StructuralFeature.class, false);
+            JmiObjUtil.getFeatures(refClass, StructuralFeature.class, false);
         int n = features.size();
         RelDataType [] types = new RelDataType[n + 2];
         String [] fieldNames = new String[n + 2];

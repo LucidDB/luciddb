@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,8 @@ import java.sql.*;
 import java.util.*;
 import com.lucidera.luciddb.applib.resource.*;
 
+import net.sf.farrago.syslib.*;
+
 /**
  * Collapses one to many relationships into one to one relationships.  In the 
  * case where A maps to B, this will result in A mapping to a concatenation 
@@ -34,80 +36,147 @@ import com.lucidera.luciddb.applib.resource.*;
  */
 public abstract class CollapseRowsUdx
 {
+    private static final int MAX_CONCAT_LEN = 16384;
+    
     public static void execute(
         ResultSet inputSet, String delimiter, PreparedStatement resultInserter)
         throws ApplibException
     {
-        // validate the number of input and output columns
         try{
+            ResultSetMetaData rsmd = inputSet.getMetaData();
+
+            // validate the number of input and output columns
             if ((resultInserter.getParameterMetaData().getParameterCount() 
-                    != 3) || (inputSet.getMetaData().getColumnCount() != 2))
+                    != 3) || (rsmd.getColumnCount() != 2))
             {
                 throw ApplibResourceObject.get().InputOutputColumnError.ex();
+            }
+
+            // validate that parent column datatype is VARCHAR or CHAR
+            if (!((rsmd.getColumnType(1) == java.sql.Types.VARCHAR) 
+                  || (rsmd.getColumnType(1) == java.sql.Types.CHAR)))
+            {
+                throw ApplibResourceObject.get().InvalidColumnDatatype.ex(
+                    rsmd.getColumnLabel(1),
+                    "VARCHAR");
             }
         } catch (SQLException e) {
             throw ApplibResourceObject.get().CannotGetMetaData.ex(e);
         }
 
-        HashMap<String, ArrayList<String>> relMap = new HashMap();
-        ArrayList currentList;
-        String currentKey;
-        String currentValue;
+
+
+        String currentChildren;
+        int childCount;
+        boolean exceededLength = false;
+        String currentParent;
 
         try {
-            while (inputSet.next()) {
-                currentKey = inputSet.getString(1);
-                currentValue = inputSet.getString(2);
-                
-                currentList = relMap.get(currentKey);
-                
-                // create list if none exists
-                if (currentList == null) {
-                    currentList = new ArrayList();
-                } 
-                
-                // add value to list unless it's a null
-                if (currentValue != null) {
-                    currentList.add(currentValue);
-                }
-                
-                relMap.put(currentKey, currentList);
+
+            // return no rows, if no rows passed in
+            if (!inputSet.next()) {
+                return;
+            } 
+
+            currentParent = inputSet.getString(1);
+            String child = inputSet.getString(2);
+            if (child == null) {
+                currentChildren = null;
+                childCount = 0;
+            } else if (child.length() <= MAX_CONCAT_LEN ) {
+                currentChildren = child;
+                childCount = 1;
+            } else {
+                // first item exceeds truncation limit
+                currentChildren = "";
+                childCount = 0;
+                exceededLength = true;
             }
 
-            // output table
-            Iterator<String> keyIter = relMap.keySet().iterator();
-            while (keyIter.hasNext()) {
-                currentKey = keyIter.next();
-                resultInserter.setString(1, currentKey);
-                
-                currentList = relMap.get(currentKey);
-                
-                if ((currentList == null) || currentList.isEmpty()) {
-                    // inserts null for the concatenation if list doesn't
-                    // exist or is empty
-                    resultInserter.setString(2, null);
-                    resultInserter.setInt(3, 0);
-                } else {
-                    // inserts concatenation of all items in list
-                    Iterator<String> valIter = currentList.iterator();
-                    String concatenation = valIter.next();
-                    int numItems = 1;
+            while(inputSet.next()) {
+                String parent = inputSet.getString(1);
+                int compare = 
+                    FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                        currentParent,
+                        parent);
+                if (compare > 0) {
+                    // row is out of order
+                    throw ApplibResourceObject.get().InputRowsNotSorted.ex(
+                        inputSet.getMetaData().getColumnLabel(1),
+                        parent);
+                } else if (compare < 0) {
+                    // new parent value, emit row for previous parent value
+                    resultInserter.setString(1, currentParent);
+                    resultInserter.setString(2, currentChildren);
+                    resultInserter.setInt(3, childCount);
+                    resultInserter.executeUpdate();
 
-                    while (valIter.hasNext()) {
-                        concatenation = concatenation + delimiter + 
-                            valIter.next();
-                        numItems++;
+                    currentParent = parent;
+                    child = inputSet.getString(2);
+                    if (child == null) {
+                        currentChildren = null;
+                        childCount = 0;
+                        exceededLength = false;
+                    } else if (child.length() <= MAX_CONCAT_LEN) {
+                        currentChildren = child;
+                        childCount = 1;
+                        exceededLength = false;
+                    } else {
+                        // first item exceeds truncation limit
+                        currentChildren = "";
+                        childCount = 0;
+                        exceededLength = true;
                     }
-                    resultInserter.setString(2, concatenation);
-                    resultInserter.setInt(3, numItems);
+                } else {
+                    // same parent value 
+                    if (exceededLength) {
+                        continue;
+                    }
+
+                    child = inputSet.getString(2);
+                    if (child == null) {
+                        continue;
+                    } 
+
+                    if (currentChildren == null) {
+                        // no previous children
+                        if ( child.length() <= MAX_CONCAT_LEN) {
+                            currentChildren = child;
+                            childCount++;
+                        } else {
+                            // first item exceeds truncation limit
+                            currentChildren = "";
+                            childCount = 0;
+                            exceededLength = true;
+                        }
+                    } else {
+                        // append child if truncation limit not exceeded
+                        int newLen = child.length() + delimiter.length();
+                        if (currentChildren.length() + newLen 
+                            <= MAX_CONCAT_LEN) 
+                        {
+                            currentChildren += delimiter + child;
+                            childCount++;
+                        } else {
+                            exceededLength = true;
+                        }
+                    }
                 }
-                resultInserter.executeUpdate();
             }
+
+            // output the last row
+            resultInserter.setString(1, currentParent);
+            resultInserter.setString(2, currentChildren);
+            resultInserter.setInt(3, childCount);
+            resultInserter.executeUpdate();
+
         } catch (SQLException e) {
             throw ApplibResourceObject.get().DatabaseAccessError.ex(
                 e.toString(), e);
         }
     }
+
+        
 }
 
-// End CollapseOneToManyRelationshipsUdx.java
+// End CollapseRowsUdx.java

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,8 +35,8 @@ FENNEL_BEGIN_NAMESPACE
  * CheckpointThread is dedicated to listening for checkpoint requests and
  * carrying them out.
  */
-class CheckpointThread :
-    public Thread, public SynchMonitoredObject, public ClosableObject,
+class FENNEL_DB_EXPORT CheckpointThread
+    : public Thread, public SynchMonitoredObject, public ClosableObject,
     public CheckpointProvider
 {
     Database &database;
@@ -49,10 +49,10 @@ class CheckpointThread :
      * itself down.
      */
     void closeImpl();
-    
+
     // implement Thread
     virtual void run();
-    
+
 public:
     /**
      * Creates a checkpoint thread for the given database (no more than

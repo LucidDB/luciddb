@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,17 +22,14 @@
 */
 package net.sf.farrago.ddl;
 
-import java.lang.reflect.*;
-
-import javax.jmi.reflect.*;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.config.*;
+import net.sf.farrago.defimpl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -44,8 +41,11 @@ import org.eigenbase.sql.*;
 public class DdlSetSessionParamStmt
     extends DdlStmt
 {
+    //~ Instance fields --------------------------------------------------------
+
     final private String paramName;
     final private SqlLiteral paramValue;
+    private FemLabel labelParamValue;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,6 +62,7 @@ public class DdlSetSessionParamStmt
         super(null);
         this.paramName = paramName;
         this.paramValue = paramValue;
+        this.labelParamValue = null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -73,10 +74,30 @@ public class DdlSetSessionParamStmt
         String valueString = paramValue.toValue();
 
         session.getPersonality().validateSessionVariable(
-            ddlValidator, 
+            ddlValidator,
             session.getSessionVariables(),
-            paramName, 
+            paramName,
             valueString);
+
+        // Retrieve the underlying label object
+        if (paramName.equals(FarragoDefaultSessionPersonality.LABEL)) {
+            // Labels can't be set inside UDR's because UDR's currently
+            // run as a single transaction initiated by the caller of the
+            // UDR.  So setting the label will be a  no-op.
+            if (FarragoUdrRuntime.inUdr()) {
+                throw FarragoResource.instance().ValidatorSetLabelInUdr.ex();
+            }
+            if (valueString != null) {
+                SqlIdentifier unQualifiedName =
+                    new SqlIdentifier(
+                        valueString,
+                        new SqlParserPos(0, 0));
+                labelParamValue =
+                    ddlValidator.getStmtValidator().findUnqualifiedObject(
+                        unQualifiedName,
+                        FemLabel.class);
+            }
+        }
     }
 
     // implement DdlStmt
@@ -84,6 +105,22 @@ public class DdlSetSessionParamStmt
     {
         visitor.visit(this);
     }
+
+    /**
+     * @return the name of the parameter being set
+     */
+    public String getParamName()
+    {
+        return paramName;
+    }
+
+    /**
+     * @return the value of the parameter if the label parameter is being set
+     */
+    public FemLabel getLabelParamValue()
+    {
+        return labelParamValue;
+    }
 }
 
-// End DdlSetSystemParam.java
+// End DdlSetSessionParamStmt.java

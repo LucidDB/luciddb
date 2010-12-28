@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,8 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlMonotonicity;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 
 /**
@@ -38,14 +40,13 @@ import org.eigenbase.sql.type.*;
 public class SqlDatetimeSubtractionOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlDatetimeSubtractionOperator()
     {
         super(
             "-",
-            SqlKind.Minus,
+            SqlKind.MINUS,
             40,
             true,
             SqlTypeStrategies.rtiNullableThirdArgType,
@@ -72,6 +73,13 @@ public class SqlDatetimeSubtractionOperator
         operands[1].unparse(writer, leftPrec, rightPrec);
         writer.endList(frame);
         operands[2].unparse(writer, leftPrec, rightPrec);
+    }
+
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
+    {
+        return SqlStdOperatorTable.minusOperator.getMonotonicity(call, scope);
     }
 }
 

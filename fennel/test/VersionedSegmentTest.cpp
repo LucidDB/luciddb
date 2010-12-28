@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ class VersionedSegmentTest : virtual public SegmentTestBase
     SharedRandomAccessDevice pLogDevice;
     PageId firstLogPageId;
     PseudoUuid onlineUuid;
-    
+
 public:
     virtual void openSegmentStorage(DeviceMode openMode)
     {
@@ -43,12 +43,12 @@ public:
 
         // NOTE:  2*nDiskPages for fuzzy checkpointing
         pLogDevice = openDevice(
-            "shadow.dat",openMode,
+            "shadow.dat", openMode,
             2*nDiskPages,logDeviceId);
         SharedSegment pLogSegment = createLinearDeviceSegment(
-            logDeviceId,2*nDiskPages);
+            logDeviceId, 2 * nDiskPages);
         SharedSegment pCircularSegment = pSegmentFactory->newCircularSegment(
-            pLogSegment,SharedCheckpointProvider(),firstLogPageId);
+            pLogSegment, SharedCheckpointProvider(), firstLogPageId);
         SharedSegment pWALSegment = pSegmentFactory->newWALSegment(
             pCircularSegment);
         SharedSegment pVersionedSegment = pSegmentFactory->newVersionedSegment(
@@ -58,13 +58,13 @@ public:
             versionNumber);
         pLinearSegment = pVersionedSegment;
     }
-    
+
     virtual void closeStorage()
     {
         closeLinearSegment();
         closeRandomSegment();
         if (pLogDevice) {
-            closeDevice(logDeviceId,pLogDevice);
+            closeDevice(logDeviceId, pLogDevice);
         }
         SegmentTestBase::closeStorage();
         ++versionNumber;
@@ -76,9 +76,9 @@ public:
         versionNumber = 0;
         firstLogPageId = NULL_PAGE_ID;
         onlineUuid.generateInvalid();
-        FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(VersionedSegmentTest,testRecovery);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(SegmentTestBase, testSingleThread);
+        FENNEL_UNIT_TEST_CASE(VersionedSegmentTest, testRecovery);
+        FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
     }
 
     void testRecovery()
@@ -90,15 +90,15 @@ public:
         VersionedSegment *pVersionedSegment =
             SegmentFactory::dynamicCast<VersionedSegment *>(pLinearSegment);
         assert(pVersionedSegment);
-        pVersionedSegment->recover(firstLogPageId);
+        pVersionedSegment->recover(pLinearSegment, firstLogPageId);
         testSequentialRead();
         closeStorage();
         firstLogPageId = NULL_PAGE_ID;
     }
-    
+
     virtual void fillPage(CachePage &page,uint x)
     {
-        SegmentTestBase::fillPage(page,x+versionNumber);
+        SegmentTestBase::fillPage(page, x + versionNumber);
     }
 
     virtual void testCheckpoint()
@@ -107,6 +107,7 @@ public:
         ++versionNumber;
         VersionedSegment *pVersionedSegment =
             SegmentFactory::dynamicCast<VersionedSegment *>(pLinearSegment);
+        assert(pVersionedSegment);
         assert(versionNumber == pVersionedSegment->getVersionNumber());
         pVersionedSegment->deallocateCheckpointedLog(CHECKPOINT_FLUSH_FUZZY);
     }
@@ -118,7 +119,7 @@ public:
         assert(pVersionedSegment);
         SegVersionNum pageVersion = pVersionedSegment->getPageVersion(page);
         assert(pageVersion <= versionNumber);
-        SegmentTestBase::verifyPage(page,x+pageVersion);
+        SegmentTestBase::verifyPage(page, x + pageVersion);
     }
 };
 

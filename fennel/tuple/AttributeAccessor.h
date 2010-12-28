@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ class TupleDatum;
  * the attributes are being processed.  In theory, this hybrid should yield the
  * highest efficiency, but it needs to be benchmarked and tuned.
  */
-class AttributeAccessor
+class FENNEL_TUPLE_EXPORT AttributeAccessor
 {
 public:
     /**
@@ -77,12 +77,12 @@ public:
     TupleStorageByteLength cbStorage;
 
     virtual ~AttributeAccessor();
-    
+
     /**
      * Unmarshals the attribute's value by setting up the
      * data pointer, length, and null indicator; does not actually copy any
      * data.
-     * 
+     *
      * @param tupleAccessor containing TupleAccessor set up
      * with the current tuple image to be accessed
      *

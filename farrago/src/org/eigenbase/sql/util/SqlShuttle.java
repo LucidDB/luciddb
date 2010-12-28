@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class SqlShuttle
     extends SqlBasicVisitor<SqlNode>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public SqlNode visit(SqlLiteral literal)
@@ -98,8 +97,8 @@ public class SqlShuttle
         }
         if (update) {
             return new SqlNodeList(
-                    newList,
-                    nodeList.getParserPosition());
+                newList,
+                nodeList.getParserPosition());
         } else {
             return nodeList;
         }
@@ -130,17 +129,17 @@ public class SqlShuttle
         public SqlNode result()
         {
             if (update || alwaysCopy) {
-                return
-                    call.getOperator().createCall(
-                        clonedOperands,
-                        call.getParserPosition(),
-                        call.getFunctionQuantifier());
+                return call.getOperator().createCall(
+                    call.getFunctionQuantifier(),
+                    call.getParserPosition(),
+                    clonedOperands);
             } else {
                 return call;
             }
         }
 
-        public SqlNode visitChild(SqlVisitor<SqlNode> visitor,
+        public SqlNode visitChild(
+            SqlVisitor<SqlNode> visitor,
             SqlNode expr,
             int i,
             SqlNode operand)

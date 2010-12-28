@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,12 +36,12 @@ JavaTraceTarget::JavaTraceTarget()
     jclass classNativeTrace = pEnv->FindClass(
         "net/sf/farrago/util/NativeTrace");
 
-    jmethodID methInstance = 
+    jmethodID methInstance =
         pEnv->GetStaticMethodID(
             classNativeTrace, "instance",
             "()Lnet/sf/farrago/util/NativeTrace;");
 
-    jobject javaTraceInit = 
+    jobject javaTraceInit =
         pEnv->CallStaticObjectMethod(classNativeTrace, methInstance);
 
     JniUtil::incrementHandleCount(JAVATRACETARGET_TYPE_STR, this);
@@ -51,15 +51,15 @@ JavaTraceTarget::JavaTraceTarget()
     assert(javaTrace);
 
     methTrace = pEnv->GetMethodID(
-        classNativeTrace,"trace",
+        classNativeTrace, "trace",
         "(Ljava/lang/String;ILjava/lang/String;)V");
     methGetSourceTraceLevel = pEnv->GetMethodID(
-        classNativeTrace,"getSourceTraceLevel",
+        classNativeTrace, "getSourceTraceLevel",
         "(Ljava/lang/String;)I");
 }
 
-JavaTraceTarget::JavaTraceTarget(        
-    jobject javaTraceInit, jmethodID methTraceInit, 
+JavaTraceTarget::JavaTraceTarget(
+    jobject javaTraceInit, jmethodID methTraceInit,
     jmethodID methGetSourceTraceLevelInit)
 {
     JniEnvAutoRef pEnv;
@@ -85,12 +85,18 @@ JavaTraceTarget::~JavaTraceTarget()
 }
 
 void JavaTraceTarget::notifyTrace(
-    std::string source,TraceLevel level,std::string message)
+    std::string source, TraceLevel level, std::string message)
 {
     JniEnvAutoRef pEnv;
+
+    // NOTE jvs 21-Aug-2007:  use ref reapers here since this
+    // may be called over and over before control returns to Java
+
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
+    JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jstring javaMessage = pEnv->NewStringUTF(message.c_str());
-    pEnv->CallVoidMethod(javaTrace,methTrace,javaSource,level,javaMessage);
+    JniLocalRefReaper javaMessageReaper(pEnv, javaMessage);
+    pEnv->CallVoidMethod(javaTrace, methTrace, javaSource, level, javaMessage);
 }
 
 TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
@@ -98,7 +104,7 @@ TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
     JniEnvAutoRef pEnv;
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
     int level = pEnv->CallIntMethod(
-        javaTrace,methGetSourceTraceLevel,javaSource);
+        javaTrace, methGetSourceTraceLevel, javaSource);
     return static_cast<TraceLevel>(level);
 }
 
@@ -114,11 +120,26 @@ void JavaTraceTarget::endSnapshot()
         "", TRACE_PERFCOUNTER_END_SNAPSHOT, "");
 }
 
-void JavaTraceTarget::writeCounter(std::string name, uint value)
+void JavaTraceTarget::writeCounter(std::string name, int64_t value)
 {
     std::string s = boost::lexical_cast<std::string>(value);
     notifyTrace(
         name, TRACE_PERFCOUNTER_UPDATE, s);
+}
+
+void JavaTraceTarget::onThreadStart()
+{
+    JniEnvAutoRef pEnv;
+    // We want to stay attached for the duration of the timer thread,
+    // so suppress detach here and do it explicitly in onThreadEnd
+    // instead.  See comments on suppressDetach about the need for a
+    // cleaner approach to attaching native-spawned threads.
+    pEnv.suppressDetach();
+}
+
+void JavaTraceTarget::onThreadEnd()
+{
+    JniUtil::detachJavaEnv();
 }
 
 FENNEL_END_CPPFILE("$Id$");

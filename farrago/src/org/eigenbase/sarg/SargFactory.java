@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,6 @@ import org.eigenbase.sql.*;
  */
 public class SargFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexBuilder rexBuilder;
@@ -81,8 +80,8 @@ public class SargFactory
     public SargIntervalExpr newIntervalExpr(RelDataType dataType)
     {
         return newIntervalExpr(
-                dataType,
-                SqlNullSemantics.NULL_MATCHES_NOTHING);
+            dataType,
+            SqlNullSemantics.NULL_MATCHES_NOTHING);
     }
 
     /**
@@ -97,9 +96,9 @@ public class SargFactory
         SqlNullSemantics nullSemantics)
     {
         return new SargIntervalExpr(
-                this,
-                dataType,
-                nullSemantics);
+            this,
+            dataType,
+            nullSemantics);
     }
 
     /**
@@ -120,17 +119,38 @@ public class SargFactory
     {
         return new SargRexAnalyzer(this, false);
     }
-    
+
     /**
-     * @param simpleMode if true, the analyzer restrictes the types of
-     * predicates it allows; only one predicate is allowed per RexInputRef,
-     * and only one range predicate is allowed
-     * 
+     * @param simpleMode if true, the analyzer restricts the types of predicates
+     * it allows; the following are disallowed - conjuntions on the same
+     * RexInputRef, more than one range predicate, and all disjunctions
+     *
      * @return new analyzer for rex expressions
      */
     public SargRexAnalyzer newRexAnalyzer(boolean simpleMode)
     {
         return new SargRexAnalyzer(this, simpleMode);
+    }
+
+    /**
+     * @param lowerRexInputIdx if >= 0, treat RexInputRefs whose index is within
+     * the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * expressions
+     * @param upperRexInputIdx if >= 0, treat RexInputRefs whose index is within
+     * the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * expressions
+     *
+     * @return new analyzer for rex expressions
+     */
+    public SargRexAnalyzer newRexAnalyzer(
+        int lowerRexInputIdx,
+        int upperRexInputIdx)
+    {
+        return new SargRexAnalyzer(
+            this,
+            true,
+            lowerRexInputIdx,
+            upperRexInputIdx);
     }
 
     /**

@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,6 +25,7 @@
 #define Fennel_BTreeExecStream_Included
 
 #include "fennel/exec/SingleOutputExecStream.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/btree/BTreeDescriptor.h"
 
@@ -33,16 +34,15 @@ FENNEL_BEGIN_NAMESPACE
 class BTreeOwnerRootMap;
 
 /**
- * BTreeExecStreamParams defines parameters common to implementations of
- * BTreeExecStream.
+ * BTreeParams defines parameters used when accessing btrees
  */
-struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
+struct FENNEL_FTRS_EXPORT BTreeParams
 {
     /**
      * Segment containing BTree.
      */
     SharedSegment pSegment;
-    
+
     /**
      * Root of BTree, or NULL_PAGE_ID for variable root.
      */
@@ -52,12 +52,12 @@ struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
      * SegmentId of segment storing BTree.
      */
     SegmentId segmentId;
-        
+
     /**
      * PageOwnerId used to mark pages.
      */
     PageOwnerId pageOwnerId;
-    
+
     /**
      * TupleDescriptor for BTree entries.
      */
@@ -73,10 +73,24 @@ struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
      */
     BTreeOwnerRootMap *pRootMap;
 
+    /**
+     * Parameter id corresponding to the rootPageId when the btree is
+     * dynamically created during execution of the stream graph
+     */
+    DynamicParamId rootPageIdParamId;
+};
+
+/**
+ * BTreeExecStreamParams defines parameters common to implementations of
+ * BTreeExecStream.
+ */
+struct FENNEL_FTRS_EXPORT BTreeExecStreamParams
+    : BTreeParams, virtual public SingleOutputExecStreamParams
+{
     explicit BTreeExecStreamParams();
 };
 
-class BTreeOwnerRootMap
+class FENNEL_FTRS_EXPORT BTreeOwnerRootMap
 {
 public:
     virtual ~BTreeOwnerRootMap();
@@ -92,24 +106,34 @@ class BTreeAccessBase;
  * @author John V. Sichi
  * @version $Id$
  */
-class BTreeExecStream : virtual public SingleOutputExecStream
+class FENNEL_FTRS_EXPORT BTreeExecStream
+    : virtual public SingleOutputExecStream
 {
 protected:
     BTreeDescriptor treeDescriptor;
     SegmentAccessor scratchAccessor;
     BTreeOwnerRootMap *pRootMap;
     SharedBTreeAccessBase pBTreeAccessBase;
-    
-    SharedBTreeReader newReader();
-    SharedBTreeWriter newWriter();
-    static void copyParamsToDescriptor(
-        BTreeDescriptor &,BTreeExecStreamParams const &);
+    SharedBTreeReader pBTreeReader;
+    DynamicParamId rootPageIdParamId;
+
+    virtual SharedBTreeReader newReader();
+    SharedBTreeWriter newWriter(bool monotonic = false);
+
+    /**
+     * Forgets the current reader or writer's search, releasing any page locks
+     */
+    virtual void endSearch();
 public:
     // implement ExecStream
     virtual void prepare(BTreeExecStreamParams const &params);
     virtual void open(bool restart);
     virtual void closeImpl();
 
+    static void copyParamsToDescriptor(
+        BTreeDescriptor &,
+        BTreeParams const &,
+        SharedCacheAccessor const &);
     static SharedBTreeWriter newWriter(BTreeExecStreamParams const &params);
 };
 

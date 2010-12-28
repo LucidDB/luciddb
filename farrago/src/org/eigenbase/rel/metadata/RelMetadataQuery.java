@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.stat.*;
 
 
@@ -69,7 +70,6 @@ import org.eigenbase.stat.*;
  */
 public abstract class RelMetadataQuery
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -110,8 +110,7 @@ public abstract class RelMetadataQuery
                 rel,
                 "getRowCount",
                 null);
-        assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
     }
 
     /**
@@ -195,8 +194,7 @@ public abstract class RelMetadataQuery
         RelNode rel,
         int iOutputColumn)
     {
-        return
-            (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
+        return (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
             .getRelMetadata(
                 rel,
                 "getColumnOrigins",
@@ -239,11 +237,82 @@ public abstract class RelMetadataQuery
      */
     public static Set<BitSet> getUniqueKeys(RelNode rel)
     {
-        return
-            (Set<BitSet>) rel.getCluster().getMetadataProvider().getRelMetadata(
+        return (Set<BitSet>) rel.getCluster().getMetadataProvider()
+            .getRelMetadata(
                 rel,
                 "getUniqueKeys",
-                null);
+                new Object[] { false });
+    }
+
+    /**
+     * Determines the set of unique minimal keys for this expression,
+     * optionally ignoring nulls in the columns in the expression.  A key is
+     * represented as a BitSet, where each bit position represents a 0-based
+     * output column ordinal. (Note that RelNode.isDistinct should return true
+     * if and only if at least one key is known.)
+     *
+     * <p>Nulls can be ignored if the relational expression has filtered out
+     * null values.
+     *
+     * @param rel the relational expression
+     * @param ignoreNulls if true, ignore null values when determining
+     * whether the keys are unique
+     *
+     * @return set of keys, or null if this information cannot be determined
+     * (whereas empty set indicates definitely no keys at all)
+     */
+    public static Set<BitSet> getUniqueKeys(RelNode rel, boolean ignoreNulls)
+    {
+        return (Set<BitSet>) rel.getCluster().getMetadataProvider()
+            .getRelMetadata(
+                rel,
+                "getUniqueKeys",
+                new Object[] { ignoreNulls });
+    }
+
+    /**
+     * Determines if a specified set of columns from a specified relational
+     * expression are unique.
+     *
+     * @param rel the relational expression
+     * @param columns column mask representing the subset of columns for which
+     * uniqueness will be determined
+     *
+     * @return true or false depending on whether the columns are unique, or
+     * null if not enough information is available to make that determination
+     */
+    public static Boolean areColumnsUnique(RelNode rel, BitSet columns)
+    {
+        return (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+            rel,
+            "areColumnsUnique",
+            new Object[] { columns, false });
+    }
+
+    /**
+     * Determines if a specified set of columns from a specified relational
+     * expression are unique, optionally ignoring null values in the columns.
+     * Nulls can be ignored if the relational expression has filtered out
+     * null values.
+     *
+     * @param rel the relational expression
+     * @param columns column mask representing the subset of columns for which
+     * uniqueness will be determined
+     * @param ignoreNulls if true, ignore null values when determining column
+     * uniqueness
+     *
+     * @return true or false depending on whether the columns are unique, or
+     * null if not enough information is available to make that determination
+     */
+    public static Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        boolean ignoreNulls)
+    {
+        return (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+            rel,
+            "areColumnsUnique",
+            new Object[] { columns, ignoreNulls });
     }
 
     /**
@@ -266,8 +335,7 @@ public abstract class RelMetadataQuery
                 rel,
                 "getPopulationSize",
                 new Object[] { groupKey });
-        assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
     }
 
     /**
@@ -294,8 +362,32 @@ public abstract class RelMetadataQuery
                 rel,
                 "getDistinctRowCount",
                 new Object[] { groupKey, predicate });
-        assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
+    }
+
+    /**
+     * Determines whether a relational expression should be visible in EXPLAIN
+     * PLAN output at a particular level of detail.
+     *
+     * @param rel the relational expression
+     * @param explainLevel level of detail
+     *
+     * @return true for visible, false for invisible
+     */
+    public static boolean isVisibleInExplain(
+        RelNode rel,
+        SqlExplainLevel explainLevel)
+    {
+        Boolean b =
+            (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel,
+                "isVisibleInExplain",
+                new Object[] { explainLevel });
+        if (b == null) {
+            return true;
+        } else {
+            return b;
+        }
     }
 
     private static boolean assertPercentage(Double result)
@@ -317,6 +409,26 @@ public abstract class RelMetadataQuery
         double d = result.doubleValue();
         assert (d >= 0.0);
         return true;
+    }
+
+    private static Double validateResult(Double result)
+    {
+        if (result == null) {
+            return result;
+        }
+
+        // Never let the result go below 1, as it will result in incorrect
+        // calculations if the rowcount is used as the denominator in a
+        // division expression.  Also, cap the value at the max double value
+        // to avoid calculations using infinity.
+        if (result.isInfinite()) {
+            result = Double.MAX_VALUE;
+        }
+        assert (assertNonNegative(result));
+        if (result < 1.0) {
+            result = 1.0;
+        }
+        return result;
     }
 }
 

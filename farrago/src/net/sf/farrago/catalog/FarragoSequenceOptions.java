@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,10 +39,10 @@ import org.eigenbase.util.*;
  */
 public class FarragoSequenceOptions
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    private enum OptionType {
+    private enum OptionType
+    {
         START, INCREMENT, MINVALUE, MAXVALUE, CYCLE;
     }
 
@@ -268,7 +268,8 @@ public class FarragoSequenceOptions
                 name);
         }
         if (min > max) {
-            throw FarragoResource.instance().ValidatorInvalidSequenceMin.ex(min,
+            throw FarragoResource.instance().ValidatorInvalidSequenceMin.ex(
+                min,
                 max);
         }
         if ((min > start) || (start > max)) {
@@ -324,4 +325,4 @@ public class FarragoSequenceOptions
     }
 }
 
-// End FarragoSequenceGeneratorOptions.java
+// End FarragoSequenceOptions.java

@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -67,7 +67,8 @@ ExecStreamResult MockConsumerExecStream::execute(
         inAccessor.unmarshalTuple(inputTuple);
         rowCount++;
         if (echoData) {
-            tuplePrinter.print(*echoData, inAccessor.getTupleDesc(), inputTuple);
+            tuplePrinter.print(
+                *echoData, inAccessor.getTupleDesc(), inputTuple);
         }
         if (saveData) {
             std::ostringstream oss;
@@ -75,7 +76,7 @@ ExecStreamResult MockConsumerExecStream::execute(
             const string &s = oss.str();
             rowStrings.push_back(s);
         }
-        inAccessor.consumeTuple();        
+        inAccessor.consumeTuple();
     }
     return EXECRC_QUANTUM_EXPIRED;
 }

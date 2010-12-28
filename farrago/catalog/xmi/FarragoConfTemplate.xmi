@@ -12,18 +12,19 @@
       name = 'Current'
       fennelDisabled = '@fennel.disabled@'
       userCatalogEnabled = 'false'
-      codeCacheMaxBytes='-1'
+      codeCacheMaxBytes='2000000'
       checkpointInterval='@checkpointInterval@'
       serverRmiRegistryPort='-1'
       serverSingleListenerPort='-1'
+      serverHttpPort='-1'
       calcVirtualMachine='@calcVirtualMachine@'
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
       >
       <FEMConfig:FarragoConfig.FennelConfig>
         <FEMConfig:FennelConfig
-          databaseInitSize='1000'
+          databaseInitSize='@databaseInitSize@'
           databaseIncrementSize='1000'
-          tempInitSize='1000'
+          tempInitSize='@tempInitSize@'
           tempIncrementSize='1000'
           databaseShadowLogInitSize='2000'
           databaseShadowLogIncrementSize='1000'
@@ -37,6 +38,7 @@
           jniHandleTraceFile='@jniHandleTraceFile@'
           expectedConcurrentStatements='4'
           cacheReservePercentage='5'
+          deviceSchedulerType='default'
           />
       </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>

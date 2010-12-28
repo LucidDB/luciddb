@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,8 +56,6 @@ class RandomVictimPolicy
      */
     std::vector<PageT *> pages;
 
-    bool bClosed;
-
     std::subtractive_rng randomNumberGenerator;
 
     friend class PageIterator;
@@ -65,6 +63,7 @@ class RandomVictimPolicy
 public:
     // for use by CacheImpl when iterating over candidate victims
     typedef NullMutexGuard SharedGuard;
+    typedef NullMutexGuard ExclusiveGuard;
     // TODO:  write an STL modulo_iterator
     class PageIterator
     {
@@ -73,10 +72,9 @@ public:
 
         PageT *getCurrent() const
         {
-            assert(!policy.bClosed);
             return policy.pages[iPage];
         }
-        
+
     public:
         PageIterator(RandomVictimPolicy &policyInit,uint iPageInit)
             : policy(policyInit)
@@ -96,12 +94,12 @@ public:
         {
             return getCurrent();
         }
-        
+
         operator PageT * () const
         {
             return getCurrent();
         }
-        
+
         PageT &operator * () const
         {
             return *getCurrent();
@@ -113,16 +111,21 @@ public:
             return iPage == other.iPage;
         }
     };
-    
+
+    typedef PageIterator DirtyPageIterator;
+
     RandomVictimPolicy()
     {
-        bClosed = false;
     }
 
-    // NOTE:  for now we assume that CacheImpl only registers pages
-    // on initialization and unregisters them on shutdown (no dynamic page
-    // allocation).
-    
+    RandomVictimPolicy(const CacheParams &params)
+    {
+    }
+
+    void setAllocatedPageCount(uint nCachePages)
+    {
+    }
+
     void registerPage(PageT &page)
     {
         pages.push_back(&page);
@@ -130,42 +133,61 @@ public:
 
     void unregisterPage(PageT &)
     {
-        bClosed = true;
+        // TODO: zfong 1/8/08 - Should remove the page from the pages vector.
+        // Otherwise, unallocated pages will be returned by getVictimRange().
     }
 
-    void notifyPageAccess(PageT &)
+    void notifyPageAccess(PageT &, bool)
     {
-        assert(!bClosed);
     }
 
     void notifyPageNice(PageT &)
     {
-        assert(!bClosed);
     }
 
-    void notifyPageMap(PageT &)
+    void notifyPageMap(PageT &, bool)
     {
-        assert(!bClosed);
     }
 
-    void notifyPageUnmap(PageT &)
+    void notifyPageUnmap(PageT &, bool)
     {
-        assert(!bClosed);
+    }
+
+    void notifyPageUnpin(PageT &page)
+    {
+    }
+
+    void notifyPageDirty(PageT &page)
+    {
+    }
+
+    void notifyPageClean(PageT &page)
+    {
+    }
+
+    void notifyPageDiscard(BlockId blockId)
+    {
     }
 
     NullMutex &getMutex()
     {
-        assert(!bClosed);
         return nullMutex;
     }
 
-    std::pair<PageIterator,PageIterator> getVictimRange()
+    std::pair<PageIterator, PageIterator> getVictimRange()
     {
         uint iPage = randomNumberGenerator(pages.size());
         uint iPageEnd = iPage ? iPage-1 : pages.size();
-        return std::pair<PageIterator,PageIterator>(
+        return std::pair<PageIterator, PageIterator>(
             PageIterator(*this,iPage),
             PageIterator(*this,iPageEnd));
+    }
+
+    std::pair<DirtyPageIterator, DirtyPageIterator> getDirtyVictimRange()
+    {
+        return
+            static_cast<std::pair<DirtyPageIterator, DirtyPageIterator> >(
+                getVictimRange());
     }
 };
 

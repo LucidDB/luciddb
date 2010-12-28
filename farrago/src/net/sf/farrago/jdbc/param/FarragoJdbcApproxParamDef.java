@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,8 @@ import java.sql.*;
 
 
 /**
- * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter.
+ * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter. This
+ * class is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -36,7 +37,6 @@ import java.sql.*;
 class FarragoJdbcApproxParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final double min;
@@ -79,15 +79,36 @@ class FarragoJdbcApproxParamDef
                 max);
             return new Double(n.doubleValue());
         } else if (value instanceof Boolean) {
-            return
-                (
-                    ((Boolean) value).booleanValue() ? new Double(1)
-                    : new Double(0)
-                );
+            return (((Boolean) value).booleanValue() ? new Double(1)
+                : new Double(0));
         } else if (value instanceof String) {
             try {
                 BigDecimal bd = new BigDecimal(value.toString().trim());
                 return getDouble(bd);
+            } catch (NumberFormatException ex) {
+                throw newInvalidFormat(value);
+            }
+        } else {
+            throw newInvalidType(value);
+        }
+    }
+
+    private Float getFloat(Object value)
+    {
+        if (value instanceof Number) {
+            Number n = (Number) value;
+            checkRange(
+                n.floatValue(),
+                min,
+                max);
+            return new Float(n.floatValue());
+        } else if (value instanceof Boolean) {
+            return (((Boolean) value).booleanValue() ? new Float(1)
+                : new Float(0));
+        } else if (value instanceof String) {
+            try {
+                BigDecimal bd = new BigDecimal(value.toString().trim());
+                return getFloat(bd);
             } catch (NumberFormatException ex) {
                 throw newInvalidFormat(value);
             }
@@ -103,7 +124,15 @@ class FarragoJdbcApproxParamDef
             checkNullable();
             return null;
         } else {
-            return getDouble(x);
+            switch (paramMetaData.type) {
+            case Types.REAL:
+                return getFloat(x);
+            case Types.FLOAT:
+            case Types.DOUBLE:
+                return getDouble(x);
+            default:
+                throw new AssertionError("bad type " + paramMetaData.type);
+            }
         }
     }
 }

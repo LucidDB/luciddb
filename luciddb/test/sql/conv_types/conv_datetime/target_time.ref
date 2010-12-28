@@ -77,7 +77,7 @@ Error: From line 2, column 9 to line 2, column 15: Cannot assign to target field
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select cast (coldate as time) from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cast function cannot convert value of type DATE to type TIME (state=,code=0)
+Error: From line 2, column 9 to line 2, column 30: Cast function cannot convert value of type DATE to type TIME (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
@@ -106,17 +106,18 @@ Error: From line 2, column 9 to line 2, column 16: Cannot assign to target field
 . . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'TIME'
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-20
 0: jdbc:luciddb:> select * from target_time order by 1
 . . . . . . . . > ;
 +-----------+
 |  COLTIME  |
 +-----------+
-| 21:19:51  |
-| 04:05:11  |
 | 00:00:00  |
 | 04:05:05  |
+| 04:05:11  |
 | 06:40:00  |
 | 06:40:00  |
+| 21:19:51  |
 +-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

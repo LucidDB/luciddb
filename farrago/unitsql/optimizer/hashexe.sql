@@ -2,11 +2,8 @@
 -- LucidDB SQL test for Hash Join and Hash Agg --
 -------------------------------------------------
 
--- TODO jvs 11-Sept-2006:  Get rid of this once leak is investigated.
-alter system set "codeCacheMaxBytes" = min;
-
 ------------------------------------------------
--- non LDB personality uses cartesian product --
+-- default personality uses cartesian product --
 ------------------------------------------------
 create schema lhx;
 set schema 'lhx';
@@ -15,20 +12,25 @@ set path 'lhx';
 -- force usage of Java calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
+alter session implementation set default;
+
+-- for first portion, prevent usage of hash/NL join so that we can use
+-- cartesian join as a reference instead
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+    'Lhx.*Rule|.*NestedLoop.*');
+
 create table lhxemps(
-    empno integer not null,
+    empno integer primary key,
     ename varchar(40),
-    deptno integer)
-server sys_column_store_data_server;
+    deptno integer);
 
 create table lhxdepts(
-    deptnoA integer)
-server sys_column_store_data_server;
+    deptnoA integer primary key);
 
-insert into lhxemps select empno, name, deptno from sales.emps;
-insert into lhxemps select empno, name, deptno from sales.emps;
+insert into lhxemps
+    select empno, name, deptno from sales.emps where empno <> 110;
 
-insert into lhxdepts select deptno from sales.emps;
+insert into lhxdepts select deptno from sales.emps where deptno <> 20;
 
 !set outputformat csv
 select * from lhxemps order by 1;
@@ -43,13 +45,20 @@ select * from lhxemps, lhxdepts
 where lhxemps.deptno = lhxdepts.deptnoA
 order by empno, ename;
 
+---------------------------------------------------
+-- test "is not distinct from" as join condition --
+---------------------------------------------------
+explain plan for
+select * from lhxemps, lhxdepts
+where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
+
 -- Clean up
 !set outputformat table
 drop schema lhx cascade;
 
 
 ------------------------------------
--- LDB personality uses hash join --
+-- test LDB personality with hash join --
 ------------------------------------
 create schema lhx;
 set schema 'lhx';
@@ -59,6 +68,12 @@ set path 'lhx';
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- allow hash joins again, but disable expression reduction to preserve casts
+-- to ensure that casts in the join keys are handled
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+    'FarragoReduceExpressionsRule.*');
 
 create table lhxemps(
     empno integer not null,
@@ -89,6 +104,13 @@ insert into lhxdepts2 select deptno, deptno from sales.emps;
 insert into lhxdepts3 select deptno, deptno from sales.emps;
 insert into lhxdepts4 select deptno, deptno from sales.emps;
 
+-- set fake stats to avoid non-deterministic results
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXEMPS', 1000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS', 600);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS2', 700);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS3', 800);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS4', 900);
 
 !set outputformat csv
 select * from lhxemps order by 1;
@@ -298,12 +320,16 @@ select * from lhxemps3 left outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
 order by 1, 2;
 
+-- put a filter on the RHS of the outer join to force the RHS to remain on
+-- the RHS
 explain plan for
-select * from lhxemps3 right outer join lhxemps4
+select * from lhxemps3 right outer join
+    (select * from lhxemps4 where enameC > 'A' or enameC is null) as lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
 order by 1, 2;
 
-select * from lhxemps3 right outer join lhxemps4
+select * from lhxemps3 right outer join
+    (select * from lhxemps4 where enameC > 'A' or enameC is null) as lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
 order by 1, 2;
 
@@ -422,7 +448,8 @@ order by 1, 2;
 
 -- filter pushed down
 explain plan for
-select * from lhxemps5 right outer join lhxemps6
+select * from lhxemps5 right outer join
+    (select * from lhxemps6 where empnoB > 0) as lhxemps6
 on lhxemps5.empnoA = lhxemps6.empnoB and
    lhxemps5.empnoA <> 2
 order by 1, 2;
@@ -481,7 +508,8 @@ order by 1, 2;
 -- outer join on filter can not be evaluated as post filter
 -- this should report an error
 explain plan without implementation for
-select * from lhxemps5 right outer join lhxemps6
+select * from lhxemps5 right outer join
+    (select * from lhxemps6 where empnoB > 0) as lhxemps6
 on lhxemps5.empnoA = lhxemps6.empnoB and
    lhxemps5.empnoA > lhxemps6.empnoB
 order by 1, 2;
@@ -493,6 +521,13 @@ select * from lhxemps5 full outer join lhxemps6
 on lhxemps5.empnoA = lhxemps6.empnoB and
    lhxemps5.empnoA > lhxemps6.empnoB
 order by 1, 2;
+
+---------------------------------------------------
+-- test "is not distinct from" as join condition --
+---------------------------------------------------
+explain plan for
+select * from lhxemps, lhxdepts
+where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
 
 --------------------
 -- hash aggregate --
@@ -647,7 +682,54 @@ select ename1 from emps1
 where upper(ename1) in (select upper(ename2) from emps2)
 order by 1;
 
---------------
+-----------------------------------------------------
+-- LDB-144
+-- removed an incorrect assert in LhxHashGenerator --
+-- check that the following query no longer fails  --
+-----------------------------------------------------
+create table A(a int not null);
+create table B(b int not null);
+create table C(c int not null);
+insert into A values (1), (2), (3);
+insert into B values (2), (3), (4);
+insert into C values (3), (4), (5);
+
+explain plan for
+select * from A right outer join (select * from B inner join C on b = c) on a = b and a = c order by a;
+
+select * from A right outer join (select * from B inner join C on b = c) on a = b and a = c order by a;
+
+drop table A;
+drop table B;
+drop table C;
+
+-- LER-6819
+create table tab(a int, b int, c int);
+insert into tab values(1,2,3),(1,2,4);
+create view vtab(a,b,c) as
+    select coalesce(t2.a, t1.a), coalesce(t2.b, t1.b), coalesce(t2.c, t1.c)
+        from tab t1, tab t2 where t1.a = t2.a;
+!set outputformat table
+select * from vtab where a = 1 and b = 2 and c = 3 order by a, b, c; 
+
+-- LER-7927 -- To reproduce this bug, there needs to be a RIGHTSEMI join
+-- with a filter on top of it.  The RIGHTSEMI join should be generated for
+-- the IN predicate with tab2 as the left input into the join because it's the
+-- bigger table.
+create table tab2(a int primary key, b int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB',100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB2',10000);
+!set outputformat csv
+explain plan for
+    select * from tab as t1,
+        (select tab.a from tab where a in (select tab2.a from tab2)
+            union
+        (select * from
+            (select distinct tab.a from tab
+                where a in (select tab2.a from tab2))
+            where a is not null)) as t2
+    where t1.a = t2.a;
+
 -- Clean up --
 --------------
 !set outputformat table

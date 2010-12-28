@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ import org.eigenbase.util.*;
 /**
  * Adapter which allows you to iterate over an {@link TupleIter} with a timeout.
  *
- * <p>The interface is similar to an {@link TupleIter}: the {@link #fetchNext()}
+ * <p>The interface is similar to an {@link TupleIter}: the {@link #fetchNext}
  * method retrieves rows and indicates when there are no more rows. It has a
  * timeout parameter, and throws a {@link QueueIterator.TimeoutException} if the
  * timeout is exceeded. There is also a {@link #closeAllocation} method, which
@@ -47,7 +47,7 @@ import org.eigenbase.util.*;
  * thread (e.g., the driver) is finished with the row. This is because the same
  * row object may be re-used for subsequent rows. To achieve this, this class's
  * thread always inserts {@link #FENCEPOST} after every row object and the
- * {@link #fetchNext()} method detects and discards the fencepost. The nature of
+ * {@link #fetchNext} method detects and discards the fencepost. The nature of
  * the underlying {@link QueueIterator}'s SynchronousQueue prevents the writing
  * thread from completing the put operation of the fencepost until the reading
  * thread is prepared to read the value. In this way we guarantee that the row
@@ -59,7 +59,6 @@ import org.eigenbase.util.*;
  */
 public class TimeoutQueueTupleIter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -92,6 +91,10 @@ public class TimeoutQueueTupleIter
      *
      * @param timeoutMillis number of milliseconds to wait for the next row;
      * less than or equal to 0 means do not wait
+     *
+     * @return next row
+     *
+     * @throws org.eigenbase.runtime.QueueIterator.TimeoutException on timeout
      */
     public Object fetchNext(long timeoutMillis)
         throws QueueIterator.TimeoutException
@@ -130,7 +133,8 @@ public class TimeoutQueueTupleIter
     public synchronized void start()
     {
         Util.pre(thread == null, "thread == null");
-        thread = new Thread() {
+        thread =
+            new Thread() {
                 public void run()
                 {
                     doWork();
@@ -158,6 +162,8 @@ public class TimeoutQueueTupleIter
                 }
                 thread.join(timeoutMillis);
             } catch (InterruptedException e) {
+                // ignore } catch (QueueIterator.TimeoutException e) { not
+                // actually possible - because hasNext(timeout=0) means to poll
             }
             thread = null;
         }

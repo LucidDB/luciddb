@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by the
@@ -35,7 +35,6 @@ import java.util.*;
 public class DoubleProperty
     extends Property
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final double minValue;
@@ -174,7 +173,8 @@ public class DoubleProperty
      */
     public double get(double defaultValue)
     {
-        final String value = getInternal(
+        final String value =
+            getInternal(
                 Double.toString(defaultValue),
                 false);
         if (value == null) {
@@ -221,8 +221,8 @@ public class DoubleProperty
     private double limit(double value)
     {
         return Math.min(
-                Math.max(value, minValue),
-                maxValue);
+            Math.max(value, minValue),
+            maxValue);
     }
 
     /**

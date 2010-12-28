@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ import org.eigenbase.util14.*;
 public abstract class FarragoAbstractJdbcDriver
     implements Driver
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement Driver
@@ -126,6 +125,19 @@ public abstract class FarragoAbstractJdbcDriver
         return true;
     }
 
+    /**
+     * Indicates whether driver accepts URLs with host:port specification.
+     * Returns <code>false</code> by default. Subclassing drivers should
+     * override and return true to enable FarragoTestCase to create URLs with
+     * host:port specifications.
+     *
+     * @return false
+     */
+    public boolean acceptsUrlWithHostPort()
+    {
+        return false;
+    }
+
     public void register()
     {
         try {
@@ -151,7 +163,8 @@ public abstract class FarragoAbstractJdbcDriver
     public Properties applyDefaultConnectionProps(final Properties info)
     {
         // copy default properties to new properties
-        Properties props = copyProperties(
+        Properties props =
+            copyProperties(
                 getDefaultConnectionProps(),
                 null);
 
@@ -177,14 +190,13 @@ public abstract class FarragoAbstractJdbcDriver
         }
         //REVIEW: add default for sessionName?
 
-        /**
-         * To set process ID, use a shell script to launch the JVM and use "exec"
-         * to replace the shell process with the JVM.  This allows you to pass the
-         * shell's PID to the JVM:
-         *     #!/bin/bash
-         *     exec java -Dprocess.id=$$ the.class.name
-         * (Without exec, $$ is the bash process's PID.)
-         */
+        // To set process ID, use a shell script to launch the JVM and
+        // use "exec" to replace the shell process with the JVM.  This
+        // allows you to pass the shell's PID to the JVM:
+        //
+        //     #!/bin/bash
+        //     exec java -Dprocess.id=$$ the.class.name
+        // (Without exec, $$ is the bash process's PID.)
         String processId = System.getProperty("process.id");
         if (processId != null) {
             props.setProperty("clientProcessId", processId);

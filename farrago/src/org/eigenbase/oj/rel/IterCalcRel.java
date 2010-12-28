@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,6 @@ import java.util.logging.*;
 import openjava.mop.*;
 
 import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
@@ -63,7 +62,6 @@ public class IterCalcRel
     extends SingleRel
     implements JavaRel
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static boolean abortOnError = true;
@@ -74,7 +72,7 @@ public class IterCalcRel
     private final RexProgram program;
 
     /**
-     * Values defined in {@link ProjectRelBase.Flags}.
+     * Values defined in {@link org.eigenbase.rel.ProjectRelBase.Flags}.
      */
     protected int flags;
 
@@ -134,10 +132,9 @@ public class IterCalcRel
 
     public double getRows()
     {
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                program.getCondition());
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            program);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -150,12 +147,12 @@ public class IterCalcRel
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    public Object clone()
+    public IterCalcRel clone()
     {
         IterCalcRel clone =
             new IterCalcRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 program.copy(),
                 getFlags(),
                 tag);
@@ -170,8 +167,8 @@ public class IterCalcRel
 
     public boolean isBoxed()
     {
-        return
-            (flags & ProjectRelBase.Flags.Boxed) == ProjectRelBase.Flags.Boxed;
+        return (flags & ProjectRelBase.Flags.Boxed)
+            == ProjectRelBase.Flags.Boxed;
     }
 
     /**
@@ -183,18 +180,17 @@ public class IterCalcRel
         String fieldName)
     {
         if (!isBoxed()) {
-            return
-                implementor.implementFieldAccess((JavaRel) getChild(),
-                    fieldName);
+            return implementor.implementFieldAccess(
+                (JavaRel) getChild(),
+                fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
         RexLocalRef ref = program.getProjectList().get(field);
         final int index = ref.getIndex();
-        return
-            implementor.findRel(
-                (JavaRel) this,
-                program.getExprList().get(index));
+        return implementor.findRel(
+            (JavaRel) this,
+            program.getExprList().get(index));
     }
 
     /**
@@ -208,8 +204,8 @@ public class IterCalcRel
     }
 
     /**
-     * Allows errors to be buffered, in the event that they overflow the
-     * error handler.
+     * Allows errors to be buffered, in the event that they overflow the error
+     * handler.
      *
      * @param errorBuffering whether to buffer errors
      */
@@ -228,33 +224,30 @@ public class IterCalcRel
         RexProgram program,
         String tag)
     {
-        return
-            implementAbstractTupleIter(
-                implementor,
-                rel,
-                childExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                tag);
+        return implementAbstractTupleIter(
+            implementor,
+            rel,
+            childExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            tag);
     }
 
     /**
-     * Generates code for a Java expression satisfying the
-     * {@link org.eigenbase.runtime.TupleIter} interface. The generated
-     * code allocates a {@link org.eigenbase.runtime.CalcTupleIter}
-     * with a dynamic {@link org.eigenbase.runtime.TupleIter#fetchNext()}
-     * method. If the "abort on error" flag is false, or an error handling
-     * tag is specified, then fetchNext is written to handle row errors.
+     * Generates code for a Java expression satisfying the {@link
+     * org.eigenbase.runtime.TupleIter} interface. The generated code allocates
+     * a {@link org.eigenbase.runtime.CalcTupleIter} with a dynamic {@link
+     * org.eigenbase.runtime.TupleIter#fetchNext()} method. If the "abort on
+     * error" flag is false, or an error handling tag is specified, then
+     * fetchNext is written to handle row errors.
      *
-     * <p>
-     *
-     * Row errors are handled by wrapping expressions that can fail
-     * with a try/catch block. A caught RuntimeException is then published
-     * to an "connection variable." In the event that errors can overflow,
-     * an "error buffering" flag allows them to be posted again on the next
-     * iteration of fetchNext.
+     * <p>Row errors are handled by wrapping expressions that can fail with a
+     * try/catch block. A caught RuntimeException is then published to an
+     * "connection variable." In the event that errors can overflow, an "error
+     * buffering" flag allows them to be posted again on the next iteration of
+     * fetchNext.
      *
      * @param implementor an object that implements relations as Java code
      * @param rel the relation to be implemented
@@ -264,6 +257,7 @@ public class IterCalcRel
      * @param outputRowType the rel data type of the output row
      * @param program the rex program to implemented by the relation
      * @param tag an error handling tag
+     *
      * @return a Java expression satisfying the TupleIter interface
      */
     public static Expression implementAbstractTupleIter(
@@ -276,9 +270,12 @@ public class IterCalcRel
         RexProgram program,
         String tag)
     {
+        MemberDeclarationList memberList = new MemberDeclarationList();
+
         // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
-        boolean errorRecovery = !abortOnError || tag != null;
+        boolean errorRecovery = !abortOnError || (tag != null);
+
         // Error buffering should not be enabled unless error recovery is
         assert !errorBuffering || errorRecovery;
 
@@ -301,13 +298,21 @@ public class IterCalcRel
             OJUtil.typeToOJClass(
                 outputRowType,
                 typeFactory);
-        OJClass inputRowClass = OJUtil.typeToOJClass(
+        OJClass inputRowClass =
+            OJUtil.typeToOJClass(
                 inputRowType,
                 typeFactory);
 
         Variable varOutputRow = implementor.newVariable();
 
-        FieldDeclaration rowVarDecl =
+        FieldDeclaration inputRowVarDecl =
+            new FieldDeclaration(
+                new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(inputRowClass),
+                varInputRow.toString(),
+                null);
+
+        FieldDeclaration outputRowVarDecl =
             new FieldDeclaration(
                 new ModifierList(ModifierList.PRIVATE),
                 TypeName.forOJClass(outputRowClass),
@@ -339,7 +344,7 @@ public class IterCalcRel
         //         if (varInputObj instanceof TupleIter.NoDataReason) {
         //             return varInputObj;
         //         }
-        //         InputRowClass varInputRow = (InputRowClass) varInputObj;
+        //         varInputRow = (InputRowClass) varInputObj;
         //         int columnIndex = 0;
         //         [calculation statements]
         //     }
@@ -369,19 +374,30 @@ public class IterCalcRel
 
         // Push up the row declaration for new error handling so that the
         // input row is available to the error handler
-        if (! backwardsCompatible) {
+        if (!backwardsCompatible) {
             whileBody.add(
-                declareInputRow(inputRowClass, varInputRow, varInputObj));
+                assignInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
         Variable varColumnIndex = null;
         if (errorRecovery && !backwardsCompatible) {
+            // NOTE jvs 7-Oct-2006:  Declare varColumnIndex as a member
+            // (rather than a local) in case in the future we want
+            // to decompose complex expressions into helper methods.
             varColumnIndex = implementor.newVariable();
-            whileBody.add(
-                new VariableDeclaration(
+            FieldDeclaration varColumnIndexDecl =
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.PRIVATE),
                     OJUtil.typeNameForClass(int.class),
                     varColumnIndex.toString(),
-                    Literal.makeLiteral(0)));
+                    null);
+            memberList.add(varColumnIndexDecl);
+            whileBody.add(
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        varColumnIndex,
+                        AssignmentExpression.EQUALS,
+                        Literal.makeLiteral(0))));
         }
 
         // Calculator (projection, filtering) statements are later appended
@@ -461,10 +477,8 @@ public class IterCalcRel
 
         if (backwardsCompatible) {
             calcStmts.add(
-                declareInputRow(inputRowClass, varInputRow, varInputObj));
+                assignInputRow(inputRowClass, varInputRow, varInputObj));
         }
-
-        MemberDeclarationList memberList = new MemberDeclarationList();
 
         StatementList condBody;
         RexToOJTranslator translator =
@@ -472,11 +486,13 @@ public class IterCalcRel
         try {
             translator.pushProgram(program);
             if (program.getCondition() != null) {
+                // TODO jvs 8-Oct-2006:  move condition to its own
+                // method if big, as below for project exprs.
                 condBody = new StatementList();
                 RexNode rexIsTrue =
                     rel.getCluster().getRexBuilder().makeCall(
                         SqlStdOperatorTable.isTrueOperator,
-                        new RexNode[] { program.getCondition() });
+                        program.getCondition());
                 Expression conditionExp =
                     translator.translateRexNode(rexIsTrue);
                 calcStmts.add(new IfStatement(conditionExp, condBody));
@@ -488,8 +504,19 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
+                // NOTE jvs 14-Sept-2006:  Put complicated project expressions
+                // into their own method, otherwise a big select list can easily
+                // blow the 64K Java limit on method bytecode size.  Make
+                // methods private final in the hopes that they will get inlined
+                // JIT.  For now we decide "complicated" based on the size of
+                // the generated Java parse tree. A big enough select list of
+                // simple expressions could still blow the limit, so we may need
+                // to group them together, sub-divide, etc.
+
+                StatementList projMethodBody = new StatementList();
+
                 if (errorRecovery && !backwardsCompatible) {
-                    condBody.add(
+                    projMethodBody.add(
                         new ExpressionStatement(
                             new UnaryExpression(
                                 varColumnIndex,
@@ -497,52 +524,33 @@ public class IterCalcRel
                 }
                 ++i;
 
-                // NOTE jvs 14-Sept-2006:  Put complicated project expressions
-                // into their own method, otherwise a big select list
-                // can easily blow the 64K Java limit on method bytecode
-                // size.  Make methods private final in the hopes that they
-                // will get inlined JIT.  For now we decide "complicated"
-                // based on the size of the generated Java parse tree.
-                // A big enough select list of simple expressions could
-                // still blow the limit, so we may need to group them
-                // together, sub-divide, etc.
-
-                StatementList projMethodBody = new StatementList();
                 RexToOJTranslator projTranslator =
                     translator.push(projMethodBody);
-                String javaFieldName = Util.toJavaId(
+                String javaFieldName =
+                    Util.toJavaId(
                         fields[i].getName(),
                         i);
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
                 projTranslator.translateAssignment(fields[i], lhs, rhs);
 
-                int complexity = countParseTreeNodes(projMethodBody);
-                if (complexity < 20) {
+                int complexity = OJUtil.countParseTreeNodes(projMethodBody);
+                if (!Bug.Frg216Fixed || complexity < 20) {
                     // No method needed; just append.
                     condBody.addAll(projMethodBody);
                     continue;
                 }
 
                 // Need a separate method.
-                
+
                 String projMethodName =
                     "calc_" + varOutputRow.toString() + "_f_" + i;
-                ParameterList paramList = new ParameterList();
-                paramList.add(
-                    new Parameter(
-                        TypeName.forOJClass(inputRowClass),
-                        varInputRow.toString()));
-                paramList.add(
-                    new Parameter(
-                        TypeName.forOJClass(outputRowClass),
-                        varOutputRow.toString()));
                 MemberDeclaration projMethodDecl =
                     new MethodDeclaration(
                         new ModifierList(
                             ModifierList.PRIVATE | ModifierList.FINAL),
                         TypeName.forOJClass(OJSystem.VOID),
                         projMethodName,
-                        paramList,
+                        new ParameterList(),
                         null,
                         projMethodBody);
                 memberList.add(projMethodDecl);
@@ -550,7 +558,7 @@ public class IterCalcRel
                     new ExpressionStatement(
                         new MethodCall(
                             projMethodName,
-                            new ExpressionList(varInputRow, varOutputRow))));
+                            new ExpressionList())));
             }
         } finally {
             translator.popProgram(program);
@@ -580,7 +588,8 @@ public class IterCalcRel
             // declare refinement of restart() and add to member list...
         }
 
-        memberList.add(rowVarDecl);
+        memberList.add(inputRowVarDecl);
+        memberList.add(outputRowVarDecl);
         memberList.add(fetchNextMethodDecl);
         Expression newTupleIterExp =
             new AllocationExpression(
@@ -589,32 +598,6 @@ public class IterCalcRel
                 memberList);
 
         return newTupleIterExp;
-    }
-
-    private static int countParseTreeNodes(ParseTree parseTree)
-    {
-        int n = 1;
-        if (parseTree instanceof NonLeaf) {
-            Object [] contents = ((NonLeaf) parseTree).getContents();
-            for (Object obj : contents) {
-                if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
-                } else {
-                    n += 1;
-                }
-            }
-        } else if (parseTree instanceof openjava.ptree.List) {
-            Enumeration e = ((openjava.ptree.List) parseTree).elements();
-            while (e.hasMoreElements()) {
-                Object obj = (Object) e.nextElement();
-                if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
-                } else {
-                    n += 1;
-                }
-            }
-        }
-        return n;
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -629,16 +612,15 @@ public class IterCalcRel
             getChild(),
             varInputRow);
 
-        return
-            implementAbstract(
-                implementor,
-                this,
-                childExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                tag);
+        return implementAbstract(
+            implementor,
+            this,
+            childExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            tag);
     }
 
     public RexProgram getProgram()
@@ -651,15 +633,18 @@ public class IterCalcRel
         return tag;
     }
 
-    private static Statement declareInputRow(
-        OJClass inputRowClass, Variable varInputRow, Variable varInputObj)
+    private static Statement assignInputRow(
+        OJClass inputRowClass,
+        Variable varInputRow,
+        Variable varInputObj)
     {
-        return new VariableDeclaration(
-            TypeName.forOJClass(inputRowClass),
-            varInputRow.toString(),
-            new CastExpression(
-                TypeName.forOJClass(inputRowClass),
-                varInputObj));
+        return new ExpressionStatement(
+            new AssignmentExpression(
+                varInputRow,
+                AssignmentExpression.EQUALS,
+                new CastExpression(
+                    TypeName.forOJClass(inputRowClass),
+                    varInputObj)));
     }
 }
 

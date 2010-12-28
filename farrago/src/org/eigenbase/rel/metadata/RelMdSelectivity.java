@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.sql.fun.*;
 public class RelMdSelectivity
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdSelectivity()
@@ -66,12 +65,23 @@ public class RelMdSelectivity
 
         double sumRows = 0.0;
         double sumSelectedRows = 0.0;
+        int [] adjustments = new int[rel.getRowType().getFieldCount()];
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         for (RelNode input : rel.getInputs()) {
             Double nRows = RelMetadataQuery.getRowCount(input);
             if (nRows == null) {
                 return null;
             }
-            double sel = RelMetadataQuery.getSelectivity(input, predicate);
+
+            // convert the predicate to reference the types of the union child
+            RexNode modifiedPred =
+                predicate.accept(
+                    new RelOptUtil.RexInputConverter(
+                        rexBuilder,
+                        null,
+                        input.getRowType().getFields(),
+                        adjustments));
+            double sel = RelMetadataQuery.getSelectivity(input, modifiedPred);
 
             sumRows += nRows;
             sumSelectedRows += nRows * sel;
@@ -86,8 +96,8 @@ public class RelMdSelectivity
     public Double getSelectivity(SortRel rel, RexNode predicate)
     {
         return RelMetadataQuery.getSelectivity(
-                rel.getChild(),
-                predicate);
+            rel.getChild(),
+            predicate);
     }
 
     public Double getSelectivity(FilterRelBase rel, RexNode predicate)
@@ -97,18 +107,16 @@ public class RelMdSelectivity
         // selectivity of the filter twice.  If no predicate is passed in,
         // use the filter's condition.
         if (predicate != null) {
-            return
-                RelMetadataQuery.getSelectivity(
-                    rel.getChild(),
-                    RelMdUtil.minusPreds(
-                        rel.getCluster().getRexBuilder(),
-                        predicate,
-                        rel.getCondition()));
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                RelMdUtil.minusPreds(
+                    rel.getCluster().getRexBuilder(),
+                    predicate,
+                    rel.getCondition()));
         } else {
-            return
-                RelMetadataQuery.getSelectivity(
-                    rel.getChild(),
-                    rel.getCondition());
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                rel.getCondition());
         }
     }
 
@@ -127,8 +135,8 @@ public class RelMdSelectivity
         }
 
         return RelMetadataQuery.getSelectivity(
-                rel.getLeft(),
-                newPred);
+            rel.getLeft(),
+            newPred);
     }
 
     public Double getSelectivity(AggregateRelBase rel, RexNode predicate)
@@ -160,17 +168,23 @@ public class RelMdSelectivity
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getChild().getRowType().getFieldCount(),
+            rel.getRowType().getFieldCount(),
             predicate,
             pushable,
             notPushable);
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
 
+        RexNode modifiedPred;
+        if (childPred == null) {
+            modifiedPred = null;
+        } else {
+            modifiedPred = RelOptUtil.pushFilterPastProject(childPred, rel);
+        }
         Double selectivity =
             RelMetadataQuery.getSelectivity(
                 rel.getChild(),
-                childPred);
+                modifiedPred);
         if (selectivity == null) {
             return null;
         } else {

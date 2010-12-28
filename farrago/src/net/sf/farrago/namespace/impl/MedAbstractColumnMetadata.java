@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,10 +26,11 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.query.*;
+import net.sf.farrago.fennel.rel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
@@ -47,12 +48,22 @@ import org.eigenbase.util14.*;
  */
 public abstract class MedAbstractColumnMetadata
 {
-
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * @deprecated
+     */
     public Set<BitSet> getUniqueKeys(
         RelNode rel,
         FarragoRepos repos)
+    {
+        return getUniqueKeys(rel, repos, false);
+    }
+
+    public Set<BitSet> getUniqueKeys(
+        RelNode rel,
+        FarragoRepos repos,
+        boolean ignoreNulls)
     {
         // this method only handles table level relnodes
         if (rel.getTable() == null) {
@@ -88,7 +99,7 @@ public abstract class MedAbstractColumnMetadata
                 rel,
                 repos,
                 (List) uniqueConstraint.getFeature(),
-                true,
+                !ignoreNulls,
                 retSet);
         }
 
@@ -116,7 +127,8 @@ public abstract class MedAbstractColumnMetadata
         BitSet colMask = new BitSet();
         for (FemAbstractColumn keyCol : keyCols) {
             if (checkNulls
-                && FarragoCatalogUtil.isColumnNullable(repos, keyCol)) {
+                && FarragoCatalogUtil.isColumnNullable(repos, keyCol))
+            {
                 return;
             }
             int fieldNo = mapColumnToField(rel, keyCol);
@@ -142,6 +154,42 @@ public abstract class MedAbstractColumnMetadata
         RelNode rel,
         FemAbstractColumn keyCol);
 
+    /**
+     * @deprecated
+     */
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        FarragoRepos repos)
+    {
+        return areColumnsUnique(rel, columns, repos, false);
+    }
+
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        FarragoRepos repos,
+        boolean ignoreNulls)
+    {
+        Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos, ignoreNulls);
+        return areColumnsUniqueForKeys(uniqueColSets, columns);
+    }
+
+    public static Boolean areColumnsUniqueForKeys(
+        Set<BitSet> uniqueColSets,
+        BitSet columns)
+    {
+        if (uniqueColSets == null) {
+            return null;
+        }
+        for (BitSet colSet : uniqueColSets) {
+            if (RelOptUtil.contains(columns, colSet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // this method only handles table level relnodes
@@ -152,10 +200,7 @@ public abstract class MedAbstractColumnMetadata
         double population = 1.0;
 
         // if columns are part of a unique key, then just return the rowcount
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq == null) {
-            return null;
-        } else if (uniq) {
+        if (RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey)) {
             return RelMetadataQuery.getRowCount(rel);
         }
 
@@ -166,8 +211,11 @@ public abstract class MedAbstractColumnMetadata
         }
 
         // multiply by the cardinality of each column
-        for (int col = groupKey.nextSetBit(0); col >= 0;
-            col = groupKey.nextSetBit(col + 1)) {
+        for (
+            int col = groupKey.nextSetBit(0);
+            col >= 0;
+            col = groupKey.nextSetBit(col + 1))
+        {
             // calculate the original ordinal (before projection)
             int origCol = mapFieldToColumnOrdinal(rel, col);
             if (origCol == -1) {
@@ -187,10 +235,9 @@ public abstract class MedAbstractColumnMetadata
         }
 
         // cap the number of distinct values
-        return
-            RelMdUtil.numDistinctVals(
-                population,
-                RelMetadataQuery.getRowCount(rel));
+        return RelMdUtil.numDistinctVals(
+            population,
+            RelMetadataQuery.getRowCount(rel));
     }
 
     /**
@@ -218,12 +265,11 @@ public abstract class MedAbstractColumnMetadata
         // if the columns form a unique key or are part of a unique key,
         // then just return the rowcount times the selectivity of the
         // predicate
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if ((uniq != null) && uniq) {
-            return
-                NumberUtil.multiply(
-                    RelMetadataQuery.getRowCount(rel),
-                    RelMetadataQuery.getSelectivity(rel, predicate));
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
+        if (uniq) {
+            return NumberUtil.multiply(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getSelectivity(rel, predicate));
         }
 
         // if no stats are available, return null
@@ -242,7 +288,7 @@ public abstract class MedAbstractColumnMetadata
             // determine which predicates are sargable and which aren't
             List<SargBinding> sargBindingList =
                 rexAnalyzer.analyzeAll(predicate);
-            nonSargFilters = rexAnalyzer.getPostFilterRexNode();
+            nonSargFilters = rexAnalyzer.getNonSargFilterRexNode();
 
             if (!sargBindingList.isEmpty()) {
                 col2SeqMap = new HashMap<CwmColumn, SargIntervalSequence>();
@@ -268,8 +314,11 @@ public abstract class MedAbstractColumnMetadata
         // loop through each column and determine the cardinality of the
         // column
         Double distRowCount = 1.0;
-        for (int fieldNo = groupKey.nextSetBit(0); fieldNo >= 0;
-            fieldNo = groupKey.nextSetBit(fieldNo + 1)) {
+        for (
+            int fieldNo = groupKey.nextSetBit(0);
+            fieldNo >= 0;
+            fieldNo = groupKey.nextSetBit(fieldNo + 1))
+        {
             // if the column has sargable predicates, compute the
             // cardinality based on the predicates; otherwise, just compute
             // the full cardinality of the column
@@ -331,4 +380,4 @@ public abstract class MedAbstractColumnMetadata
         int fieldNo);
 }
 
-// End MedAbstractColumnMetadata
+// End MedAbstractColumnMetadata.java

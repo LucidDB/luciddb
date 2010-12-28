@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,8 +27,10 @@
 #include "fennel/device/ThreadPoolScheduler.h"
 #include "fennel/device/RandomAccessDevice.h"
 #include "fennel/device/RandomAccessRequest.h"
+#include "fennel/common/FennelExcn.h"
+#include "fennel/common/FennelResource.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include "fennel/device/IoCompletionPortScheduler.h"
 #include "fennel/common/SysCallExcn.h"
 #include <windows.h>
@@ -68,12 +70,11 @@ DeviceAccessScheduler *
 DeviceAccessScheduler::newScheduler(
     DeviceAccessSchedulerParams const &params)
 {
-    switch(params.schedulerType) {
-        
+    switch (params.schedulerType) {
     case DeviceAccessSchedulerParams::THREAD_POOL_SCHEDULER:
         return new ThreadPoolScheduler(params);
-        
-#ifdef __MINGW32__
+
+#ifdef __MSVC__
     case DeviceAccessSchedulerParams::IO_COMPLETION_PORT_SCHEDULER:
         return new IoCompletionPortScheduler(params);
 #endif
@@ -85,22 +86,30 @@ DeviceAccessScheduler::newScheduler(
             if (pScheduler) {
                 return pScheduler;
             } else {
-                // if dynamic load fails, use ThreadPoolScheduler as a fallback
-                return new ThreadPoolScheduler(params);
+                // if the aioLinux scheduler was explicitly selected (vs simply
+                // using the default type for the OS), then the AIO runtime
+                // library must be installed; otherwise, fall through to use
+                // ThreadPoolScheduler as fallback
+                if (params.usingDefaultSchedulerType) {
+                    break;
+                }
+                throw FennelExcn(FennelResource::instance().libaioRequired());
             }
         }
 #endif
-        
+
 #ifdef USE_AIO_H
     case DeviceAccessSchedulerParams::AIO_POLLING_SCHEDULER:
         return new AioPollingScheduler(params);
     case DeviceAccessSchedulerParams::AIO_SIGNAL_SCHEDULER:
         return new AioSignalScheduler(params);
 #endif
-        
+
     default:
-        permAssert(false);
+        // fall through to use ThreadPoolScheduler as a fallback
+        break;
     }
+    return new ThreadPoolScheduler(params);
 }
 
 DeviceAccessScheduler::~DeviceAccessScheduler()
@@ -109,20 +118,20 @@ DeviceAccessScheduler::~DeviceAccessScheduler()
 
 RandomAccessRequestBinding::RandomAccessRequestBinding()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     // TODO:  only create this when ThreadPoolScheduler is being used?
-    hEvent = CreateEvent(NULL,1,0,NULL);
+    hEvent = CreateEvent(NULL, 1, 0, NULL);
     if (!hEvent) {
         throw new SysCallExcn("CreateEvent failed");
     }
-#endif    
+#endif
 }
 
 RandomAccessRequestBinding::~RandomAccessRequestBinding()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     CloseHandle(hEvent);
-#endif    
+#endif
 }
 
 void RandomAccessRequest::execute()

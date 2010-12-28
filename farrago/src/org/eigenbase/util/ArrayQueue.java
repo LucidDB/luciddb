@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,11 +47,10 @@ import java.util.*;
  * @version $Id$
  * @since Sep 16, 2004
  */
-public class ArrayQueue
-    extends AbstractCollection
-    implements Collection
+public class ArrayQueue<E>
+    extends AbstractCollection<E>
+    implements Collection<E>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final int DEFAULT_CAPACITY = 10;
@@ -67,7 +66,7 @@ public class ArrayQueue
     /**
      * The queue contents. Treated as a circular buffer.
      */
-    private Object [] queue;
+    private E [] queue;
 
     /**
      * The current position of the head element of the queue.
@@ -88,9 +87,11 @@ public class ArrayQueue
      */
     public ArrayQueue(int capacity)
     {
-        assert (capacity > 0);
+        if (capacity <= 0) {
+            throw new IllegalArgumentException();
+        }
         this.capacity = capacity;
-        this.queue = new Object[capacity];
+        this.queue = (E []) new Object[capacity];
         this.start = 0;
         this.end = 0;
     }
@@ -115,7 +116,7 @@ public class ArrayQueue
      *
      * @throws NullPointerException if c or any of its elements are null
      */
-    public ArrayQueue(Collection c)
+    public ArrayQueue(Collection<? extends E> c)
     {
         this(Math.max(
                 DEFAULT_CAPACITY,
@@ -136,7 +137,7 @@ public class ArrayQueue
      *
      * @throws NullPointerException if c or any of its elements are null
      */
-    public ArrayQueue(int capacity, Collection c)
+    public ArrayQueue(int capacity, Collection<? extends E> c)
     {
         this(Math.max(
                 capacity,
@@ -156,7 +157,7 @@ public class ArrayQueue
      * @return <code>false</code> if o is <code>null</code>, otherwise <code>
      * true</code> since it's always possible to add an element to this queue.
      */
-    public boolean offer(Object o)
+    public boolean offer(E o)
     {
         if (o == null) {
             return false;
@@ -182,7 +183,7 @@ public class ArrayQueue
      *
      * @return the head of the queue or <code>null</code> if the queue is empty
      */
-    public Object peek()
+    public E peek()
     {
         if (start == end) {
             return null;
@@ -197,13 +198,14 @@ public class ArrayQueue
      *
      * @return the head of the queue or <code>null</code> if the queue is empty
      */
-    public Object poll()
+    public E poll()
     {
         if (start == end) {
             return null;
         }
 
-        Object result = queue[start];
+        E result = queue[start];
+        queue[start] = null; // Let the "result" be GCed as soon as possible
         start = increment(start);
         return result;
     }
@@ -232,9 +234,9 @@ public class ArrayQueue
      *
      * @return an iterator over the elements in this queue in proper order
      */
-    public Iterator iterator()
+    public Iterator<E> iterator()
     {
-        Object [] contents = new Object[size()];
+        E [] contents = (E []) new Object[size()];
 
         copyQueueToArray(contents);
 
@@ -260,7 +262,7 @@ public class ArrayQueue
     /**
      * Unsupported operation.
      */
-    public boolean retainAll(Collection c)
+    public boolean retainAll(Collection<?> c)
     {
         throw new UnsupportedOperationException();
     }
@@ -273,7 +275,7 @@ public class ArrayQueue
         int size = size();
 
         int largerCapacity = capacity * 2;
-        Object [] largerQueue = new Object[largerCapacity];
+        E [] largerQueue = (E []) new Object[largerCapacity];
         copyQueueToArray(largerQueue);
 
         queue = largerQueue;
@@ -298,7 +300,10 @@ public class ArrayQueue
      */
     public boolean equals(Object o)
     {
-        ArrayQueue oq = (ArrayQueue) o;
+        if (!(o instanceof ArrayQueue)) {
+            return false;
+        }
+        ArrayQueue<E> oq = (ArrayQueue<E>) o;
 
         if (size() != oq.size()) {
             return false;
@@ -327,7 +332,7 @@ public class ArrayQueue
      * otherQueue.length</code> must be greater than or equal to {@link
      * #size()}.
      */
-    private void copyQueueToArray(Object [] otherQueue)
+    private void copyQueueToArray(E [] otherQueue)
     {
         assert (otherQueue.length >= size());
 
@@ -370,7 +375,7 @@ public class ArrayQueue
      * @throws NullPointerException if o is <code>null</code>
      * @throws IllegalStateException if the call to {@link #offer(Object)} fails
      */
-    public boolean add(Object o)
+    public boolean add(E o)
     {
         if (o == null) {
             throw new NullPointerException();
@@ -406,14 +411,14 @@ public class ArrayQueue
      * <code>null</code>.
      * @throws IllegalStateException if the call to {@link #add(Object)} does
      */
-    public boolean addAll(Collection c)
+    public boolean addAll(Collection<? extends E> c)
     {
         if (c == this) {
             throw new IllegalArgumentException();
         }
 
         boolean result = false;
-        for (Iterator i = c.iterator(); i.hasNext();) {
+        for (Iterator<? extends E> i = c.iterator(); i.hasNext();) {
             result = add(i.next());
         }
 
@@ -458,7 +463,7 @@ public class ArrayQueue
      *
      * @throws NoSuchElementException if the queue is empty
      */
-    public Object remove()
+    public E remove()
     {
         if (isEmpty()) {
             throw new NoSuchElementException();

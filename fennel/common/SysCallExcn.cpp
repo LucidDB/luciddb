@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,42 +27,59 @@
 #include <errno.h>
 #include <sstream>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 SysCallExcn::SysCallExcn(std::string msgInit)
-    : FennelExcn(msgInit)
+    : FennelExcn(msgInit), errCode(getCurrentErrorCode())
 {
-#ifdef __MINGW32__
-    DWORD dwErr = GetLastError();
-#endif
+    init();
+}
+
+SysCallExcn::SysCallExcn(std::string msgInit, int errCodeInit)
+    : FennelExcn(msgInit), errCode(errCodeInit)
+{
+    init();
+}
+
+void SysCallExcn::init()
+{
     std::ostringstream oss;
     oss << msg;
     oss << ": ";
-#ifdef __MINGW32__
+
+#ifdef __MSVC__
     oss << "GetLastError() = ";
-    oss << dwErr;
-    errCode = dwErr;
+    oss << errCode;
 #else
-    char *pMsg = strerror(errno);
+    char *pMsg = strerror(errCode);
     if (pMsg) {
         oss << pMsg;
     } else {
         oss << "errno = ";
-        oss << errno;
+        oss << errCode;
     }
-    errCode = errno;
 #endif
     msg = oss.str();
     msg = FennelResource::instance().sysCallFailed(msg);
 }
 
+
 int SysCallExcn::getErrorCode()
 {
     return errCode;
+}
+
+int SysCallExcn::getCurrentErrorCode()
+{
+#ifdef __MING32__
+    return GetLastError();
+#else
+    return errno;
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package org.eigenbase.oj.util;
 
+import java.util.*;
+
 import openjava.mop.*;
 
 import openjava.ptree.*;
@@ -38,21 +40,22 @@ import org.eigenbase.util.*;
  */
 public abstract class OJUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {
         OJSystem.initConstants();
     }
 
-    public static final OJClass clazzVoid = OJClass.forClass(
+    public static final OJClass clazzVoid =
+        OJClass.forClass(
             void.class);
 
     public static final OJClass clazzObject =
         OJClass.forClass(
             java.lang.Object.class);
 
-    public static final OJClass clazzObjectArray = OJClass.arrayOf(
+    public static final OJClass clazzObjectArray =
+        OJClass.arrayOf(
             clazzObject);
 
     public static final OJClass clazzCollection =
@@ -133,7 +136,8 @@ public abstract class OJUtil
         OJClass.forClass(
             java.lang.Integer.class);
 
-    public static final TypeName tnInt = TypeName.forOJClass(
+    public static final TypeName tnInt =
+        TypeName.forOJClass(
             OJSystem.INT);
 
     public static final OJClass clazzList =
@@ -164,9 +168,11 @@ public abstract class OJUtil
      * Each thread's enclosing {@link OJClass}. Synthetic classes are declared
      * as inner classes of this.
      */
-    public static final ThreadLocal threadDeclarers = new ThreadLocal();
+    public static final ThreadLocal<OJClass> threadDeclarers =
+        new ThreadLocal<OJClass>();
 
-    private static ThreadLocal threadTypeFactories = new ThreadLocal();
+    private static final ThreadLocal<OJTypeFactory> threadTypeFactories =
+        new ThreadLocal<OJTypeFactory>();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -177,7 +183,7 @@ public abstract class OJUtil
 
     public static OJTypeFactory threadTypeFactory()
     {
-        return (OJTypeFactory) threadTypeFactories.get();
+        return threadTypeFactories.get();
     }
 
     public static RelDataType ojToType(
@@ -220,7 +226,7 @@ public abstract class OJUtil
         RelDataType rowType,
         RelDataTypeFactory typeFactory)
     {
-        OJClass declarer = (OJClass) threadDeclarers.get();
+        OJClass declarer = threadDeclarers.get();
         if (declarer == null) {
             assert (false) : "threadDeclarers.get() != null";
         }
@@ -276,14 +282,18 @@ public abstract class OJUtil
     {
         if (clazz.isArray()) {
             return clazz.getComponentType();
-        } else if (clazzIterator.isAssignableFrom(clazz)
+        } else if (
+            clazzIterator.isAssignableFrom(clazz)
             || clazzEnumeration.isAssignableFrom(clazz)
             || clazzVector.isAssignableFrom(clazz)
             || clazzCollection.isAssignableFrom(clazz)
-            || clazzResultSet.isAssignableFrom(clazz)) {
+            || clazzResultSet.isAssignableFrom(clazz))
+        {
             return clazzObject;
-        } else if (clazzHashtable.isAssignableFrom(clazz)
-            || clazzMap.isAssignableFrom(clazz)) {
+        } else if (
+            clazzHashtable.isAssignableFrom(clazz)
+            || clazzMap.isAssignableFrom(clazz))
+        {
             return clazzEntry;
         } else {
             return null;
@@ -333,10 +343,9 @@ public abstract class OJUtil
     public static Expression box(OJClass clazz, Expression exp)
     {
         if (clazz.isPrimitive()) {
-            return
-                new AllocationExpression(
-                    clazz.primitiveWrapper(),
-                    new ExpressionList(exp));
+            return new AllocationExpression(
+                clazz.primitiveWrapper(),
+                new ExpressionList(exp));
         } else {
             return exp;
         }
@@ -393,6 +402,39 @@ public abstract class OJUtil
         } catch (Exception e) {
             throw Util.newInternal(e, "while deriving type for '" + exp + "'");
         }
+    }
+
+    /**
+     * Counts the number of nodes in a parse tree.
+     *
+     * @param parseTree tree to walk
+     *
+     * @return count of nodes
+     */
+    public static int countParseTreeNodes(ParseTree parseTree)
+    {
+        int n = 1;
+        if (parseTree instanceof NonLeaf) {
+            Object [] contents = ((NonLeaf) parseTree).getContents();
+            for (Object obj : contents) {
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        } else if (parseTree instanceof openjava.ptree.List) {
+            Enumeration e = ((openjava.ptree.List) parseTree).elements();
+            while (e.hasMoreElements()) {
+                Object obj = (Object) e.nextElement();
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        }
+        return n;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,18 +46,24 @@ void SegmentTestBase::openStorage(DeviceMode openMode)
 
 CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
 {
-    SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+    SegmentAccessor segmentAccessor(pLinearSegment, pCache);
     SegPageLock pageLock(segmentAccessor);
     if (opType == OP_ALLOCATE) {
         PageId pageId = pageLock.allocatePage(objId);
         assert(Segment::getLinearBlockNum(pageId) == iPage);
         CachePage &page = pageLock.getPage();
-        fillPage(page,iPage);
+        fillPage(page, iPage);
         pageLock.dontUnlock();
         return &page;
     } else {
         PageId pageId = Segment::getLinearPageId(iPage);
-        pageLock.lockPage(pageId,getLockMode(opType));
+        // Prepare the page for update before locking it
+        if (opType == OP_WRITE_SEQ || opType == OP_WRITE_RAND
+            || opType == OP_WRITE_SKIP)
+        {
+            pLinearSegment->updatePage(pageId, true);
+        }
+        pageLock.lockPage(pageId, getLockMode(opType));
         CachePage *pPage = pageLock.isLocked() ? &(pageLock.getPage()) : NULL;
         pageLock.dontUnlock();
         return pPage;
@@ -66,17 +72,17 @@ CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
 
 void SegmentTestBase::unlockPage(CachePage &page,LockMode lockMode)
 {
-    getCache().unlockPage(page,lockMode);
+    getCache().unlockPage(page, lockMode);
 }
 
 void SegmentTestBase::prefetchPage(uint iPage)
 {
     PageId pageId = Segment::getLinearPageId(iPage);
     BlockId blockId = pLinearSegment->translatePageId(pageId);
-    getCache().prefetchPage(blockId,pLinearSegment.get());
+    getCache().prefetchPage(blockId, pLinearSegment.get());
 }
 
-void SegmentTestBase::prefetchBatch(uint,uint)
+void SegmentTestBase::prefetchBatch(uint, uint)
 {
     permAssert(false);
 }
@@ -86,7 +92,7 @@ void SegmentTestBase::testAllocate()
     assert(pRandomSegment);
 
     uint i;
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     for (i = 0; i < nRandomOps; ++i) {
 #ifdef HAVE_SCHED_H
         sched_yield();
@@ -111,9 +117,9 @@ void SegmentTestBase::testAllocate()
 void SegmentTestBase::testDeallocate()
 {
     assert(pRandomSegment);
-        
+
     uint i;
-    SegmentAccessor segmentAccessor(pRandomSegment,pCache);
+    SegmentAccessor segmentAccessor(pRandomSegment, pCache);
     for (i = 0; i < nRandomOps; ++i) {
 #ifdef HAVE_SCHED_H
         sched_yield();

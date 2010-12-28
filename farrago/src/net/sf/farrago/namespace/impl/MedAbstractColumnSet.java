@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,18 +24,18 @@ package net.sf.farrago.namespace.impl;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -49,13 +49,12 @@ public abstract class MedAbstractColumnSet
     extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String [] localName;
     private final String [] foreignName;
     private Properties tableProps;
-    private Map columnPropMap;
+    private Map<String, Properties> columnPropMap;
     private FarragoPreparingStmt preparingStmt;
     private CwmNamedColumnSet cwmColumnSet;
     private SqlAccessType allowedAccess;
@@ -79,7 +78,7 @@ public abstract class MedAbstractColumnSet
         String [] foreignName,
         RelDataType rowType,
         Properties tableProps,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
     {
         super(null, localName[localName.length - 1], rowType);
         this.localName = localName;
@@ -97,17 +96,13 @@ public abstract class MedAbstractColumnSet
         return localName;
     }
 
-    /**
-     * @return the name this ColumnSet is known by within the Farrago system
-     */
+    // implement FarragoMedColumnSet
     public String [] getLocalName()
     {
         return localName;
     }
 
-    /**
-     * @return the name of this ColumnSet as it is known on the foreign server
-     */
+    // implement FarragoMedColumnSet
     public String [] getForeignName()
     {
         return foreignName;
@@ -125,7 +120,7 @@ public abstract class MedAbstractColumnSet
      * @return map (from column name to Properties) of column options specified
      * by CREATE FOREIGN TABLE
      */
-    public Map getColumnPropertyMap()
+    public Map<String, Properties> getColumnPropertyMap()
     {
         return columnPropMap;
     }
@@ -155,9 +150,9 @@ public abstract class MedAbstractColumnSet
     }
 
     // implement SqlValidatorTable
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     // implement SqlValidatorTable
@@ -183,7 +178,7 @@ public abstract class MedAbstractColumnSet
      * identifiers, e.g. x.y.z or x."y".z
      * @param serverMofId if not null, the invoked UDX can access the data
      * server with the given MOFID at runtime via {@link
-     * FarragoUdrRuntime.getDataServerRuntimeSupport}
+     * net.sf.farrago.runtime.FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
      *
      * @return generated relational expression producing the UDX results
@@ -195,65 +190,118 @@ public abstract class MedAbstractColumnSet
         String serverMofId,
         RexNode [] args)
     {
-        // Parse the specific name of the UDX.
-        SqlIdentifier udxId;
-        try {
-            SqlParser parser = new SqlParser(udxSpecificName);
-            SqlNode parsedId = parser.parseExpression();
-            udxId = (SqlIdentifier) parsedId;
-        } catch (Exception ex) {
-            throw FarragoResource.instance().MedInvalidUdxId.ex(
-                udxSpecificName,
-                ex);
+        // TODO jvs 13-Oct-2006:  phase out these vestigial parameters
+        assert (cluster == getPreparingStmt().getRelOptCluster());
+        assert (connection == getPreparingStmt());
+
+        return FarragoJavaUdxRel.newUdxRel(
+            getPreparingStmt(),
+            getRowType(),
+            udxSpecificName,
+            serverMofId,
+            args,
+            RelNode.emptyArray);
+    }
+
+    /**
+     * Converts one RelNode to another RelNode with specified RowType. New
+     * columns are filled with nulls.
+     *
+     * @param cluster same as for toRel
+     * @param child original RelNode
+     * @param targetRowType RowType to map to
+     * @param srcRowType RowType of external data source
+     */
+    protected RelNode toLenientRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RelDataType targetRowType,
+        RelDataType srcRowType)
+    {
+        ArrayList<RexNode> rexNodeList = new ArrayList();
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        FarragoWarningQueue warningQueue =
+            getPreparingStmt().getStmtValidator().getWarningQueue();
+        String objectName = this.localName[this.localName.length - 1];
+
+        HashMap<String, RelDataType> srcMap = new HashMap();
+        for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+            srcMap.put(srcField.getName(), srcField.getType());
         }
 
-        // Look up the UDX in the catalog.
-        List<SqlOperator> list =
-            getPreparingStmt().getSqlOperatorTable().lookupOperatorOverloads(
-                udxId,
-                SqlFunctionCategory.UserDefinedSpecificFunction,
-                SqlSyntax.Function);
-        FarragoUserDefinedRoutine udx = null;
-        if (list.size() == 1) {
-            SqlOperator obj = list.get(0);
-            if (obj instanceof FarragoUserDefinedRoutine) {
-                udx = (FarragoUserDefinedRoutine) obj;
-                if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {
-                    // Not a UDX.
-                    udx = null;
+        ArrayList<String> allTargetFields = new ArrayList();
+        int index = 0;
+        for (RelDataTypeField targetField : targetRowType.getFieldList()) {
+            allTargetFields.add(targetField.getName());
+            RelDataType type;
+
+            // target field is in child
+            if ((index = child.getRowType().getFieldOrdinal(
+                        targetField.getName()))
+                != -1)
+            {
+                if ((type = srcMap.get(targetField.getName()))
+                    != targetField.getType())
+                {
+                    // field type has been cast
+                    warningQueue.postWarning(
+                        FarragoResource.instance().TypeChangeWarning.ex(
+                            objectName,
+                            targetField.getName(),
+                            type.toString(),
+                            targetField.getType().toString()));
+                }
+                rexNodeList.add(
+                    new RexInputRef(
+                        index,
+                        child.getRowType().getField(
+                            targetField.getName()).getType()));
+            } else { // target field is not in child
+                rexNodeList.add(
+                    rexBuilder.makeCast(
+                        targetField.getType(),
+                        rexBuilder.constantNull()));
+
+                // check if type-incompatibility between source and target
+                if ((type = srcMap.get(targetField.getName())) != null) {
+                    warningQueue.postWarning(
+                        FarragoResource.instance().IncompatibleTypeChangeWarning
+                        .ex(
+                            objectName,
+                            targetField.getName(),
+                            type.toString(),
+                            targetField.getType().toString()));
+                } else {
+                    // field in target has been deleted in source
+                    warningQueue.postWarning(
+                        FarragoResource.instance().DeletedFieldWarning.ex(
+                            objectName,
+                            targetField.getName()));
                 }
             }
         }
-        if (udx == null) {
-            throw FarragoResource.instance().MedUnknownUdx.ex(
-                udxId.toString());
+
+        // check if data source has added fields
+        for (String srcField : srcMap.keySet()) {
+            if (!allTargetFields.contains(srcField)) {
+                warningQueue.postWarning(
+                    FarragoResource.instance().AddedFieldWarning.ex(
+                        objectName,
+                        srcField));
+            }
         }
 
-        // UDX wants all types nullable, so construct a corresponding
-        // type descriptor for the result of the call.
-        RexBuilder rexBuilder = cluster.getRexBuilder();
-        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType resultType =
-            typeFactory.createTypeWithNullability(
-                getRowType(),
-                true);
+        // create a new RelNode.
+        RelNode calcRel =
+            CalcRel.createProject(
+                child,
+                rexNodeList,
+                null);
 
-        // Create a relational algebra expression for invoking the UDX.
-        RexNode rexCall = rexBuilder.makeCall(udx, args);
-        RelNode udxRel =
-            new FarragoJavaUdxRel(
-                cluster,
-                rexCall,
-                resultType,
-                serverMofId,
-                RelNode.emptyArray);
-
-        // Optimizer wants us to preserve original types,
-        // so cast back for the final result.
         return RelOptUtil.createCastRel(
-                udxRel,
-                getRowType(),
-                true);
+            calcRel,
+            targetRowType,
+            true);
     }
 }
 

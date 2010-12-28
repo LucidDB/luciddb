@@ -89,20 +89,22 @@
           file="${open.dir}/luciddb/test/sql/concurrency/delete-insert.mtsql"/>
       </test>
 
+      <test name="insert-analyze" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-analyze.mtsql"/>
+      </test>
+
+      <test name="alterTruncate" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/alterTruncate.mtsql"/>
+      </test>
+
       <test name="cretdrp-read" requiresSuccess="setup">
-        <!-- LDB-118 -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
       </test>
 
       <test name="cretdrp-write" requiresSuccess="setup">
-        <!-- partly commented out; fixed by LDB-118 -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>
       </test>
@@ -112,6 +114,35 @@
           file="${open.dir}/luciddb/test/sql/concurrency/failthread.mtsql"/>
       </test>
 
+      <test name="snapshots" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/snapshots.mtsql"/>
+      </test>
+
+      <test name="insert-dbasessions" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-dbasessions.mtsql"/>
+      </test>
+
+      <test name="alteradd-dml">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/alteradd-dml.mtsql"/>
+      </test>
+
+      <test name="concurrentMerges">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/concurrentMerges.mtsql"/>
+      </test>
+
+      <test name="labels">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/labels.mtsql"/>
+      </test>
+
+      <test name="labelsReportsEtl">
+        <junit-sql
+            file="${open.dir}/luciddb/test/sql/concurrency/labelsReportsEtl.mtsql"/>
+      </test>
 
 <!-- set up servers (for use in large local data set and foreign data source-->
 
@@ -187,8 +218,20 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/delete2.mtsql"/>
       </test>
 
+      <test name="large-analyze" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/analyze.mtsql"/>
+      </test>
+
+      <test name="large-alter" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/alterRebuild.mtsql"/>
+      </test>
+
+        <!-- REVIEW jvs 9-Dec-2006:  tests below used to hang due to
+             LDB-118; that is now fixed, but some of them are still
+             super-slow because they sleep 5 seconds for every row
+             of a big table; for now I'm leaving them disabled -->
+
       <test name="large-insert-select" requiresSuccess="preparedata">
-        <!-- this test hangs; may be fixed by LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -196,7 +239,6 @@
       </test>
       
       <test name="large-ddlselect" requiresSuccess="preparedata">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -204,7 +246,6 @@
       </test>
 
       <test name="large-ddldelete" requiresSuccess="preparedata">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -212,7 +253,6 @@
       </test>
 
       <test name="large-ddlinsert" requiresSuccess="preparedata">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -220,7 +260,6 @@
       </test>
 
       <test name="large-ddlmerge" requiresSuccess="preparedata">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -228,7 +267,6 @@
       </test>
 
       <test name="large-selectddl" requiresSuccess="preparedata">
-        <!-- this test hangs sometimes; may be fixed by LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>        
@@ -236,7 +274,6 @@
       </test>
 
       <test name="large-insertddl" requiresSuccess="preparedata">
-        <!-- this test hangs sometimes; may be fixed by LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>        
@@ -247,7 +284,6 @@
 <!-- test cases for foreign data sources -->
 
       <test name="importschema" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -255,7 +291,6 @@
       </test>
 
      <test name="creforeigntbl" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -263,7 +298,6 @@
       </test>
 
       <test name="crelocaltbl" requiresSuccess="creforeigntbl">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -271,7 +305,6 @@
       </test>
 
       <test name="selectonly" requiresSuccess="crelocaltbl">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -279,7 +312,6 @@
       </test>
  
       <test name="insert2local" requiresSuccess="crelocaltbl">
-        <!-- LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -287,7 +319,6 @@
       </test>
 
       <test name="mixedops" requiresSuccess="crelocaltbl">
-        <!-- partly commented out; may be fixed by LDB-118 -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>

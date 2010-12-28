@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
  */
 public class SqlOperandCountRange
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // common usage instances
@@ -79,7 +78,7 @@ public class SqlOperandCountRange
 
     public SqlOperandCountRange(int count)
     {
-        this(new Integer[] { new Integer(count) });
+        this(new Integer[] { count });
     }
 
     public SqlOperandCountRange(List<Integer> list)
@@ -92,7 +91,7 @@ public class SqlOperandCountRange
         int count1,
         int count2)
     {
-        this(new Integer[] { new Integer(count1), new Integer(count2) });
+        this(new Integer[] { count1, count2 });
     }
 
     public SqlOperandCountRange(
@@ -100,12 +99,7 @@ public class SqlOperandCountRange
         int count2,
         int count3)
     {
-        this(
-            new Integer[] {
-                new Integer(count1),
-            new Integer(count2),
-            new Integer(count3)
-            });
+        this(new Integer[] { count1, count2, count3 });
     }
 
     //~ Methods ----------------------------------------------------------------

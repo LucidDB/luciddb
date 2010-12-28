@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,9 +30,10 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * LRUVictim is the attributes class which must be a base for any CachePage type
- * which will be cached using an LRUVictimPolicy.  
+ * which will be cached using an LRUVictimPolicy.
  */
-class LRUVictim : public IntrusiveDListNode
+class FENNEL_CACHE_EXPORT LRUVictim
+    : public IntrusiveDListNode
 {
     // no data; base IntrusiveDListNode is used to order LRUVictims in an
     // intrusive doubly-linked list.
@@ -48,7 +49,7 @@ class LRUVictim : public IntrusiveDListNode
  *
  * Note that any realization for PageT must inherit both CachePage and
  * LRUVictim as bases.
- * 
+ *
  */
 template <class PageT>
 class LRUVictimPolicy
@@ -57,24 +58,19 @@ class LRUVictimPolicy
      * SXMutex protecting LRU page chain.
      */
     SXMutex mutex;
-    
+
     /**
      * Most-recently accessed page; this is one end of a queue implemented
      * as a doubly-linked list.
      */
     PageT *pageLRU;
-    
+
     /**
      * Least-recently accessed page; this is the other end of a
      * queue implemented as a doubly-linked list.
      */
     PageT *pageMRU;
 
-    /**
-     * Guard for write access to mutex.
-     */
-    typedef SXMutexExclusiveGuard ExclusiveGuard;
-    
 public:
 
     /**
@@ -85,6 +81,17 @@ public:
      * iterating over the doubly-linked list of pages from LRU to MRU.
      */
     typedef IntrusiveDListIter<PageT> PageIterator;
+
+    /**
+     * All models for VictimPolicy must define a nested public type
+     * DirtyPageIterator, which is used by CacheImpl to iterate over pages
+     * that can potentially be flushed by the lazy page writer that runs
+     * in a background thread.  In the case of LRUVictimPolicy, this iterator
+     * is identical to PageIterator.  A separate iterator is defined to
+     * allow victimization policies to optimize the iterator to exclude
+     * "clean" pages.
+     */
+    typedef IntrusiveDListIter<PageT> DirtyPageIterator;
 
     /**
      * All models for VictimPolicy must define a nested public type SharedGuard,
@@ -99,12 +106,33 @@ public:
     typedef SXMutexSharedGuard SharedGuard;
 
     /**
+     * Guard for write access to mutex.
+     */
+    typedef SXMutexExclusiveGuard ExclusiveGuard;
+
+    /**
      * All models for VictimPolicy must have a default constructor.
      */
     LRUVictimPolicy()
     {
         pageLRU = NULL;
         pageMRU = NULL;
+    }
+
+    LRUVictimPolicy(const CacheParams &params)
+    {
+        pageLRU = NULL;
+        pageMRU = NULL;
+    }
+
+    /**
+     * Receives notification from CacheImpl, indicating the total number of
+     * buffer pages in the cache.
+     *
+     * @param nCachePages number of buffer pages in the cache
+     */
+    void setAllocatedPageCount(uint nCachePages)
+    {
     }
 
     /**
@@ -117,6 +145,7 @@ public:
     void registerPage(PageT &page)
     {
         // TODO:  use a DList container to avoid this edge case
+        ExclusiveGuard exclusiveGuard(mutex);
         if (!pageLRU) {
             pageLRU = &page;
         } else {
@@ -134,9 +163,14 @@ public:
      */
     void unregisterPage(PageT &page)
     {
-        // NOTE:  for now we assume that CacheImpl only registers pages on
-        // initialization and unregisters them on shutdown (no dynamic page
-        // allocation).  So don't bother unlinking the page.
+        ExclusiveGuard exclusiveGuard(mutex);
+        if (&page == pageLRU) {
+            pageLRU = (PageT *) (page.getNext());
+        }
+        if (&page == pageMRU) {
+            pageMRU = (PageT *) (page.getPrev());
+        }
+        page.IntrusiveDListNode::detach();
     }
 
     /**
@@ -147,8 +181,9 @@ public:
      * access results in the page being moved to the MRU end of the list.
      *
      * @param page the page being accessed
+     * @param pin if true, the page being accessed will be pinned in the cache
      */
-    void notifyPageAccess(PageT &page)
+    void notifyPageAccess(PageT &page, bool pin)
     {
         ExclusiveGuard exclusiveGuard(mutex);
         if (&page == pageMRU) {
@@ -189,12 +224,13 @@ public:
      * notifyPageAccess notification is received.
      *
      * @param page the page being mapped
+     * @param pin if true, the page being mapped will be pinned in the cache
      */
-    void notifyPageMap(PageT &page)
+    void notifyPageMap(PageT &page, bool pin)
     {
         // first access for a newly mapped page will not get a corresponding
         // call to notifyPageAccess, so do it now
-        notifyPageAccess(page);
+        notifyPageAccess(page, pin);
     }
 
     /**
@@ -202,12 +238,54 @@ public:
      * The Page object still has the ID being unmapped.
      *
      * @param page the page being unmapped
+     *
+     * @param discard true if the page is also being discarded from the cache
      */
-    void notifyPageUnmap(PageT &page)
+    void notifyPageUnmap(PageT &page, bool discard)
     {
         // move the unmapped page to the MRU position so that it will not be
         // treated as a candidate for flush
-        notifyPageAccess(page);
+        notifyPageAccess(page, false);
+    }
+
+    /**
+     * Receives notification from CacheImpl that a page no longer needs to be
+     * pinned.
+     *
+     * @param page the unpinned page
+     */
+    void notifyPageUnpin(PageT &page)
+    {
+    }
+
+    /**
+     * Receives notification from CacheImpl that a page has been marked as
+     * dirty.
+     *
+     * @param page the dirty page
+     */
+    void notifyPageDirty(PageT &page)
+    {
+    }
+
+    /**
+     * Receives notification from CacheImpl that a page is no longer dirty.
+     *
+     * @param page the clean page
+     */
+    void notifyPageClean(PageT &page)
+    {
+    }
+
+    /**
+     * Receives notification from CacheImpl that a page has been discarded
+     * from the cache.  This allows the policy to remove any history of
+     * the page, if it's tracking that information.
+     *
+     * @param blockId the blockId of the page being deallocated
+     */
+    void notifyPageDiscard(BlockId blockId)
+    {
     }
 
     /**
@@ -228,10 +306,23 @@ public:
      * @return a pair of PageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range
      */
-    std::pair<PageIterator,PageIterator> getVictimRange()
+    std::pair<PageIterator, PageIterator> getVictimRange()
     {
-        return std::pair<PageIterator,PageIterator>(
-            PageIterator(pageLRU),PageIterator());
+        return std::pair<PageIterator, PageIterator>(
+            PageIterator(pageLRU), PageIterator());
+    }
+
+    /**
+     * Provides a range of candidate victims for flushing to CacheImpl.
+     *
+     * @return a pair of DirtyPageIterators, where pair.first references
+     * the best victim and pair.second is the end of the victim range
+     */
+    std::pair<DirtyPageIterator, DirtyPageIterator> getDirtyVictimRange()
+    {
+        return
+            static_cast<std::pair<DirtyPageIterator, DirtyPageIterator> >(
+                getVictimRange());
     }
 };
 

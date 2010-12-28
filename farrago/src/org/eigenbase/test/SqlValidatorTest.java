@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,9 +26,8 @@ import java.nio.charset.*;
 
 import java.util.logging.*;
 
-import junit.framework.*;
-
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -39,7 +38,7 @@ import org.eigenbase.util.*;
  *
  * <p>If you want to run these same tests in a different environment, create a
  * derived class whose {@link #getTester} returns a different implementation of
- * {@link Tester}.
+ * {@link org.eigenbase.test.SqlValidatorTestCase.Tester}.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -48,7 +47,6 @@ import org.eigenbase.util.*;
 public class SqlValidatorTest
     extends SqlValidatorTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -57,6 +55,7 @@ public class SqlValidatorTest
      */
     protected static final boolean todo = false;
     public static final boolean todoTypeInference = false;
+    private static final String ANY = "(?s).*";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -90,11 +89,14 @@ public class SqlValidatorTest
 
     public void testTypeOfAs()
     {
-        checkColumnType("select 1 as c1 from (values (true))",
+        checkColumnType(
+            "select 1 as c1 from (values (true))",
             "INTEGER NOT NULL");
-        checkColumnType("select 'hej' as c1 from (values (true))",
+        checkColumnType(
+            "select 'hej' as c1 from (values (true))",
             "CHAR(3) NOT NULL");
-        checkColumnType("select x'deadbeef' as c1 from (values (true))",
+        checkColumnType(
+            "select x'deadbeef' as c1 from (values (true))",
             "BINARY(4) NOT NULL");
         checkColumnType(
             "select cast(null as boolean) as c1 from (values (true))",
@@ -105,20 +107,22 @@ public class SqlValidatorTest
     {
         checkExpType("'abc'", "CHAR(3) NOT NULL");
         checkExpType("n'abc'", "CHAR(3) NOT NULL");
-        checkExpType("_iso_8859-2'abc'", "CHAR(3) NOT NULL");
+        checkExpType("_UTF16'abc'", "CHAR(3) NOT NULL");
         checkExpType("'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
         checkExpType(
             "'ab'" + NL + "'cd'" + NL + "'ef'" + NL + "'gh'" + NL
             + "'ij'" + NL + "'kl'",
             "CHAR(12) NOT NULL");
         checkExpType("n'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
-        checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
+        checkExpType("_UTF16'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
 
-        checkExpFails("^x'abc'^",
+        checkExpFails(
+            "^x'abc'^",
             "Binary literal string must contain an even number of hexits");
         checkExpType("x'abcd'", "BINARY(2) NOT NULL");
         checkExpType("x'abcd'" + NL + "'ff001122aabb'", "BINARY(8) NOT NULL");
-        checkExpType("x'aaaa'" + NL + "'bbbb'" + NL + "'0000'" + NL + "'1111'",
+        checkExpType(
+            "x'aaaa'" + NL + "'bbbb'" + NL + "'0000'" + NL + "'1111'",
             "BINARY(8) NOT NULL");
 
         checkExpType("1234567890", "INTEGER NOT NULL");
@@ -141,33 +145,40 @@ public class SqlValidatorTest
     public void testAndOrIllegalTypesFails()
     {
         //TODO need col+line number
-        checkWholeExpFails("'abc' AND FaLsE",
+        checkWholeExpFails(
+            "'abc' AND FaLsE",
             "(?s).*'<CHAR.3.> AND <BOOLEAN>'.*");
 
-        checkWholeExpFails("TRUE OR 1", "(?s).*");
+        checkWholeExpFails("TRUE OR 1", ANY);
 
-        checkWholeExpFails("unknown OR 1.0",
-            "(?s).*");
+        checkWholeExpFails(
+            "unknown OR 1.0",
+            ANY);
 
-        checkWholeExpFails("true OR 1.0e4",
-            "(?s).*");
+        checkWholeExpFails(
+            "true OR 1.0e4",
+            ANY);
 
         if (todo) {
-            checkWholeExpFails("TRUE OR (TIME '12:00' AT LOCAL)",
-                "(?s).*");
+            checkWholeExpFails(
+                "TRUE OR (TIME '12:00' AT LOCAL)",
+                ANY);
         }
     }
 
     public void testNotIllegalTypeFails()
     {
-        //TODO need col+line number
-        assertExceptionIsThrown("select NOT 3.141 from (values(true))",
-            "(?s).*'NOT<DECIMAL.4, 3.>'.*");
+        assertExceptionIsThrown(
+            "select ^NOT 3.141^ from (values(true))",
+            "(?s).*Cannot apply 'NOT' to arguments of type 'NOT<DECIMAL.4, 3.>'.*");
 
-        assertExceptionIsThrown("select NOT 'abc' from (values(true))",
-            "(?s).*");
+        assertExceptionIsThrown(
+            "select ^NOT 'abc'^ from (values(true))",
+            ANY);
 
-        assertExceptionIsThrown("select NOT 1 from (values(true))", "(?s).*");
+        assertExceptionIsThrown(
+            "select ^NOT 1^ from (values(true))",
+            ANY);
     }
 
     public void testIs()
@@ -185,22 +196,26 @@ public class SqlValidatorTest
 
         check("select 1 IS NULL FROM (values(true))");
         check("select 1.2 IS NULL FROM (values(true))");
-        checkExpFails("'abc' IS NOT UNKNOWN", "(?s).*Cannot apply.*");
+        checkExpFails("^'abc' IS NOT UNKNOWN^", "(?s).*Cannot apply.*");
     }
 
     public void testIsFails()
     {
-        assertExceptionIsThrown("select 1 IS TRUE FROM (values(true))",
+        assertExceptionIsThrown(
+            "select ^1 IS TRUE^ FROM (values(true))",
             "(?s).*'<INTEGER> IS TRUE'.*");
 
-        assertExceptionIsThrown("select 1.1 IS NOT FALSE FROM (values(true))",
-            "(?s).*");
+        assertExceptionIsThrown(
+            "select ^1.1 IS NOT FALSE^ FROM (values(true))",
+            ANY);
 
-        assertExceptionIsThrown("select 1.1e1 IS NOT FALSE FROM (values(true))",
+        assertExceptionIsThrown(
+            "select ^1.1e1 IS NOT FALSE^ FROM (values(true))",
             "(?s).*Cannot apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
 
-        assertExceptionIsThrown("select 'abc' IS NOT TRUE FROM (values(true))",
-            "(?s).*");
+        assertExceptionIsThrown(
+            "select ^'abc' IS NOT TRUE^ FROM (values(true))",
+            ANY);
     }
 
     public void testScalars()
@@ -228,8 +243,8 @@ public class SqlValidatorTest
 
     public void testScalarsFails()
     {
-        //TODO need col+line number
-        assertExceptionIsThrown("select 1+TRUE from (values(true))",
+        assertExceptionIsThrown(
+            "select ^1+TRUE^ from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <BOOLEAN>'\\. Supported form\\(s\\):.*");
     }
 
@@ -242,9 +257,11 @@ public class SqlValidatorTest
     {
         checkExpType("+interval '1' second", "INTERVAL SECOND NOT NULL");
         checkExpType("-interval '1' month", "INTERVAL MONTH NOT NULL");
-        checkFails("SELECT -'abc' from (values(true))",
+        checkFails(
+            "SELECT ^-'abc'^ from (values(true))",
             "(?s).*Cannot apply '-' to arguments of type '-<CHAR.3.>'.*");
-        checkFails("SELECT +'abc' from (values(true))",
+        checkFails(
+            "SELECT ^+'abc'^ from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '\\+<CHAR.3.>'.*");
     }
 
@@ -297,25 +314,35 @@ public class SqlValidatorTest
 
     public void testEqualNotEqualFails()
     {
-        checkExpFails("''<>1",
+        checkExpFails(
+            "^''<>1^",
             "(?s).*Cannot apply '<>' to arguments of type '<CHAR.0.> <> <INTEGER>'.*");
-        checkExpFails("'1'>=1",
+        checkExpFails(
+            "^'1'>=1^",
             "(?s).*Cannot apply '>=' to arguments of type '<CHAR.1.> >= <INTEGER>'.*");
-        checkExpFails("1<>n'abc'",
+        checkExpFails(
+            "^1<>n'abc'^",
             "(?s).*Cannot apply '<>' to arguments of type '<INTEGER> <> <CHAR.3.>'.*");
-        checkExpFails("''=.1",
+        checkExpFails(
+            "^''=.1^",
             "(?s).*Cannot apply '=' to arguments of type '<CHAR.0.> = <DECIMAL.1..1.>'.*");
-        checkExpFails("true<>1e-1",
+        checkExpFails(
+            "^true<>1e-1^",
             "(?s).*Cannot apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");
-        checkExpFails("false=''",
+        checkExpFails(
+            "^false=''^",
             "(?s).*Cannot apply '=' to arguments of type '<BOOLEAN> = <CHAR.0.>'.*");
-        checkExpFails("x'a4'=0.01",
+        checkExpFails(
+            "^x'a4'=0.01^",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <DECIMAL.3, 2.>'.*");
-        checkExpFails("x'a4'=1",
+        checkExpFails(
+            "^x'a4'=1^",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
-        checkExpFails("x'13'<>0.01",
+        checkExpFails(
+            "^x'13'<>0.01^",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.1.> <> <DECIMAL.3, 2.>'.*");
-        checkExpFails("x'abcd'<>1",
+        checkExpFails(
+            "^x'abcd'<>1^",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.2.> <> <INTEGER>'.*");
     }
 
@@ -327,19 +354,23 @@ public class SqlValidatorTest
 
     public void testBinaryStringFails()
     {
-        assertExceptionIsThrown("select x'ffee'='abc' from (values(true))",
+        assertExceptionIsThrown(
+            "select ^x'ffee'='abc'^ from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.2.> = <CHAR.3.>'.*");
-        assertExceptionIsThrown("select x'ff'=88 from (values(true))",
+        assertExceptionIsThrown(
+            "select ^x'ff'=88^ from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
-        assertExceptionIsThrown("select x''<>1.1e-1 from (values(true))",
+        assertExceptionIsThrown(
+            "select ^x''<>1.1e-1^ from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DOUBLE>'.*");
-        assertExceptionIsThrown("select x''<>1.1 from (values(true))",
+        assertExceptionIsThrown(
+            "select ^x''<>1.1^ from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
     public void testStringLiteral()
     {
-        check("select n''=_iso_8859-1'abc' from (values(true))");
+        check("select n''=_iso-8859-1'abc' from (values(true))");
         check("select N'f'<>'''' from (values(true))");
     }
 
@@ -350,16 +381,18 @@ public class SqlValidatorTest
         check("select 'foo'\n\r'bar' from (values(true))");
         check("select 'foo'\r\n'bar' from (values(true))");
         check("select 'foo'\n'bar' from (values(true))");
-        checkFails("select 'foo' /* comment */ ^'bar'^ from (values(true))",
+        checkFails(
+            "select 'foo' /* comment */ ^'bar'^ from (values(true))",
             "String literal continued on same line");
         check("select 'foo' -- comment\r from (values(true))");
-        checkFails("select 'foo' ^'bar'^ from (values(true))",
+        checkFails(
+            "select 'foo' ^'bar'^ from (values(true))",
             "String literal continued on same line");
     }
 
     public void testArithmeticOperators()
     {
-        checkExp("pow(2,3)");
+        checkExp("power(2,3)");
         checkExp("aBs(-2.3e-2)");
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
@@ -370,39 +403,31 @@ public class SqlValidatorTest
         checkExp("exp(3.67)");
     }
 
-    public void testArithmeticOperatorsTypes()
-    {
-        // todo: move these tests to SqlOperatorTests
-        checkExpType("pow(2,3)", "todo: DOUBLE");
-        checkExpType("aBs(-2.3e-2)", "todo: DOUBLE");
-        checkExpType("aBs(5000000000)", "todo: BIGINT");
-        checkExpType("aBs(-interval '1-1' year to month)",
-            "todo: INTERVAL YEAR TO MONTH");
-        checkExpType("aBs(+interval '1:1' hour to minute)",
-            "todo: INTERVAL HOUR TO MINUTE");
-        checkExpType("MOD(5,2)", "todo: INTEGER");
-        checkExpType("ln(5.43  )", "todo: DOUBLE");
-        checkExpType("log10(- -.2  )", "todo: DOUBLE");
-        checkExpType("exp(3)", "todo: DOUBLE");
-    }
-
     public void testArithmeticOperatorsFails()
     {
-        checkExpFails("pow(2,'abc')",
-            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
-        checkExpFails("pow(true,1)",
-            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
-        checkExpFails("mod(x'1100',1)",
+        checkExpFails(
+            "^power(2,'abc')^",
+            "(?s).*Cannot apply 'POWER' to arguments of type 'POWER.<INTEGER>, <CHAR.3.>.*");
+        checkExpFails(
+            "^power(true,1)^",
+            "(?s).*Cannot apply 'POWER' to arguments of type 'POWER.<BOOLEAN>, <INTEGER>.*");
+        checkExpFails(
+            "^mod(x'1100',1)^",
             "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BINARY.2.>, <INTEGER>.*");
-        checkExpFails("mod(1, x'1100')",
+        checkExpFails(
+            "^mod(1, x'1100')^",
             "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BINARY.2.>.*");
-        checkExpFails("abs(x'')",
+        checkExpFails(
+            "^abs(x'')^",
             "(?s).*Cannot apply 'ABS' to arguments of type 'ABS.<BINARY.0.>.*");
-        checkExpFails("ln(x'face12')",
+        checkExpFails(
+            "^ln(x'face12')^",
             "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BINARY.3.>.*");
-        checkExpFails("log10(x'fa')",
+        checkExpFails(
+            "^log10(x'fa')^",
             "(?s).*Cannot apply 'LOG10' to arguments of type 'LOG10.<BINARY.1.>.*");
-        checkExpFails("exp('abc')",
+        checkExpFails(
+            "^exp('abc')^",
             "(?s).*Cannot apply 'EXP' to arguments of type 'EXP.<CHAR.3.>.*");
     }
 
@@ -426,7 +451,8 @@ public class SqlValidatorTest
 
     public void testCaseExpressionTypes()
     {
-        checkExpType("case 1 when 1 then 'one' else 'not one' end",
+        checkExpType(
+            "case 1 when 1 then 'one' else 'not one' end",
             "CHAR(7) NOT NULL");
         checkExpType("case when 2<1 then 'impossible' end", "CHAR(10)");
         checkExpType(
@@ -438,7 +464,8 @@ public class SqlValidatorTest
         checkExpType(
             "case 1 when 1 then 'one' when 2 then null else 'more' end",
             "CHAR(4)");
-        checkExpType("case when TRUE then 'true' else 'false' end",
+        checkExpType(
+            "case when TRUE then 'true' else 'false' end",
             "CHAR(5) NOT NULL");
         checkExpType("CASE 1 WHEN 1 THEN cast(null as integer) END", "INTEGER");
         checkExpType(
@@ -450,22 +477,23 @@ public class SqlValidatorTest
         checkExpType(
             "CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END",
             "INTEGER");
-        ;
     }
 
     public void testCaseExpressionFails()
     {
         //varchar not comparable with bit string
-        checkExpFails(
+        checkWholeExpFails(
             "case 'string' when x'01' then 'zero one' else 'something' end",
             "(?s).*Cannot apply '=' to arguments of type '<CHAR.6.> = <BINARY.1.>'.*");
 
         //all thens and else return null
-        checkExpFails("case 1 when 1 then null else null end",
+        checkWholeExpFails(
+            "case 1 when 1 then null else null end",
             "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
 
         //all thens and else return null
-        checkExpFails("case 1 when 1 then null end",
+        checkWholeExpFails(
+            "case 1 when 1 then null end",
             "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
         checkWholeExpFails(
             "case when true and true then 1 "
@@ -482,7 +510,8 @@ public class SqlValidatorTest
         checkExpType("nullif('a','b')", "CHAR(1)");
         checkExpType("nullif(345.21, 2)", "DECIMAL(5, 2)");
         checkExpType("nullif(345.21, 2e0)", "DECIMAL(5, 2)");
-        checkWholeExpFails("nullif(1,2,3)",
+        checkWholeExpFails(
+            "nullif(1,2,3)",
             "Invalid number of arguments to function 'NULLIF'. Was expecting 2 arguments");
     }
 
@@ -494,9 +523,11 @@ public class SqlValidatorTest
 
     public void testCoalesceFails()
     {
-        checkWholeExpFails("coalesce('a',1)",
+        checkWholeExpFails(
+            "coalesce('a',1)",
             "Illegal mixing of types in CASE or COALESCE statement");
-        checkWholeExpFails("coalesce('a','b',1)",
+        checkWholeExpFails(
+            "coalesce('a','b',1)",
             "Illegal mixing of types in CASE or COALESCE statement");
     }
 
@@ -519,14 +550,12 @@ public class SqlValidatorTest
 
     public void testStringCompareType()
     {
-        checkExpType("'a' = 'b'", "todo: BOOLEAN"); // todo: should it be
-                                                    // "BOOLEAN NOT NULL" since
-                                                    // args are not null?
-        checkExpType("'a' <> 'b'", "todo: BOOLEAN");
-        checkExpType("'a' > 'b'", "todo: BOOLEAN");
-        checkExpType("'a' < 'b'", "todo: BOOLEAN");
-        checkExpType("'a' >= 'b'", "todo: BOOLEAN");
-        checkExpType("'a' <= 'b'", "todo: BOOLEAN");
+        checkExpType("'a' = 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <> 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' > 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' < 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' >= 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <= 'b'", "BOOLEAN NOT NULL");
         checkExpType("CAST(NULL AS VARCHAR(33)) > 'foo'", "BOOLEAN");
     }
 
@@ -535,26 +564,29 @@ public class SqlValidatorTest
         checkExp("'a'||'b'");
         checkExp("x'12'||x'34'");
         checkExpType("'a'||'b'", "CHAR(2) NOT NULL");
-        checkExpType("cast('a' as char(1))||cast('b' as char(2))",
+        checkExpType(
+            "cast('a' as char(1))||cast('b' as char(2))",
             "CHAR(3) NOT NULL");
         checkExpType("cast(null as char(1))||cast('b' as char(2))", "CHAR(3)");
         checkExpType("'a'||'b'||'c'", "CHAR(3) NOT NULL");
         checkExpType("'a'||'b'||'cde'||'f'", "CHAR(6) NOT NULL");
-        checkExpType("'a'||'b'||cast('cde' as VARCHAR(3))|| 'f'",
+        checkExpType(
+            "'a'||'b'||cast('cde' as VARCHAR(3))|| 'f'",
             "VARCHAR(6) NOT NULL");
-        checkExp("_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'");
+        checkExp("_UTF16'a'||_UTF16'b'||_UTF16'c'");
     }
 
     public void testConcatWithCharset()
     {
         checkCharset(
-            "_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'",
-            Charset.forName("ISO-8859-6"));
+            "_UTF16'a'||_UTF16'b'||_UTF16'c'",
+            Charset.forName("UTF-16LE"));
     }
 
     public void testConcatFails()
     {
-        checkExpFails("'a'||x'ff'",
+        checkWholeExpFails(
+            "'a'||x'ff'",
             "(?s).*Cannot apply '\\|\\|' to arguments of type '<CHAR.1.> \\|\\| <BINARY.1.>'"
             + ".*Supported form.s.: '<STRING> \\|\\| <STRING>.*'");
     }
@@ -563,25 +595,33 @@ public class SqlValidatorTest
     {
         checkExp("1 between 2 and 3");
         checkExp("'a' between 'b' and 'c'");
-        checkExpFails("'' between 2 and 3", "(?s).*Cannot apply.*");
+        checkWholeExpFails(
+            "'' between 2 and 3",
+            "(?s).*Cannot apply 'BETWEEN' to arguments of type.*");
     }
 
     public void testCharsetMismatch()
     {
-        checkExpFails("''=_shift_jis''",
+        checkWholeExpFails(
+            "''=_UTF16''",
+            "Cannot apply .* to the two different charsets ISO-8859-1 and UTF-16LE");
+        checkWholeExpFails(
+            "''<>_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''<>_shift_jis''",
+        checkWholeExpFails(
+            "''>_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''>_shift_jis''",
+        checkWholeExpFails(
+            "''<_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''<_shift_jis''",
+        checkWholeExpFails(
+            "''<=_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''<=_shift_jis''",
+        checkWholeExpFails(
+            "''>=_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''>=_shift_jis''",
-            "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''||_shift_jis''", "(?s).*");
-        checkExpFails("'a'||'b'||_iso-8859-6'c'", "(?s).*");
+        checkWholeExpFails("''||_UTF16''", ANY);
+        checkWholeExpFails("'a'||'b'||_UTF16'c'", ANY);
     }
 
     // FIXME jvs 2-Feb-2005: all collation-related tests are disabled due to
@@ -591,10 +631,12 @@ public class SqlValidatorTest
     {
         checkExp("'s' collate latin1$en$1");
         checkExpType("'s' collate latin1$en$1", "CHAR(1)");
-        checkCollation("'s'",
+        checkCollation(
+            "'s'",
             "ISO-8859-1$en_US$primary",
             SqlCollation.Coercibility.Coercible);
-        checkCollation("'s' collate latin1$sv$3",
+        checkCollation(
+            "'s' collate latin1$sv$3",
             "ISO-8859-1$sv$3",
             SqlCollation.Coercibility.Explicit);
     }
@@ -602,7 +644,7 @@ public class SqlValidatorTest
     public void _testCharsetAndCollateMismatch()
     {
         //todo
-        checkExpFails("_shift_jis's' collate latin1$en$1", "?");
+        checkExpFails("_UTF16's' collate latin1$en$1", "?");
     }
 
     public void _testDyadicCollateCompare()
@@ -615,23 +657,28 @@ public class SqlValidatorTest
     public void _testDyadicCompareCollateFails()
     {
         //two different explicit collations. difference in strength
-        checkExpFails("'s' collate latin1$en$1 <= 't' collate latin1$en$2",
+        checkExpFails(
+            "'s' collate latin1$en$1 <= 't' collate latin1$en$2",
             "(?s).*Two explicit different collations.*are illegal.*");
 
         //two different explicit collations. difference in language
-        checkExpFails("'s' collate latin1$sv$1 >= 't' collate latin1$en$1",
+        checkExpFails(
+            "'s' collate latin1$sv$1 >= 't' collate latin1$en$1",
             "(?s).*Two explicit different collations.*are illegal.*");
     }
 
     public void _testDyadicCollateOperator()
     {
-        checkCollation("'a' || 'b'",
+        checkCollation(
+            "'a' || 'b'",
             "ISO-8859-1$en_US$primary",
             SqlCollation.Coercibility.Coercible);
-        checkCollation("'a' collate latin1$sv$3 || 'b'",
+        checkCollation(
+            "'a' collate latin1$sv$3 || 'b'",
             "ISO-8859-1$sv$3",
             SqlCollation.Coercibility.Explicit);
-        checkCollation("'a' collate latin1$sv$3 || 'b' collate latin1$sv$3",
+        checkCollation(
+            "'a' collate latin1$sv$3 || 'b' collate latin1$sv$3",
             "ISO-8859-1$sv$3",
             SqlCollation.Coercibility.Explicit);
     }
@@ -639,7 +686,7 @@ public class SqlValidatorTest
     public void testCharLength()
     {
         checkExp("char_length('string')");
-        checkExp("char_length(_shift_jis'string')");
+        checkExp("char_length(_UTF16'string')");
         checkExp("character_length('string')");
         checkExpType("char_length('string')", "INTEGER NOT NULL");
         checkExpType("character_length('string')", "INTEGER NOT NULL");
@@ -647,10 +694,11 @@ public class SqlValidatorTest
 
     public void testUpperLower()
     {
-        checkExp("upper(_shift_jis'sadf')");
+        checkExp("upper(_UTF16'sadf')");
         checkExp("lower(n'sadf')");
         checkExpType("lower('sadf')", "CHAR(4) NOT NULL");
-        checkExpFails("upper(123)",
+        checkWholeExpFails(
+            "upper(123)",
             "(?s).*Cannot apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
     }
 
@@ -660,7 +708,8 @@ public class SqlValidatorTest
         checkExp("position(x'11' in x'100110')");
         checkExp("position(x'abcd' in x'')");
         checkExpType("position('mouse' in 'house')", "INTEGER NOT NULL");
-        checkExpFails("position(x'1234' in '110')",
+        checkWholeExpFails(
+            "position(x'1234' in '110')",
             "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BINARY.2.> IN <CHAR.3.>.'.*");
     }
 
@@ -671,12 +720,14 @@ public class SqlValidatorTest
         checkExp("trim(leading 'mustache' FROM 'beard')");
         checkExp("trim(trailing 'mustache' FROM 'beard')");
         checkExpType("trim('mustache' FROM 'beard')", "VARCHAR(5) NOT NULL");
-        checkExpType("trim('mustache' FROM cast(null as varchar(4)))",
+        checkExpType(
+            "trim('mustache' FROM cast(null as varchar(4)))",
             "VARCHAR(4)");
 
         if (todo) {
             final SqlCollation.Coercibility expectedCoercibility = null;
-            checkCollation("trim('mustache' FROM 'beard')",
+            checkCollation(
+                "trim('mustache' FROM 'beard')",
                 "CHAR(5)",
                 expectedCoercibility);
         }
@@ -684,11 +735,14 @@ public class SqlValidatorTest
 
     public void testTrimFails()
     {
-        checkExpFails("trim(123 FROM 'beard')",
+        checkWholeExpFails(
+            "trim(123 FROM 'beard')",
             "(?s).*Cannot apply 'TRIM' to arguments of type.*");
-        checkExpFails("trim('a' FROM 123)",
+        checkWholeExpFails(
+            "trim('a' FROM 123)",
             "(?s).*Cannot apply 'TRIM' to arguments of type.*");
-        checkExpFails("trim('a' FROM _shift_jis'b')",
+        checkWholeExpFails(
+            "trim('a' FROM _UTF16'b')",
             "(?s).*not comparable to each other.*");
     }
 
@@ -702,13 +756,17 @@ public class SqlValidatorTest
     {
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
-        checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
+        checkWholeExpFails(
+            "overlay('ABCdef' placing 'abc' from '1' for 3)",
             "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
-        checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
+        checkExpType(
+            "overlay('ABCdef' placing 'abc' from 1 for 3)",
             "VARCHAR(9) NOT NULL");
-        checkExpType("overlay('ABCdef' placing 'abc' from 6 for 3)",
+        checkExpType(
+            "overlay('ABCdef' placing 'abc' from 6 for 3)",
             "VARCHAR(9) NOT NULL");
-        checkExpType("overlay('ABCdef' placing cast(null as char(5)) from 1)",
+        checkExpType(
+            "overlay('ABCdef' placing cast(null as char(5)) from 1)",
             "VARCHAR(11)");
 
         if (todo) {
@@ -728,30 +786,37 @@ public class SqlValidatorTest
 
         checkExpType("substring('10' FROM 1  FOR 2)", "VARCHAR(2) NOT NULL");
         checkExpType("substring('1000' FROM 2)", "VARCHAR(4) NOT NULL");
-        checkExpType("substring('1000' FROM '1'  FOR 'w')",
+        checkExpType(
+            "substring('1000' FROM '1'  FOR 'w')",
             "VARCHAR(4) NOT NULL");
-        checkExpType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')",
+        checkExpType(
+            "substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')",
             "VARCHAR(99) NOT NULL");
-        checkExpType("substring(x'10456b' FROM 1  FOR 2)",
+        checkExpType(
+            "substring(x'10456b' FROM 1  FOR 2)",
             "VARBINARY(3) NOT NULL");
 
         checkCharset(
             "substring('10' FROM 1  FOR 2)",
             Charset.forName("latin1"));
         checkCharset(
-            "substring(_shift_jis'10' FROM 1  FOR 2)",
-            Charset.forName("SHIFT_JIS"));
+            "substring(_UTF16'10' FROM 1  FOR 2)",
+            Charset.forName("UTF-16LE"));
     }
 
     public void testSubstringFails()
     {
-        checkExpFails("substring('a' from 1 for 'b')",
+        checkWholeExpFails(
+            "substring('a' from 1 for 'b')",
             "(?s).*Cannot apply 'SUBSTRING' to arguments of type.*");
-        checkExpFails("substring(_shift_jis'10' FROM '0' FOR '\\')",
+        checkWholeExpFails(
+            "substring(_UTF16'10' FROM '0' FOR '\\')",
             "(?s).* not comparable to each other.*");
-        checkExpFails("substring('10' FROM _shift_jis'0' FOR '\\')",
+        checkWholeExpFails(
+            "substring('10' FROM _UTF16'0' FOR '\\')",
             "(?s).* not comparable to each other.*");
-        checkExpFails("substring('10' FROM '0' FOR _shift_jis'\\')",
+        checkWholeExpFails(
+            "substring('10' FROM '0' FOR _UTF16'\\')",
             "(?s).* not comparable to each other.*");
     }
 
@@ -765,19 +830,27 @@ public class SqlValidatorTest
 
     public void _testLikeAndSimilarFails()
     {
-        checkExpFails("'a' like _shift_jis'b'  escape 'c'",
+        checkExpFails(
+            "'a' like _UTF16'b'  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
-        checkExpFails("'a' similar to _shift_jis'b'  escape 'c'",
+        checkExpFails(
+            "'a' similar to _UTF16'b'  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
 
-        checkExpFails("'a' similar to 'b' collate shift_jis$jp  escape 'c'",
+        checkExpFails(
+            "'a' similar to 'b' collate UTF16$jp  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _ISO-8859-1.b. COLLATE SHIFT_JIS.jp.primary.*");
     }
 
     public void testNull()
     {
-        checkFails("values 1.0 + NULL", "(?s).*Illegal use of .NULL.*");
-        checkExpFails("1.0 + NULL", "(?s).*Illegal use of .NULL.*");
+        checkFails("values 1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
+        checkExpFails("1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
+
+        // FIXME: SQL:2003 does not allow raw NULL in IN clause
+        checkExp("1 in (1, null, 2)");
+        checkExp("1 in (null, 1, null, 2)");
+        checkExp("1 in (null, null)");
     }
 
     public void testNullCast()
@@ -835,31 +908,52 @@ public class SqlValidatorTest
         checkExpType("cast('abc' as varchar(1))", "VARCHAR(1) NOT NULL");
         checkExpType("cast('abc' as char(1))", "CHAR(1) NOT NULL");
         checkExpType("cast(x'ff' as binary(1))", "BINARY(1) NOT NULL");
-        checkExpType("cast(multiset[1] as double multiset)",
+        checkExpType(
+            "cast(multiset[1] as double multiset)",
             "DOUBLE NOT NULL MULTISET NOT NULL");
-        checkExpType("cast(multiset['abc'] as integer multiset)",
+        checkExpType(
+            "cast(multiset['abc'] as integer multiset)",
             "INTEGER NOT NULL MULTISET NOT NULL");
     }
 
     public void testCastFails()
     {
-        checkExpFails("cast('foo' as bar)",
+        checkExpFails(
+            "cast('foo' as ^bar^)",
             "(?s).*Unknown datatype name 'BAR'");
-        checkExpFails("cast(multiset[1] as integer)",
+        checkWholeExpFails(
+            "cast(multiset[1] as integer)",
             "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
-        checkExpFails("cast(x'ff' as decimal(5,2))",
+        checkWholeExpFails(
+            "cast(x'ff' as decimal(5,2))",
             "(?s).*Cast function cannot convert value of type BINARY\\(1\\) to type DECIMAL\\(5, 2\\)");
 
-        checkExpFails("cast(1 as boolean)",
+        checkWholeExpFails(
+            "cast(1 as boolean)",
             "(?s).*Cast function cannot convert value of type INTEGER to type BOOLEAN.*");
-        checkExpFails("cast(1.0e1 as boolean)",
+        checkWholeExpFails(
+            "cast(1.0e1 as boolean)",
             "(?s).*Cast function cannot convert value of type DOUBLE to type BOOLEAN.*");
-        checkExpFails("cast(true as numeric)",
+        checkWholeExpFails(
+            "cast(true as numeric)",
             "(?s).*Cast function cannot convert value of type BOOLEAN to type DECIMAL.*");
-        checkExpFails("cast(DATE '1243-12-01' as TIME)",
+        checkWholeExpFails(
+            "cast(DATE '1243-12-01' as TIME)",
             "(?s).*Cast function cannot convert value of type DATE to type TIME.*");
-        checkExpFails("cast(TIME '12:34:01' as DATE)",
+        checkWholeExpFails(
+            "cast(TIME '12:34:01' as DATE)",
             "(?s).*Cast function cannot convert value of type TIME\\(0\\) to type DATE.*");
+
+        // It's a runtime error that 'TRUE' cannot fit into CHAR(3), but at
+        // validate time this expression is OK.
+        checkExp("cast(true as char(3))");
+    }
+
+    public void testCastBinaryLiteral()
+    {
+        checkExpFails(
+            "cast(^x'0dd'^ as binary(5))",
+            "Binary literal string must contain an even number of hexits");
     }
 
     public void testDateTime()
@@ -867,84 +961,121 @@ public class SqlValidatorTest
         // LOCAL_TIME
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME"); //    fix sqlcontext later.
-        checkExpFails("LOCALTIME(1+2)",
+        checkWholeExpFails(
+            "LOCALTIME(1+2)",
             "Argument to function 'LOCALTIME' must be a literal");
-        checkWholeExpFails("LOCALTIME()",
+        checkExpFails(
+            "LOCALTIME(^NULL^)",
+            "Illegal use of 'NULL'");
+        checkWholeExpFails(
+            "LOCALTIME(CAST(NULL AS INTEGER))",
+            "Argument to function 'LOCALTIME' must not be NULL");
+        checkWholeExpFails(
+            "LOCALTIME()",
             "No match found for function signature LOCALTIME..");
         checkExpType("LOCALTIME", "TIME(0) NOT NULL"); //  with TZ ?
-        checkExpFails("LOCALTIME(-1)",
+        checkWholeExpFails(
+            "LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a positive integer literal");
-        checkExpFails("LOCALTIME(100000000000000)",
+        checkExpFails(
+            "LOCALTIME(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails("LOCALTIME(4)",
+        checkWholeExpFails(
+            "LOCALTIME(4)",
             "Argument to function 'LOCALTIME' must be a valid precision between '0' and '3'");
-        checkExpFails("LOCALTIME('foo')",
+        checkWholeExpFails(
+            "LOCALTIME('foo')",
             "(?s).*Cannot apply.*");
 
         // LOCALTIMESTAMP
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
-        checkExpFails("LOCALTIMESTAMP(1+2)",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP(1+2)",
             "Argument to function 'LOCALTIMESTAMP' must be a literal");
-        checkWholeExpFails("LOCALTIMESTAMP()",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP()",
             "No match found for function signature LOCALTIMESTAMP..");
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
-        checkExpFails("LOCALTIMESTAMP(-1)",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
-        checkExpFails("LOCALTIMESTAMP(100000000000000)",
+        checkExpFails(
+            "LOCALTIMESTAMP(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails("LOCALTIMESTAMP(4)",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP(4)",
             "Argument to function 'LOCALTIMESTAMP' must be a valid precision between '0' and '3'");
-        checkExpFails("LOCALTIMESTAMP('foo')",
+        checkWholeExpFails(
+            "LOCALTIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // CURRENT_DATE
-        checkWholeExpFails("CURRENT_DATE(3)",
+        checkWholeExpFails(
+            "CURRENT_DATE(3)",
             "No match found for function signature CURRENT_DATE..NUMERIC..");
         checkExp("CURRENT_DATE"); //    fix sqlcontext later.
-        checkWholeExpFails("CURRENT_DATE(1+2)",
+        checkWholeExpFails(
+            "CURRENT_DATE(1+2)",
             "No match found for function signature CURRENT_DATE..NUMERIC..");
-        checkWholeExpFails("CURRENT_DATE()",
+        checkWholeExpFails(
+            "CURRENT_DATE()",
             "No match found for function signature CURRENT_DATE..");
         checkExpType("CURRENT_DATE", "DATE NOT NULL"); //  with TZ?
-        checkWholeExpFails("CURRENT_DATE(-1)",
-            "No match found for function signature CURRENT_DATE..NUMERIC.."); // i guess -s1 is an expression?
-        checkExpFails("CURRENT_DATE('foo')", "(?s).*");
+        // I guess -s1 is an expression?
+        checkWholeExpFails(
+            "CURRENT_DATE(-1)",
+            "No match found for function signature CURRENT_DATE..NUMERIC..");
+        checkWholeExpFails("CURRENT_DATE('foo')", ANY);
 
         // current_time
         checkExp("current_time(3)");
         checkExp("current_time"); //    fix sqlcontext later.
-        checkExpFails("current_time(1+2)",
+        checkWholeExpFails(
+            "current_time(1+2)",
             "Argument to function 'CURRENT_TIME' must be a literal");
-        checkWholeExpFails("current_time()",
+        checkWholeExpFails(
+            "current_time()",
             "No match found for function signature CURRENT_TIME..");
         checkExpType("current_time", "TIME(0) NOT NULL"); //  with TZ ?
-        checkExpFails("current_time(-1)",
+        checkWholeExpFails(
+            "current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a positive integer literal");
-        checkExpFails("CURRENT_TIME(100000000000000)",
+        checkExpFails(
+            "CURRENT_TIME(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails("CURRENT_TIME(4)",
+        checkWholeExpFails(
+            "CURRENT_TIME(4)",
             "Argument to function 'CURRENT_TIME' must be a valid precision between '0' and '3'");
-        checkExpFails("current_time('foo')",
+        checkWholeExpFails(
+            "current_time('foo')",
             "(?s).*Cannot apply.*");
 
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         check("SELECT CURRENT_TIMESTAMP AS X FROM (VALUES (1))");
-        checkExpFails("CURRENT_TIMESTAMP(1+2)",
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP(1+2)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
-        checkWholeExpFails("CURRENT_TIMESTAMP()",
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP()",
             "No match found for function signature CURRENT_TIMESTAMP..");
-        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
-        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL"); //  with TZ ?
-        checkExpFails("CURRENT_TIMESTAMP(-1)",
+        // should type be 'TIMESTAMP with TZ'?
+        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL");
+        // should type be 'TIMESTAMP with TZ'?
+        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL");
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
-        checkExpFails("CURRENT_TIMESTAMP(100000000000000)",
+        checkExpFails(
+            "CURRENT_TIMESTAMP(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails("CURRENT_TIMESTAMP(4)",
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP(4)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a valid precision between '0' and '3'");
-        checkExpFails("CURRENT_TIMESTAMP('foo')",
+        checkWholeExpFails(
+            "CURRENT_TIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // Date literals
@@ -964,7 +1095,8 @@ public class SqlValidatorTest
      */
     public void testDateTimeCast()
     {
-        checkExpFails("CAST(1 as DATE)",
+        checkWholeExpFails(
+            "CAST(1 as DATE)",
             "Cast function cannot convert value of type INTEGER to type DATE");
         checkExp("CAST(DATE '2001-12-21' AS VARCHAR(10))");
         checkExp("CAST( '2001-12-21' AS DATE)");
@@ -976,9 +1108,11 @@ public class SqlValidatorTest
 
     public void testInvalidFunction()
     {
-        checkWholeExpFails("foo()",
+        checkWholeExpFails(
+            "foo()",
             "No match found for function signature FOO..");
-        checkWholeExpFails("mod(123)",
+        checkWholeExpFails(
+            "mod(123)",
             "Invalid number of arguments to function 'MOD'. Was expecting 2 arguments");
     }
 
@@ -987,65 +1121,107 @@ public class SqlValidatorTest
         checkExp("{fn log10(1)}");
         checkExp("{fn locate('','')}");
         checkExp("{fn insert('',1,2,'')}");
-        checkExpFails("{fn insert('','',1,2)}", "(?s).*.*");
-        checkExpFails("{fn insert('','',1)}", "(?s).*4.*");
-        checkExpFails("{fn locate('','',1)}", "(?s).*"); //todo this is legal
-                                                         //jdbc syntax, just
-                                                         //that currently the 3
-                                                         //ops call is not
-                                                         //implemented in the
-                                                         //system
-        checkExpFails("{fn log10('1')}",
+
+        // 'lower' is a valid SQL function but not valid JDBC fn; the JDBC
+        // equivalent is 'lcase'
+        checkWholeExpFails(
+            "{fn lower('Foo' || 'Bar')}",
+            "Function '\\{fn LOWER\\}' is not defined");
+        checkExp("{fn lcase('Foo' || 'Bar')}");
+
+        checkExp("{fn power(2, 3)}");
+        checkWholeExpFails("{fn insert('','',1,2)}", "(?s).*.*");
+        checkWholeExpFails("{fn insert('','',1)}", "(?s).*4.*");
+
+        // TODO: this is legal JDBC syntax, but the 3 ops call is not
+        // implemented
+        checkWholeExpFails("{fn locate('','',1)}", ANY);
+        checkWholeExpFails(
+            "{fn log10('1')}",
             "(?s).*Cannot apply.*fn LOG10..<CHAR.1.>.*");
-        checkExpFails("{fn log10(1,1)}",
+        checkWholeExpFails(
+            "{fn log10(1,1)}",
             "(?s).*Encountered .fn LOG10. with 2 parameter.s.; was expecting 1 parameter.s.*");
-        checkExpFails("{fn fn(1)}",
+        checkWholeExpFails(
+            "{fn fn(1)}",
             "(?s).*Function '.fn FN.' is not defined.*");
-        checkExpFails("{fn hahaha(1)}",
+        checkWholeExpFails(
+            "{fn hahaha(1)}",
             "(?s).*Function '.fn HAHAHA.' is not defined.*");
     }
 
-    // REVIEW jvs 2-Feb-2005:  I am disabling this test because I removed
-    // the corresponding support from the parser.  Where in the standard
-    // does it state that you're supposed to be able to quote keywords
-    // for builtin functions?
-    public void _testQuotedFunction()
+    public void testQuotedFunction()
     {
-        checkExp("\"CAST\"(1 as double)");
-        checkExp("\"POSITION\"('b' in 'alphabet')");
+        if (false) {
+            // REVIEW jvs 2-Feb-2005:  I am disabling this test because I
+            // removed the corresponding support from the parser.  Where in the
+            // standard does it state that you're supposed to be able to quote
+            // keywords for builtin functions?
+            checkExp("\"CAST\"(1 as double)");
+            checkExp("\"POSITION\"('b' in 'alphabet')");
 
-        //convert and translate not yet implemented
-        //        checkExp("\"CONVERT\"('b' using converstion)");
-        //        checkExp("\"TRANSLATE\"('b' using translation)");
-        checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
-        checkExp("\"SUBSTRING\"('a' from 1)");
-        checkExp("\"TRIM\"('b')");
+            //convert and translate not yet implemented
+            //        checkExp("\"CONVERT\"('b' using converstion)");
+            //        checkExp("\"TRANSLATE\"('b' using translation)");
+            checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
+            checkExp("\"SUBSTRING\"('a' from 1)");
+            checkExp("\"TRIM\"('b')");
+        } else {
+            // Very poor error message. JVS's above remarks notwithstanding,
+            // the parser creates a call to TRIM with 1 rather than the
+            // expected 3 args, and the remaining two args are filled in with
+            // NULL literals so that we get as far as validation.
+            checkExpFails("\"TRIM\"('b')", "(?s).*Illegal use of 'NULL'.*");
+        }
     }
 
     public void testRowtype()
     {
         check("values (1),(2),(1)");
+        checkResultType(
+            "values (1),(2),(1)",
+            "RecordType(INTEGER NOT NULL EXPR$0) NOT NULL");
         check("values (1,'1'),(2,'2')");
-        checkFails("^values ('1'),(2)^",
+        checkResultType(
+            "values (1,'1'),(2,'2')",
+            "RecordType(INTEGER NOT NULL EXPR$0, CHAR(1) NOT NULL EXPR$1) NOT NULL");
+        checkResultType(
+            "values true",
+            "RecordType(BOOLEAN NOT NULL EXPR$0) NOT NULL");
+        checkFails(
+            "^values ('1'),(2)^",
             "Values passed to VALUES operator must have compatible types");
         if (todo) {
             checkColumnType("values (1),(2.0),(3)", "ROWTYPE(DOUBLE)");
         }
     }
 
+    public void testRow()
+    {
+        // double-nested rows can confuse validator namespace resolution
+        checkColumnType(
+            "select t.r.\"EXPR$1\".\"EXPR$2\" \n"
+            + "from (select ((1,2),(3,4,5)) r from dept) t",
+            "INTEGER NOT NULL");
+    }
+
     public void testMultiset()
     {
         checkExpType("multiset[1]", "INTEGER NOT NULL MULTISET NOT NULL");
-        checkExpType("multiset[1, CAST(null AS DOUBLE)]",
+        checkExpType(
+            "multiset[1, CAST(null AS DOUBLE)]",
             "DOUBLE MULTISET NOT NULL");
-        checkExpType("multiset[1.3,2.3]",
+        checkExpType(
+            "multiset[1.3,2.3]",
             "DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
-        checkExpType("multiset[1,2.3, cast(4 as bigint)]",
+        checkExpType(
+            "multiset[1,2.3, cast(4 as bigint)]",
             "DECIMAL(19, 0) NOT NULL MULTISET NOT NULL");
         checkExpType(
             "multiset['1','22', '333','22']",
             "CHAR(3) NOT NULL MULTISET NOT NULL");
-        checkExpFails("^multiset[1, '2']^",
+        checkExpFails(
+            "^multiset[1, '2']^",
             "Parameters must be of the same type");
         checkExpType(
             "multiset[ROW(1,2)]",
@@ -1072,9 +1248,11 @@ public class SqlValidatorTest
     public void testMultisetSetOperators()
     {
         checkExp("multiset[1] multiset union multiset[1,2.3]");
-        checkExpType("multiset[324.2] multiset union multiset[23.2,2.32]",
+        checkExpType(
+            "multiset[324.2] multiset union multiset[23.2,2.32]",
             "DECIMAL(5, 2) NOT NULL MULTISET NOT NULL");
-        checkExpType("multiset[1] multiset union multiset[1,2.3]",
+        checkExpType(
+            "multiset[1] multiset union multiset[1,2.3]",
             "DECIMAL(11, 1) NOT NULL MULTISET NOT NULL");
         checkExp("multiset[1] multiset union all multiset[1,2.3]");
         checkExp("multiset[1] multiset except multiset[1,2.3]");
@@ -1082,7 +1260,8 @@ public class SqlValidatorTest
         checkExp("multiset[1] multiset intersect multiset[1,2.3]");
         checkExp("multiset[1] multiset intersect all multiset[1,2.3]");
 
-        checkExpFails("^multiset[1, '2']^ multiset union multiset[1]",
+        checkExpFails(
+            "^multiset[1, '2']^ multiset union multiset[1]",
             "Parameters must be of the same type");
         checkExp("multiset[ROW(1,2)] multiset intersect multiset[row(3,4)]");
         if (todo) {
@@ -1094,12 +1273,15 @@ public class SqlValidatorTest
 
     public void testSubMultisetOf()
     {
-        checkExpType("multiset[1] submultiset of multiset[1,2.3]",
+        checkExpType(
+            "multiset[1] submultiset of multiset[1,2.3]",
             "BOOLEAN NOT NULL");
-        checkExpType("multiset[1] submultiset of multiset[1]",
+        checkExpType(
+            "multiset[1] submultiset of multiset[1]",
             "BOOLEAN NOT NULL");
 
-        checkExpFails("^multiset[1, '2']^ submultiset of multiset[1]",
+        checkExpFails(
+            "^multiset[1, '2']^ submultiset of multiset[1]",
             "Parameters must be of the same type");
         checkExp("multiset[ROW(1,2)] submultiset of multiset[row(3,4)]");
     }
@@ -1110,14 +1292,16 @@ public class SqlValidatorTest
         checkExpType("1.0+element(multiset[1])", "DECIMAL(12, 1) NOT NULL");
         checkExpType("element(multiset['1'])", "CHAR(1) NOT NULL");
         checkExpType("element(multiset[1e-2])", "DOUBLE NOT NULL");
-        checkExpType("element(multiset[multiset[cast(null as tinyint)]])",
+        checkExpType(
+            "element(multiset[multiset[cast(null as tinyint)]])",
             "TINYINT MULTISET NOT NULL");
     }
 
     public void testMemberOf()
     {
         checkExpType("1 member of multiset[1]", "BOOLEAN NOT NULL");
-        checkWholeExpFails("1 member of multiset['1']",
+        checkWholeExpFails(
+            "1 member of multiset['1']",
             "Cannot compare values of types 'INTEGER', 'CHAR\\(1\\)'");
     }
 
@@ -1125,14 +1309,15 @@ public class SqlValidatorTest
     {
         checkExp("multiset[1] is a set");
         checkExp("multiset['1'] is a set");
-        checkExpFails("'a' is a set", ".*Cannot apply 'IS A SET' to.*");
+        checkWholeExpFails("'a' is a set", ".*Cannot apply 'IS A SET' to.*");
     }
 
     public void testCardinality()
     {
         checkExpType("cardinality(multiset[1])", "INTEGER NOT NULL");
         checkExpType("cardinality(multiset['1'])", "INTEGER NOT NULL");
-        checkWholeExpFails("cardinality('a')",
+        checkWholeExpFails(
+            "cardinality('a')",
             "Cannot apply 'CARDINALITY' to arguments of type 'CARDINALITY.<CHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'");
     }
 
@@ -1145,43 +1330,33 @@ public class SqlValidatorTest
         // generated by this test.
         assertEquals(
             0,
-            SqlIntervalQualifier.TimeUnit.Year.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.YEAR.ordinal());
         assertEquals(
             1,
-            SqlIntervalQualifier.TimeUnit.Month.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.MONTH.ordinal());
         assertEquals(
             2,
-            SqlIntervalQualifier.TimeUnit.Day.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.DAY.ordinal());
         assertEquals(
             3,
-            SqlIntervalQualifier.TimeUnit.Hour.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.HOUR.ordinal());
         assertEquals(
             4,
-            SqlIntervalQualifier.TimeUnit.Minute.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.MINUTE.ordinal());
         assertEquals(
             5,
-            SqlIntervalQualifier.TimeUnit.Second.getOrdinal());
+            SqlIntervalQualifier.TimeUnit.SECOND.ordinal());
         boolean b =
-            (
-                SqlIntervalQualifier.TimeUnit.Year.getOrdinal()
-                < SqlIntervalQualifier.TimeUnit.Month.getOrdinal()
-            )
-            && (
-                SqlIntervalQualifier.TimeUnit.Month.getOrdinal()
-                < SqlIntervalQualifier.TimeUnit.Day.getOrdinal()
-               )
-            && (
-                SqlIntervalQualifier.TimeUnit.Day.getOrdinal()
-                < SqlIntervalQualifier.TimeUnit.Hour.getOrdinal()
-               )
-            && (
-                SqlIntervalQualifier.TimeUnit.Hour.getOrdinal()
-                < SqlIntervalQualifier.TimeUnit.Minute.getOrdinal()
-               )
-            && (
-                SqlIntervalQualifier.TimeUnit.Minute.getOrdinal()
-                < SqlIntervalQualifier.TimeUnit.Second.getOrdinal()
-               );
+            (SqlIntervalQualifier.TimeUnit.YEAR.ordinal()
+                < SqlIntervalQualifier.TimeUnit.MONTH.ordinal())
+            && (SqlIntervalQualifier.TimeUnit.MONTH.ordinal()
+                < SqlIntervalQualifier.TimeUnit.DAY.ordinal())
+            && (SqlIntervalQualifier.TimeUnit.DAY.ordinal()
+                < SqlIntervalQualifier.TimeUnit.HOUR.ordinal())
+            && (SqlIntervalQualifier.TimeUnit.HOUR.ordinal()
+                < SqlIntervalQualifier.TimeUnit.MINUTE.ordinal())
+            && (SqlIntervalQualifier.TimeUnit.MINUTE.ordinal()
+                < SqlIntervalQualifier.TimeUnit.SECOND.ordinal());
         assertTrue(b);
     }
 
@@ -1204,7 +1379,8 @@ public class SqlValidatorTest
         checkIntervalConv("INTERVAL '1 1' DAY TO HOUR", "90000000");
         checkIntervalConv("INTERVAL '1 1:05' DAY TO MINUTE", "90300000");
         checkIntervalConv("INTERVAL '1 1:05:03' DAY TO SECOND", "90303000");
-        checkIntervalConv("INTERVAL '1 1:05:03.12345' DAY TO SECOND",
+        checkIntervalConv(
+            "INTERVAL '1 1:05:03.12345' DAY TO SECOND",
             "90303123");
         checkIntervalConv("INTERVAL '1.12345' SECOND", "1123");
         checkIntervalConv("INTERVAL '1:05.12345' MINUTE TO SECOND", "65123");
@@ -1212,68 +1388,2227 @@ public class SqlValidatorTest
         checkIntervalConv("INTERVAL '1:05:03.12345' HOUR TO SECOND", "3903123");
     }
 
-    public void testIntervalLiteral()
+    /**
+     * Runs tests for INTERVAL... YEAR that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalYearPositive()
     {
-        checkExpType("INTERVAL '1' DAY", "INTERVAL DAY NOT NULL");
-        checkExpType("INTERVAL '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
-        checkExpType("INTERVAL '1' HOUR", "INTERVAL HOUR NOT NULL");
-        checkExpType("INTERVAL '1' MINUTE", "INTERVAL MINUTE NOT NULL");
-        checkExpType("INTERVAL '1' SECOND", "INTERVAL SECOND NOT NULL");
-        checkExpType("INTERVAL '1' SECOND(3)", "INTERVAL SECOND(3) NOT NULL");
-        checkExpType("INTERVAL '1' SECOND(3, 4)",
-            "INTERVAL SECOND(3, 4) NOT NULL");
-        checkExpType("INTERVAL '1 2:3:4' DAY TO SECOND",
+        //default precision
+        checkExpType(
+            "INTERVAL '1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL '99' YEAR",
+            "INTERVAL YEAR NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' YEAR(2)",
+            "INTERVAL YEAR(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' YEAR(2)",
+            "INTERVAL YEAR(2) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' YEAR(10)",
+            "INTERVAL YEAR(10) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' YEAR(1)",
+            "INTERVAL YEAR(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' YEAR(4)",
+            "INTERVAL YEAR(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' YEAR",
+            "INTERVAL YEAR NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... YEAR TO MONTH that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalYearToMonthPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-11' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-0' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1-2' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-11' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-0' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647-11' YEAR(10) TO MONTH",
+            "INTERVAL YEAR(10) TO MONTH NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0-0' YEAR(1) TO MONTH",
+            "INTERVAL YEAR(1) TO MONTH NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2006-2' YEAR(4) TO MONTH",
+            "INTERVAL YEAR(4) TO MONTH NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MONTH that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMonthPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MONTH",
+            "INTERVAL MONTH NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' MONTH(2)",
+            "INTERVAL MONTH(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MONTH(2)",
+            "INTERVAL MONTH(2) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' MONTH(10)",
+            "INTERVAL MONTH(10) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' MONTH(1)",
+            "INTERVAL MONTH(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' MONTH(4)",
+            "INTERVAL MONTH(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' MONTH",
+            "INTERVAL MONTH NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL '99' DAY",
+            "INTERVAL DAY NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' DAY(2)",
+            "INTERVAL DAY(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' DAY(2)",
+            "INTERVAL DAY(2) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' DAY(10)",
+            "INTERVAL DAY(10) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' DAY(1)",
+            "INTERVAL DAY(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' DAY(4)",
+            "INTERVAL DAY(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' DAY",
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' DAY",
+            "INTERVAL DAY NOT NULL");
+    }
+
+    public void subTestIntervalDayToHourPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23' DAY(10) TO HOUR",
+            "INTERVAL DAY(10) TO HOUR NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0' DAY(1) TO HOUR",
+            "INTERVAL DAY(1) TO HOUR NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 2' DAY(4) TO HOUR",
+            "INTERVAL DAY(4) TO HOUR NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO MINUTE that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayToMinutePositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2:3' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23:59' DAY(10) TO MINUTE",
+            "INTERVAL DAY(10) TO MINUTE NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0:0' DAY(1) TO MINUTE",
+            "INTERVAL DAY(1) TO MINUTE NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 6:7' DAY(4) TO MINUTE",
+            "INTERVAL DAY(4) TO MINUTE NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO SECOND that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayToSecondPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2:3:4' DAY TO SECOND",
             "INTERVAL DAY TO SECOND NOT NULL");
-        checkExpType("INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)",
-            "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
-        checkExpType("INTERVAL '-1 2:3:4' DAY TO SECOND",
+        checkExpType(
+            "INTERVAL '99 23:59:59' DAY TO SECOND",
             "INTERVAL DAY TO SECOND NOT NULL");
-        checkExpType("INTERVAL '+1 2:3:4' DAY(4) TO SECOND(4)",
+        checkExpType(
+            "INTERVAL '99 0:0:0' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59.999999' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0.0' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2:3:4' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59.999999' DAY TO SECOND(6)",
+            "INTERVAL DAY TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0.0' DAY TO SECOND(6)",
+            "INTERVAL DAY TO SECOND(6) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23:59:59' DAY(10) TO SECOND",
+            "INTERVAL DAY(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647 23:59:59.999999999' DAY(10) TO SECOND(9)",
+            "INTERVAL DAY(10) TO SECOND(9) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0:0:0' DAY(1) TO SECOND",
+            "INTERVAL DAY(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0 0:0:0.0' DAY(1) TO SECOND(1)",
+            "INTERVAL DAY(1) TO SECOND(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 6:7:8' DAY(4) TO SECOND",
+            "INTERVAL DAY(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345 6:7:8.9012' DAY(4) TO SECOND(4)",
             "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
 
-        checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR NOT NULL");
-        checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH NOT NULL");
-        checkExpType("INTERVAL '1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("INTERVAL '-1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("INTERVAL '+1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
+        //sign
+        checkExpType(
+            "INTERVAL '-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+    }
 
-        // FIXME Error message should contain quotes:
-        //    Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR
-        // FIXME Position is wrong
-        checkExpFails("INTERVAL '1.2' ^YEAR^",
-            "(?s).*Illegal interval literal format 1.2 for INTERVAL YEAR.*");
-        checkExpFails("INTERVAL '1-2' ^YEAR^",
-            "(?s).*Illegal interval literal format 1-2 for INTERVAL YEAR.*");
-        checkExpFails("INTERVAL '1-2' ^MONTH^",
-            "(?s).*Illegal interval literal format 1-2 for INTERVAL MONTH.*");
-        checkExpFails("INTERVAL '1.2' ^MONTH^",
-            "(?s).*Illegal interval literal format 1.2 for INTERVAL MONTH.*");
-        checkExpFails("interval 'wael was here' ^HOUR^",
-            "(?s).*Illegal interval literal format wael was here for INTERVAL HOUR.*");
-        checkExpFails("interval 'wael was here' ^MONTH^",
-            "(?s).*Illegal interval literal format wael was here for INTERVAL MONTH.*");
-        checkExpFails("interval '1.1' ^day^",
-            "Illegal interval literal format 1.1 for INTERVAL DAY");
-        checkExpFails("interval '1.1' ^hour^",
-            "Illegal interval literal format 1.1 for INTERVAL HOUR");
-        checkExpFails("interval '1.1' ^minute^",
-            "Illegal interval literal format 1.1 for INTERVAL MINUTE");
-        checkExpFails("interval '1' day to ^hour^",
-            "Illegal interval literal format 1 for INTERVAL DAY TO HOUR");
-        checkExpFails("interval '1 2' day to ^second^",
-            "Illegal interval literal format 1 2 for INTERVAL DAY TO SECOND");
-        checkExpFails("interval '1 2' hour to ^minute^",
-            "(?s).*Illegal interval literal format 1 2 for INTERVAL HOUR TO MINUTE.*");
-        checkExp("interval '1:2' minute to second");
-        checkExpFails("interval '-' ^day^",
-            "(?s).*Illegal interval literal format - for INTERVAL DAY.*");
-        checkExpFails("interval '1:x' hour to ^minute^",
-            "(?s).*Illegal interval literal format 1:x for INTERVAL HOUR TO MINUTE.*");
-        checkExpFails("interval '1:x:2' hour to ^second^",
-            "(?s).*Illegal interval literal format 1:x:2 for INTERVAL HOUR TO SECOND.*");
+    /**
+     * Runs tests for INTERVAL... HOUR that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99' HOUR",
+            "INTERVAL HOUR NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' HOUR(2)",
+            "INTERVAL HOUR(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' HOUR(2)",
+            "INTERVAL HOUR(2) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' HOUR(10)",
+            "INTERVAL HOUR(10) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' HOUR(1)",
+            "INTERVAL HOUR(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' HOUR(4)",
+            "INTERVAL HOUR(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' HOUR",
+            "INTERVAL HOUR NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO MINUTE that should pass both parser
+     * and validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourToMinutePositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:3' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59' HOUR(10) TO MINUTE",
+            "INTERVAL HOUR(10) TO MINUTE NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0' HOUR(1) TO MINUTE",
+            "INTERVAL HOUR(1) TO MINUTE NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:7' HOUR(4) TO MINUTE",
+            "INTERVAL HOUR(4) TO MINUTE NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-1:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '+1:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'+2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO SECOND that should pass both parser
+     * and validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourToSecondPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59:59' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59:59.999999' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0.0' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:3:4' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59:59' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59:59.999999' HOUR TO SECOND(6)",
+            "INTERVAL HOUR TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0.0' HOUR TO SECOND(6)",
+            "INTERVAL HOUR TO SECOND(6) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59:59' HOUR(10) TO SECOND",
+            "INTERVAL HOUR(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647:59:59.999999999' HOUR(10) TO SECOND(9)",
+            "INTERVAL HOUR(10) TO SECOND(9) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0:0' HOUR(1) TO SECOND",
+            "INTERVAL HOUR(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0:0:0.0' HOUR(1) TO SECOND(1)",
+            "INTERVAL HOUR(1) TO SECOND(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:7:8' HOUR(4) TO SECOND",
+            "INTERVAL HOUR(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345:7:8.9012' HOUR(4) TO SECOND(4)",
+            "INTERVAL HOUR(4) TO SECOND(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMinutePositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' MINUTE(2)",
+            "INTERVAL MINUTE(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MINUTE(2)",
+            "INTERVAL MINUTE(2) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' MINUTE(10)",
+            "INTERVAL MINUTE(10) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' MINUTE(1)",
+            "INTERVAL MINUTE(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' MINUTE(4)",
+            "INTERVAL MINUTE(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' MINUTE",
+            "INTERVAL MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE TO SECOND that should pass both parser
+     * and validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMinuteToSecondPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '59:59' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '59:59.999999' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0.0' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:4' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59.999999' MINUTE TO SECOND(6)",
+            "INTERVAL MINUTE TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0.0' MINUTE TO SECOND(6)",
+            "INTERVAL MINUTE TO SECOND(6) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59' MINUTE(10) TO SECOND",
+            "INTERVAL MINUTE(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647:59.999999999' MINUTE(10) TO SECOND(9)",
+            "INTERVAL MINUTE(10) TO SECOND(9) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0' MINUTE(1) TO SECOND",
+            "INTERVAL MINUTE(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0:0.0' MINUTE(1) TO SECOND(1)",
+            "INTERVAL MINUTE(1) TO SECOND(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:8' MINUTE(4) TO SECOND",
+            "INTERVAL MINUTE(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345:7.8901' MINUTE(4) TO SECOND(4)",
+            "INTERVAL MINUTE(4) TO SECOND(4) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... SECOND that should pass both parser and
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalSecondPositive()
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND",
+            "INTERVAL SECOND NOT NULL");
+
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' SECOND(2)",
+            "INTERVAL SECOND(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND(2)",
+            "INTERVAL SECOND(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '1' SECOND(2, 6)",
+            "INTERVAL SECOND(2, 6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND(2, 6)",
+            "INTERVAL SECOND(2, 6) NOT NULL");
+
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' SECOND(10)",
+            "INTERVAL SECOND(10) NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647.999999999' SECOND(10, 9)",
+            "INTERVAL SECOND(10, 9) NOT NULL");
+
+        //min precision
+        checkExpType(
+            "INTERVAL '0' SECOND(1)",
+            "INTERVAL SECOND(1) NOT NULL");
+        checkExpType(
+            "INTERVAL '0.0' SECOND(1, 1)",
+            "INTERVAL SECOND(1, 1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' SECOND(4)",
+            "INTERVAL SECOND(4) NOT NULL");
+        checkExpType(
+            "INTERVAL '1234.56789' SECOND(4, 5)",
+            "INTERVAL SECOND(4, 5) NOT NULL");
+
+        //sign
+        checkExpType(
+            "INTERVAL '+1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' SECOND",
+            "INTERVAL SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... YEAR that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalYearNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' YEAR",
+            "Illegal interval literal format '-' for INTERVAL YEAR.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' YEAR",
+            "Illegal interval literal format '1-2' for INTERVAL YEAR.*");
+        checkWholeExpFails(
+            "INTERVAL '1.2' YEAR",
+            "Illegal interval literal format '1.2' for INTERVAL YEAR.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' YEAR",
+            "Illegal interval literal format '1 2' for INTERVAL YEAR.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' YEAR(2)",
+            "Illegal interval literal format '1-2' for INTERVAL YEAR\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' YEAR",
+            "Illegal interval literal format 'bogus text' for INTERVAL YEAR.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' YEAR",
+            "Illegal interval literal format '--1' for INTERVAL YEAR.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' YEAR",
+            "Interval field value 100 exceeds precision of YEAR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' YEAR(2)",
+            "Interval field value 100 exceeds precision of YEAR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' YEAR(3)",
+            "Interval field value 1,000 exceeds precision of YEAR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' YEAR(3)",
+            "Interval field value -1,000 exceeds precision of YEAR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' YEAR(10)",
+            "Interval field value 2,147,483,648 exceeds precision of YEAR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' YEAR(10)",
+            "Interval field value -2,147,483,648 exceeds precision of YEAR\\(10\\) field");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' YEAR(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL YEAR\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' YEAR(0^)^",
+            "Interval leading field precision '0' out of range for INTERVAL YEAR\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... YEAR TO MONTH that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalYearToMonthNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' YEAR TO MONTH",
+            "Illegal interval literal format '-' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1' YEAR TO MONTH",
+            "Illegal interval literal format '1' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1:2' YEAR TO MONTH",
+            "Illegal interval literal format '1:2' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1.2' YEAR TO MONTH",
+            "Illegal interval literal format '1.2' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1 2' YEAR TO MONTH",
+            "Illegal interval literal format '1 2' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1:2' YEAR(2) TO MONTH",
+            "Illegal interval literal format '1:2' for INTERVAL YEAR\\(2\\) TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' YEAR TO MONTH",
+            "Illegal interval literal format 'bogus text' for INTERVAL YEAR TO MONTH");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1-2' YEAR TO MONTH",
+            "Illegal interval literal format '--1-2' for INTERVAL YEAR TO MONTH");
+        checkWholeExpFails(
+            "INTERVAL '1--2' YEAR TO MONTH",
+            "Illegal interval literal format '1--2' for INTERVAL YEAR TO MONTH");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100-0' YEAR TO MONTH",
+            "Interval field value 100 exceeds precision of YEAR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100-0' YEAR(2) TO MONTH",
+            "Interval field value 100 exceeds precision of YEAR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000-0' YEAR(3) TO MONTH",
+            "Interval field value 1,000 exceeds precision of YEAR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000-0' YEAR(3) TO MONTH",
+            "Interval field value -1,000 exceeds precision of YEAR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648-0' YEAR(10) TO MONTH",
+            "Interval field value 2,147,483,648 exceeds precision of YEAR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648-0' YEAR(10) TO MONTH",
+            "Interval field value -2,147,483,648 exceeds precision of YEAR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1-12' YEAR TO MONTH",
+            "Illegal interval literal format '1-12' for INTERVAL YEAR TO MONTH.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1-1' YEAR(11) TO ^MONTH^",
+            "Interval leading field precision '11' out of range for INTERVAL YEAR\\(11\\) TO MONTH");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0-0' YEAR(0) TO ^MONTH^",
+            "Interval leading field precision '0' out of range for INTERVAL YEAR\\(0\\) TO MONTH");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MONTH that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMonthNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' MONTH",
+            "Illegal interval literal format '-' for INTERVAL MONTH.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' MONTH",
+            "Illegal interval literal format '1-2' for INTERVAL MONTH.*");
+        checkWholeExpFails(
+            "INTERVAL '1.2' MONTH",
+            "Illegal interval literal format '1.2' for INTERVAL MONTH.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' MONTH",
+            "Illegal interval literal format '1 2' for INTERVAL MONTH.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' MONTH(2)",
+            "Illegal interval literal format '1-2' for INTERVAL MONTH\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MONTH",
+            "Illegal interval literal format 'bogus text' for INTERVAL MONTH.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' MONTH",
+            "Illegal interval literal format '--1' for INTERVAL MONTH.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' MONTH",
+            "Interval field value 100 exceeds precision of MONTH\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' MONTH(2)",
+            "Interval field value 100 exceeds precision of MONTH\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' MONTH(3)",
+            "Interval field value 1,000 exceeds precision of MONTH\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' MONTH(3)",
+            "Interval field value -1,000 exceeds precision of MONTH\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' MONTH(10)",
+            "Interval field value 2,147,483,648 exceeds precision of MONTH\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' MONTH(10)",
+            "Interval field value -2,147,483,648 exceeds precision of MONTH\\(10\\) field.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' MONTH(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL MONTH\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' MONTH(0^)^",
+            "Interval leading field precision '0' out of range for INTERVAL MONTH\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' DAY",
+            "Illegal interval literal format '-' for INTERVAL DAY.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' DAY",
+            "Illegal interval literal format '1-2' for INTERVAL DAY.*");
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY",
+            "Illegal interval literal format '1.2' for INTERVAL DAY.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY",
+            "Illegal interval literal format '1 2' for INTERVAL DAY.*");
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY",
+            "Illegal interval literal format '1:2' for INTERVAL DAY.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' DAY(2)",
+            "Illegal interval literal format '1-2' for INTERVAL DAY\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' DAY",
+            "Illegal interval literal format '--1' for INTERVAL DAY.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' DAY",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' DAY(2)",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' DAY(3)",
+            "Interval field value 1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' DAY(3)",
+            "Interval field value -1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' DAY(10)",
+            "Interval field value 2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' DAY(10)",
+            "Interval field value -2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' DAY(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' DAY(0^)^",
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO HOUR that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToHourNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' DAY TO HOUR",
+            "Illegal interval literal format '-' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO HOUR",
+            "Illegal interval literal format '1' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO HOUR",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO HOUR",
+            "Illegal interval literal format '1.2' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1 x' DAY TO HOUR",
+            "Illegal interval literal format '1 x' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL ' ' DAY TO HOUR",
+            "Illegal interval literal format ' ' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY(2) TO HOUR",
+            "Illegal interval literal format '1:2' for INTERVAL DAY\\(2\\) TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO HOUR",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO HOUR");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1 1' DAY TO HOUR",
+            "Illegal interval literal format '--1 1' for INTERVAL DAY TO HOUR");
+        checkWholeExpFails(
+            "INTERVAL '1 -1' DAY TO HOUR",
+            "Illegal interval literal format '1 -1' for INTERVAL DAY TO HOUR");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY TO HOUR",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY(2) TO HOUR",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000 0' DAY(3) TO HOUR",
+            "Interval field value 1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000 0' DAY(3) TO HOUR",
+            "Interval field value -1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0' DAY(10) TO HOUR",
+            "Interval field value 2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0' DAY(10) TO HOUR",
+            "Interval field value -2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1 24' DAY TO HOUR",
+            "Illegal interval literal format '1 24' for INTERVAL DAY TO HOUR.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1 1' DAY(11) TO ^HOUR^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO HOUR");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0' DAY(0) TO ^HOUR^",
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO HOUR");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO MINUTE that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL ' :' DAY TO MINUTE",
+            "Illegal interval literal format ' :' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO MINUTE",
+            "Illegal interval literal format '1' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY TO MINUTE",
+            "Illegal interval literal format '1 2' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO MINUTE",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO MINUTE",
+            "Illegal interval literal format '1.2' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL 'x 1:1' DAY TO MINUTE",
+            "Illegal interval literal format 'x 1:1' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 x:1' DAY TO MINUTE",
+            "Illegal interval literal format '1 x:1' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1:x' DAY TO MINUTE",
+            "Illegal interval literal format '1 1:x' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:3' DAY TO MINUTE",
+            "Illegal interval literal format '1 1:2:3' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.2' DAY TO MINUTE",
+            "Illegal interval literal format '1 1:1:1.2' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:3' DAY(2) TO MINUTE",
+            "Illegal interval literal format '1 1:2:3' for INTERVAL DAY\\(2\\) TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1' DAY(2) TO MINUTE",
+            "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO MINUTE",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO MINUTE");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1 1:1' DAY TO MINUTE",
+            "Illegal interval literal format '--1 1:1' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 -1:1' DAY TO MINUTE",
+            "Illegal interval literal format '1 -1:1' for INTERVAL DAY TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 1:-1' DAY TO MINUTE",
+            "Illegal interval literal format '1 1:-1' for INTERVAL DAY TO MINUTE");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100 0:0' DAY TO MINUTE",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100 0:0' DAY(2) TO MINUTE",
+            "Interval field value 100 exceeds precision of DAY\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000 0:0' DAY(3) TO MINUTE",
+            "Interval field value 1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000 0:0' DAY(3) TO MINUTE",
+            "Interval field value -1,000 exceeds precision of DAY\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0:0' DAY(10) TO MINUTE",
+            "Interval field value 2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0:0' DAY(10) TO MINUTE",
+            "Interval field value -2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1 24:1' DAY TO MINUTE",
+            "Illegal interval literal format '1 24:1' for INTERVAL DAY TO MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1 1:60' DAY TO MINUTE",
+            "Illegal interval literal format '1 1:60' for INTERVAL DAY TO MINUTE.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1 1:1' DAY(11) TO ^MINUTE^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO MINUTE");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0' DAY(0) TO ^MINUTE^",
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO MINUTE");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO SECOND that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL ' ::' DAY TO SECOND",
+            "Illegal interval literal format ' ::' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL ' ::.' DAY TO SECOND",
+            "Illegal interval literal format ' ::\\.' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO SECOND",
+            "Illegal interval literal format '1' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY TO SECOND",
+            "Illegal interval literal format '1 2' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO SECOND",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO SECOND",
+            "Illegal interval literal format '1\\.2' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' DAY TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:x' DAY TO SECOND",
+            "Illegal interval literal format '1 1:2:x' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:2:3' DAY TO SECOND",
+            "Illegal interval literal format '1:2:3' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.2' DAY TO SECOND",
+            "Illegal interval literal format '1:1:1\\.2' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' DAY(2) TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL DAY\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1' DAY(2) TO SECOND",
+            "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO SECOND",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '2345 6:7:8901' DAY TO SECOND(4)",
+            "Illegal interval literal format '2345 6:7:8901' for INTERVAL DAY TO SECOND\\(4\\)");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1 1:1:1' DAY TO SECOND",
+            "Illegal interval literal format '--1 1:1:1' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 -1:1:1' DAY TO SECOND",
+            "Illegal interval literal format '1 -1:1:1' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:-1:1' DAY TO SECOND",
+            "Illegal interval literal format '1 1:-1:1' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:-1' DAY TO SECOND",
+            "Illegal interval literal format '1 1:1:-1' for INTERVAL DAY TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.-1' DAY TO SECOND",
+            "Illegal interval literal format '1 1:1:1.-1' for INTERVAL DAY TO SECOND");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY TO SECOND",
+            "Illegal interval literal format '100 0' for INTERVAL DAY TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY(2) TO SECOND",
+            "Illegal interval literal format '100 0' for INTERVAL DAY\\(2\\) TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1000 0' DAY(3) TO SECOND",
+            "Illegal interval literal format '1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000 0' DAY(3) TO SECOND",
+            "Illegal interval literal format '-1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648 1:1:0' DAY(10) TO SECOND",
+            "Interval field value 2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 1:1:0' DAY(10) TO SECOND",
+            "Interval field value -2,147,483,648 exceeds precision of DAY\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0' DAY(10) TO SECOND",
+            "Illegal interval literal format '2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0' DAY(10) TO SECOND",
+            "Illegal interval literal format '-2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 24:1:1' DAY TO SECOND",
+            "Illegal interval literal format '1 24:1:1' for INTERVAL DAY TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 1:60:1' DAY TO SECOND",
+            "Illegal interval literal format '1 1:60:1' for INTERVAL DAY TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:60' DAY TO SECOND",
+            "Illegal interval literal format '1 1:1:60' for INTERVAL DAY TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.0000001' DAY TO SECOND",
+            "Illegal interval literal format '1 1:1:1\\.0000001' for INTERVAL DAY TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.0001' DAY TO SECOND(3)",
+            "Illegal interval literal format '1 1:1:1\\.0001' for INTERVAL DAY TO SECOND\\(3\\).*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1 1' DAY(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '1 1' DAY TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for INTERVAL DAY TO SECOND\\(10\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0:0:0' DAY(0) TO ^SECOND^",
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0 0:0:0' DAY TO SECOND(0^)^",
+            "Interval fractional second precision '0' out of range for INTERVAL DAY TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' HOUR",
+            "Illegal interval literal format '-' for INTERVAL HOUR.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' HOUR",
+            "Illegal interval literal format '1-2' for INTERVAL HOUR.*");
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR",
+            "Illegal interval literal format '1.2' for INTERVAL HOUR.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR.*");
+        checkWholeExpFails(
+            "INTERVAL '1:2' HOUR",
+            "Illegal interval literal format '1:2' for INTERVAL HOUR.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' HOUR(2)",
+            "Illegal interval literal format '1-2' for INTERVAL HOUR\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' HOUR",
+            "Illegal interval literal format '--1' for INTERVAL HOUR.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' HOUR",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' HOUR(2)",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' HOUR(3)",
+            "Interval field value 1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' HOUR(3)",
+            "Interval field value -1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' HOUR(10)",
+            "Interval field value 2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' HOUR(10)",
+            "Interval field value -2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' HOUR(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' HOUR(0^)^",
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO MINUTE that should pass parser but
+     * fail validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourToMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL ':' HOUR TO MINUTE",
+            "Illegal interval literal format ':' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1' HOUR TO MINUTE",
+            "Illegal interval literal format '1' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1:x' HOUR TO MINUTE",
+            "Illegal interval literal format '1:x' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR TO MINUTE",
+            "Illegal interval literal format '1.2' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR TO MINUTE",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1:2:3' HOUR TO MINUTE",
+            "Illegal interval literal format '1:2:3' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR(2) TO MINUTE",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR\\(2\\) TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR TO MINUTE",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO MINUTE");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1:1' HOUR TO MINUTE",
+            "Illegal interval literal format '--1:1' for INTERVAL HOUR TO MINUTE");
+        checkWholeExpFails(
+            "INTERVAL '1:-1' HOUR TO MINUTE",
+            "Illegal interval literal format '1:-1' for INTERVAL HOUR TO MINUTE");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100:0' HOUR TO MINUTE",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100:0' HOUR(2) TO MINUTE",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000:0' HOUR(3) TO MINUTE",
+            "Interval field value 1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000:0' HOUR(3) TO MINUTE",
+            "Interval field value -1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0' HOUR(10) TO MINUTE",
+            "Interval field value 2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0' HOUR(10) TO MINUTE",
+            "Interval field value -2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1:60' HOUR TO MINUTE",
+            "Illegal interval literal format '1:60' for INTERVAL HOUR TO MINUTE.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1:1' HOUR(11) TO ^MINUTE^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\) TO MINUTE");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0' HOUR(0) TO ^MINUTE^",
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\) TO MINUTE");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO SECOND that should pass parser but
+     * fail validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '::' HOUR TO SECOND",
+            "Illegal interval literal format '::' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '::.' HOUR TO SECOND",
+            "Illegal interval literal format '::\\.' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1' HOUR TO SECOND",
+            "Illegal interval literal format '1' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR TO SECOND",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:2' HOUR TO SECOND",
+            "Illegal interval literal format '1:2' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR TO SECOND",
+            "Illegal interval literal format '1\\.2' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' HOUR TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:2:x' HOUR TO SECOND",
+            "Illegal interval literal format '1:2:x' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:x:3' HOUR TO SECOND",
+            "Illegal interval literal format '1:x:3' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.x' HOUR TO SECOND",
+            "Illegal interval literal format '1:1:1\\.x' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' HOUR(2) TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL HOUR\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1' HOUR(2) TO SECOND",
+            "Illegal interval literal format '1 1' for INTERVAL HOUR\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR TO SECOND",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '6:7:8901' HOUR TO SECOND(4)",
+            "Illegal interval literal format '6:7:8901' for INTERVAL HOUR TO SECOND\\(4\\)");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1:1:1' HOUR TO SECOND",
+            "Illegal interval literal format '--1:1:1' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:-1:1' HOUR TO SECOND",
+            "Illegal interval literal format '1:-1:1' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1:-1' HOUR TO SECOND",
+            "Illegal interval literal format '1:1:-1' for INTERVAL HOUR TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.-1' HOUR TO SECOND",
+            "Illegal interval literal format '1:1:1\\.-1' for INTERVAL HOUR TO SECOND");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100:0:0' HOUR TO SECOND",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100:0:0' HOUR(2) TO SECOND",
+            "Interval field value 100 exceeds precision of HOUR\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000:0:0' HOUR(3) TO SECOND",
+            "Interval field value 1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000:0:0' HOUR(3) TO SECOND",
+            "Interval field value -1,000 exceeds precision of HOUR\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0:0' HOUR(10) TO SECOND",
+            "Interval field value 2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0:0' HOUR(10) TO SECOND",
+            "Interval field value -2,147,483,648 exceeds precision of HOUR\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1:60:1' HOUR TO SECOND",
+            "Illegal interval literal format '1:60:1' for INTERVAL HOUR TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:1:60' HOUR TO SECOND",
+            "Illegal interval literal format '1:1:60' for INTERVAL HOUR TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0000001' HOUR TO SECOND",
+            "Illegal interval literal format '1:1:1\\.0000001' for INTERVAL HOUR TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0001' HOUR TO SECOND(3)",
+            "Illegal interval literal format '1:1:1\\.0001' for INTERVAL HOUR TO SECOND\\(3\\).*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1:1:1' HOUR(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '1:1:1' HOUR TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for INTERVAL HOUR TO SECOND\\(10\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0:0' HOUR(0) TO ^SECOND^",
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0:0:0' HOUR TO SECOND(0^)^",
+            "Interval fractional second precision '0' out of range for INTERVAL HOUR TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL '-' MINUTE",
+            "Illegal interval literal format '-' for INTERVAL MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' MINUTE",
+            "Illegal interval literal format '1-2' for INTERVAL MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1.2' MINUTE",
+            "Illegal interval literal format '1.2' for INTERVAL MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' MINUTE",
+            "Illegal interval literal format '1 2' for INTERVAL MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1:2' MINUTE",
+            "Illegal interval literal format '1:2' for INTERVAL MINUTE.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' MINUTE(2)",
+            "Illegal interval literal format '1-2' for INTERVAL MINUTE\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MINUTE",
+            "Illegal interval literal format 'bogus text' for INTERVAL MINUTE.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' MINUTE",
+            "Illegal interval literal format '--1' for INTERVAL MINUTE.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' MINUTE",
+            "Interval field value 100 exceeds precision of MINUTE\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' MINUTE(2)",
+            "Interval field value 100 exceeds precision of MINUTE\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' MINUTE(3)",
+            "Interval field value 1,000 exceeds precision of MINUTE\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' MINUTE(3)",
+            "Interval field value -1,000 exceeds precision of MINUTE\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' MINUTE(10)",
+            "Interval field value 2,147,483,648 exceeds precision of MINUTE\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' MINUTE(10)",
+            "Interval field value -2,147,483,648 exceeds precision of MINUTE\\(10\\) field.*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' MINUTE(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL MINUTE\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' MINUTE(0^)^",
+            "Interval leading field precision '0' out of range for INTERVAL MINUTE\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE TO SECOND that should pass parser but
+     * fail validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMinuteToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL ':' MINUTE TO SECOND",
+            "Illegal interval literal format ':' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL ':.' MINUTE TO SECOND",
+            "Illegal interval literal format ':\\.' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1' MINUTE TO SECOND",
+            "Illegal interval literal format '1' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 2' MINUTE TO SECOND",
+            "Illegal interval literal format '1 2' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1.2' MINUTE TO SECOND",
+            "Illegal interval literal format '1\\.2' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' MINUTE TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:x' MINUTE TO SECOND",
+            "Illegal interval literal format '1:x' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL 'x:3' MINUTE TO SECOND",
+            "Illegal interval literal format 'x:3' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1.x' MINUTE TO SECOND",
+            "Illegal interval literal format '1:1\\.x' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' MINUTE(2) TO SECOND",
+            "Illegal interval literal format '1 1:2' for INTERVAL MINUTE\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1 1' MINUTE(2) TO SECOND",
+            "Illegal interval literal format '1 1' for INTERVAL MINUTE\\(2\\) TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MINUTE TO SECOND",
+            "Illegal interval literal format 'bogus text' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '7:8901' MINUTE TO SECOND(4)",
+            "Illegal interval literal format '7:8901' for INTERVAL MINUTE TO SECOND\\(4\\)");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1:1' MINUTE TO SECOND",
+            "Illegal interval literal format '--1:1' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:-1' MINUTE TO SECOND",
+            "Illegal interval literal format '1:-1' for INTERVAL MINUTE TO SECOND");
+        checkWholeExpFails(
+            "INTERVAL '1:1.-1' MINUTE TO SECOND",
+            "Illegal interval literal format '1:1.-1' for INTERVAL MINUTE TO SECOND");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkWholeExpFails(
+            "INTERVAL '100:0' MINUTE TO SECOND",
+            "Interval field value 100 exceeds precision of MINUTE\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100:0' MINUTE(2) TO SECOND",
+            "Interval field value 100 exceeds precision of MINUTE\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000:0' MINUTE(3) TO SECOND",
+            "Interval field value 1,000 exceeds precision of MINUTE\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000:0' MINUTE(3) TO SECOND",
+            "Interval field value -1,000 exceeds precision of MINUTE\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0' MINUTE(10) TO SECOND",
+            "Interval field value 2,147,483,648 exceeds precision of MINUTE\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0' MINUTE(10) TO SECOND",
+            "Interval field value -2,147,483,648 exceeds precision of MINUTE\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1:60' MINUTE TO SECOND",
+            "Illegal interval literal format '1:60' for"
+            + " INTERVAL MINUTE TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:1.0000001' MINUTE TO SECOND",
+            "Illegal interval literal format '1:1\\.0000001' for"
+            + " INTERVAL MINUTE TO SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0001' MINUTE TO SECOND(3)",
+            "Illegal interval literal format '1:1:1\\.0001' for"
+            + " INTERVAL MINUTE TO SECOND\\(3\\).*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1:1' MINUTE(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for"
+            + " INTERVAL MINUTE\\(11\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '1:1' MINUTE TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for"
+            + " INTERVAL MINUTE TO SECOND\\(10\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0' MINUTE(0) TO ^SECOND^",
+            "Interval leading field precision '0' out of range for"
+            + " INTERVAL MINUTE\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0:0' MINUTE TO SECOND(0^)^",
+            "Interval fractional second precision '0' out of range for"
+            + " INTERVAL MINUTE TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... SECOND that should pass parser but fail
+     * validator. A substantially identical set of tests exists in
+     * SqlParserTest, and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed appropriately to
+     * each of the other 12 subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkWholeExpFails(
+            "INTERVAL ':' SECOND",
+            "Illegal interval literal format ':' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '.' SECOND",
+            "Illegal interval literal format '\\.' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' SECOND",
+            "Illegal interval literal format '1-2' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1.x' SECOND",
+            "Illegal interval literal format '1\\.x' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL 'x.1' SECOND",
+            "Illegal interval literal format 'x\\.1' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1 2' SECOND",
+            "Illegal interval literal format '1 2' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1:2' SECOND",
+            "Illegal interval literal format '1:2' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1-2' SECOND(2)",
+            "Illegal interval literal format '1-2' for INTERVAL SECOND\\(2\\)");
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' SECOND",
+            "Illegal interval literal format 'bogus text' for INTERVAL SECOND.*");
+
+        // negative field values
+        checkWholeExpFails(
+            "INTERVAL '--1' SECOND",
+            "Illegal interval literal format '--1' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1.-1' SECOND",
+            "Illegal interval literal format '1.-1' for INTERVAL SECOND.*");
+
+        // Field value out of range
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkWholeExpFails(
+            "INTERVAL '100' SECOND",
+            "Interval field value 100 exceeds precision of SECOND\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '100' SECOND(2)",
+            "Interval field value 100 exceeds precision of SECOND\\(2\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1000' SECOND(3)",
+            "Interval field value 1,000 exceeds precision of SECOND\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-1000' SECOND(3)",
+            "Interval field value -1,000 exceeds precision of SECOND\\(3\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '2147483648' SECOND(10)",
+            "Interval field value 2,147,483,648 exceeds precision of SECOND\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' SECOND(10)",
+            "Interval field value -2,147,483,648 exceeds precision of SECOND\\(10\\) field.*");
+        checkWholeExpFails(
+            "INTERVAL '1.0000001' SECOND",
+            "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND.*");
+        checkWholeExpFails(
+            "INTERVAL '1.0000001' SECOND(2)",
+            "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND\\(2\\).*");
+        checkWholeExpFails(
+            "INTERVAL '1.0001' SECOND(2, 3)",
+            "Illegal interval literal format '1\\.0001' for INTERVAL SECOND\\(2, 3\\).*");
+        checkWholeExpFails(
+            "INTERVAL '1.0000000001' SECOND(2, 9)",
+            "Illegal interval literal format '1\\.0000000001' for"
+            + " INTERVAL SECOND\\(2, 9\\).*");
+
+        // precision > maximum
+        checkExpFails(
+            "INTERVAL '1' SECOND(11^)^",
+            "Interval leading field precision '11' out of range for"
+            + " INTERVAL SECOND\\(11\\)");
+        checkExpFails(
+            "INTERVAL '1.1' SECOND(1, 10^)^",
+            "Interval fractional second precision '10' out of range for"
+            + " INTERVAL SECOND\\(1, 10\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' SECOND(0^)^",
+            "Interval leading field precision '0' out of range for"
+            + " INTERVAL SECOND\\(0\\)");
+        checkExpFails(
+            "INTERVAL '0' SECOND(1, 0^)^",
+            "Interval fractional second precision '0' out of range for"
+            + " INTERVAL SECOND\\(1, 0\\)");
+    }
+
+    public void testIntervalLiterals()
+    {
+        // First check that min, max, and defaults are what we expect
+        // (values used in subtests depend on these being true to
+        // accurately test bounds)
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getMinPrecision() == 1);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getMinPrecision() == 1);
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getMaxPrecision() == 10);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getMaxPrecision() == 10);
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getDefaultPrecision() == 2);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getDefaultPrecision() == 2);
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getMinScale() == 1);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getMinScale() == 1);
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getMaxScale() == 9);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getMaxScale() == 9);
+        assertTrue(
+            SqlTypeName.INTERVAL_YEAR_MONTH.getDefaultScale() == 6);
+        assertTrue(
+            SqlTypeName.INTERVAL_DAY_TIME.getDefaultScale() == 6);
+
+        // Tests that should pass both parser and validator
+        subTestIntervalYearPositive();
+        subTestIntervalYearToMonthPositive();
+        subTestIntervalMonthPositive();
+        subTestIntervalDayPositive();
+        subTestIntervalDayToHourPositive();
+        subTestIntervalDayToMinutePositive();
+        subTestIntervalDayToSecondPositive();
+        subTestIntervalHourPositive();
+        subTestIntervalHourToMinutePositive();
+        subTestIntervalHourToSecondPositive();
+        subTestIntervalMinutePositive();
+        subTestIntervalMinuteToSecondPositive();
+        subTestIntervalSecondPositive();
+
+        // Tests that should pass parser but fail validator
+        subTestIntervalYearNegative();
+        subTestIntervalYearToMonthNegative();
+        subTestIntervalMonthNegative();
+        subTestIntervalDayNegative();
+        subTestIntervalDayToHourNegative();
+        subTestIntervalDayToMinuteNegative();
+        subTestIntervalDayToSecondNegative();
+        subTestIntervalHourNegative();
+        subTestIntervalHourToMinuteNegative();
+        subTestIntervalHourToSecondNegative();
+        subTestIntervalMinuteNegative();
+        subTestIntervalMinuteToSecondNegative();
+        subTestIntervalSecondNegative();
+
+        // Miscellaneous
+        // fractional value is not OK, even if it is 0
+        checkWholeExpFails(
+            "INTERVAL '1.0' HOUR",
+            "Illegal interval literal format '1.0' for INTERVAL HOUR");
+        // only seconds are allowed to have a fractional part
+        checkExpType(
+            "INTERVAL '1.0' SECOND",
+            "INTERVAL SECOND NOT NULL");
+        // leading zeroes do not cause precision to be exceeded
+        checkExpType(
+            "INTERVAL '0999' MONTH(3)",
+            "INTERVAL MONTH(3) NOT NULL");
     }
 
     public void testIntervalOperators()
@@ -1282,18 +3617,24 @@ public class SqlValidatorTest
         checkExpType("TIME '8:8:8' - interval '1' hour", "TIME(0) NOT NULL");
         checkExpType("TIME '8:8:8' + interval '1' hour", "TIME(0) NOT NULL");
 
-        checkExpType("interval '1' day + interval '1' DAY(4)",
+        checkExpType(
+            "interval '1' day + interval '1' DAY(4)",
             "INTERVAL DAY(4) NOT NULL");
-        checkExpType("interval '1' day(5) + interval '1' DAY",
+        checkExpType(
+            "interval '1' day(5) + interval '1' DAY",
             "INTERVAL DAY(5) NOT NULL");
-        checkExpType("interval '1' day + interval '1' HOUR(10)",
+        checkExpType(
+            "interval '1' day + interval '1' HOUR(10)",
             "INTERVAL DAY TO HOUR NOT NULL");
-        checkExpType("interval '1' day + interval '1' MINUTE",
+        checkExpType(
+            "interval '1' day + interval '1' MINUTE",
             "INTERVAL DAY TO MINUTE NOT NULL");
-        checkExpType("interval '1' day + interval '1' second",
+        checkExpType(
+            "interval '1' day + interval '1' second",
             "INTERVAL DAY TO SECOND NOT NULL");
 
-        checkExpType("interval '1:2' hour to minute + interval '1' second",
+        checkExpType(
+            "interval '1:2' hour to minute + interval '1' second",
             "INTERVAL HOUR TO SECOND NOT NULL");
         checkExpType(
             "interval '1:3' hour to minute + interval '1 1:2:3.4' day to second",
@@ -1308,21 +3649,29 @@ public class SqlValidatorTest
             "interval '1 2' day to hour + interval '1:1' minute to second",
             "INTERVAL DAY TO SECOND NOT NULL");
 
-        checkExpType("interval '1' year + interval '1' month",
+        checkExpType(
+            "interval '1' year + interval '1' month",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("interval '1' day - interval '1' hour",
+        checkExpType(
+            "interval '1' day - interval '1' hour",
             "INTERVAL DAY TO HOUR NOT NULL");
-        checkExpType("interval '1' year - interval '1' month",
+        checkExpType(
+            "interval '1' year - interval '1' month",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("interval '1' month - interval '1' year",
+        checkExpType(
+            "interval '1' month - interval '1' year",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails("interval '1' year + interval '1' day",
+        checkWholeExpFails(
+            "interval '1' year + interval '1' day",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL YEAR> \\+ <INTERVAL DAY>'.*");
-        checkExpFails("interval '1' month + interval '1' second",
+        checkWholeExpFails(
+            "interval '1' month + interval '1' second",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL MONTH> \\+ <INTERVAL SECOND>'.*");
-        checkExpFails("interval '1' year - interval '1' day",
+        checkWholeExpFails(
+            "interval '1' year - interval '1' day",
             "(?s).*Cannot apply '-' to arguments of type '<INTERVAL YEAR> - <INTERVAL DAY>'.*");
-        checkExpFails("interval '1' month - interval '1' second",
+        checkWholeExpFails(
+            "interval '1' month - interval '1' second",
             "(?s).*Cannot apply '-' to arguments of type '<INTERVAL MONTH> - <INTERVAL SECOND>'.*");
 
         // mixing between datetime and interval todo        checkExpType("date
@@ -1332,14 +3681,17 @@ public class SqlValidatorTest
 
         // multiply operator
         checkExpType("interval '1' year * 2", "INTERVAL YEAR NOT NULL");
-        checkExpType("1.234*interval '1 1:2:3' day to second ",
+        checkExpType(
+            "1.234*interval '1 1:2:3' day to second ",
             "INTERVAL DAY TO SECOND NOT NULL");
 
         // division operator
         checkExpType("interval '1' month / 0.1", "INTERVAL MONTH NOT NULL");
-        checkExpType("interval '1-2' year TO month / 0.1e-9",
+        checkExpType(
+            "interval '1-2' year TO month / 0.1e-9",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails("1.234/interval '1 1:2:3' day to second ",
+        checkWholeExpFails(
+            "1.234/interval '1 1:2:3' day to second",
             "(?s).*Cannot apply '/' to arguments of type '<DECIMAL.4, 3.> / <INTERVAL DAY TO SECOND>'.*");
     }
 
@@ -1354,139 +3706,189 @@ public class SqlValidatorTest
         checkExpType("+1.643", "DECIMAL(4, 3) NOT NULL");
 
         // addition operator
-        checkExpType("cast(1 as TINYINT) + cast(5 as INTEGER)",
+        checkExpType(
+            "cast(1 as TINYINT) + cast(5 as INTEGER)",
             "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) + cast(5 as BIGINT)", "BIGINT");
         checkExpType("cast(1 as REAL) + cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) + cast(5 as DOUBLE)", "DOUBLE");
         checkExpType("cast(null as REAL) + cast(5 as REAL)", "REAL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as REAL)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as REAL)",
             "DOUBLE NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DOUBLE)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as DOUBLE)",
             "DOUBLE NOT NULL");
-        checkExpType("cast(null as DECIMAL(5, 2)) + cast(1 as DOUBLE)",
+        checkExpType(
+            "cast(null as DECIMAL(5, 2)) + cast(1 as DOUBLE)",
             "DOUBLE");
 
         checkExpType("1.543 + 2.34", "DECIMAL(5, 3) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as BIGINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as BIGINT)",
             "DECIMAL(19, 2) NOT NULL");
-        checkExpType("cast(1 as NUMERIC(5, 2)) + cast(1 as INTEGER)",
+        checkExpType(
+            "cast(1 as NUMERIC(5, 2)) + cast(1 as INTEGER)",
             "DECIMAL(13, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(null as SMALLINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(null as SMALLINT)",
             "DECIMAL(8, 2)");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as TINYINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as TINYINT)",
             "DECIMAL(6, 2) NOT NULL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(5, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(5, 2))",
             "DECIMAL(6, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(6, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(6, 2))",
             "DECIMAL(7, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))",
             "DECIMAL(7, 4) NOT NULL");
-        checkExpType("cast(null as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(null as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))",
             "DECIMAL(7, 4)");
-        checkExpType("cast(1 as DECIMAL(19, 2)) + cast(1 as DECIMAL(19, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(19, 2)) + cast(1 as DECIMAL(19, 2))",
             "DECIMAL(19, 2) NOT NULL");
 
         // substraction operator
-        checkExpType("cast(1 as TINYINT) - cast(5 as BIGINT)",
+        checkExpType(
+            "cast(1 as TINYINT) - cast(5 as BIGINT)",
             "BIGINT NOT NULL");
         checkExpType("cast(null as INTEGER) - cast(5 as SMALLINT)", "INTEGER");
         checkExpType("cast(1 as INTEGER) - cast(5 as REAL)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) - cast(5 as DOUBLE)", "DOUBLE");
         checkExpType("cast(null as REAL) - cast(5 as REAL)", "REAL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DOUBLE)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(1 as DOUBLE)",
             "DOUBLE NOT NULL");
         checkExpType("cast(null as DOUBLE) - cast(1 as DECIMAL)", "DOUBLE");
 
         checkExpType("1.543 - 24", "DECIMAL(14, 3) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5)) - cast(1 as BIGINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5)) - cast(1 as BIGINT)",
             "DECIMAL(19, 0) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as INTEGER)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(1 as INTEGER)",
             "DECIMAL(13, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(null as SMALLINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(null as SMALLINT)",
             "DECIMAL(8, 2)");
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as TINYINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(1 as TINYINT)",
             "DECIMAL(6, 2) NOT NULL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(7))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(7))",
             "DECIMAL(10, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(6, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(6, 2))",
             "DECIMAL(7, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(4, 2)) - cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 2)) - cast(1 as DECIMAL(6, 4))",
             "DECIMAL(7, 4) NOT NULL");
-        checkExpType("cast(null as DECIMAL) - cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(null as DECIMAL) - cast(1 as DECIMAL(6, 4))",
             "DECIMAL(19, 4)");
-        checkExpType("cast(1 as DECIMAL(19, 2)) - cast(1 as DECIMAL(19, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(19, 2)) - cast(1 as DECIMAL(19, 2))",
             "DECIMAL(19, 2) NOT NULL");
 
         // multiply operator
-        checkExpType("cast(1 as TINYINT) * cast(5 as INTEGER)",
+        checkExpType(
+            "cast(1 as TINYINT) * cast(5 as INTEGER)",
             "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) * cast(5 as BIGINT)", "BIGINT");
         checkExpType("cast(1 as REAL) * cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) * cast(5 as DOUBLE)", "DOUBLE");
 
-        checkExpType("cast(1 as DECIMAL(7, 3)) * 1.654",
+        checkExpType(
+            "cast(1 as DECIMAL(7, 3)) * 1.654",
             "DECIMAL(11, 6) NOT NULL");
-        checkExpType("cast(null as DECIMAL(7, 3)) * cast (1.654 as DOUBLE)",
+        checkExpType(
+            "cast(null as DECIMAL(7, 3)) * cast (1.654 as DOUBLE)",
             "DOUBLE");
 
-        checkExpType("cast(null as DECIMAL(5, 2)) * cast(1 as BIGINT)",
+        checkExpType(
+            "cast(null as DECIMAL(5, 2)) * cast(1 as BIGINT)",
             "DECIMAL(19, 2)");
-        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as INTEGER)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) * cast(1 as INTEGER)",
             "DECIMAL(15, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as SMALLINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) * cast(1 as SMALLINT)",
             "DECIMAL(10, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as TINYINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) * cast(1 as TINYINT)",
             "DECIMAL(8, 2) NOT NULL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(5, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(5, 2))",
             "DECIMAL(10, 4) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(6, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(6, 2))",
             "DECIMAL(11, 4) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))",
             "DECIMAL(10, 6) NOT NULL");
-        checkExpType("cast(null as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(null as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))",
             "DECIMAL(10, 6)");
-        checkExpType("cast(1 as DECIMAL(4, 10)) * cast(null as DECIMAL(6, 10))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 10)) * cast(null as DECIMAL(6, 10))",
             "DECIMAL(10, 19)");
-        checkExpType("cast(1 as DECIMAL(19, 2)) * cast(1 as DECIMAL(19, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(19, 2)) * cast(1 as DECIMAL(19, 2))",
             "DECIMAL(19, 4) NOT NULL");
 
         // divide operator
-        checkExpType("cast(1 as TINYINT) / cast(5 as INTEGER)",
+        checkExpType(
+            "cast(1 as TINYINT) / cast(5 as INTEGER)",
             "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) / cast(5 as BIGINT)", "BIGINT");
         checkExpType("cast(1 as REAL) / cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) / cast(5 as DOUBLE)", "DOUBLE");
-        checkExpType("cast(1 as DECIMAL(7, 3)) / 1.654",
+        checkExpType(
+            "cast(1 as DECIMAL(7, 3)) / 1.654",
             "DECIMAL(15, 8) NOT NULL");
-        checkExpType("cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)",
+        checkExpType(
+            "cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)",
             "DOUBLE");
 
-        checkExpType("cast(null as DECIMAL(5, 2)) / cast(1 as BIGINT)",
+        checkExpType(
+            "cast(null as DECIMAL(5, 2)) / cast(1 as BIGINT)",
             "DECIMAL(19, 16)");
-        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as INTEGER)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) / cast(1 as INTEGER)",
             "DECIMAL(16, 13) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as SMALLINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) / cast(1 as SMALLINT)",
             "DECIMAL(11, 8) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as TINYINT)",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) / cast(1 as TINYINT)",
             "DECIMAL(9, 6) NOT NULL");
 
-        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(5, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(5, 2))",
             "DECIMAL(13, 8) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(6, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(6, 2))",
             "DECIMAL(14, 9) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))",
             "DECIMAL(15, 9) NOT NULL");
-        checkExpType("cast(null as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))",
+        checkExpType(
+            "cast(null as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))",
             "DECIMAL(15, 9)");
-        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))",
+        checkExpType(
+            "cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))",
             "DECIMAL(19, 6)");
-        checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))",
+        checkExpType(
+            "cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))",
             "DECIMAL(19, 0) NOT NULL");
     }
 
@@ -1517,7 +3919,8 @@ public class SqlValidatorTest
         checkWin(sql, expectedMsgPattern);
     }
 
-    public void checkWinFuncExpWithWinClause(String sql,
+    public void checkWinFuncExpWithWinClause(
+        String sql,
         String expectedMsgPattern)
     {
         sql = "select " + sql + " from emp window w as (order by deptno)";
@@ -1547,7 +3950,32 @@ public class SqlValidatorTest
         // <query specification> or <select statement: single row>,
         // or the <order by clause> of a simple table query.
         // See 4.15.3 for detail
-        // todo: test case for rule 1
+        checkWin(
+            "select *\n"
+            + " from emp\n"
+            + " where ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ > 10",
+            "Windowed aggregate expression is illegal in WHERE clause");
+
+        checkWin(
+            "select *\n"
+            + " from emp\n"
+            + " group by ename, ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ + 10\n"
+            + "order by deptno",
+            "Windowed aggregate expression is illegal in GROUP BY clause");
+
+        checkWin(
+            "select *\n"
+            + " from emp\n"
+            + " join dept on emp.deptno = dept.deptno\n"
+            + " and ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ = dept.deptno + 40\n"
+            + "order by deptno",
+            "Windowed aggregate expression is illegal in ON clause");
 
         // rule 3, a)
         checkWin(
@@ -1560,68 +3988,102 @@ public class SqlValidatorTest
         // valid window functions
         checkWinFuncExpWithWinClause("sum(sal)", null);
 
-        // row_number function
-        checkWinFuncExpWithWinClause("row_number() over (order by deptno)",
-            null);
+        if (Bug.Dt1446Fixed) {
+            // row_number function
+            checkWinFuncExpWithWinClause(
+                "row_number() over (order by deptno)",
+                null);
 
-        // rank function type
-        checkWinFuncExpWithWinClause("dense_rank()", null);
-        checkWinFuncExpWithWinClause("rank() over (order by empno)", null);
-        checkWinFuncExpWithWinClause("percent_rank() over (order by empno)",
-            null);
-        checkWinFuncExpWithWinClause("cume_dist() over (order by empno)", null);
+            // rank function type
+            checkWinFuncExpWithWinClause("dense_rank()", null);
+            checkWinFuncExpWithWinClause("rank() over (order by empno)", null);
+            checkWinFuncExpWithWinClause(
+                "percent_rank() over (order by empno)",
+                null);
+            checkWinFuncExpWithWinClause(
+                "cume_dist() over (order by empno)",
+                null);
 
-        // rule 6a
-        // ORDER BY required with RANK & DENSE_RANK
-        checkWin("select rank() over ^(partition by deptno)^ from emp",
-            "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        checkWin("select dense_rank() over ^(partition by deptno)^ from emp ",
-            "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        // The following fail but it is reported as window needing OBC due to
-        // test sequence so
-        // not really failing due to 6a
-        //checkWin("select rank() over w from emp window w as ^(partition by
-        //deptno)^",
-        //    "RANK or DENSE_RANK functions require ORDER BY clause in window
-        // specification");
-        //checkWin("select dense_rank() over w from emp window w as ^(partition
-        //by deptno)^",
-        //    "RANK or DENSE_RANK functions require ORDER BY clause in window
-        // specification");
+            // rule 6a
+            // ORDER BY required with RANK & DENSE_RANK
+            checkWin(
+                "select rank() over ^(partition by deptno)^ from emp",
+                "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
+            checkWin(
+                "select dense_rank() over ^(partition by deptno)^ from emp ",
+                "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
+            // The following fail but it is reported as window needing OBC due
+            // to
+            // test sequence so
+            // not really failing due to 6a
+            //checkWin("select rank() over w from emp window w as ^(partition by
+            //deptno)^",
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in
+            // window
+            // specification");
+            //checkWin("select dense_rank() over w from emp window w as
+            //^(partition
+            //by deptno)^",
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in
+            // window
+            // specification");
 
-        // rule 6b
-        // Framing not allowed with RANK & DENSE_RANK functions
-        // window framing defined in window clause
-        checkWin(
-            "select rank() over w from emp window w as (order by empno ^rows^ 2 preceding )",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select dense_rank() over w from emp window w as (order by empno ^rows^ 2 preceding)",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select percent_rank() over w from emp window w as (rows 2 preceding )",
-            null);
-        checkWin(
-            "select cume_dist() over w from emp window w as (rows 2 preceding)",
-            null);
+            // rule 6b
+            // Framing not allowed with RANK & DENSE_RANK functions
+            // window framing defined in window clause
+            checkWin(
+                "select rank() over w from emp window w as (order by empno ^rows^ 2 preceding )",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select dense_rank() over w from emp window w as (order by empno ^rows^ 2 preceding)",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select percent_rank() over w from emp window w as (rows 2 preceding )",
+                null);
+            checkWin(
+                "select cume_dist() over w from emp window w as (rows 2 preceding)",
+                null);
 
-        // window framing defined in in-line window
-        checkWin(
-            "select rank() over (order by empno ^range^ 2 preceding ) from emp ",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select dense_rank() over (order by empno ^rows^ 2 preceding ) from emp ",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin("select percent_rank() over (rows 2 preceding ) from emp",
-            null);
-        checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
+            // window framing defined in in-line window
+            checkWin(
+                "select rank() over (order by empno ^range^ 2 preceding ) from emp ",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select dense_rank() over (order by empno ^rows^ 2 preceding ) from emp ",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select percent_rank() over (rows 2 preceding ) from emp",
+                null);
+            checkWin(
+                "select cume_dist() over (rows 2 preceding ) from emp ",
+                null);
+        } else {
+            // Check for Rank function failure.
+            checkWinFuncExpWithWinClause(
+                "^dense_rank()^",
+                "Function 'DENSE_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^percent_rank()^",
+                "Function 'PERCENT_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^rank()^",
+                "Function 'RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^cume_dist()^",
+                "Function 'CUME_DIST\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^row_number()^",
+                "Function 'ROW_NUMBER\\(\\)' is not defined");
+        }
 
         // invalid column reference
-        checkWinFuncExpWithWinClause("sum(^invalidColumn^)",
+        checkWinFuncExpWithWinClause(
+            "sum(^invalidColumn^)",
             "Column 'INVALIDCOLUMN' not found in any table");
 
         // invalid window functions
-        checkWinFuncExpWithWinClause("^invalidFun(sal)^",
+        checkWinFuncExpWithWinClause(
+            "^invalidFun(sal)^",
             "No match found for function signature INVALIDFUN\\(<NUMERIC>\\)");
 
         // 6.10 rule 10. no distinct allowed aggreagate function
@@ -1677,18 +4139,19 @@ public class SqlValidatorTest
         checkWinFuncExp(
             "sum(sal) over (order by deptno rows unbounded preceding)",
             null);
-        checkWinFuncExp("sum(sal) over (order by deptno rows current row)",
+        checkWinFuncExp(
+            "sum(sal) over (order by deptno rows current row)",
             null);
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between unbounded preceding and unbounded following)",
-            null);
+            + "rows between unbounded preceding and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between CURRENT ROW and unbounded following)",
-            null);
+            + "rows between CURRENT ROW and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by deptno "
@@ -1701,6 +4164,7 @@ public class SqlValidatorTest
             + "order by deptno "
             + "rows between CURRENT ROW and CURRENT ROW)",
             null);
+
         // physical current row/current row
         checkWinFuncExp(
             "sum(sal) over ("
@@ -1713,10 +4177,12 @@ public class SqlValidatorTest
             + "order by deptno "
             + "rows between 2 preceding and CURRENT ROW)",
             null);
-        checkWinFuncExpWithWinClause("sum(sal) OVER (w "
+        checkWinFuncExpWithWinClause(
+            "sum(sal) OVER (w "
             + "rows 2 preceding )",
             null);
-        checkWinFuncExp("sum(sal) over (order by deptno range 2.0 preceding)",
+        checkWinFuncExp(
+            "sum(sal) over (order by deptno range 2.0 preceding)",
             null);
 
         // Failure mode tests
@@ -1747,12 +4213,12 @@ public class SqlValidatorTest
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by deptno "
-            + "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            + "RANGE BETWEEN ^INTERVAL '1' SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by empno "
-            + "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            + "RANGE BETWEEN ^INTERVAL '1' SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
         checkWinFuncExp(
             "sum(sal) over (order by deptno, empno ^range^ 2 preceding)",
@@ -1760,7 +4226,8 @@ public class SqlValidatorTest
         checkWinFuncExp(
             "sum(sal) over ^(partition by deptno range 5 preceding)^",
             "Window specification must contain an ORDER BY clause");
-        checkWinFuncExp("sum(sal) over ^w1^",
+        checkWinFuncExp(
+            "sum(sal) over ^w1^",
             "Window 'W1' not found");
         checkWinFuncExp(
             "sum(sal) OVER (^w1^ "
@@ -1768,6 +4235,17 @@ public class SqlValidatorTest
             + "order by empno "
             + "rows 2 preceding )",
             "Window 'W1' not found");
+    }
+
+    public void testPartitionByExpr()
+    {
+        checkWinFuncExp(
+            "sum(sal) over (partition by empno + deptno order by empno range 5 preceding)",
+            null);
+
+        checkWinFuncExp(
+            "sum(sal) over (partition by ^empno + ename^ order by empno range 5 preceding)",
+            "(?s)Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <VARCHAR\\(20\\)>'.*");
     }
 
     public void testWindowClause()
@@ -1794,19 +4272,23 @@ public class SqlValidatorTest
         // rule 11
         // a)
         // missing window order clause.
-        checkWinClauseExp("window w as (range 100 preceding)",
+        checkWinClauseExp(
+            "window w as ^(range 100 preceding)^",
             "Window specification must contain an ORDER BY clause");
 
         // order by number
-        checkWinClauseExp("window w as (order by sal range 100 preceding)",
+        checkWinClauseExp(
+            "window w as (order by sal range 100 preceding)",
             null);
 
         // order by date
-        checkWinClauseExp("window w as (order by hiredate range 100 preceding)",
+        checkWinClauseExp(
+            "window w as (order by hiredate range ^100^ preceding)",
             "Data Type mismatch between ORDER BY and RANGE clause");
 
         // order by string, should fail
-        checkWinClauseExp("window w as (order by ename range 100 preceding)",
+        checkWinClauseExp(
+            "window w as (order by ename range ^100^ preceding)",
             "Data type of ORDER BY prohibits use of RANGE clause");
         // todo: interval test ???
 
@@ -1814,25 +4296,33 @@ public class SqlValidatorTest
         // valid
         checkWinClauseExp("window w as (rows 2 preceding)", null);
 
-        // invalid tests
-        // exact numeric for the unsigned value specification
-        // The followoing two test fail as they should but in the parser
-        //checkWinClauseExp("window w as (rows -2.5 preceding)", null);
-        //checkWinClauseExp("window w as (rows -2 preceding)", null);
+        // invalid tests exact numeric for the unsigned value specification The
+        // followoing two test fail as they should but in the parser: JR not
+        // anymore now the validator kicks out
+        checkWinClauseExp(
+            "window w as (rows ^-2.5^ preceding)",
+            "ROWS value must be a non-negative integral constant");
+        checkWinClauseExp(
+            "window w as (rows ^-2^ preceding)",
+            "ROWS value must be a non-negative integral constant");
 
         // This test should fail as per 03 Std. but we pass it and plan
         // to apply the FLOOR function before window processing
-        checkWinClauseExp("window w as (rows 2.5 preceding)", null);
+        checkWinClauseExp(
+            "window w as (rows ^2.5^ preceding)",
+            "ROWS value must be a non-negative integral constant");
 
         // -----------------------------------
         // --   negative testings           --
         // -----------------------------------
         // reference undefined xyz column
-        checkWinClauseExp("window w as (partition by ^xyz^)",
+        checkWinClauseExp(
+            "window w as (partition by ^xyz^)",
             "Column 'XYZ' not found in any table");
 
         // window defintion is empty when applied to unsorted table
-        checkWinClauseExp("window w as ^( /* boo! */  )^",
+        checkWinClauseExp(
+            "window w as ^( /* boo! */  )^",
             "Window specification must contain an ORDER BY clause");
 
         // duplidate window name
@@ -1860,7 +4350,8 @@ public class SqlValidatorTest
             "Expression 'COMM' is not being grouped");
 
         // syntax rule 7
-        checkWinClauseExp("window w as (order by rank() over (order by sal))",
+        checkWinClauseExp(
+            "window w as (order by rank() over (order by sal))",
             null);
 
         // ------------------------------------
@@ -1922,7 +4413,8 @@ public class SqlValidatorTest
 
         // rule 13
         checkWinClauseExp("window w as (order by sal)", null);
-        checkWinClauseExp("window w as (order by ^non_exist_col^)",
+        checkWinClauseExp(
+            "window w as (order by ^non_exist_col^)",
             "Column 'NON_EXIST_COL' not found in any table");
         checkWinClauseExp(
             "window w as (partition by ^non_exist_col^ order by sal)",
@@ -1935,39 +4427,84 @@ public class SqlValidatorTest
         // the scope of another <new window name> NWN2 such that NWN1 and NWN2
         // are equivalent.
         checkWinClauseExp(
-            "window " + NL
-            + "w  as (partition by deptno order by empno rows 2 preceding), "
-            + NL
-            + "w2 as (partition by deptno order by empno rows 2 preceding)"
-            + NL,
+            "window\n"
+            + "w  as (partition by deptno order by empno rows 2 preceding),\n"
+            + "w2 as ^(partition by deptno order by empno rows 2 preceding)^\n",
             "Duplicate window specification not allowed in the same window clause");
+    }
+
+    public void testWindowClauseWithSubquery()
+    {
+        check(
+            "select * from \n"
+            + "( select sum(empno) over w, sum(deptno) over w from emp \n"
+            + "window w as (order by hiredate range interval '1' minute preceding))");
+
+        check(
+            "select * from \n"
+            + "( select sum(empno) over w, sum(deptno) over w, hiredate from emp) \n"
+            + "window w as (order by hiredate range interval '1' minute preceding)");
+
+        checkFails(
+            "select * from \n"
+            + "( select sum(empno) over w, sum(deptno) over w from emp) \n"
+            + "window w as (order by ^hiredate^ range interval '1' minute preceding)",
+            "Column 'HIREDATE' not found in any table");
     }
 
     public void testWindowNegative()
     {
-        checkNegWindow("rows between 2 preceding and 4 preceding", true);
-        checkNegWindow("rows between 2 preceding and 3 preceding", true);
-        checkNegWindow("rows between 2 preceding and 2 preceding", false);
-        checkNegWindow("rows between unbounded preceding and current row", false);
-        checkNegWindow("rows between unbounded preceding and unbounded following", false);
-        checkNegWindow("rows between current row and unbounded following", false);
-        checkNegWindow("rows between current row and 2 following", false);
-        checkNegWindow("range between 2 preceding and 2 following", false);
-        checkNegWindow("range between 2 preceding and -2 preceding", false);
-        checkNegWindow("range between 4 following and 3 following", true);
-        checkNegWindow("range between 4 following and 5 following", false);
-        checkNegWindow("rows between 1 following and 0 following", true);
-        checkNegWindow("rows between 0 following and 0 following", false);
+        final String negSize = "Window has negative size";
+        checkNegWindow("rows between 2 preceding and 4 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 3 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 2 preceding", null);
+        checkNegWindow(
+            "rows between unbounded preceding and current row",
+            null);
+        final String unboundedFollowing =
+            "UNBOUNDED FOLLOWING window not supported";
+        checkNegWindow(
+            "rows between unbounded preceding and unbounded following",
+            unboundedFollowing);
+        checkNegWindow(
+            "rows between current row and unbounded following",
+            unboundedFollowing);
+        checkNegWindow("rows between current row and 2 following", null);
+        checkNegWindow("range between 2 preceding and 2 following", null);
+        checkNegWindow("range between 2 preceding and -2 preceding", null);
+        checkNegWindow("range between 4 following and 3 following", negSize);
+        checkNegWindow("range between 4 following and 5 following", null);
+        checkNegWindow("rows between 1 following and 0 following", negSize);
+        checkNegWindow("rows between 0 following and 0 following", null);
     }
 
-    private void checkNegWindow(String s, boolean fail)
+    private void checkNegWindow(String s, String msg)
     {
-        String sql = "select sum(deptno) over ^(order by empno "
+        String sql =
+            "select sum(deptno) over ^(order by empno "
             + s
             + ")^ from emp";
         checkFails(
             sql,
-            fail ? "Window has negative size" : null);
+            msg);
+    }
+
+    public void testWindowPartial()
+    {
+        check(
+            "select sum(deptno) over (\n"
+            + "order by deptno, empno rows 2 preceding disallow partial)\n"
+            + "from emp");
+
+        // cannot do partial over logical window
+        checkFails(
+            "select sum(deptno) over (\n"
+            + "  partition by deptno\n"
+            + "  order by empno\n"
+            + "  range between 2 preceding and 3 following\n"
+            + "  ^disallow partial^)\n"
+            + "from emp",
+            "Cannot use DISALLOW PARTIAL with window based on RANGE");
     }
 
     public void testOneWinFunc()
@@ -2040,7 +4577,8 @@ public class SqlValidatorTest
     {
         checkColumnType("values (true)", "BOOLEAN NOT NULL");
         checkColumnType("select * from (values(true))", "BOOLEAN NOT NULL");
-        checkColumnType("select * from (select * from (values(true)))",
+        checkColumnType(
+            "select * from (select * from (values(true)))",
             "BOOLEAN NOT NULL");
         checkColumnType(
             "select * from (select * from (select * from (values(true))))",
@@ -2079,7 +4617,7 @@ public class SqlValidatorTest
         checkFails(
             "select * from emp as emps, dept as d" + NL
             + "where ^dept^.deptno > 5",
-            "Unknown identifier 'DEPT'");
+            "Table 'DEPT' not found");
 
         // fail: ambiguous column reference in ON clause
         checkFails(
@@ -2118,15 +4656,36 @@ public class SqlValidatorTest
     {
         // dtbug 282 -- "select r.* from sales.depts" gives NPE.
         // dtbug 318 -- error location should be ^r^ not ^r.*^.
-        checkFails("select ^r^.* from dept",
+        checkFails(
+            "select ^r^.* from dept",
             "Unknown identifier 'R'");
 
         check("select e.* from emp as e");
         check("select emp.* from emp");
 
         // Error message could be better (EMPNO does exist, but it's a column).
-        checkFails("select ^empno^ .  * from emp",
+        checkFails(
+            "select ^empno^ .  * from emp",
             "Unknown identifier 'EMPNO'");
+    }
+
+    public void testAsColumnList()
+    {
+        check("select d.a, b from dept as d(a, b)");
+        checkFails(
+            "select d.^deptno^ from dept as d(a, b)",
+            "(?s).*Column 'DEPTNO' not found in table 'D'.*");
+        checkFails(
+            "select 1 from dept as d(^a^, b, c)",
+            "(?s).*List of column aliases must have same degree as table; "
+            + "table has 2 columns \\('DEPTNO', 'NAME'\\), "
+            + "whereas alias list has 3 columns.*");
+        checkResultType(
+            "select * from dept as d(a, b)",
+            "RecordType(INTEGER NOT NULL A, VARCHAR(10) NOT NULL B) NOT NULL");
+        checkResultType(
+            "select * from (values ('a', 1), ('bc', 2)) t (a, b)",
+            "RecordType(CHAR(2) NOT NULL A, INTEGER NOT NULL B) NOT NULL");
     }
 
     // todo: implement IN
@@ -2152,7 +4711,8 @@ public class SqlValidatorTest
         // "select * from emp where empno in ()" is invalid -- see parser test
         check(
             "select * from emp where empno in (10 + deptno, cast(null as integer))");
-        checkFails("select * from emp where empno ^in (10, '20')^",
+        checkFails(
+            "select * from emp where empno in ^(10, '20')^",
             ERR_IN_VALUES_INCOMPATIBLE);
 
         checkExpType("1 in (2, 3, 4)", "BOOLEAN NOT NULL");
@@ -2163,23 +4723,30 @@ public class SqlValidatorTest
         checkExpType("true in (false, false or unknown)", "BOOLEAN");
         checkExpType("true in (false, true)", "BOOLEAN NOT NULL");
         checkExpType("(1,2) in ((1,2), (3,4))", "BOOLEAN NOT NULL");
-        checkExpType("'medium' in (cast(null as varchar(10)), 'bc')",
+        checkExpType(
+            "'medium' in (cast(null as varchar(10)), 'bc')",
             "BOOLEAN");
 
         // nullability depends on nullability of both sides
         checkColumnType("select empno in (1, 2) from emp", "BOOLEAN NOT NULL");
-        checkColumnType("select nullif(empno,empno) in (1, 2) from emp",
+        checkColumnType(
+            "select nullif(empno,empno) in (1, 2) from emp",
             "BOOLEAN");
-        checkColumnType("select empno in (1, nullif(empno,empno), 2) from emp",
+        checkColumnType(
+            "select empno in (1, nullif(empno,empno), 2) from emp",
             "BOOLEAN");
 
-        checkExpFails("1 in (2, 'c')",
+        checkExpFails(
+            "1 in ^(2, 'c')^",
             ERR_IN_VALUES_INCOMPATIBLE);
-        checkExpFails("1 in ((2), (3,4))",
+        checkExpFails(
+            "1 in ^((2), (3,4))^",
             ERR_IN_VALUES_INCOMPATIBLE);
-        checkExpFails("false and ^1 in ('b', 'c')^",
+        checkExpFails(
+            "false and ^1 in ('b', 'c')^",
             ERR_IN_OPERANDS_INCOMPATIBLE);
-        checkExpFails("1 > 5 ^or (1, 2) in (3, 4)^",
+        checkExpFails(
+            "1 > 5 ^or (1, 2) in (3, 4)^",
             ERR_IN_OPERANDS_INCOMPATIBLE);
     }
 
@@ -2190,9 +4757,12 @@ public class SqlValidatorTest
             "select * from emp where (empno,deptno)"
             + " in (select deptno,deptno from dept)");
 
+        // NOTE: jhyde: The closing caret should be one character to the right
+        // ("dept)^"), but it's difficult to achieve, because parentheses are
+        // discarded during the parsing process.
         checkFails(
-            "select * from emp where deptno in "
-            + "(select deptno,deptno from dept)",
+            "select * from emp where ^deptno in "
+            + "(select deptno,deptno from dept^)",
             "Values passed to IN operator must have compatible types");
     }
 
@@ -2203,15 +4773,71 @@ public class SqlValidatorTest
         check("select * from emp cross join dept");
     }
 
-    // TODO: is this legal? check that standard
-    public void _testDuplicateColumnAliasFails()
+    public void testDuplicateColumnAliasIsOK()
     {
-        checkFails("select 1 as a, 2 as b, 3 as a from emp", "xyz");
+        // duplicate column aliases are daft, but SQL:2003 allows them
+        check("select 1 as a, 2 as b, 3 as a from emp");
     }
 
-    public void testInvalidGroupBy(TestCase test)
+    public void testDuplicateTableAliasFails()
     {
-        checkFails("select empno, deptno from emp group by deptno", "xyz");
+        // implicit alias clashes with implicit alias
+        checkFails(
+            "select 1 from emp, ^emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // implicit alias clashes with implicit alias, using join syntax
+        checkFails(
+            "select 1 from emp join ^emp^ on emp.empno = emp.mgrno",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // explicit alias clashes with implicit alias
+        checkFails(
+            "select 1 from emp join ^dept as emp^ on emp.empno = emp.deptno",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // implicit alias does not clash with overridden alias
+        check("select 1 from emp as e join emp on emp.empno = e.deptno");
+
+        // explicit alias does not clash with overridden alias
+        check(
+            "select 1 from emp as e join dept as emp on e.empno = emp.deptno");
+
+        // more than 2 in from clause
+        checkFails(
+            "select 1 from emp, dept, emp as e, ^dept as emp^, emp",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // alias applied to subquery
+        checkFails(
+            "select 1 from emp, (^select 1 as x from (values (true))) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+        checkFails(
+            "select 1 from emp, (^values (true,false)) as emp (b, c)^, dept as emp",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // alias applied to table function. doesn't matter that table fn
+        // doesn't exist - should find the alias problem first
+        checkFails(
+            "select 1 from emp, ^table(foo()) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // explicit table
+        checkFails(
+            "select 1 from emp, ^(table foo.bar.emp) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+
+        // alias does not clash with alias inherited from enclosing context
+        check(
+            "select 1 from emp, dept where exists (\n"
+            + "  select 1 from emp where emp.empno = emp.deptno)");
+    }
+
+    public void testInvalidGroupBy()
+    {
+        checkFails(
+            "select ^empno^, deptno from emp group by deptno",
+            "Expression 'EMPNO' is not being grouped");
     }
 
     public void testSingleNoAlias()
@@ -2266,7 +4892,7 @@ public class SqlValidatorTest
             "select * from emp" + NL
             + "union" + NL
             + "select * from dept where ^empno^ < 10",
-            "Unknown identifier 'EMPNO'");
+            "Column 'EMPNO' not found in any table");
     }
 
     public void testUnionCountMismatchFails()
@@ -2278,18 +4904,46 @@ public class SqlValidatorTest
             "Column count mismatch in UNION");
     }
 
+    public void testUnionCountMismatcWithValuesFails()
+    {
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1,2))",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from emp",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from emp" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1))",
+            "Column count mismatch in UNION");
+    }
+
     public void testUnionTypeMismatchFails()
     {
-        checkFails("select 1, ^2^ from emp union select deptno, name from dept",
+        checkFails(
+            "select 1, ^2^ from emp union select deptno, name from dept",
             "Type mismatch in column 2 of UNION");
+
+        checkFails(
+            "select ^slacker^ from emp union select name from dept",
+            "Type mismatch in column 1 of UNION");
     }
 
     public void testUnionTypeMismatchWithStarFails()
     {
-        checkFails("select ^*^ from dept union select 1, 2 from emp",
+        checkFails(
+            "select ^*^ from dept union select 1, 2 from emp",
             "Type mismatch in column 2 of UNION");
 
-        checkFails("select ^dept.*^ from dept union select 1, 2 from emp",
+        checkFails(
+            "select ^dept.*^ from dept union select 1, 2 from emp",
             "Type mismatch in column 2 of UNION");
     }
 
@@ -2299,17 +4953,36 @@ public class SqlValidatorTest
             "values (1, ^2^, 3), (3, 4, 5), (6, 7, 8) union " + NL
             + "select deptno, name, deptno from dept",
             "Type mismatch in column 2 of UNION");
+
+        checkFails(
+            "select 1 from (values (^'x'^)) union " + NL
+            + "select 'a' from (values ('y'))",
+            "Type mismatch in column 1 of UNION");
+
+        checkFails(
+            "select 1 from (values (^'x'^)) union " + NL
+            + "(values ('a'))",
+            "Type mismatch in column 1 of UNION");
+    }
+
+    public void testValuesTypeMismatchFails()
+    {
+        checkFails(
+            "^values (1), ('a')^",
+            "Values passed to VALUES operator must have compatible types");
     }
 
     public void testNaturalCrossJoinFails()
     {
-        checkFails("select * from emp natural cross ^join^ dept",
+        checkFails(
+            "select * from emp natural cross ^join^ dept",
             "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 
     public void testCrossJoinUsingFails()
     {
-        checkFails("select * from emp cross join dept ^using (deptno)^",
+        checkFails(
+            "select * from emp cross join dept ^using (deptno)^",
             "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 
@@ -2319,7 +4992,8 @@ public class SqlValidatorTest
 
         // fail: comm exists on one side not the other
         // todo: The error message could be improved.
-        checkFails("select * from emp join dept using (deptno, ^comm^)",
+        checkFails(
+            "select * from emp join dept using (deptno, ^comm^)",
             "Column 'COMM' not found in any table");
 
         // ok to repeat (ok in Oracle10g too)
@@ -2356,11 +5030,99 @@ public class SqlValidatorTest
             "INNER, LEFT, RIGHT or FULL join requires a condition \\(NATURAL keyword or ON or USING clause\\)");
     }
 
+    public void testNaturalJoinWithOnFails()
+    {
+        checkFails(
+            "select * from emp natural join dept on ^emp.deptno = dept.deptno^",
+            "Cannot specify NATURAL keyword with ON or USING clause");
+    }
+
+    public void testNaturalJoinWithUsing()
+    {
+        checkFails(
+            "select * from emp natural join dept ^using (deptno)^",
+            "Cannot specify NATURAL keyword with ON or USING clause");
+    }
+
+    public void testNaturalJoinIncompatibleDatatype()
+    {
+        checkFails(
+            "select * from emp natural ^join^\n"
+            + "(select deptno, name as sal from dept)",
+            "Column 'SAL' matched using NATURAL keyword or USING clause has incompatible types: cannot compare 'INTEGER' to 'VARCHAR\\(10\\)'");
+
+        // make sal occur more than once on rhs, it is ignored and therefore
+        // there is no error about incompatible types
+        check(
+            "select * from emp natural join\n"
+            + " (select deptno, name as sal, 'foo' as sal from dept)");
+    }
+
+    public void testJoinUsingIncompatibleDatatype()
+    {
+        checkFails(
+            "select * from emp join (select deptno, name as sal from dept) using (deptno, ^sal^)",
+            "Column 'SAL' matched using NATURAL keyword or USING clause has incompatible types: cannot compare 'INTEGER' to 'VARCHAR\\(10\\)'");
+    }
+
     public void testJoinUsingInvalidColsFails()
     {
         // todo: Improve error msg
-        checkFails("select * from emp left join dept using (^gender^)",
+        checkFails(
+            "select * from emp left join dept using (^gender^)",
             "Column 'GENDER' not found in any table");
+    }
+
+    public void testJoinUsingDupColsFails()
+    {
+        checkFails(
+            "select * from emp left join (select deptno, name as deptno from dept) using (^deptno^)",
+            "Column name 'DEPTNO' in USING clause is not unique on one side of join");
+    }
+
+    public void testJoinRowType()
+    {
+        checkResultType(
+            "select * from emp left join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER NOT NULL EMPNO,"
+            + " VARCHAR(20) NOT NULL ENAME,"
+            + " VARCHAR(10) NOT NULL JOB,"
+            + " INTEGER NOT NULL MGR,"
+            + " TIMESTAMP(0) NOT NULL HIREDATE,"
+            + " INTEGER NOT NULL SAL,"
+            + " INTEGER NOT NULL COMM,"
+            + " INTEGER NOT NULL DEPTNO,"
+            + " BOOLEAN NOT NULL SLACKER,"
+            + " INTEGER DEPTNO0,"
+            + " VARCHAR(10) NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp right join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO,"
+            + " VARCHAR(20) ENAME,"
+            + " VARCHAR(10) JOB,"
+            + " INTEGER MGR,"
+            + " TIMESTAMP(0) HIREDATE,"
+            + " INTEGER SAL,"
+            + " INTEGER COMM,"
+            + " INTEGER DEPTNO,"
+            + " BOOLEAN SLACKER,"
+            + " INTEGER NOT NULL DEPTNO0,"
+            + " VARCHAR(10) NOT NULL NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp full join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO,"
+            + " VARCHAR(20) ENAME,"
+            + " VARCHAR(10) JOB,"
+            + " INTEGER MGR,"
+            + " TIMESTAMP(0) HIREDATE,"
+            + " INTEGER SAL,"
+            + " INTEGER COMM,"
+            + " INTEGER DEPTNO,"
+            + " BOOLEAN SLACKER,"
+            + " INTEGER DEPTNO0,"
+            + " VARCHAR(10) NAME) NOT NULL");
     }
 
     // todo: Cannot handle '(a join b)' yet -- we see the '(' and expect to
@@ -2391,20 +5153,31 @@ public class SqlValidatorTest
 
     public void testWhere()
     {
-        checkFails("select * from emp where ^sal^",
+        checkFails(
+            "select * from emp where ^sal^",
             "WHERE clause must be a condition");
+    }
+
+    public void testOn()
+    {
+        checkFails(
+            "select * from emp e1 left outer join emp e2 on ^e1.sal^",
+            "ON clause must be a condition");
     }
 
     public void testHaving()
     {
-        checkFails("select * from emp having ^sum(sal)^",
+        checkFails(
+            "select * from emp having ^sum(sal)^",
             "HAVING clause must be a condition");
-        checkFails("select ^*^ from emp having sum(sal) > 10",
+        checkFails(
+            "select ^*^ from emp having sum(sal) > 10",
             "Expression 'EMP\\.EMPNO' is not being grouped");
 
         // agg in select and having, no group by
         check("select sum(sal + sal) from emp having sum(sal) > 10");
-        checkFails("SELECT deptno FROM emp GROUP BY deptno HAVING ^sal^ > 10",
+        checkFails(
+            "SELECT deptno FROM emp GROUP BY deptno HAVING ^sal^ > 10",
             "Expression 'SAL' is not being grouped");
     }
 
@@ -2424,7 +5197,13 @@ public class SqlValidatorTest
      */
     public void testLarge()
     {
-        final int x = 1000;
+        int x = 1000;
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            // NOTE jvs 1-Nov-2006:  Default thread stack size
+            // on Windows is too small, so avoid stack overflow
+            x /= 3;
+        }
+
         // E.g. large = "deptno * 1 + deptno * 2 + deptno * 3".
         String large = list(" + ", "deptno * ", x);
         check("select " + large + "from emp");
@@ -2444,7 +5223,8 @@ public class SqlValidatorTest
         // E.g. "select x1, x2 ... from (
         // select 'a' as x1, 'a' as x2, ... from emp union
         // select 'bb' as x1, 'bb' as x2, ... from dept)"
-        check("select " + list(", ", "x", x)
+        check(
+            "select " + list(", ", "x", x)
             + " from (select " + list(", ", "'a' as x", x) + " from emp "
             + "union all select " + list(", ", "'bb' as x", x) + " from dept)");
     }
@@ -2463,57 +5243,66 @@ public class SqlValidatorTest
 
     public void testOrder()
     {
-        final SqlValidator.Compatible compatible = getCompatible();
+        final SqlConformance conformance = tester.getConformance();
         check("select empno as x from emp order by empno");
 
         // invalid use of 'asc'
-        checkFails("select empno, sal from emp order by ^asc^",
+        checkFails(
+            "select empno, sal from emp order by ^asc^",
             "Column 'ASC' not found in any table");
 
         // In sql92, empno is obscured by the alias.
         // Otherwise valid.
         // Checked Oracle10G -- is it valid.
-        checkFails("select empno as x from emp order by empno",
+        checkFails(
+            "select empno as x from emp order by empno",
 
             // in sql92, empno is obscured by the alias
-            compatible.isSortByAliasObscures() ? "unknown column empno" : 
+            conformance.isSortByAliasObscures()
+            ? "unknown column empno"
             // otherwise valid
-            null);
+            : null);
 
-        checkFails("select empno as x from emp order by ^x^",
+        checkFails(
+            "select empno as x from emp order by ^x^",
 
             // valid in oracle and pre-99 sql
-            compatible.isSortByAlias() ? null
-                : 
+            conformance.isSortByAlias()
+            ? null
             // invalid in sql:2003
-            "Column 'X' not found in any table");
+            : "Column 'X' not found in any table");
 
-        checkFails("select empno as x from emp order by ^10^",
+        checkFails(
+            "select empno as x from emp order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" : 
+            conformance.isSortByOrdinal()
+            ? "Ordinal out of range"
             // valid from sql:99 onwards (but sorting by constant achieves
             // nothing!)
-            null);
+            : null);
 
         // Has different meanings in different dialects (which makes it very
         // confusing!) but is always valid.
         check("select empno + 1 as empno from emp order by empno");
 
         // Always fails
-        checkFails("select empno as x from emp, dept order by ^deptno^",
+        checkFails(
+            "select empno as x from emp, dept order by ^deptno^",
             "Column 'DEPTNO' is ambiguous");
 
         check("select empno + 1 from emp order by deptno asc, empno + 1 desc");
 
-        checkFails("select empno as deptno from emp, dept order by deptno",
+        checkFails(
+            "select empno as deptno from emp, dept order by deptno",
 
             // Alias 'deptno' is closer in scope than 'emp.deptno'
             // and 'dept.deptno', and is therefore not ambiguous.
             // Checked Oracle10G -- it is valid.
-            compatible.isSortByAlias() ? null : 
+            conformance.isSortByAlias()
+            ? null
             // Ambiguous in SQL:2003
-            "col ambig");
+            : "col ambig");
 
         check(
             "select deptno from dept" + NL
@@ -2535,7 +5324,7 @@ public class SqlValidatorTest
             + "order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" : null);
+            conformance.isSortByOrdinal() ? "Ordinal out of range" : null);
 
         // Sort by scalar subquery
         check(
@@ -2546,16 +5335,24 @@ public class SqlValidatorTest
             + "order by (select name from dept where deptno = emp.^foo^)",
             "Column 'FOO' not found in table 'EMP'");
 
+        // REVIEW jvs 10-Apr-2008:  I disabled this because I don't
+        // understand what it means; see
+        // testAggregateInOrderByFails for the discrimination I added
+        // (SELECT should be aggregating for this to make sense).
+        /*
         // Sort by aggregate. Oracle allows this.
         check("select 1 from emp order by sum(sal)");
+        */
 
         // ORDER BY and SELECT *
         check("select * from emp order by empno");
-        checkFails("select * from emp order by ^nonExistent^, deptno",
+        checkFails(
+            "select * from emp order by ^nonExistent^, deptno",
             "Column 'NONEXISTENT' not found in any table");
 
         // Overriding expression has different type.
-        checkFails("select 'foo' as empno from emp order by ^empno + 5^",
+        checkFails(
+            "select 'foo' as empno from emp order by ^empno + 5^",
             "(?s)Cannot apply '\\+' to arguments of type '<CHAR\\(3\\)> \\+ <INTEGER>'\\..*");
     }
 
@@ -2571,7 +5368,7 @@ public class SqlValidatorTest
             "select empno, sal from emp "
             + "union all "
             + "select deptno, deptno from dept "
-            + "order by asc",
+            + "order by ^asc^",
             "Column 'ASC' not found in any table");
 
         // name belongs to emp but is not projected so cannot sort on it
@@ -2579,7 +5376,7 @@ public class SqlValidatorTest
             "select empno, sal from emp "
             + "union all "
             + "select deptno, deptno from dept "
-            + "order by ename desc",
+            + "order by ^ename^ desc",
             "Column 'ENAME' not found in any table");
 
         // empno is not an alias in the first select in the union
@@ -2599,7 +5396,7 @@ public class SqlValidatorTest
 
         // ordinal out of range -- if 'order by <ordinal>' means something in
         // this dialect
-        if (getCompatible().isSortByOrdinal()) {
+        if (tester.getConformance().isSortByOrdinal()) {
             checkFails(
                 "select empno, sal from emp "
                 + "union all "
@@ -2629,8 +5426,9 @@ public class SqlValidatorTest
     public void testOrderGroup()
     {
         // Group by
-        checkFails("select 1 from emp group by deptno order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+        checkFails(
+            "select 1 from emp group by deptno order by ^empno^",
+            "Expression 'EMP\\.EMPNO' is not being grouped");
 
         // order by can contain aggregate expressions
         check(
@@ -2642,7 +5440,7 @@ public class SqlValidatorTest
 
         checkFails(
             "select sum(sal) from emp having count(*) > 3 order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
 
         check(
             "select sum(sal) from emp having count(*) > 3 order by sum(deptno)");
@@ -2651,7 +5449,11 @@ public class SqlValidatorTest
 
         checkFails(
             "select distinct deptno from emp group by deptno order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+
+        checkFails(
+            "select distinct deptno from emp group by deptno order by deptno, ^empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
 
         check(
             "select distinct deptno from emp group by deptno order by deptno");
@@ -2675,18 +5477,81 @@ public class SqlValidatorTest
             + "from emp "
             + "group by empno, deptno "
             + "order by empno * sum(sal + 2)",
-            getCompatible().isSortByAliasObscures() ? "xxxx" : null);
+            tester.getConformance().isSortByAliasObscures() ? "xxxx" : null);
+
+        // Distinct on expressions with attempts to order on a column in
+        // the underlying table
+        checkFails(
+            "select distinct cast(empno as bigint) "
+            + "from emp order by ^empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+        checkFails(
+            "select distinct cast(empno as bigint) "
+            + "from emp order by ^emp.empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp order by ^emp.empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp as e order by ^e.empno^",
+            "Expression 'E\\.EMPNO' is not in the select clause");
+
+        // These tests are primarily intended to test cases where sorting by
+        // an alias is allowed.  But for instances that don't support sorting
+        // by alias, the tests also verify that a proper exception is thrown.
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp order by ^empno^",
+            tester.getConformance().isSortByAlias() ? null
+            : "Expression 'EMPNO' is not in the select clause");
+        checkFails(
+            "select distinct cast(empno as bigint) as eno "
+            + "from emp order by ^eno^",
+            tester.getConformance().isSortByAlias() ? null
+            : "Column 'ENO' not found in any table");
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp e order by ^empno^",
+            tester.getConformance().isSortByAlias() ? null
+            : "Expression 'EMPNO' is not in the select clause");
+
+        // Distinct on expressions, sorting using ordinals.
+        if (tester.getConformance().isSortByOrdinal()) {
+            check(
+                "select distinct cast(empno as bigint) from emp order by 1");
+            check(
+                "select distinct cast(empno as bigint) as empno "
+                + "from emp order by 1");
+            check(
+                "select distinct cast(empno as bigint) as empno "
+                + "from emp as e order by 1");
+        }
+
+        // Distinct on expressions with ordering on expressions as well
+        check(
+            "select distinct cast(empno as varchar(10)) from emp "
+            + "order by cast(empno as varchar(10))");
+        checkFails(
+            "select distinct cast(empno as varchar(10)) as eno from emp "
+            + " order by upper(^eno^)",
+            tester.getConformance().isSortByAlias() ? null
+            : "Column 'ENO' not found in any table");
     }
 
     public void testGroup()
     {
-        checkFails("select empno from emp where ^sum(sal)^ > 50",
+        checkFails(
+            "select empno from emp where ^sum(sal)^ > 50",
             "Aggregate expression is illegal in WHERE clause");
 
-        checkFails("select ^empno^ from emp group by deptno",
+        checkFails(
+            "select ^empno^ from emp group by deptno",
             "Expression 'EMPNO' is not being grouped");
 
-        checkFails("select ^*^ from emp group by deptno",
+        checkFails(
+            "select ^*^ from emp group by deptno",
             "Expression 'EMP\\.EMPNO' is not being grouped");
 
         // If we're grouping on ALL columns, 'select *' is ok.
@@ -2726,11 +5591,23 @@ public class SqlValidatorTest
         check("select localtime, deptno + 3 from emp group by deptno");
     }
 
+    public void testGroupByCorrelatedColumnFails()
+    {
+        // -- this is not sql 2003 standard
+        // -- see sql2003 part2,  7.9
+        checkFails(
+            "select count(*)\n"
+            + "from emp\n"
+            + "where exists (select count(*) from dept group by ^emp^.empno)",
+            "Table 'EMP' not found");
+    }
+
     public void testGroupExpressionEquivalence()
     {
         // operator equivalence
         check("select empno + 1 from emp group by empno + 1");
-        checkFails("select 1 + ^empno^ from emp group by empno + 1",
+        checkFails(
+            "select 1 + ^empno^ from emp group by empno + 1",
             "Expression 'EMPNO' is not being grouped");
 
         // datatype equivalence
@@ -2840,7 +5717,7 @@ public class SqlValidatorTest
 
         checkFails(
             "select case ^empno^ when 10 then _iso-8859-1'foo bar' else null end from emp "
-            + "group by case empno when 10 then _iso-8859-2'foo bar' else null end",
+            + "group by case empno when 10 then _UTF16'foo bar' else null end",
             "Expression 'EMPNO' is not being grouped");
 
         if (Bug.Frg78Fixed) {
@@ -2857,13 +5734,80 @@ public class SqlValidatorTest
         check("select deptno as d, count(*) as c from emp group by deptno");
     }
 
+    public void testNestedAggFails()
+    {
+        String ERR_NESTED_AGG = "Aggregate expressions cannot be nested";
+
+        // simple case
+        checkFails(
+            "select ^sum(max(empno))^ from emp",
+            ERR_NESTED_AGG);
+
+        // should still fail with intermediate expression
+        checkFails(
+            "select ^sum(2*max(empno))^ from emp",
+            ERR_NESTED_AGG);
+
+        // make sure it fails with GROUP BY too
+        checkFails(
+            "select ^sum(max(empno))^ from emp group by deptno",
+            ERR_NESTED_AGG);
+
+        // make sure it fails in HAVING too
+        checkFails(
+            "select count(*) from emp group by deptno "
+            + "having ^sum(max(empno))^=3",
+            ERR_NESTED_AGG);
+
+        // double-nesting should fail too; bottom-up validation currently
+        // causes us to flag the intermediate level
+        checkFails(
+            "select sum(^max(min(empno))^) from emp",
+            ERR_NESTED_AGG);
+
+        // in OVER clause
+        checkFails(
+            "select ^sum(max(empno)) OVER^ (order by deptno ROWS 2 PRECEDING) from emp",
+            ERR_NESTED_AGG);
+
+        // OVER in clause
+        checkFails(
+            "select ^sum(max(empno) OVER (order by deptno ROWS 2 PRECEDING))^ from emp",
+            ERR_NESTED_AGG);
+    }
+
+    public void testAggregateInGroupByFails()
+    {
+        String ERR_AGG_IN_GROUP_BY =
+            "Aggregate expression is illegal in GROUP BY clause";
+
+        checkFails(
+            "select count(*) from emp group by ^sum(empno)^",
+            ERR_AGG_IN_GROUP_BY);
+    }
+
+    public void testAggregateInOrderByFails()
+    {
+        String ERR_AGG_IN_ORDER_BY =
+            "Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT";
+
+        checkFails(
+            "select empno from emp order by ^sum(empno)^",
+            ERR_AGG_IN_ORDER_BY);
+
+        // but this should be OK
+        check("select sum(empno) from emp group by deptno order by sum(empno)");
+
+        // this should also be OK
+        check("select sum(empno) from emp order by sum(empno)");
+    }
+
     public void testCorrelatingVariables()
     {
         // reference to unqualified correlating column
-        checkFails(
+        check(
             "select * from emp where exists (" + NL
-            + "select * from dept where deptno = sal)",
-            "Unknown identifier 'SAL'");
+            + "select * from dept where deptno = sal)");
 
         // reference to qualified correlating column
         check(
@@ -2873,35 +5817,46 @@ public class SqlValidatorTest
 
     public void testIntervalCompare()
     {
-        checkExpType("interval '1' hour = interval '1' day",
+        checkExpType(
+            "interval '1' hour = interval '1' day",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' hour <> interval '1' hour",
+        checkExpType(
+            "interval '1' hour <> interval '1' hour",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' hour < interval '1' second",
+        checkExpType(
+            "interval '1' hour < interval '1' second",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' hour <= interval '1' minute",
+        checkExpType(
+            "interval '1' hour <= interval '1' minute",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' minute > interval '1' second",
+        checkExpType(
+            "interval '1' minute > interval '1' second",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' second >= interval '1' day",
+        checkExpType(
+            "interval '1' second >= interval '1' day",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' year >= interval '1' year",
+        checkExpType(
+            "interval '1' year >= interval '1' year",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' month = interval '1' year",
+        checkExpType(
+            "interval '1' month = interval '1' year",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' month <> interval '1' month",
+        checkExpType(
+            "interval '1' month <> interval '1' month",
             "BOOLEAN NOT NULL");
-        checkExpType("interval '1' year >= interval '1' month",
+        checkExpType(
+            "interval '1' year >= interval '1' month",
             "BOOLEAN NOT NULL");
 
-        checkExpFails("interval '1' second >= interval '1' year",
+        checkWholeExpFails(
+            "interval '1' second >= interval '1' year",
             "(?s).*Cannot apply '>=' to arguments of type '<INTERVAL SECOND> >= <INTERVAL YEAR>'.*");
-        checkExpFails("interval '1' month = interval '1' day",
+        checkWholeExpFails(
+            "interval '1' month = interval '1' day",
             "(?s).*Cannot apply '=' to arguments of type '<INTERVAL MONTH> = <INTERVAL DAY>'.*");
     }
 
-    // disabled(dtbug 334): works in farrago but not from aspen
-    public void _testOverlaps()
+    public void testOverlaps()
     {
         checkExpType(
             "(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', date '1-2-3')",
@@ -2913,13 +5868,13 @@ public class SqlValidatorTest
         checkExp(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
 
-        checkExpFails(
+        checkWholeExpFails(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
-            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
-        checkExpFails(
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
+        checkWholeExpFails(
             "(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
-            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
-        checkExpFails(
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
+        checkWholeExpFails(
             "(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')",
             "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIME.0.>. OVERLAPS .<TIME.0.>, <DATE>.'.*");
     }
@@ -2928,46 +5883,58 @@ public class SqlValidatorTest
     {
         // TODO: Need to have extract return decimal type for seconds
         // so we can have seconds fractions
-        checkExpType("extract(year from interval '1-2' year to month)",
+        checkExpType(
+            "extract(year from interval '1-2' year to month)",
             "BIGINT NOT NULL");
         checkExp("extract(minute from interval '1.1' second)");
 
-        checkExpFails("extract(minute from interval '11' month)",
+        checkWholeExpFails(
+            "extract(minute from interval '11' month)",
             "(?s).*Cannot apply.*");
-        checkExpFails("extract(year from interval '11' second)",
+        checkWholeExpFails(
+            "extract(year from interval '11' second)",
             "(?s).*Cannot apply.*");
     }
 
     public void testCastToInterval()
     {
-        checkExpType("cast(interval '1' hour as varchar(20))",
+        checkExpType(
+            "cast(interval '1' hour as varchar(20))",
             "VARCHAR(20) NOT NULL");
         checkExpType("cast(interval '1' hour as bigint)", "BIGINT NOT NULL");
         checkExpType("cast(1000 as interval hour)", "INTERVAL HOUR NOT NULL");
 
-        checkExpType("cast(interval '1' month as interval year)",
+        checkExpType(
+            "cast(interval '1' month as interval year)",
             "INTERVAL YEAR NOT NULL");
-        checkExpType("cast(interval '1-1' year to month as interval month)",
+        checkExpType(
+            "cast(interval '1-1' year to month as interval month)",
             "INTERVAL MONTH NOT NULL");
-        checkExpType("cast(interval '1:1' hour to minute as interval day)",
+        checkExpType(
+            "cast(interval '1:1' hour to minute as interval day)",
             "INTERVAL DAY NOT NULL");
         checkExpType(
             "cast(interval '1:1' hour to minute as interval minute to second)",
             "INTERVAL MINUTE TO SECOND NOT NULL");
 
-        checkExpFails("cast(interval '1:1' hour to minute as interval month)",
+        checkWholeExpFails(
+            "cast(interval '1:1' hour to minute as interval month)",
             "Cast function cannot convert value of type INTERVAL HOUR TO MINUTE to type INTERVAL MONTH");
-        checkExpFails("cast(interval '1-1' year to month as interval second)",
+        checkWholeExpFails(
+            "cast(interval '1-1' year to month as interval second)",
             "Cast function cannot convert value of type INTERVAL YEAR TO MONTH to type INTERVAL SECOND");
     }
 
     public void testMinusDateOperator()
     {
-        checkExpType("(CURRENT_DATE - CURRENT_DATE) HOUR",
+        checkExpType(
+            "(CURRENT_DATE - CURRENT_DATE) HOUR",
             "INTERVAL HOUR NOT NULL");
-        checkExpType("(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH",
+        checkExpType(
+            "(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails("(CURRENT_DATE - LOCALTIME) YEAR TO MONTH",
+        checkWholeExpFails(
+            "(CURRENT_DATE - LOCALTIME) YEAR TO MONTH",
             "(?s).*Parameters must be of the same type.*");
     }
 
@@ -2992,22 +5959,29 @@ public class SqlValidatorTest
     public void testUnnest()
     {
         checkColumnType("select*from unnest(multiset[1])", "INTEGER NOT NULL");
-        checkColumnType("select*from unnest(multiset[1, 2])",
+        checkColumnType(
+            "select*from unnest(multiset[1, 2])",
             "INTEGER NOT NULL");
-        checkColumnType("select*from unnest(multiset[321.3, 2.33])",
+        checkColumnType(
+            "select*from unnest(multiset[321.3, 2.33])",
             "DECIMAL(5, 2) NOT NULL");
-        checkColumnType("select*from unnest(multiset[321.3, 4.23e0])",
+        checkColumnType(
+            "select*from unnest(multiset[321.3, 4.23e0])",
             "DOUBLE NOT NULL");
         checkColumnType(
             "select*from unnest(multiset[43.2e1, cast(null as decimal(4,2))])",
             "DOUBLE");
-        checkColumnType("select*from unnest(multiset[1, 2.3, 1])",
+        checkColumnType(
+            "select*from unnest(multiset[1, 2.3, 1])",
             "DECIMAL(11, 1) NOT NULL");
-        checkColumnType("select*from unnest(multiset['1','22','333'])",
+        checkColumnType(
+            "select*from unnest(multiset['1','22','333'])",
             "CHAR(3) NOT NULL");
-        checkColumnType("select*from unnest(multiset['1','22','333','22'])",
+        checkColumnType(
+            "select*from unnest(multiset['1','22','333','22'])",
             "CHAR(3) NOT NULL");
-        checkFails("select*from unnest(1)",
+        checkFails(
+            "select*from ^unnest(1)^",
             "(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
         check("select*from unnest(multiset(select*from dept))");
     }
@@ -3042,8 +6016,8 @@ public class SqlValidatorTest
     public void testLateral()
     {
         checkFails(
-            "select * from emp, (select * from dept where emp.deptno=dept.deptno)",
-            "(?s).*Unknown identifier 'EMP'.*");
+            "select * from emp, (select * from dept where ^emp^.deptno=dept.deptno)",
+            "Table 'EMP' not found");
 
         check(
             "select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)");
@@ -3064,7 +6038,8 @@ public class SqlValidatorTest
 
     public void testFusion()
     {
-        checkFails("select fusion(deptno) from emp",
+        checkFails(
+            "select ^fusion(deptno)^ from emp",
             "(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
         check("select fusion(multiset[3]) from emp");
         // todo. FUSION is an aggregate function. test that validator only can
@@ -3078,7 +6053,8 @@ public class SqlValidatorTest
         check("select count(ename) from emp");
         check("select count(sal) from emp");
         check("select count(1) from emp");
-        checkFails("select ^count(sal,ename)^ from emp",
+        checkFails(
+            "select ^count(sal,ename)^ from emp",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
     }
 
@@ -3093,10 +6069,8 @@ public class SqlValidatorTest
 
     public void testMinMaxFunctions()
     {
-        checkFails("SELECT ^MIN(true)^ from emp",
-            "The MIN function does not support the BOOLEAN data type.");
-        checkFails("SELECT ^MAX(false)^ from emp",
-            "The MAX function does not support the BOOLEAN data type.");
+        check("SELECT MIN(true) from emp");
+        check("SELECT MAX(false) from emp");
 
         check("SELECT MIN(sal+deptno) FROM emp");
         check("SELECT MAX(ename) FROM emp");
@@ -3107,7 +6081,8 @@ public class SqlValidatorTest
     public void testFunctionalDistinct()
     {
         check("select count(distinct sal) from emp");
-        checkFails("select COALESCE(^distinct^ sal) from emp",
+        checkFails(
+            "select COALESCE(^distinct^ sal) from emp",
             "DISTINCT/ALL not allowed with COALESCE function");
     }
 
@@ -3116,20 +6091,50 @@ public class SqlValidatorTest
         check("SELECT DISTINCT deptno FROM emp");
         check("SELECT DISTINCT deptno, sal FROM emp");
         check("SELECT DISTINCT deptno FROM emp GROUP BY deptno");
-        checkFails("SELECT DISTINCT ^deptno^ FROM emp GROUP BY sal",
+        checkFails(
+            "SELECT DISTINCT ^deptno^ FROM emp GROUP BY sal",
             "Expression 'DEPTNO' is not being grouped");
         check("SELECT DISTINCT avg(sal) from emp");
-        checkFails("SELECT DISTINCT ^deptno^, avg(sal) from emp",
+        checkFails(
+            "SELECT DISTINCT ^deptno^, avg(sal) from emp",
             "Expression 'DEPTNO' is not being grouped");
         check("SELECT DISTINCT deptno, sal from emp GROUP BY sal, deptno");
         check("SELECT deptno FROM emp GROUP BY deptno HAVING deptno > 55");
         check(
             "SELECT DISTINCT deptno, 33 FROM emp GROUP BY deptno HAVING deptno > 55");
-        checkFails("SELECT DISTINCT deptno, 33 FROM emp HAVING ^deptno^ > 55",
+        checkFails(
+            "SELECT DISTINCT deptno, 33 FROM emp HAVING ^deptno^ > 55",
             "Expression 'DEPTNO' is not being grouped");
         check("SELECT DISTINCT * from emp");
-        checkFails("SELECT DISTINCT ^*^ from emp GROUP BY deptno",
+        checkFails(
+            "SELECT DISTINCT ^*^ from emp GROUP BY deptno",
             "Expression 'EMP\\.EMPNO' is not being grouped");
+
+        // similar validation for SELECT DISTINCT and GROUP BY
+        checkFails(
+            "SELECT deptno FROM emp GROUP BY deptno ORDER BY deptno, ^empno^",
+            "Expression 'EMP\\.EMPNO' is not being grouped");
+        checkFails(
+            "SELECT DISTINCT deptno from emp ORDER BY deptno, ^empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+        check("SELECT DISTINCT deptno from emp ORDER BY deptno + 2");
+        if (false) { // Hersker 2008917: Julian will fix immediately after
+                     // integration
+            checkFails(
+                "SELECT DISTINCT deptno from emp ORDER BY deptno, ^sum(empno)^",
+                "Expression 'SUM\\(`EMP`\\.`EMPNO`\\)' is not in the select clause");
+        }
+
+        // The ORDER BY clause works on what is projected by DISTINCT - even if
+        // GROUP BY is present.
+        checkFails(
+            "SELECT DISTINCT deptno FROM emp GROUP BY deptno, empno ORDER BY deptno, ^empno^",
+            "Expression 'EMP\\.EMPNO' is not in the select clause");
+
+        // redundant distinct; same query is in unitsql/optimizer/distinct.sql
+        check(
+            "select distinct * from (select distinct deptno from emp) order by 1");
+
         check("SELECT DISTINCT 5, 10+5, 'string' from emp");
     }
 
@@ -3147,19 +6152,23 @@ public class SqlValidatorTest
             + " BOOLEAN NOT NULL SLACKER) NOT NULL";
         checkResultType("select * from (table emp)", empRecordType);
         checkResultType("table emp", empRecordType);
-        checkFails("table ^nonexistent^",
+        checkFails(
+            "table ^nonexistent^",
             "Table 'NONEXISTENT' not found");
     }
 
     public void testCollectionTable()
     {
-        checkResultType("select * from table(ramp(3))",
+        checkResultType(
+            "select * from table(ramp(3))",
             "RecordType(INTEGER NOT NULL I) NOT NULL");
 
-        checkFails("select * from table(^ramp('3')^)",
+        checkFails(
+            "select * from table(^ramp('3')^)",
             "Cannot apply 'RAMP' to arguments of type 'RAMP\\(<CHAR\\(1\\)>\\)'\\. Supported form\\(s\\): 'RAMP\\(<NUMERIC>\\)'");
 
-        checkFails("select * from table(^nonExistentRamp('3')^)",
+        checkFails(
+            "select * from table(^nonExistentRamp('3')^)",
             "No match found for function signature NONEXISTENTRAMP\\(<CHARACTER>\\)");
     }
 
@@ -3177,30 +6186,44 @@ public class SqlValidatorTest
     {
         check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
         checkFails(
-            "SELECT ename,(select losal, ^hisal^ from salgrade where grade=1) FROM emp",
+            "SELECT ename,(^select losal, hisal from salgrade where grade=1^) FROM emp",
             "Cannot apply '\\$SCALAR_QUERY' to arguments of type '\\$SCALAR_QUERY\\(<RECORDTYPE\\(INTEGER LOSAL, INTEGER HISAL\\)>\\)'\\. Supported form\\(s\\): '\\$SCALAR_QUERY\\(<RECORDTYPE\\(SINGLE FIELD\\)>\\)'");
 
         // Note that X is a field (not a record) and is nullable even though
         // EMP.NAME is NOT NULL.
-        checkResultType("SELECT  ename,(select name from dept where deptno=1) FROM emp",
+        checkResultType(
+            "SELECT  ename,(select name from dept where deptno=1) FROM emp",
             "RecordType(VARCHAR(20) NOT NULL ENAME, VARCHAR(10) EXPR$1) NOT NULL");
 
         // scalar subqery inside AS operator
-        checkResultType("SELECT  ename,(select name from dept where deptno=1) as X FROM emp",
+        checkResultType(
+            "SELECT  ename,(select name from dept where deptno=1) as X FROM emp",
             "RecordType(VARCHAR(20) NOT NULL ENAME, VARCHAR(10) X) NOT NULL");
 
         // scalar subqery inside + operator
-        checkResultType("SELECT  ename, 1 + (select deptno from dept where deptno=1) as X FROM emp",
+        checkResultType(
+            "SELECT  ename, 1 + (select deptno from dept where deptno=1) as X FROM emp",
             "RecordType(VARCHAR(20) NOT NULL ENAME, INTEGER X) NOT NULL");
 
         // scalar subquery inside WHERE
         check("select * from emp where (select true from dept)");
     }
 
+    public void _testSubqueryInOnClause()
+    {
+        // Currently not supported. Should give validator error, but gives
+        // internal error.
+        check(
+            "select * from emp as emps left outer join dept as depts\n"
+            + "on emps.deptno = depts.deptno and emps.deptno = (\n"
+            + "select min(deptno) from dept as depts2)");
+    }
+
     public void testRecordType()
     {
         // Have to qualify columns with table name.
-        checkFails("SELECT ^coord^.x, coord.y FROM customer.contact",
+        checkFails(
+            "SELECT ^coord^.x, coord.y FROM customer.contact",
             "Table 'COORD' not found");
 
         checkResultType(
@@ -3219,20 +6242,22 @@ public class SqlValidatorTest
     {
         // applied to table
         check("SELECT * FROM emp TABLESAMPLE SUBSTITUTE('foo')");
+        check("SELECT * FROM emp TABLESAMPLE BERNOULLI(50)");
+        check("SELECT * FROM emp TABLESAMPLE SYSTEM(50)");
 
         // applied to query
         check(
             "SELECT * FROM ("
             + "SELECT deptno FROM emp "
             + "UNION ALL "
-            + "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SUBSTITUTE('foo') "
             + "WHERE x.deptno < 100");
 
         checkFails(
             "SELECT x.^empno^ FROM ("
             + "SELECT deptno FROM emp TABLESAMPLE SUBSTITUTE('bar') "
             + "UNION ALL "
-            + "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SUBSTITUTE('foo') "
             + "ORDER BY 1",
             "Column 'EMPNO' not found in table 'X'");
 
@@ -3241,6 +6266,48 @@ public class SqlValidatorTest
             + "    select * from emp\n"
             + "    join dept on emp.deptno = dept.deptno\n"
             + ") tablesample substitute('SMALL')");
+
+        check(
+            "SELECT * FROM ("
+            + "SELECT deptno FROM emp "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE BERNOULLI(50) "
+            + "WHERE x.deptno < 100");
+
+        checkFails(
+            "SELECT x.^empno^ FROM ("
+            + "SELECT deptno FROM emp TABLESAMPLE BERNOULLI(50) "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE BERNOULLI(10) "
+            + "ORDER BY 1",
+            "Column 'EMPNO' not found in table 'X'");
+
+        check(
+            "select * from (\n"
+            + "    select * from emp\n"
+            + "    join dept on emp.deptno = dept.deptno\n"
+            + ") tablesample bernoulli(10)");
+
+        check(
+            "SELECT * FROM ("
+            + "SELECT deptno FROM emp "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SYSTEM(50) "
+            + "WHERE x.deptno < 100");
+
+        checkFails(
+            "SELECT x.^empno^ FROM ("
+            + "SELECT deptno FROM emp TABLESAMPLE SYSTEM(50) "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SYSTEM(10) "
+            + "ORDER BY 1",
+            "Column 'EMPNO' not found in table 'X'");
+
+        check(
+            "select * from (\n"
+            + "    select * from emp\n"
+            + "    join dept on emp.deptno = dept.deptno\n"
+            + ") tablesample system(10)");
     }
 
     public void testRewriteWithoutIdentifierExpansion()
@@ -3262,32 +6329,171 @@ public class SqlValidatorTest
             "select * from dept",
             "SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`"
             + NL
-            + "FROM `SALES`.`DEPT` AS `DEPT`");
+            + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`");
+    }
+
+    public void testRewriteWithColumnReferenceExpansion()
+    {
+        // NOTE jvs 9-Apr-2007:  This tests illustrates that
+        // ORDER BY is still a special case.  Update expected
+        // output if that gets fixed in the future.
+
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(true);
+        validator.setColumnReferenceExpansion(true);
+        tester.checkRewrite(
+            validator,
+            "select name from dept where name = 'Moonracer' group by name"
+            + " having sum(deptno) > 3 order by name",
+            TestUtil.fold(
+                "SELECT `DEPT`.`NAME`\n"
+                + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`\n"
+                + "WHERE `DEPT`.`NAME` = 'Moonracer'\n"
+                + "GROUP BY `DEPT`.`NAME`\n"
+                + "HAVING SUM(`DEPT`.`DEPTNO`) > 3\n"
+                + "ORDER BY `NAME`"));
+    }
+
+    public void testRewriteWithColumnReferenceExpansionAndFromAlias()
+    {
+        // NOTE jvs 9-Apr-2007:  This tests illustrates that
+        // ORDER BY is still a special case.  Update expected
+        // output if that gets fixed in the future.
+
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(true);
+        validator.setColumnReferenceExpansion(true);
+        tester.checkRewrite(
+            validator,
+            "select name from (select * from dept)"
+            + " where name = 'Moonracer' group by name"
+            + " having sum(deptno) > 3 order by name",
+            TestUtil.fold(
+                "SELECT `EXPR$0`.`NAME`\n"
+                + "FROM (SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`\n"
+                + "FROM `CATALOG`.`SALES`.`DEPT` AS `DEPT`) AS `EXPR$0`\n"
+                + "WHERE `EXPR$0`.`NAME` = 'Moonracer'\n"
+                + "GROUP BY `EXPR$0`.`NAME`\n"
+                + "HAVING SUM(`EXPR$0`.`DEPTNO`) > 3\n"
+                + "ORDER BY `NAME`"));
     }
 
     public void testCoalesceWithoutRewrite()
     {
         SqlValidator validator = tester.getValidator();
         validator.setCallRewrite(false);
-        tester.checkRewrite(
-            validator,
-            "select coalesce(deptno, empno) from emp",
-            "SELECT COALESCE(`DEPTNO`, `EMPNO`)"
-            + NL
-            + "FROM `EMP`");
+        if (validator.shouldExpandIdentifiers()) {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                TestUtil.fold(
+                    "SELECT COALESCE(`EMP`.`DEPTNO`, `EMP`.`EMPNO`)\n"
+                    + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`"));
+        } else {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                "SELECT COALESCE(`DEPTNO`, `EMPNO`)"
+                + NL
+                + "FROM `EMP`");
+        }
     }
 
     public void testCoalesceWithRewrite()
     {
         SqlValidator validator = tester.getValidator();
         validator.setCallRewrite(true);
+        if (validator.shouldExpandIdentifiers()) {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                TestUtil.fold(
+                    "SELECT CASE WHEN `EMP`.`DEPTNO` IS NOT NULL THEN `EMP`.`DEPTNO` ELSE `EMP`.`EMPNO` END\n"
+                    + "FROM `CATALOG`.`SALES`.`EMP` AS `EMP`"));
+        } else {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                "SELECT CASE WHEN `DEPTNO` IS NOT NULL THEN `DEPTNO` "
+                + "ELSE `EMPNO` END"
+                + NL
+                + "FROM `EMP`");
+        }
+    }
+
+    public void testValuesRewrite()
+    {
+        SqlValidator validator = tester.getValidator();
+
+        // if the validator is expanding identifiers (as the DT validator
+        // does) then rewrites introduce table and column aliases
+        boolean expand = validator.shouldExpandIdentifiers();
+
+        // bare VALUES should be rewritten
         tester.checkRewrite(
             validator,
-            "select coalesce(deptno, empno) from emp",
-            "SELECT CASE WHEN `DEPTNO` IS NOT NULL THEN `DEPTNO` "
-            + "ELSE `EMPNO` END"
-            + NL
-            + "FROM `EMP`");
+            "values (3)",
+            TestUtil.fold(
+                expand
+                ? ("SELECT `EXPR$0`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$0`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3))")));
+
+        // but VALUES under FROM should not...
+        tester.checkRewrite(
+            validator,
+            "select * from (values (3))",
+            TestUtil.fold(
+                expand
+                ? ("SELECT `EXPR$1`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$1`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3))")));
+
+        // ...even if an alias is present
+        tester.checkRewrite(
+            validator,
+            "select * from (values (3)) as fluff",
+            TestUtil.fold(
+                expand
+                ? ("SELECT `FLUFF`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`")));
+    }
+
+    public void _testValuesWithAggFuncs()
+    {
+        checkFails(
+            "values(^count(1)^)",
+            "Call to xxx is invalid\\. Direct calls to aggregate functions not allowed in ROW definitions\\.");
+    }
+
+    public void testFieldOrigin()
+    {
+        tester.checkFieldOrigin(
+            "select * from emp join dept on true",
+            "{CATALOG.SALES.EMP.EMPNO,"
+            + " CATALOG.SALES.EMP.ENAME,"
+            + " CATALOG.SALES.EMP.JOB,"
+            + " CATALOG.SALES.EMP.MGR,"
+            + " CATALOG.SALES.EMP.HIREDATE,"
+            + " CATALOG.SALES.EMP.SAL,"
+            + " CATALOG.SALES.EMP.COMM,"
+            + " CATALOG.SALES.EMP.DEPTNO,"
+            + " CATALOG.SALES.EMP.SLACKER,"
+            + " CATALOG.SALES.DEPT.DEPTNO,"
+            + " CATALOG.SALES.DEPT.NAME}");
+
+        tester.checkFieldOrigin(
+            "select distinct emp.empno, hiredate, 1 as one,\n"
+            + " emp.empno * 2 as twiceEmpno\n"
+            + "from emp join dept on true",
+            "{CATALOG.SALES.EMP.EMPNO,"
+            + " CATALOG.SALES.EMP.HIREDATE,"
+            + " null,"
+            + " null}");
     }
 
     public void testNew()
@@ -3295,6 +6501,7 @@ public class SqlValidatorTest
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
+        //        check("SELECT count(0) FROM emp GROUP BY ()");
     }
 }
 

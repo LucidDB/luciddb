@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,14 +23,13 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 
 
 /**
  * Strategy to transform one type to another. The transformation is dependent on
  * the implemented strategy object and in the general case is a function of the
  * type and the other operands. Can not be used by itself. Must be used in an
- * object of type {@link TransformCascade}
+ * object of type {@link SqlTypeTransformCascade}.
  *
  * <p>This class is an example of the {@link
  * org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.</p>
@@ -40,7 +39,6 @@ import org.eigenbase.sql.validate.*;
  */
 public interface SqlTypeTransform
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

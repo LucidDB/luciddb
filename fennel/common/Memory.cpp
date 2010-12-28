@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,29 +29,15 @@
 #include <boost/io/ios_state.hpp>
 #include <boost/format.hpp>
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 # include <windows.h>
+# include "fennel/common/AtomicCounter.h"
+# include "fennel/common/IntrusiveDList.h"
+# include "fennel/common/CompoundId.h"
+# include "fennel/common/AbortExcn.h"
+# include "fennel/common/VoidPtrHash.h"
 #else
 # include <pthread.h>
-#endif
-
-// NOTE jvs 26-June-2005:  I added this to squelch link errors with
-// the Boost filesystem library.  Yet another case where I have no
-// idea what's really going on.
-#ifdef __MINGW32__
-void *operator new [](unsigned sz) throw (std::bad_alloc)
-{
-    void *p = malloc(sz ? sz : 1);
-    if (!p) {
-        throw std::bad_alloc();
-    }
-    return p;
-}
-
-void operator delete [](void *p) throw ()
-{
-    free(p);
-}
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -64,10 +50,12 @@ std::logic_error constructAssertion(
         (fmt % condExpr % lineNum % pFilename).str());
 }
 
-int getCurrentThreadId()
+int64_t getCurrentThreadId()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     return static_cast<int>(GetCurrentThreadId());
+#elif defined(__APPLE__)
+    return reinterpret_cast<int64_t>(pthread_self());
 #else
     return static_cast<int>(pthread_self());
 #endif
@@ -76,12 +64,12 @@ int getCurrentThreadId()
 void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
 {
     boost::io::ios_all_saver streamStateSaver(o);
-    
+
     PConstBuffer b = (PConstBuffer) v;
-    uint cbLine = 16,cbThis;
+    uint cbLine = 16, cbThis;
     o.fill('0');
     for (; cb; cb -= cbThis, cbDone += cbThis) {
-        cbThis = std::min(cbLine,cb);
+        cbThis = std::min(cbLine, cb);
         o << std::hex;
         o.width(4);
         o << cbDone << ": ";
@@ -104,6 +92,20 @@ void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
         o << std::endl;
     }
 }
+
+// TODO jvs 27-Feb-2009:  move this somewhere else
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedCommonStructs
+{
+    AtomicCounter atomicCounter;
+    IntrusiveDListNode dlistNode;
+    CompoundId compoundId;
+    AbortExcn abortExcn;
+    VoidPtrHash voidPtrHash;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

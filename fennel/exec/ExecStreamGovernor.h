@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ enum ExecStreamResourceKnobType {
  * ExecStreamResourceKnobs is a structure that stores the settings of the
  * different knobs that are used to determine exec stream resource allocation
  */
-struct ExecStreamResourceKnobs
+struct FENNEL_EXEC_EXPORT ExecStreamResourceKnobs
 {
     /**
      * Max expected number of concurrent, active statements
@@ -71,7 +71,8 @@ enum ExecStreamResourceType {
 /**
  * Structure used to track the resource requirements for a single stream
  */
-struct ExecStreamResourceRequirements {
+struct FENNEL_EXEC_EXPORT ExecStreamResourceRequirements
+{
     uint minReqt;
     uint optReqt;
     ExecStreamResourceSettingType optType;
@@ -85,7 +86,7 @@ struct ExecStreamResourceRequirements {
  * @author Zelaine Fong
  * @version $Id$
  */
-class ExecStreamGovernor
+class FENNEL_EXEC_EXPORT ExecStreamGovernor
     : public boost::noncopyable, public virtual TraceSource,
     public StatsSource
 {
@@ -152,6 +153,12 @@ public:
     virtual ~ExecStreamGovernor();
 
     /**
+     * Prints the state of a resoource governor object, for tracing.
+     * Not thread-safe.
+     */
+    void print(std::ostream&) const;
+
+    /**
      * Informs the resource governor of a new knob setting.  Called by
      * ALTER SYSTEM SET commands that dynamically modify parameters
      * controlling resource allocation.
@@ -204,7 +211,7 @@ public:
     virtual void returnResources(ExecStreamGraph &graph) = 0;
 
     // implement StatsSource
-    void writeStats(StatsTarget &);
+    void writeStats(StatsTarget &target);
 };
 
 FENNEL_END_NAMESPACE

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.reltype;
+
+import java.io.*;
 
 import java.nio.charset.*;
 
@@ -46,15 +48,19 @@ public abstract class RelDataTypeImpl
     implements RelDataType,
         RelDataTypeFamily
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelDataTypeField [] fields;
-    protected List fieldList;
+    protected List<RelDataTypeField> fieldList;
     protected String digest;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a RelDataTypeImpl.
+     *
+     * @param fields Array of fields
+     */
     protected RelDataTypeImpl(RelDataTypeField [] fields)
     {
         this.fields = fields;
@@ -63,6 +69,19 @@ public abstract class RelDataTypeImpl
         } else {
             fieldList = null;
         }
+    }
+
+    /**
+     * Default constructor, to allow derived classes such as {@link
+     * BasicSqlType} to be {@link Serializable}.
+     *
+     * <p>(The serialization specification says that a class can be serializable
+     * even if its base class is not serializable, provided that the base class
+     * has a public or protected zero-args constructor.)
+     */
+    protected RelDataTypeImpl()
+    {
+        this(null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,7 +111,7 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
-    public List getFieldList()
+    public List<RelDataTypeField> getFieldList()
     {
         assert (isStruct());
         return fieldList;
@@ -175,13 +194,13 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public int getPrecision()
     {
-        throw Util.newInternal("attribute not applicable");
+        throw Util.newInternal("no precision: " + this);
     }
 
     // implement RelDataType
     public int getScale()
     {
-        throw Util.newInternal("attribute not applicable");
+        throw Util.newInternal("no scale: " + this);
     }
 
     // implement RelDataType
@@ -198,8 +217,8 @@ public abstract class RelDataTypeImpl
             return null;
         }
         return new SqlIdentifier(
-                typeName.getName(),
-                SqlParserPos.ZERO);
+            typeName.name(),
+            SqlParserPos.ZERO);
     }
 
     // implement RelDataType
@@ -215,10 +234,9 @@ public abstract class RelDataTypeImpl
      * @param sb StringBuffer into which to generate the string
      * @param withDetail when true, all detail information needed to compute a
      * unique digest (and return from getFullTypeString) should be included;
-     * when false, less verbosity is appropriate (for return from toString)
      */
     protected abstract void generateTypeString(
-        StringBuffer sb,
+        StringBuilder sb,
         boolean withDetail);
 
     /**
@@ -227,7 +245,7 @@ public abstract class RelDataTypeImpl
      */
     protected void computeDigest()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         generateTypeString(sb, true);
         if (!isNullable()) {
             sb.append(" NOT NULL");
@@ -238,7 +256,7 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public String toString()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         generateTypeString(sb, false);
         return sb.toString();
     }
@@ -249,20 +267,20 @@ public abstract class RelDataTypeImpl
         // by default, make each type have a precedence list containing
         // only other types in the same family
         return new RelDataTypePrecedenceList() {
-                public boolean containsType(RelDataType type)
-                {
-                    return getFamily() == type.getFamily();
-                }
+            public boolean containsType(RelDataType type)
+            {
+                return getFamily() == type.getFamily();
+            }
 
-                public int compareTypePrecedence(
-                    RelDataType type1,
-                    RelDataType type2)
-                {
-                    assert (containsType(type1));
-                    assert (containsType(type2));
-                    return 0;
-                }
-            };
+            public int compareTypePrecedence(
+                RelDataType type1,
+                RelDataType type2)
+            {
+                assert (containsType(type1));
+                assert (containsType(type2));
+                return 0;
+            }
+        };
     }
 
     // implement RelDataType

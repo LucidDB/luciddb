@@ -15,9 +15,7 @@
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: Could not calculate result column 1 of Read.LOCALDB.S.MOCK_FENNEL_TABLE for input:
-[0]
-Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;
@@ -45,9 +43,7 @@ Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: Could not calculate result column 1 of Read.LOCALDB.S.MOCK_FENNEL_TABLE for input:
-[0]
-Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;
@@ -58,5 +54,52 @@ Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema s cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tests for UPDATE
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema upsales;
+0: jdbc:luciddb:> set schema 'upsales';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table upemps(
+. . . . . . . . >   empno int primary key,
+. . . . . . . . >   name varchar(10),
+. . . . . . . . >   deptno int);
+0: jdbc:luciddb:> insert into upemps
+. . . . . . . . >   values
+. . . . . . . . >     (1, 'Fred', 20),
+. . . . . . . . >     (2, 'Bill', 10),
+. . . . . . . . >     (3, 'Joe', 10);
+0: jdbc:luciddb:> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 1      | Fred  | 20      |
+| 2      | Bill  | 10      |
+| 3      | Joe   | 10      |
++--------+-------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- division by zero
+0: jdbc:luciddb:> update upemps u set deptno = deptno/0;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 1      | Fred  | 20      |
+| 2      | Bill  | 10      |
+| 3      | Joe   | 10      |
++--------+-------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- uniqueness violation
+0: jdbc:luciddb:> update upemps u set empno = 4;
+Error: Unique constraint violation (state=,code=0)
+0: jdbc:luciddb:> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 1      | Fred  | 20      |
+| 2      | Bill  | 10      |
+| 3      | Joe   | 10      |
++--------+-------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

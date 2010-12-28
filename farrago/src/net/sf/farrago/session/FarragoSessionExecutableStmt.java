@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -50,7 +51,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoSessionExecutableStmt
     extends FarragoAllocationOwner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -68,6 +68,19 @@ public interface FarragoSessionExecutableStmt
     public RelDataType getRowType();
 
     /**
+     * Returns a description of how each field in the row type maps to a
+     * catalog, schema, table and column in the schema.
+     *
+     * <p>The returned list has one element for each field in the row type. Each
+     * element is a list of four elements (catalog, schema, table, column), or
+     * may be null if the column is an expression.
+     *
+     * @return Description of how each field in the row type maps to a schema
+     * object
+     */
+    List<List<String>> getFieldOrigins();
+
+    /**
      * @return type descriptor for row of dynamic parameters expected by this
      * stmt
      */
@@ -79,6 +92,12 @@ public interface FarragoSessionExecutableStmt
     public boolean isDml();
 
     /**
+     * @return the table modification operation type if this is a table
+     * modification statement; otherwise null
+     */
+    public TableModificationRel.Operation getTableModOp();
+
+    /**
      * @return approximate total number of bytes used by this statement's
      * in-memory representation
      */
@@ -87,7 +106,13 @@ public interface FarragoSessionExecutableStmt
     /**
      * @return Set of MOFID's of objects accessed when this stmt is executed
      */
-    public Set getReferencedObjectIds();
+    public Set<String> getReferencedObjectIds();
+
+    /**
+     * @return the modification time of an object accessed by this statement, or
+     * null if the modification time is not available
+     */
+    public String getReferencedObjectModTime(String mofid);
 
     /**
      * @return map of access modes for all tables referenced

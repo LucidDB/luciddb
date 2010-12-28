@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 // language ("en" or "fr" in our example.  Language-only locales have
 // no parent.  Language and country codes are always two letters.
 // Also, the language should be lowercase and the country uppercase.
-class Locale
+class FENNEL_COMMON_EXPORT Locale
 {
 public:
     explicit Locale(const std::string &language);
@@ -81,3 +81,5 @@ std::ostream &operator<<(std::ostream &str, const Locale &loc);
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_Locale_Included
+
+// End Locale.h

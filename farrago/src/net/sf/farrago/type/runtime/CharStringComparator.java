@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
  * A very slow, generic comparator for two objects with valid toString()
  * methods. It implements SQL character comparison semantics (rtrim before
@@ -37,7 +38,6 @@ import org.eigenbase.util.*;
 public class CharStringComparator
     implements Comparator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public static final int compareCharStrings(

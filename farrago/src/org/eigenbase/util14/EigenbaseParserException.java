@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@
 package org.eigenbase.util14;
 
 /**
- * This is a tagging interface to allow {@link
- * or.eigenbase.sql.parser.SqlParseException} to be identified without adding a
+ * This is a tagging interface to allow a {@link
+ * org.eigenbase.sql.parser.SqlParseException} to be identified without adding a
  * dependency on it from client-side code.
  *
  * @author John V. Sichi

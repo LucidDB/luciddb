@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ package net.sf.farrago.test;
 import java.sql.*;
 
 import java.util.*;
-import java.util.regex.*;
 
 import junit.framework.*;
 
@@ -53,7 +52,6 @@ import org.eigenbase.util.*;
  */
 public class FarragoSqlOperatorsSuite
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlTypeFactoryImpl sqlTypeFactory =
@@ -98,6 +96,11 @@ public class FarragoSqlOperatorsSuite
          */
         private final FarragoCalcSystemTest.VirtualMachine vm;
 
+        /**
+         * Whether this virtual machine can implement this operator.
+         */
+        private boolean vmCanImplement;
+
         private FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm)
             throws Exception
         {
@@ -105,7 +108,8 @@ public class FarragoSqlOperatorsSuite
             this.farragoTest = new MyFarragoTestCase();
         }
 
-        protected FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm,
+        protected FarragoSqlTester(
+            FarragoCalcSystemTest.VirtualMachine vm,
             FarragoTestCase farragoTest)
             throws Exception
         {
@@ -113,13 +117,61 @@ public class FarragoSqlOperatorsSuite
             this.farragoTest = farragoTest;
         }
 
-        public void checkInvalid(
+        public void setFor(
+            SqlOperator operator,
+            VmName ... unimplementedVmNames)
+        {
+            super.setFor(operator, unimplementedVmNames);
+            if (operator != null) {
+                final boolean expanded =
+                    contains(unimplementedVmNames, "EXPAND");
+                vmCanImplement = expanded
+                    || vm.canImplement(operator);
+                if (vm.getName().equals("AUTO")) {
+                    // ignore
+                } else if (operator instanceof SqlJdbcFunctionCall) {
+                    // Ignore JDBC functions. They are implemented by
+                    // expansion, but sometimes they expand to something that
+                    // is only available in Java.
+                } else if (contains(unimplementedVmNames, vm.getName())) {
+                    assert !vmCanImplement : "VM " + vm.getName()
+                        + " implements operator " + operator
+                        + " but VM is in the exclusion list "
+                        + Arrays.asList(unimplementedVmNames);
+                } else {
+                    assert vmCanImplement : "VM " + vm.getName()
+                        + " cannot implement operator " + operator
+                        + " but VM is not in the exclusion list "
+                        + Arrays.asList(unimplementedVmNames);
+                }
+                assert !(vm.canImplement(operator)
+                    && expanded) : "VM " + vm.getName()
+                    + " claims to implement an "
+                    + "operator (" + operator
+                    + ") that is implemented by expansion";
+            }
+        }
+
+        private static boolean contains(
+            VmName [] vmNames,
+            String vm)
+        {
+            for (VmName vmName : vmNames) {
+                if (vmName.name().equals(vm)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void checkFails(
             String expression,
-            String expectedError)
+            String expectedError,
+            boolean runtime)
         {
             try {
                 farragoTest.setUp();
-                checkFails(vm, expression, expectedError, false);
+                checkFails(vm, expression, expectedError, runtime);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -131,32 +183,16 @@ public class FarragoSqlOperatorsSuite
             }
         }
 
-        public void checkFails(String expression, String expectedError)
-        {
-            try {
-                farragoTest.setUp();
-                checkFails(vm, expression, expectedError, true);
-            } catch (Exception e) {
-                throw wrap(e);
-            } finally {
-                try {
-                    farragoTest.tearDown();
-                } catch (Exception e) {
-                    throw wrap(e);
-                }
-            }
-        }
-
-        public void checkType(
-            String expression,
+        public void checkColumnType(
+            String query,
             String type)
         {
             try {
                 farragoTest.setUp();
-                checkType(
+                checkColumnType(
                     vm,
                     getFor(),
-                    expression,
+                    query,
                     type);
             } catch (Exception e) {
                 throw wrap(e);
@@ -169,11 +205,22 @@ public class FarragoSqlOperatorsSuite
             }
         }
 
-        public void check(
+        public final void check(
             String query,
             TypeChecker typeChecker,
             Object result,
             double delta)
+        {
+            check(
+                query,
+                typeChecker,
+                AbstractSqlTester.createChecker(result, delta));
+        }
+
+        public void check(
+            String query,
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
         {
             try {
                 farragoTest.setUp();
@@ -182,8 +229,7 @@ public class FarragoSqlOperatorsSuite
                     getFor(),
                     query,
                     typeChecker,
-                    result,
-                    delta);
+                    resultChecker);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -240,29 +286,17 @@ public class FarragoSqlOperatorsSuite
             FarragoCalcSystemTest.VirtualMachine vm,
             SqlOperator operator,
             String query,
-            SqlTester.TypeChecker typeChecker,
-            Object result,
-            double delta)
+            TypeChecker typeChecker,
+            ResultChecker resultChecker)
             throws Exception
         {
-            farragoTest.assertNotNull("Test must call isFor() first", operator);
-            if (!vm.canImplement(operator)) {
+            Assert.assertNotNull("Test must call isFor() first", operator);
+            if (!vmCanImplement) {
                 return;
             }
             farragoTest.stmt.execute(vm.getAlterSystemCommand());
             farragoTest.resultSet = farragoTest.stmt.executeQuery(query);
-            if (result instanceof Pattern) {
-                farragoTest.compareResultSetWithPattern((Pattern) result);
-            } else if (delta != 0) {
-                Assert.assertTrue(result instanceof Number);
-                farragoTest.compareResultSetWithDelta(
-                    ((Number) result).doubleValue(),
-                    delta);
-            } else {
-                Set refSet = new HashSet();
-                refSet.add((result == null) ? null : result.toString());
-                farragoTest.compareResultSet(refSet);
-            }
+            resultChecker.checkResult(farragoTest.resultSet);
 
             // Check result type
             ResultSetMetaData md = farragoTest.resultSet.getMetaData();
@@ -273,7 +307,7 @@ public class FarragoSqlOperatorsSuite
             typeChecker.checkType(type);
 
             farragoTest.stmt.close();
-            farragoTest.stmt = farragoTest.connection.createStatement();
+            farragoTest.stmt = FarragoTestCase.connection.createStatement();
         }
 
         private BasicSqlType getColumnType(
@@ -288,9 +322,9 @@ public class FarragoSqlOperatorsSuite
             if (actualTypeOrdinal == Types.OTHER) {
                 return null;
             }
-            farragoTest.assertNotNull(actualSqlTypeName);
-            farragoTest.assertEquals(
-                actualSqlTypeName.getName(),
+            Assert.assertNotNull(actualSqlTypeName);
+            Assert.assertEquals(
+                actualSqlTypeName.name(),
                 actualTypeName);
             BasicSqlType sqlType;
             final int actualNullable = md.isNullable(column);
@@ -317,20 +351,19 @@ public class FarragoSqlOperatorsSuite
             return sqlType;
         }
 
-        void checkType(
+        void checkColumnType(
             FarragoCalcSystemTest.VirtualMachine vm,
             SqlOperator operator,
-            String expression,
+            String query,
             String type)
             throws SQLException
         {
-            farragoTest.assertNotNull("Test must call isFor() first", operator);
+            Assert.assertNotNull("Test must call isFor() first", operator);
             if (!vm.canImplement(operator)) {
                 return;
             }
             farragoTest.stmt.execute(vm.getAlterSystemCommand());
 
-            String query = buildQuery(expression);
             farragoTest.resultSet = farragoTest.stmt.executeQuery(query);
 
             // Check type
@@ -338,7 +371,7 @@ public class FarragoSqlOperatorsSuite
             int count = md.getColumnCount();
             Assert.assertEquals(count, 1);
             String columnType = md.getColumnTypeName(1);
-            if (type.indexOf('(') > 0) {
+            if (type.indexOf('(') >= 0 && (columnType.indexOf('(') < 0)) {
                 columnType += "(" + md.getPrecision(1);
                 if (type.indexOf(',') >= 0) {
                     columnType += ", " + md.getScale(1);
@@ -351,16 +384,17 @@ public class FarragoSqlOperatorsSuite
             Assert.assertEquals(type, columnType);
         }
 
-        protected String buildQuery(String expression)
-        {
-            return "values (" + expression + ")";
-        }
-
+        @SuppressWarnings({ "ThrowableInstanceNeverThrown" })
         private static RuntimeException wrap(Exception e)
         {
             final RuntimeException rte = new RuntimeException(e);
             rte.setStackTrace(e.getStackTrace());
             return rte;
+        }
+
+        public boolean isVm(VmName vmName)
+        {
+            return vm.getName().equals(vmName.name());
         }
     }
 
@@ -404,8 +438,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoJavaVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoJavaVmOperatorTest.class));
         }
     }
 
@@ -425,8 +459,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoAutoVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoAutoVmOperatorTest.class));
         }
     }
 
@@ -446,8 +480,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoFennelVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoFennelVmOperatorTest.class));
         }
     }
 
@@ -478,7 +512,6 @@ public class FarragoSqlOperatorsSuite
                 FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
         }
     }
-
 }
 
 // End FarragoSqlOperatorsSuite.java

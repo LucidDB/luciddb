@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -113,7 +113,6 @@ import org.xml.sax.*;
  */
 public class DiffRepository
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /*
@@ -130,6 +129,7 @@ public class DiffRepository
     private static final String RootTag = "Root";
     private static final String TestCaseTag = "TestCase";
     private static final String TestCaseNameAttr = "name";
+    private static final String TestCaseOverridesAttr = "overrides";
     private static final String ResourceTag = "Resource";
     private static final String ResourceNameAttr = "name";
 
@@ -149,14 +149,26 @@ public class DiffRepository
     private final Element root;
     private final File refFile;
     private final File logFile;
+    private final Filter filter;
 
     //~ Constructors -----------------------------------------------------------
 
-    public DiffRepository(File refFile,
+    /**
+     * Creates a DiffRepository.
+     *
+     * @param refFile Reference file
+     * @param logFile Log file
+     * @param baseRepos Parent repository or null
+     * @param filter Filter or null
+     */
+    private DiffRepository(
+        File refFile,
         File logFile,
-        DiffRepository baseRepos)
+        DiffRepository baseRepos,
+        Filter filter)
     {
         this.baseRepos = baseRepos;
+        this.filter = filter;
         if (refFile == null) {
             throw new IllegalArgumentException("url must not be null");
         }
@@ -275,7 +287,8 @@ public class DiffRepository
         if (text == null) {
             return null;
         } else if (text.startsWith("${")
-            && text.endsWith("}")) {
+            && text.endsWith("}"))
+        {
             final String testCaseName = getCurrentTestCaseName(true);
             final String token = text.substring(2, text.length() - 1);
             if (tag == null) {
@@ -283,12 +296,16 @@ public class DiffRepository
             }
             assert token.startsWith(tag) : "token '" + token
                 + "' does not match tag '" + tag + "'";
-            final String expanded = get(testCaseName, token);
+            String expanded = get(testCaseName, token);
             if (expanded == null) {
                 // Token is not specified. Return the original text: this will
                 // cause a diff, and the actual value will be written to the
                 // log file.
                 return text;
+            }
+            if (filter != null) {
+                expanded =
+                    filter.filter(this, testCaseName, tag, text, expanded);
             }
             return expanded;
         } else {
@@ -297,7 +314,8 @@ public class DiffRepository
             // resource file.
             final String testCaseName = getCurrentTestCaseName(true);
             if ((baseRepos != null)
-                && (baseRepos.get(testCaseName, tag) != null)) {
+                && (baseRepos.get(testCaseName, tag) != null))
+            {
                 // set in base repos; don't override
             } else {
                 set(tag, text);
@@ -322,7 +340,8 @@ public class DiffRepository
     public void amend(String expected, String actual)
     {
         if (expected.startsWith("${")
-            && expected.endsWith("}")) {
+            && expected.endsWith("}"))
+        {
             String token = expected.substring(2, expected.length() - 1);
             set(token, actual);
         } else {
@@ -342,7 +361,7 @@ public class DiffRepository
         final String testCaseName,
         String resourceName)
     {
-        Element testCaseElement = getTestCaseElement(root, testCaseName);
+        Element testCaseElement = getTestCaseElement(testCaseName, true);
         if (testCaseElement == null) {
             if (baseRepos != null) {
                 return baseRepos.get(testCaseName, resourceName);
@@ -375,7 +394,7 @@ public class DiffRepository
 
         // Otherwise return all the text under this element (including
         // whitespace).
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
             if (node instanceof Text) {
@@ -389,14 +408,15 @@ public class DiffRepository
      * Returns the &lt;TestCase&gt; element corresponding to the current test
      * case.
      *
-     * @param root Root element of the document
      * @param testCaseName Name of test case
+     * @param checkOverride Make sure that if an element overrides an element in
+     * a base repository, it has overrides="true"
      *
      * @return TestCase element, or null if not found
      */
-    private static Element getTestCaseElement(
-        final Element root,
-        final String testCaseName)
+    private Element getTestCaseElement(
+        final String testCaseName,
+        boolean checkOverride)
     {
         final NodeList childNodes = root.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -404,7 +424,21 @@ public class DiffRepository
             if (child.getNodeName().equals(TestCaseTag)) {
                 Element testCase = (Element) child;
                 if (testCaseName.equals(
-                        testCase.getAttribute(TestCaseNameAttr))) {
+                        testCase.getAttribute(TestCaseNameAttr)))
+                {
+                    if (checkOverride
+                        && (baseRepos != null)
+                        && (baseRepos.getTestCaseElement(
+                                testCaseName,
+                                false) != null)
+                        && !"true".equals(
+                            testCase.getAttribute(TestCaseOverridesAttr)))
+                    {
+                        throw new RuntimeException(
+                            "TestCase  '" + testCaseName + "' overrides a "
+                            + "testcase in the base repository, but does "
+                            + "not specify 'overrides=true'");
+                    }
                     return testCase;
                 }
             }
@@ -484,20 +518,20 @@ public class DiffRepository
      * values in parallel.
      *
      * <p>If any of the values do not match, throws an {@link AssertFailure},
-     * but still updates the other values. This is convenient, because if a
-     * unit test needs to check N values, you can correct the logfile in 1
-     * pass through the test rather than N.
+     * but still updates the other values. This is convenient, because if a unit
+     * test needs to check N values, you can correct the logfile in 1 pass
+     * through the test rather than N.
      *
      * @param tags Array of tags
      * @param expecteds Array of expected values
      * @param actuals Array of actual values
      * @param ignoreNulls Whether to ignore entries for which expected[i] ==
-     *            null
+     * null
      */
     public void assertEqualsMulti(
-        String[] tags,
-        String[] expecteds,
-        String[] actuals,
+        String [] tags,
+        String [] expecteds,
+        String [] actuals,
         boolean ignoreNulls)
     {
         final int count = tags.length;
@@ -519,8 +553,9 @@ public class DiffRepository
             String expected2 = expand(tag, expected);
             if (expected2 == null) {
                 update(testCaseName, expected, actual);
-                AssertionFailedError e = new AssertionFailedError(
-                    "reference file does not contain resource '" + expected
+                AssertionFailedError e =
+                    new AssertionFailedError(
+                        "reference file does not contain resource '" + expected
                         + "' for testcase '" + testCaseName
                         + "'");
                 if (e0 == null) {
@@ -559,16 +594,16 @@ public class DiffRepository
      * <p>This method is synchronized, in case two threads are running test
      * cases of this test at the same time.
      *
-     * @param testCaseName
-     * @param resourceName
-     * @param value
+     * @param testCaseName Test case name
+     * @param resourceName Resource name
+     * @param value        New value of resource
      */
     private synchronized void update(
         String testCaseName,
         String resourceName,
         String value)
     {
-        Element testCaseElement = getTestCaseElement(root, testCaseName);
+        Element testCaseElement = getTestCaseElement(testCaseName, true);
         if (testCaseElement == null) {
             testCaseElement = doc.createElement(TestCaseTag);
             testCaseElement.setAttribute(TestCaseNameAttr, testCaseName);
@@ -633,7 +668,8 @@ public class DiffRepository
             Node child = childNodes.item(i);
             if (child.getNodeName().equals(ResourceTag)
                 && resourceName.equals(
-                    ((Element) child).getAttribute(ResourceNameAttr))) {
+                    ((Element) child).getAttribute(ResourceNameAttr)))
+            {
                 return (Element) child;
             }
         }
@@ -754,9 +790,33 @@ public class DiffRepository
         return true;
     }
 
+     /**
+      * Finds the repository instance for a given class, with no base
+      * repository or filter.
+      *
+      * @param clazz Testcase class
+      *
+      * @return The diff repository shared between testcases in this class.
+      */
     public static DiffRepository lookup(Class clazz)
     {
         return lookup(clazz, null);
+    }
+
+    /**
+     * Finds the repository instance for a given class and inheriting from
+     * a given repository.
+     *
+     * @param clazz Testcase class
+     * @param baseRepos Base class of test class
+     *
+     * @return The diff repository shared between testcases in this class.
+     */
+    public static DiffRepository lookup(
+        Class clazz,
+        DiffRepository baseRepos)
+    {
+        return lookup(clazz, baseRepos, null);
     }
 
     /**
@@ -774,21 +834,53 @@ public class DiffRepository
      * missing or incorrect, it will not write them to the log file -- you
      * probably need to fix the base test.
      *
+     * <p>Use the <code>filter</code> parameter if you expect the test to
+     * return results slightly different than in the repository. This happens
+     * if the behavior of a derived test is slightly different than a base
+     * test. If you do not specify a filter, no filtering will happen.
+     *
      * @param clazz Testcase class
-     * @param baseRepos Base class of test class
+     * @param baseRepos Base repository
+     * @param filter Filters each string returned by the repository
      *
      * @return The diff repository shared between testcases in this class.
      */
-    public static DiffRepository lookup(Class clazz, DiffRepository baseRepos)
+    public static DiffRepository lookup(
+        Class clazz,
+        DiffRepository baseRepos,
+        Filter filter)
     {
         DiffRepository diffRepos = mapClassToRepos.get(clazz);
         if (diffRepos == null) {
             final File refFile = findFile(clazz, ".ref.xml");
             final File logFile = findFile(clazz, ".log.xml");
-            diffRepos = new DiffRepository(refFile, logFile, baseRepos);
+            diffRepos =
+                new DiffRepository(
+                    refFile, logFile, baseRepos, filter);
             mapClassToRepos.put(clazz, diffRepos);
         }
         return diffRepos;
+    }
+
+    /**
+     * Callback to filter strings before returning them.
+     */
+    public interface Filter {
+        /**
+         * Filters a string.
+         *
+         * @param diffRepository Repository
+         * @param testCaseName Test case name
+         * @param tag Tag being expanded
+         * @param text Text being expanded
+         * @param expanded Expanded text @return Expanded text after filtering
+         */
+        String filter(
+            DiffRepository diffRepository,
+            String testCaseName,
+            String tag,
+            String text,
+            String expanded);
     }
 }
 

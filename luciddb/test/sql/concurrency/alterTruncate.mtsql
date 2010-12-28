@@ -1,0 +1,81 @@
+@nolockstep
+
+@setup
+-- Test alter/truncate on a table while reading and writing the table
+
+  set schema 'concurrency';
+  delete from t1;
+  insert into t1 values (1);
+  insert into t1 values (2);
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  delete from concurrency.t1;
+@end
+
+-----------------------------------------------------------
+
+@thread reader
+  set schema 'concurrency';
+
+  -- the first 3 selects should return 2 rows; the last returns no rows
+  @sync
+  select * from t1 where (c >= 1 + sys_boot.mgmt.sleep(3000)) order by c; 
+  @sync
+  select * from t1;
+  @sync
+  select * from t1 where (c >= 1 + sys_boot.mgmt.sleep(3000)) order by c;
+  @sync
+  select * from t1;
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writer
+  set schema 'concurrency';
+
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  insert into t1 values (sys_boot.mgmt.sleep(5000));
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread alter
+  set schema 'concurrency';
+
+  @sync
+  @sleep 2000
+  alter table t1 rebuild;
+  alter system deallocate old;
+  select * from t1 order by c;
+  @sync
+  @sync
+  @sleep 2000
+  truncate table t1;
+  alter system deallocate old;
+  select * from t1 order by c;
+  @sync
+  @sync
+  @sleep 2000
+  -- should fail because write is in progress
+  @err alter table t1 rebuild;
+  @sync
+
+@end

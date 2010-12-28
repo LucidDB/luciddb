@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 BTreeVerifier::BTreeVerifier(BTreeDescriptor const &descriptor)
     : BTreeAccessBase(descriptor)
 {
-    assert(getRootPageId() != NULL_PAGE_ID);
+    permAssert(getRootPageId() != NULL_PAGE_ID);
     keyData.compute(keyDescriptor);
     keyData2 = keyData;
 }
@@ -52,6 +52,7 @@ void BTreeVerifier::verify(bool strictInit, bool keysInit, bool leafInit)
     stats.nNonLeafNodes = 0;
     stats.nLeafNodes = 0;
     stats.nTuples = 0;
+    stats.nUniqueKeys = 0;
     PageId pageId = getRootPageId();
     do {
         expectedRightSibling = NULL_PAGE_ID;
@@ -74,43 +75,55 @@ PageId BTreeVerifier::verifyNode(
     pageLock.lockShared(pageId);
     BTreeNode const &node = pageLock.getNodeForRead();
     PageId returnPageId = NULL_PAGE_ID;
-    
+
+    // for optimized build, we don't check node magic numbers implicitly,
+    // so do it explicitly here
+    permAssert(node.magicNumber == BTreeNode::MAGIC_NUMBER);
+
     if (isMAXU(expectedHeight)) {
         stats.nLevels = node.height + 1;
     } else {
-        assert(node.height == expectedHeight);
+        permAssert(node.height == expectedHeight);
     }
 
     if (strict) {
-        assert(node.rightSibling == getRightSibling(pageId));
-        assert(node.rightSibling == expectedRightSibling);
+        permAssert(node.rightSibling == getRightSibling(pageId));
+        permAssert(node.rightSibling == expectedRightSibling);
     } else {
         if (node.rightSibling != expectedRightSibling) {
-            assert(node.rightSibling != NULL_PAGE_ID);
+            permAssert(node.rightSibling != NULL_PAGE_ID);
             returnPageId = node.rightSibling;
         }
     }
-    
+
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
 
     // TODO:  delegate to nodeAccessor for checking node integrity
 
     // verify key ordering, including lower bound
     if (keys) {
+        bool countUniqueKeys = (node.height == 0);
         keyData = lowerBoundKey;
         uint nKeys = nodeAccessor.getKeyCount(node);
         for (uint i = 0; i < nKeys; ++i) {
-            nodeAccessor.accessTuple(node,i);
+            nodeAccessor.accessTuple(node, i);
             nodeAccessor.unmarshalKey(keyData2);
             if (keyData.size()) {
-                int c = keyDescriptor.compareTuples(keyData,keyData2);
+                int c = keyDescriptor.compareTuples(keyData, keyData2);
 
                 // TODO:  move this somewhere else
                 if (c > 0) {
-                    nodeAccessor.dumpNode(std::cerr,node,pageId);
+                    nodeAccessor.dumpNode(std::cerr, node, pageId);
                 }
-                assert(c <= 0);
+                permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
+
+                if (countUniqueKeys && c == -1) {
+                    // Only count differences in the first column of the key.
+                    stats.nUniqueKeys++;
+                }
+            } else if (countUniqueKeys) {
+                stats.nUniqueKeys++;
             }
             keyData = keyData2;
         }
@@ -119,8 +132,8 @@ PageId BTreeVerifier::verifyNode(
     // verify upper bound (using last key left over from previous loop)
     if (keyData.size() && upperBoundKey.size()) {
         keyData2 = upperBoundKey;
-        int c = keyDescriptor.compareTuples(keyData,keyData2);
-        assert(c <= 0);
+        int c = keyDescriptor.compareTuples(keyData, keyData2);
+        permAssert(c <= 0);
     }
     if (node.height) {
         stats.nNonLeafNodes++;
@@ -144,15 +157,15 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
     for (uint i = 0; i < node.nEntries; ++i) {
         PageId nextChildPageId;
         if (i + 1 < node.nEntries) {
-            nextChildPageId = getChild(node,i+1);
+            nextChildPageId = getChild(node, i + 1);
         } else {
             nextChildPageId = getFirstChild(node.rightSibling);
         }
-        PageId childPageId = getChild(node,i);
+        PageId childPageId = getChild(node, i);
         do {
             expectedRightSibling = nextChildPageId;
             expectedHeight = node.height - 1;
-            nodeAccessor.accessTuple(node,i);
+            nodeAccessor.accessTuple(node, i);
             nodeAccessor.unmarshalKey(keyData);
             if (nextChildPageId == NULL_PAGE_ID) {
                 // pretend last key is +infinity
@@ -162,7 +175,7 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
             }
             childPageId = verifyNode(childPageId);
         } while (childPageId != NULL_PAGE_ID);
-        nodeAccessor.accessTuple(node,i);
+        nodeAccessor.accessTuple(node, i);
         nodeAccessor.unmarshalKey(keyData);
         lowerBoundKey = keyData;
     }

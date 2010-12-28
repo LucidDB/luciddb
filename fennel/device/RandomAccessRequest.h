@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,7 @@ struct aiocb;
 struct iocb;
 #endif
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <windows.h>
 #endif
 
@@ -48,21 +48,22 @@ class RandomAccessDevice;
  * RandomAccessRequestBinding binds a RandomAccessRequest to a particular
  * memory location being read from or written to.
  */
-class RandomAccessRequestBinding : public IntrusiveListNode
+class FENNEL_DEVICE_EXPORT RandomAccessRequestBinding
+    : public IntrusiveListNode
 #ifdef USE_AIO_H
 , public aiocb
 #endif
 #ifdef USE_LIBAIO_H
 , public iocb
 #endif
-#ifdef __MINGW32__
+#ifdef __MSVC__
 , public OVERLAPPED
 #endif
 {
 public:
     explicit RandomAccessRequestBinding();
     virtual ~RandomAccessRequestBinding();
-    
+
     /**
      * @return memory address where transfer should start.
      */
@@ -73,7 +74,7 @@ public:
      * transfer.
      */
     virtual uint getBufferSize() const = 0;
-    
+
     /**
      * Receives notification when a transfer completes.
      *
@@ -90,10 +91,14 @@ public:
  * RandomAccessRequestBinding memory locations need not be contiguous
  * (scatter/gather).
  */
-class RandomAccessRequest 
+class FENNEL_DEVICE_EXPORT RandomAccessRequest
 {
 public:
-    enum Type { READ, WRITE};
+    enum Type {
+        READ,
+        WRITE
+    };
+
     typedef IntrusiveList<RandomAccessRequestBinding> BindingList;
     typedef IntrusiveListIter<RandomAccessRequestBinding> BindingListIter;
     typedef IntrusiveListMutator<RandomAccessRequestBinding>

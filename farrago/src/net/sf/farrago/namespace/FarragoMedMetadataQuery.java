@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,6 @@ import java.util.*;
  */
 public interface FarragoMedMetadataQuery
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String OTN_TABLE = "Table";
@@ -78,9 +77,9 @@ public interface FarragoMedMetadataQuery
      * instance of {@link FarragoMedNameDirectory}, which provides additional
      * filtering context.
      *
-     * @return Map<String, FarragoMedMetadataFilter>
+     * @return map
      */
-    public Map getFilterMap();
+    public Map<String, FarragoMedMetadataFilter> getFilterMap();
 
     /**
      * Retrieves a set of result object types to be returned by the query,
@@ -88,7 +87,7 @@ public interface FarragoMedMetadataQuery
      *
      * @return Set<String>
      */
-    public Set getResultObjectTypes();
+    public Set<String> getResultObjectTypes();
 }
 
 // End FarragoMedMetadataQuery.java

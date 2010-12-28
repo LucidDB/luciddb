@@ -12,7 +12,7 @@
 
       <test-suite-call testfile="test/sql/bench/benchtest-csvjdbc.xml"/>
       <test-suite-call testfile="test/sql/compositekey/test.xml"/>
-      <test-suite-call testfile="test/sql/datatypes/test-csvjdbc.xml"/>
+      <test-suite-call testfile="test/sql/datatypes/test.xml"/>
       <test-suite-call testfile="test/sql/VI/insert/test.xml"/>
       <test-suite-call testfile="test/sql/VI/populate/test.xml"/>
 

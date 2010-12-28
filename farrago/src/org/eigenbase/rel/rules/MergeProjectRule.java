@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,11 +22,12 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
 
 /**
  * MergeProjectRule merges a {@link ProjectRel} into another {@link ProjectRel},
@@ -38,16 +39,39 @@ import java.util.*;
 public class MergeProjectRule
     extends RelOptRule
 {
+    public static final MergeProjectRule instance =
+        new MergeProjectRule();
+
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * if true, always merge projects
+     */
+    private final boolean force;
+
     //~ Constructors -----------------------------------------------------------
 
-    public MergeProjectRule()
+    /**
+     * Creates a MergeProjectRule.
+     */
+    private MergeProjectRule()
+    {
+        this(false);
+    }
+
+    /**
+     * Creates a MergeProjectRule, specifying whether to always merge projects.
+     *
+     * @param force Whether to always merge projects
+     */
+    public MergeProjectRule(boolean force)
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)),
+            "MergeProjectRule" + (force ? ": force mode" : ""));
+        this.force = force;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -58,14 +82,16 @@ public class MergeProjectRule
         ProjectRel topProject = (ProjectRel) call.rels[0];
         ProjectRel bottomProject = (ProjectRel) call.rels[1];
         RexBuilder rexBuilder = topProject.getCluster().getRexBuilder();
-        
-        // if the two projects reference identical inputs, then return
-        // and either let FennelRenameRule or RemoveTrivialProjectRule
-        // replace the projects
-        if (RelOptUtil.checkProjAndChildInputs(topProject, false)) {
-            return;
+
+        // if we're not in force mode and the two projects reference identical
+        // inputs, then return and either let FennelRenameRule or
+        // RemoveTrivialProjectRule replace the projects
+        if (!force) {
+            if (RelOptUtil.checkProjAndChildInputs(topProject, false)) {
+                return;
+            }
         }
-        
+
         // create a RexProgram for the bottom project
         RexProgram bottomProgram =
             RexProgram.create(
@@ -74,9 +100,9 @@ public class MergeProjectRule
                 null,
                 bottomProject.getRowType(),
                 rexBuilder);
-                    
+
         // create a RexProgram for the topmost project
-        RexNode[] projExprs = topProject.getProjectExps();
+        RexNode [] projExprs = topProject.getProjectExps();
         RexProgram topProgram =
             RexProgram.create(
                 bottomProject.getRowType(),
@@ -84,31 +110,30 @@ public class MergeProjectRule
                 null,
                 topProject.getRowType(),
                 rexBuilder);
-        
+
         // combine the two RexPrograms
         RexProgram mergedProgram =
             RexProgramBuilder.mergePrograms(
                 topProgram,
                 bottomProgram,
                 rexBuilder);
-        
+
         // re-expand the topmost projection expressions, now that they
         // reference the children of the bottom-most project
         int nProjExprs = projExprs.length;
-        RexNode[] newProjExprs = new RexNode[nProjExprs];
+        RexNode [] newProjExprs = new RexNode[nProjExprs];
         List<RexLocalRef> projList = mergedProgram.getProjectList();
         for (int i = 0; i < nProjExprs; i++) {
-            newProjExprs[i] =
-                mergedProgram.expandLocalRef(projList.get(i));
+            newProjExprs[i] = mergedProgram.expandLocalRef(projList.get(i));
         }
-        
+
         // replace the two projects with a combined projection
         ProjectRel newProjectRel =
             (ProjectRel) CalcRel.createProject(
                 bottomProject.getChild(),
                 newProjExprs,
                 RelOptUtil.getFieldNames(topProject.getRowType()));
-        
+
         call.transformTo(newProjectRel);
     }
 }

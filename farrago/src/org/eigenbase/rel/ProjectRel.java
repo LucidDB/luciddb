@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,6 +27,7 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -36,18 +37,20 @@ import org.eigenbase.rex.*;
  * <p>The result is usually 'boxed' as a record with one named field for each
  * column; if there is precisely one expression, the result may be 'unboxed',
  * and consist of the raw value type.</p>
+ *
+ * @version $Id$
+ * @author jhyde
+ * @since March, 2004
  */
 public final class ProjectRel
     extends ProjectRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a ProjectRel.
+     * Creates a ProjectRel with no sort keys.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param fieldNames aliases of the expressions
@@ -69,19 +72,18 @@ public final class ProjectRel
                 exps,
                 fieldNames),
             flags,
-            RelCollation.emptyList);
+            Collections.<RelCollation>emptyList());
     }
 
     /**
      * Creates a ProjectRel.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param rowType output row type
      * @param flags values as in {@link ProjectRelBase.Flags}
-     * @param collationList
+     * @param collationList List of sort keys
      */
     public ProjectRel(
         RelOptCluster cluster,
@@ -103,18 +105,39 @@ public final class ProjectRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public ProjectRel clone()
     {
         ProjectRel clone =
             new ProjectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 RexUtil.clone(exps),
                 rowType,
                 getFlags(),
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    /**
+     * Returns a permutation, if this projection is merely a permutation of its
+     * input fields, otherwise null.
+     */
+    public Permutation getPermutation()
+    {
+        final int fieldCount = rowType.getFields().length;
+        if (fieldCount != getChild().getRowType().getFields().length) {
+            return null;
+        }
+        Permutation permutation = new Permutation(fieldCount);
+        for (int i = 0; i < fieldCount; ++i) {
+            if (exps[i] instanceof RexInputRef) {
+                permutation.set(i, ((RexInputRef) exps[i]).getIndex());
+            } else {
+                return null;
+            }
+        }
+        return permutation;
     }
 }
 

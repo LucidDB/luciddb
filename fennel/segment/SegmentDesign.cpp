@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,6 +56,13 @@ virtualization rather than a direct logical-to-physical mapping.
 
 The segment library also relies on the cache library (TBD: link to cache
 design) for all device access, and for imposing rules such as write ordering.
+
+<p>
+
+For an example of how the segment library can be applied to create page-based
+persistent data structures, see <a
+href="http://pub.eigenbase.org/wiki/FennelPageBasedDataStructureHowto">this
+HOWTO doc</a>.
 
 <hr>
 
@@ -193,7 +200,7 @@ shown in the following diagram:
 Here, each extent contains one extent map page followed by four data pages;
 real extents are much bigger.  The entries in the PageId 0 segment map page
 contain the number of unallocated pages in each extent (light gray rectangles
-represent unallocated blocks).  Each extent map contains the allocation status
+represent allocated blocks).  Each extent map contains the allocation status
 of the corresponding data pages, together with successor PageId entries,
 forming singly-linked lists terminated with NULL_PAGE_ID).  Storing the
 successor chain in the extent map allows for efficient prefetch even in the
@@ -282,6 +289,206 @@ allocated), a new segment map page with one empty extent is allocated.
 
 RandomAllocationSegment is good for implementing dynamic data structures such
 as BTrees where the page allocation/deallocation pattern is unpredictable.
+
+<hr>
+
+<a name="VersionedRandomAllocationSegment"></a>
+<a name="SnapshotRandomAllocationSegment"></a>
+<h3>VersionedRandomAllocationSegment and SnapshotRandomAllocationSegment</h3>
+
+VersionedRandomAllocationSegment and SnapshotRandomAllocationSegment are
+companion segments that implement snapshot-consistent, multi-versioned, random
+data access.
+VersionedRandomAllocationSegment provides the underlying multi-versioned,
+random data storage, while SnapshotRandomAllocationSegment maintains
+transaction private state, initiates the commit and rollback of changes in
+the underlying segment, and determines which snapshot pages to access for
+a specified transaction.
+
+<h4>Data Storage</h4>
+
+VersionedRandomAllocationSegment is derived from the same base class used to
+implement RandomAllocationSegment.
+Therefore, it uses the same page allocation/deallocation scheme.
+In fact, it uses the same segment map described earlier, and a similar
+extent map.
+The difference is the entries in a VersionedRandomAllocationSegment extent map
+include a commit sequence number, corresponding to when the page was committed,
+and a version chain that links a page to its snapshots.
+The first entry in the chain is the anchor page and corresponds to the original
+copy of the page.
+The page chained from that anchor page entry is the latest snapshot copy
+of the page.
+Chained from that is the next latest snapshot copy and so forth, until we
+chain back to the anchor page.
+
+<p>
+
+In order to support recovery and transaction rollbacks, changes made to the
+segment and extent maps of a VersionedRandomAllocationSegment are not
+written to the segment's pages until a transaction is committed.
+This is implemented by maintaining temporary copies of the pages containing
+these maps.
+As new pages are allocated, the allocations are reflected in these temporary
+pages.
+Only when a transaction commits are the changes corresponding to that
+transaction copied back to the
+permanent pages in the VersionedRandomAllocationSegment.
+In the case of rollback, any uncommitted changes corresponding to the
+transaction are removed from the temporary pages.
+All page allocations will go through these temporary pages.
+That way, all page allocations are still reserved to prevent other
+transactions from allocating the same page.
+
+<h4>Maintaining Snapshots</h4>
+
+SnapshotRandomAllocationSegment is responsible for maintaining and keeping
+track of page allocations, deallocations, and updates for a specific
+transaction.
+This is in contrast to VersionedRandomAllocationSegment which maintains
+page allocations and deallocations for all active transactions.
+Normally, you will have one SnapshotRandomAllocationSegment per transaction
+with more than one SnapshotRandomAllocationSegment associated with the same
+underlying companion VersionedRandomAllocationSegment.
+The SnapshotRandomAllocationSegment is created with an initial commit sequence
+number.
+This commit sequence number determines which pages should be read by the
+segment.
+In order to locate the appropriate snapshot page,
+it compares this commit sequence number against the commit sequence numbers
+stored in the extent map entries in the underlying
+VersionedRandomAllocationSegment.
+Pages are always accessed through their original anchor page.
+Therefore, the desired page is found by walking the page chain starting at
+the anchor until we find a page whose commit sequence number is less than
+or equal to the commit sequence number associated with the segment.
+We can walk the chain in this way because as noted above, the chain is
+constructed such that the pages that follow the anchor are arranged from newest
+to oldest.
+
+<p>
+
+A new snapshot page is created whenever a page is updated.
+With a SnapshotRandomAllocationSegment, the very first time a page is updated
+by the segment, it will create a new snapshot copy of the page, linking the
+new page into the page chain of the original anchor page in the
+VersionedRandomAllocationSegment.
+Subsequent updates made through the segment to that same page will not result
+in a new page allocation.
+Instead, the previous, newly allocated page will be used since the update
+is part of the same transaction.
+
+<p>
+
+Commits and rollbacks of changes stored in the temporary pages of the underlying
+VersionedRandomAllocationSegment are initiated through the
+SnapshotRandomAllocationSegment.
+When a commit is called on a SnapshotRandomAllocationSegment, it will
+call its underlying VersionedRandomAllocationSegment to make any page
+allocations and deallocations that it initiated permanent.
+When committing these changes, a new commit sequence number is passed
+down to VersionedRandomAllocationSegment so the extent page entries
+corresponding to these modifications will reflect the sequence number at the
+time of the commit, rather than at the start of the transaction.
+
+<p>
+
+The following example illustrates these concepts.
+Suppose the following:
+
+<ul>
+
+<li>Transaction 1 creates pages 1, 2 and 3.
+
+<li>Transaction 3 updates page 3, thereby creating snapshot page 4.
+It also creates a new page -- page 5.
+
+<li>Transaction 5 updates pages 4 and 5, creating snapshot pages 6 and 7,
+and creates page 8.
+
+</ul>
+
+The extent map entries for these pages would be as noted in the diagram below.
+For simplicity, for each page entry, I only show the commit sequence number
+and the version chain pointer.
+Note that because pages 1, 2, and 8 have not been updated, their page entries
+chain back to themselves.
+<hr>
+\image html VersionedRandomAllocationSegment.gif
+<hr>
+
+Using the above example:
+
+<ul>
+
+<li>A SnapshotRandomAllocationSegment with a commit sequence number of 2 would
+read pages 1, 2, and 3.
+
+<li>A SnapshotRandomAllocationSegment with commit sequence number 4 would read
+pages 1, 2, 4, and 5.
+
+<li>A SnapshotRandomAllocationSegment with commit sequence 6 would
+read pages 1, 2, 6, 7, and 8.
+
+</ul>
+
+<h4>Associating Different Snapshots to the Same Object </h4>
+
+If you want to tie more than one SnapshotRandomAllocationSegment (each
+corresponding to a different transaction over time) to the same object,
+one way of doing this is to make use of a DynamicDelegatingSegment.
+Unlike a DelegatingSegment, you can dynamically set the underlying delegate
+in a DynamicDelegatingSegment.
+In other words, as you switch to a new transaction, you can switch the
+delegate of a DynamicDelegatingSegment to the SnapshotRandomAllocationSegment
+corresponding to the new transaction.
+
+<h4>Page Deallocation </h4>
+One other noteworthy characteristic of VersionedRandomAllocationSegment is the
+manner in which page deallocations are handled.
+Requests to deallocate individual pages are still carried out by calling
+the deallocatePageRange method.
+However, for the VersionedRandomAllocationSegment, that method does not
+actually free the page, making it available for re-allocation.
+Instead, the page is marked as deallocation deferred.
+In order to free deallocation-deferred pages,
+VersionedRandomAllocationSegment::getOldPageIds must first be
+called to locate these pages.
+Then VersionedRandomAllocationSegment::deallocateOldPages must be called to
+do the actual frees.
+Normally, these two methods should be called in a loop until getOldPageIds
+can no longer find any old pages.
+
+<p>
+
+In addition to identifying pages marked for deallocation,
+VersionedRandomAllocationSegment::getOldPageIds also identifies pages in a page
+chain that are no longer being accessed by any active transactions.
+Some of the old Pages in a page chain can be deallocated provided there
+are at least three old pages in the page chain.
+Why three?
+
+<ol>
+
+<li>We can never deallocate the anchor page since there can be
+references to that anchor page id in btree entries and/or other page entries.
+
+<li>We cannot deallocate the newest, old page because it's still being
+referenced by active transactions.
+
+<li>Therefore, the newest page we can deallocate is the second newest, old page.
+
+</ol>
+
+Using the example from earlier, if we consider the page chain with page 3 as
+its anchor and the oldest, active transaction id is 5, then no pages can be
+freed because transaction id 5 is still referencing page 4, and
+transaction id 6 and beyond are referencing page 6.
+On the other hand, if the oldest, active transaction id is 7, then we can
+free page 4.
+Again, we cannot free page 6 because transaction id 7 is still referencing it.
+If the page chain contained additional old pages following page 4 in the chain,
+those pages would also be freed.
 
 <hr>
 
@@ -417,7 +624,7 @@ it.
 <li> If the checksum recorded in the footer does not match a recovery checksum
 computed from the page contents, the page is considered invalid and recovery
 terminates (successfully, under the assumption that the page represents the
-result of an incomplete write at the end of the log).  TBD:  onlineUuid. 
+result of an incomplete write at the end of the log).  TBD:  onlineUuid.
 
 <li> If the page version is older than the latest version number, the page is
 skipped and recovery continues (TBD: why does this happen?  I think fuzzy
@@ -596,7 +803,7 @@ mirroring).
 <hr>
 
  */
-struct SegmentDesign 
+struct SegmentDesign
 {
     // NOTE:  dummy class for doxygen
 };

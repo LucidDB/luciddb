@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,6 +42,7 @@ public class RandUdf
         Random oRand = (Random)FarragoUdrRuntime.getContext();
         if (oRand == null) {
             oRand = new Random();
+            FarragoUdrRuntime.setContext(oRand);
         }
 
         // Generate a double precision number between 0 and 1

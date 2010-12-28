@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package net.sf.farrago.db;
 import java.util.*;
 import java.util.logging.*;
 
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -41,7 +42,6 @@ import net.sf.farrago.util.*;
 public abstract class FarragoDbSingleton
     extends FarragoCompoundAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = FarragoTrace.getDatabaseTracer();
@@ -64,6 +64,17 @@ public abstract class FarragoDbSingleton
      * #shutdown()}, to help prevent recursive shutdown.
      */
     private static boolean inShutdown;
+
+    /**
+     * Flag indicating whether a database backup is already in progress
+     */
+    private static boolean backupInProgress;
+
+    /**
+     * Flag indicating whether FarragoDbSingleton is already in {@link
+     * #shutdownConditional(int)}, to help prevent recursive shutdown.
+     */
+    private static boolean inShutdownConditional;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -98,6 +109,30 @@ public abstract class FarragoDbSingleton
             }
         }
         return instance;
+    }
+
+    /**
+     * Establishes a database reference. If requireExistingEngine, a new
+     * database will not be loaded, even if this is the first reference.
+     *
+     * @param sessionFactory factory for various database-level objects
+     * @param requireExistingEngine true if require an already created reference
+     *
+     * @return loaded database
+     */
+    public static synchronized FarragoDatabase pinReference(
+        FarragoSessionFactory sessionFactory,
+        boolean requireExistingEngine)
+    {
+        if (requireExistingEngine) {
+            tracer.info("connect");
+            if (instance == null) {
+                throw FarragoResource.instance().NoDatabaseLoaded.ex();
+            }
+            ++nReferences;
+            return instance;
+        }
+        return pinReference(sessionFactory);
     }
 
     static synchronized void addSession(
@@ -163,24 +198,68 @@ public abstract class FarragoDbSingleton
      *
      * @return whether shutdown took place
      */
-    public static synchronized boolean shutdownConditional(
-        int groundReferences)
+    public static boolean shutdownConditional(int groundReferences)
     {
-        assert (instance != null);
-        tracer.fine("ground reference count = " + groundReferences);
-        tracer.fine("actual reference count = " + nReferences);
-        if (nReferences <= groundReferences) {
-            shutdown();
-            return true;
-        } else {
-            return false;
+        boolean flushCodeCache = false;
+        boolean success = false;
+        synchronized (FarragoDbSingleton.class) {
+            if (instance == null) {
+                assert (nReferences == 0);
+                return true;
+            }
+            if (inShutdownConditional || inShutdown) {
+                return false;
+            }
+            inShutdownConditional = true;
+
+            try {
+                tracer.fine("ground reference count = " + groundReferences);
+                tracer.fine("actual reference count = " + nReferences);
+
+                int numLoopbackSessions = countLoopbackSessions();
+
+                if ((nReferences - numLoopbackSessions) <= groundReferences) {
+                    flushCodeCache = true;
+                }
+
+                success = true;
+            } finally {
+                // Clean up if an exception is being thrown
+                if (!success) {
+                    inShutdownConditional = false;
+                }
+            }
+        }
+
+        // Release the monitor on FarragoDbSingleton: Allows loopback sessions
+        // to be closed from other threads.  It is possible that a new
+        // connection (or even loopback session) will created while the
+        // monitor is free.  In that case, we will not shut down.  It is also
+        // possible some loopback sessions will not actually be closed by
+        // the flush (connection resource leak, timing, etc.), in which case
+        // we will not shut down.
+        if (flushCodeCache) {
+            instance.flushCodeCache();
+        }
+
+        synchronized (FarragoDbSingleton.class) {
+            try {
+                if (nReferences <= groundReferences) {
+                    shutdown();
+                    return true;
+                } else {
+                    return false;
+                }
+            } finally {
+                inShutdownConditional = false;
+            }
         }
     }
 
     /**
      * Shuts down the database, killing any running sessions.
      */
-    public static synchronized void shutdown()
+    public static void shutdown()
     {
         // REVIEW: SWZ 12/31/2004: If an extension project adds "specialized
         // initialization" that ends up pinning a reference to FarragoDatabase
@@ -192,21 +271,58 @@ public abstract class FarragoDbSingleton
         // there's probably a better way -- maybe a new implementation of
         // Connection that represents an internal connection and avoids the
         // extra reference count and cleanupSessions() call.
-        if (inShutdown) {
-            return;
-        }
-        inShutdown = true;
 
-        tracer.info("shutdown");
-        assert (instance != null);
-        try {
-            instance.sessionFactory.specializedShutdown();
-            instance.close(false);
-        } finally {
-            instance = null;
-            nReferences = 0;
-            inShutdown = false;
+        // SWZ: 09/12/2008: Note that loopback sessions don't really solve
+        // the above problem.  Loopback sessions are sessions (connections)
+        // owned by data wrappers/servers which can be closed by flushing
+        // the code cache.
+
+        boolean flushCodeCache = false;
+        synchronized (FarragoDbSingleton.class) {
+            if (instance == null) {
+                assert (nReferences == 0);
+                return;
+            }
+            if (inShutdown) {
+                return;
+            }
+            inShutdown = true;
+
+            tracer.info("shutdown");
+
+            if (countLoopbackSessions() > 0) {
+                flushCodeCache = true;
+            }
         }
+
+        // Attempt to close loopback sessions.  We will shut down even if
+        // none close.
+        if (flushCodeCache) {
+            instance.flushCodeCache();
+        }
+
+        synchronized (FarragoDbSingleton.class) {
+            assert (instance != null);
+            try {
+                instance.sessionFactory.specializedShutdown();
+                instance.close(false);
+            } finally {
+                instance = null;
+                nReferences = 0;
+                inShutdown = false;
+            }
+        }
+    }
+
+    private static int countLoopbackSessions()
+    {
+        int numLoopbackSessions = 0;
+        for (FarragoSession session : getSessions()) {
+            if (session.isLoopback()) {
+                numLoopbackSessions++;
+            }
+        }
+        return numLoopbackSessions;
     }
 
     /**
@@ -221,6 +337,30 @@ public abstract class FarragoDbSingleton
             assert (instance == null);
             return false;
         }
+    }
+
+    /**
+     * Sets a flag indicating whether a backup is in progress. If the flag is
+     * true and a backup is already in progress, then false is returned.
+     * Otherwise, true is returned.
+     *
+     * @param inProgress true if the flag is to be set, indicating that a backup
+     * is in progress
+     *
+     * @return true if setting of the flag was successful
+     */
+    public static synchronized boolean setBackupFlag(boolean inProgress)
+    {
+        if (inProgress && backupInProgress) {
+            return false;
+        }
+        backupInProgress = inProgress;
+        return true;
+    }
+
+    public static boolean isInShutdown()
+    {
+        return inShutdown;
     }
 }
 

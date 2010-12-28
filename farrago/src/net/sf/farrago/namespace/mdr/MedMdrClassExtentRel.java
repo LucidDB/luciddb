@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,12 +28,13 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -57,7 +58,6 @@ class MedMdrClassExtentRel
     extends TableAccessRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -81,14 +81,20 @@ class MedMdrClassExtentRel
             connection);
         this.mdrClassExtent = mdrClassExtent;
 
-        rowClass = JmiUtil.getClassForRefClass(mdrClassExtent.refClass);
+        FarragoPreparingStmt preparingStmt =
+            FarragoRelUtil.getPreparingStmt(this);
+
+        rowClass =
+            JmiObjUtil.getClassForRefClass(
+                preparingStmt.getRepos().getMdrRepos(),
+                mdrClassExtent.refClass);
         useReflection = (rowClass == RefObject.class);
     }
 
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public MedMdrClassExtentRel clone()
     {
         MedMdrClassExtentRel clone =
             new MedMdrClassExtentRel(
@@ -106,29 +112,29 @@ class MedMdrClassExtentRel
         boolean useModel = (refObject instanceof ModelElement);
 
         // determine the path from the root package to refObject
-        RefBaseObject refPackage = JmiUtil.getContainer(refObject);
+        RefBaseObject refPackage = JmiObjUtil.getContainer(refObject);
         String rootPackageName =
-            JmiUtil.getMetaObjectName(
+            JmiObjUtil.getMetaObjectName(
                 mdrClassExtent.directory.server.getExtentPackage());
         for (;;) {
-            String packageName = JmiUtil.getMetaObjectName(refPackage);
+            String packageName = JmiObjUtil.getMetaObjectName(refPackage);
             if (packageName.equals(rootPackageName)) {
                 break;
             }
 
             // we're building up the list in reverse order
             nameList.add(0, packageName);
-            refPackage = JmiUtil.getContainer(refPackage);
+            refPackage = JmiObjUtil.getContainer(refPackage);
             assert (refPackage != null);
         }
 
-        nameList.add(JmiUtil.getMetaObjectName(refObject));
+        nameList.add(JmiObjUtil.getMetaObjectName(refObject));
         String typeName;
         if (useModel) {
-            typeName = JmiUtil.getMetaObjectName(refObject.refMetaObject());
+            typeName = JmiObjUtil.getMetaObjectName(refObject.refMetaObject());
         } else {
             typeName =
-                JmiUtil.getMetaObjectName(
+                JmiObjUtil.getMetaObjectName(
                     refObject.refMetaObject().refMetaObject());
         }
         nameList.add(typeName);
@@ -152,12 +158,11 @@ class MedMdrClassExtentRel
             nameList.add(Literal.makeLiteral(runtimeName[i]));
         }
 
-        return
-            mdrClassExtent.directory.server.generateRuntimeSupportCall(
-                new ArrayAllocationExpression(
-                    TypeName.forOJClass(OJSystem.STRING),
-                    new ExpressionList(null),
-                    new ArrayInitializer(nameList)));
+        return mdrClassExtent.directory.server.generateRuntimeSupportCall(
+            new ArrayAllocationExpression(
+                TypeName.forOJClass(OJSystem.STRING),
+                new ExpressionList(null),
+                new ArrayInitializer(nameList)));
     }
 
     public Expression getCollectionExpression()
@@ -199,16 +204,15 @@ class MedMdrClassExtentRel
                 OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
                 new ExpressionList(
                     collectionExpression));
-        return
-            IterCalcRel.implementAbstractTupleIter(
-                implementor,
-                this,
-                adapterExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                null);
+        return IterCalcRel.implementAbstractTupleIter(
+            implementor,
+            this,
+            adapterExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            null);
     }
 
     RexNode [] implementProjection(Expression inputRow)
@@ -226,7 +230,7 @@ class MedMdrClassExtentRel
 
         RelDataType outputRowType = getRowType();
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(
+            JmiObjUtil.getFeatures(
                 mdrClassExtent.refClass,
                 StructuralFeature.class,
                 false);
@@ -244,7 +248,7 @@ class MedMdrClassExtentRel
                         new ExpressionList(
                             Literal.makeLiteral(feature.getName())));
             } else {
-                String accessorName = JmiUtil.getAccessorName(feature);
+                String accessorName = JmiObjUtil.getAccessorName(feature);
                 accessorExps[i] =
                     new MethodCall(
                         castInputRow,

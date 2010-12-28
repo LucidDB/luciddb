@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -122,9 +122,27 @@ Object FarragoSqlStmtEof() :
     (
         obj = DdlStmtEof()
         |
-        obj = SqlStmtEof()
-        |
-        obj = PsmBody()
+        (
+            /*
+             * Insure that a read-only repository transaction is started.
+             * Note that view expansion can cause a second call into the
+             * parser, which requires us to avoid attempting to start
+             * the read txn twice.
+             */
+            {
+                FarragoReposTxnContext reposTxnContext =
+                    farragoParser.getStmtValidator().getReposTxnContext();
+
+                if (reposTxnContext != null
+                    && !reposTxnContext.isReadTxnInProgress())
+                {
+                    reposTxnContext.beginLockedTxn(true);
+                }
+            }
+            obj = SqlStmtEof()
+            |
+            obj = PsmBody()
+        )
     )
     <EOF>
     {
@@ -139,21 +157,26 @@ DdlStmt DdlStmtEof() :
     SqlNode expr;
     DdlReplaceOptions replaceOptions = new DdlReplaceOptions();
     SqlIdentifier newName;
+    FarragoReposTxnContext reposTxnContext =
+        farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
     (
         (
             <CREATE>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             [
-            	( <OR> <REPLACE> )
-	            {
-	                replaceOptions.setIsReplace(true);
-	            }
-	            [ ( <RENAME> <TO> newName = SimpleIdentifier() )
-		            {
-		                replaceOptions.setNewName(newName);
-		            }
-	            ]
+                ( <OR> <REPLACE> )
+                {
+                    replaceOptions.setIsReplace(true);
+                }
+                [ ( <RENAME> <TO> newName = SimpleIdentifier() )
+                    {
+                        replaceOptions.setNewName(newName);
+                    }
+                ]
             ]
             (
                 modelElement = SchemaDefinition()
@@ -172,56 +195,74 @@ DdlStmt DdlStmtEof() :
                 modelElement = RoleDefinition()
                 |
                 modelElement = ExtensionModelDefinition()
+                |
+                modelElement = LabelDefinition()
+                |
+                modelElement = CatalogDefinition()
             )
             {
-                ddlStmt = new DdlCreateStmt(modelElement, replaceOptions);
+                ddlStmt = newDdlCreateStmt(modelElement, replaceOptions);
             }
         )
         |
         (
             <DROP>
             {
+                reposTxnContext.beginLockedTxn(false);
+
                 // assume RESTRICT; CascadeOption() may override
                 dropRestrict = true;
             }
             (
-                modelElement = SchemaDrop()
+                (
+                    modelElement = SchemaDrop()
+                    |
+                    modelElement = CatalogDrop()
+                    |
+                    modelElement = TableDrop()
+                    |
+                    modelElement = IndexDrop()
+                    |
+                    modelElement = ViewDrop()
+                    |
+                    modelElement = RoutineDrop()
+                    |
+                    modelElement = UserDefinedTypeDrop()
+                    |
+                    modelElement = UserDefinedOrderingDrop()
+                    |
+                    modelElement = JarDrop()
+                    |
+                    modelElement = DataServerDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = DataWrapperDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = ForeignTableDrop()
+                    |
+                    modelElement = UserDrop()
+                    |
+                    modelElement = RoleDrop()
+                    |
+                    modelElement = ExtensionModelDrop()
+                )
+                {
+                    ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
+                }
                 |
-                modelElement = TableDrop()
-                |
-                modelElement = IndexDrop()
-                |
-                modelElement = ViewDrop()
-                |
-                modelElement = RoutineDrop()
-                |
-                modelElement = UserDefinedTypeDrop()
-                |
-                modelElement = UserDefinedOrderingDrop()
-                |
-                modelElement = JarDrop()
-                |
-                modelElement = DataServerDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = DataWrapperDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = ForeignTableDrop()
-                |
-                modelElement = UserDrop()
-                |
-                modelElement = RoleDrop()
-                |
-                modelElement = ExtensionModelDrop()
+                modelElement = LabelDrop()
+                {
+                    ddlStmt = newDdlDropLabelStmt(modelElement,dropRestrict);
+                }
             )
-            {
-                ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
-            }
         )
         |
         (
             <TRUNCATE>
+            {
+                reposTxnContext.beginLockedTxn(true);
+            }
             (
                 <TABLE> modelElement = TableIdentifier()
             )
@@ -232,16 +273,19 @@ DdlStmt DdlStmtEof() :
         |
         (
             <SET>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
-                <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                <CATALOG> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetCatalogStmt(expr);
                 }
-                | <SCHEMA> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                | <SCHEMA> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetSchemaStmt(expr);
                 }
-                | <PATH> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                | <PATH> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetPathStmt(expr);
                 }
@@ -251,27 +295,45 @@ DdlStmt DdlStmtEof() :
         <ALTER>
         (
             <SYSTEM>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <SET> ddlStmt = SystemParamAssignment()
                 |
                 <ADD> ddlStmt = CatalogExtension()
                 |
                 <REPLACE> ddlStmt = CatalogReplace()
+                |
+                <DEALLOCATE> ddlStmt = DeallocateOld()
             )
             |
             <SESSION>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <IMPLEMENTATION> ddlStmt = SessionImplementation()
                 |
                 <SET> ddlStmt = SessionParamAssignment()
             )
             |
-            <TABLE> ddlStmt = AlterTableStmt()
+            <TABLE>
+            {
+                reposTxnContext.beginLockedTxn(false);
+                ddlStmt = AlterTableStmt();
+            }
             |
-            ddlStmt = ExtensionModelAlter()
+            {
+                reposTxnContext.beginLockedTxn(false);
+                ddlStmt = ExtensionModelAlter();
+            }
         )
         |
         <GRANT>
+        {
+            reposTxnContext.beginLockedTxn(false);
+        }
         (
             ddlStmt = GrantRoleStmt()
             |
@@ -280,23 +342,50 @@ DdlStmt DdlStmtEof() :
         |
         <CHECKPOINT>
         {
+            reposTxnContext.beginLockedTxn(false);
+
             ddlStmt = new DdlCheckpointStmt();
         }
         |
         <COMMIT>
         {
+            reposTxnContext.beginLockedTxn(false);
+
             ddlStmt = new DdlCommitStmt();
         }
         |
-        <ROLLBACK> ddlStmt = Rollback()
+        <ROLLBACK>
+        {
+            reposTxnContext.beginLockedTxn(false);
+        }
+        ddlStmt = Rollback()
         |
-        <SAVEPOINT> ddlStmt = Savepoint()
+        <SAVEPOINT>
+        {
+            reposTxnContext.beginLockedTxn(false);
+        }
+        ddlStmt = Savepoint()
         |
-        <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint()
+        <RELEASE> <SAVEPOINT>
+        {
+            reposTxnContext.beginLockedTxn(false);
+        }
+        ddlStmt = ReleaseSavepoint()
         |
-        <IMPORT> ddlStmt = ImportForeignSchemaStmt()
+        <IMPORT>
+        {
+            reposTxnContext.beginLockedTxn(false);
+        }
+        ddlStmt = ImportForeignSchemaStmt()
         |
-        <ANALYZE> ddlStmt = AnalyzeStmt()
+        <ANALYZE>
+        {
+            // During the initial prepare of an analyze statement, we only
+            // need to acquire shared locks since we're only reading from the
+            // catalogs.  During catalog update, we'll start a new write xact
+            reposTxnContext.beginLockedTxn(true);
+        }
+        ddlStmt = AnalyzeStmt()
     )
     <EOF>
     {
@@ -403,7 +492,7 @@ void SchemaPath(FemLocalSchema schema) :
         Iterator iter = searchPath.iterator();
         while (iter.hasNext()) {
             CwmSchema searchedSchema = (CwmSchema) iter.next();
-            if (searchedSchema.getNamespace() != schema.getNamespace()) {
+            if (!searchedSchema.getNamespace().equals(schema.getNamespace())) {
                 throw FarragoResource.instance().ValidatorPathBadCatalog.ex(
                     getRepos().getLocalizedObjectName(
                         searchedSchema.getNamespace()),
@@ -494,17 +583,6 @@ FemLocalTable UnscopedTableDefinition() :
     OptionalSampleList(table, false)
     OptionalDescription(table)
     {
-        List features = table.getFeature();
-        int sequences = 0;
-        for (Object o : features) {
-            if (((FemStoredColumn) o).getSequence() != null) {
-                sequences++;
-            }
-        }
-        if (sequences > 1) {
-            throw FarragoResource.instance()
-            .ValidatorMultipleTableSequences.ex(table.getName());
-        }
         return table;
     }
 }
@@ -585,9 +663,8 @@ FemLocalView ViewDefinition() :
     <AS>
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(view, defStart);
     }
-    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
         defEnd = getEndPos();
 
@@ -598,6 +675,9 @@ FemLocalView ViewDefinition() :
         String bodyText = farragoParser.getSubstring(defStart, defEnd);
         CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
         queryExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                view, defStart, bodyText);
         queryExpr.setBody(bodyText);
         view.setQueryExpression(queryExpr);
         return view;
@@ -629,7 +709,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             table = specifiedTable;
         } else {
             // TODO:  move rule down into validator
-            if (table != specifiedTable) {
+            if (!table.equals(specifiedTable)) {
                 throw farragoParser.getDdlValidator().newPositionalError(
                     index,
                     FarragoResource.instance().ValidatorIndexBadTable.ex());
@@ -641,6 +721,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
         }
         index.setSorted(true);
         index.setUnique(false);
+        index.setNamespace(table.getNamespace());
     }
     <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
     {
@@ -667,7 +748,7 @@ FemUser UserDefinition() :
 {
     FemUser user;
     SqlIdentifier userName;
-    SqlNode expr;
+    SqlNode plaintextLiteral;
     CwmNamespace defaultNamespace;
 }
 {
@@ -680,12 +761,24 @@ FemUser UserDefinition() :
         // set the repos name attribute
         user.setName(userName.getSimple());
     }
-    <AUTHORIZATION> expr = Expression(EXPR_ACCEPT_NONQUERY)
-    {
-        // TODO: Finalize the syntax for JAAS integration
-        // user.setAuthenticationMethod =
-        // TODO: validate and save the authentication method
-    }
+    [
+        <AUTHORIZATION> plaintextLiteral = StringLiteral()
+        {
+            // ignore; this clause is deprecated
+        }
+        | <IDENTIFIED> <BY> plaintextLiteral = StringLiteral()
+        {
+            String plaintext = SqlLiteral.stringValue(plaintextLiteral);
+            if (!plaintext.equals("")) {
+                String algorithmName = "SHA-256";
+                String cyphertext =
+                    net.sf.farrago.util.FarragoUtil.encryptPassword(
+                        plaintext, algorithmName);
+                user.setEncryptedPassword(cyphertext);
+                user.setPasswordEncryptionAlgorithm(algorithmName);
+            }
+        }
+    ]
     [<DEFAULT_KW>
         (
             defaultNamespace = CatalogReference()
@@ -736,6 +829,53 @@ FemRole RoleDefinition() :
     ]
     {
         return role;
+    }
+}
+
+FemLabel LabelDefinition() :
+{
+    FemLabel label;
+    SqlIdentifier labelName;
+    SqlIdentifier parentLabel;
+}
+{
+    <LABEL> labelName = SimpleIdentifier()
+    {
+        label = getRepos().newFemLabel();
+        label.setName(labelName.getSimple());
+        label.setNamespace(
+            getRepos().getCatalog(
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
+    }
+    [
+        <FROM> <LABEL> parentLabel = SimpleIdentifier()
+        {
+            label.setParentLabel(
+                farragoParser.getStmtValidator().findUnqualifiedObject(
+                    parentLabel, FemLabel.class));
+        }
+    ]
+    OptionalDescription(label)
+    {
+        return label;
+    }
+}
+
+FemLocalCatalog CatalogDefinition() :
+{
+    FemLocalCatalog catalog;
+    SqlIdentifier catalogName;
+}
+{
+    <CATALOG> catalogName = SimpleIdentifier()
+    {
+        catalog = getRepos().newFemLocalCatalog();
+        catalog.setName(catalogName.getSimple());
+        FarragoCatalogUtil.initializeCatalog(getRepos(), catalog);
+    }
+    OptionalDescription(catalog)
+    {
+        return catalog;
     }
 }
 
@@ -998,7 +1138,8 @@ SqlNode DefaultClause() :
     <DEFAULT_KW>
     (
         // TODO:  allow USER, CURRENT_USER, CURRENT_ROLE, SESSION_USER,
-        // SYSTEM_USER, CURRENT_PATH, <datetime value function>,
+        // SYSTEM_USER, CURRENT_PATH, CURRENT_CATALOG, CURRENT_SCHEMA,
+        // <datetime value function>,
         // <implicitly typed value specification>
         expression = Literal()
     )
@@ -1100,13 +1241,16 @@ CwmModelElement TableConstraint(CwmTable table) :
     [ <CONSTRAINT> constraintName = Identifier() ]
     constraint = TableUniqueConstraint(table)
     {
+        // NOTE jvs 6-Nov-2006:  We store contraints as owned
+        // by tables because CWM doesn't give us a good way
+        // to associate them directly.
+        table.getOwnedElement().add(constraint);
         if (constraintName != null) {
             constraint.setName(constraintName);
         } else {
             FarragoCatalogUtil.generateConstraintName(
                 getRepos(), constraint);
         }
-        table.getOwnedElement().add(constraint);
         return constraint;
     }
 }
@@ -1170,6 +1314,8 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
     (
         <NOT> <NULL>
         {
+            // TODO jvs 7-Nov-2006:  Model explicit named constraint
+            // object for NOT NULL constraints.
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
         | constraint = UniqueConstraint()
@@ -1196,6 +1342,19 @@ CwmModelElement SchemaDrop() :
     CascadeOption()
     {
         return schema;
+    }
+}
+
+CwmModelElement CatalogDrop() :
+{
+    SqlIdentifier catalogName;
+    CwmCatalog catalog;
+}
+{
+    catalog = CatalogReference()
+    CascadeOption()
+    {
+        return catalog;
     }
 }
 
@@ -1351,30 +1510,32 @@ void CascadeOption() :
 DdlStmt SystemParamAssignment() :
 {
     SqlIdentifier paramName;
-    SqlLiteral paramValue;
+    SqlNode paramValue;
 }
 {
     paramName = SimpleIdentifier()
     <EQ>
     paramValue = SystemParamValue()
     {
+        SqlLiteral literal = SqlLiteral.unchain(paramValue);
         return new DdlSetSystemParamStmt(
-            paramName.getSimple(),paramValue);
+            paramName.getSimple(), literal);
     }
 }
 
 DdlStmt SessionParamAssignment() :
 {
     SqlIdentifier paramName;
-    SqlLiteral paramValue;
+    SqlNode paramValue;
 }
 {
     paramName = SimpleIdentifier()
     <EQ>
     paramValue = SystemParamValue()
     {
+        SqlLiteral literal = SqlLiteral.unchain(paramValue);
         return new DdlSetSessionParamStmt(
-            paramName.getSimple(),paramValue);
+            paramName.getSimple(), literal);
     }
 }
 
@@ -1396,6 +1557,16 @@ DdlStmt CatalogReplace() :
     <CATALOG>
     {
         return new DdlReplaceCatalogStmt();
+    }
+}
+
+DdlStmt DeallocateOld() :
+{
+}
+{
+    <OLD>
+    {
+        return new DdlDeallocateOldStmt();
     }
 }
 
@@ -1426,8 +1597,55 @@ DdlStmt AlterTableStmt() :
 }
 {
     table = TableIdentifier()
-    <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
+    (
+        <ADD> [ <COLUMN> ] ddlStmt = AddColumnStmt(table)
+        {
+            return ddlStmt;
+        }
+        |
+        <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
+        {
+            return ddlStmt;
+        }
+        |
+        <REBUILD>
+        {
+            return new DdlRebuildTableStmt(table);
+        }
+    )
+}
+
+DdlStmt AddColumnStmt(CwmTable table) :
+{
+    DdlStmt ddlStmt;
+    CwmColumn column;
+}
+{
+    // NOTE jvs 4-Dec-2008:  It's important that we construct
+    // ddlStmt BEFORE parsing the actual column definition.
+    // The reason is that the constructor for
+    // DdlAlterTableStructureStmt needs to make a copy
+    // of the unmodified table structure.
     {
+        FarragoSession session =
+            farragoParser.getDdlValidator().getInvokingSession();
+        ddlStmt = new DdlAlterTableStructureStmt(
+            getRepos(), table);
+    }
+    column = ColumnDefinition(table)
+    {
+        boolean constraints = false;
+        UniqueFeature uf =
+            getRepos().getKeysIndexesPackage().getUniqueFeature();
+        if (!uf.getUniqueKey(column).isEmpty()) {
+            constraints = true;
+        }
+        if (constraints) {
+            // TODO jvs 4-Dec-2008:  This is supposed to work; we just
+            // haven't added the necessary support yet.
+            throw Util.needToImplement(
+                "Adding keys via ALTER TABLE is not yet supported");
+        }
         return ddlStmt;
     }
 }
@@ -1469,14 +1687,14 @@ DdlStmt AlterIdentityColumnStmt(CwmColumn column) :
     }
 }
 
-SqlLiteral SystemParamValue() :
+SqlNode SystemParamValue() :
 {
-    SqlLiteral paramValue;
+    SqlNode paramValue;
     SqlParserPos pos = null;
 }
 {
     (
-        paramValue = StrictLiteral()
+        paramValue = Literal()
         | <MAX>
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
@@ -1538,7 +1756,7 @@ FemDataWrapper DataWrapperDefinition() :
 {
     FemDataWrapper wrapper;
     SqlIdentifier wrapperName;
-    String libraryFile;
+    SqlNode libraryFile;
     boolean isForeign;
 }
 {
@@ -1552,9 +1770,9 @@ FemDataWrapper DataWrapperDefinition() :
                 FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
         wrapper.setForeign(isForeign);
     }
-    <LIBRARY> libraryFile = QuotedString()
+    <LIBRARY> libraryFile = StringLiteral()
     {
-        wrapper.setLibraryFile(libraryFile);
+        wrapper.setLibraryFile(SqlLiteral.stringValue(libraryFile));
     }
     <LANGUAGE> <JAVA>
     {
@@ -1600,8 +1818,8 @@ FemDataServer DataServerDefinition() :
     FemDataServer server;
     FemDataWrapper wrapper;
     SqlIdentifier serverName;
-    String serverType;
-    String serverVersion;
+    SqlNode serverType;
+    SqlNode serverVersion;
 }
 {
     <SERVER> serverName = SimpleIdentifier()
@@ -1613,15 +1831,15 @@ FemDataServer DataServerDefinition() :
                 FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
     }
     [
-        <TYPE> serverType = QuotedString()
+        <TYPE> serverType = StringLiteral()
         {
-            server.setType(serverType);
+            server.setType(SqlLiteral.stringValue(serverType));
         }
     ]
     [
-        <VERSION> serverVersion = QuotedString()
+        <VERSION> serverVersion = StringLiteral()
         {
-            server.setVersion(serverVersion);
+            server.setVersion(SqlLiteral.stringValue(serverVersion));
         }
     ]
     wrapper = DataWrapperReference()
@@ -1703,7 +1921,6 @@ FemRoutine ConstructorDefinition() :
     RightsClause(method)
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(method, defStart);
     }
     PsmBody()
     {
@@ -1711,6 +1928,9 @@ FemRoutine ConstructorDefinition() :
         String bodyText = farragoParser.getSubstring(defStart, defEnd);
         CwmProcedureExpression procedureExpr = method.getBody();
         procedureExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                method, defStart, bodyText);
         procedureExpr.setBody(bodyText);
         // NOTE: this is necessary to force a revalidation of the method
         method.setBody(procedureExpr);
@@ -1748,12 +1968,12 @@ SqlNode ConstructorAssignment() :
 }
 {
     <SET> <SELF> <DOT> attributeName = SimpleIdentifier()
-    <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
+    <EQ> expr = Expression(ExprContext.ACCEPT_NONQUERY) <SEMICOLON>
     {
         return opTab.equalsOperator.createCall(
+            getPos(),
             attributeName,
-            expr,
-            getPos());
+            expr);
     }
 }
 
@@ -1777,7 +1997,7 @@ void ReturnsClause(FemRoutine function) :
             returnParam.setType(
                 farragoParser.getStmtValidator().findSqldataType(
                     new SqlIdentifier(
-                        SqlTypeName.Integer.getName(),
+                        SqlTypeName.INTEGER.name(),
                         SqlParserPos.ZERO)));
         }
         |
@@ -1857,12 +2077,11 @@ void SqlFunctionBody(FemRoutine routine) :
     <RETURN>
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(routine, defStart);
 
         // TODO jvs 24-Dec-2004: eventually allow subqueries and
         // non-functional routine bodies.
     }
-    expr = Expression(EXPR_ACCEPT_NONQUERY)
+    expr = Expression(ExprContext.ACCEPT_NONQUERY)
     {
         defEnd = getEndPos();
 
@@ -1870,6 +2089,9 @@ void SqlFunctionBody(FemRoutine routine) :
         CwmProcedureExpression procedureExpr =
         getRepos().newCwmProcedureExpression();
         procedureExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                routine, defStart, bodyText);
         procedureExpr.setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
         routine.setBody(procedureExpr);
@@ -2002,10 +2224,21 @@ void RoutineCharacteristics(FemRoutine routine) :
         {
             routine.setDeterministic(true);
         }
-        | <NOT> <DETERMINISTIC>
+        | <DYNAMIC_FUNCTION>
         {
-            routine.setDeterministic(false);
+            routine.setDynamicFunction(true);
         }
+        | <NOT>
+        (
+            <DETERMINISTIC>
+            {
+                routine.setDeterministic(false);
+            }
+            | <DYNAMIC_FUNCTION>
+            {
+                routine.setDynamicFunction(false);
+            }
+        )
         | <NO> <SQL>
         {
             routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);
@@ -2050,31 +2283,60 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
 {
     FemRoutineParameter param;
     SqlIdentifier name;
-
-    param = getRepos().newFemRoutineParameter();
-    routine.getParameter().add(param);
+    SqlIdentifier cursorName;
+    FemColumnListRoutineParameter columnListParam;
+    ParameterDirectionKind kind = null;
 }
 {
     [
         (
             <IN>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_IN);
+                kind = ParameterDirectionKindEnum.PDK_IN;
             }
             | <OUT>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_OUT);
+                kind = ParameterDirectionKindEnum.PDK_OUT;
             }
             | <INOUT>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_INOUT);
+                kind = ParameterDirectionKindEnum.PDK_INOUT;
             }
         )
     ]
     name = SimpleIdentifier()
+    (
+        param = NonColumnListRoutineParam(kind, name)
+        |
+        <SELECT> <FROM> cursorName = SimpleIdentifier()
+        {
+            columnListParam = getRepos().newFemColumnListRoutineParameter();
+            columnListParam.setKind(kind);
+            columnListParam.setName(name.getSimple());
+            columnListParam.setSourceCursorName(cursorName.getSimple());
+            farragoParser.getDdlValidator().setSqlDefinition(
+                columnListParam,
+                new SqlIdentifier("COLUMN_LIST", getPos()));
+            param = columnListParam;
+        }
+    )
     {
-        param.setName(name.getSimple());
+        routine.getParameter().add(param);
+        return param;
     }
+}
+
+FemRoutineParameter NonColumnListRoutineParam(
+    ParameterDirectionKind kind,
+    SqlIdentifier name) :
+{
+    FemRoutineParameter param;
+
+    param = getRepos().newFemRoutineParameter();
+    param.setKind(kind);
+    param.setName(name.getSimple());
+}
+{
     (
         TypedElement(param)
         |
@@ -2094,7 +2356,7 @@ FemJar JarDefinition() :
 {
     FemJar jar;
     SqlIdentifier qualifiedName;
-    String url;
+    SqlNode url;
     SqlLiteral deploymentState;
 }
 {
@@ -2107,9 +2369,9 @@ FemJar JarDefinition() :
         farragoParser.getDdlValidator().setSchemaObjectName(
             jar,qualifiedName);
     }
-    <LIBRARY> url = QuotedString()
+    <LIBRARY> url = StringLiteral()
     {
-        jar.setUrl(url);
+        jar.setUrl(SqlLiteral.stringValue(url));
     }
     <OPTIONS> <LPAREN>
     deploymentState = NumericLiteral() <RPAREN>
@@ -2133,11 +2395,14 @@ FemUserDefinedType UserDefinedTypeDefinition() :
         typeDef = ObjectTypeDefinition()
         | typeDef = DistinctTypeDefinition()
     )
-    UserDefinedTypeOptions(typeDef)
-    MethodSpecificationList(typeDef)
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             typeDef, qualifiedName);
+    }
+    UserDefinedTypeOptions(typeDef)
+    OptionalDescription(typeDef)
+    MethodSpecificationList(typeDef)
+    {
         return typeDef;
     }
 }
@@ -2224,6 +2489,7 @@ void MethodSpecificationList(FemUserDefinedType typeDef) :
 void MethodSpecification(FemUserDefinedType typeDef) :
 {
     SqlIdentifier name, returnTypeName;
+    SqlIdentifier qualifiedName;
     FemRoutine method;
 }
 {
@@ -2233,8 +2499,14 @@ void MethodSpecification(FemUserDefinedType typeDef) :
     {
         method = getRepos().newFemRoutine();
         method.setType(ProcedureTypeEnum.FUNCTION);
+        qualifiedName = new SqlIdentifier(
+            new String [] {
+                typeDef.getNamespace().getName(),
+                name.getSimple()
+            },
+            name.getParserPosition());
         farragoParser.getDdlValidator().setSchemaObjectName(
-            method, name);
+            method, qualifiedName);
         method.setInvocationName(method.getName());
         method.setCalledOnNullInput(true);
         // TODO jvs 25-Feb-2005:  mark as constructor
@@ -2427,7 +2699,7 @@ void OptionalDescription(FemAnnotatedElement element) :
 }
 {
     [
-        <DESCRIPTION> description = StringLiteral(false)
+        <DESCRIPTION> description = StringLiteral()
         {
             element.setDescription(SqlLiteral.stringValue(description));
         }
@@ -2510,15 +2782,15 @@ void OptionalStorageOptions(FemElementWithStorageOptions element) :
 void StorageOption(FemElementWithStorageOptions element) :
 {
     SqlIdentifier name;
-    String value;
+    SqlNode literal;
 }
 {
     name = SimpleIdentifier()
-    value = QuotedString()
+    literal = StringLiteral()
     {
         FemStorageOption option = getRepos().newFemStorageOption();
         option.setName(name.getSimple());
-        option.setValue(value);
+        option.setValue(SqlLiteral.stringValue(literal));
         element.getStorageOptions().add(option);
     }
 }
@@ -2529,7 +2801,7 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
     SqlIdentifier localSchemaName;
     boolean exclude = false;
     List roster = null;
-    String pattern = null;
+    SqlNode pattern = null;
     FemDataServer server;
 }
 {
@@ -2538,24 +2810,26 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
     [
         (<LIMIT> <TO> | <EXCEPT> { exclude = true; })
         // TODO jvs 5-Aug-2005:  this is supposed to take compound
-        // identifiers, but it's useless because all the schema names
+        // identifiers, but it is useless because all the schema names
         // have to match foreignSchemaName
         (
             <LPAREN> roster = SimpleIdentifierCommaList() <RPAREN>
             |
-            <TABLE_NAME> <LIKE> pattern = QuotedString()
+            <TABLE_NAME> <LIKE> pattern = StringLiteral()
         )
     ]
     <FROM> server = DataServerReference()
     <INTO> localSchemaName = CompoundIdentifier2()
     {
+        final String patternString =
+            pattern == null ? null : SqlLiteral.stringValue(pattern);
         return new DdlImportForeignSchemaStmt(
             farragoParser.getStmtValidator().findSchema(localSchemaName),
             server,
             foreignSchemaName,
             exclude,
             roster,
-            pattern);
+            patternString);
     }
 }
 
@@ -2619,11 +2893,28 @@ CwmModelElement RoleDrop() :
     }
 }
 
+CwmModelElement LabelDrop() :
+{
+    SqlIdentifier name;
+    FemLabel label;
+}
+{
+    <LABEL> name = SimpleIdentifier()
+    {
+        label = farragoParser.getStmtValidator().findUnqualifiedObject(
+            name, FemLabel.class);
+    }
+    CascadeOption()
+    {
+        return label;
+    }
+}
+
 SqlIdentifier PrivilegedAction() :
 {
 }
 {
-    (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
+    (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>)
     {
         SqlIdentifier privId = new SqlIdentifier(
             token.image.toUpperCase(),  getPos());
@@ -2656,7 +2947,7 @@ List PrivilegedActionList() :
 //
 // This method is common between the two grant statements
 // (i.e. GRANT privilege and GRANT ROLE).
-// 
+//
 void GrantOptions(DdlGrantStmt stmt) :
 {
     SqlIdentifier grantor;
@@ -2725,13 +3016,13 @@ DdlStmt GrantPrivStmt() :
         return stmt;
     }
 }
-    
+
 
 DdlStmt GrantRoleStmt() :
 {
-    DdlGrantRoleStmt stmt = new DdlGrantRoleStmt();    
+    DdlGrantRoleStmt stmt = new DdlGrantRoleStmt();
     List roleList;
-    List granteeList;    
+    List granteeList;
 }
 {
     <ROLE> roleList = SimpleIdentifierCommaList()
@@ -2744,7 +3035,7 @@ DdlStmt GrantRoleStmt() :
     }
     GrantOptions(stmt)
     {
-        return stmt;            
+        return stmt;
     }
 }
 
@@ -2754,15 +3045,15 @@ DdlStmt GrantRoleStmt() :
  */
 DdlStmt AnalyzeStmt() :
 {
-    DdlAnalyzeStmt stmt = new DdlAnalyzeStmt();
+    DdlAnalyzeStmt stmt;
     CwmTable table;
     List columnNameList;
-    int percent;
+    SqlNumericLiteral percent;
 }
 {
     <TABLE> table = TableIdentifier()
     {
-        stmt.setTable(table);
+        stmt = new DdlAnalyzeStmt(table);
     }
     (
         <COMPUTE>
@@ -2776,7 +3067,7 @@ DdlStmt AnalyzeStmt() :
     (
         ( <ALL> <COLUMNS> )
         {
-            stmt.setColumns(table.getFeature());
+            stmt.setColumns((List) table.getFeature());
         }
         |
         ( <COLUMNS>
@@ -2794,13 +3085,20 @@ DdlStmt AnalyzeStmt() :
         }
     )
     [
-        <SAMPLE> percent = UnsignedIntLiteral() <PERCENT>
+        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
         {
+            BigDecimal rate = percent.bigDecimalValue();
+            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+            {
+                throw new ParseException(
+                    EigenbaseResource.instance().InvalidSampleSize.str());
+            }
             stmt.setSamplePercent(percent);
         }
     ]
     {
-        return stmt;            
+        return stmt;
     }
 }
 
@@ -2817,9 +3115,11 @@ TOKEN :
     | < COLUMNS: "COLUMNS" >
     | < COMPUTE: "COMPUTE" >
     | < ESTIMATE: "ESTIMATE" >
+    | < IDENTIFIED: "IDENTIFIED" >
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
     | < PERCENT: "PERCENT" >
+    | < REBUILD: "REBUILD" >
     | < RENAME: "RENAME" >
     | < REPLACE: "REPLACE" >
     | < SAMPLE: "SAMPLE" >
@@ -2851,9 +3151,11 @@ String DdlNonReservedKeyWord() :
         | <COLUMNS>
         | <COMPUTE>
         | <ESTIMATE>
+        | <IDENTIFIED>
         | <INDEX>
         | <JAR>
         | <PERCENT>
+        | <REBUILD>
         | <RENAME>
         | <REPLACE>
         | <SAMPLE>

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,6 @@ import org.eigenbase.sql.parser.*;
 public class SqlExplain
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -47,9 +46,15 @@ public class SqlExplain
     /**
      * The level of abstraction with which to display the plan.
      */
-    public static enum Depth {
+    public static enum Depth
+        implements SqlLiteral.SqlSymbol
+    {
         Type, Logical, Physical,
     }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final int nDynamicParams;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,6 +64,7 @@ public class SqlExplain
         SqlLiteral detailLevel,
         SqlLiteral depth,
         SqlLiteral asXml,
+        int nDynamicParams,
         SqlParserPos pos)
     {
         super(
@@ -69,6 +75,7 @@ public class SqlExplain
         operands[DETAIL_LEVEL_OPERAND] = detailLevel;
         operands[DEPTH_OPERAND] = depth;
         operands[AS_XML_OPERAND] = asXml;
+        this.nDynamicParams = nDynamicParams;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -86,9 +93,8 @@ public class SqlExplain
      */
     public SqlExplainLevel getDetailLevel()
     {
-        return
-            (SqlExplainLevel) SqlLiteral.enumValue(
-                operands[DETAIL_LEVEL_OPERAND]);
+        return (SqlExplainLevel) SqlLiteral.symbolValue(
+            operands[DETAIL_LEVEL_OPERAND]);
     }
 
     /**
@@ -96,7 +102,15 @@ public class SqlExplain
      */
     public Depth getDepth()
     {
-        return (Depth) SqlLiteral.enumValue(operands[DEPTH_OPERAND]);
+        return (Depth) SqlLiteral.symbolValue(operands[DEPTH_OPERAND]);
+    }
+
+    /**
+     * @return the number of dynamic parameters in the statement
+     */
+    public int getDynamicParamCount()
+    {
+        return nDynamicParams;
     }
 
     /**
@@ -133,7 +147,7 @@ public class SqlExplain
         switch (getDetailLevel()) {
         case NO_ATTRIBUTES:
             writer.keyword("EXCLUDING ATTRIBUTES");
-            break;  
+            break;
         case EXPPLAN_ATTRIBUTES:
             writer.keyword("INCLUDING ATTRIBUTES");
             break;

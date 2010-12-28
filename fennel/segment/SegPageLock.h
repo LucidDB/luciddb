@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
 
 // TODO jvs 31-Dec-2005:  Doxygen for all methods, and move inline
 // bodies to end of file.
-    
+
 /**
  * A SegPageLock is associated with a single segment, and starts out in the
  * unlocked state.  It serves a function similar to a boost::scoped_lock, but
@@ -47,29 +47,71 @@ FENNEL_BEGIN_NAMESPACE
  * ID; the destructor for the SegPageLock will then unlock the page
  * automatically, unless the dontUnlock method is invoked first.
  */
-class SegPageLock : public boost::noncopyable
+class FENNEL_SEGMENT_EXPORT SegPageLock
+    : public boost::noncopyable
 {
     // NOTE: the shared pointers in segmentAccessor imply some locking
     // overhead during assignment.  If this is an issue, preallocate
     // the necessary SegPageLocks rather than stack-allocating them.
-    
+
     SegmentAccessor segmentAccessor;
     CachePage *pPage;
     LockMode lockMode;
+    PageId lockedPageId;
+    bool newPage;
+    bool isWriteVersioned;
+
+    inline void resetPage()
+    {
+        pPage = NULL;
+        lockedPageId = NULL_PAGE_ID;
+        newPage = false;
+    }
+
+    inline LockMode getLockMode(LockMode origLockMode)
+    {
+        // If writes are versioned, then there's no need to apply an
+        // exclusive lock on the current version of the page.  When
+        // we need to modify the page, we'll create a new version of the
+        // page, which we'll exclusively lock.
+        if (isWriteVersioned) {
+            if (origLockMode == LOCKMODE_X
+                || origLockMode == LOCKMODE_X_NOWAIT)
+            {
+                return
+                    (origLockMode == LOCKMODE_X)
+                    ? LOCKMODE_S
+                    : LOCKMODE_S_NOWAIT;
+            }
+        }
+
+        return origLockMode;
+    }
+
+    inline void initialize()
+    {
+        // this is a dummy to keep happy optimizing compilers which are too
+        // smart for their own good
+        lockMode = LOCKMODE_X;
+        isWriteVersioned = false;
+    }
+
 
 public:
     explicit SegPageLock()
     {
-        pPage = NULL;
+        initialize();
+        resetPage();
     }
 
     explicit SegPageLock(
         SegmentAccessor const &segmentAccessor)
     {
-        pPage = NULL;
+        initialize();
+        resetPage();
         accessSegment(segmentAccessor);
     }
-    
+
     ~SegPageLock()
     {
         unlock();
@@ -82,6 +124,7 @@ public:
         assert(segmentAccessorInit.pSegment);
         assert(segmentAccessorInit.pCacheAccessor);
         segmentAccessor = segmentAccessorInit;
+        isWriteVersioned = segmentAccessor.pSegment->isWriteVersioned();
     }
 
     inline bool isLocked() const
@@ -94,14 +137,14 @@ public:
         assert(isLocked());
         return *pPage;
     }
-    
+
     inline PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = tryAllocatePage(ownerId);
-        assert(pageId != NULL_PAGE_ID);
+        permAssert(pageId != NULL_PAGE_ID);
         return pageId;
     }
-    
+
     inline PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         unlock();
@@ -109,99 +152,169 @@ public:
         if (pageId == NULL_PAGE_ID) {
             return pageId;
         }
-        lockPage(pageId,LOCKMODE_X,false);
+        lockPage(pageId, LOCKMODE_X, false);
+        newPage = true;
         return pageId;
     }
-    
+
     inline void deallocateLockedPage()
     {
         assert(isLocked());
         BlockId blockId = pPage->getBlockId();
         unlock();
-        segmentAccessor.pCacheAccessor->discardPage(blockId);
         PageId pageId = segmentAccessor.pSegment->translateBlockId(blockId);
-        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
+        // we rely on the segment to decide whether to discard the block
+        // from cache
+        segmentAccessor.pSegment->deallocatePageRange(pageId, pageId);
     }
 
     inline void deallocateUnlockedPage(PageId pageId)
     {
         assert(pageId != NULL_PAGE_ID);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
-        segmentAccessor.pCacheAccessor->discardPage(blockId);
-        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
+        // we rely on the segment to decide whether to discard the block
+        // from cache
+        segmentAccessor.pSegment->deallocatePageRange(pageId, pageId);
     }
-        
+
     inline void unlock()
     {
         if (pPage) {
             segmentAccessor.pCacheAccessor->unlockPage(
                 *pPage,
                 lockMode);
-            pPage = NULL;
+            resetPage();
         }
     }
 
     inline void dontUnlock()
     {
-        pPage = NULL;
+        resetPage();
     }
-    
+
     inline void lockPage(
-        PageId pageId,LockMode lockModeInit,
+        PageId pageId, LockMode lockModeInit,
         bool readIfUnmapped = true)
     {
+        // if the page we want to lock is already locked in the desired
+        // mode, nothing needs to be done
+        if (isLocked() && pageId == lockedPageId && lockMode == lockModeInit) {
+            return;
+        }
         unlock();
-        lockMode = lockModeInit;
+        lockMode = getLockMode(lockModeInit);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
         pPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
-            lockModeInit,
+            lockMode,
             readIfUnmapped,
-            segmentAccessor.pSegment.get());
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
+        lockedPageId = pageId;
     }
 
     inline void lockPageWithCoupling(
-        PageId pageId,LockMode lockModeInit)
+        PageId pageId, LockMode lockModeInit)
     {
         assert(lockModeInit < LOCKMODE_S_NOWAIT);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
+        LockMode newLockMode = getLockMode(lockModeInit);
         CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
-            lockModeInit,
+            newLockMode,
             true,
-            segmentAccessor.pSegment.get());
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
         assert(pNewPage);
         unlock();
-        lockMode = lockModeInit;
+        lockMode = newLockMode;
         pPage = pNewPage;
+        lockedPageId = pageId;
     }
-    
+
     inline void lockShared(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_S);
+        lockPage(pageId, LOCKMODE_S);
     }
-    
+
     inline void lockExclusive(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_X);
+        lockPage(pageId, LOCKMODE_X);
     }
-    
+
     inline void lockSharedNoWait(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_S_NOWAIT);
+        lockPage(pageId, LOCKMODE_S_NOWAIT);
         lockMode = LOCKMODE_S;
     }
-    
+
     inline void lockExclusiveNoWait(PageId pageId)
     {
-        lockPage(pageId,LOCKMODE_X_NOWAIT);
+        lockPage(pageId, LOCKMODE_X_NOWAIT);
         lockMode = LOCKMODE_X;
+    }
+
+    inline void updatePage()
+    {
+        assert(isLocked());
+
+        // If the page is not newly allocated and can't be updated in-place,
+        // lock the page that will be updated
+        if (!newPage) {
+            PageId origPageId =
+                segmentAccessor.pSegment->translateBlockId(
+                    getPage().getBlockId());
+            PageId updatePageId =
+                segmentAccessor.pSegment->updatePage(origPageId);
+            if (updatePageId != NULL_PAGE_ID) {
+                lockUpdatePage(updatePageId);
+                return;
+            }
+        }
+
+        // Either the page is new or the page can be updated in-place.
+        // If we haven't locked the page exclusively yet, upgrade the
+        // shared lock, forcing the upgrade to wait for pending IOs.
+        if (lockMode == LOCKMODE_S) {
+            assert(isWriteVersioned);
+            TxnId txnId = segmentAccessor.pCacheAccessor->getTxnId();
+            pPage->upgrade(txnId);
+            lockMode = LOCKMODE_X;
+        }
+    }
+
+    inline void lockUpdatePage(PageId updatePageId)
+    {
+        assert(isWriteVersioned);
+        BlockId blockId =
+            segmentAccessor.pSegment->translatePageId(updatePageId);
+        assert(lockMode == LOCKMODE_S);
+        CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
+            blockId,
+            LOCKMODE_X,
+            true,
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
+        assert(pNewPage);
+        // copy the original page while we have both the original and new
+        // pages locked
+        memcpy(
+            pNewPage->getWritableData(),
+            pPage->getReadableData(),
+            segmentAccessor.pSegment->getUsablePageSize());
+        PageId origPageId = lockedPageId;
+        unlock();
+        lockMode = LOCKMODE_X;
+        pPage = pNewPage;
+        newPage = true;
+        // keep track of the locked page based on the original pageId
+        // requested
+        lockedPageId = origPageId;
     }
 
     inline PageId getPageId()
     {
-        return segmentAccessor.pSegment->translateBlockId(
-            getPage().getBlockId());
+        // note that lockedPageId may not be the same as
+        // segmentAccessor.pSegment->translateBlockId(getPage().getBlockId())
+        // if the page is versioned
+        return lockedPageId;
     }
 
     inline void flushPage(bool async)
@@ -219,13 +332,18 @@ public:
         assert(lockMode == LOCKMODE_X);
         assert(other.lockMode == LOCKMODE_X);
         assert(pPage != other.pPage);
+
+        // since we're copying new data into other, treat it as an update
+        other.updatePage();
+
         // both pages will end up with this page's footer, on the assumption
         // that other was a scratch page
         // TODO:  correctly swap footers as well?
         Segment &segment = *(segmentAccessor.pSegment);
-        memcpy(other.pPage->getWritableData() + segment.getUsablePageSize(),
-               pPage->getReadableData() +  segment.getUsablePageSize(),
-               segment.getFullPageSize() - segment.getUsablePageSize());
+        memcpy(
+            other.pPage->getWritableData() + segment.getUsablePageSize(),
+            pPage->getReadableData() +  segment.getUsablePageSize(),
+            segment.getFullPageSize() - segment.getUsablePageSize());
         pPage->swapBuffers(*other.pPage);
     }
 
@@ -236,11 +354,18 @@ public:
         // REVIEW jvs 31-Dec-2005:  This should really go through
         // the CacheAccessor interface.
         TxnId txnId = segmentAccessor.pCacheAccessor->getTxnId();
-        if (pPage->tryUpgrade(txnId)) {
-            lockMode = LOCKMODE_X;
+
+        // If we're versioning, defer upgrading the lock until
+        // we're actually going to be update the page.
+        if (isWriteVersioned) {
             return true;
+        } else {
+            if (pPage->tryUpgrade(txnId)) {
+                lockMode = LOCKMODE_X;
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     inline SharedCacheAccessor getCacheAccessor() const
@@ -262,7 +387,7 @@ public:
  * might invalidate extant stored databases; it may be possible to make the
  * change in a backwards-compatible fashion.
  */
-struct StoredNode
+struct FENNEL_SEGMENT_EXPORT StoredNode
 {
     /**
      * Magic number identifying the derived StoredNode class.
@@ -279,6 +404,12 @@ struct StoredNode
  * The Node template parameter determines the derived class of StoredNode.  It
  * must have a static member MAGIC_NUMBER defining its unique magic number.
  * (To generate these, I run uuidgen on Linux and take the last 16 nybbles.)
+ *
+ *<p>
+ *
+ * For more information, see <a
+ * href="http://pub.eigenbase.org/wiki/FennelPageBasedDataStructureHowto">the
+ * HOWTO</a>.
  */
 template <class Node>
 class SegNodeLock : public SegPageLock
@@ -287,18 +418,25 @@ class SegNodeLock : public SegPageLock
     {
         assert(node.magicNumber == Node::MAGIC_NUMBER);
     }
-    
+
 public:
     explicit SegNodeLock()
     {
     }
-    
+
     explicit SegNodeLock(
         SegmentAccessor &segmentAccessor)
         : SegPageLock(segmentAccessor)
     {
     }
-    
+
+    inline bool checkMagicNumber() const
+    {
+        Node const &node =
+            *reinterpret_cast<Node const *>(getPage().getReadableData());
+        return (node.magicNumber == Node::MAGIC_NUMBER);
+    }
+
     inline Node const &getNodeForRead() const
     {
         Node const &node =
@@ -306,9 +444,10 @@ public:
         verifyMagicNumber(node);
         return node;
     }
-    
+
     inline Node &getNodeForWrite()
-    { 
+    {
+        updatePage();
         return *reinterpret_cast<Node *>(getPage().getWritableData());
     }
 
@@ -318,7 +457,7 @@ public:
         setMagicNumber();
         return pageId;
     }
-    
+
     inline PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = SegPageLock::tryAllocatePage(ownerId);
@@ -327,7 +466,7 @@ public:
         }
         return pageId;
     }
-    
+
     inline void setMagicNumber()
     {
         getNodeForWrite().magicNumber = Node::MAGIC_NUMBER;

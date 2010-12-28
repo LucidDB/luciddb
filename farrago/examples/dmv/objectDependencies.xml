@@ -1,0 +1,11 @@
+<DmvTransformationRuleSet>
+  <SetAllByAggregation 
+    requestedKind="composite" 
+    mapping="HIERARCHY"/>
+  <SetAllByAggregation 
+    requestedKind="none" 
+    mapping="COPY"/>
+  <SetByAssoc
+    assoc="DependencyClient"
+    mapping="CONTRACTION"/>
+</DmvTransformationRuleSet>

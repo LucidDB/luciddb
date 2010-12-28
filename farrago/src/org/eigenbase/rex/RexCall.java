@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -49,7 +50,6 @@ import org.eigenbase.sql.*;
 public class RexCall
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlOperator op;
@@ -73,6 +73,16 @@ public class RexCall
         this.kind = sqlKindToRexKind(op.getKind());
         assert this.kind != null : op;
         this.digest = computeDigest(true);
+
+        // TODO zfong 11/19/07 - Extend the check below to all types of
+        // operators, similar to SqlOperator.checkOperandCount.  However,
+        // that method operates on SqlCalls, which may have not have the
+        // same number of operands as their corresponding RexCalls.  One
+        // example is the CAST operator, which is originally a 2-operand
+        // SqlCall, but is later converted to a 1-operand RexCall.
+        if (op instanceof SqlBinaryOperator) {
+            assert (operands.length == 2);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -85,85 +95,88 @@ public class RexCall
      */
     static RexKind sqlKindToRexKind(SqlKind kind)
     {
-        switch (kind.getOrdinal()) {
-        case SqlKind.EqualsORDINAL:
+        switch (kind) {
+        case EQUALS:
             return RexKind.Equals;
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             return RexKind.Identifier;
-        case SqlKind.LiteralORDINAL:
+        case LITERAL:
             return RexKind.Literal;
-        case SqlKind.DynamicParamORDINAL:
+        case DYNAMIC_PARAM:
             return RexKind.DynamicParam;
-        case SqlKind.TimesORDINAL:
+        case TIMES:
             return RexKind.Times;
-        case SqlKind.DivideORDINAL:
+        case DIVIDE:
             return RexKind.Divide;
-        case SqlKind.PlusORDINAL:
+        case PLUS:
             return RexKind.Plus;
-        case SqlKind.MinusORDINAL:
+        case MINUS:
             return RexKind.Minus;
-        case SqlKind.LessThanORDINAL:
+        case LESS_THAN:
             return RexKind.LessThan;
-        case SqlKind.GreaterThanORDINAL:
+        case GREATER_THAN:
             return RexKind.GreaterThan;
-        case SqlKind.LessThanOrEqualORDINAL:
+        case LESS_THAN_OR_EQUAL:
             return RexKind.LessThanOrEqual;
-        case SqlKind.GreaterThanOrEqualORDINAL:
+        case GREATER_THAN_OR_EQUAL:
             return RexKind.GreaterThanOrEqual;
-        case SqlKind.NotEqualsORDINAL:
+        case NOT_EQUALS:
             return RexKind.NotEquals;
-        case SqlKind.OrORDINAL:
+        case OR:
             return RexKind.Or;
-        case SqlKind.AndORDINAL:
+        case AND:
             return RexKind.And;
-        case SqlKind.NotORDINAL:
+        case NOT:
             return RexKind.Not;
-        case SqlKind.IsTrueORDINAL:
+        case IS_TRUE:
             return RexKind.IsTrue;
-        case SqlKind.IsFalseORDINAL:
+        case IS_FALSE:
             return RexKind.IsFalse;
-        case SqlKind.IsNullORDINAL:
+        case IS_NULL:
             return RexKind.IsNull;
-        case SqlKind.IsUnknownORDINAL:
+        case IS_UNKNOWN:
             return RexKind.IsNull;
-        case SqlKind.PlusPrefixORDINAL:
+        case PLUS_PREFIX:
             return RexKind.Plus;
-        case SqlKind.MinusPrefixORDINAL:
+        case MINUS_PREFIX:
             return RexKind.MinusPrefix;
-        case SqlKind.ValuesORDINAL:
+        case VALUES:
             return RexKind.Values;
-        case SqlKind.RowORDINAL:
+        case ROW:
             return RexKind.Row;
-        case SqlKind.CastORDINAL:
+        case CAST:
             return RexKind.Cast;
-        case SqlKind.TrimORDINAL:
+        case TRIM:
             return RexKind.Trim;
-        case SqlKind.FunctionORDINAL:
+        case OTHER_FUNCTION:
             return RexKind.Other;
-        case SqlKind.CaseORDINAL:
+        case CASE:
             return RexKind.Other;
-        case SqlKind.OtherORDINAL:
+        case OTHER:
             return RexKind.Other;
-        case SqlKind.LikeORDINAL:
+        case LIKE:
             return RexKind.Like;
-        case SqlKind.SimilarORDINAL:
+        case SIMILAR:
             return RexKind.Similar;
-        case SqlKind.MultisetQueryConstructorORDINAL:
+        case MULTISET_QUERY_CONSTRUCTOR:
             return RexKind.MultisetQueryConstructor;
-        case SqlKind.NewSpecificationORDINAL:
+        case NEW_SPECIFICATION:
             return RexKind.NewSpecification;
-        case SqlKind.ReinterpretORDINAL:
+        case REINTERPRET:
             return RexKind.Reinterpret;
+        case COLUMN_LIST:
+            return RexKind.Row;
         default:
-            throw kind.unexpected();
+            throw Util.unexpected(kind);
         }
     }
 
     protected String computeDigest(boolean withType)
     {
-        StringBuffer sb = new StringBuffer(op.getName());
+        StringBuilder sb = new StringBuilder(op.getName());
         if ((operands.length == 0)
-            && (op.getSyntax() == SqlSyntax.FunctionId)) {
+            && (op.getSyntax() == SqlSyntax.FunctionId))
+        {
             // Don't print params for empty arg list. For example, we want
             // "SYSTEM_USER", not "SYSTEM_USER()".
         } else {
@@ -192,9 +205,8 @@ public class RexCall
         // REVIEW jvs 16-Jan-2005: For CAST and NEW, the type is really an
         // operand and needs to be printed out.  But special-casing it here is
         // ugly.
-        return
-            computeDigest(
-                isA(RexKind.Cast) || isA(RexKind.NewSpecification));
+        return computeDigest(
+            isA(RexKind.Cast) || isA(RexKind.NewSpecification));
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -207,12 +219,12 @@ public class RexCall
         return type;
     }
 
-    public Object clone()
+    public RexCall clone()
     {
         return new RexCall(
-                type,
-                op,
-                RexUtil.clone(operands));
+            type,
+            op,
+            RexUtil.clone(operands));
     }
 
     public RexKind getKind()

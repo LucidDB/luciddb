@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import javax.jmi.reflect.*;
 public class JmiDependencyMappedTransform
     implements JmiDependencyTransform
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<JmiAssocEdge, List<AssocRule>> map;
@@ -46,7 +45,7 @@ public class JmiDependencyMappedTransform
 
     private final boolean produceSelfLoops;
 
-    private boolean sortByMofId;
+    private Comparator<RefBaseObject> tieBreaker;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,24 +65,26 @@ public class JmiDependencyMappedTransform
         this.modelView = modelView;
         this.produceSelfLoops = produceSelfLoops;
         map = new HashMap<JmiAssocEdge, List<AssocRule>>();
-        sortByMofId = true;
+        tieBreaker = JmiMofIdComparator.instance;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Disables sorting by MofId (which is enabled by default), causing {@link
-     * #shouldSortByMofId} to return false.
-     */
-    public void disableSortByMofId()
+    // implement JmiDependencyTransform
+    public Comparator<RefBaseObject> getTieBreaker()
     {
-        sortByMofId = false;
+        return tieBreaker;
     }
 
-    // implement JmiDependencyTransform
-    public boolean shouldSortByMofId()
+    /**
+     * Sets a new tie-breaker. (Default after construction is {@link
+     * JmiMofIdComparator#instance}.)
+     *
+     * @param tieBreaker new tie-breaker, or null to disable tie-breaking
+     */
+    public void setTieBreaker(Comparator<RefBaseObject> tieBreaker)
     {
-        return sortByMofId;
+        this.tieBreaker = tieBreaker;
     }
 
     // implement JmiDependencyTransform
@@ -96,9 +97,10 @@ public class JmiDependencyMappedTransform
         RefClass refClass = target.refClass();
         JmiClassVertex targetClassVertex =
             modelView.getModelGraph().getVertexForRefClass(refClass);
-        for (Object assocEdgeObj
-            : modelView.getAllIncomingAssocEdges(targetClassVertex)) {
-            JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
+        for (
+            JmiAssocEdge assocEdge
+            : modelView.getAllIncomingAssocEdges(targetClassVertex))
+        {
             List<AssocRule> rules = map.get(assocEdge);
             if (rules == null) {
                 continue;
@@ -110,11 +112,10 @@ public class JmiDependencyMappedTransform
                     continue;
                 }
             }
-            if (!(
-                    target.refIsInstanceOf(
+            if (!(target.refIsInstanceOf(
                         assocEdge.getTargetEnd().getType(),
-                        true)
-                 )) {
+                        true)))
+            {
                 continue;
             }
             Collection sources =
@@ -143,13 +144,14 @@ public class JmiDependencyMappedTransform
             }
         }
         collection.retainAll(candidates);
-        if (sortByMofId) {
-            Collections.sort(collection, JmiMofIdComparator.instance);
+        if (tieBreaker != null) {
+            Collections.sort(collection, tieBreaker);
         }
         return collection;
     }
 
-    private void applyRefinedRules(List<AssocRule> rules,
+    private void applyRefinedRules(
+        List<AssocRule> rules,
         RefObject source,
         RefObject target,
         Collection result,
@@ -190,8 +192,10 @@ public class JmiDependencyMappedTransform
         AggregationKind requestedKind,
         JmiAssocMapping mapping)
     {
-        for (Object assocEdgeObj
-            : modelView.getModelGraph().getAssocGraph().edgeSet()) {
+        for (
+            Object assocEdgeObj
+            : modelView.getModelGraph().getAssocGraph().edgeSet())
+        {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             AggregationKind actualKind = AggregationKindEnum.NONE;
             for (int i = 0; i < 2; i++) {

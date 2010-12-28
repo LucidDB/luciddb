@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -363,7 +363,6 @@ import org.eigenbase.util.*;
 public class SqlJdbcFunctionCall
     extends SqlFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String numericFunctions;
@@ -375,41 +374,41 @@ public class SqlJdbcFunctionCall
      * List of all numeric function names defined by JDBC.
      */
     private static final String [] allNumericFunctions =
-        {
-            "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
-            "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
-            "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
-            "TAN", "TRUNCATE"
-        };
+    {
+        "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
+        "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
+        "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
+        "TAN", "TRUNCATE"
+    };
 
     /**
      * List of all string function names defined by JDBC.
      */
     private static final String [] allStringFunctions =
-        {
-            "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
-            "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
-            "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
-        };
+    {
+        "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
+        "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
+        "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
+    };
 
     /**
      * List of all time/date function names defined by JDBC.
      */
     private static final String [] allTimeDateFunctions =
-        {
-            "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
-            "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
-            "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
-            "WEEK", "YEAR"
-        };
+    {
+        "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
+        "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
+        "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
+        "WEEK", "YEAR"
+    };
 
     /**
      * List of all system function names defined by JDBC.
      */
     private static final String [] allSystemFunctions =
-        {
-            "DATABASE", "IFNULL", "USER"
-        };
+    {
+        "DATABASE", "IFNULL", "USER"
+    };
 
     static {
         numericFunctions = constructFuncList(allNumericFunctions);
@@ -420,12 +419,11 @@ public class SqlJdbcFunctionCall
 
     //~ Instance fields --------------------------------------------------------
 
-    String jdbcName;
-    MakeCall lookupMakeCallObj;
+    private final String jdbcName;
+    private final MakeCall lookupMakeCallObj;
     private SqlCall lookupCall;
 
-    //    private SqlCall thisCall;
-    SqlNode [] thisOperands;
+    private SqlNode [] thisOperands;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -433,7 +431,7 @@ public class SqlJdbcFunctionCall
     {
         super(
             "{fn " + name + "}",
-            SqlKind.JdbcFn,
+            SqlKind.JDBC_FN,
             null,
             null,
             SqlTypeStrategies.otcVariadic,
@@ -447,7 +445,7 @@ public class SqlJdbcFunctionCall
 
     private static String constructFuncList(String [] functionNames)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (int i = 0; i < functionNames.length; ++i) {
             String funcName = functionNames[i];
@@ -465,12 +463,12 @@ public class SqlJdbcFunctionCall
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
+        SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlNode ... operands)
     {
         thisOperands = operands;
-        return super.createCall(operands, pos, functionQualifier);
+        return super.createCall(functionQualifier, pos, operands);
     }
 
     public SqlCall getLookupCall()
@@ -519,11 +517,12 @@ public class SqlJdbcFunctionCall
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(
-                opBinding.getOperandCount())) {
+                opBinding.getOperandCount()))
+        {
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().WrongNumberOfParam.ex(
                     getName(),
-                    new Integer(thisOperands.length),
+                    thisOperands.length,
                     getArgCountMismatchMsg()));
         }
 
@@ -532,19 +531,19 @@ public class SqlJdbcFunctionCall
                     callBinding.getValidator(),
                     callBinding.getScope(),
                     getLookupCall()),
-                false)) {
+                false))
+        {
             throw callBinding.newValidationSignatureError();
         }
-        return
-            lookupMakeCallObj.operator.validateOperands(
-                callBinding.getValidator(),
-                callBinding.getScope(),
-                getLookupCall());
+        return lookupMakeCallObj.operator.validateOperands(
+            callBinding.getValidator(),
+            callBinding.getScope(),
+            getLookupCall());
     }
 
     private String getArgCountMismatchMsg()
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         int [] possible = lookupMakeCallObj.getPossibleArgCounts();
         for (int i = 0; i < possible.length; i++) {
             if (i > 0) {
@@ -574,7 +573,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getNumericFunctions
+     * @see java.sql.DatabaseMetaData#getNumericFunctions
      */
     public static String getNumericFunctions()
     {
@@ -582,7 +581,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getStringFunctions
+     * @see java.sql.DatabaseMetaData#getStringFunctions
      */
     public static String getStringFunctions()
     {
@@ -590,7 +589,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getTimeDateFunctions
+     * @see java.sql.DatabaseMetaData#getTimeDateFunctions
      */
     public static String getTimeDateFunctions()
     {
@@ -598,7 +597,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getSystemFunctions
+     * @see java.sql.DatabaseMetaData#getSystemFunctions
      */
     public static String getSystemFunctions()
     {
@@ -701,11 +700,9 @@ public class SqlJdbcFunctionCall
             SqlParserPos pos)
         {
             if (null == order) {
-                return operator.createCall(operands, pos);
+                return operator.createCall(pos, operands);
             }
-            return operator.createCall(
-                    reorder(operands),
-                    pos);
+            return operator.createCall(pos, reorder(operands));
         }
 
         /**
@@ -736,13 +733,15 @@ public class SqlJdbcFunctionCall
          */
         static final JdbcToInternalLookupTable instance =
             new JdbcToInternalLookupTable();
-        private final Map map = new HashMap();
+        private final Map<String, MakeCall> map =
+            new HashMap<String, MakeCall>();
 
         private JdbcToInternalLookupTable()
         {
             // A table of all functions can be found at
             // http://java.sun.com/products/jdbc/driverdevs.html
             // which is also provided in the javadoc for this class.
+            // See also SqlOperatorTests.testJdbcFn, which contains the list.
             map.put(
                 "ABS",
                 new MakeCall(SqlStdOperatorTable.absFunc, 1));
@@ -760,7 +759,7 @@ public class SqlJdbcFunctionCall
                 new MakeCall(SqlStdOperatorTable.modFunc, 2));
             map.put(
                 "POWER",
-                new MakeCall(SqlStdOperatorTable.powFunc, 2));
+                new MakeCall(SqlStdOperatorTable.powerFunc, 2));
 
             map.put(
                 "CONCAT",
@@ -790,7 +789,7 @@ public class SqlJdbcFunctionCall
                         SqlNode [] newOperands = new SqlNode[3];
                         newOperands[0] =
                             SqlLiteral.createSymbol(
-                                SqlTrimFunction.Flag.Leading,
+                                SqlTrimFunction.Flag.LEADING,
                                 null);
                         newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];
@@ -808,7 +807,7 @@ public class SqlJdbcFunctionCall
                         SqlNode [] newOperands = new SqlNode[3];
                         newOperands[0] =
                             SqlLiteral.createSymbol(
-                                SqlTrimFunction.Flag.Trailing,
+                                SqlTrimFunction.Flag.TRAILING,
                                 null);
                         newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];
@@ -821,7 +820,7 @@ public class SqlJdbcFunctionCall
                 new MakeCall(SqlStdOperatorTable.substringFunc, 3));
             map.put(
                 "UCASE",
-                new MakeCall(SqlStdOperatorTable.upperFunc, 0));
+                new MakeCall(SqlStdOperatorTable.upperFunc, 1));
 
             map.put(
                 "CURDATE",
@@ -840,7 +839,7 @@ public class SqlJdbcFunctionCall
          */
         public MakeCall lookup(String name)
         {
-            return (MakeCall) map.get(name);
+            return map.get(name);
         }
     }
 }

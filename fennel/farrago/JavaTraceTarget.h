@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,12 +31,13 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * JavaTraceTarget implements TraceTarget by calling back into the 
+ * JavaTraceTarget implements TraceTarget by calling back into the
  * java.util.logging facility.  It also implements StatsTarget by
  * converting performance counter updates into trace events which
  * are published inside of Java.
  */
-class JavaTraceTarget : public TraceTarget, public StatsTarget
+class FENNEL_FARRAGO_EXPORT JavaTraceTarget
+    : public TraceTarget, public StatsTarget
 {
     /**
      * net.sf.farrago.util.NativeTrace object to which trace messages should be
@@ -48,30 +49,32 @@ class JavaTraceTarget : public TraceTarget, public StatsTarget
      * Method NativeTrace.trace.
      */
     jmethodID methTrace;
-    
+
     /**
      * Method NativeTrace.getSourceTraceLevel.
      */
     jmethodID methGetSourceTraceLevel;
-    
+
 public:
     explicit JavaTraceTarget();
 
     explicit JavaTraceTarget(
-        jobject javaTraceInit, jmethodID methTraceInit, 
+        jobject javaTraceInit, jmethodID methTraceInit,
         jmethodID methGetSourceTraceLevelInit);
 
     virtual ~JavaTraceTarget();
 
     // implement TraceTarget
     virtual void notifyTrace(
-        std::string source,TraceLevel level,std::string message);
+        std::string source, TraceLevel level, std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
-    
+
     // implement StatsTarget
     virtual void beginSnapshot();
     virtual void endSnapshot();
-    virtual void writeCounter(std::string name,uint value);
+    virtual void writeCounter(std::string name, int64_t value);
+    virtual void onThreadStart();
+    virtual void onThreadEnd();
 };
 
 FENNEL_END_NAMESPACE

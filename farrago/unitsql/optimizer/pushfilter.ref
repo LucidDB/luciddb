@@ -1,254 +1,249 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test optimizer rules for pushing down filters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema pdf;
-0: jdbc:farrago:> set schema 'pdf';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t1(
-. . . . . . . . >     k1 int primary key,
-. . . . . . . . >     t1a int not null,
-. . . . . . . . >     t1b int not null,
-. . . . . . . . >     t1c int not null,
-. . . . . . . . >     t1d int not null);
-0: jdbc:farrago:> create table t2(k2 int primary key, t2a int, t2b int, t2c int, t2d int);
-0: jdbc:farrago:> create table t3(k3 int primary key, t3a int, t3b int, t3c int, t3d int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t1 values(1, 11, 12, 13, 14);
-0: jdbc:farrago:> insert into t1 values(2, 21, 22, 23, 24);
-0: jdbc:farrago:> insert into t1 values(3, 31, 32, 33, 34);
-0: jdbc:farrago:> insert into t1 values(4, 41, 42, 43, 44);
-0: jdbc:farrago:> insert into t1 values(5, 51, 52, 53, 54);
-0: jdbc:farrago:> insert into t2 select * from t1;
-0: jdbc:farrago:> insert into t3 select * from t1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------
-0: jdbc:farrago:> -- pushdown table level filters
-0: jdbc:farrago:> -------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1, t2 where
-. . . . . . . . >         t1a  = 1 order by k1, k2;
+> -- $Id$
+> -- Test optimizer rules for pushing down filters
+> 
+> create schema pdf;
+> set schema 'pdf';
+> 
+> create table t1(
+>     k1 int primary key,
+>     t1a int not null,
+>     t1b int not null,
+>     t1c int not null,
+>     t1d int not null);
+> create table t2(k2 int primary key, t2a int, t2b int, t2c int, t2d int);
+> create table t3(k3 int primary key, t3a int, t3b int, t3c int, t3d int);
+> 
+> insert into t1 values(1, 11, 12, 13, 14);
+> insert into t1 values(2, 21, 22, 23, 24);
+> insert into t1 values(3, 31, 32, 33, 34);
+> insert into t1 values(4, 41, 42, 43, 44);
+> insert into t1 values(5, 51, 52, 53, 54);
+> insert into t2 select * from t1;
+> insert into t3 select * from t1;
+> 
+> !set outputformat csv
+> 
+> -------------------------------
+> -- pushdown table level filters
+> -------------------------------
+> 
+> explain plan for
+>     select * from t1, t2 where
+>         t1a  = 1 order by k1, k2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 5]], discardDuplicates=[false])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[1]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D) NOT NULL])'
-'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1, t2 where
-. . . . . . . . >         t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
-. . . . . . . . >         t1b + 1 = t1c order by k1;
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+> 
+> explain plan for
+>     select * from t1, t2 where
+>         t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
+>         t1b + 1 = t1c order by k1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filters in the on clause
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 inner join t2 on
-. . . . . . . . >         t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
-. . . . . . . . >         t1b + 1 = t1c order by k1;
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CAST($t4):INTEGER], expr#6=[11], expr#7=[>=($t1, $t6)], expr#8=[1], expr#9=[+($t2, $t8)], expr#10=[=($t9, $t3)], expr#11=[AND($t7, $t10)], proj#0..5=[{exprs}], $condition=[$t11])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+> 
+> -- filters in the on clause
+> explain plan for
+>     select * from t1 inner join t2 on
+>         t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
+>         t1b + 1 = t1c order by k1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filters in both on clause and where
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 inner join t2
-. . . . . . . . >         on t1d = t2d and t1b + 1 = t1c
-. . . . . . . . >         where t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43)
-. . . . . . . . >         order by k1;
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CAST($t4):INTEGER], expr#6=[11], expr#7=[>=($t1, $t6)], expr#8=[1], expr#9=[+($t2, $t8)], expr#10=[=($t9, $t3)], expr#11=[AND($t7, $t10)], proj#0..5=[{exprs}], $condition=[$t11])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+> 
+> -- filters in both on clause and where
+> explain plan for
+>     select * from t1 inner join t2
+>         on t1d = t2d and t1b + 1 = t1c
+>         where t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43)
+>         order by k1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1], expr#6=[+($t2, $t5)], expr#7=[=($t6, $t3)], expr#8=[11], expr#9=[>=($t1, $t8)], expr#10=[AND($t7, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- outer joins
-0: jdbc:farrago:> -- need to join on key columns as outer joins not supported otherwise
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can push to the left since it doesn't generate nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 left outer join t2
-. . . . . . . . >         on k1 = k2
-. . . . . . . . >         where t1a = 11;
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[+($t2, $t6)], expr#8=[=($t7, $t3)], expr#9=[11], expr#10=[>=($t1, $t9)], expr#11=[AND($t8, $t10)], proj#0..5=[{exprs}], $condition=[$t11])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+> 
+> -- outer joins
+> -- need to join on key columns as outer joins not supported otherwise
+> 
+> -- can push to the left since it doesn't generate nulls
+> explain plan for
+>     select * from t1 left outer join t2
+>         on k1 = k2
+>         where t1a = 11;
 'column0'
 'FennelToIteratorConverter'
-'  FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
+'  FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[11]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D) NOT NULL])'
-'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can't push to the right from where clause since right generates nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 left outer join t2
-. . . . . . . . >         on k1 = k2
-. . . . . . . . >         where t2a = 11;
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+> 
+> -- can't push to the right from where clause since right generates nulls
+> explain plan for
+>     select * from t1 left outer join t2
+>         on k1 = k2
+>         where t2a = 11;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_EQ], filterOrdinals=[[6]], filterTuple=[[11]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
-'    FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
-'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRG-158 -- filters that always evaluate to true aren't pushed
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select t1a from t1 left outer join (select *, true as x from t2) on true
-. . . . . . . . >         where x is true;
+'    FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+> 
+> -- FRG-158 -- filters that always evaluate to true aren't pushed
+> explain plan for
+>     select t1a from t1 left outer join (select *, true as x from t2) on true
+>         where x is true;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER NOT NULL T1A) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
 '        FennelCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> -- pushdown join filters
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create indexes on the tables to make pushing down joins worthwhile
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index it2 on t2(t2a);
-0: jdbc:farrago:> create index it3 on t3(t3b);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1, t2, t3 where
-. . . . . . . . >         t1a = t2a and t2b = t3b
-. . . . . . . . >         order by k1, k2;
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+> 
+> ------------------------
+> -- pushdown join filters
+> ------------------------
+> 
+> -- create indexes on the tables to make pushing down joins worthwhile
+> 
+> create index it2 on t2(t2a);
+> create index it3 on t3(t3b);
+> 
+> explain plan for
+>     select * from t1, t2, t3 where
+>         t1a = t2a and t2b = t3b
+>         order by k1, k2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 5]], discardDuplicates=[false])'
-'    FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[10]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[10]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[[0]], index=[IT3], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[7]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
 '        FennelCalcRel(expr#0..9=[{inputs}], expr#10=[IS NOT NULL($t7)], proj#0..9=[{exprs}], $condition=[$t10])'
-'          FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[5]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[5]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[5]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
 '              FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 1]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER T2A) NOT NULL])'
-'                FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- both table filters and joins
-0: jdbc:farrago:> -- note that cartesian joins will end up getting used because the filters
-0: jdbc:farrago:> -- reduce the size of the inputs into the joins; but you should still see
-0: jdbc:farrago:> -- the filters being pushed to their respective tables and joins
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1, t2, t3 where
-. . . . . . . . >         t1a = t2a and t2b = t3b and t1b > 12 and t2c > 23 and t3d = 34;
+'                FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+> 
+> -- both table filters and joins
+> -- note that cartesian joins will end up getting used because the filters
+> -- reduce the size of the inputs into the joins; but you should still see
+> -- the filters being pushed to their respective tables and joins
+> 
+> explain plan for
+>     select * from t1, t2, t3 where
+>         t1a = t2a and t2b = t3b and t1b > 12 and t2c > 23 and t3d = 34;
 'column0'
-'IterCalcRel(expr#0..14=[{inputs}], expr#15=[=($t7, $t12)], proj#0..14=[{exprs}], $condition=[$t15])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
-'      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t1, $t6)], proj#0..9=[{exprs}], $condition=[$t10])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[2]], filterTuple=[[12]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D) NOT NULL])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[3]], filterTuple=[[23]], outputRowType=[RecordType(INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
-'              FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[34]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- join filter that references all 3 columns and therefore can only be pushed
-0: jdbc:farrago:> -- to the topmost join
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1, t2, t3 where
-. . . . . . . . >         t1a /10 = t2b / 10 + t3c / 10
-. . . . . . . . >         order by k1, k2;
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[7]], rightKeys=[[2]], joinType=[INNER])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[1]], joinType=[INNER])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 1]], filterOp=[COMP_GT], filterOrdinals=[[2]], filterTuple=[[12]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER CAST($1):INTEGER) NOT NULL])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[3]], filterTuple=[[23]], outputRowType=[RecordType(INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[34]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D) NOT NULL])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
+> 
+> -- join filter that references all 3 columns and therefore can only be pushed
+> -- to the topmost join
+> explain plan for
+>     select * from t1, t2, t3 where
+>         t1a /10 = t2b / 10 + t3c / 10
+>         order by k1, k2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 5]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..14=[{inputs}], expr#15=[10], expr#16=[/($t1, $t15)], expr#17=[/($t7, $t15)], expr#18=[/($t13, $t15)], expr#19=[+($t17, $t18)], expr#20=[=($t16, $t19)], proj#0..14=[{exprs}], $condition=[$t20])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1, 7]], joinKeyParamIds=[[1, 2]])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------
-0: jdbc:farrago:> -- push down filter past setops
-0: jdbc:farrago:> -------------------------------
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from (select * from t1 union select * from t2) where t1a < 41;
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'      FennelCalcRel(expr#0..6=[{inputs}], expr#7=[10], expr#8=[/($t5, $t7)], expr#9=[/($t6, $t7)], expr#10=[/($t3, $t7)], expr#11=[+($t9, $t10)], expr#12=[=($t8, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D, INTEGER NOT NULL T1A, INTEGER T2B) NOT NULL])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
+> 
+> -------------------------------
+> -- push down filter past setops
+> -------------------------------
+> explain plan for
+>     select * from (select * from t1 union select * from t2) where t1a < 41;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1, 2, 3, 4]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[5])'
 '    FennelMergeRel'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[41]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER T1A, INTEGER T1B, INTEGER T1C, INTEGER T1D) NOT NULL])'
-'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelRenameRel(fieldNames=[[K1, T1A, T1B, T1C, T1D]])'
-'        FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'        FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '          FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', 41 }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from (select * from t1 union all select * from t2) where t1a < 41;
+'            FennelValuesRel(tuples=[[{ '(', null, ')', 41 }]])'
+> explain plan for
+>     select * from (select * from t1 union all select * from t2) where t1a < 41;
 'column0'
 'IterConcatenateRel(all=[true])'
 '  FennelToIteratorConverter'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[41]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER T1A, INTEGER T1B, INTEGER T1C, INTEGER T1D) NOT NULL])'
-'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '  FennelToIteratorConverter'
 '    FennelRenameRel(fieldNames=[[K1, T1A, T1B, T1C, T1D]])'
-'      FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '        FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'          FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', 41 }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from
-. . . . . . . . >         (select t1a, t1b from t1 union
-. . . . . . . . >             select t2b, t2a from t2 union
-. . . . . . . . >             select t3c, t3b from t3)
-. . . . . . . . >         where t1b in (12, 21, 32);
+'          FennelValuesRel(tuples=[[{ '(', null, ')', 41 }]])'
+> explain plan for
+>     select * from
+>         (select t1a, t1b from t1 union
+>             select t2b, t2a from t2 union
+>             select t3c, t3b from t3)
+>         where t1b in (12, 21, 32);
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[2])'
 '    FennelMergeRel'
-'      FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'      LhxAggRel(groupCount=[2])'
 '        FennelMergeRel'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[12], expr#3=[=($t1, $t2)], expr#4=[21], expr#5=[=($t1, $t4)], expr#6=[OR($t3, $t5)], expr#7=[32], expr#8=[=($t1, $t7)], expr#9=[OR($t6, $t8)], expr#10=[CAST($t0):INTEGER], expr#11=[CAST($t1):INTEGER], T1A=[$t10], T1B=[$t11], $condition=[$t9])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):INTEGER], expr#3=[CAST($t1):INTEGER], expr#4=[12], expr#5=[=($t1, $t4)], expr#6=[21], expr#7=[=($t1, $t6)], expr#8=[OR($t5, $t7)], expr#9=[32], expr#10=[=($t1, $t9)], expr#11=[OR($t8, $t10)], T1A=[$t2], T1B=[$t3], $condition=[$t11])'
+'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '          FennelRenameRel(fieldNames=[[T1A, T1B]])'
 '            FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(INTEGER T2B, INTEGER T2A) NOT NULL])'
-'              FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '                FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'                  FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 12, _ISO-8859-1']', 12 }, { _ISO-8859-1'[', 21, _ISO-8859-1']', 21 }, { _ISO-8859-1'[', 32, _ISO-8859-1']', 32 }]])'
+'                  FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }, { '[', 21, ']', 21 }, { '[', 32, ']', 32 }]])'
 '      FennelRenameRel(fieldNames=[[T1A, T1B]])'
 '        FennelReshapeRel(projection=[[3, 2]], outputRowType=[RecordType(INTEGER T3C, INTEGER T3B) NOT NULL])'
-'          FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, PDF, T3]], projection=[[0]], index=[IT3], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 12, _ISO-8859-1']', 12 }, { _ISO-8859-1'[', 21, _ISO-8859-1']', 21 }, { _ISO-8859-1'[', 32, _ISO-8859-1']', 32 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------------------------------------------
-0: jdbc:farrago:> -- run queries just to make sure the plans created are executable
-0: jdbc:farrago:> -----------------------------------------------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1, t2 where
-. . . . . . . . >     t1a = 11 order by k1, k2;
+'              FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }, { '[', 21, ']', 21 }, { '[', 32, ']', 32 }]])'
+> 
+> -----------------------------------------------------------------
+> -- run queries just to make sure the plans created are executable
+> -----------------------------------------------------------------
+> !set outputformat table
+> 
+> select * from t1, t2 where
+>     t1a = 11 order by k1, k2;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
@@ -258,59 +253,59 @@
 | 1   | 11   | 12   | 13   | 14   | 4   | 41   | 42   | 43   | 44   |
 | 1   | 11   | 12   | 13   | 14   | 5   | 51   | 52   | 53   | 54   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1, t2 where
-. . . . . . . . >     t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
-. . . . . . . . >     t1b + 1 = t1c order by k1;
+> 
+> select * from t1, t2 where
+>     t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
+>     t1b + 1 = t1c order by k1;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
 | 2   | 21   | 22   | 23   | 24   | 2   | 21   | 22   | 23   | 24   |
 | 5   | 51   | 52   | 53   | 54   | 5   | 51   | 52   | 53   | 54   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 inner join t2 on
-. . . . . . . . >     t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
-. . . . . . . . >     t1b + 1 = t1c order by k1;
+> 
+> select * from t1 inner join t2 on
+>     t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43) and t1d = t2d and
+>     t1b + 1 = t1c order by k1;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
 | 2   | 21   | 22   | 23   | 24   | 2   | 21   | 22   | 23   | 24   |
 | 5   | 51   | 52   | 53   | 54   | 5   | 51   | 52   | 53   | 54   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 inner join t2
-. . . . . . . . >     on t1d = t2d and t1b + 1 = t1c
-. . . . . . . . >     where t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43)
-. . . . . . . . >     order by k1;
+> 
+> select * from t1 inner join t2
+>     on t1d = t2d and t1b + 1 = t1c
+>     where t1a >= 11 and 21 <= t2a and (t2b < 32 or t2c > 43)
+>     order by k1;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
 | 2   | 21   | 22   | 23   | 24   | 2   | 21   | 22   | 23   | 24   |
 | 5   | 51   | 52   | 53   | 54   | 5   | 51   | 52   | 53   | 54   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 left outer join t2
-. . . . . . . . >     on k1 = k2
-. . . . . . . . >     where t1a = 11;
+> 
+> select * from t1 left outer join t2
+>     on k1 = k2
+>     where t1a = 11;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
 | 1   | 11   | 12   | 13   | 14   | 1   | 11   | 12   | 13   | 14   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 left outer join t2
-. . . . . . . . >     on k1 = k2
-. . . . . . . . >     where t2a = 11;
+> 
+> select * from t1 left outer join t2
+>     on k1 = k2
+>     where t2a = 11;
 +-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  |
 +-----+------+------+------+------+-----+------+------+------+------+
 | 1   | 11   | 12   | 13   | 14   | 1   | 11   | 12   | 13   | 14   |
 +-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1, t2, t3 where
-. . . . . . . . >     t1a = t2a and t2b = t3b
-. . . . . . . . >     order by k1;
+> 
+> select * from t1, t2, t3 where
+>     t1a = t2a and t2b = t3b
+>     order by k1;
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  | K3  | T3A  | T3B  | T3C  | T3D  |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
@@ -320,18 +315,18 @@
 | 4   | 41   | 42   | 43   | 44   | 4   | 41   | 42   | 43   | 44   | 4   | 41   | 42   | 43   | 44   |
 | 5   | 51   | 52   | 53   | 54   | 5   | 51   | 52   | 53   | 54   | 5   | 51   | 52   | 53   | 54   |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1, t2, t3 where
-. . . . . . . . >     t1a = t2a and t2b = t3b and t1b > 11 and t2c > 23 and t3d = 34;
+> 
+> select * from t1, t2, t3 where
+>     t1a = t2a and t2b = t3b and t1b > 11 and t2c > 23 and t3d = 34;
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  | K3  | T3A  | T3B  | T3C  | T3D  |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
 | 3   | 31   | 32   | 33   | 34   | 3   | 31   | 32   | 33   | 34   | 3   | 31   | 32   | 33   | 34   |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1, t2, t3 where
-. . . . . . . . >     t1a /10 = t2b / 10 + t3c / 10
-. . . . . . . . >     order by k1, k2;
+> 
+> select * from t1, t2, t3 where
+>     t1a /10 = t2b / 10 + t3c / 10
+>     order by k1, k2;
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  | K2  | T2A  | T2B  | T2C  | T2D  | K3  | T3A  | T3B  | T3C  | T3D  |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
@@ -346,9 +341,9 @@
 | 5   | 51   | 52   | 53   | 54   | 3   | 31   | 32   | 33   | 34   | 2   | 21   | 22   | 23   | 24   |
 | 5   | 51   | 52   | 53   | 54   | 4   | 41   | 42   | 43   | 44   | 1   | 11   | 12   | 13   | 14   |
 +-----+------+------+------+------+-----+------+------+------+------+-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from (select * from t1 union select * from t2) where t1a < 41
-. . . . . . . . >     order by k1;
+> 
+> select * from (select * from t1 union select * from t2) where t1a < 41
+>     order by k1;
 +-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  |
 +-----+------+------+------+------+
@@ -356,9 +351,9 @@
 | 2   | 21   | 22   | 23   | 24   |
 | 3   | 31   | 32   | 33   | 34   |
 +-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from (select * from t1 union all select * from t2) where t1a < 41
-. . . . . . . . >     order by k1;
+> 
+> select * from (select * from t1 union all select * from t2) where t1a < 41
+>     order by k1;
 +-----+------+------+------+------+
 | K1  | T1A  | T1B  | T1C  | T1D  |
 +-----+------+------+------+------+
@@ -369,13 +364,13 @@
 | 3   | 31   | 32   | 33   | 34   |
 | 3   | 31   | 32   | 33   | 34   |
 +-----+------+------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from
-. . . . . . . . >     (select t1a, t1b from t1 union
-. . . . . . . . >         select t2b, t2a from t2 union
-. . . . . . . . >         select t3c, t3b from t3)
-. . . . . . . . >     where t1b in (12, 21, 32)
-. . . . . . . . >     order by t1a;
+> 
+> select * from
+>     (select t1a, t1b from t1 union
+>         select t2b, t2a from t2 union
+>         select t3c, t3b from t3)
+>     where t1b in (12, 21, 32)
+>     order by t1a;
 +------+------+
 | T1A  | T1B  |
 +------+------+
@@ -385,120 +380,125 @@
 | 31   | 32   |
 | 33   | 32   |
 +------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------------------------------------------
-0: jdbc:farrago:> -- run a query through Volcano to exercise rules more thoroughly
-0: jdbc:farrago:> ----------------------------------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> alter session implementation add jar sys_boot.sys_boot.volcano_plugin;
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select t1a from t1 left outer join (select *, true as x from t2) on true
-. . . . . . . . >         where x is true;
+> 
+> ----------------------------------------------------------------
+> -- run a query through Volcano to exercise rules more thoroughly
+> ----------------------------------------------------------------
+> !set outputformat csv
+> alter session implementation add jar sys_boot.sys_boot.volcano_plugin;
+> explain plan for
+>     select t1a from t1 left outer join (select *, true as x from t2) on true
+>         where x is true;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER NOT NULL T1A) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------
-0: jdbc:farrago:> -- LucidDb-specific operations
-0: jdbc:farrago:> ------------------------------
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> create table lt1(
-. . . . . . . . >     t1a int unique not null,
-. . . . . . . . >     t1b int unique not null,
-. . . . . . . . >     t1c int unique not null,
-. . . . . . . . >     t1d int unique not null);
-0: jdbc:farrago:> create table lt2(
-. . . . . . . . >     t2a int unique, t2b int unique, t2c int unique, t2d int unique);
-0: jdbc:farrago:> create table lt3(
-. . . . . . . . >     t3a int unique, t3b int unique, t3c int unique, t3d int unique);
-0: jdbc:farrago:> insert into lt1 select t1a, t1b, t1c, t1d from t1;
-0: jdbc:farrago:> insert into lt2 select t2a, t2b, t2c, t2d from t2;
-0: jdbc:farrago:> insert into lt3 select t3a, t3b, t3c, t3d from t3;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from
-. . . . . . . . >         (select t1c, t1d from lt1 intersect select t2b+1, t2a+3 from lt2)
-. . . . . . . . >             where t1d > 30;
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
+'            FennelToIteratorConverter'
+'              FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[IT2], preserveOrder=[false])'
+> 
+> ------------------------------
+> -- LucidDb-specific operations
+> ------------------------------
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> create table lt1(
+>     t1a int unique not null,
+>     t1b int unique not null,
+>     t1c int unique not null,
+>     t1d int unique not null);
+> create table lt2(
+>     t2a int unique, t2b int unique, t2c int unique, t2d int unique);
+> create table lt3(
+>     t3a int unique, t3b int unique, t3c int unique, t3d int unique);
+> insert into lt1 select t1a, t1b, t1c, t1d from t1;
+> insert into lt2 select t2a, t2b, t2c, t2d from t2;
+> insert into lt3 select t3a, t3b, t3c, t3d from t3;
+> 
+> -- fake row count so that index access is considered
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT1', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT2', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT3', 100);
+> 
+> explain plan for
+>     select * from
+>         (select t1c, t1d from lt1 intersect select t2b+1, t2a+3 from lt2)
+>             where t1d > 30;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[LEFTSEMI], setop=[true])'
 '    FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T1C, INTEGER T1D) NOT NULL])'
-'      LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT1$T1C, SYS$CLUSTERED_INDEX$PDF$LT1$T1D]])'
+'      LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT1$T1C, SYS$CLUSTERED_INDEX$LT1$T1D]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'          LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$LT1$SYS$UNIQUE_KEY$T1D], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 30, _ISO-8859-1'+', null }]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT1$T1D], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])'
 '    FennelRenameRel(fieldNames=[[T1C, T1D]])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[3], expr#3=[+($t0, $t2)], expr#4=[30], expr#5=[>($t3, $t4)], expr#6=[1], expr#7=[+($t1, $t6)], EXPR$0=[$t7], EXPR$1=[$t3], $condition=[$t5])'
-'        LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT2$T2A, SYS$CLUSTERED_INDEX$PDF$LT2$T2B]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from
-. . . . . . . . >         (select t1a, t1b, t1c from lt1 except
-. . . . . . . . >             select t2b - 1, t2c - 1, t2d - 1 from lt2 where t2a < 20)
-. . . . . . . . >     where t1c > 25;
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t1, $t2)], expr#4=[3], expr#5=[+($t0, $t4)], expr#6=[30], expr#7=[>($t5, $t6)], EXPR$0=[$t3], EXPR$1=[$t5], $condition=[$t7])'
+'        LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT2$T2A, SYS$CLUSTERED_INDEX$LT2$T2B]])'
+> 
+> explain plan for
+>     select * from
+>         (select t1a, t1b, t1c from lt1 except
+>             select t2b - 1, t2c - 1, t2d - 1 from lt2 where t2a < 20)
+>     where t1c > 25;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1, 2]], rightKeys=[[0, 1, 2]], joinType=[RIGHTANTI], setop=[true])'
 '    FennelRenameRel(fieldNames=[[T1A, T1B, T1C]])'
-'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[-($t2, $t3)], expr#5=[25], expr#6=[>($t4, $t5)], expr#7=[-($t0, $t3)], expr#8=[-($t1, $t3)], EXPR$0=[$t7], EXPR$1=[$t8], EXPR$2=[$t4], $condition=[$t6])'
-'        LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT2$T2B, SYS$CLUSTERED_INDEX$PDF$LT2$T2C, SYS$CLUSTERED_INDEX$PDF$LT2$T2D]])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[-($t0, $t3)], expr#5=[-($t1, $t3)], expr#6=[-($t2, $t3)], expr#7=[25], expr#8=[>($t6, $t7)], EXPR$0=[$t4], EXPR$1=[$t5], EXPR$2=[$t6], $condition=[$t8])'
+'        LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT2$T2B, SYS$CLUSTERED_INDEX$LT2$T2C, SYS$CLUSTERED_INDEX$LT2$T2D]])'
 '          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
-'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT2]], index=[SYS$CONSTRAINT_INDEX$LT2$SYS$UNIQUE_KEY$T2A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'              FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', 20 }]])'
+'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT2]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT2$T2A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '(', null, ')', 20 }]])'
 '    FennelReshapeRel(projection=[[0, 1, 2]], outputRowType=[RecordType(INTEGER T1A, INTEGER T1B, INTEGER T1C) NOT NULL])'
-'      LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT1$T1A, SYS$CLUSTERED_INDEX$PDF$LT1$T1B, SYS$CLUSTERED_INDEX$PDF$LT1$T1C]])'
+'      LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT1$T1A, SYS$CLUSTERED_INDEX$LT1$T1B, SYS$CLUSTERED_INDEX$LT1$T1C]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'          LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$LT1$SYS$UNIQUE_KEY$T1C], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 25, _ISO-8859-1'+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- the following exercises pushing the filter past the setop as well as
-0: jdbc:farrago:> -- merging the pushed filter with the filter already on top of the scan;
-0: jdbc:farrago:> -- if the merge is being done, then indexes should be used for all of the
-0: jdbc:farrago:> -- filters
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from
-. . . . . . . . >         (select t1a, t1b from lt1 where t1a = 31 union
-. . . . . . . . >             select t2b, t2a from lt2 union
-. . . . . . . . >             select t3c, t3b from lt3 where t3c = 13)
-. . . . . . . . >         where t1b in (12, 21, 32);
+'          LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT1$T1C], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelValuesRel(tuples=[[{ '(', 25, '+', null }]])'
+> 
+> -- the following exercises pushing the filter past the setop as well as
+> -- merging the pushed filter with the filter already on top of the scan;
+> -- if the merge is being done, then indexes should be used for all of the
+> -- filters
+> explain plan for
+>     select * from
+>         (select t1a, t1b from lt1 where t1a = 31 union
+>             select t2b, t2a from lt2 union
+>             select t3c, t3b from lt3 where t3c = 13)
+>         where t1b in (12, 21, 32);
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[2])'
 '    FennelMergeRel'
-'      LhxAggRel(groupCount=[2])'
-'        FennelMergeRel'
-'          FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T1A, INTEGER T1B) NOT NULL])'
-'            LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT1$T1A, SYS$CLUSTERED_INDEX$PDF$LT1$T1B]])'
-'              LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'                LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$LT1$SYS$UNIQUE_KEY$T1A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
-'                  FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 31, _ISO-8859-1']', 31 }]])'
-'                LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
-'                  LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$LT1$SYS$UNIQUE_KEY$T1B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 12, _ISO-8859-1']', 12 }, { _ISO-8859-1'[', 21, _ISO-8859-1']', 21 }, { _ISO-8859-1'[', 32, _ISO-8859-1']', 32 }]])'
-'          FennelRenameRel(fieldNames=[[T1A, T1B]])'
-'            LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[1, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT2$T2A, SYS$CLUSTERED_INDEX$PDF$LT2$T2B]])'
-'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[4])'
-'                LcsIndexSearchRel(table=[[LOCALDB, PDF, LT2]], index=[SYS$CONSTRAINT_INDEX$LT2$SYS$UNIQUE_KEY$T2A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                  FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 12, _ISO-8859-1']', 12 }, { _ISO-8859-1'[', 21, _ISO-8859-1']', 21 }, { _ISO-8859-1'[', 32, _ISO-8859-1']', 32 }]])'
+'      FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T1A, INTEGER T1B) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, PDF, LT1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT1$T1A, SYS$CLUSTERED_INDEX$LT1$T1B]])'
+'          LcsIndexIntersectRel(startRidParamId=[5], rowLimitParamId=[6])'
+'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT1$T1A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[5], rowLimitParamId=[6])'
+'              FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
+'            LcsIndexMergeRel(consumerSridParamId=[5], segmentLimitParamId=[6], ridLimitParamId=[7])'
+'              LcsIndexSearchRel(table=[[LOCALDB, PDF, LT1]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT1$T1B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }, { '[', 21, ']', 21 }, { '[', 32, ']', 32 }]])'
 '      FennelRenameRel(fieldNames=[[T1A, T1B]])'
-'        LcsRowScanRel(table=[[LOCALDB, PDF, LT3]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PDF$LT3$T3B, SYS$CLUSTERED_INDEX$PDF$LT3$T3C]])'
-'          LcsIndexIntersectRel(startRidParamId=[6], rowLimitParamId=[5])'
-'            LcsIndexMergeRel(consumerSridParamId=[6], segmentLimitParamId=[5], ridLimitParamId=[7])'
-'              LcsIndexSearchRel(table=[[LOCALDB, PDF, LT3]], index=[SYS$CONSTRAINT_INDEX$LT3$SYS$UNIQUE_KEY$T3B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 12, _ISO-8859-1']', 12 }, { _ISO-8859-1'[', 21, _ISO-8859-1']', 21 }, { _ISO-8859-1'[', 32, _ISO-8859-1']', 32 }]])'
-'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT3]], index=[SYS$CONSTRAINT_INDEX$LT3$SYS$UNIQUE_KEY$T3C], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[6], rowLimitParamId=[5])'
-'              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 13, _ISO-8859-1']', 13 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select * from
-. . . . . . . . >     (select t1c, t1d from t1 intersect select t2b+1, t2a+3 from t2)
-. . . . . . . . >         where t1d > 30
-. . . . . . . . >     order by t1c;
+'        LcsRowScanRel(table=[[LOCALDB, PDF, LT2]], projection=[[1, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT2$T2A, SYS$CLUSTERED_INDEX$LT2$T2B]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[4])'
+'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT2]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT2$T2A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }, { '[', 21, ']', 21 }, { '[', 32, ']', 32 }]])'
+'      FennelRenameRel(fieldNames=[[T1A, T1B]])'
+'        LcsRowScanRel(table=[[LOCALDB, PDF, LT3]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LT3$T3B, SYS$CLUSTERED_INDEX$LT3$T3C]])'
+'          LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, PDF, LT3]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT3$T3B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }, { '[', 21, ']', 21 }, { '[', 32, ']', 32 }]])'
+'            LcsIndexSearchRel(table=[[LOCALDB, PDF, LT3]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$LT3$T3C], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[3])'
+'              FennelValuesRel(tuples=[[{ '[', 13, ']', 13 }]])'
+> 
+> !set outputformat table
+> select * from
+>     (select t1c, t1d from t1 intersect select t2b+1, t2a+3 from t2)
+>         where t1d > 30
+>     order by t1c;
 +------+------+
 | T1C  | T1D  |
 +------+------+
@@ -506,11 +506,11 @@
 | 43   | 44   |
 | 53   | 54   |
 +------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from
-. . . . . . . . >     (select t1a, t1b, t1c from lt1 except
-. . . . . . . . >         select t2b - 1, t2c - 1, t2d - 1 from lt2 where t2a < 20)
-. . . . . . . . > where t1c > 25 order by t1a;
+> 
+> select * from
+>     (select t1a, t1b, t1c from lt1 except
+>         select t2b - 1, t2c - 1, t2d - 1 from lt2 where t2a < 20)
+> where t1c > 25 order by t1a;
 +------+------+------+
 | T1A  | T1B  | T1C  |
 +------+------+------+
@@ -518,13 +518,13 @@
 | 41   | 42   | 43   |
 | 51   | 52   | 53   |
 +------+------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from
-. . . . . . . . >     (select t1a, t1b from lt1 where t1a = 31 union
-. . . . . . . . >         select t2b, t2a from lt2 union
-. . . . . . . . >         select t3c, t3b from lt3 where t3c = 13)
-. . . . . . . . >     where t1b in (12, 21, 32)
-. . . . . . . . >     order by t1a;
+> 
+> select * from
+>     (select t1a, t1b from lt1 where t1a = 31 union
+>         select t2b, t2a from lt2 union
+>         select t3c, t3b from lt3 where t3c = 13)
+>     where t1b in (12, 21, 32)
+>     order by t1a;
 +------+------+
 | T1A  | T1B  |
 +------+------+
@@ -532,5 +532,5 @@
 | 22   | 21   |
 | 31   | 32   |
 +------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

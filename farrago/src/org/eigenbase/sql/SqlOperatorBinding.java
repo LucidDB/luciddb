@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,11 @@
 */
 package org.eigenbase.sql;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -37,7 +40,6 @@ import org.eigenbase.sql.*;
  */
 public abstract class SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
@@ -45,6 +47,12 @@ public abstract class SqlOperatorBinding
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlOperatorBinding.
+     *
+     * @param typeFactory Type factory
+     * @param sqlOperator Operator which is subject of this call
+     */
     protected SqlOperatorBinding(
         RelDataTypeFactory typeFactory,
         SqlOperator sqlOperator)
@@ -153,6 +161,38 @@ public abstract class SqlOperatorBinding
     {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Retrieves information about a column list parameter.
+     *
+     * @param ordinal ordinal position of the column list parameter
+     * @param paramName name of the column list parameter
+     * @param columnList returns a list of the column names that are referenced
+     * in the column list parameter
+     *
+     * @return the name of the parent cursor referenced by the column list
+     * parameter if it is a column list parameter; otherwise, null is returned
+     */
+    public String getColumnListParamInfo(
+        int ordinal,
+        String paramName,
+        List<String> columnList)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Wraps a validation error with context appropriate to this operator call.
+     *
+     * @param e Validation error
+     *
+     * @return Error wrapped, if possible, with positional information
+     *
+     * @pre node != null
+     * @post return != null
+     */
+    public abstract EigenbaseException newError(
+        SqlValidatorException e);
 }
 
 // End SqlOperatorBinding.java

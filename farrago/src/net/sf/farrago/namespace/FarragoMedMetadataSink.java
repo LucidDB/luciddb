@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,8 +20,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.namespace;
-
-import java.sql.*;
 
 import java.util.*;
 
@@ -44,7 +42,6 @@ import org.eigenbase.reltype.*;
  */
 public interface FarragoMedMetadataSink
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -52,8 +49,6 @@ public interface FarragoMedMetadataSink
      * have more specific write methods.
      *
      * @param name unqualified object name
-     * @param type object type name, from enumeration in {@link
-     * FarragoMedMetadataQuery}
      * @param remarks object description, or null for none
      * @param properties storage options
      *
@@ -63,7 +58,7 @@ public interface FarragoMedMetadataSink
         String name,
         String typeName,
         String remarks,
-        Map properties);
+        Properties properties);
 
     /**
      * Writes a descriptor for a column.
@@ -85,7 +80,7 @@ public interface FarragoMedMetadataSink
         RelDataType type,
         String remarks,
         String defaultValue,
-        Map properties);
+        Properties properties);
 
     /**
      * @return a type factory for use in creating type instances for calls such

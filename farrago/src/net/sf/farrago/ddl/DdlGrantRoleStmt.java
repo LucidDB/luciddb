@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,17 +24,10 @@ package net.sf.farrago.ddl;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -46,10 +39,9 @@ import org.eigenbase.util.*;
 public class DdlGrantRoleStmt
     extends DdlGrantStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    protected List roleList;
+    protected List<SqlIdentifier> roleList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,10 +72,12 @@ public class DdlGrantRoleStmt
         // the owner. Or (b) the owner has been granted with Admin Option. Need
         // model change!
 
-        Iterator iter = granteeList.iterator();
-        while (iter.hasNext()) {
-            // process the next grantee
-            SqlIdentifier granteeId = (SqlIdentifier) iter.next();
+        for (SqlIdentifier granteeId : granteeList) {
+            // REVIEW: SWZ: 2008-07-29: getAuthIdByName most certainly does not
+            // create an AuthId if it does not exist.  An optimization here
+            // would be to modify newRoleGrant to accept AuthId instances
+            // instead of re-doing the lookup for granteeId for each role in the
+            // roleList.
 
             // Find the repository element id for the grantee,  create one if
             // it does not exist
@@ -95,10 +89,7 @@ public class DdlGrantRoleStmt
             // for each role in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // the individual basis.
-            Iterator iterRole = roleList.iterator();
-            while (iterRole.hasNext()) {
-                SqlIdentifier roleId = (SqlIdentifier) iterRole.next();
-
+            for (SqlIdentifier roleId : roleList) {
                 // create a privilege object and set its properties
                 FemGrant grant =
                     FarragoCatalogUtil.newRoleGrant(
@@ -113,7 +104,7 @@ public class DdlGrantRoleStmt
         }
     }
 
-    public void setRoleList(List roleList)
+    public void setRoleList(List<SqlIdentifier> roleList)
     {
         this.roleList = roleList;
     }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ inline BTreeNodeAccessor &BTreeAccessBase::getLeafNodeAccessor(
     assert(!node.height);
     return *pLeafNodeAccessor;
 }
-    
+
 inline BTreeNodeAccessor &BTreeAccessBase::getNonLeafNodeAccessor(
     BTreeNode const &node)
 {
@@ -57,13 +57,13 @@ inline PageId BTreeAccessBase::getChildForCurrent()
 {
     TupleDatum &childDatum = pNonLeafNodeAccessor->tupleData.back();
     pChildAccessor->unmarshalValue(
-        pNonLeafNodeAccessor->tupleAccessor,childDatum);
+        pNonLeafNodeAccessor->tupleAccessor, childDatum);
     return *reinterpret_cast<PageId const *>(childDatum.pData);
 }
-    
+
 inline PageId BTreeAccessBase::getChild(BTreeNode const &node,uint iChild)
 {
-    getNonLeafNodeAccessor(node).accessTuple(node,iChild);
+    getNonLeafNodeAccessor(node).accessTuple(node, iChild);
     return getChildForCurrent();
 }
 
@@ -75,7 +75,7 @@ inline PageId BTreeAccessBase::getRightSibling(PageId pageId)
 inline void BTreeAccessBase::setRightSibling(
     BTreeNode &leftNode,PageId leftPageId,PageId rightPageId)
 {
-    getSegment()->setPageSuccessor(leftPageId,rightPageId);
+    getSegment()->setPageSuccessor(leftPageId, rightPageId);
     leftNode.rightSibling = rightPageId;
 }
 

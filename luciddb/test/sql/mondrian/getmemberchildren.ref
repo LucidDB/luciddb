@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> set schema 'foodmart_test';
 0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = '*SM_CTX_SEL' group by "product_class"."product_family" order by "product_class"."product_family" ;
 +-----------------+
 | product_family  |

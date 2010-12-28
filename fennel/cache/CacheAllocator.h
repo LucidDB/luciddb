@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * CacheAllocator defines an interface for allocating memory pages to be used
  * by the cache.
  */
-class CacheAllocator
+class FENNEL_CACHE_EXPORT CacheAllocator
 {
 public:
     virtual ~CacheAllocator();
@@ -38,16 +38,26 @@ public:
     /**
      * Allocates a chunk of memory of size determined by the constructor.
      *
-     * @return the allocated chunk
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
+     * @return the allocated chunk; NULL if memory cannot be allocated (see
+     * pErrorCode for OS error code)
      */
-    virtual void *allocate() = 0;
+    virtual void *allocate(int *pErrorCode = NULL) = 0;
 
     /**
      * Deallocates a chunk of memory.
      *
      * @param pMem the allocated memory
+     *
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
+     * @return 0 on success; -1 if memory cannot be deallocated (see
+     * pErrorCode for OS error code)
      */
-    virtual void deallocate(void *pMem) = 0;
+    virtual int deallocate(void *pMem, int *pErrorCode = NULL) = 0;
 
     /**
      * @return number of bytes currently allocated
@@ -63,8 +73,15 @@ public:
      *
      * @param readOnly true for read-only; false for read-write
      * (TODO jvs 7-Feb-2006:  support no-access as well)
+     *
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
+     * @return 0 on success; -1 if an error occurs while manupulating memory
+     * protections (see pErrorCode for OS error code)
      */
-    virtual void setProtection(void *pMem, uint cb, bool readOnly) = 0;
+    virtual int setProtection(
+        void *pMem, uint cb, bool readOnly, int *pErrorCode = NULL) = 0;
 };
 
 FENNEL_END_NAMESPACE

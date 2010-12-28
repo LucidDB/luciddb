@@ -1,30 +1,30 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which execute row-by-row filters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which returns one row
-0: jdbc:farrago:> select name from emps where empno = 120;
+> -- $Id$
+> -- Test queries which execute row-by-row filters
+> 
+> set schema 'sales';
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- filter which returns one row
+> select name from emps where empno = 120;
 +--------+
 |  NAME  |
 +--------+
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which returns two rows
-0: jdbc:farrago:> select name from emps where empno = 110 order by name;
+> 
+> -- filter which returns two rows
+> select name from emps where empno = 110 order by name;
 +-------+
 | NAME  |
 +-------+
 | Eric  |
 | John  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- IN filter implemented as OR
-0: jdbc:farrago:> select name from emps where empno in (110, 120) order by name;
+> 
+> -- IN filter implemented as OR
+> select name from emps where empno in (110, 120) order by name;
 +--------+
 |  NAME  |
 +--------+
@@ -32,48 +32,539 @@
 | John   |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- IN filter implemented as join; have to go over
-0: jdbc:farrago:> -- the default threshold of 20 list items for this to kick in;
-0: jdbc:farrago:> -- throw in some duplicates just for fun
-0: jdbc:farrago:> select name from emps where empno in 
-. . . . . . . . > (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-. . . . . . . . > order by name;
+> 
+> select name, empno, deptno from emps
+> where (empno, deptno) in ((110, 10), (120, 20)) order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+> 
+> select name, empno, deptno from emps 
+> where (empno - 10, deptno + 10) in ((100, 20), (110, 30))
+> order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+> 
+> -- IN filter implemented as join; have to go over
+> -- the default threshold of 20 list items for this to kick in;
+> -- throw in some duplicates just for fun
+> select name from emps where empno in 
+> (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+> order by name;
 +-------+
 | NAME  |
 +-------+
 | Eric  |
 | John  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno = 120;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select name from emps where empno = 120;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[120]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno in (110, 120);
+> 
+> explain plan without implementation for
+> select name from emps where empno in (110, 120);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[OR(=($0, 110), =($0, 120))])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+> 
+> explain plan for
+> select name from emps where empno in (110, 120);
 'column0'
 'FennelToIteratorConverter'
 '  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[110], expr#3=[=($t0, $t2)], expr#4=[120], expr#5=[=($t0, $t4)], expr#6=[OR($t3, $t5)], NAME=[$t1], $condition=[$t6])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno
-. . . . . . . . > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+> 
+> explain plan without implementation for
+> select name, empno, deptno from emps where (empno, deptno) in ((110, 10), (120, 20));
+'column0'
+'ProjectRel(NAME=[$1], EMPNO=[$0], DEPTNO=[$2])'
+'  FilterRel(condition=[OR(AND(=($0, 110), =($2, 10)), AND(=($0, 120), =($2, 20)))])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+> 
+> explain plan for
+> select name, empno, deptno from emps where (empno, deptno) in ((110, 10), (120, 20));
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], NAME=[$t1], $condition=[$t3])'
-'    FennelCalcRel(expr#0..2=[{inputs}], EMPNO=[$t1], NAME=[$t2], ROW_VALUE=[$t0])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'          FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[110], expr#4=[=($t0, $t3)], expr#5=[10], expr#6=[=($t2, $t5)], expr#7=[AND($t4, $t6)], expr#8=[120], expr#9=[=($t0, $t8)], expr#10=[20], expr#11=[=($t2, $t10)], expr#12=[AND($t9, $t11)], expr#13=[OR($t7, $t12)], NAME=[$t1], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t13])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan without implementation for
+> select name, empno, deptno from emps where (empno - 10, deptno + 10) in ((100, 20), (110, 30));
+'column0'
+'ProjectRel(NAME=[$1], EMPNO=[$0], DEPTNO=[$2])'
+'  FilterRel(condition=[OR(AND(=(-($0, 10), 100), =(+($2, 10), 20)), AND(=(-($0, 10), 110), =(+($2, 10), 30)))])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+> 
+> explain plan for
+> select name, empno, deptno from emps where (empno - 10, deptno + 10) in ((100, 20), (110, 30));
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[10], expr#4=[-($t0, $t3)], expr#5=[100], expr#6=[=($t4, $t5)], expr#7=[+($t2, $t3)], expr#8=[20], expr#9=[=($t7, $t8)], expr#10=[AND($t6, $t9)], expr#11=[110], expr#12=[=($t4, $t11)], expr#13=[30], expr#14=[=($t7, $t13)], expr#15=[AND($t12, $t14)], expr#16=[OR($t10, $t15)], NAME=[$t1], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t16])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan without implementation for
+> select name from emps where empno
+> in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  JoinRel(condition=[=($10, $11)], joinType=[inner])'
+'    ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'    AggregateRel(groupCount=[1])'
+'      ValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
+> 
+> explain plan for
+> select name from emps where empno
+> in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f1, $f10]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
+> 
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- verify fix for LER-2691 (incorrect IN list padding)
+> -- requires Farrago personality because LucidDB aggregates 
+> -- raggedy CHAR to VARCHAR
+> create table test1(col varchar(2) not null primary key);
+> insert into test1 values 'B', 'A1';
+> 
+> explain plan for 
+> select col from test1
+> where col in (
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST1], preserveOrder=[false])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..1=[{exprs}])'
+'          FennelToIteratorConverter'
+'            FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
+> 
+> select col from test1
+> where col in (
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'B', 'A1', 'A1', 'A1')
+> order by col;
+'COL'
+'A1'
+'B '
+> 
+> create table test2(col char(2) not null primary key);
+> insert into test2 values 'B', 'A1';
+> 
+> explain plan for 
+> select col from test2
+> where col in (
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], preserveOrder=[false])'
+'      FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
+> 
+> select col from test2
+> where col in (
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'A1', 'A1', 'A1', 'A1',
+> 'A1', 'B', 'A1', 'A1', 'A1')
+> order by col;
+'COL'
+'A1'
+'B '
+> 
+> drop table test1;
+> drop table test2;
+> 
+> -- not in and null value
+> -- not in requires outer join
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> explain plan without implementation for 
+> select name from emps 
+> where empno not in (10, null);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])'
+'    JoinRel(condition=[=($10, $11)], joinType=[left])'
+'      ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'      AggregateRel(groupCount=[1], agg#0=[MIN($1)])'
+'        ProjectRel($f0=[$0], $f1=[true])'
+'          ValuesRel(tuples=[[{ 10 }, { null }]])'
+> 
+> explain plan for 
+> select name from emps 
+> where empno not in (10, null);
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS TRUE($t4)], expr#6=[NOT($t5)], NAME=[$t1], $condition=[$t6])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'            FennelToIteratorConverter'
+'              FennelValuesRel(tuples=[[{ 10 }, { null }]])'
+> 
+> select name from emps 
+> where empno not in (10, null)
+> order by name;
+'NAME'
+'Eric'
+'Fred'
+'John'
+'Wilma'
+> 
+> explain plan without implementation for 
+> select name from emps
+> where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])'
+'    JoinRel(condition=[=($10, $11)], joinType=[left])'
+'      ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'      AggregateRel(groupCount=[1], agg#0=[MIN($1)])'
+'        ProjectRel($f0=[$0], $f1=[true])'
+'          UnionRel(all=[true])'
+'            ProjectRel(EXPR$0=[+(10, 10)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ProjectRel(EXPR$0=[*(10, 2)])'
+'              OneRowRel'
+'            ValuesRel(tuples=[[{ 10 }, { null }]])'
+> 
+> explain plan for 
+> select name from emps
+> where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null);
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS TRUE($t4)], expr#6=[NOT($t5)], NAME=[$t1], $condition=[$t6])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
+'        FennelMergeRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], expr#3=[true], $f0=[$t2], $f1=[$t3])'
+'              IterOneRowRel'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'              FennelToIteratorConverter'
+'                FennelValuesRel(tuples=[[{ 10 }, { null }]])'
+> 
+> select name from emps
+> where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null)
+> order by name;
+'NAME'
+'Eric'
+'Fred'
+'John'
+'Wilma'
+> 
+> explain plan without implementation for 
+> select name from emps
+> where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])'
+'    JoinRel(condition=[=($10, $11)], joinType=[left])'
+'      ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'      AggregateRel(groupCount=[1], agg#0=[MIN($1)])'
+'        ProjectRel($f0=[$0], $f1=[true])'
+'          ValuesRel(tuples=[[{ null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }]])'
+> 
+> explain plan for 
+> select name from emps
+> where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null);
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS TRUE($t4)], expr#6=[NOT($t5)], NAME=[$t1], $condition=[$t6])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[MIN($1)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'            FennelToIteratorConverter'
+'              FennelValuesRel(tuples=[[{ null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }]])'
+> 
+> select name from emps
+> where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null)
+> order by name;
+'NAME'
+'Eric'
+'Fred'
+'John'
+'Wilma'
+> 
+> explain plan without implementation for 
+> select name from emps
+> where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[NOT(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(OR(=($0, 20), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)), =($0, 20)))])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+> 
+> explain plan for 
+> select name from emps
+> where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20);
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[=($t0, $t2)], expr#4=[OR($t3, $t3)], expr#5=[OR($t4, $t3)], expr#6=[OR($t5, $t3)], expr#7=[OR($t6, $t3)], expr#8=[OR($t7, $t3)], expr#9=[OR($t8, $t3)], expr#10=[OR($t9, $t3)], expr#11=[OR($t10, $t3)], expr#12=[OR($t11, $t3)], expr#13=[OR($t12, $t3)], expr#14=[OR($t13, $t3)], expr#15=[OR($t14, $t3)], expr#16=[OR($t15, $t3)], expr#17=[OR($t16, $t3)], expr#18=[OR($t17, $t3)], expr#19=[OR($t18, $t3)], expr#20=[OR($t19, $t3)], expr#21=[OR($t20, $t3)], expr#22=[NOT($t21)], NAME=[$t1], $condition=[$t22])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> select name from emps
+> where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
+> order by name;
+'NAME'
+'Eric'
+'Fred'
+'John'
+'Wilma'
+> 
+> -- Exercise cases where IS [NOT] NULL filters can be removed.
+> !set outputformat csv
+> explain plan for select * from emps where empno is null;
+'column0'
+'FennelToIteratorConverter'
+'  FennelValuesRel(tuples=[[]])'
+> explain plan for select * from emps where empno is not null;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where not(empno is null);
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where not(empno is not null);
+'column0'
+'FennelToIteratorConverter'
+'  FennelValuesRel(tuples=[[]])'
+> explain plan for select * from emps where manager is unknown;
+'column0'
+'FennelToIteratorConverter'
+'  FennelValuesRel(tuples=[[]])'
+> explain plan for select * from emps where not(manager is unknown);
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select min(empno) from emps
+>     having not(count(distinct city) is null);
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelAggRel(groupCount=[0], EXPR$0=[MIN($0)])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[0], agg#0=[COUNT($0)])'
+'        LhxAggRel(groupCount=[1])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> -- Make sure the filter is NOT removed when it's applied on a nullable column
+> explain plan for select * from emps where city is null;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER NOT NULL EMPID, INTEGER AGE, VARBINARY(50) PUBLIC_KEY, BOOLEAN SLACKER, BOOLEAN NOT NULL MANAGER) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where city is not null;
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[IS NOT NULL($t4)], proj#0..9=[{exprs}], $condition=[$t10])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where not(city is null);
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_GT], filterOrdinals=[[4]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER NOT NULL EMPID, INTEGER AGE, VARBINARY(50) PUBLIC_KEY, BOOLEAN SLACKER, BOOLEAN NOT NULL MANAGER) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where not(city is not null);
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[IS NOT NULL($t4)], expr#11=[NOT($t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where slacker is unknown;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_EQ], filterOrdinals=[[8]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER NOT NULL EMPID, INTEGER AGE, VARBINARY(50) PUBLIC_KEY, BOOLEAN SLACKER, BOOLEAN NOT NULL MANAGER) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for select * from emps where not(slacker is unknown);
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_GT], filterOrdinals=[[8]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER NOT NULL EMPID, INTEGER AGE, VARBINARY(50) PUBLIC_KEY, BOOLEAN SLACKER, BOOLEAN NOT NULL MANAGER) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> explain plan for
+>     select * from
+>         (select e.empno, d.name from emps e left outer join depts d
+>             on e.deptno = d.deptno)
+>     where name is null;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
+> !set outputformat table
+> select * from
+>     (select e.empno, d.name from emps e left outer join depts d
+>         on e.deptno = d.deptno)
+> where name is null;
++--------+-------+
+| EMPNO  | NAME  |
++--------+-------+
+| 110    |       |
++--------+-------+
+> 
+> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,23 +26,34 @@
 #include "fennel/common/SysCallExcn.h"
 
 #include <stdlib.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 
 #ifdef HAVE_MMAP
 #include <sys/resource.h>
 #include <sys/mman.h>
+#ifndef NDEBUG
+#ifndef __APPLE__
+#define FENNEL_CACHE_GUARD
+#endif
+#endif
+#endif
+
+#ifdef __APPLE__
+#define MAP_ANONYMOUS MAP_ANON
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
+VMAllocator::VMAllocator(size_t cbAllocInit, size_t nLocked)
 {
     cbAlloc = cbAllocInit;
     nAllocs = 0;
     if (nLocked) {
 #ifdef RLIMIT_MEMLOCK
         struct rlimit rl;
-        if (::getrlimit(RLIMIT_MEMLOCK,&rl)) {
+        if (::getrlimit(RLIMIT_MEMLOCK, &rl)) {
             throw SysCallExcn("getrlimit failed");
         }
         if (rl.rlim_cur != RLIM_INFINITY) {
@@ -50,7 +61,7 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
             // locked pages?
             rl.rlim_cur = nLocked*cbAlloc;
             rl.rlim_max = nLocked*cbAlloc;
-            if (::setrlimit(RLIMIT_MEMLOCK,&rl)) {
+            if (::setrlimit(RLIMIT_MEMLOCK, &rl)) {
                 throw SysCallExcn("setrlimit failed");
             }
         }
@@ -63,15 +74,28 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
 
 VMAllocator::~VMAllocator()
 {
+    // This assertion indicates that not all allocated pages were deallocated.
+    // In relation to LER-5976: in debug builds, each allocation is divided
+    // into 3 sections (two guard pages surrounding the actual allocation).
+    // The mprotect calls in allocate(int *) can fail in low memory situations
+    // (the kernel may allocate private memory as it tracks a single mmap
+    // region being split in three).  When this occurs, subsequent munmap calls
+    // (even on different regions) in deallocate sometimes fail, leading to a
+    // failure of this assertion.  This should not occur in release builds,
+    // since no guard pages are allocated or protected. NOTE: On Ubuntu Edgy
+    // Eft (2.6.17-12-generic SMP), the munmap calls in deallocate fails three
+    // times, then inexplicably begin succeeding.  Retrying the failed calls
+    // then succeeds.
     assert(!getBytesAllocated());
 }
 
-void *VMAllocator::allocate()
+void *VMAllocator::allocate(int *pErrorCode)
 {
 #ifdef HAVE_MMAP
 
     uint cbActualAlloc = cbAlloc;
-#ifndef NDEBUG
+
+#ifdef FENNEL_CACHE_GUARD
     // For a debug build, allocate "fence" regions before and after each
     // allocated buffer.  This helps to catch stray pointers around buffer
     // boundaries.  The fence size is one OS memory page, since that's
@@ -79,21 +103,26 @@ void *VMAllocator::allocate()
     // alignment for O_DIRECT file access.
     cbActualAlloc += 2*getpagesize();
 #endif
-    
+
     void *v = ::mmap(
-        NULL,cbActualAlloc,
+        NULL, cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
     if (v == MAP_FAILED) {
-        throw SysCallExcn("mmap failed");
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        return NULL;
     }
-    
-#ifndef NDEBUG
+
+#ifdef FENNEL_CACHE_GUARD
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        SysCallExcn excn("mprotect on pre-fence failed");
-        ::munmap(v,cbAlloc);
-        throw excn;
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        ::munmap(v, cbAlloc);
+        return NULL;
     }
     p += getpagesize();
     memset(p, 0xFF, cbAlloc);
@@ -101,52 +130,67 @@ void *VMAllocator::allocate()
     p += cbAlloc;
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        SysCallExcn excn("mprotect on post-fence failed");
-        ::munmap(v,cbAlloc);
-        throw excn;
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        ::munmap(v, cbAlloc);
+        return NULL;
     }
 #endif
-    
+
     if (bLockPages) {
-        if (::mlock(v,cbAlloc)) {
-            SysCallExcn excn("mlock failed");
-            ::munmap(v,cbAlloc);
-            throw excn;
+        if (::mlock(v, cbAlloc)) {
+            if (pErrorCode != NULL) {
+                *pErrorCode = SysCallExcn::getCurrentErrorCode();
+            }
+            ::munmap(v, cbAlloc);
+            return NULL;
         }
     }
 #else
     void *v = malloc(cbAlloc);
     if (v == NULL) {
-        throw SysCallExcn("mmap failed");
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        return NULL;
     }
 #endif
     ++nAllocs;
     return v;
 }
 
-void VMAllocator::deallocate(void *p)
+int VMAllocator::deallocate(void *p, int *pErrorCode)
 {
 #ifdef HAVE_MMAP
     if (bLockPages) {
-        if (::munlock(p,cbAlloc)) {
-            throw SysCallExcn("munlock failed");
+        if (::munlock(p, cbAlloc)) {
+            if (pErrorCode != NULL) {
+                *pErrorCode = SysCallExcn::getCurrentErrorCode();
+            }
+            return -1;
         }
     }
-    
+
     uint cbActualAlloc = cbAlloc;
-#ifndef NDEBUG
+#ifdef FENNEL_CACHE_GUARD
     PBuffer p2 = static_cast<PBuffer>(p);
     p2 -= getpagesize();
     p = p2;
     cbActualAlloc += 2*getpagesize();
 #endif
-    if (::munmap((caddr_t)p,cbActualAlloc)) {
-        throw SysCallExcn("munmap failed");
+    if (::munmap((caddr_t)p, cbActualAlloc)) {
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        return -1;
     }
 #else
     free(p);
 #endif
     --nAllocs;
+
+    return 0;
 }
 
 size_t VMAllocator::getBytesAllocated() const
@@ -154,7 +198,8 @@ size_t VMAllocator::getBytesAllocated() const
     return nAllocs*cbAlloc;
 }
 
-void VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
+int VMAllocator::setProtection(
+    void *pMem, uint cb, bool readOnly, int *pErrorCode)
 {
     // FIXME jvs 7-Feb-2006:  use autoconf to get HAVE_MPROTECT instead
 #ifdef HAVE_MMAP
@@ -163,9 +208,14 @@ void VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
         prot |= PROT_WRITE;
     }
     if (::mprotect(pMem, cb, prot)) {
-        throw SysCallExcn("mprotect failed");
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
+        return -1;
     }
 #endif
+
+    return 0;
 }
 
 FENNEL_END_CPPFILE("$Id$");

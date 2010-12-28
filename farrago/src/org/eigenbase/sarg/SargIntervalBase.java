@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,6 @@ package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -35,7 +34,6 @@ import org.eigenbase.sql.*;
  */
 public abstract class SargIntervalBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SargFactory factory;
@@ -47,7 +45,7 @@ public abstract class SargIntervalBase
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newIntervalExpr
+     * @see SargFactory#newIntervalExpr
      */
     SargIntervalBase(
         SargFactory factory,
@@ -85,8 +83,7 @@ public abstract class SargIntervalBase
      */
     public boolean isPoint()
     {
-        return
-            lowerBound.isClosed() && upperBound.isClosed()
+        return lowerBound.isClosed() && upperBound.isClosed()
             && lowerBound.isTouching(upperBound);
     }
 
@@ -95,8 +92,7 @@ public abstract class SargIntervalBase
      */
     public boolean isEmpty()
     {
-        return
-            !lowerBound.isClosed() && !upperBound.isClosed()
+        return !lowerBound.isClosed() && !upperBound.isClosed()
             && lowerBound.isNull() && upperBound.isNull();
     }
 
@@ -137,8 +133,6 @@ public abstract class SargIntervalBase
 
     /**
      * Sets this interval to represent a single point matching the null value.
-     *
-     * @param coordinate coordinate of point to set, or null for the null value
      */
     void setNull()
     {
@@ -148,8 +142,8 @@ public abstract class SargIntervalBase
     /**
      * Sets the lower bound for this interval.
      *
-     * @param coordinate coordinate of point to set
-     * @param boundary strictness
+     * @param coordinate coordinate of point to set, must not be null
+     * @param strictness strictness
      */
     void setLower(RexNode coordinate, SargStrictness strictness)
     {
@@ -212,7 +206,6 @@ public abstract class SargIntervalBase
             SargStrictness.OPEN);
     }
 
-    // implement SargExpr
     public RelDataType getDataType()
     {
         return lowerBound.getDataType();

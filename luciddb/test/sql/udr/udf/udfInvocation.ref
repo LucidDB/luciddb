@@ -2,6 +2,7 @@
 0: jdbc:luciddb:> -- Tests ported from 
 0: jdbc:luciddb:> -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set shownestederrs true
 0: jdbc:luciddb:> -- force usage of Java calculator for error message consistency
 0: jdbc:luciddb:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 0: jdbc:luciddb:> 
@@ -27,6 +28,7 @@
 . . . . . . . . > contains sql
 . . . . . . . . > return x;
 Error: Result expression type VARCHAR(128) from routine "UDFTEST4"."BAD_ATOI" does not match declared return type INTEGER (state=,code=0)
+Error: Invalid definition for routine "UDFTEST4"."BAD_ATOI" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test that explicit cast does occur
 0: jdbc:luciddb:> create function good_atoi(x varchar(128))
@@ -242,9 +244,16 @@ Error: From line 1, column 8 to line 1, column 40: No match found for function s
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail
 0: jdbc:luciddb:> values good_atoi('nineoneone');
+Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values stirfry('Alley');
 +-------------+
@@ -304,10 +313,20 @@ Messages: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values substring24(cast(null as varchar(128)));
+Error: java.lang.NullPointerException: null (state=,code=0)
+Error: Invocation of user-defined external Java method substring24 failed (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method substring24 failed
-java.lang.NullPointerException (state=,code=0)
+java.lang.NullPointerException: null (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method substring24 failed
+java.lang.NullPointerException: null (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values prim_int_to_hex_string(255);
 +---------+
@@ -318,9 +337,12 @@ java.lang.NullPointerException (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with an SQL exception for NULL detected
 0: jdbc:luciddb:> values prim_int_to_hex_string(cast(null as integer));
+Error: Target "I" cannot be assigned null value (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Target "I" cannot be assigned null value (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values obj_int_to_hex_string(255);
 +---------+
@@ -368,17 +390,37 @@ Messages: Target "I" cannot be assigned null value (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values atoi(cast(null as varchar(128)));
+Error: java.lang.NumberFormatException: null (state=,code=0)
+Error: Invocation of user-defined external Java method atoi failed (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method atoi failed
 java.lang.NumberFormatException: null (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method atoi failed
+java.lang.NumberFormatException: null (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values atoi('Posey');
+Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+Error: Invocation of user-defined external Java method atoi failed (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method atoi failed
 java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method atoi failed
+java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values atoi_with_null_for_err('451');
 +---------+
@@ -428,17 +470,37 @@ java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail
 0: jdbc:luciddb:> values throw_sql_exception();
+Error: nothing but a failure (state=,code=0)
+Error: Invocation of user-defined external Java method throwSQLException failed (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method throwSQLException failed
 nothing but a failure (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method throwSQLException failed
+nothing but a failure (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail
 0: jdbc:luciddb:> values throw_npe();
+Error: java.lang.NullPointerException: null (state=,code=0)
+Error: Invocation of user-defined external Java method throwNPE failed (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method throwNPE failed
 java.lang.NullPointerException (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method throwNPE failed
+java.lang.NullPointerException (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set path 'crypto2';
 0: jdbc:luciddb:> 

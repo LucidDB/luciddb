@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,13 +30,18 @@ import java.util.*;
  * Cancellation is implemented synchronously and without any delay, making it
  * easy to avoid shutdown races.
  *
+ * <p>NOTE jvs 13-Aug-2007: The shutdown mechanism requires that cancellation
+ * not happen via any other means. If it does, the shutdown could result in an
+ * {@link IllegalStateException} or a hang. Use {@link FarragoTimerTask} to
+ * avoid the implicit cancellation which can occur when a timer task throws an
+ * exception.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoTimerAllocation
     implements FarragoAllocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Timer timer;

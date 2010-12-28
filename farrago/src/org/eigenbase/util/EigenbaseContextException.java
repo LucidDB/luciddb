@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,6 +32,14 @@ package org.eigenbase.util;
 public class EigenbaseContextException
     extends EigenbaseException
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool. Prevents
+     * incompatible class conflict when serialized from JDK 1.5-built server to
+     * JDK 1.4-built client.
+     */
+    private static final long serialVersionUID = -54978888153560134L;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -42,6 +50,8 @@ public class EigenbaseContextException
     private int endPosLine;
 
     private int endPosColumn;
+
+    private String originalStatement;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,6 +90,23 @@ public class EigenbaseContextException
         setPosition(posLine, posColumn, endPosLine, endPosColumn);
     }
 
+    /**
+     * Creates a new EigenbaseContextException object. This constructor is for
+     * use by the generated factory.
+     *
+     * @param message error message
+     * @param cause underlying cause, must not be null
+     * @param inputText is the orginal SQL statement, may be null
+     */
+    public EigenbaseContextException(
+        String message,
+        Throwable cause,
+        String inputText)
+    {
+        this(message, cause, 0, 0, 0, 0);
+        this.originalStatement = inputText;
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -104,7 +131,8 @@ public class EigenbaseContextException
      * @param endPosLine 1-based end line number
      * @param endPosColumn 1-based end column number
      */
-    public void setPosition(int posLine,
+    public void setPosition(
+        int posLine,
         int posColumn,
         int endPosLine,
         int endPosColumn)
@@ -146,6 +174,22 @@ public class EigenbaseContextException
     public int getEndPosColumn()
     {
         return endPosColumn;
+    }
+
+    /**
+     * @return the input string that is associated with the context
+     */
+    public String getOriginalStatement()
+    {
+        return originalStatement;
+    }
+
+    /**
+     * @param originalStatement - String to associate with the current context
+     */
+    public void setOriginalStatement(String originalStatement)
+    {
+        this.originalStatement = originalStatement;
     }
 }
 

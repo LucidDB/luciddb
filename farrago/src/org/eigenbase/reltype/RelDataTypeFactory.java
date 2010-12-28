@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,9 @@ import org.eigenbase.sql.type.*;
 
 /**
  * RelDataTypeFactory is a factory for datatype descriptors. It defines methods
- * for instantiating and combining SQL, Java, and collection types.
+ * for instantiating and combining SQL, Java, and collection types. The factory
+ * also provides methods for return type inference for arithmetic in cases where
+ * SQL 2003 is implementation defined or impractical.
  *
  * <p>This interface is an example of the {@link
  * org.eigenbase.util.Glossary#AbstractFactoryPattern abstract factory pattern}.
@@ -47,7 +49,6 @@ import org.eigenbase.sql.type.*;
  */
 public interface RelDataTypeFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -97,7 +98,8 @@ public interface RelDataTypeFactory
      * @pre typeList.size() == fieldNameList.size()
      * @post return != null
      */
-    public RelDataType createStructType(List<RelDataType> typeList,
+    public RelDataType createStructType(
+        List<RelDataType> typeList,
         List<String> fieldNameList);
 
     /**
@@ -181,6 +183,11 @@ public interface RelDataTypeFactory
         SqlCollation collation);
 
     /**
+     * @return the default {@link Charset} for string types
+     */
+    public Charset getDefaultCharset();
+
+    /**
      * Returns the most general of a set of types (that is, one type to which
      * they can all be cast), or null if conversion is not possible. The result
      * may be a new type which is less restrictive than any of the input types,
@@ -199,7 +206,7 @@ public interface RelDataTypeFactory
      * Creates a SQL type with no precision or scale.
      *
      * @param typeName Name of the type, for example {@link
-     * SqlTypeName#Boolean}.
+     * SqlTypeName#BOOLEAN}.
      *
      * @return canonical type descriptor
      *
@@ -212,9 +219,10 @@ public interface RelDataTypeFactory
      * Creates a SQL type with length (precision) but no scale.
      *
      * @param typeName Name of the type, for example {@link
-     * org.eigenbase.sql.type.SqlTypeName#Varchar}.
+     * org.eigenbase.sql.type.SqlTypeName#VARCHAR}.
      * @param precision maximum length of the value (non-numeric types) or the
-     * precision of the value (numeric/datetime types)
+     * precision of the value (numeric/datetime types) requires both operands to
+     * have exact numeric types.
      *
      * @return canonical type descriptor
      *
@@ -230,7 +238,7 @@ public interface RelDataTypeFactory
      * Creates a SQL type with precision and scale.
      *
      * @param typeName Name of the type, for example {@link
-     * org.eigenbase.sql.type.SqlTypeName#Decimal}.
+     * org.eigenbase.sql.type.SqlTypeName#DECIMAL}.
      * @param precision precision of the value
      * @param scale scale of the values, i.e. the number of decimal places to
      * shift the value. For example, a NUMBER(10,3) value of "123.45" is
@@ -259,6 +267,46 @@ public interface RelDataTypeFactory
     public RelDataType createSqlIntervalType(
         SqlIntervalQualifier intervalQualifier);
 
+    /**
+     * Infers the return type of a decimal multiplication. Decimal
+     * multiplication involves at least one decimal operand and requires both
+     * operands to have exact numeric types.
+     *
+     * @param type1 type of the first operand
+     * @param type2 type of the second operand
+     *
+     * @return the result type for a decimal multiplication, or null if decimal
+     * multiplication should not be applied to the operands.
+     */
+    public RelDataType createDecimalProduct(
+        RelDataType type1,
+        RelDataType type2);
+
+    /**
+     * @return whether a decimal multiplication should be implemented by casting
+     * arguments to double values.
+     *
+     * @pre createDecimalProduct(type1, type2) != null
+     */
+    public boolean useDoubleMultiplication(
+        RelDataType type1,
+        RelDataType type2);
+
+    /**
+     * Infers the return type of a decimal division. Decimal division involves
+     * at least one decimal operand and requires both operands to have exact
+     * numeric types.
+     *
+     * @param type1 type of the first operand
+     * @param type2 type of the second operand
+     *
+     * @return the result type for a decimal division, or null if decimal
+     * division should not be applied to the operands.
+     */
+    public RelDataType createDecimalQuotient(
+        RelDataType type1,
+        RelDataType type2);
+
     //~ Inner Interfaces -------------------------------------------------------
 
     /**
@@ -266,11 +314,61 @@ public interface RelDataTypeFactory
      */
     public interface FieldInfo
     {
+        /**
+         * Returns the number of fields.
+         *
+         * @return number of fields
+         */
         public int getFieldCount();
 
+        /**
+         * Returns the name of a given field.
+         *
+         * @param index Ordinal of field
+         * @return Name of given field
+         */
         public String getFieldName(int index);
 
+        /**
+         * Returns the type of a given field.
+         *
+         * @param index Ordinal of field
+         * @return Type of given field
+         */
         public RelDataType getFieldType(int index);
+    }
+
+    /**
+     * Simple implementation of {@link FieldInfo}, based on a list of fields.
+     */
+    public static class ListFieldInfo implements FieldInfo
+    {
+        private final List<? extends RelDataTypeField> fieldList;
+
+        /**
+         * Creates a ListFieldInfo.
+         *
+         * @param fieldList List of fields
+         */
+        public ListFieldInfo(List<? extends RelDataTypeField> fieldList)
+        {
+            this.fieldList = fieldList;
+        }
+
+        public int getFieldCount()
+        {
+            return fieldList.size();
+        }
+
+        public String getFieldName(int index)
+        {
+            return fieldList.get(index).getName();
+        }
+
+        public RelDataType getFieldType(int index)
+        {
+            return fieldList.get(index).getType();
+        }
     }
 }
 

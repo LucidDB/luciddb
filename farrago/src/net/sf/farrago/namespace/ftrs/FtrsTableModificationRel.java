@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
@@ -46,7 +48,6 @@ import org.eigenbase.util.*;
 class FtrsTableModificationRel
     extends MedAbstractFennelTableModRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -91,14 +92,14 @@ class FtrsTableModificationRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FtrsTableModificationRel clone()
     {
         FtrsTableModificationRel clone =
             new FtrsTableModificationRel(
                 getCluster(),
                 ftrsTable,
                 getConnection(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList());
         clone.inheritTraitsFrom(this);
@@ -112,15 +113,17 @@ class FtrsTableModificationRel
         return planner.makeTinyCost();
     }
 
-    private List<CwmColumn> getUpdateCwmColumnList()
+    private <E extends CwmColumn> List<E> getUpdateColumnList(Class<E> clazz)
     {
         int n = getUpdateColumnList().size();
-        List<CwmColumn> list = new ArrayList<CwmColumn>();
-        Collection<CwmColumn> columns = (List)
-            ftrsTable.getCwmColumnSet().getFeature();
+        List<E> list = new ArrayList<E>();
+        Collection<E> columns =
+            Util.cast(
+                ftrsTable.getCwmColumnSet().getFeature(),
+                clazz);
         for (int i = 0; i < n; i++) {
             String columnName = getUpdateColumnList().get(i);
-            CwmColumn column =
+            E column =
                 FarragoCatalogUtil.getModelElementByName(
                     columns,
                     columnName);
@@ -133,7 +136,7 @@ class FtrsTableModificationRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());
@@ -141,26 +144,26 @@ class FtrsTableModificationRel
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
-        List<CwmColumn> updateCwmColumnList = null;
+        List<FemAbstractColumn> updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
-        switch (getOperation().getOrdinal()) {
-        case TableModificationRel.Operation.INSERT_ORDINAL:
+        switch (getOperation()) {
+        case INSERT:
             tableWriterDef = repos.newFemTableInserterDef();
             break;
-        case TableModificationRel.Operation.DELETE_ORDINAL:
+        case DELETE:
             tableWriterDef = repos.newFemTableDeleterDef();
             break;
-        case TableModificationRel.Operation.UPDATE_ORDINAL:
+        case UPDATE:
             FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
-            updateCwmColumnList = getUpdateCwmColumnList();
+            updateCwmColumnList = getUpdateColumnList(FemAbstractColumn.class);
             tableUpdaterDef.setUpdateProj(
                 ftrsTable.getIndexGuide().createTupleProjectionFromColumnList(
                     updateCwmColumnList));
             break;
         default:
-            throw getOperation().unexpected();
+            throw Util.unexpected(getOperation());
         }
 
         // We need to be careful about the order in which we write to indexes.
@@ -185,13 +188,15 @@ class FtrsTableModificationRel
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
-        for (FemLocalIndex index
-            : FarragoCatalogUtil.getTableIndexes(repos, table)) {
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             boolean updateInPlace = false;
 
             if (updateCwmColumnList != null) {
-                if (index != clusteredIndex) {
-                    List<? extends Object> coverageList =
+                if (!index.equals(clusteredIndex)) {
+                    List<FemAbstractColumn> coverageList =
                         indexGuide.getUnclusteredCoverageColList(index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
@@ -212,14 +217,14 @@ class FtrsTableModificationRel
             FemIndexWriterDef indexWriter =
                 indexGuide.newIndexWriter(this, index);
             indexWriter.setUpdateInPlace(updateInPlace);
-            if (index != clusteredIndex) {
+            if (!index.equals(clusteredIndex)) {
                 indexWriter.setInputProj(
                     indexGuide.getCoverageProjection(index));
             }
 
             boolean prepend = false;
             if (clusteredFirst) {
-                if (index == clusteredIndex) {
+                if (index.equals(clusteredIndex)) {
                     prepend = true;
                 }
             } else {

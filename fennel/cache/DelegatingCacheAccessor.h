@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,10 +33,10 @@ FENNEL_BEGIN_NAMESPACE
  * of CacheAccessor which delegate part of their behavior to another
  * underlying CacheAccessor.
  */
-class DelegatingCacheAccessor : public CacheAccessor
+class FENNEL_CACHE_EXPORT DelegatingCacheAccessor : public CacheAccessor
 {
     SharedCacheAccessor pDelegate;
-    
+
 public:
     /**
      * Constructor.
@@ -45,7 +45,7 @@ public:
      */
     explicit DelegatingCacheAccessor(
         SharedCacheAccessor pDelegate);
-    
+
     // implement the CacheAccessor interface
     virtual CachePage *lockPage(
         BlockId blockId,
@@ -56,11 +56,11 @@ public:
     virtual void unlockPage(
         CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
     virtual void discardPage(BlockId blockId);
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void flushPage(CachePage &page,bool async);
     virtual void nicePage(CachePage &page);
@@ -69,6 +69,10 @@ public:
     virtual void setMaxLockedPages(uint nPages);
     virtual void setTxnId(TxnId txnId);
     virtual TxnId getTxnId() const;
+    virtual void getPrefetchParams(
+        uint &prefetchPagesMax,
+        uint &prefetchThrottleRate);
+    virtual uint getProcessorCacheBytes();
 };
 
 FENNEL_END_NAMESPACE

@@ -1,50 +1,77 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> -- Q11 (tpch2.6.1)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- rewritten query used before subquery support
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --SELECT
+0: jdbc:luciddb:> --    PS_PARTKEY, SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
+0: jdbc:luciddb:> --FROM
+0: jdbc:luciddb:> --    PARTSUPP, SUPPLIER, NATION,
+0: jdbc:luciddb:> --    (SELECT SUM(PS_SUPPLYCOST * PS_AVAILQTY) * (0.0001 / 0.1) AS TMP
+0: jdbc:luciddb:> --     FROM PARTSUPP, SUPPLIER, NATION
+0: jdbc:luciddb:> --     WHERE PS_SUPPKEY = S_SUPPKEY AND
+0: jdbc:luciddb:> --           S_NATIONKEY = N_NATIONKEY AND
+0: jdbc:luciddb:> --           N_NAME = 'GERMANY') AS TEMPS
+0: jdbc:luciddb:> --WHERE 
+0: jdbc:luciddb:> --    PS_SUPPKEY = S_SUPPKEY AND 
+0: jdbc:luciddb:> --    S_NATIONKEY = N_NATIONKEY AND
+0: jdbc:luciddb:> --    N_NAME = 'GERMANY'
+0: jdbc:luciddb:> --GROUP BY PS_PARTKEY
+0: jdbc:luciddb:> --HAVING SUM(PS_SUPPLYCOST*PS_AVAILQTY) > SUM(TEMPS.TMP)/COUNT(*)
+0: jdbc:luciddb:> --ORDER BY VAL DESC;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT
-. . . . . . . . >     PS_PARTKEY, SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
+. . . . . . . . >     PS_PARTKEY,
+. . . . . . . . >     SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
 . . . . . . . . > FROM
-. . . . . . . . >     PARTSUPP, SUPPLIER, NATION,
-. . . . . . . . >     (SELECT SUM(PS_SUPPLYCOST * PS_AVAILQTY) * 0.001000000 AS TMP
-. . . . . . . . >      FROM PARTSUPP, SUPPLIER, NATION
-. . . . . . . . >      WHERE PS_SUPPKEY = S_SUPPKEY AND
-. . . . . . . . >            S_NATIONKEY = N_NATIONKEY AND
-. . . . . . . . >            N_NAME = 'GERMANY') AS TEMPS
-. . . . . . . . > WHERE 
-. . . . . . . . >     PS_SUPPKEY = S_SUPPKEY AND 
-. . . . . . . . >     S_NATIONKEY = N_NATIONKEY AND
-. . . . . . . . >     N_NAME = 'GERMANY'
-. . . . . . . . > GROUP BY PS_PARTKEY
-. . . . . . . . > HAVING SUM(PS_SUPPLYCOST*PS_AVAILQTY) > SUM(TEMPS.TMP)/COUNT(*)
-. . . . . . . . > ORDER BY VAL;
+. . . . . . . . >     TPCH.PARTSUPP,
+. . . . . . . . >     TPCH.SUPPLIER,
+. . . . . . . . >     TPCH.NATION
+. . . . . . . . > WHERE
+. . . . . . . . >     PS_SUPPKEY = S_SUPPKEY
+. . . . . . . . >     AND S_NATIONKEY = N_NATIONKEY
+. . . . . . . . >     AND N_NAME = 'GERMANY'
+. . . . . . . . > GROUP BY
+. . . . . . . . >     PS_PARTKEY HAVING
+. . . . . . . . >         SUM(PS_SUPPLYCOST * PS_AVAILQTY) > (
+. . . . . . . . >             SELECT
+. . . . . . . . >                 SUM(PS_SUPPLYCOST * PS_AVAILQTY) * (0.0001 / 0.1)
+. . . . . . . . >             FROM
+. . . . . . . . >                 TPCH.PARTSUPP,
+. . . . . . . . >                 TPCH.SUPPLIER,
+. . . . . . . . >                 TPCH.NATION
+. . . . . . . . >             WHERE
+. . . . . . . . >                 PS_SUPPKEY = S_SUPPKEY
+. . . . . . . . >                 AND S_NATIONKEY = N_NATIONKEY
+. . . . . . . . >                 AND N_NAME = 'GERMANY'
+. . . . . . . . >             )
+. . . . . . . . > ORDER BY
+. . . . . . . . >     VAL DESC;
 +-------------+--------------+
 | PS_PARTKEY  |     VAL      |
 +-------------+--------------+
-| 12969       | 10125777.93  |
-| 5043        | 10226395.88  |
-| 12146       | 10257362.66  |
-| 6366        | 10759786.81  |
-| 12231       | 10841131.39  |
-| 9871        | 10889253.68  |
-| 17852       | 10934711.93  |
-| 2860        | 11262529.95  |
-| 18427       | 11282385.24  |
-| 17349       | 11354213.05  |
-| 2084        | 11502875.36  |
-| 1833        | 12024581.72  |
-| 403         | 12856217.34  |
-| 12633       | 12892561.61  |
-| 5797        | 13038622.72  |
-| 1084        | 13170428.29  |
-| 12552       | 13332469.18  |
-| 3452        | 14070870.14  |
-| 17052       | 14351644.20  |
-| 13334       | 15023662.41  |
-| 5134        | 15709338.52  |
 | 12098       | 16227681.21  |
+| 5134        | 15709338.52  |
+| 13334       | 15023662.41  |
+| 17052       | 14351644.20  |
+| 3452        | 14070870.14  |
+| 12552       | 13332469.18  |
+| 1084        | 13170428.29  |
+| 5797        | 13038622.72  |
+| 12633       | 12892561.61  |
+| 403         | 12856217.34  |
+| 1833        | 12024581.72  |
+| 2084        | 11502875.36  |
+| 17349       | 11354213.05  |
+| 18427       | 11282385.24  |
+| 2860        | 11262529.95  |
+| 17852       | 10934711.93  |
+| 9871        | 10889253.68  |
+| 12231       | 10841131.39  |
+| 6366        | 10759786.81  |
+| 12146       | 10257362.66  |
+| 5043        | 10226395.88  |
+| 12969       | 10125777.93  |
 +-------------+--------------+
-0: jdbc:luciddb:> -- ORDER BY VAL DESC;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

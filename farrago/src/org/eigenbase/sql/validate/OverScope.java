@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,10 @@
 */
 package org.eigenbase.sql.validate;
 
+import java.util.*;
+
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -29,31 +32,28 @@ import org.eigenbase.sql.*;
  * the parameters found on the left side of the over clause, and objects
  * inherited from the parent scope.
  *
- * <p/>
  * <p>This object is both a {@link SqlValidatorScope} only. In the query
  *
- * <p/>
  * <blockquote>
  * <pre>SELECT name FROM (
  *     SELECT *
- *     FROM emp over (order by empno range between 2 preceding and 2 following)
+ *     FROM emp OVER (
+ *         ORDER BY empno
+ *         RANGE BETWEEN 2 PRECEDING AND 2 FOLLOWING))
  * </pre>
  * </blockquote>
  *
  * <p/>
- * <p>we need to use the {@link OverScope} as a {@link SqlValidatorNamespace}
- * when resolving names used in the window specification.
- *
- * <p/>
+ * <p>We need to use the {@link OverScope} as a {@link SqlValidatorNamespace}
+ * when resolving names used in the window specification.</p>
  *
  * @author jack
  * @version $Id$
- * @since Mar 25, 2003
+ * @since Jun 29, 2005
  */
 public class OverScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall overCall;
@@ -64,9 +64,10 @@ public class OverScope
      * Creates a scope corresponding to a SELECT clause.
      *
      * @param parent Parent scope, or null
-     * @param overCall
+     * @param overCall Call to OVER operator
      */
-    OverScope(SqlValidatorScope parent,
+    OverScope(
+        SqlValidatorScope parent,
         SqlCall overCall)
     {
         super(parent);
@@ -80,23 +81,24 @@ public class OverScope
         return overCall;
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        if (expr.isMonotonic(this)) {
-            return true;
+        SqlMonotonicity monotonicity = expr.getMonotonicity(this);
+        if (monotonicity != SqlMonotonicity.NotMonotonic) {
+            return monotonicity;
         }
 
         if (children.size() == 1) {
-            final SqlNodeList monotonicExprs =
-                children.get(0).getMonotonicExprs();
-            for (int i = 0; i < monotonicExprs.size(); i++) {
-                SqlNode monotonicExpr = monotonicExprs.get(i);
-                if (expr.equalsDeep(monotonicExpr, false)) {
-                    return true;
+            final SqlValidatorNamespace child = children.get(0);
+            final List<Pair<SqlNode, SqlMonotonicity>> monotonicExprs =
+                child.getMonotonicExprs();
+            for (Pair<SqlNode, SqlMonotonicity> pair : monotonicExprs) {
+                if (expr.equalsDeep(pair.left, false)) {
+                    return pair.right;
                 }
             }
         }
-        return super.isMonotonic(expr);
+        return super.getMonotonicity(expr);
     }
 }
 

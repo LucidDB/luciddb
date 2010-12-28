@@ -1,866 +1,842 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test distinct aggregate queries
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> -- Test Sort Aggreagtes --
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes"=min;
-0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct city) from emps;
+> -- $Id$
+> -- Test distinct aggregate queries
+> 
+> set schema 'sales';
+> 
+> --------------------------
+> -- Test Sort Aggreagtes --
+> --------------------------
+> alter session implementation set default;
+> -- for first portion, prevent usage of hash agg so that we can use
+> -- test sort-based agg instead
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter('LhxAggRule');
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> !set outputformat table
+> 
+> select count(distinct city) from emps;
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct city) from emps where empno > 100000;
+> 
+> select count(distinct city) from emps where empno > 100000;
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- mixed distinct and non-distinct aggs
-0: jdbc:farrago:> select sum(distinct empno), sum(empno) from emps;
+> 
+> -- mixed distinct and non-distinct aggs
+> select sum(distinct empno), sum(empno) from emps;
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 | 330     | 440     |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- mixed distinct and non-distinct aggs
-0: jdbc:farrago:> select count(distinct manager), count(distinct gender),
-. . . . . . . . >    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
+> 
+> -- mixed distinct and non-distinct aggs
+> select count(distinct manager), count(distinct gender),
+>    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
 +---------+---------+---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
 +---------+---------+---------+---------+---------+
 | 2       | 2       | 330     | 330     | 440     |
 +---------+---------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- expressions of distinct-aggs of expressions
-0: jdbc:farrago:> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
-. . . . . . . . >  from emps group by deptno order by 1,2;
+> 
+> -- expressions of distinct-aggs of expressions
+> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
+>  from emps group by deptno order by 1,2;
 Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in any table (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- group bys
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select deptno, count(distinct empno) from emps group by deptno order by 1,2;
-+---------------------------+
-|          column0          |
-+---------------------------+
-| DEPTNO INTEGER NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL    |
-+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno, count(distinct empno) from emps group by deptno order by 1,2;
-+---------+---------+
-| DEPTNO  | EXPR$1  |
-+---------+---------+
-| 10      | 1       |
-| 20      | 2       |
-| 40      | 1       |
-+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- group by boolean, nullable key
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
-+-------------------------+
-|         column0         |
-+-------------------------+
-| SLACKER BOOLEAN,        |
-| EXPR$1 BIGINT NOT NULL  |
-+-------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
-+----------+---------+
-| SLACKER  | EXPR$1  |
-+----------+---------+
-|          | 1       |
-| false    | 1       |
-| true     | 1       |
-+----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test where input stream is empty
-0: jdbc:farrago:> select deptno, count(distinct empno), count(*) from emps
-. . . . . . . . >  where deptno < 0 group by deptno order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- group, but don't project group column
-0: jdbc:farrago:> select count(distinct e.slacker and e.manager) from emps as e group by deptno
-. . . . . . . . > order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-| 1       |
-| 1       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- query without any non-distinct aggs
-0: jdbc:farrago:> select deptno, sum(distinct age), count(distinct gender)
-. . . . . . . . > from emps
-. . . . . . . . > group by deptno
-. . . . . . . . > order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| 10      | 25      | 0       |
-| 20      | 130     | 2       |
-| 40      |         | 1       |
-+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this is what the previous query expands to (make sure it returns the same)
-0: jdbc:farrago:> SELECT de.deptno, adage.sum_age, adgender.count_gender
-. . . . . . . . > FROM (
-. . . . . . . . >    SELECT deptno
-. . . . . . . . >    FROM Emps AS e
-. . . . . . . . >    GROUP BY deptno) AS de
-. . . . . . . . > JOIN (
-. . . . . . . . >    SELECT deptno, COUNT(gender) AS count_gender
-. . . . . . . . >    FROM (
-. . . . . . . . >      SELECT DISTINCT deptno, gender
-. . . . . . . . >      FROM Emps) AS dgender
-. . . . . . . . >    GROUP BY deptno) AS adgender
-. . . . . . . . > ON de.deptno = adgender.deptno
-. . . . . . . . > JOIN (
-. . . . . . . . >    SELECT deptno, SUM(age) AS sum_age
-. . . . . . . . >    FROM (
-. . . . . . . . >       SELECT DISTINCT deptno, age
-. . . . . . . . >       FROM Emps) AS dage
-. . . . . . . . >       GROUP BY deptno) AS adage
-. . . . . . . . > ON de.deptno = adage.deptno
-. . . . . . . . > order by 1,2,3;
-+---------+----------+---------------+
-| DEPTNO  | SUM_AGE  | COUNT_GENDER  |
-+---------+----------+---------------+
-| 10      | 25       | 0             |
-| 20      | 130      | 2             |
-| 40      |          | 1             |
-+---------+----------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------
-0: jdbc:farrago:> -- joins
-0: jdbc:farrago:> --------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- cartesian
-0: jdbc:farrago:> select count(distinct emps.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 3       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct emps.empno + e.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 5       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- count of a nullable column is not null
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select d.name, count(distinct e.empid), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid;
-+--------------------------------------------------------------------------------------------+
-|                                          column0                                           |
-+--------------------------------------------------------------------------------------------+
-| NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL,                                                                    |
-| EMPID INTEGER NOT NULL                                                                     |
-+--------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid
-. . . . . . . . > order by 1,2,3,4;
-+------------+---------+---------+--------+
-|    NAME    | EXPR$1  | EXPR$2  | EMPID  |
-+------------+---------+---------+--------+
-| Marketing  | 1       | 1       | 1      |
-| Marketing  | 1       | 1       | 3      |
-| Sales      | 1       | 0       | 30     |
-+------------+---------+---------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
-. . . . . . . . > from emps as e join depts as d on e.deptno = d.deptno
-. . . . . . . . > group by d.name
-. . . . . . . . > order by 1,2,3;
-+------------+---------+---------+
-|    NAME    | EXPR$1  | EXPR$2  |
-+------------+---------+---------+
-| Marketing  | 2       | 1       |
-| Sales      | 1       | 1       |
-+------------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- ------------
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> -- ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct city) from emps;
+> 
+> ------------
+> -- group bys
+> ------------
+> 
+> !set outputformat csv
+> explain plan with type for
+> select deptno, count(distinct empno) from emps group by deptno order by 1,2;
+'column0'
+'DEPTNO INTEGER NOT NULL,'
+'EXPR$1 BIGINT NOT NULL'
+> 
+> select deptno, count(distinct empno) from emps group by deptno order by 1,2;
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
+> 
+> -- group by boolean, nullable key
+> explain plan with type for
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
+'column0'
+'SLACKER BOOLEAN,'
+'EXPR$1 BIGINT NOT NULL'
+> 
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
+'SLACKER','EXPR$1'
+'','1'
+'false','1'
+'true','1'
+> 
+> -- Test where input stream is empty
+> select deptno, count(distinct empno), count(*) from emps
+>  where deptno < 0 group by deptno order by 1,2,3;
+'DEPTNO','EXPR$1','EXPR$2'
+> 
+> -- group, but don't project group column
+> select count(distinct e.slacker and e.manager) from emps as e group by deptno
+> order by 1;
+'EXPR$0'
+'1'
+'1'
+'1'
+> 
+> -- query without any non-distinct aggs
+> select deptno, sum(distinct age), count(distinct gender)
+> from emps
+> group by deptno
+> order by 1,2,3;
+'DEPTNO','EXPR$1','EXPR$2'
+'10','25','0'
+'20','130','2'
+'40','','1'
+> 
+> -- this is what the previous query expands to (make sure it returns the same)
+> SELECT de.deptno, adage.sum_age, adgender.count_gender
+> FROM (
+>    SELECT deptno
+>    FROM Emps AS e
+>    GROUP BY deptno) AS de
+> JOIN (
+>    SELECT deptno, COUNT(gender) AS count_gender
+>    FROM (
+>      SELECT DISTINCT deptno, gender
+>      FROM Emps) AS dgender
+>    GROUP BY deptno) AS adgender
+> ON de.deptno = adgender.deptno
+> JOIN (
+>    SELECT deptno, SUM(age) AS sum_age
+>    FROM (
+>       SELECT DISTINCT deptno, age
+>       FROM Emps) AS dage
+>       GROUP BY deptno) AS adage
+> ON de.deptno = adage.deptno
+> order by 1,2,3;
+'DEPTNO','SUM_AGE','COUNT_GENDER'
+'10','25','0'
+'20','130','2'
+'40','','1'
+> 
+> -- group by with mixed distinct and non-distinct aggs
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno
+> order by 1;
+'DEPTNO','EXPR$1','EXPR$2','EXPR$3'
+'10','25','0','25'
+'20','130','2','80'
+'40','','1',''
+> 
+> --------
+> -- joins
+> --------
+> 
+> -- cartesian
+> select count(distinct emps.empno) from emps as e, emps;
+'EXPR$0'
+'3'
+> 
+> select count(distinct emps.empno + e.empno) from emps as e, emps;
+'EXPR$0'
+'5'
+> 
+> -- count of a nullable column is not null
+> explain plan with type for
+> select d.name, count(distinct e.empid), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid;
+'column0'
+'NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,'
+'EXPR$1 BIGINT NOT NULL,'
+'EMPID INTEGER NOT NULL'
+> 
+> select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid
+> order by 1,2,3,4;
+'NAME','EXPR$1','EXPR$2','EMPID'
+'Marketing','1','1','1'
+'Marketing','1','1','3'
+'Sales','1','0','30'
+> 
+> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
+> from emps as e join depts as d on e.deptno = d.deptno
+> group by d.name
+> order by 1,2,3;
+'NAME','EXPR$1','EXPR$2'
+'Marketing','2','1'
+'Sales','1','1'
+> 
+> 
+> -- ------------
+> -- verify plans
+> -- ------------
+> 
+> !set outputformat csv
+> 
+> explain plan for
+> select count(distinct city) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct city) from emps where empno > 100000;
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct city) from emps where empno > 100000;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'        FennelReshapeRel(projection=[[1]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[100000]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" $f0) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct manager), count(distinct gender),
-. . . . . . . . >    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'      FennelReshapeRel(projection=[[1]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[100000]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct manager), count(distinct gender),
+>    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1, EXPR$2, EXPR$3, EXPR$4]])'
-'    FennelReshapeRel(projection=[[1, 2, 3, 4, 0]], outputRowType=[RecordType(BIGINT NOT NULL $f0, BIGINT NOT NULL $f1, INTEGER $f2, INTEGER $f3, INTEGER $f4) NOT NULL])'
+'  FennelReshapeRel(projection=[[1, 2, 3, 3, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..1=[{inputs}], EXPR$4=[$t1], EXPR$0=[$t0])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FennelAggRel(groupCount=[0], agg#0=[SUM(2)])'
-'              FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'                FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'                  FennelRenameRel(fieldNames=[[$f0]])'
-'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'            FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'                FennelRenameRel(fieldNames=[[$f1]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'            FennelBufferRel(inMemory=[false], multiPass=[true])'
+'              FennelAggRel(groupCount=[0], EXPR$4=[SUM($2)])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(0)])'
+'          FennelAggRel(groupCount=[0], EXPR$1=[COUNT($0)])'
 '            FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'              FennelRenameRel(fieldNames=[[$f2]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
-. . . . . . . . >  from emps group by deptno;
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$3=[SUM($0)])'
+'          FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
+>  from emps group by deptno;
 Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in any table (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans for group bys
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, count(distinct empno) from emps group by deptno;
+> 
+> -- verify plans for group bys
+> 
+> explain plan for
+> select deptno, count(distinct empno) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1]])'
-'    FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
+'  FennelAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'      FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[SLACKER, EXPR$1]])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'    FennelAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, count(distinct empno), count(*) from emps
+>  where deptno < 0 group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
+'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'              FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'            FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, count(distinct empno), count(*) from emps
-. . . . . . . . >  where deptno < 0 group by deptno;
-'column0'
-'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], $f0=[$t0], $f1=[$t3], $f2=[$t1], $condition=[$t4])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
-'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'            FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
-'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'                FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 0 }]])'
-'        FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'            FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'              FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
-'                FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'                  FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 0 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct e.slacker and e.manager) from emps as e group by deptno;
+'            FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'                FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
+> 
+> explain plan for
+> select count(distinct e.slacker and e.manager) from emps as e group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'    FennelAggRel(groupCount=[1], EXPR$0=[COUNT($1)])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], $f0=[$t0], $f1=[$t3])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, sum(distinct age), count(distinct gender)
-. . . . . . . . > from emps
-. . . . . . . . > group by deptno;
+'          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], DEPTNO=[$t0], $f1=[$t3])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender)
+> from emps
+> group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t4])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t1)], $f0=[$t0], $f1=[$t2], $condition=[$t3])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FennelAggRel(groupCount=[1])'
-'              FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
-'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                    FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 4, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, INTEGER EXPR$1) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'          FennelAggRel(groupCount=[1], EXPR$3=[MAX($1)])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FennelAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
 '            FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                FennelRenameRel(fieldNames=[[$f0, $f2]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans for joins
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct emps.empno) from emps as e, emps;
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> -- verify plans for joins
+> 
+> explain plan for
+> select count(distinct emps.empno) from emps as e, emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'        FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO0) NOT NULL])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct emps.empno + e.empno) from emps as e, emps;
+> 
+> explain plan for
+> select count(distinct emps.empno + e.empno) from emps as e, emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[+($t1, $t0)], $f0=[$t2])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[+($t1, $t0)], $f0=[$t2])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(distinct e.empid), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid;
+> 
+> explain plan for
+> select d.name, count(distinct e.empid), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, INTEGER NOT NULL EMPID) NOT NULL])'
-'    FennelAggRel(groupCount=[2], agg#0=[COUNT(1)])'
+'    FennelAggRel(groupCount=[2], EXPR$1=[COUNT($1)])'
 '      FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'          FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t2, $t0)], $f0=[$t1], $f1=[$t3], $condition=[$t4])'
-'            FennelCartesianProductRel(leftouterjoin=[false])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'              FennelBufferRel(inMemory=[false], multiPass=[true])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
-. . . . . . . . > from emps as e join depts as d on e.deptno = d.deptno
-. . . . . . . . > group by d.name;
+'          FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPID) NOT NULL])'
+'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID], preserveOrder=[false])'
+> 
+> explain plan for
+> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
+> from emps as e join depts as d on e.deptno = d.deptno
+> group by d.name;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[NAME, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t4])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t1)], $f0=[$t0], $f1=[$t2], $condition=[$t3])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FennelAggRel(groupCount=[1])'
-'              FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], $f0=[$t11], $f1=[$t0], $f2=[$t12])'
-'                  FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'                  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                    FennelReshapeRel(projection=[[11, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
-'                      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'                        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], $f0=[$t11], $f2=[$t12])'
-'                  FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> -- Test Hash Aggreagtes --
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes"=max;
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct city) from emps;
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FennelReshapeRel(projection=[[11, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], NAME=[$t11], $f2=[$t12])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> --------------------------
+> -- Test Hash Aggreagtes --
+> --------------------------
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> call sys_boot.mgmt.flush_code_cache();
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> !set outputformat table
+> 
+> select count(distinct city) from emps;
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct city) from emps where empno > 100000;
+> 
+> select count(distinct city) from emps where empno > 100000;
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- mixed distinct and non-distinct aggs
-0: jdbc:farrago:> select sum(distinct empno), sum(empno) from emps;
+> 
+> -- multiple distinct with no non-distinct and no group by (FRG-229)
+> select sum(distinct empno), sum(distinct deptno) from emps;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 330     | 70      |
++---------+---------+
+> 
+> -- mixed distinct and non-distinct aggs
+> select sum(distinct empno), sum(empno) from emps;
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 | 330     | 440     |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- mixed distinct and non-distinct aggs
-0: jdbc:farrago:> select count(distinct manager), count(distinct gender),
-. . . . . . . . >    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
+> 
+> -- mixed distinct and non-distinct aggs
+> select count(distinct manager), count(distinct gender),
+>    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
 +---------+---------+---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
 +---------+---------+---------+---------+---------+
 | 2       | 2       | 330     | 330     | 440     |
 +---------+---------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- expressions of distinct-aggs of expressions
-0: jdbc:farrago:> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
-. . . . . . . . >  from emps group by deptno order by 1,2;
+> 
+> -- expressions of distinct-aggs of expressions
+> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
+>  from emps group by deptno order by 1,2;
 Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in any table (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- group bys
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select deptno, count(distinct empno) from emps group by deptno order by deptno;
-+---------------------------+
-|          column0          |
-+---------------------------+
-| DEPTNO INTEGER NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL    |
-+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno, count(distinct empno) from emps group by deptno order by deptno;
-+---------+---------+
-| DEPTNO  | EXPR$1  |
-+---------+---------+
-| 10      | 1       |
-| 20      | 2       |
-| 40      | 1       |
-+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- group by boolean, nullable key
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
-+-------------------------+
-|         column0         |
-+-------------------------+
-| SLACKER BOOLEAN,        |
-| EXPR$1 BIGINT NOT NULL  |
-+-------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
-+----------+---------+
-| SLACKER  | EXPR$1  |
-+----------+---------+
-|          | 1       |
-| false    | 1       |
-| true     | 1       |
-+----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test where input stream is empty
-0: jdbc:farrago:> select deptno, count(distinct empno), count(*) from emps
-. . . . . . . . >  where deptno < 0 group by deptno order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- group, but don't project group column
-0: jdbc:farrago:> select count(distinct e.slacker and e.manager) from emps as e group by deptno
-. . . . . . . . > order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-| 1       |
-| 1       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- query without any non-distinct aggs
-0: jdbc:farrago:> select deptno, sum(distinct age), count(distinct gender)
-. . . . . . . . > from emps
-. . . . . . . . > group by deptno
-. . . . . . . . > order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| 10      | 25      | 0       |
-| 20      | 130     | 2       |
-| 40      |         | 1       |
-+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this is what the previous query expands to (make sure it returns the same)
-0: jdbc:farrago:> SELECT de.deptno, adage.sum_age, adgender.count_gender
-. . . . . . . . > FROM (
-. . . . . . . . >    SELECT deptno
-. . . . . . . . >    FROM Emps AS e
-. . . . . . . . >    GROUP BY deptno) AS de
-. . . . . . . . > JOIN (
-. . . . . . . . >    SELECT deptno, COUNT(gender) AS count_gender
-. . . . . . . . >    FROM (
-. . . . . . . . >      SELECT DISTINCT deptno, gender
-. . . . . . . . >      FROM Emps) AS dgender
-. . . . . . . . >    GROUP BY deptno) AS adgender
-. . . . . . . . > ON de.deptno = adgender.deptno
-. . . . . . . . > JOIN (
-. . . . . . . . >    SELECT deptno, SUM(age) AS sum_age
-. . . . . . . . >    FROM (
-. . . . . . . . >       SELECT DISTINCT deptno, age
-. . . . . . . . >       FROM Emps) AS dage
-. . . . . . . . >       GROUP BY deptno) AS adage
-. . . . . . . . > ON de.deptno = adage.deptno
-. . . . . . . . > order by 1,2,3;
-+---------+----------+---------------+
-| DEPTNO  | SUM_AGE  | COUNT_GENDER  |
-+---------+----------+---------------+
-| 10      | 25       | 0             |
-| 20      | 130      | 2             |
-| 40      |          | 1             |
-+---------+----------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------
-0: jdbc:farrago:> -- joins
-0: jdbc:farrago:> --------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- cartesian
-0: jdbc:farrago:> select count(distinct emps.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 3       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(distinct emps.empno + e.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 5       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- count of a nullable column is not null
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select d.name, count(distinct e.empid), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid;
-+--------------------------------------------------------------------------------------------+
-|                                          column0                                           |
-+--------------------------------------------------------------------------------------------+
-| NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL,                                                                    |
-| EMPID INTEGER NOT NULL                                                                     |
-+--------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid
-. . . . . . . . > order by 1,2,3,4;
-+------------+---------+---------+--------+
-|    NAME    | EXPR$1  | EXPR$2  | EMPID  |
-+------------+---------+---------+--------+
-| Marketing  | 1       | 1       | 1      |
-| Marketing  | 1       | 1       | 3      |
-| Sales      | 1       | 0       | 30     |
-+------------+---------+---------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
-. . . . . . . . > from emps as e join depts as d on e.deptno = d.deptno
-. . . . . . . . > group by d.name
-. . . . . . . . > order by 1,2,3;
-+------------+---------+---------+
-|    NAME    | EXPR$1  | EXPR$2  |
-+------------+---------+---------+
-| Marketing  | 2       | 1       |
-| Sales      | 1       | 1       |
-+------------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select e.name, d.deptno, sum(e.age), count(distinct d.name) 
-. . . . . . . . > from emps e, depts d where e.deptno = d.deptno
-. . . . . . . . > group by e.name, d.deptno
-. . . . . . . . > order by 1;
-+--------+---------+---------+---------+
-|  NAME  | DEPTNO  | EXPR$2  | EXPR$3  |
-+--------+---------+---------+---------+
-| Eric   | 20      | 80      | 1       |
-| Fred   | 10      | 25      | 1       |
-| Wilma  | 20      | 50      | 1       |
-+--------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- ------------
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> -- ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct city) from emps;
+> 
+> ------------
+> -- group bys
+> ------------
+> 
+> !set outputformat csv
+> explain plan with type for
+> select deptno, count(distinct empno) from emps group by deptno order by deptno;
+'column0'
+'DEPTNO INTEGER NOT NULL,'
+'EXPR$1 BIGINT NOT NULL'
+> 
+> select deptno, count(distinct empno) from emps group by deptno order by deptno;
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
+> 
+> -- group by boolean, nullable key
+> explain plan with type for
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
+'column0'
+'SLACKER BOOLEAN,'
+'EXPR$1 BIGINT NOT NULL'
+> 
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
+'SLACKER','EXPR$1'
+'','1'
+'false','1'
+'true','1'
+> 
+> -- Test where input stream is empty
+> select deptno, count(distinct empno), count(*) from emps
+>  where deptno < 0 group by deptno order by 1,2,3;
+'DEPTNO','EXPR$1','EXPR$2'
+> 
+> -- group, but don't project group column
+> select count(distinct e.slacker and e.manager) from emps as e group by deptno
+> order by 1;
+'EXPR$0'
+'1'
+'1'
+'1'
+> 
+> -- query without any non-distinct aggs
+> select deptno, sum(distinct age), count(distinct gender)
+> from emps
+> group by deptno
+> order by 1,2,3;
+'DEPTNO','EXPR$1','EXPR$2'
+'10','25','0'
+'20','130','2'
+'40','','1'
+> 
+> -- this is what the previous query expands to (make sure it returns the same)
+> SELECT de.deptno, adage.sum_age, adgender.count_gender
+> FROM (
+>    SELECT deptno
+>    FROM Emps AS e
+>    GROUP BY deptno) AS de
+> JOIN (
+>    SELECT deptno, COUNT(gender) AS count_gender
+>    FROM (
+>      SELECT DISTINCT deptno, gender
+>      FROM Emps) AS dgender
+>    GROUP BY deptno) AS adgender
+> ON de.deptno = adgender.deptno
+> JOIN (
+>    SELECT deptno, SUM(age) AS sum_age
+>    FROM (
+>       SELECT DISTINCT deptno, age
+>       FROM Emps) AS dage
+>       GROUP BY deptno) AS adage
+> ON de.deptno = adage.deptno
+> order by 1,2,3;
+'DEPTNO','SUM_AGE','COUNT_GENDER'
+'10','25','0'
+'20','130','2'
+'40','','1'
+> 
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno
+> order by 1;
+'DEPTNO','EXPR$1','EXPR$2','EXPR$3'
+'10','25','0','25'
+'20','130','2','80'
+'40','','1',''
+> 
+> --------
+> -- joins
+> --------
+> 
+> -- cartesian
+> select count(distinct emps.empno) from emps as e, emps;
+'EXPR$0'
+'3'
+> 
+> select count(distinct emps.empno + e.empno) from emps as e, emps;
+'EXPR$0'
+'5'
+> 
+> -- count of a nullable column is not null
+> explain plan with type for
+> select d.name, count(distinct e.empid), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid;
+'column0'
+'NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,'
+'EXPR$1 BIGINT NOT NULL,'
+'EMPID INTEGER NOT NULL'
+> 
+> select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid
+> order by 1,2,3,4;
+'NAME','EXPR$1','EXPR$2','EMPID'
+'Marketing','1','1','1'
+'Marketing','1','1','3'
+'Sales','1','0','30'
+> 
+> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
+> from emps as e join depts as d on e.deptno = d.deptno
+> group by d.name
+> order by 1,2,3;
+'NAME','EXPR$1','EXPR$2'
+'Marketing','2','1'
+'Sales','1','1'
+> 
+> select e.name, d.deptno, sum(e.age), count(distinct d.name) 
+> from emps e, depts d where e.deptno = d.deptno
+> group by e.name, d.deptno
+> order by 1;
+'NAME','DEPTNO','EXPR$2','EXPR$3'
+'Eric','20','80','1'
+'Fred','10','25','1'
+'Wilma','20','50','1'
+> 
+> -- ------------
+> -- verify plans
+> -- ------------
+> 
+> !set outputformat csv
+> 
+> explain plan for
+> select count(distinct city) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct city) from emps where empno > 100000;
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(groupCount=[1])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct city) from emps where empno > 100000;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelReshapeRel(projection=[[1]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[100000]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" $f0) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct manager), count(distinct gender),
-. . . . . . . . >    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(groupCount=[1])'
+'      FennelReshapeRel(projection=[[1]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[100000]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct manager), count(distinct gender),
+>    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1, EXPR$2, EXPR$3, EXPR$4]])'
-'    FennelReshapeRel(projection=[[1, 2, 3, 4, 0]], outputRowType=[RecordType(BIGINT NOT NULL $f0, BIGINT NOT NULL $f1, INTEGER $f2, INTEGER $f3, INTEGER $f4) NOT NULL])'
+'  FennelReshapeRel(projection=[[3, 2, 1, 1, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FennelAggRel(groupCount=[0], agg#0=[SUM(2)])'
-'              FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FennelBufferRel(inMemory=[false], multiPass=[true])'
-'              FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'                LhxAggRel(groupCount=[1])'
-'                  FennelRenameRel(fieldNames=[[$f0]])'
-'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'              LhxAggRel(groupCount=[1])'
-'                FennelRenameRel(fieldNames=[[$f1]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(0)])'
+'          FennelAggRel(groupCount=[0], EXPR$4=[SUM($2)])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FennelAggRel(groupCount=[0], EXPR$3=[SUM($0)])'
 '            LhxAggRel(groupCount=[1])'
-'              FennelRenameRel(fieldNames=[[$f2]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
-. . . . . . . . >  from emps group by deptno;
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'        FennelAggRel(groupCount=[0], EXPR$1=[COUNT($0)])'
+'          LhxAggRel(groupCount=[1])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'        LhxAggRel(groupCount=[1])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
+>  from emps group by deptno;
 Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in any table (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans for group bys
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, count(distinct empno) from emps group by deptno;
+> 
+> explain plan for
+> select sum(distinct empno), sum(distinct deptno) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1]])'
-'    LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'      LhxAggRel(groupCount=[2])'
-'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select slacker, count(distinct deptno) from emps
-. . . . . . . . >  group by slacker order by slacker;
+'  FennelCartesianProductRel(leftouterjoin=[false])'
+'    FennelAggRel(groupCount=[0], EXPR$0=[SUM($0)])'
+'      LhxAggRel(groupCount=[1])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'    FennelAggRel(groupCount=[0], EXPR$1=[SUM($0)])'
+'      LhxAggRel(groupCount=[1])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> -- verify plans for group bys
+> 
+> explain plan for
+> select deptno, count(distinct empno) from emps group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'    LhxAggRel(groupCount=[2])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select slacker, count(distinct deptno) from emps
+>  group by slacker order by slacker;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[SLACKER, EXPR$1]])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'        LhxAggRel(groupCount=[2])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, count(distinct empno), count(*) from emps
-. . . . . . . . >  where deptno < 0 group by deptno;
+'    LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'      LhxAggRel(groupCount=[2])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, count(distinct empno), count(*) from emps
+>  where deptno < 0 group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, BIGINT NOT NULL $f1, BIGINT NOT NULL $f2) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'          FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT()])'
+'        FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
-'        LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'          LhxAggRel(groupCount=[2])'
-'            FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct e.slacker and e.manager) from emps as e group by deptno;
+> 
+> explain plan for
+> select count(distinct e.slacker and e.manager) from emps as e group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT($1)])'
 '      LhxAggRel(groupCount=[2])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], $f0=[$t0], $f1=[$t3])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, sum(distinct age), count(distinct gender)
-. . . . . . . . > from emps
-. . . . . . . . > group by deptno;
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], DEPTNO=[$t0], $f1=[$t3])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender)
+> from emps
+> group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelReshapeRel(projection=[[2, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f1, BIGINT NOT NULL $f2) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'          LhxAggRel(groupCount=[2])'
-'            FennelRenameRel(fieldNames=[[$f0, $f2]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f1) NOT NULL])'
-'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LhxAggRel(groupCount=[1])'
-'              FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
-'              LhxAggRel(groupCount=[2])'
-'                FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans for joins
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct emps.empno) from emps as e, emps;
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(distinct emps.empno + e.empno) from emps as e, emps;
+'  FennelReshapeRel(projection=[[0, 4, 2, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'          LhxAggRel(groupCount=[1], EXPR$3=[MAX($1)])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          LhxAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'            LhxAggRel(groupCount=[2])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> -- verify plans for joins
+> 
+> explain plan for
+> select count(distinct emps.empno) from emps as e, emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[+($t1, $t0)], $f0=[$t2])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(distinct e.empid), e.empid
-. . . . . . . . > from depts as d join emps as e on e.deptno = d.deptno
-. . . . . . . . > group by d.name, e.empid;
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(groupCount=[1])'
+'      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO0) NOT NULL])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select count(distinct emps.empno + e.empno) from emps as e, emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
+'    LhxAggRel(groupCount=[1])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[+($t1, $t0)], $f0=[$t2])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select d.name, count(distinct e.empid), e.empid
+> from depts as d join emps as e on e.deptno = d.deptno
+> group by d.name, e.empid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, INTEGER NOT NULL EMPID) NOT NULL])'
-'    LhxAggRel(groupCount=[2], agg#0=[COUNT(1)])'
+'    LhxAggRel(groupCount=[2], EXPR$1=[COUNT($1)])'
 '      LhxAggRel(groupCount=[2])'
-'        FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
+'        FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPID) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
-. . . . . . . . > from emps as e join depts as d on e.deptno = d.deptno
-. . . . . . . . > group by d.name;
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID], preserveOrder=[false])'
+> 
+> explain plan for
+> select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
+> from emps as e join depts as d on e.deptno = d.deptno
+> group by d.name;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[NAME, EXPR$1, EXPR$2]])'
-'    FennelReshapeRel(projection=[[2, 3, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, BIGINT NOT NULL $f1, BIGINT NOT NULL $f2) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelReshapeRel(projection=[[5, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT($1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelCalcRel(expr#0..5=[{inputs}], expr#6=[OR($t2, $t3)], NAME=[$t5], $f2=[$t6])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select e.name, d.deptno, sum(e.age), count(distinct d.name) 
+> from emps e, depts d where e.deptno = d.deptno
+> group by e.name, d.deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 5]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, INTEGER EXPR$2, BIGINT NOT NULL EXPR$3) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], filterNulls=[[]], joinType=[INNER])'
+'      LhxAggRel(groupCount=[2], EXPR$2=[SUM($2)])'
+'        FennelReshapeRel(projection=[[0, 3, 2, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, INTEGER AGE, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME0) NOT NULL])'
+'          FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[2], EXPR$3=[COUNT($2)])'
+'        LhxAggRel(groupCount=[3])'
+'          FennelReshapeRel(projection=[[0, 3, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME0) NOT NULL])'
+'            FennelMultiUseBufferRel(inMemory=[false], readerRefCountParamId=[1])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> ----------------------------------------
+> -- test agg distinct with null values --
+> ----------------------------------------
+> create table test(i int, j int, k int);
+> 
+> insert into test values (1, 2, 3);
+> insert into test values (null, 4, 5);
+> 
+> explain plan without implementation for
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'column0'
+'SortRel(sort0=[$0], dir0=[Ascending])'
+'  AggregateRel(groupCount=[1], EXPR$1=[COUNT(DISTINCT $1)], EXPR$2=[SUM($2)])'
+'    TableAccessRel(table=[[LOCALDB, SALES, TEST]])'
+> 
+> explain plan for
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER I, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'        LhxAggRel(groupCount=[1], EXPR$2=[SUM($2)])'
+'          LcsRowScanRel(table=[[LOCALDB, SALES, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$I, SYS$CLUSTERED_INDEX$TEST$J, SYS$CLUSTERED_INDEX$TEST$K]])'
+'        LhxAggRel(groupCount=[1], EXPR$1=[COUNT($1)])'
 '          LhxAggRel(groupCount=[2])'
-'            FennelCalcRel(expr#0..4=[{inputs}], expr#5=[OR($t1, $t2)], $f0=[$t4], $f2=[$t5])'
-'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, BIGINT NOT NULL $f1) NOT NULL])'
-'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LhxAggRel(groupCount=[1])'
-'              FennelCalcRel(expr#0..5=[{inputs}], expr#6=[OR($t2, $t3)], $f0=[$t5], $f1=[$t0], $f2=[$t6])'
-'                FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'              LhxAggRel(groupCount=[2])'
-'                FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
-'                  FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select e.name, d.deptno, sum(e.age), count(distinct d.name) 
-. . . . . . . . > from emps e, depts d where e.deptno = d.deptno
-. . . . . . . . > group by e.name, d.deptno;
-'column0'
-'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[NAME, DEPTNO, EXPR$2, EXPR$3]])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 5]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1, INTEGER $f2, BIGINT NOT NULL $f3) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[INNER])'
-'        LhxAggRel(groupCount=[2], agg#0=[SUM(2)])'
-'          FennelReshapeRel(projection=[[0, 3, 2, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1, INTEGER $f2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f3) NOT NULL])'
-'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        LhxAggRel(groupCount=[2], agg#0=[COUNT(2)])'
-'          LhxAggRel(groupCount=[3])'
-'            FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f3) NOT NULL])'
-'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End aggDistinct.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'            LcsRowScanRel(table=[[LOCALDB, SALES, TEST]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$I, SYS$CLUSTERED_INDEX$TEST$J]])'
+> 
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'I','EXPR$1','EXPR$2'
+'','1','5'
+'1','1','3'
+> 
+> drop table test;
+> 
+> -- End aggDistinct.sql
+> 
+> !quit

@@ -39,7 +39,6 @@ import org.eigenbase.util.Util;
 
 import net.sf.saffron.runtime.*;
 
-import java.util.*;
 import java.util.List;
 
 /**
@@ -97,11 +96,11 @@ public class IterCalcRel extends SingleRel implements JavaRel
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    public Object clone()
+    public IterCalcRel clone()
     {
         IterCalcRel clone = new IterCalcRel(
             getCluster(),
-            RelOptUtil.clone(getChild()),
+            getChild().clone(),
             program.copy(),
             getFlags());
         clone.inheritTraitsFrom(this);
@@ -193,7 +192,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
                 RexNode rexIsTrue =
                     rel.getCluster().getRexBuilder().makeCall(
                         SqlStdOperatorTable.isTrueOperator,
-                        new RexNode [] { program.getCondition() });
+                        program.getCondition());
                 Expression conditionExp =
                     translator.translateRexNode(rexIsTrue);
                 whileBody.add(new IfStatement(conditionExp, condBody));

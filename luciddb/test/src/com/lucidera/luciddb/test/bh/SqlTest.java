@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,7 +20,7 @@
 */
 package com.lucidera.luciddb.test.bh;
 
-import com.lucidera.jdbc.*;
+import org.luciddb.jdbc.*;
 import java.io.*;
 import java.util.regex.*;
 import net.sf.farrago.catalog.*;
@@ -58,9 +58,9 @@ public class SqlTest extends AutoTest {
 
         // set luciddb-specific properties
         System.setProperty("net.sf.farrago.defaultSessionFactoryLibraryName",
-            "class:com.lucidera.farrago.LucidDbSessionFactory");
+            "class:org.luciddb.session.LucidDbSessionFactory");
         System.setProperty("net.sf.farrago.test.jdbcDriverClass",
-            "com.lucidera.jdbc.LucidDbLocalDriver");
+            "org.luciddb.jdbc.LucidDbLocalDriver");
 
         Parameters param = tc.getParameters();
         // obtain sql-file parameter - required

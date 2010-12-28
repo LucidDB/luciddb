@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,20 +26,22 @@
 
 #include <map>
 
+#include "fennel/common/TraceSource.h"
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * ConfigMap defines a simple container for configuration parameter/value
  * pairs.
  */
-class ConfigMap 
+class FENNEL_COMMON_EXPORT ConfigMap : public TraceSource
 {
-    typedef std::map<std::string,std::string> StringMap;
+    typedef std::map<std::string, std::string> StringMap;
     typedef StringMap::iterator StringMapIter;
     typedef StringMap::const_iterator StringMapConstIter;
-    
+
     StringMap paramVals;
-    
+
 public:
     /**
      * Creates an empty map.
@@ -66,7 +68,7 @@ public:
      * @param dumpStream target stream
      */
     void dumpParams(std::ostream &dumpStream) const;
-    
+
     /**
      * Merges in all the parameters from another map.
      * New values override current values.
@@ -112,6 +114,20 @@ public:
     long getLongParam(
         std::string paramName,
         long defaultVal = 0) const;
+
+
+    /**
+     * Gets the value of a double-typed parameter.
+     *
+     * @param paramName name of the parameter
+     *
+     * @param defaultVal the default value to return if the parameter is not set
+     *
+     * @return the parameter value
+     */
+    double getDoubleParam(
+        std::string paramName,
+        double defaultVal = 0) const;
 
     /**
      * Gets the value of an boolean-typed parameter.

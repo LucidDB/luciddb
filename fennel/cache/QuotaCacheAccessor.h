@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,7 @@
 #ifndef Fennel_QuotaCacheAccessor_Included
 #define Fennel_QuotaCacheAccessor_Included
 
-#include "fennel/cache/DelegatingCacheAccessor.h"
+#include "fennel/cache/TransactionalCacheAccessor.h"
 #include "fennel/common/AtomicCounter.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -41,20 +41,18 @@ typedef boost::shared_ptr<QuotaCacheAccessor> SharedQuotaCacheAccessor;
  *
  *<p>
  *
- * QuotaCacheAccessor supports the CacheAccessor::setTxnId method, allowing
- * it to be used to lock pages on behalf of a particular transaction
- * without the caller being aware of the association.
+ * QuotaCacheAccessor inherits TransactionalCacheAccessor functionality.
  */
-class QuotaCacheAccessor : public DelegatingCacheAccessor
+class FENNEL_CACHE_EXPORT QuotaCacheAccessor
+    : public TransactionalCacheAccessor
 {
     SharedQuotaCacheAccessor pSuperQuotaAccessor;
     uint maxLockedPages;
     AtomicCounter nPagesLocked;
-    TxnId implicitTxnId;
 
     void incrementUsage();
     void decrementUsage();
-    
+
 public:
     /**
      * Constructor.
@@ -87,7 +85,7 @@ public:
     {
         return nPagesLocked;
     }
-    
+
     // implement the CacheAccessor interface
     virtual CachePage *lockPage(
         BlockId blockId,
@@ -97,8 +95,6 @@ public:
         TxnId txnId = IMPLICIT_TXN_ID);
     virtual void unlockPage(
         CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
-    virtual void setTxnId(TxnId txnId);
-    virtual TxnId getTxnId() const;
 };
 
 FENNEL_END_NAMESPACE

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,8 @@ import java.util.*;
 /**
  * FennelTupleDescriptor provides the metadata describing a tuple. This is used
  * in conjunction with FennelTupleAccessor objects to marshall and unmarshall
- * data into FennelTupleData objects from external formats.
+ * data into FennelTupleData objects from external formats. This class is JDK
+ * 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -38,7 +39,6 @@ import java.util.*;
 public class FennelTupleDescriptor
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -105,45 +105,6 @@ public class FennelTupleDescriptor
         }
         return false;
     }
-
-    /**
-     * Compares two tuples.
-     *
-     * @return zero if they match, -1 if the first is less than the second
-     * otherwise 1
-     */
-    public int compareTuples(FennelTupleData tuple1, FennelTupleData tuple2)
-    {
-        int n = tuple1.getDatumCount();
-        if (n > tuple2.getDatumCount()) {
-            n = tuple2.getDatumCount();
-        }
-        if (n >= getAttrCount()) {
-            n = getAttrCount();
-        }
-        int i;
-        for (i = 0; i < n; ++i) {
-            FennelTupleDatum datum1 = tuple1.getDatum(i);
-            FennelTupleDatum datum2 = tuple2.getDatum(i);
-            if (!datum1.isPresent()) {
-                if (!datum2.isPresent()) {
-                    continue;
-                }
-                return -1;
-            } else if (!datum2.isPresent()) {
-                return 1;
-            }
-            int c = getAttr(i).typeDescriptor.compareValues(datum1, datum2);
-            if (c != 0) {
-                if (c < 0) {
-                    return -1;
-                }
-                return 1;
-            }
-        }
-        return 0;
-    }
 }
-;
 
 // End FennelTupleDescriptor.java

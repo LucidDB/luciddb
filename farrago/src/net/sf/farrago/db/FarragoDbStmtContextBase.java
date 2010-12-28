@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,6 +34,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -46,12 +47,18 @@ import org.eigenbase.resource.*;
  * <p>See individual methods for assistance in determining when they may be
  * called.
  *
+ * <p>Most non-trivial public methods on this class must be synchronized on the
+ * parent session, since closeAllocation may be called from a thread shutting
+ * down the database. The exception is cancel, which must NOT be synchronized,
+ * since it needs to return immediately. (We synchronize on the parent session
+ * to avoid deadlocks from session/stmt vs. stmt/session lock order; see
+ * http://issues.eigenbase.org/browse/LDB-150 for an example.)
+ *
  * @author Stephan Zuercher
  */
 public abstract class FarragoDbStmtContextBase
     implements FarragoSessionStmtContext
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer =
@@ -59,7 +66,7 @@ public abstract class FarragoDbStmtContextBase
 
     //~ Instance fields --------------------------------------------------------
 
-    protected FarragoDbSession session;
+    protected final FarragoDbSession session;
     protected final FarragoSessionStmtParamDefFactory paramDefFactory;
 
     /**
@@ -86,6 +93,30 @@ public abstract class FarragoDbStmtContextBase
 
     private FarragoSessionExecutingStmtInfo info = null;
 
+    private final long stmtCurrentTime;
+    protected final FarragoSessionStmtContext rootStmtContext;
+
+    /**
+     * The children statement contexts associated with a root statement context.
+     */
+    protected List<FarragoSessionStmtContext> childrenStmtContexts;
+
+    /**
+     * If non-null, the commit sequence number to be used for all transactions
+     * associated with a root context as well as children contexts associated
+     * with that root context. Only used if the personality supports snapshots.
+     */
+    protected Long snapshotCsn;
+
+    /**
+     * Indicates whether the csn associated with the first txn initiated from a
+     * root context or one of its children contexts needs to be saved. Only used
+     * if the personality supports snapshots.
+     */
+    protected boolean saveFirstCsn;
+
+    protected final CancelFlag cancelFlag;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -100,9 +131,44 @@ public abstract class FarragoDbStmtContextBase
         FarragoSessionStmtParamDefFactory paramDefFactory,
         FarragoDdlLockManager ddlLockManager)
     {
+        this(session, paramDefFactory, ddlLockManager, null);
+    }
+
+    /**
+     * Creates a new FarragoDbStmtContextBase object.
+     *
+     * @param session the session creating this statement
+     * @param paramDefFactory dynamic parameter definition factory
+     * @param ddlLockManager ddl object lock manager
+     * @param rootStmtContext the root statement context for an internally
+     * prepared statement; for an externally prepared statement, this will be
+     * null
+     */
+    protected FarragoDbStmtContextBase(
+        FarragoDbSession session,
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoDdlLockManager ddlLockManager,
+        FarragoSessionStmtContext rootStmtContext)
+    {
         this.session = session;
         this.paramDefFactory = paramDefFactory;
         this.ddlLockManager = ddlLockManager;
+        this.rootStmtContext = rootStmtContext;
+        this.snapshotCsn = null;
+        this.saveFirstCsn = false;
+
+        // For the root context, set the current time that will be used
+        // throughout the statement.  For non-root contexts, inherit the
+        // time from the root context.  Also, keep track of all of the
+        // children contexts associated with a root context.
+        this.childrenStmtContexts = new ArrayList<FarragoSessionStmtContext>();
+        if (rootStmtContext == null) {
+            this.stmtCurrentTime = System.currentTimeMillis();
+        } else {
+            this.stmtCurrentTime = rootStmtContext.getStmtCurrentTime();
+            rootStmtContext.addChildStmtContext(this);
+        }
+        cancelFlag = new CancelFlag();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -110,10 +176,12 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void closeAllocation()
     {
-        unprepare();
+        synchronized (session) {
+            unprepare();
 
-        // purge self from session's list
-        session.forgetAllocation(this);
+            // purge self from session's list
+            session.forgetAllocation(this);
+        }
     }
 
     // implement FarragoSessionStmtContext
@@ -137,43 +205,104 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void unprepare()
     {
-        sql = null;
-        dynamicParamValues = null;
-        dynamicParamValuesSet = null;
+        cancelFlag.clearCancel();
+        synchronized (session) {
+            sql = null;
+            dynamicParamValues = null;
+            dynamicParamValuesSet = null;
 
-        ddlLockManager.removeObjectsInUse(this);
+            ddlLockManager.removeObjectsInUse(this);
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(int parameterIndex, Object x)
+    public void setDynamicParam(
+        int parameterIndex,
+        Object x)
     {
-        assert (isPrepared());
-        Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
-        dynamicParamValues[parameterIndex] = y;
-        dynamicParamValuesSet[parameterIndex] = true;
+        synchronized (session) {
+            assert (isPrepared());
+            Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
+            dynamicParamValues[parameterIndex] = y;
+            dynamicParamValuesSet[parameterIndex] = true;
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(int parameterIndex, Object x, Calendar cal)
+    public void setDynamicParam(
+        int parameterIndex,
+        Object x,
+        Calendar cal)
     {
-        assert (isPrepared());
-        Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
-        dynamicParamValues[parameterIndex] = y;
-        dynamicParamValuesSet[parameterIndex] = true;
+        synchronized (session) {
+            assert (isPrepared());
+            Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
+            dynamicParamValues[parameterIndex] = y;
+            dynamicParamValuesSet[parameterIndex] = true;
+        }
     }
 
     // implement FarragoSessionStmtContext
     public void clearParameters()
     {
-        assert (isPrepared());
-        Arrays.fill(dynamicParamValuesSet, false);
-        Arrays.fill(dynamicParamValues, null);
+        synchronized (session) {
+            assert (isPrepared());
+            Arrays.fill(dynamicParamValuesSet, false);
+            Arrays.fill(dynamicParamValues, null);
+        }
     }
 
     // implement FarragoSessionStmtContext
     public String getSql()
     {
         return sql;
+    }
+
+    // implement FarragoSessionStmtContext
+    public long getStmtCurrentTime()
+    {
+        return stmtCurrentTime;
+    }
+
+    // implement FarragoSessionStmtContext
+    public void setSaveFirstTxnCsn()
+    {
+        assert (rootStmtContext == null);
+        if (session.getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            saveFirstCsn = true;
+        }
+    }
+
+    // implement FarragoSessionStmtContext
+    public boolean needToSaveFirstTxnCsn()
+    {
+        assert (rootStmtContext == null);
+        return saveFirstCsn;
+    }
+
+    // implement FarragoSessionStmtContext
+    public void saveFirstTxnCsn(long csn)
+    {
+        assert (rootStmtContext == null);
+
+        // Only the very first csn needs to be saved; so if one is already
+        // set, don't overwrite it.  Also, only do this if the personality
+        // supports snapshots.
+        if ((snapshotCsn == null)
+            && session.getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            snapshotCsn = new Long(csn);
+        }
+    }
+
+    // implement FarragoSessionStmtContext
+    public void addChildStmtContext(FarragoSessionStmtContext childStmtContext)
+    {
+        assert (rootStmtContext == null);
+        childrenStmtContexts.add(childStmtContext);
     }
 
     /**
@@ -195,7 +324,14 @@ public abstract class FarragoDbStmtContextBase
                 .SQLConformance_MultipleActiveAutocommitStatements.ex();
             }
         } else {
-            if (readOnly) {
+            Long sessionLabelCsn = session.getSessionLabelCsn();
+            if (sessionLabelCsn != null) {
+                session.getFennelTxnContext().initiateTxnWithCsn(
+                    sessionLabelCsn.longValue());
+            } else if (snapshotCsn != null) {
+                session.getFennelTxnContext().initiateTxnWithCsn(
+                    snapshotCsn.longValue());
+            } else if (readOnly) {
                 session.getFennelTxnContext().initiateReadOnlyTxn();
             }
         }
@@ -233,7 +369,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Checks that all dynamic parameters have been set
+     * Checks that all dynamic parameters have been set.
      */
     protected void checkDynamicParamsSet()
     {
@@ -259,8 +395,38 @@ public abstract class FarragoDbStmtContextBase
     protected void accessTables(FarragoSessionExecutableStmt executableStmt)
     {
         TableAccessMap accessMap = executableStmt.getTableAccessMap();
+        lockTables(accessMap);
+    }
+
+    /**
+     * Acquires locks (or whatever transaction manager wants) on a single table.
+     *
+     * @param table fully qualified table name, represented as a list
+     * @param mode access mode for the table
+     */
+    protected void accessTable(List<String> table, TableAccessMap.Mode mode)
+    {
+        TableAccessMap accessMap = new TableAccessMap(table, mode);
+        lockTables(accessMap);
+    }
+
+    /**
+     * Calls the transaction manager to access a set of tables.
+     *
+     * @param accessMap map containing the tables being accessed and their
+     * access modes
+     */
+    private void lockTables(TableAccessMap accessMap)
+    {
         FarragoSessionTxnMgr txnMgr = session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
+        // If we're attempting to access a table, and the system has only
+        // been partially restored, then raise an exception.
+        if (!accessMap.getTablesAccessed().isEmpty()
+            && session.getDatabase().isPartiallyRestored())
+        {
+            throw FarragoResource.instance().PartialRestore.ex();
+        }
         txnMgr.accessTables(
             txnId,
             accessMap);
@@ -283,6 +449,18 @@ public abstract class FarragoDbStmtContextBase
         ddlLockManager.addObjectsInUse(
             this,
             newExecutableStmt.getReferencedObjectIds());
+    }
+
+    /**
+     * Marks a single object, represented by its mofId, as in-use.
+     *
+     * @param mofId mofId of the object being marked as in-use
+     */
+    protected void lockObjectInUse(String mofId)
+    {
+        Set<String> mofIds = new HashSet<String>();
+        mofIds.add(mofId);
+        ddlLockManager.addObjectsInUse(this, mofIds);
     }
 
     /**
@@ -319,12 +497,19 @@ public abstract class FarragoDbStmtContextBase
      */
     protected void clearExecutingStmtInfo()
     {
+        cancelFlag.clearCancel();
         if (info == null) {
             return;
         }
         long key = info.getId();
         getSessionInfo().removeExecutingStmtInfo(key);
         info = null;
+    }
+
+    // implement FarragoSessionStmtContext
+    public CancelFlag getCancelFlag()
+    {
+        return cancelFlag;
     }
 
     /**

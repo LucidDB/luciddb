@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2004-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,6 @@ import org.eigenbase.util.*;
 public class SqlWindow
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -85,6 +84,14 @@ public class SqlWindow
      */
     public static final int UpperBound_OPERAND = 6;
 
+    /**
+     * Ordinal of the operand which declares whether to allow partial results.
+     * It may be null.
+     */
+    public static final int AllowPartial_OPERAND = 7;
+
+    public static final int OperandCount = 8;
+
     //~ Instance fields --------------------------------------------------------
 
     private SqlCall windowCall = null;
@@ -105,14 +112,11 @@ public class SqlWindow
         SqlParserPos pos)
     {
         super(operator, operands, pos);
+        assert operands.length == OperandCount;
         final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
-        Util.pre((declId == null) || declId.isSimple(),
-            "operands[DeclName_OPERAND] == null || "
-            + "operands[DeclName_OPERAND].isSimple()");
-        Util.pre(operands[PartitionList_OPERAND] != null,
-            "operands[PartitionList_OPERAND] != null");
-        Util.pre(operands[OrderList_OPERAND] != null,
-            "operands[OrderList_OPERAND] != null");
+        assert (declId == null) || declId.isSimple() : declId;
+        assert operands[PartitionList_OPERAND] != null;
+        assert operands[OrderList_OPERAND] != null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -244,17 +248,18 @@ public class SqlWindow
         newOperands[RefName_OPERAND] = null;
 
         // Overlay other parameters.
-        setOperand(newOperands,
+        setOperand(
+            newOperands,
             that.operands,
             PartitionList_OPERAND,
             validator);
         setOperand(newOperands, that.operands, OrderList_OPERAND, validator);
         setOperand(newOperands, that.operands, LowerBound_OPERAND, validator);
         setOperand(newOperands, that.operands, UpperBound_OPERAND, validator);
-        return
-            new SqlWindow((SqlWindowOperator) getOperator(),
-                newOperands,
-                SqlParserPos.ZERO);
+        return new SqlWindow(
+            (SqlWindowOperator) getOperator(),
+            newOperands,
+            SqlParserPos.ZERO);
     }
 
     private static void setOperand(
@@ -267,7 +272,8 @@ public class SqlWindow
         if ((thatOperand != null) && !SqlNodeList.isEmptyList(thatOperand)) {
             final SqlNode clonedOperand = destOperands[i];
             if ((clonedOperand == null)
-                || SqlNodeList.isEmptyList(clonedOperand)) {
+                || SqlNodeList.isEmptyList(clonedOperand))
+            {
                 destOperands[i] = thatOperand;
             } else {
                 throw validator.newValidationError(
@@ -297,7 +303,9 @@ public class SqlWindow
 
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
-        if (!this.getOperator().getName().equals(that.getOperator().getName())) {
+        if (!this.getOperator().getName().equals(
+                that.getOperator().getName()))
+        {
             assert !fail : this + "!=" + node;
             return false;
         }
@@ -320,7 +328,21 @@ public class SqlWindow
     public SqlWindowOperator.OffsetRange getOffsetAndRange()
     {
         return SqlWindowOperator.getOffsetAndRange(
-            getLowerBound(), getUpperBound(), isRows());
+            getLowerBound(),
+            getUpperBound(),
+            isRows());
+    }
+
+    /**
+     * Returns whether partial windows are allowed. If false, a partial window
+     * (for example, a window of size 1 hour which has only 45 minutes of data
+     * in it) will appear to windowed aggregate functions to be empty.
+     */
+    public boolean isAllowPartial()
+    {
+        // Default (and standard behavior) is to allow partial windows.
+        return (operands[AllowPartial_OPERAND] == null)
+            || SqlLiteral.booleanValue(operands[AllowPartial_OPERAND]);
     }
 }
 

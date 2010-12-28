@@ -1,187 +1,98 @@
-<!-- begin -->
-    <!-- some of the properties are set in config-<hostname>.xml -->
+<!-- This file is an XML fragment with the -->
+<!-- CruiseControl config for Luciddb -->
 
-    <property name="artifacts.dir" value="${artifacts.root}/${project}"/>
-    <property name="logs.dir" value="${red.bootstrap.dir}/logs" />
+	<project name="luciddb&configSuffix;">
+		<labelincrementer defaultLabel="luciddb.1"/>
 
-    <labelincrementer 
-        port="${p4port}" 
-        client="${p4client}" 
-        user="${p4user}" 
-        view="${p4root}/..." 
-    />
+		<!-- Bootstrappers are run with every build before mod checks -->
+		<bootstrappers>
+			<!-- currentbuildstatusbootstrapper file="logs/luciddb/currentbuildstatus.txt"/ -->
+			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+		</bootstrappers>
 
-	<!-- Bootstrappers are run with every build before mod checks -->
-	<bootstrappers>
-        <p4bootstrapper port="${p4port}" client="${p4client}" user="${p4user}" view="${p4root}/bootstrap/..."/>
-	</bootstrappers>
+                <listeners>
+                        <currentbuildstatuslistener file="logs/luciddb/currentbuildstatus.txt"/>
+                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/luciddb&configSuffix;/currentbuildstatus.txt"/>
+                </listeners>
 
-    <listeners>
-        <currentbuildstatuslistener file="${logs.dir}/${project}/currentbuildstatus.txt"/>
-    </listeners>
-
-	<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-	<modificationset quietperiod="300">
-        <p4 port="${p4port}" client="${p4client}" user="${p4user}" view="${p4root}/luciddb/..."/>
-        <p4 port="${p4port}" client="${p4client}" user="${p4user}" view="${p4root}/farrago/..."/>
-        <p4 port="${p4port}" client="${p4client}" user="${p4user}" view="${p4root}/fennel/..."/>
-        <p4 port="${p4port}" client="${p4client}" user="${p4user}" view="${p4root}/thirdparty/..."/>
-	</modificationset>
+		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
+		<modificationset quietperiod="300">
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/luciddb/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="//open/blackhawk/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
+		</modificationset>
 
 
-	<!-- Configures the actual build loop, how often and which build file/target -->
-    <schedule interval="${build.interval}">
-        <ant buildfile="${bootstrap.dir}/build-luciddb.xml"  antworkingdir="${bootstrap.dir}" uselogger="true" usedebug="false" antscript="${ant}" target="integration-build-and-test">
-            <property name="p4.port" value="${p4port}"/>
-            <property name="p4.user" value="${p4user}"/>
-            <property name="p4.client" value="${p4client}"/>
+		<!-- Configures the actual build loop, how often and which build file/target -->
+		<schedule interval="&build_interval;">
+			<ant buildfile="&open_default.build.home;/bootstrap/build-luciddb.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			    <property name="open_propfile" value="&open_propfile;"/>
+			    <property name="open_root" value="&open_root;"/>
+			</ant>
+		</schedule>
 
-            <property name="default.build.home" value="${open.default.build.home}"/>
-            <property name="integration.build.home" value="${open.integration.build.home}"/>
-            <property name="open.build.home" value="${open.integration.build.home}"/>
+		<!-- directory to write build logs to -->
+		<log dir="logs/luciddb">
+			<merge dir="&open_integration.build.home;/luciddb/testlog"/>
+			<merge dir="&open_integration.build.home;/farrago/testlog"/>
+		</log>
 
-            <property name="with.tests" value="${with.tests}"/>
-            <property name="with.optimization" value="${with.optimization}"/>
+		<!-- Publishers are run *after* a build completes -->
+		<publishers>
+			<!-- currentbuildstatuspublisher file="logs/luciddb/currentbuildstatus.txt"/ -->
 
-            <property name="open_root" value="${p4root}"/>
-            <property name="eigen_home" value="${open.integration.build.home}"/>
-            <property name="lucidera_platform_home" value="${red.default.build.home}/platform/main"/>
-		</ant>
-	</schedule>
+			<artifactspublisher dir="&open_integration.build.home;/luciddb/trace" dest="artifacts/luciddb&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/luciddb/testlog" dest="artifacts/luciddb&configSuffix;" subdirectory="testlog"/>
 
-	<!-- directory to write build logs to -->
-    <log dir="${logs.dir}/${project}">
-        <merge dir="${open.integration.build.home}/luciddb/testlog"/>
-        <merge dir="${open.integration.build.home}/farrago/testlog"/>
-	</log>
+                        <!-- farrago artifacts -->
+                        <artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/luciddb&configSuffix;" subdirectory="farrago/trace"/>
+                        <artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/luciddb&configSuffix;" subdirectory="farrago/testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/luciddb&configSuffix;" subdirectory="farrago/unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/luciddb&configSuffix;" subdirectory="farrago/initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/luciddb&configSuffix;" subdirectory="farrago/regressionsql"/>                    
 
-	<!-- Publishers are run *after* a build completes -->
-	<publishers>
-        <artifactspublisher 
-            dir="${open.integration.build.home}/luciddb/trace" 
-            dest="${artifacts.dir}" 
-            subdirectory="trace"/>
+                        <!-- fennel artifacts -->
+			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/luciddb&configSuffix;" subdirectory="fennel"/>
 
-        <artifactspublisher 
-            dir="${open.integration.build.home}/luciddb/testlog" 
-            dest="${artifacts.dir}" 
-            subdirectory="testlog"/>
+                        <!--
+                        <onfailure>
+                            <artifactspublisher dir="&open_integration.build.home;/luciddb" dest="artifacts/luciddb&configSuffix;" subdirectory="luciddb"/>
+                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/luciddb&configSuffix;" subdirectory="fennel"/>
+                        </onfailure>
+                        -->
+        
+			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
+			<execute command="&rsync_cmd; artifacts/luciddb&configSuffix; &rsync_dest;"/>
 
-        <!-- farrago artifacts -->
-        <artifactspublisher 
-            dir="${open.integration.build.home}/farrago/trace" 
-            dest="${artifacts.dir}" 
-            subdirectory="farrago/trace"/>
+			<scp sourcedir="logs/luciddb"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/luciddb&configSuffix;"
+                             options="&scp_options;"/>
+			
+			<scp sourcedir="logs/luciddb"
+			     file="currentbuildstatus.txt"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/luciddb&configSuffix;"
+                             options="&scp_options;"/> 
+			
+			<email buildresultsurl="&buildresultsbase;/luciddb&configSuffix;"
+			       mailhost="&mailhost;"
+			       reportsuccess="&reportsuccess;"
+			       returnname="&returnname;"
+			       returnaddress="&returnaddress;"
+			       skipusers="&skipusers;"
+			       spamwhilebroken="&spamwhilebroken;"
+			       subjectprefix="&subjectprefix;">
+				<failure address="&failureaddress;"
+				         reportWhenFixed="&reportwhenfixed;"/>
+                                <propertiesmapper file="&emailmapper;"/>
+			</email>
+		</publishers>
+	</project>
 
-        <artifactspublisher 
-            dir="${open.integration.build.home}/farrago/testlog" 
-            dest="${artifacts.dir}" 
-            subdirectory="farrago/testlog"/>
-
-        <artifactspublisher 
-            dir="${open.integration.build.home}/farrago/unitsql" 
-            dest="${artifacts.dir}" 
-            subdirectory="farrago/unitsql"/>
-
-        <artifactspublisher 
-            dir="${open.integration.build.home}/farrago/initsql" 
-            dest="${artifacts.dir}" 
-            subdirectory="farrago/initsql"/>
-
-        <artifactspublisher 
-            dir="${open.integration.build.home}/farrago/regressionsql" 
-            dest="${artifacts.dir}" 
-            subdirectory="farrago/regressionsql"/>                    
-
-        <!-- fennel artifacts -->
-        <artifactspublisher 
-            dir="${open.integration.build.home}/fennel/trace" 
-            dest="${artifacts.dir}" 
-            subdirectory="fennel"/>
-
-        <artifactspublisher
-            file="${open.integration.build.home}/${project}/dist/${luciddb.tar}"
-            dest="${artifacts.dir}" 
-            subdirectory="release"/>
-
-		<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-
-        <onsuccess>
-            <antpublisher 
-                antscript="${ant}"
-                antworkingdir="${red.bootstrap.dir}"
-                buildfile="set-p4-counter.xml"
-                uselogger="true"
-                usedebug="true"
-                target="set.p4.counter">
-
-                <property name="p4.port" value="${p4port}"/>
-                <property name="p4.user" value="${p4user}"/>
-                <property name="p4.client" value="${p4client}"/>
-
-                <property name="p4.counter.name" value="${lu.dev.luciddb.p4.counter.ok}"/>
-            </antpublisher>
-
-            <antpublisher 
-                antscript="${ant}"
-                antworkingdir="${red.bootstrap.dir}"
-                buildfile="onsuccess-build.xml"
-                uselogger="true"
-                usedebug="true"
-                target="onsuccess.luciddb">
-
-                <property name="p4.port" value="${p4port}"/>
-                <property name="p4.user" value="${p4user}"/>
-                <property name="p4.client" value="${p4client}"/>
-
-                <property name="cc.project" value="${project}"/>
-                <property name="eigen_home" value="${open.integration.build.home}"/>
-                <property name="open.bootstrap.dir" value="${bootstrap.dir}"/>
-                <property name="red.bootstrap.dir" value="${red.bootstrap.dir}"/>
-                <property name="luciddb.pass.dir" value="${luciddb.pass.dir}"/>
-            </antpublisher>
-
-            <artifactspublisher
-                file="${luciddb.pass.dir}/unpackopen.tz"
-                dest="${artifacts.dir}" 
-                subdirectory="release"/>
-            <artifactspublisher
-                file="${luciddb.pass.dir}/unpackopen.sh"
-                dest="${artifacts.dir}" 
-                subdirectory="release"/>
-
-        </onsuccess>
-
-        <antpublisher 
-            antscript="${ant}"
-                antworkingdir="${red.bootstrap.dir}"
-                buildfile="pub-logfile-luciddb.xml"
-                uselogger="true"
-                usedebug="true"
-                target="pub-logfile">
-
-                <property name="artifacts_dir" value="${artifacts.root}"/>
-                <property name="project" value="${project}"/>
-                <property name="logs.dir" value="${logs.dir}"/>
-        </antpublisher>
-
-        <email 
-            buildresultsurl="${buildresultsurl}/${project}"
-            mailhost="${mailhost}"
-            reportsuccess="${reportsuccess}"
-            returnname="${returnname}"
-            returnaddress="${returnaddress}"
-            skipusers="${skipusers}"
-            spamwhilebroken="${spamwhilebroken}"
-            subjectprefix="${subjectprefix}">
-
-            <failure address="${failureaddress}" reportWhenFixed="${reportwhenfixed}"/>
-            <propertiesmapper file="${emailmapper}"/>
-            <always address="${alwaysaddress}"/>
-	    </email>
-
-	</publishers>
-
-    <plugin name="labelincrementer"
-        classname="net.sourceforge.cruisecontrol.labelincrementers.P4ChangelistLabelIncrementer" />
-<!-- the end -->

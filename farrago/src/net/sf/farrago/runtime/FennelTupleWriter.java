@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,8 @@ package net.sf.farrago.runtime;
 
 import java.nio.*;
 
+import net.sf.farrago.fennel.tuple.*;
+
 
 /**
  * FennelTupleWriter defines an interface for marshalling tuples to be sent to
@@ -35,7 +37,6 @@ import java.nio.*;
  */
 public abstract class FennelTupleWriter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -43,12 +44,17 @@ public abstract class FennelTupleWriter
      */
     private static long MAGIC_NUMBER = 0x9897ab509de7dcf5L;
 
+    /**
+     * Singleton helper for aligning tuple buffers correctly.
+     */
+    private static FennelTupleAccessor tupleAligner = new FennelTupleAccessor();
+
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Marshals one tuple if it can fit; otherwise, throws either
-     * BufferOverflowException or IndexOutOfBoundsException (depending on
-     * whether absolute or relative puts are used).
+     * Marshals one tuple if it can fit; otherwise, throws either {@link
+     * BufferOverflowException} or {@link IndexOutOfBoundsException} (depending
+     * on whether absolute or relative puts are used).
      *
      * @param sliceBuffer buffer to be filled with marshalled tuple data; on
      * entry, the buffer position is 0; on return, the buffer position should be
@@ -56,7 +62,7 @@ public abstract class FennelTupleWriter
      * @param object subclass-specific object to be marshalled
      *
      * @exception BufferOverflowException see above
-     * @exception IndexOutOfBoundException see above
+     * @exception IndexOutOfBoundsException see above
      */
     protected abstract void marshalTupleOrThrow(
         ByteBuffer sliceBuffer,
@@ -89,9 +95,8 @@ public abstract class FennelTupleWriter
             int newPosition = byteBuffer.position() + sliceBuffer.position();
 
             // add final alignment padding
-            while ((newPosition & 3) != 0) {
-                ++newPosition;
-            }
+            newPosition = tupleAligner.alignRoundUp(newPosition);
+
             byteBuffer.position(newPosition);
         } catch (BufferOverflowException ex) {
             return false;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,13 @@
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/CacheImpl.h"
 #include "fennel/cache/RandomVictimPolicy.h"
+#include "fennel/cache/LRUVictimPolicy.h"
 #include <boost/test/test_tools.hpp>
+#include <strstream>
+
+#ifdef __MSVC__
+#include <process.h>
+#endif
 
 using namespace fennel;
 
@@ -37,11 +43,25 @@ Cache &CacheTestBase::getCache()
 {
     return *pCache;
 }
-    
+
 typedef CacheImpl<
     CachePage,
     RandomVictimPolicy<CachePage>
 > RandomCache;
+
+class LRUPage : public CachePage, public LRUVictim
+{
+public:
+    LRUPage(Cache &cache,PBuffer buffer)
+        : CachePage(cache, buffer)
+    {
+    }
+};
+
+typedef CacheImpl<
+    LRUPage,
+    LRUVictimPolicy<LRUPage>
+> LRUCache;
 
 SharedCache CacheTestBase::newCache()
 {
@@ -51,6 +71,10 @@ SharedCache CacheTestBase::newCache()
             new RandomCache(cacheParams),
             ClosableObjectDestructor());
     case victimLRU:
+        return SharedCache(
+            new LRUCache(cacheParams),
+            ClosableObjectDestructor());
+    case victimTwoQ:
         return Cache::newCache(cacheParams);
     default:
         permAssert(false);
@@ -58,35 +82,39 @@ SharedCache CacheTestBase::newCache()
 }
 
 SharedRandomAccessDevice CacheTestBase::openDevice(
-    std::string devName,DeviceMode openMode,uint nDevicePages,
+    std::string devName, DeviceMode openMode, uint nDevicePages,
     DeviceId deviceId)
 {
     if (openMode.create) {
         FileSystem::remove(devName.c_str());
     }
     SharedRandomAccessDevice pDevice(
-        new RandomAccessFileDevice(devName,openMode));
+        new RandomAccessFileDevice(devName, openMode));
     if (openMode.create) {
         pDevice->setSizeInBytes(nDevicePages*cbPageFull);
     }
-    pCache->registerDevice(deviceId,pDevice);
+    pCache->registerDevice(deviceId, pDevice);
     return pDevice;
 }
-    
+
 void CacheTestBase::openStorage(DeviceMode openMode)
 {
+    // make a test.dat filename unique to each process
+    std::ostrstream testDataFile;
+    testDataFile << "test-" << getpid() << ".dat" << ends;
+
     pCache = newCache();
 
     statsTimer.addSource(pCache);
     statsTimer.start();
-    
+
     pRandomAccessDevice = openDevice(
-        "test.dat",openMode,nDiskPages,dataDeviceId);
+        testDataFile.str(), openMode, nDiskPages, dataDeviceId);
 }
 
 void CacheTestBase::closeStorage()
 {
-    closeDevice(dataDeviceId,pRandomAccessDevice);
+    closeDevice(dataDeviceId, pRandomAccessDevice);
     statsTimer.stop();
     if (pCache) {
         assert(pCache.unique());
@@ -100,13 +128,13 @@ void CacheTestBase::testCaseTearDown()
 }
 
 void CacheTestBase::closeDevice(
-    DeviceId deviceId,SharedRandomAccessDevice &pDevice)
+    DeviceId deviceId, SharedRandomAccessDevice &pDevice)
 {
     if (!pDevice) {
         return;
     }
     DeviceIdPagePredicate pagePredicate(deviceId);
-    pCache->checkpointPages(pagePredicate,CHECKPOINT_FLUSH_AND_UNMAP);
+    pCache->checkpointPages(pagePredicate, CHECKPOINT_FLUSH_AND_UNMAP);
     pCache->unregisterDevice(deviceId);
     assert(pDevice.unique());
     pDevice.reset();
@@ -115,23 +143,25 @@ void CacheTestBase::closeDevice(
 CacheTestBase::CacheTestBase()
 {
     cacheParams.readConfig(configMap);
-    
-    nDiskPages = configMap.getIntParam("diskPages",1000);
+
+    nDiskPages = configMap.getIntParam("diskPages", 1000);
     dataDeviceId = DeviceId(23);
     nMemPages = cacheParams.nMemPagesMax;
     cbPageFull = cacheParams.cbPage;
     std::string victimPolicyString = configMap.getStringParam(
-        "victimPolicy","lru");
+        "victimPolicy", "twoq");
     if (victimPolicyString == "random") {
         victimPolicy = victimRandom;
     } else if (victimPolicyString == "lru") {
         victimPolicy = victimLRU;
+    } else if (victimPolicyString == "twoq") {
+        victimPolicy = victimTwoQ;
     } else {
         std::cerr << "Unknown victim policy " << victimPolicyString
                   << std::endl;
         exit(-1);
     }
-    
+
 }
 
 // End CacheTestBase.cpp

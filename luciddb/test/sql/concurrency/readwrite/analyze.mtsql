@@ -1,0 +1,65 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+
+  insert into lineitem select * from "lineitem";
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+@sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    truncate table nation;
+@end
+
+-----------------------------------------------------------
+
+@thread analyze
+
+  set schema 'rwconcur';
+
+  @sync
+    analyze table lineitem compute statistics for all columns;
+  @sync
+    select count(*) from lineitem;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread reader
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from lineitem;
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread readwrite
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    insert into nation select * from "nation";
+    select count(*) from nation;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,16 +29,12 @@ import java.util.*;
  * RestartableIterator extends the Iterator interface with a method for
  * restarting to the beginning of the collection.
  *
- * <p>TODO jvs 21-Mar-2006: This interface is no longer used except by Saffron,
- * so we should move it to Saffron.
- *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface RestartableIterator
     extends Iterator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

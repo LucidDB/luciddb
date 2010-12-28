@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ListSqlOperatorTable
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<SqlOperator> operatorList = new ArrayList<SqlOperator>();
@@ -66,7 +65,8 @@ public class ListSqlOperatorTable
                 continue;
             }
             if (!opName.isSimple()
-                || !operator.isName(opName.getSimple())) {
+                || !operator.isName(opName.getSimple()))
+            {
                 continue;
             }
             SqlFunctionCategory functionCategory;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,8 @@ import java.sql.*;
 
 /**
  * This defines the per parameter field metadata required by the client-side
- * driver to implement the JDBC ParameterMetaData API.
+ * driver to implement the JDBC ParameterMetaData API. This class is JDK 1.4
+ * compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -38,7 +39,6 @@ import java.sql.*;
 public class FarragoParamFieldMetaData
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -101,6 +101,5 @@ public class FarragoParamFieldMetaData
      */
     public String paramTypeStr;
 }
-;
 
 // End FarragoParamFieldMetaData.java

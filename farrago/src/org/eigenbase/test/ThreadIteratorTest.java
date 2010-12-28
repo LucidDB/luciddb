@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class ThreadIteratorTest
     extends EigenbaseTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public ThreadIteratorTest(String s)
@@ -62,21 +61,21 @@ public class ThreadIteratorTest
     {
         Iterator beatles =
             new ThreadIterator(queue) {
-                    String [] strings;
+                String [] strings;
 
-                    public ThreadIterator start(String [] strings)
-                    {
-                        this.strings = strings;
-                        return start();
-                    }
+                public ThreadIterator start(String [] strings)
+                {
+                    this.strings = strings;
+                    return start();
+                }
 
-                    protected void doWork()
-                    {
-                        for (int i = 0; i < strings.length; i++) {
-                            put(new Integer(strings[i].length()));
-                        }
+                protected void doWork()
+                {
+                    for (int i = 0; i < strings.length; i++) {
+                        put(new Integer(strings[i].length()));
                     }
-                }.start(new String[] { "lennon", "mccartney", null, "starr" });
+                }
+            }.start(new String[] { "lennon", "mccartney", null, "starr" });
         assertTrue(beatles.hasNext());
         assertEquals(
             beatles.next(),
@@ -95,29 +94,23 @@ public class ThreadIteratorTest
 
     public void testDigits()
     {
-        Iterator digits = new ThreadIterator() {
-                    int limit;
-
-                    public ThreadIterator start(int limit)
-                    {
-                        this.limit = limit;
-                        return super.start();
+        ThreadIterator threadIterator =
+            new ThreadIterator() {
+                protected void doWork()
+                {
+                    for (int i = 0; i < 10; i++) {
+                        put(new Integer(i));
                     }
-
-                    protected void doWork()
-                    {
-                        for (int i = 0; i < limit; i++) {
-                            put(new Integer(i));
-                        }
-                    }
-                }.start(10);
+                }
+            };
+        Iterator digits = threadIterator.iterator();
         assertEquals(
             digits,
             new Integer[] {
                 new Integer(0), new Integer(1), new Integer(2),
-            new Integer(3), new Integer(4), new Integer(5),
-            new Integer(6), new Integer(7), new Integer(8),
-            new Integer(9)
+                new Integer(3), new Integer(4), new Integer(5),
+                new Integer(6), new Integer(7), new Integer(8),
+                new Integer(9)
             });
         assertTrue(!digits.hasNext());
     }

@@ -247,3 +247,209 @@ explain plan for
 select EMP.LNAME, DEPT.DNAME
     from EMP, DEPT, LOCATION EL, LOCATION DL
     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
+
+-- tables needed for complex select below; taken from pge query 1
+
+create table CUST_SERV_ACCT(CUST_SERV_ACCT_KEY DECIMAL(10,0),
+ CU_ID DECIMAL(10,0),
+ CU_TYP_IND CHAR(1),
+ CUOR_CUST_NM VARCHAR(50),
+ ORGDTL_STR_ID_TXT VARCHAR(10),
+ ORGDTL_NM VARCHAR(50),
+ ORGDTL_DBA_NM VARCHAR(18),
+ CUIN_LST_NM VARCHAR(25),
+ CUIN_FST_NM VARCHAR(25),
+ CUIN_MID_INIT_TXT CHAR(1),
+ CA_ID DECIMAL(10,0),
+ MAIL_ADDR_ID DECIMAL(10,0),
+ SITE_ID DECIMAL(10,0),
+ SERV_ADDR VARCHAR(40),
+ MNCPLT_NM VARCHAR(25),
+ ST_CD CHAR(2),
+ ZIP_CD_NUM CHAR(5),
+ CO_CD CHAR(3),
+ GEOG_KEY DECIMAL(10,0),
+ SITUSE_CD CHAR(2),
+ SAA_ID DECIMAL(10,0),
+ SAA_SEQ_NUM DECIMAL(5,0),
+ SRVPLN_KEY DECIMAL(10,0),
+ CYC_FREQY_CD CHAR(2),
+ ACYC_NUM CHAR(2),
+ CNTLUT_NUM DECIMAL(10,0),
+ IS_DWLGS_VAL DECIMAL(5,0),
+ SERV_SIC_CD CHAR(4),
+ BU_CD CHAR(3),
+ UTIL_TYP_CD CHAR(2),
+ SAA_SPLINSTL_INDCR CHAR(1),
+ SAA_CLRG_ACCT_ID DECIMAL(10,0),
+ SAA_ST_TX_EXM_INDC CHAR(1),
+ IS_SERV_INSTLD_DT TIMESTAMP,
+ RCD_EFF_DT TIMESTAMP,
+ RCD_END_DT TIMESTAMP,
+ PROC_BAT_ID DECIMAL(10,0)) 
+;
+create table GEOG(GEOG_KEY DECIMAL(10,0),
+ DPT_CD CHAR(3),
+ RVTWN_CD CHAR(3),
+ RVTWN_DESC VARCHAR(30),
+ GEOG_CNTY_CD CHAR(2),
+ GEOG_CNTY_DESC VARCHAR(30),
+ ST_CD CHAR(2),
+ ST_DESC VARCHAR(30),
+ PROC_BATCH_ID VARCHAR(10)) 
+;
+create table REVN_DTL_RAND(CUST_SERV_ACCT_KEY DECIMAL(10,0),
+ GEOG_KEY DECIMAL(10,0),
+ SRVPLN_KEY DECIMAL(10,0),
+ REVN_YR_MO DECIMAL(6,0),
+ USG_VAL DOUBLE,
+ USG_BILL_THERM DOUBLE,
+ USG_BILL_KWH DOUBLE,
+ USGC_BILL_KW_VAL DOUBLE,
+ RSD_SVC_BILG_AMT DOUBLE,
+ RSD_ST_SLSTX_AMT DOUBLE,
+ RSD_TRSPT_CHRG_AMT DOUBLE,
+ RSD_BALG_CHRG_AMT DOUBLE,
+ RSD_TOP_SRCHRG_AMT DOUBLE,
+ RSD_CCOGA_AMT DOUBLE,
+ RSD_CCOGC_AMT DOUBLE,
+ RSD_CUST_CHRG_AMT DOUBLE,
+ RSD_DMND_CHRG_AMT DOUBLE,
+ RSD_CU_CNT DECIMAL(5,0),
+ SAS_FNL_BIL_INDCR CHAR(1),
+ SAS_TYP_CD CHAR(1),
+ USG_DAYS_NUM DECIMAL(5,0),
+ USG_STRT_DT TIMESTAMP,
+ USG_END_DT TIMESTAMP,
+ CISPD_DT TIMESTAMP,
+ PROC_BAT_ID DECIMAL(10,0)) 
+;
+create table REVN_PRD(REVN_YR_MO DECIMAL(6,0),
+ REVN_YR_MO_DESC VARCHAR(14),
+ REVN_MO DECIMAL(2,0),
+ REVN_MO_DESC VARCHAR(9),
+ REVN_YR DECIMAL(4,0),
+ REVN_QTR CHAR(1),
+ REVN_QTR_YR CHAR(7),
+ REVN_QTR_YR_DESC VARCHAR(20),
+ USER_ID CHAR(4)) 
+;
+create table SERV_PLAN(SRVPLN_KEY DECIMAL(10,0),
+ SRVPLN_ID DECIMAL(10,0),
+ SRVPLN_NM VARCHAR(25),
+ SPO_ID DECIMAL(10,0),
+ SPO_NM VARCHAR(25),
+ BU_CD CHAR(3),
+ BU_DESC VARCHAR(30),
+ RC_CD CHAR(2),
+ RC_DESC VARCHAR(30),
+ PROC_BAT_ID DECIMAL(10,0)) 
+;
+
+-- this query exercises the case where merge projections are required as
+-- joins are being converted to MultiJoinRels and projections are pulled up;
+-- the resulting query plan should NOT contain cartesian product joins
+explain plan for
+SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
+   FROM
+    CUST_SERV_ACCT AL1,
+    GEOG AL2,
+    SERV_PLAN AL3,
+    REVN_PRD AL4,
+    REVN_DTL_RAND AL5
+   WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+    AND AL2.GEOG_KEY=AL5.GEOG_KEY
+    AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+    AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+    AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995;
+
+-- this query exercises ensuring that all projections are merged before
+-- converting joins to MultiJoinRels; the resulting query plan
+-- should NOT contain cartesian product joins
+explain plan for
+SELECT AL1.CU_ID, AL4.REVN_YR_MO, SUM(AL5.USG_VAL),
+ SUM(AL5.USG_BILL_THERM), SUM(AL5.USGC_BILL_KW_VAL),
+ SUM(AL5.RSD_SVC_BILG_AMT), AL5.RSD_CU_CNT
+FROM
+ CUST_SERV_ACCT AL1,
+ GEOG AL2,
+ SERV_PLAN AL3,
+ REVN_PRD AL4,
+ REVN_DTL_RAND AL5
+WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+ AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+ AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+ AND (AL2.ST_CD='IN' AND AL2.GEOG_CNTY_DESC='LAPORTE'
+ AND AL4.REVN_YR=1995 AND AL3.SRVPLN_NM LIKE '%DUSK%'
+ AND AL3.SPO_NM LIKE '%SODIUM%'
+ AND AL3.RC_DESC='RESIDENTIAL - GENERAL SERVICE')
+GROUP BY AL1.CU_ID, AL4.REVN_YR_MO, AL5.RSD_CU_CNT;
+
+
+-- LER-3639 -- If this query is not properly optimized, a cartesian join is
+-- incorrectly chosen.
+create table t1(t1a char(10));
+create table t2(t2a char(10));
+create table t3(t3a char(10));
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
+explain plan for
+select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
+where t3a = a;
+
+-- same query as above except without the subquery in the from clause
+explain plan for
+select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;
+
+-- LER-7778 -- Likewise for this query.  It should not result in a cartesian
+-- join.
+create table tab1(c1 char(1), c2 char(2), c3 char(3));
+create table tab2(c1 char(1), c2 char(2), c3 char(3));
+create table tab3(c1 char(1), c2 char(2), c3 char(3));
+create view vtab1 as
+    select cast(c1 as char(5)) as c1, cast(c2 as char(5)), cast(c3 as char(5))
+    from tab1;
+explain plan for
+select vtab1.c1 from vtab1, tab2, tab3 where
+    vtab1.c1 = tab3.c2 and tab2.c2 = tab3.c3;
+
+-- LER-7807 -- Tables A and B should be joined together before joining with C.
+-- This allows the joins to be completely processed using hash joins without
+-- post-processing of the filter referencing all 3 tables.
+create table A(a int, b int, c int);
+create table B(a int, b int, c int);
+create table C(a int, b int, c int);
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','A',1000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','B',500);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','C',400);
+
+explain plan for
+select * from A, B, C
+where A.a = B.a and
+A.b + B.b = C.b and
+A.c = C.c;
+
+-- The following query *MUST* produce a join ordering where the row scan
+-- that selects all columns from BIG (i.e., B2) *DOES NOT* appear in the
+-- innermost join in the query plan.  That would be non-optimal because it
+-- entails passing around the most data across exec streams.  The joins in
+-- this query are all 1-1, so to avoid putting B2 in the innermost join,
+-- the widths of the rows in the intermediate joins need to be taken into
+-- account.
+create table big(a int, b int, c int, d int, e int, f int);
+create table small(a int, b int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','BIG',100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','SMALL',10);
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'A', 100000, 100, 100000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'B', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'SMALL', 'A', 10, 100, 10, 0, '0123456789');
+explain plan for
+    select b2.*, b1.a, s1.b, s2.b
+        from big b2 inner join big b1 on b1.a = b2.a
+        left outer join small s1 on b1.b = s1.a
+        left outer join small s2 on b1.b = s2.a;

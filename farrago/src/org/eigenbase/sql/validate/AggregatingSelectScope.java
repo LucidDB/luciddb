@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,10 @@
 */
 package org.eigenbase.sql.validate;
 
+import java.util.*;
+
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -39,35 +42,82 @@ public class AggregatingSelectScope
     extends DelegatingScope
     implements AggregatingScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private final SqlNodeList groupExprs;
     private final SqlSelect select;
+    private final boolean distinct;
+    private final List<SqlNode> groupExprList;
 
     //~ Constructors -----------------------------------------------------------
 
     AggregatingSelectScope(
         SqlValidatorScope selectScope,
-        SqlSelect select)
+        SqlSelect select,
+        boolean distinct)
     {
         // The select scope is the parent in the sense that all columns which
         // are available in the select scope are available. Whether they are
         // valid as aggregation expressions... now that's a different matter.
         super(selectScope);
         this.select = select;
-        if (select.getGroup() == null) {
-            this.groupExprs = SqlNodeList.Empty;
-        } else {
+        this.distinct = distinct;
+        if (distinct) {
+            groupExprList = null;
+        } else if (select.getGroup() != null) {
             // We deep-copy the group-list in case subsequent validation
-            // modifies it and makes it no longer equivalent.
-            this.groupExprs =
-                (SqlNodeList) select.getGroup().accept(
-                    new SqlValidatorUtil.DeepCopier(selectScope));
+            // modifies it and makes it no longer equivalent. While copying,
+            // we fully qualify all identifiers.
+            SqlNodeList sqlNodeList =
+                (SqlNodeList) this.select.getGroup().accept(
+                    new SqlValidatorUtil.DeepCopier(parent));
+            this.groupExprList = sqlNodeList.getList();
+        } else {
+            groupExprList = null;
         }
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Returns the expressions that are in the GROUP BY clause (or the SELECT
+     * DISTINCT clause, if distinct) and that can therefore be referenced
+     * without being wrapped in aggregate functions.
+     *
+     * <p>The expressions are fully-qualified, and any "*" in select clauses are
+     * expanded.
+     *
+     * @return list of grouping expressions
+     */
+    private List<SqlNode> getGroupExprs()
+    {
+        if (distinct) {
+            // Cannot compute this in the constructor: select list has not been
+            // expanded yet.
+            assert select.isDistinct();
+
+            // Remove the AS operator so the expressions are consistent with
+            // OrderExpressionExpander.
+            List<SqlNode> groupExprs = new ArrayList<SqlNode>();
+            for (
+                SqlNode selectItem
+                : ((SelectScope) parent).getExpandedSelectList())
+            {
+                if (SqlUtil.isCallTo(
+                        selectItem,
+                        SqlStdOperatorTable.asOperator))
+                {
+                    groupExprs.add(((SqlCall) selectItem).getOperands()[0]);
+                } else {
+                    groupExprs.add(selectItem);
+                }
+            }
+            return groupExprs;
+        } else if (select.getGroup() != null) {
+            return groupExprList;
+        } else {
+            return Collections.emptyList();
+        }
+    }
 
     public SqlNode getNode()
     {
@@ -112,11 +162,13 @@ public class AggregatingSelectScope
         }
 
         // Make sure expression is valid, throws if not.
+        List<SqlNode> groupExprs = getGroupExprs();
         final AggChecker aggChecker =
             new AggChecker(
                 validator,
                 this,
-                groupExprs.getList());
+                groupExprs,
+                distinct);
         if (deep) {
             expr.accept(aggChecker);
         }

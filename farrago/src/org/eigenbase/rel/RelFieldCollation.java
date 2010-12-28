@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,6 @@ package org.eigenbase.rel;
  */
 public class RelFieldCollation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RelFieldCollation [] emptyCollationArray =
@@ -41,36 +40,37 @@ public class RelFieldCollation
     /**
      * Direction that a field is ordered in.
      */
-    public static enum Direction {
+    public static enum Direction
+    {
         /**
-         * Ascending direction: A value is always followed by a greater
-         * or equal value.
+         * Ascending direction: A value is always followed by a greater or equal
+         * value.
          */
         Ascending,
 
         /**
-         * Strictly ascending direction: A value is always followed by a
-         * greater value.
+         * Strictly ascending direction: A value is always followed by a greater
+         * value.
          */
         StrictlyAscending,
 
         /**
-         * Descending direction: A value is always followed by a lesser
-         * or equal value.
+         * Descending direction: A value is always followed by a lesser or equal
+         * value.
          */
         Descending,
 
         /**
-         * Strictly descending direction: A value is always followed by a
-         * lesser value.
+         * Strictly descending direction: A value is always followed by a lesser
+         * value.
          */
         StrictlyDescending,
 
         /**
-         * Clustered direction: Values occur in no particular order, and
-         * the same value may occur in contiguous groups, but never occurs
-         * after that. This sort order tends to occur when values are
-         * ordered according to a hash-key.
+         * Clustered direction: Values occur in no particular order, and the
+         * same value may occur in contiguous groups, but never occurs after
+         * that. This sort order tends to occur when values are ordered
+         * according to a hash-key.
          */
         Clustered,
     }
@@ -115,8 +115,8 @@ public class RelFieldCollation
             return false;
         }
         RelFieldCollation other = (RelFieldCollation) obj;
-        return
-            (fieldIndex == other.fieldIndex) && (direction == other.direction);
+        return (fieldIndex == other.fieldIndex)
+            && (direction == other.direction);
     }
 
     // implement Object

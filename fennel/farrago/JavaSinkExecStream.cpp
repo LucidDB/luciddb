@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2004-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,6 +24,8 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JniUtil.h"
+#include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include <iostream>
 
@@ -72,7 +74,7 @@ void JavaSinkExecStream::open(bool restart)
         pStreamGraphHandle->javaRuntimeContext,
         JniUtil::methGetJavaStreamHandle,
         javaFennelPipeTupleIterId);
-    javaFennelPipeTupleIter = 
+    javaFennelPipeTupleIter =
         CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
     assert(javaFennelPipeTupleIter);
 }
@@ -95,50 +97,74 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         assert(inAccessor.getConsumptionAvailable() == 0);
         break;
     default:
+        FENNEL_TRACE(TRACE_FINER, "input rows:");
+        getGraph().getScheduler()
+            ->traceStreamBufferContents(*this, inAccessor, TRACE_FINER);
         break;
     }
 
     PConstBuffer pInBufStart = inAccessor.getConsumptionStart();
     PConstBuffer pInBufEnd = inAccessor.getConsumptionEnd();
     uint nbytes = pInBufEnd - pInBufStart;
-    sendData(pInBufStart, nbytes);
-    if (nbytes > 0) {
-        inAccessor.consumeData(pInBufEnd);
-        return (lastResult = EXECRC_BUF_UNDERFLOW);
-    } else
-        return (lastResult = EXECRC_EOS);
+    bool success = sendData(pInBufStart, nbytes);
+    if (success) {
+        if (nbytes > 0) {
+            inAccessor.consumeData(pInBufEnd);
+            return (lastResult = EXECRC_BUF_UNDERFLOW);
+        } else {
+            return (lastResult = EXECRC_EOS);
+        }
+    } else {
+        return EXECRC_QUANTUM_EXPIRED;
+    }
 }
 
 /// sends data to java peer
-void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
+bool JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 {
-    // Get an output ByteBuffer. Since this is a local ref, it will be automatically
-    // deleted when the next method call returns.
-    // REVIEW: Could give the ByteBuffer a longer lifecycle.
     JniEnvAutoRef pEnv;
+
+    // Get an output ByteBuffer. Since this is a local ref, it will be
+    // automatically deleted when the next method call returns.
+    // REVIEW: Could give the ByteBuffer a longer lifecycle.
     jobject javaByteBuf = pEnv->CallObjectMethod(
         javaFennelPipeTupleIter, methFennelPipeTupleIter_getByteBuffer, size);
-    assert(javaByteBuf);
+    if (!javaByteBuf) {
+        // no free buffers available
+        FENNEL_TRACE(
+            TRACE_FINE, "FennelPipeTupleIter.getByteBuffer returned NULL. "
+            << "Free buffers not available.");
+        return false;
+    }
 
     // copy the data, allowing upstream XO to produce more output
-    stuffByteBuffer(javaByteBuf, src, size);
+    if (size > 0) {
+        stuffByteBuffer(javaByteBuf, src, size);
+    }
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(TRACE_FINE, "call FennelPipeTupleIter.write " << size << " bytes");
-    pEnv->CallVoidMethod(javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
-                         javaByteBuf, size);
+    FENNEL_TRACE(
+        TRACE_FINE,
+        "call FennelPipeTupleIter.write " << size << " bytes");
+    pEnv->CallVoidMethod(
+        javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
+        javaByteBuf, size);
     FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
+    return true;
 }
 
-void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
+void JavaSinkExecStream::stuffByteBuffer(
+    jobject byteBuffer,
+    PConstBuffer src,
+    uint size)
 {
     // TODO: lookup methods in constructor.
     // TODO: ByteBuffer with a longer life, permanently pinned.
     JniEnvAutoRef pEnv;
 
     // pin the byte array
-    jbyteArray bufBacking = 
+    jbyteArray bufBacking =
         static_cast<jbyteArray>(
             pEnv->CallObjectMethod(byteBuffer, methByteBuffer_array));
     jboolean copied;
@@ -146,6 +172,22 @@ void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, u
 
     // copy the data
     memcpy(dst, src, size);
+
+    // trace the copy
+    if (isTracingLevel(TRACE_FINER)) {
+        // wrap the output buffer with a buf accessor
+        ExecStreamBufAccessor ba;
+        ba.setProvision(BUFPROV_PRODUCER);
+        ba.setTupleShape(
+            pInAccessor->getTupleDesc(), pInAccessor->getTupleFormat());
+        ba.clear();
+        PBuffer buf = (PBuffer) dst;
+        ba.provideBufferForConsumption(buf, buf + size);
+        FENNEL_TRACE(TRACE_FINER, "output rows:");
+        getGraph().getScheduler()
+            ->traceStreamBufferContents(*this, ba, TRACE_FINER);
+    }
+
     // unpin
     pEnv->ReleaseByteArrayElements(bufBacking, dst, 0);
 }

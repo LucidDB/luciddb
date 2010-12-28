@@ -1,0 +1,70 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+> insert into orders select * from "orders";
+150000 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> truncate table orders;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread deletelineitem
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem where l_shipmode = 'TRUCK';
+85953 rows affected.
+-- end of thread deletelineitem
+
+-- thread selectlineitem
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 85953               |
++---------------------+
+
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+-- end of thread selectlineitem
+
+-- thread deleteorders
+> set schema 'rwconcur';
+0 rows affected.
+> delete from orders where o_orderpriority = '2-HIGH';
+30172 rows affected.
+-- end of thread deleteorders
+
+-- thread selectorders
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from orders where o_orderpriority = '2-HIGH';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 30172               |
++---------------------+
+
+> select count(*) from orders where o_orderpriority = '2-HIGH';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+-- end of thread selectorders
+

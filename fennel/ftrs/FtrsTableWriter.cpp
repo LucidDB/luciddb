@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ FtrsTableWriter::FtrsTableWriter(FtrsTableWriterParams const &params)
     assert(pClusteredIndexWriter);
 
     pTupleData = &(pClusteredIndexWriter->tupleData);
-    
+
     if (!updateProj.empty()) {
         TupleDescriptor tupleDesc =
             pClusteredIndexWriter->pWriter->getTupleDescriptor();
@@ -70,8 +70,10 @@ FtrsTableWriter::FtrsTableWriter(FtrsTableWriterParams const &params)
         updateTupleData.compute(tupleDesc);
         pTupleData = &updateTupleData;
     }
-    
+
     nAttrs = pClusteredIndexWriter->tupleData.size();
+
+    logBuf.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 }
 
 FtrsTableIndexWriter &FtrsTableWriter::createIndexWriter(
@@ -95,9 +97,9 @@ FtrsTableIndexWriter &FtrsTableWriter::createIndexWriter(
         }
     } else {
         // TODO:  tuple format?
-        
+
         // this is the clustered index:  its tuple will drive the other indexes
-        TupleDescriptor const &clusteredTupleDesc = 
+        TupleDescriptor const &clusteredTupleDesc =
             indexWriter.pWriter->getTupleDescriptor();
         tupleAccessor.compute(clusteredTupleDesc);
         indexWriter.tupleData.compute(clusteredTupleDesc);
@@ -118,7 +120,7 @@ inline bool FtrsTableWriter::searchForIndexKey(
         keyData[i] =
             pClusteredIndexWriter->tupleData[indexWriter.inputKeyProj[i]];
     }
-    return indexWriter.pWriter->searchForKey(keyData,DUP_SEEK_ANY);
+    return indexWriter.pWriter->searchForKey(keyData, DUP_SEEK_ANY);
 }
 
 inline void FtrsTableWriter::insertIntoIndex(
@@ -136,6 +138,10 @@ inline void FtrsTableWriter::insertIntoIndex(
             }
             // couldn't update in place:  treat as a deletion+insertion instead
             indexWriter.pWriter->deleteCurrent();
+
+            // REVIEW jvs 26-Jun-2007:  doesn't insertTupleData below
+            // assume that the writer is still positioned?
+            // So why do we call endSearch here?
             indexWriter.pWriter->endSearch();
         } else {
             // REVIEW:  can this happen?  If so, should we insert?
@@ -163,7 +169,7 @@ inline void FtrsTableWriter::modifySomeIndexes(
     IndexWriterVector::iterator &first,
     IndexWriterVector::iterator last)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         for (; first != last; ++first) {
             insertIntoIndex(*first);
@@ -186,14 +192,14 @@ inline void FtrsTableWriter::modifyAllIndexes(LogicalActionType actionType)
     IndexWriterVector::iterator first = indexWriters.begin();
     IndexWriterVector::iterator current = first;
     try {
-        modifySomeIndexes(actionType,current,indexWriters.end());
+        modifySomeIndexes(actionType, current, indexWriters.end());
     } catch (...) {
         // In case of exception, carefully roll back only those indexes which
         // were already modified.
         try {
             LogicalActionType compensatingActionType =
                 (actionType == ACTION_INSERT) ? ACTION_DELETE : ACTION_INSERT;
-            modifySomeIndexes(compensatingActionType,first,current);
+            modifySomeIndexes(compensatingActionType, first, current);
         } catch (...) {
             // If this rollback fails, don't allow exception to hide original
             // exception.  But TODO:  trace.
@@ -231,7 +237,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
         // for reverse, overlay new values instead
         copyNewValues();
     }
-    
+
     modifyAllIndexes(ACTION_DELETE);
 
     if (reverse) {
@@ -241,7 +247,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
         // overlay new values to be inserted
         copyNewValues();
     }
-    
+
     try {
         modifyAllIndexes(ACTION_INSERT);
     } catch (...) {
@@ -264,7 +270,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
 
 inline void FtrsTableWriter::executeTuple(LogicalActionType actionType)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
     case ACTION_DELETE:
         modifyAllIndexes(actionType);
@@ -281,7 +287,7 @@ inline void FtrsTableWriter::executeTuple(LogicalActionType actionType)
 }
 
 RecordNum FtrsTableWriter::execute(
-    ExecStreamQuantum const &quantum, 
+    ExecStreamQuantum const &quantum,
     ExecStreamBufAccessor &bufAccessor,
     LogicalActionType actionType,
     SXMutex &actionMutex)
@@ -308,19 +314,15 @@ RecordNum FtrsTableWriter::execute(
         SXMutexSharedGuard actionMutexGuard(actionMutex);
         executeTuple(actionType);
         uint cb = tupleAccessor.getCurrentByteCount();
-        // NOTE: use getWritePointer rather than writeBytes to ensure that
-        // tuples are logged contiguously
         LogicalTxn *pTxn = getLogicalTxn();
         ByteOutputStream &logStream =
             pTxn->beginLogicalAction(*this,actionType);
-        PBuffer pLogBuf = logStream.getWritePointer(cb);
-        memcpy(pLogBuf,tupleAccessor.getCurrentTupleBuf(),cb);
-        logStream.consumeWritePointer(cb);
+        logStream.writeBytes(tupleAccessor.getCurrentTupleBuf(), cb);
         pTxn->endLogicalAction();
         bufAccessor.consumeTuple();
         ++nTuples;
     } while (nTuples < quantum.nTuplesMax);
-        
+
     return nTuples;
 }
 
@@ -362,15 +364,15 @@ void FtrsTableWriter::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
-        redoLogicalAction(ACTION_DELETE,logStream);
+        redoLogicalAction(ACTION_DELETE, logStream);
         break;
     case ACTION_DELETE:
-        redoLogicalAction(ACTION_INSERT,logStream);
+        redoLogicalAction(ACTION_INSERT, logStream);
         break;
     case ACTION_UPDATE:
-        redoLogicalAction(ACTION_REVERSE_UPDATE,logStream);
+        redoLogicalAction(ACTION_REVERSE_UPDATE, logStream);
         break;
     default:
         permAssert(false);
@@ -381,16 +383,19 @@ void FtrsTableWriter::redoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    // REVIEW:  see comments in SpillOutputStream.cpp regarding page size
-    // discrepancies.  For now it just happens to work since no footers are
-    // added to log pages, but that could change in the future.
-    PConstBuffer pLogBuf = logStream.getReadPointer(1);
-    tupleAccessor.setCurrentTupleBuf(pLogBuf);
+    uint cbMin = tupleAccessor.getMinByteCount();
+    uint cbActual = logStream.readBytes(logBuf.get(), cbMin);
+    assert(cbMin == cbActual);
+    tupleAccessor.setCurrentTupleBuf(logBuf.get());
     uint cb = tupleAccessor.getCurrentByteCount();
+    uint cbRemainder = cb - cbMin;
+    if (cbRemainder) {
+      cbActual = logStream.readBytes(logBuf.get() + cbMin, cbRemainder);
+      assert(cbActual == cbRemainder);
+    }
     // TODO:  for delete, only need to unmarshal union of keys
     tupleAccessor.unmarshal(*pTupleData);
     executeTuple(actionType);
-    logStream.consumeReadPointer(cb);
 }
 
 PageOwnerId FtrsTableWriter::getTableId()

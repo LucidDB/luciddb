@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ DelegatingCacheAccessor::DelegatingCacheAccessor(
     : pDelegate(pDelegateInit)
 {
 }
-    
+
 CachePage *DelegatingCacheAccessor::lockPage(
     BlockId blockId,
     LockMode lockMode,
@@ -40,7 +40,7 @@ CachePage *DelegatingCacheAccessor::lockPage(
     TxnId txnId)
 {
     return pDelegate->lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
+        blockId, lockMode, readIfUnmapped, pMappedPageListener, txnId);
 }
 
 void DelegatingCacheAccessor::unlockPage(
@@ -48,7 +48,7 @@ void DelegatingCacheAccessor::unlockPage(
     LockMode lockMode,
     TxnId txnId)
 {
-    pDelegate->unlockPage(page,lockMode,txnId);
+    pDelegate->unlockPage(page, lockMode, txnId);
 }
 
 void DelegatingCacheAccessor::discardPage(
@@ -57,23 +57,23 @@ void DelegatingCacheAccessor::discardPage(
     pDelegate->discardPage(blockId);
 }
 
-void DelegatingCacheAccessor::prefetchPage(
+bool DelegatingCacheAccessor::prefetchPage(
     BlockId blockId,
     MappedPageListener *pMappedPageListener)
 {
-    pDelegate->prefetchPage(blockId,pMappedPageListener);
+    return pDelegate->prefetchPage(blockId, pMappedPageListener);
 }
 
 void DelegatingCacheAccessor::prefetchBatch(
-    BlockId blockId,uint nPages,
+    BlockId blockId, uint nPages,
     MappedPageListener *pMappedPageListener)
 {
-    pDelegate->prefetchBatch(blockId,nPages,pMappedPageListener);
+    pDelegate->prefetchBatch(blockId, nPages, pMappedPageListener);
 }
 
 void DelegatingCacheAccessor::flushPage(CachePage &page,bool async)
 {
-    pDelegate->flushPage(page,async);
+    pDelegate->flushPage(page, async);
 }
 
 void DelegatingCacheAccessor::nicePage(CachePage &page)
@@ -104,6 +104,18 @@ TxnId DelegatingCacheAccessor::getTxnId() const
 void DelegatingCacheAccessor::setTxnId(TxnId txnId)
 {
     pDelegate->setTxnId(txnId);
+}
+
+void DelegatingCacheAccessor::getPrefetchParams(
+    uint &prefetchPagesMax,
+    uint &prefetchThrottleRate)
+{
+    pDelegate->getPrefetchParams(prefetchPagesMax, prefetchThrottleRate);
+}
+
+uint DelegatingCacheAccessor::getProcessorCacheBytes()
+{
+    return pDelegate->getProcessorCacheBytes();
 }
 
 FENNEL_END_CPPFILE("$Id$");

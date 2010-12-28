@@ -1,5 +1,7 @@
 0: jdbc:luciddb:> set schema 'stkmkt';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set numberFormat since floating point differs based on VM
+0: jdbc:luciddb:> !set numberFormat 0.0000
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- find the total commission paid by each customer for the whole year
 0: jdbc:luciddb:> select t1.account account, t2.acct_name account_name, sum(commission) 
@@ -10,19 +12,19 @@
 . . . . . . . . > group by t1.account, t2.acct_name
 . . . . . . . . > order by t1.account, t2.acct_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- find the total commission paid by each customer for the whole year
@@ -46,19 +48,19 @@
 . . . . . . . . > group by account, account_name
 . . . . . . . . > order by account, account_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
@@ -96,19 +98,19 @@
 . . . . . . . . > group by account, account_name
 . . . . . . . . > order by account, account_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> --do the above queries using from-list subqueries
@@ -131,19 +133,19 @@ Error: From line 6, column 19 to line 6, column 30: Column 'ACCOUNT_NAME' not fo
 . . . . . . . . > group by t1.account, t2.acct_name
 . . . . . . . . > order by t1.account, t2.acct_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
 0: jdbc:luciddb:> --by UNION ALLing over half-yearly transactions.
@@ -166,19 +168,19 @@ Error: From line 6, column 19 to line 6, column 30: Column 'ACCOUNT_NAME' not fo
 . . . . . . . . > group by account, account_name
 . . . . . . . . > order by account, account_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
@@ -224,18 +226,20 @@ Error: From line 6, column 19 to line 6, column 30: Column 'ACCOUNT_NAME' not fo
 . . . . . . . . > group by account, account_name
 . . . . . . . . > order by account, account_name
 . . . . . . . . > ;
-+----------+---------------+---------------------+
-| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2        |
-+----------+---------------+---------------------+
-| 1        | Investor1     | 8760.000000000002   |
-| 2        | Investor2     | 1113.7500000000002  |
-| 3        | Investor3     | 4863.75             |
-| 4        | Investor4     | 7182.5              |
-| 5        | Investor5     | 2272.5              |
-| 7        | Investor7     | 2272.5              |
-| 8        | Investor8     | 907.5               |
-| 9        | Investor9     | 5748.75             |
-| 10       | Investor10    | 2417.1875           |
-+----------+---------------+---------------------+
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1.0000   | Investor1     | 8760.0000  |
+| 2.0000   | Investor2     | 1113.7500  |
+| 3.0000   | Investor3     | 4863.7500  |
+| 4.0000   | Investor4     | 7182.5000  |
+| 5.0000   | Investor5     | 2272.5000  |
+| 7.0000   | Investor7     | 2272.5000  |
+| 8.0000   | Investor8     | 907.5000   |
+| 9.0000   | Investor9     | 5748.7500  |
+| 10.0000  | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set numberFormat default
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

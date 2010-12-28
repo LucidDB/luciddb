@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,8 +26,7 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import net.sf.farrago.util.*;
-
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
@@ -42,7 +41,6 @@ import org.eigenbase.relopt.*;
 class MedMdrJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     MedMdrJoinRule()
@@ -52,10 +50,8 @@ class MedMdrJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null),
-            new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
-                }));
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(MedMdrClassExtentRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -79,7 +75,8 @@ class MedMdrJoinRule
         }
 
         if ((joinRel.getJoinType() != JoinRelType.INNER)
-            && (joinRel.getJoinType() != JoinRelType.LEFT)) {
+            && (joinRel.getJoinType() != JoinRelType.LEFT))
+        {
             return;
         }
 
@@ -93,7 +90,8 @@ class MedMdrJoinRule
         // on right side, must join to reference field which refers to
         // left side type
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(rightRel.mdrClassExtent.refClass,
+            JmiObjUtil.getFeatures(
+                rightRel.mdrClassExtent.refClass,
                 StructuralFeature.class,
                 false);
         Reference reference;

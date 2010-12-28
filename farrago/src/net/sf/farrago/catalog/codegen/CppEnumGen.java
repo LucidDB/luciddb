@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,8 +28,6 @@ import java.lang.reflect.*;
 
 import java.util.*;
 
-import net.sf.farrago.util.*;
-
 
 // TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
@@ -44,7 +42,6 @@ import net.sf.farrago.util.*;
  */
 public class CppEnumGen
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private PrintWriter pw;
@@ -67,10 +64,14 @@ public class CppEnumGen
      * Generates a single enumeration. Enumeration values (and their names) is
      * based on the subset of non-inherited public static final data members
      * contained by enumClass and having exact type enumSymbolType. Enumeration
-     * order (and hence implied ordinals) is based on the result of {@link
-     * Class#getDeclaredFields}.
+     * order (and hence implied ordinals) is on the current locale's collation
+     * order for the enum field names. This ordering may not hold in the future,
+     * so no C++ code should be written which depends on the current
+     * deterministic ordering.
      *
-     * <p>TODO: support integer ordinals
+     * <p>TODO: Support integer ordinals. Also, we'd prefer to preserve the
+     * original metamodel ordering in order to relax the ordering condition
+     * above.
      *
      * @param enumName name to give C++ enum
      * @param enumClass Java class to be interpreted as an enumeration; this
@@ -83,7 +84,7 @@ public class CppEnumGen
         Class enumSymbolType)
         throws Exception
     {
-        List symbols = new ArrayList();
+        List<String> symbols = new ArrayList<String>();
 
         Field [] fields = enumClass.getDeclaredFields();
         for (int i = 0; i < fields.length; ++i) {
@@ -95,13 +96,16 @@ public class CppEnumGen
             symbols.add(field.getName());
         }
 
+        // Force deterministic ordering
+        Collections.sort(symbols);
+
         pw.print("enum ");
         pw.print(enumName);
         pw.println(" {");
 
-        Iterator iter = symbols.iterator();
+        Iterator<String> iter = symbols.iterator();
         while (iter.hasNext()) {
-            String symbol = (String) iter.next();
+            String symbol = iter.next();
             pw.print("    ");
             pw.print(symbol);
             if (iter.hasNext()) {
@@ -120,7 +124,7 @@ public class CppEnumGen
 
         iter = symbols.iterator();
         while (iter.hasNext()) {
-            String symbol = (String) iter.next();
+            String symbol = iter.next();
             pw.print('"');
             pw.print(symbol);
             pw.print('"');

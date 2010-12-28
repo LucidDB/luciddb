@@ -1,22 +1,23 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test foreign data wrappers
-0: jdbc:farrago:> create foreign data wrapper test_jdbc
-. . . . . . . . > library 'plugin/FarragoMedJdbc.jar'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server csv_server
-. . . . . . . . > foreign data wrapper test_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
-. . . . . . . . >     schema_name 'TESTDATA');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Check the foreign data wrapper and server
-0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
+> -- $Id$
+> -- Test JDBC metadata calls for foreign data wrappers
+> 
+> -- !set verbose true
+> 
+> -- test foreign data wrappers
+> create foreign data wrapper test_jdbc
+> library 'plugin/FarragoMedJdbc.jar'
+> language java;
+> 
+> create server csv_server
+> foreign data wrapper test_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
+>     schema_name 'TESTDATA');
+> 
+> -- Check the foreign data wrapper and server (exclude some storage option names
+> -- that vary by repository configuration in sys_fem/cwm)
+> select "name" from sys_fem.med."DataWrapper" order by 1;
 +-------------------+
 |       name        |
 +-------------------+
@@ -29,7 +30,7 @@
 | SYS_MOCK_FOREIGN  |
 | TEST_JDBC         |
 +-------------------+
-0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
+> select "name" from sys_fem.med."DataServer" order by 1;
 +-------------------------------+
 |             name              |
 +-------------------------------+
@@ -43,41 +44,34 @@
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
 | SYS_MOF                       |
 +-------------------------------+
-0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
-+--------------------+-------------------------------------+
-|        name        |                value                |
-+--------------------+-------------------------------------+
-| DRIVER_CLASS       | org.hsqldb.jdbcDriver               |
-| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver      |
-| ROOT_PACKAGE_NAME  | CWM                                 |
-| ROOT_PACKAGE_NAME  | FEM                                 |
-| ROOT_PACKAGE_NAME  | MOF                                 |
-| SCHEMA_NAME        | MODEL                               |
-| SCHEMA_NAME        | TESTDATA                            |
-| TABLE_TYPES        | TABLE,VIEW                          |
-| URL                | jdbc:hsqldb:testcases/hsqldb/scott  |
-| URL                | jdbc:relique:csv:unitsql/med        |
-| USER_NAME          | SA                                  |
-+--------------------+-------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test a join to look up the storage options for a server
-0: jdbc:farrago:> select o."name",o."value" 
-. . . . . . . . > from 
-. . . . . . . . > (select * from sys_fem.med."DataServer" where "name"='SYS_MOF') s
-. . . . . . . . > inner join
-. . . . . . . . > sys_fem.med."StorageOption" o
-. . . . . . . . > on s."mofId"=o."StoredElement"
-. . . . . . . . > order by 1,2;
+> select "name","value" from sys_fem.med."StorageOption" where "name" in ('URL', 'DRIVER_CLASS') order by 1,2;
++---------------+-----------------------------------------------+
+|     name      |                     value                     |
++---------------+-----------------------------------------------+
+| DRIVER_CLASS  | org.hsqldb.jdbcDriver                         |
+| DRIVER_CLASS  | org.relique.jdbc.csv.CsvDriver                |
+| URL           | jdbc:hsqldb:testcases/hsqldb/scott            |
+| URL           | jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med  |
++---------------+-----------------------------------------------+
+> 
+> -- Test a join to look up the storage options for a server
+> select o."name",o."value" 
+> from 
+> (select * from sys_fem.med."DataServer" where "name"='SYS_MOF') s
+> inner join
+> sys_fem.med."StorageOption" o
+> on s."mofId"=o."StoredElement"
+> order by 1,2;
 +--------------------+--------+
 |        name        | value  |
 +--------------------+--------+
 | ROOT_PACKAGE_NAME  | MOF    |
 | SCHEMA_NAME        | MODEL  |
 +--------------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create schema and table
-0: jdbc:farrago:> create schema csv_schema;
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> -- Create schema and table
+> create schema csv_schema;
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -89,16 +83,16 @@
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign table csv_schema.example(
-. . . . . . . . >     id int not null,
-. . . . . . . . >     name varchar(50) not null,
-. . . . . . . . >     extra_field char(1) not null)
-. . . . . . . . > server csv_server
-. . . . . . . . > options (table_name 'example');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Check the foreign table appears and the columns are correct
-0: jdbc:farrago:> !tables
+> 
+> create foreign table csv_schema.example(
+>     id int not null,
+>     name varchar(50) not null,
+>     extra_field char(1) not null)
+> server csv_server
+> options (table_name 'example');
+> 
+> -- Check the foreign table appears and the columns are correct
+> !tables
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -110,7 +104,7 @@
 | LOCALDB    | SALES        | JOINVIEW    | VIEW           |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPSVIEW   | VIEW           |          |           |             |            |                            |                 |
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> !columns EXAMPLE
+> !columns EXAMPLE
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
@@ -118,11 +112,11 @@
 | LOCALDB    | CSV_SCHEMA   | EXAMPLE     | NAME         | 12         | VARCHAR    | 50           | 0           |             |                 | 0         |          |             | 0              | 0                 | 50                 | 2                 | NO           |                |               |              |                   |
 | LOCALDB    | CSV_SCHEMA   | EXAMPLE     | EXTRA_FIELD  | 1          | CHAR       | 1            | 0           |             |                 | 0         |          |             | 0              | 0                 | 1                  | 3                 | NO           |                |               |              |                   |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Check metadata updated when dropping
-0: jdbc:farrago:> drop foreign table cvs_schema.example;
+> 
+> -- Check metadata updated when dropping
+> drop foreign table cvs_schema.example;
 Error: DDL validation error near line 1, column 31: Reference to unknown foreign table "EXAMPLE" (state=,code=0)
-0: jdbc:farrago:> !tables
+> !tables
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -134,7 +128,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | LOCALDB    | SALES        | JOINVIEW    | VIEW           |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPSVIEW   | VIEW           |          |           |             |            |                            |                 |
 +------------+--------------+-------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> !columns EXAMPLE
+> !columns EXAMPLE
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
@@ -142,9 +136,9 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | LOCALDB    | CSV_SCHEMA   | EXAMPLE     | NAME         | 12         | VARCHAR    | 50           | 0           |             |                 | 0         |          |             | 0              | 0                 | 50                 | 2                 | NO           |                |               |              |                   |
 | LOCALDB    | CSV_SCHEMA   | EXAMPLE     | EXTRA_FIELD  | 1          | CHAR       | 1            | 0           |             |                 | 0         |          |             | 0              | 0                 | 1                  | 3                 | NO           |                |               |              |                   |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop server csv_server cascade;
-0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
+> 
+> drop server csv_server cascade;
+> select "name" from sys_fem.med."DataServer" order by 1;
 +-------------------------------+
 |             name              |
 +-------------------------------+
@@ -157,9 +151,9 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
 | SYS_MOF                       |
 +-------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema csv_schema cascade;
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> drop schema csv_schema cascade;
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -170,9 +164,9 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop foreign data wrapper test_jdbc;
-0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
+> 
+> drop foreign data wrapper test_jdbc;
+> select "name" from sys_fem.med."DataWrapper" order by 1;
 +-------------------+
 |       name        |
 +-------------------+
@@ -184,5 +178,5 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | SYS_MOCK          |
 | SYS_MOCK_FOREIGN  |
 +-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

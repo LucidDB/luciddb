@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,36 +43,40 @@ import org.eigenbase.util.*;
 public class SetopOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        assert (callBinding.getOperandCount() == 2) : "setops are binary (for now)";
+        assert callBinding.getOperandCount() == 2
+            : "setops are binary (for now)";
         RelDataType [] argTypes =
             new RelDataType[callBinding.getOperandCount()];
         int colCount = -1;
+        final SqlValidator validator = callBinding.getValidator();
         for (int i = 0; i < argTypes.length; i++) {
-            final SqlNode operand = callBinding.getCall().operands[i];
             final RelDataType argType =
-                argTypes[i] =
-                    callBinding.getValidator().getValidatedNodeType(operand);
+                argTypes[i] = callBinding.getOperandType(i);
             Util.permAssert(
                 argType.isStruct(),
                 "setop arg must be a struct");
-            if (i == 0) {
-                colCount = argTypes[0].getFieldList().size();
-                continue;
-            }
 
             // Each operand must have the same number of columns.
             final RelDataTypeField [] fields = argType.getFields();
+            if (i == 0) {
+                colCount = fields.length;
+                continue;
+            }
+
             if (fields.length != colCount) {
                 if (throwOnFailure) {
-                    throw callBinding.getValidator().newValidationError(
-                        operand,
+                    SqlNode node = callBinding.getCall().getOperands()[i];
+                    if (node instanceof SqlSelect) {
+                        node = ((SqlSelect) node).getSelectList();
+                    }
+                    throw validator.newValidationError(
+                        node,
                         EigenbaseResource.instance().ColumnCountMismatchInSetop
                         .ex(
                             callBinding.getOperator().getName()));
@@ -100,11 +104,11 @@ public class SetopOperandTypeChecker
                         SqlUtil.getSelectListItem(
                             callBinding.getCall().operands[0],
                             i);
-                    throw callBinding.getValidator().newValidationError(
+                    throw validator.newValidationError(
                         field,
                         EigenbaseResource.instance().ColumnTypeMismatchInSetop
                         .ex(
-                            new Integer(i + 1), // 1-based
+                            i + 1, // 1-based
                             callBinding.getOperator().getName()));
                 } else {
                     return false;

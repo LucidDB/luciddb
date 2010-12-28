@@ -8,6 +8,8 @@ create schema lbm;
 set schema 'lbm';
 set path 'lbm';
 
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
 create server test_data
 foreign data wrapper sys_file_wrapper
 options (
@@ -328,6 +330,31 @@ insert into multimulti
         where a1 = 11 and b1 = 12;
 select * from multimulti order by a1, b1, c1, a2, b2, c2, a3, b3, c3;
 
+-- Test for residual filter bug
+-- force plan without index access
+-- and use only residual filters
+drop index multimulti_mixed_a;
+drop index multimulti_mixed_b;
+drop index multimulti_mixed_c;
+
+!set outputformat csv
+explain plan for
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+!set outputformat table
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+
+!set outputformat csv
+explain plan for
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+!set outputformat table
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+
+!set outputformat csv
+explain plan for
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+!set outputformat table
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+
 drop table multimulti;
 
 
@@ -384,7 +411,6 @@ create index typed_m on typed(m);
 create index typed_n on typed(n);
 
 -- LER-422: merging with singleton 
--- http://jira.lucidera.com/browse/LER-422
 insert into typed values(
     1,X'deadbeef',null,'first',
     0.16,1,1,1,
@@ -410,5 +436,261 @@ insert into typed values(
 insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
 select * from typed_src;
 
+
+-------------------------------------------------------------
+-- Part 5. Minus stream                                    --
+-------------------------------------------------------------
+
+alter session implementation set jar
+    sys_boot.sys_boot.luciddb_index_only_plugin;
+
+-- LER-3491
+create table t(a int);
+create index it on t(a);
+insert into t values (10), (11), (12), (13), (14), (15), (16), (17);
+insert into t values(0);
+delete from t where a = 10;
+
+select a, count(*) from t group by a having a = 10;
+
+-------------------------------------------------------------
+-- Part 6. Misc tests for bugfixes
+-------------------------------------------------------------
+
+-- FNL-63 -- multiple nulls in a unique constraint column
+create table null_src(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int
+);
+
+insert into null_src values
+(null, null, null, null, null),
+(3, null, 'three2', 'three2', 32),
+(1, 10000, 'one', 'ten-thousand', 10000),
+(2, 30, 'two', 'thirty', 60),
+(3, null, 'three', null, null),
+(2, 30, 'two', 'forty', 80),
+(null, 10, null, 'ten', null),
+(4, 40, 'four', 'forty', 160);
+
+alter session set "errorMax"=10;
+alter session set "logDir" = 'testlog';
+
+create table null_uc_sk(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int,
+  constraint n_pkey_unique UNIQUE(pkey, colbigint)
+);
+
+!set showwarnings true
+insert into null_uc_sk select * from null_src;
+select * from null_uc_sk order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey is null order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey = 3 order by pkey, colbigint, colint;
+
+-- verify that minus stream restart works correctly when doing a keyonly scan
+-- on a composite index where only a partial key is read
+create table minus(a int, b int, c int);
+create index iminus on minus(a, b);
+insert into minus values(0,0,0);
+insert into minus values(0,1,1);
+insert into minus values(0,2,2);
+insert into minus values(0,3,3);
+insert into minus values(1,0,4);
+insert into minus values(1,1,5);
+insert into minus values(1,2,6);
+insert into minus values(1,3,7);
+insert into minus values(0,0,8);
+insert into minus values(0,1,9);
+insert into minus values(0,2,10);
+insert into minus values(0,3,11);
+insert into minus values(1,0,12);
+insert into minus values(1,1,13);
+insert into minus values(1,2,14);
+insert into minus values(1,3,15);
+insert into minus values(0,0,16);
+delete from minus where c in (1,16);
+-- fake stats so index is chosen
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MINUS', 100);
+!set outputformat csv
+explain plan for select a, count(*) from minus group by a;
+!set outputformat table
+select a, count(*) from minus group by a;
+
+truncate table minus;
+insert into minus values(0,1,0);
+insert into minus values(0,1,1);
+insert into minus values(0,1,2);
+insert into minus values(0,1,3);
+insert into minus values(0,1,4);
+insert into minus values(0,1,5);
+insert into minus values(0,1,6);
+insert into minus values(0,1,7);
+insert into minus values(0,2,8);
+insert into minus values(0,2,9);
+insert into minus values(0,2,10);
+insert into minus values(0,2,11);
+insert into minus values(0,2,12);
+insert into minus values(0,2,13);
+insert into minus values(0,2,14);
+insert into minus values(0,2,15);
+insert into minus values(0,3,16);
+insert into minus values(0,3,17);
+insert into minus values(0,3,18);
+insert into minus values(0,3,19);
+insert into minus values(0,3,20);
+insert into minus values(0,3,21);
+insert into minus values(0,3,22);
+insert into minus values(0,3,23);
+insert into minus values(0,1,24);
+insert into minus values(0,4,25);
+insert into minus values(0,4,26);
+insert into minus values(0,4,27);
+insert into minus values(0,4,28);
+insert into minus values(0,4,29);
+insert into minus values(0,4,30);
+insert into minus values(0,4,31);
+insert into minus values(1,4,32);
+delete from minus where c = 24 or c = 16;
+-- fake stats so index is chosen
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MINUS', 100);
+!set outputformat csv
+explain plan for select a, count(*) from minus group by a;
+!set outputformat table
+select a, count(*) from minus group by a;
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- LER-5800
+create table t1(a int);
+create index it1 on t1(a);
+create table t2(a int);
+insert into t2 values(2), (2), (2);
+insert into t1 values(null), (1), (1), (1), (2);
+insert into t1 select * from t2;
+insert into t1 values(2);
+select * from t1 order by a;
+
+-- incur the same unique constraint violation multiple times
+-- error logging has already been enabled above
+create table u(a int unique);
+insert into u values(1);
+insert into u values(1);
+insert into u values(1);
+
+-- LER-8002
+insert into u values (2),(3),(4),(5),(6),(7),(8),(9),(10);
+delete from u where a = 10;
+insert into u select * from u;
+select * from u order by a;
+
+-- LER-9058
+-- A varchar column size of 16380 multipled by 2 equals 32K; a size of 16382
+-- multipled by 2 will exceed 32K
+create table vc(
+    a varchar(16380), b varchar(16382), c varchar(32768), d varchar(65535));
+create index ivc1 on vc(a);
+create index ivc2 on vc(b);
+create index ivc3 on vc(c);
+create index ivc4 on vc(d);
+insert into vc values
+    ('a1', 'b1', 'c1', 'd1'),
+    ('a2', 'b2', 'c2', 'd2'),
+    ('a3', 'b3', 'c3', 'd3'),
+    ('a4', 'b4', 'c4', 'd4');
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'VC', 10000);
+-- make sure the index is used
+!set outputformat csv
+explain plan for select * from vc where a = 'a1';
+explain plan for select * from vc where b = 'b2';
+explain plan for select * from vc where c = 'c3';
+explain plan for select * from vc where d = 'd4';
+!set outputformat table
+select * from vc where a = 'a1';
+select * from vc where b = 'b2';
+select * from vc where c = 'c3';
+select * from vc where d = 'd4';
+
+create table vc2(a varchar(40));
+insert into vc2 values
+    (null),(null),(null),(null),(null),(null),(null),(null),(null),(null);
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+create index i_vc2 on vc2(a);
+delete from vc2 where lcs_rid(a) = 0;
+!set outputformat csv
+explain plan for select count(*) from vc2 where a is null;
+!set outputformat table
+select count(*) from vc2 where a is null;
+
+-- LER-10217 -- Note these testcases may not cause a failure even w/o the fix
+-- for LER-10217, as that bug requires the data to be sorted in a particular
+-- order, which is non-deterministic.  However, they do exercise the codepaths
+-- introduced by the fix.
+create table t5(
+    a varchar(4000), b varchar(4000), c varchar(4000), d varchar(4000), 
+    e varchar(4000));
+create index it5a on t5(a);
+create index it5b on t5(b);
+create index it5c on t5(c);
+create index it5d on t5(d);
+create index it5e on t5(e);
+create table src(a varchar(4000));
+insert into src values
+    ('a'),('a'),('b'),('c'),('d'),('e'),('a'),('a');
+insert into src select * from src;
+insert into src select * from src;
+insert into t5 select a, a, a, a, a from src;
+select * from t5 where a = 'a';
+-- make sure the index was used
+!set outputformat csv
+explain plan for select * from t5 where a = 'a';
+!set outputformat table
+
+create table t3(a varchar(4000), b varchar(4000), c varchar(4000));
+create index it3a on t3(a);
+create index it3b on t3(b);
+create index it3c on t3(c);
+truncate table src;
+insert into src values
+    ('a'),('b'),('c'),('d'),('e'),('f'),('g'),('h'),('a'),('i'),('a'),('b'),
+    ('c'),('d'),('e'),('f');
+insert into src select * from src;
+insert into t3 select a, a, a from src;
+select * from t3 where a = 'a';
+-- make sure the index was used
+!set outputformat csv
+explain plan for select * from t3 where a = 'a';
+
+-- LER-11056 -- When rebuilding unique indexes for the alter table rebuild,
+-- rids in the current deletion index should be ignored
+create table uu(a int unique, b int, c int, d int, e int);
+insert into uu values(0,0,0,0,0),(1,1,1,1,1);
+update uu set b = b + 1, c = c + 1, d = d + 1, e = e + 1;
+alter table uu rebuild;
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'UU', 10000);
+-- make sure the index is being used
+!set outputformat csv
+explain plan for select * from uu where a = 0;
+!set outputformat table
+select * from uu where a = 0;
+
 -- cleanup
 drop server test_data cascade;
+
+-- End lbm.sql
+

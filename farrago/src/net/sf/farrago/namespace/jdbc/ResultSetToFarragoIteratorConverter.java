@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.namespace.jdbc;
 
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
@@ -52,10 +53,10 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 class ResultSetToFarragoIteratorConverter
-    extends ConverterRel
-    implements JavaRel
+    extends ConverterRelImpl
+    implements ConverterRel,
+        JavaRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -78,7 +79,7 @@ class ResultSetToFarragoIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public ResultSetToFarragoIteratorConverter clone()
     {
         ResultSetToFarragoIteratorConverter clone =
             new ResultSetToFarragoIteratorConverter(
@@ -113,9 +114,9 @@ class ResultSetToFarragoIteratorConverter
                 TypeName.forOJClass(OJUtil.clazzResultSet),
                 varResultSet);
 
-        RelDataType rowType = getRowType();
-        FarragoTypeFactory factory =
-            farragoImplementor.getPreparingStmt().getFarragoTypeFactory();
+        final FarragoPreparingStmt stmt = farragoImplementor.getPreparingStmt();
+        final FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
+        final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         JavaRexBuilder javaRexBuilder =
@@ -133,12 +134,15 @@ class ResultSetToFarragoIteratorConverter
             if ((SqlTypeUtil.isJavaPrimitive(type)) && !type.isNullable()) {
                 // TODO:  make this official:  java.sql and java.nio
                 // use the same accessor names, happily,
-                // (except for boolean, sadly)
+                // (except for boolean and tinyint, sadly)
                 String methodName =
                     ReflectUtil.getByteBufferReadMethod(
                         factory.getClassForPrimitive(type)).getName();
-                if (type.getSqlTypeName() == SqlTypeName.Boolean) {
+                if (type.getSqlTypeName() == SqlTypeName.BOOLEAN) {
                     methodName = "getBoolean";
+                }
+                if (type.getSqlTypeName() == SqlTypeName.TINYINT) {
+                    methodName = "getByte";
                 }
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
@@ -146,11 +150,11 @@ class ResultSetToFarragoIteratorConverter
                 String methodName;
                 if (SqlTypeUtil.inCharFamily(type)) {
                     methodName = "getString";
-                } else if (type.getSqlTypeName() == SqlTypeName.Timestamp) {
+                } else if (type.getSqlTypeName() == SqlTypeName.TIMESTAMP) {
                     methodName = "getTimestamp";
-                } else if (type.getSqlTypeName() == SqlTypeName.Date) {
+                } else if (type.getSqlTypeName() == SqlTypeName.DATE) {
                     methodName = "getDate";
-                } else if (type.getSqlTypeName() == SqlTypeName.Time) {
+                } else if (type.getSqlTypeName() == SqlTypeName.TIME) {
                     methodName = "getTime";
                 } else {
                     methodName = "getObject";
@@ -159,31 +163,50 @@ class ResultSetToFarragoIteratorConverter
                     new MethodCall(castResultSet, methodName, colPosExpList);
             }
 
-            // cast to target type, or narrow if necessary
+            // cast to target type, or perhaps narrow the external data if
+            // it is of greater precision that Farrago supports
             boolean narrow = false;
-            if (type.getSqlTypeName() == SqlTypeName.Decimal
-                && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) {
-                narrow = true;
+            if ((type.getSqlTypeName() == SqlTypeName.DECIMAL)
+                && (type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION))
+            {
+                narrow =
+                    stmt.getSession().getSessionVariables().getBoolean(
+                        FarragoDefaultSessionPersonality.SQUEEZE_JDBC_NUMERIC);
             }
             if (narrow) {
-                ExpressionList args = 
-                    new ExpressionList(
-                        rhsExp,
-                        Literal.makeLiteral(type.getPrecision()),
-                        Literal.makeLiteral(type.getScale()));
-                rhsExp = new MethodCall(
-                    OJClass.forClass(EncodedSqlDecimal.class),
-                    "narrowCast",
-                    args);
+                // allocate a high precision object as class data member
+                OJClass highPrecisionClazz =
+                    OJUtil.typeToOJClass(type, getCluster().getTypeFactory());
+                Variable varNarrow = implementor.newVariable();
+                memberList.add(
+                    new FieldDeclaration(
+                        new ModifierList(ModifierList.PRIVATE),
+                        TypeName.forOJClass(highPrecisionClazz),
+                        varNarrow.toString(),
+                        new AllocationExpression(
+                            highPrecisionClazz,
+                            new ExpressionList())));
+
+                methodBody.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            varNarrow,
+                            EncodedSqlDecimal.NARROW_CAST_METHOD_NAME,
+                            new ExpressionList(rhsExp))));
+                rhsExp = varNarrow;
+                getCluster().getEnv().bindVariable(
+                    rhsExp.toString(),
+                    highPrecisionClazz);
             }
             RexNode rhs =
                 javaRexBuilder.makeJava(
                     getCluster().getEnv(),
                     rhsExp);
-            if (!narrow){
-                rhs = javaRexBuilder.makeAbstractCast(
-                    field.getType(),
-                    rhs);
+            if (!narrow) {
+                rhs =
+                    javaRexBuilder.makeAbstractCast(
+                        field.getType(),
+                        rhs);
             }
 
             final RexToOJTranslator translator =
@@ -225,15 +248,13 @@ class ResultSetToFarragoIteratorConverter
                 },
                 methodBody));
 
-        return
-            new AllocationExpression(
-                TypeName.forOJClass(
-                    OJClass.forClass(ResultSetTupleIter.class)),
-                new ExpressionList(
-                    new CastExpression(
-                        TypeName.forOJClass(OJUtil.clazzResultSet),
-                        childObj)),
-                memberList);
+        return new AllocationExpression(
+            stmt.getResultSetTupleIterTypeName(),
+            new ExpressionList(
+                new CastExpression(
+                    OJUtil.typeNameForClass(ResultSetProvider.class),
+                    childObj)),
+            memberList);
     }
 }
 

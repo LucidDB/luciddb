@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,13 +30,21 @@ FENNEL_BEGIN_NAMESPACE
  * FileSystem provides some static utility methods for manipulating the OS
  * file system.
  */
-class FileSystem
+class FENNEL_COMMON_EXPORT FileSystem
 {
 public:
     static void remove(char const *filename);
     static bool setFileAttributes(char const *filename,bool readOnly = 1);
     static bool doesFileExist(char const *filename);
-    static bool getDiskFreeSpace(char const *dir, FileSize *availableSpace);
+
+    /**
+     * Determines how much free space is available in a file system.
+     *
+     * @param path the pathname of any file within the file system
+     * @param availableSpace returns the number of free bytes available in the
+     * file system
+     */
+    static void getDiskFreeSpace(char const *path, FileSize &availableSpace);
 };
 
 FENNEL_END_NAMESPACE

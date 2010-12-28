@@ -1,0 +1,400 @@
+LucidDB Binary Release 0.9.3
+
+----------------------------------------------------------------------
+HOME PAGE
+
+http://www.luciddb.org
+
+----------------------------------------------------------------------
+INSTALLATION
+
+This page explains how to install and run LucidDB:
+
+http://docs.eigenbase.org/LucidDbGettingStarted
+
+Source releases are also available:
+
+http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
+
+----------------------------------------------------------------------
+GETTING IN TOUCH
+
+The mailing list for the user community is
+
+luciddb-users@lists.sf.net
+
+Subscribe at
+
+http://sourceforge.net/mail/?group_id=157599
+
+There is also a ##luciddb IRC channel on freenode.net.
+
+------------------------------------------------------------
+RELEASE NOTES
+
+This binary release is intended for use by anyone who wants to run
+LucidDB without having to build anything.
+
+LucidDB packaging does not yet support automatic upgrade, so install this
+release in a fresh location; do not attempt to unpack over an existing
+installation!
+
+For manual upgrade from an older version, use this procedure:
+
+http://docs.eigenbase.org/LucidDbUpgrade
+
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
+
+Note that in version 0.9.2, the default client/server JDBC protocol
+was changed from RMI to HTTP.  This change affects upgraded servers,
+as well as any installation procedures developed against older
+versions.  For more information, please see this wiki page:
+
+http://pub.eigenbase.org/wiki/FarragoHttpClient
+
+------------------------------------------------------------
+LEGAL
+
+Copyright (C) 2005 LucidEra Inc
+Copyright (C) 1999 The Eigenbase Project and others
+
+LucidDB and the LucidDB logo are trademarks of LucidEra, Inc.
+
+This distribution of LucidDB is licensed under the GNU General
+Public License; see file COPYING for details.  License terms for
+third-party libraries contained in this distribution are provided as
+text files in the lib directory.
+
+To obtain the source code from which this distribution was built,
+please visit http://www.eigenbase.org/download.html.
+
+----------------------------------------------------------------------
+CHANGE HISTORY
+
+Changes since 0.9.1 include
+
+- add catalog-based password authentication
+- change to HTTP as default client/server JDBC protocol
+- add CPU cache-consciousness system parameter
+- simplify build instructions a little bit
+- beginning of cleanups on test harness
+- include JTDS driver in classpath, and eliminate FarragoMedJdbc3p.jar
+- fix deletion index rid-checking bug in ALTER TABLE REBUILD
+- fix bitmap index creation bug for trailing spaces (LDB-198)
+- fix catalog access problems via upgrade to Hibernate 3.3.2 (ENK-8)
+- fix cancel for ANALYZE TABLE (FRG-379)
+- add SKIP_TYPE_CHECK option to JDBC foreign data wrapper (FRG-340)
+- support usage of dynamic parameters within UDX invocation
+- improve JDBC foreign data wrapper SQL pushdown
+- validate name uniqueness for CREATE USER/ROLE (FRG-244)
+
+Changes since 0.9.0 include
+
+- miscellaneous compiler compatibility fixes
+- fix buffer pool requirement calculation for nested loop joins
+- optimize no-op replace column updates to avoid touching pages
+- fix hang in kill/shutdown (FRG-294)
+- additional bitmap index fixes
+- optimize column store scans so filtered columns are scanned first
+- fix crash in cleanup of dynamic parameter for unopened stream
+- use UTF-8 for XMI catalog export
+- fix catalog write performance on OpenSUSE (FRG-376)
+
+Changes since 0.8.0 include
+
+- add new feature ALTER TABLE ADD COLUMN
+- add new feature for support of the UDPATE statement
+- add new feature for UNICODE support
+- add new feature for CURRENT_SCHEMA/CATALOG (FRG-370)
+- add support for UDX's returning dynamic types based on
+  column list parameters
+- add feature !set showtime to sqlline
+- add Star Schema Benchmark (SSB)
+- overhaul build to use cmake instead of autotools
+- overhaul Windows build to use MSVC instead of mingw
+- change catalog persistence to use Hibernate
+- fix for end-of-full-page loader bug
+- allow restore_database to bypass restore of catalog data
+- optimize common relational subexpressions
+- optimize full-column update in MERGE/UPDATE
+- change EXPLAIN PLAN to output MAX($1) instead of MAX(1)
+- fix typo in asc_or_desc column name in JDBC index view
+- fix buffer-flushing RID overlap bug in bitmap index generator
+- optimize filters on null-generating OUTER JOIN inputs
+- fix to allow ordering on expressions from the projection when 
+  the column expression is aliased
+- fix validation for union of BOOLEAN and VARCHAR columns
+- optimize to detect removable outer joins before semijoins
+- optimize away some self-joins
+- improve error message when attempting to drop an in-use warehouse
+  label
+- fix row count reset bug with CREATE OR REPLACE
+- change penultimate_values UDX to return null for singular value
+- fix index searches with prefetch and prepared statements (LDB-193)
+- optimize away redundant casts
+- fix backup for extent allocation nodes with 0 allocated pages
+- fix bitmap index merge for oversize index keys
+- fix validation of cacheReservePercentage parameter (FRG-366)
+- fix PIVOT_COLUMNS_TO_ROWS UDX so it throws an exception if the
+  input does not contain a single row
+- fix bug with complaints from redundant database shutdown (LDB-190)
+- fix I/O notification race condition in backup/restore (FNL-82)
+- prevent duplicate target column names in INSERT/UPDATE;
+  prevent cast from datetime to BIGINT; fix error message for
+  illegal conversion in UPDATE (FRG-156, FRG-255, FRG-273)
+- fix hang in DBA_SESSIONS view when DML is in progress (FRG-294)
+- make abort work in most common cases (FRG-159, FNL-47, FNL-48,
+  LDB-122, FRG-349)
+- fix NPE when input to split_rows has null value
+- prevent usage of non-boolean expression in ON clause (FRG-71)
+
+Changes since 0.7.4 include
+
+- add new feature for warehouse labels
+- add new feature for hot/incremental/differential backup/restore
+- fix timestamp fractional seconds formatting when cast to VARCHAR
+- add new applib.contiguous_value_intervals UDX
+- add new sys_root.test_data_server and
+  sys_root.test_all_servers_for_wrapper system procedures for
+  testing links to SQL/MED data servers
+- add ext directories (e.g. for moodss) to distribution (LDB-189)
+- fix uninitialized variable which could cause bogus values
+  for page allocation performance counters (FNL-78)
+- rename non-standard POW function to SQL:2003 standard POWER (FRG-329)
+- improve join ordering to use column count when number of rows is the same
+- fix for join order optimization when multiple join factors have same weight
+- add fifo support to flaftile reader
+- add Mondrian aggregate designer support
+- suppress AWT workaround in distribution startup scripts (FRG-350)
+- ignore semijoin candidates with poor selectivity
+- fix validator to prevent duplicate aliases in the same FROM clause
+- JDK 1.6 build support
+- add table prefix mapping support to SQL/MED JDBC wrapper
+- add JNDI data source and connection pool support to SQL/MED JDBC wrapper
+- fix SQL/MED JDBC wrapper pushdown bug with WHERE boolean_column (FRG-339)
+- optimize away redundant buffering for upserts, deletes, and self-inserts
+- fix shutdown warning from loopback connections (FRG-345)
+- TPC-H query phrasing refinements
+- fix bug with default values in INSERT/MERGE with UNION source
+- fix flatfile reader bug where csv header row has missing column names
+- fix for correlated subqueries on SQL/MED JDBC foreign tables
+- fix issues with UDX input restarts (FRG-331)
+- improve agg-distinct rewrite to consolidate common subexpressions
+- fix native code error message rendering (LDB-177)
+- use statement-level queues for all warnings
+- fix executor inefficiency from accidental Boost graph copying
+- add support for NATURAL JOIN
+- optimize away some redundant casts
+- lucidDbAllocFile script usage/validation improvements
+- improve optimizer to reorder index intersections by selectivity
+
+Changes since 0.7.3 include
+
+- new feature for constant reduction of uncorrelated subqueries by
+  optimizer (controlled by "reduceNonCorrelateSubqueries" session
+  parameter, default true)
+- optimizer rewrite for relational expressions known to return zero rows
+- improve join elimination algorithm to handle more than one outer join
+- implement on-the-fly rowcount estimates for flatfiles based on file
+  size and sampling the first block of rows
+- improve cost estimate for joins where not all join conditions can be
+  evaluated by hash join
+- pull up projections even if expressions in the projection are
+  subsequently referenced in join filters (to avoid cartesian joins)
+- avoid extra join/aggregation for queries with multiple distinct
+  aggregates but no non-distinct aggregates
+- optimize aggregations in multi-input unions into a single
+  aggregation
+- add experimental support for Hibernate catalog storage (enki)
+- add new lucidDbAllocFile utility for storage preallocation
+- DDL performance improvements
+- add new applib.estimate_statistics_for_schema UDP
+- add new applib.penultimate_values UDX
+- add new applib.topn UDX
+- improve applib.collapse_rows UDX to run in streaming fashion
+- add optional sequence numbers to applib.split_string UDX family
+- add JBoss embedding example code
+- add sqlline support for !set rowlimit
+- add new performance counters for page allocation tracking
+- change default for session parameter "validateDdlOnPrepare" from
+  "true" to "false" (FRG-268)
+- fix mbeans to avoid auto-starting the engine via new
+  "requireExistingEngine" Farrago JDBC connection property
+- new mbean for storage management
+- fix some missing/redundant performance counter increments
+- fix for cache race condition during checkpoints
+- fix for optimizer bug with 0-column projections in cartesian joins
+- fix optimizer estimate for distinct row count of right-semijoins
+- fix for constant reduction in UDR arguments
+- removal of incorrect assertion in bitmap index code
+- fix bug with ReshapeExecStream evaluation of IS NULL constraints
+- fix upgrade path broken by addition of new prefetch/2Q parameters in
+  0.7.3
+- fix memory corruption which could occur from combination of nested
+  loop join with index prefetch
+- fix rare crashes during recovery caused by stats timer kicking in
+- fix TRIM BOTH when string is all blanks (FRG-319)
+- return empty results for foreign key JDBC metadata queries
+- fix parsing of DELETE WHERE FALSE
+- miscellaneous fixes for IN and uncorrelated subqueries (e.g. FRG-277)
+- fix tiny memory leak from FarragoDbSessionIndexMap
+- fix validator to prevent nested agg function invocations,
+  agg function invocations in GROUP BY, and agg function invocations
+  in ORDER BY (unless SELECT is already aggregating)
+- when parsing type name from Java UDR method signature, trim
+  off leading and trailing blanks
+- fix constant reduction so time-sensitive evaluations such as 
+  CURRENT_TIMESTAMP return the same value when invoked from multiple
+  expressions within the same statement
+- fix DDL validator to prevent drop of system-defined indexes
+  such as deletion index and constraint indexes
+- more testcases for DELETE
+- update query 13 in TPC-H, and add suggested preallocation sizes and script
+
+Changes since 0.7.2 include
+
+- intelligent prefetch for all access paths
+- 2Q victimization algorithm for improved data caching
+- improvements to asynchronous I/O usage on Linux
+- improvements to data cache lazy writer
+- require libaio-dev package for builds
+- fixes for TPC-H dbgen
+- fixes for transaction boundaries in some DDL statements such as ANALYZE
+- fix validation for join on top of set operator (FRG-163)
+- use ESTIMATE in ANALYZE for TPC-H
+- fix references to JVM version in installer error messages
+- fix another rare bitmap index corruption (LDB-171)
+- fix leak of java.util.logger.Logging objects
+- fix for stale temp cache pages (FNL-69)
+- fix for large rows passing from Java into native executor (FRG-305)
+- allow JDBC driver to be loaded off of the bootstrap classpath
+- truncate large rows produced by APPLIB.COLLAPSE_ROWS
+- fix sqlline to ignore repeated Control-C signals
+- improve JDBC foreign data wrapper to push down projections and
+  handle TIMESTAMP and DATE literals for SQL Server
+- add SCHEMA_MAPPING and TABLE_MAPPING options to JDBC foreign data wrapper
+- fix non-nullable TINYINT datatype in JDBC foreign data wrapper
+- add SYS_ROOT.RETRIEVE_REPOSITORY_LOB_TEXT
+- optimizations for predicates known to be always true or false
+- support column-level AS aliasing for VALUES construct
+- fix for selectivity of non-pushable filters when computing distinct
+  row counts for aggregates and projections
+- fix for determination of uniqueness for join keys in the dimension
+  table of a semijoin
+- automatically strip invalid XML characters out of catalog XMI
+  imports
+- relax input restrictions for APPLIB.INSTR; increase output length for
+  APPLIB.STR_REPLACE
+- allow null inputs to APPLIB.SPLIT_STRING_TO_ROWS
+
+Changes since 0.7.1 include
+
+- sampling support for ANALYZE
+- BERNOULLI and SYSTEM options for TABLESAMPLE
+- significant performance improvement for large DROP operations
+- additional system views DBA_COLUMN_STATS and DBA_COLUMN_HISTOGRAMS
+- table name mapping support in JDBC foreign data wrapper
+- new system parameter "deviceSchedulerType" for controlling I/O impl
+- new VJDBC listener system parameter "connectionTimeoutMillis"
+- new session parameter "lastRowsRejected"
+- new performance counters
+  "DatabasePagesAllocatedAfterReclaim", "TempPagesAllocatedAfterReclaim"
+- miscellaneous optimizer improvements and fixes
+- optimize away distinct agg for semijoins where the keys are already unique
+- improve rowcount inference for UDX's (FRG-289)
+- support optimization for functional expressions in nested loop join
+  conditions
+- optimize away nested loop join temp index when LHS input is empty
+- fixes for a few problems in efficient subquery decorrelation
+- increase applib function input/output lengths
+- fixes for page versioning concurrency and other code review findings
+- fix a bad cache page access during index search
+- fixes for some rare bitmap index corruptions during incremental load
+- some segment-level tracing fixes
+- improved error reporting for failures setting large cache sizes
+- fix a rare problem with simultaneous commits (FNL-68)
+- fix decimal rounding mode for converting literals in VALUES clause
+- fix exception handling issues with JNI (FNL-67)
+- change LucidDB mbean to use local JDBC driver rather than RMI
+- improve EXPLAIN PLAN readability for GROUP BY
+- improve rejected row logfile naming
+
+Changes since 0.7.0 include
+
+- new nested loop join feature improves non-equijoin support for
+  both inner and outer joins
+- fixes in calendar-related applib functions
+- VJDBC default connection timeout changed to 1 day
+- fixes in rowscan-level filtering when used on the right hand side
+  of a cartesian product
+- validate to prevent duplicate column references in 
+  index/constraint definitions
+- support for USING clause join conditions
+- fix some code caching issues (FRG-263 and others)
+- fixes for default value usage (FRG-285)
+- fixes for rounding/truncation problems with large BIGINT values
+  (avoid usage of intermediate floating point operations)
+- fixes for outer join and rowscan row count estimation
+- blackhawk and LucidDB test harness improvements
+- Mondrian source replication feature added
+- fixes for bitmap index corruption during incremental loads
+- fixes for retrieving distinct DATE/TIME/TIMESTAMP objects via local JDBC
+  driver
+- suppress revalidation of dependent servers from CREATE OR REPLACE
+  WRAPPER
+- fix accidental conversion from empty string to NULL (FRG-275)
+- avoid preemptive exclusive locking for snapshot-versioned pages
+- fix some snapshot-versioned page deallocation problems
+
+Changes since 0.6.0 include
+
+- 64-bit support
+- fixes for asynchronous I/O calls
+- fixes to support data files larger than 4 gigabytes
+- improvements in timestamp and interval data type support
+- read/write concurrency with snapshot consistency
+- cost-based index selection
+- constant-reduction optimization for CURRENT_DATE, CURRENT_TIME, etc
+- new schema-selection property in JDBC URL's
+- new options for JDBC foreign data wrapper (FRG-267, schema mapping)
+- pushdown of filters into JDBC foreign data servers
+- fix for integer division behavior (round instead of truncate)
+- logging for export schema procedure now uses logDir parameter if set
+- pluggable authentication support via JAAS
+- new http option for client/server JDBC
+- fixes for out-of-disk exception handling
+- fix for btree split bug in incremental load
+- fixes for certain btree search bugs visible after upsert
+- disablement of suboptimal index-only scans
+- upgrade build to ant 1.7
+- fix for LDB-160 (ALTER TABLE REBUILD on table with GENERATED ALWAYS column)
+- fix for LDB-125 (flattened hierarchy cycle reporting)
+- fix for an obscure outer join optimization bug; fixes from findbugs
+- fix for cast of null values to/from certain datatypes
+- new applib routines (split strings, enforce row constraints, julian
+  date conversion)
+- fixes for null input in applib
+- fix for error message localization setup
+- new session parameter for controlling whether DDL preparation does validation
+- fix for row filtering bug with clusters on multiple columns
+- upgrades of miscellaneous thirdparty libraries
+- new check on startup for incompatible catalog version
+- mbeans for management and monitoring of LucidDB via JMX
+- new DYNAMIC_FUNCTION qualifier on UDR's
+- full error stack tracing for UDR invocation and scalar expression
+  exceptions
+- new warnings for SQL/MED source metadata changes
+- refined fix for LDB-90
+- improved SQL pretty printing (FRG-190, FRG-232, FRG-234)
+- fix to flatfile reader when source column count < target column
+  count
+- moodss integration improvements
+- fixes for null value btree insertion order FNL-63)
+- fix for segfault in hash aggregate on large data sets
+- fix for segfault in error handling during load
+- fixes for calendar generation regarding leap year, week start/end
+  dates
+- fix lingering table lock after executing DDL from within a UDR (FRG-141)
+- fix hang on abrupt shutdown during DML (LDB-150)

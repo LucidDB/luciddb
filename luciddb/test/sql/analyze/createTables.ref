@@ -1,0 +1,67 @@
+0: jdbc:luciddb:> ----------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- large data set from bench tables
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema analyzetest;
+0: jdbc:luciddb:> set schema 'analyzetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table BENCH10K (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "k2" bigint,
+. . . . . . . . > "k4" bigint,
+. . . . . . . . > "k5" bigint,
+. . . . . . . . > "k10" bigint,
+. . . . . . . . > "k25" bigint,
+. . . . . . . . > "k100" bigint,
+. . . . . . . . > "k1k" bigint,
+. . . . . . . . > "k10k" bigint,
+. . . . . . . . > "k40k" bigint,
+. . . . . . . . > "k100k" bigint,
+. . . . . . . . > "k250k" bigint,
+. . . . . . . . > "k500k" bigint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table BENCH1M (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "k2" bigint,
+. . . . . . . . > "k4" bigint,
+. . . . . . . . > "k5" bigint,
+. . . . . . . . > "k10" bigint,
+. . . . . . . . > "k25" bigint,
+. . . . . . . . > "k100" bigint,
+. . . . . . . . > "k1k" bigint,
+. . . . . . . . > "k10k" bigint,
+. . . . . . . . > "k40k" bigint,
+. . . . . . . . > "k100k" bigint,
+. . . . . . . . > "k250k" bigint,
+. . . . . . . . > "k500k" bigint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- populated from BENCH10K
+0: jdbc:luciddb:> create table BENCH1K (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "k2" bigint,
+. . . . . . . . > "k4" bigint,
+. . . . . . . . > "k5" bigint,
+. . . . . . . . > "k10" bigint,
+. . . . . . . . > "k25" bigint,
+. . . . . . . . > "k100" bigint,
+. . . . . . . . > "k1k" bigint,
+. . . . . . . . > "k10k" bigint,
+. . . . . . . . > "k40k" bigint,
+. . . . . . . . > "k100k" bigint,
+. . . . . . . . > "k250k" bigint,
+. . . . . . . . > "k500k" bigint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table CONCURRENT_SIM (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "k100" bigint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table INDEX_EST (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "kuniq" bigint unique not null,
+. . . . . . . . > "kuniq_null" bigint unique,
+. . . . . . . . > "k10" bigint not null,
+. . . . . . . . > "k1k" bigint not null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index INDEX_EST_IDX on INDEX_EST("k10", "k1k");
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

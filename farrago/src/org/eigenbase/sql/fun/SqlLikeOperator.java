@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,13 +54,19 @@ import org.eigenbase.util.*;
 public class SqlLikeOperator
     extends SqlSpecialOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean negated;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlLikeOperator.
+     *
+     * @param name Operator name
+     * @param kind Kind
+     * @param negated Whether this is 'NOT LIKE'
+     */
     SqlLikeOperator(
         String name,
         SqlKind kind,
@@ -69,7 +75,8 @@ public class SqlLikeOperator
         // LIKE is right-associative, because that makes it easier to capture
         // dangling ESCAPE clauses: "a like b like c escape d" becomes
         // "a like (b like c escape d)".
-        super(name,
+        super(
+            name,
             kind,
             30,
             false,
@@ -81,6 +88,11 @@ public class SqlLikeOperator
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns whether this is the 'NOT LIKE' operator.
+     *
+     * @return whether this is 'NOT LIKE'
+     */
     public boolean isNegated()
     {
         return negated;
@@ -99,14 +111,16 @@ public class SqlLikeOperator
         case 2:
             if (!SqlTypeStrategies.otcStringSameX2.checkOperandTypes(
                     callBinding,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
             break;
         case 3:
             if (!SqlTypeStrategies.otcStringSameX3.checkOperandTypes(
                     callBinding,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
 
@@ -118,14 +132,10 @@ public class SqlLikeOperator
                 "unexpected number of args to " + callBinding.getCall());
         }
 
-        if (!SqlTypeUtil.isCharTypeComparable(
-                callBinding.getValidator(),
-                callBinding.getScope(),
-                callBinding.getCall().operands,
-                throwOnFailure)) {
-            return false;
-        }
-        return true;
+        return SqlTypeUtil.isCharTypeComparable(
+            callBinding,
+            callBinding.getCall().getOperands(),
+            throwOnFailure);
     }
 
     public void unparse(
@@ -157,7 +167,7 @@ public class SqlLikeOperator
 
     public int reduceExpr(
         final int opOrdinal,
-        List list)
+        List<Object> list)
     {
         // Example:
         //   a LIKE b || c ESCAPE d || e AND f
@@ -172,20 +182,20 @@ public class SqlLikeOperator
                 list,
                 opOrdinal + 1,
                 getRightPrec(),
-                SqlKind.Escape);
+                SqlKind.ESCAPE);
         SqlNode exp2 = null;
         if ((opOrdinal + 2) < list.size()) {
             final Object o = list.get(opOrdinal + 2);
             if (o instanceof SqlParserUtil.ToTreeListItem) {
                 final SqlOperator op2 =
                     ((SqlParserUtil.ToTreeListItem) o).getOperator();
-                if (op2.getKind() == SqlKind.Escape) {
+                if (op2.getKind() == SqlKind.ESCAPE) {
                     exp2 =
                         SqlParserUtil.toTreeEx(
                             list,
                             opOrdinal + 3,
                             getRightPrec(),
-                            SqlKind.Escape);
+                            SqlKind.ESCAPE);
                 }
             }
         }
@@ -198,7 +208,7 @@ public class SqlLikeOperator
             operands = new SqlNode[] { exp0, exp1 };
             end = opOrdinal + 2;
         }
-        SqlCall call = createCall(operands, SqlParserPos.ZERO);
+        SqlCall call = createCall(SqlParserPos.ZERO, operands);
         SqlParserUtil.replaceSublist(list, opOrdinal - 1, end, call);
         return opOrdinal - 1;
     }

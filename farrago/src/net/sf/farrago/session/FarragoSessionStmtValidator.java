@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,11 +24,8 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import javax.jmi.reflect.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
@@ -43,7 +40,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -58,7 +54,6 @@ import org.eigenbase.util.*;
 public interface FarragoSessionStmtValidator
     extends FarragoAllocationOwner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -123,13 +118,27 @@ public interface FarragoSessionStmtValidator
     public FarragoDdlLockManager getDdlLockManager();
 
     /**
+     * Gets the warning queue to be used by this validator
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
+
+    /**
+     * Sets the warning queue to be used by this validator
+     *
+     * @param warningQueue target queue to use
+     */
+    public void setWarningQueue(FarragoWarningQueue warningQueue);
+
+    /**
      * Submits a request for access from the current user and/or role to a
      * catalog object via this validator's privilege checker. Actual checking of
      * the request may be deferred.
      *
      * @param obj object to be accessed
      * @param action the action to be performed on obj (see {@link
-     * PrivilegedActionEnum} for base set)
+     * net.sf.farrago.fem.security.PrivilegedActionEnum} for base set)
      */
     public void requestPrivilege(
         CwmModelElement obj,
@@ -289,7 +298,7 @@ public interface FarragoSessionStmtValidator
      * @return the list of all {@link SqlMoniker} object (schema and table)
      * names under the above criteria
      */
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names);
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names);
 
     /**
      * Sets the parser position to use for context in error messages.
@@ -302,7 +311,7 @@ public interface FarragoSessionStmtValidator
      * Validates that a particular feature is enabled.
      *
      * @param feature feature being used, represented as a resource definition
-     * from {@link EigenbaseResource}
+     * from {@link org.eigenbase.resource.EigenbaseResource}
      * @param context parser position context for error reporting, or null if
      * none available
      */
@@ -341,6 +350,19 @@ public interface FarragoSessionStmtValidator
      */
     public void validateDataType(SqlDataTypeSpec dataType)
         throws SqlValidatorException;
+
+    /**
+     * Sets the repository transaction context associated with this statement.
+     *
+     * @param reposTxnContext repos txn context to use
+     */
+    public void setReposTxnContext(FarragoReposTxnContext reposTxnContext);
+
+    /**
+     * @return the repository transaction context associated with this
+     * statement.
+     */
+    public FarragoReposTxnContext getReposTxnContext();
 }
 
 // End FarragoSessionStmtValidator.java

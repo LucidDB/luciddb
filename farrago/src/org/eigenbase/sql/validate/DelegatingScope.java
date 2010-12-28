@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public abstract class DelegatingScope
     implements SqlValidatorScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -56,22 +55,21 @@ public abstract class DelegatingScope
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a <code>DelegatingScope</code>.
+     *
+     * @param parent Parent scope
+     */
     DelegatingScope(SqlValidatorScope parent)
     {
         super();
-        this.validator = (SqlValidatorImpl) parent.getValidator();
         Util.pre(parent != null, "parent != null");
+        this.validator = (SqlValidatorImpl) parent.getValidator();
         this.parent = parent;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Registers a relation in this scope.
-     *
-     * @param ns Namespace representing the result-columns of the relation
-     * @param alias Alias with which to reference the relation, must not be null
-     */
     public void addChild(SqlValidatorNamespace ns, String alias)
     {
         // By default, you cannot add to a scope. Derived classes can
@@ -109,30 +107,14 @@ public abstract class DelegatingScope
         }
     }
 
-    protected void addTableNames(
-        SqlValidatorNamespace ns,
-        List<SqlMoniker> tableNames)
+    public void findAllColumnNames(List<SqlMoniker> result)
     {
-        SqlValidatorTable table = ns.getTable();
-        if (table == null) {
-            return;
-        }
-        String [] qnames = table.getQualifiedName();
-        if (qnames != null) {
-            tableNames.add(new SqlMonikerImpl(qnames, SqlMonikerType.Table));
-        }
+        parent.findAllColumnNames(result);
     }
 
-    public void findAllColumnNames(
-        String parentObjName,
-        List<SqlMoniker> result)
+    public void findAliases(List<SqlMoniker> result)
     {
-        parent.findAllColumnNames(parentObjName, result);
-    }
-
-    public void findAllTableNames(List<SqlMoniker> result)
-    {
-        parent.findAllTableNames(result);
+        parent.findAliases(result);
     }
 
     public String findQualifyingTableName(String columnName, SqlNode ctx)
@@ -170,10 +152,14 @@ public abstract class DelegatingScope
         if (identifier.isStar()) {
             return identifier;
         }
+
+        String tableName;
+        String columnName;
+
         switch (identifier.names.length) {
-        case 1: {
-            final String columnName = identifier.names[0];
-            final String tableName =
+        case 1:
+            columnName = identifier.names[0];
+            tableName =
                 findQualifyingTableName(columnName, identifier);
 
             //todo: do implicit collation here
@@ -185,14 +171,13 @@ public abstract class DelegatingScope
                     pos,
                     new SqlParserPos[] {
                         SqlParserPos.ZERO,
-                    pos
+                        pos
                     });
             validator.setOriginal(expanded, identifier);
             return expanded;
-        }
 
-        case 2: {
-            final String tableName = identifier.names[0];
+        case 2:
+            tableName = identifier.names[0];
             final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
             if (fromNs == null) {
                 throw validator.newValidationError(
@@ -200,7 +185,7 @@ public abstract class DelegatingScope
                     EigenbaseResource.instance().TableNameNotFound.ex(
                         tableName));
             }
-            final String columnName = identifier.names[1];
+            columnName = identifier.names[1];
             final RelDataType fromRowType = fromNs.getRowType();
             final RelDataType type =
                 SqlValidatorUtil.lookupFieldType(fromRowType, columnName);
@@ -213,10 +198,8 @@ public abstract class DelegatingScope
                         columnName,
                         tableName));
             }
-        }
 
         default:
-
             // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
             // for row and structured types
             assert identifier.names.length > 0;
@@ -235,9 +218,9 @@ public abstract class DelegatingScope
         return parent.lookupWindow(name);
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        return parent.isMonotonic(expr);
+        return parent.getMonotonicity(expr);
     }
 
     public SqlNodeList getOrderList()
@@ -245,6 +228,9 @@ public abstract class DelegatingScope
         return parent.getOrderList();
     }
 
+    /**
+     * Returns the parent scope of this <code>DelegatingScope</code>.
+     */
     public SqlValidatorScope getParent()
     {
         return parent;

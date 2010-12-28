@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,9 +28,6 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
@@ -53,7 +50,6 @@ import org.eigenbase.util.*;
 public interface FarragoSessionDdlValidator
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -153,10 +149,20 @@ public interface FarragoSessionDdlValidator
     /**
      * Sets the parser offset for the body of a given object.
      *
+     * <p>If the body text has preceding whitespace, trims the whitespace and
+     * advances the position by the number of whitespace characters removed.
+     * Returns the trimmed body.
+     *
      * @param obj object being defined
      * @param pos parser offset
+     * @param body text of body
+     *
+     * @return body text with preceding whitespace removed
      */
-    public void setParserOffset(RefObject obj, SqlParserPos pos);
+    public String setParserOffset(
+        RefObject obj,
+        SqlParserPos pos,
+        String body);
 
     /**
      * Retrieves the parser offset for the body of a given object.
@@ -206,13 +212,6 @@ public interface FarragoSessionDdlValidator
     public void executeStorage();
 
     /**
-     * Schedules truncation of an existing object.
-     *
-     * @param modelElement to be truncated
-     */
-    public void scheduleTruncation(CwmModelElement modelElement);
-
-    /**
      * Validates all scheduled operations. Validation may cause other objects to
      * be changed, so the process continues until a fixpoint is reached.
      *
@@ -238,9 +237,9 @@ public interface FarragoSessionDdlValidator
      * validate the names provided in a VIEW's explicit column list.
      *
      * @param collection Collection of CwmModelElements representing the
-     * explicity named columns
+     * explicitly named columns
      */
-    public void validateViewColumnList(Collection collection);
+    public void validateViewColumnList(Collection<?> collection);
 
     /**
      * Creates a new dependency.
@@ -285,6 +284,16 @@ public interface FarragoSessionDdlValidator
         SqlValidatorException ex);
 
     /**
+     * Deletes the given object and cascades deletion as necessary to
+     * subordinate objects. Implementation of deletion is handled with the
+     * highest performance possible given the underlying repository
+     * implementation.
+     *
+     * @param obj object to delete
+     */
+    public void deleteObject(RefObject obj);
+
+    /**
      * Adds a {@link FarragoSessionDdlDropRule}.
      *
      * @param refAssoc model association to which the rule relates
@@ -301,7 +310,8 @@ public interface FarragoSessionDdlValidator
      * @param element object impacted by replacement
      * @param ex exception to be handled, may be null
      */
-    public void setRevalidationResult(CwmModelElement element,
+    public void setRevalidationResult(
+        CwmModelElement element,
         EigenbaseException ex);
 
     /**
@@ -323,6 +333,21 @@ public interface FarragoSessionDdlValidator
      * @param analyzedSql Analyzed SQL for the view definition
      */
     void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
+
+    /**
+     * Obtains the single consistent timestamp for this DDL transaction.
+     *
+     * @return the timestamp for this DDL transaction
+     */
+    public String obtainTimestamp();
+
+    /**
+     * Tests if DDL statement is CREATE OR REPLACE.
+     *
+     * @return true if statement is CREATE OR REPLACE
+     */
+    // implement FarragoSessionDdlValidator
+    public boolean isReplace();
 }
 
 // End FarragoSessionDdlValidator.java

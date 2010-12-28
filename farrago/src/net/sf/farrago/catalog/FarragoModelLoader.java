@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,9 +31,9 @@ import net.sf.farrago.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
+
 import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
-import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
 import org.netbeans.mdr.persistence.jdbcimpl.*;
 
 
@@ -50,7 +50,6 @@ import org.netbeans.mdr.persistence.jdbcimpl.*;
  */
 public class FarragoModelLoader
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
@@ -60,7 +59,8 @@ public class FarragoModelLoader
 
     //~ Instance fields --------------------------------------------------------
 
-    protected MDRepository mdrRepos;
+    protected EnkiMDRepository mdrRepos;
+    private boolean openMdrReposSession;
     private String storageFactoryClassName;
     private final Properties storageProps;
     private final FarragoProperties farragoProperties;
@@ -83,9 +83,17 @@ public class FarragoModelLoader
     public void close()
     {
         if (mdrRepos != null) {
-            org.netbeans.jmiimpl.mof.model.NamespaceImpl.clearContains();
+            closeMdrSession();
             mdrRepos.shutdown();
             mdrRepos = null;
+        }
+    }
+
+    public void closeMdrSession()
+    {
+        if (openMdrReposSession) {
+            openMdrReposSession = false;
+            mdrRepos.endSession();
         }
     }
 
@@ -117,6 +125,9 @@ public class FarragoModelLoader
         }
         mdrRepos =
             MdrUtil.loadRepository(storageFactoryClassName, storageProps);
+
+        mdrRepos.beginSession();
+        openMdrReposSession = true;
     }
 
     public File getSystemReposFile()
@@ -137,25 +148,29 @@ public class FarragoModelLoader
             propsStream.close();
         }
 
-        Iterator iter = props.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        //noinspection unchecked
+        final Map<String, String> map = (Map) props;
+        for (Map.Entry<String, String> entry : map.entrySet()) {
             setStorageProperty(
-                entry.getKey().toString(),
+                entry.getKey(),
                 farragoProperties.expandProperties(
-                    entry.getValue().toString()));
+                    entry.getValue()));
         }
     }
 
     private void setUserReposProperties()
     {
+        // REVIEW: SWZ: 2008-02-12: This will fail badly if used with
+        // Enki+Hibernate.
         storageFactoryClassName = JdbcStorageFactory.class.getName();
         setStorageProperty(JdbcStorageFactory.STORAGE_URL, "jdbc:farrago:");
         setStorageProperty(JdbcStorageFactory.STORAGE_USER_NAME, "MDR");
         setStorageProperty(JdbcStorageFactory.STORAGE_SCHEMA_NAME, "MDR");
-        setStorageProperty(JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
+        setStorageProperty(
+            JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
             "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver");
-        setStorageProperty(JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
+        setStorageProperty(
+            JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
             "VARBINARY(10000)");
     }
 

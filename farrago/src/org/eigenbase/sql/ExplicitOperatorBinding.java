@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,9 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -34,10 +37,10 @@ import org.eigenbase.reltype.*;
 public class ExplicitOperatorBinding
     extends SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType [] types;
+    private final SqlOperatorBinding delegate;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -46,6 +49,7 @@ public class ExplicitOperatorBinding
         RelDataType [] types)
     {
         this(
+            delegate,
             delegate.getTypeFactory(),
             delegate.getOperator(),
             types);
@@ -56,8 +60,18 @@ public class ExplicitOperatorBinding
         SqlOperator operator,
         RelDataType [] types)
     {
+        this(null, typeFactory, operator, types);
+    }
+
+    private ExplicitOperatorBinding(
+        SqlOperatorBinding delegate,
+        RelDataTypeFactory typeFactory,
+        SqlOperator operator,
+        RelDataType [] types)
+    {
         super(typeFactory, operator);
         this.types = types;
+        this.delegate = delegate;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -72,6 +86,16 @@ public class ExplicitOperatorBinding
     public RelDataType getOperandType(int ordinal)
     {
         return types[ordinal];
+    }
+
+    public EigenbaseException newError(
+        SqlValidatorException e)
+    {
+        if (delegate != null) {
+            return delegate.newError(e);
+        } else {
+            return SqlUtil.newContextException(SqlParserPos.ZERO, e);
+        }
     }
 
     public boolean isOperandNull(int ordinal, boolean allowCast)

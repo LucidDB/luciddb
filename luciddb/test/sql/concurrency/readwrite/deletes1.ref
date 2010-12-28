@@ -1,0 +1,104 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> create table s1 (i1 int);
+0 rows affected.
+> create table s2 (i1 int);
+0 rows affected.
+> create table s3 (i1 int);
+0 rows affected.
+> create table s4 (i1 int);
+0 rows affected.
+> create table s5 (i1 int);
+0 rows affected.
+> create view v2 as select * from s2;
+0 rows affected.
+> create view v3 as select * from s3
+> where i1 > (select min(i1) from s5);
+0 rows affected.
+> create view v4 as select * from s4;
+0 rows affected.
+> insert into s1 values (1),(2),(3),(4),(5);
+5 rows affected.
+> insert into s2 values (1),(2),(3),(4),(5);
+5 rows affected.
+> insert into s3 values (3),(4);
+2 rows affected.
+> insert into s4 values (0);
+1 row affected.
+> insert into s5 values (0);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> drop table s1 cascade;
+0 rows affected.
+> drop table s2 cascade;
+0 rows affected.
+> drop table s3 cascade;
+0 rows affected.
+> drop table s4 cascade;
+0 rows affected.
+> drop table s5 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread deletes1
+> set schema 'rwconcur';
+0 rows affected.
+> delete from s1 where
+> i1 = (select min(i1) + sys_boot.mgmt.sleep(10000) from v2
+> where i1 > (select min(i1) + sys_boot.mgmt.sleep(10000) from v4)) or
+> i1 + sys_boot.mgmt.sleep(5000) in (select i1 from s3);
+3 rows affected.
+> select * from s1;
++------------+
+| I1         |
++------------+
+| 2          |
+| 5          |
++------------+
+
+-- end of thread deletes1
+
+-- thread selects1
+> set schema 'rwconcur';
+0 rows affected.
+> select * from s1 where
+> i1 = (select * from s2 where i1 + sys_boot.mgmt.sleep(10000) =
+> (select min(v3.i1) from v3 where v3.i1 + s2.i1 > 0 )) and
+> i1 + sys_boot.mgmt.sleep(5000) in (select * from s2);
++------------+
+| I1         |
++------------+
+| 3          |
++------------+
+
+> select * from s1;
++------------+
+| I1         |
++------------+
+| 2          |
+| 5          |
++------------+
+
+-- end of thread selects1
+
+-- thread drops4
+> set schema 'rwconcur';
+0 rows affected.
+> drop table s4;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Dropping table "RWCONCUR"."S4" requires CASCADE because other objects still reference it
+-- end of thread drops4
+
+-- thread drops5
+> set schema 'rwconcur';
+0 rows affected.
+> drop table s5;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Dropping table "RWCONCUR"."S5" requires CASCADE because other objects still reference it
+-- end of thread drops5
+

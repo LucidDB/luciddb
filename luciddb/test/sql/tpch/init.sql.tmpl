@@ -33,7 +33,7 @@ CREATE ROLE TPCHROLE;
 --/
 
 create server ff_tpch_server
-foreign data wrapper "FLAT FILE"
+foreign data wrapper sys_file_wrapper
 options(
     directory '@FFDIR@',
     file_extension '.tbl',
@@ -49,13 +49,4 @@ options(
 
 import foreign schema "BCP" from server ff_tpch_server into tpch;
 
-select count(*) from tpch."lineitem";
-select count(*) from tpch."nation";
-select count(*) from tpch."region";
-select count(*) from tpch."part";
-select count(*) from tpch."supplier";
-select count(*) from tpch."customer";
-select count(*) from tpch."orders";
-
 set schema 'tpch';
-

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * ThreadedTestBase is a common base for tests which execute multiple threads
  * with various operations over a configurable duration.
  */
-class ThreadedTestBase : virtual public TestBase
+class FENNEL_TEST_EXPORT ThreadedTestBase
+    : virtual public TestBase
 {
     friend class ThreadedTestBaseTask;
 private:
@@ -73,9 +74,9 @@ protected:
     virtual ~ThreadedTestBase();
 
     virtual void threadInit();
-    
+
     virtual void threadTerminate();
-    
+
     /**
      * Test implementation must be supplied by derived test class.
      *
@@ -84,23 +85,23 @@ protected:
      * @return true if test should run again
      */
     virtual bool testThreadedOp(int iOp) = 0;
-    
+
     /**
      * Executes specified test threads.
      */
     void runThreadedTestCase();
 };
 
-class ThreadedTestBaseTask 
+class FENNEL_TEST_EXPORT ThreadedTestBaseTask
 {
     ThreadedTestBase &test;
     int iOp;
-    
+
 public:
     explicit ThreadedTestBaseTask(
         ThreadedTestBase &testCaseInit,
         int iOpInit);
-    
+
     void execute();
 };
 

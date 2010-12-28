@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,12 +41,12 @@ void ByteOutputStream::writeBytes(void const *pData,uint cb)
     for (;;) {
         assert(cbWritable);
         if (cb <= cbWritable) {
-            memcpy(pNextByte,pData,cb);
+            memcpy(pNextByte, pData, cb);
             cbWritable -= cb;
             pNextByte += cb;
             return;
         }
-        memcpy(pNextByte,pData,cbWritable);
+        memcpy(pNextByte, pData, cbWritable);
         pData = static_cast<char const *>(pData) + cbWritable;
         cb -= cbWritable;
         cbWritable = 0;

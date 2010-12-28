@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,6 @@ import junit.framework.*;
 
 import net.sf.farrago.db.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.test.*;
 
 import org.eigenbase.util.*;
 
@@ -56,6 +55,8 @@ public class LucidDbTestHarness extends TestCase
     
     private static boolean haveSavedParameters;
     
+    private static boolean noAutoStart;
+    
     public LucidDbTestHarness(String testName) throws Exception
     {
         super(testName);
@@ -69,10 +70,14 @@ public class LucidDbTestHarness extends TestCase
      *
      * @return connection to LucidDB
      */
-    static Connection startupEngine(
+    public static Connection startupEngine(
         String urlPrefix, String username, String passwd)
         throws Exception
     {
+        if (noAutoStart) {
+            return null;
+        }
+        
         if (connection != null) {
             // Already started.  TODO:  if parameters don't match,
             // force restart.
@@ -118,6 +123,23 @@ public class LucidDbTestHarness extends TestCase
         tracer.info("testSuiteInit");
         ++testDepth;
         needCleanup = true;
+        noAutoStart = false;
+    }
+    
+    /**
+     * Called from tinitSingleTest.xml.  Use this if you want to execute a
+     * single test within a LucidDB server instance.  LucidDB will start
+     * when the test is initiated, rather than automatically, as is normally
+     * the case when you want multiple tests to execute within the same
+     * LucidDB server instance.  As a result, tests that use this
+     * initialization won't execute automatic cleanup and restore of system
+     * parameters.
+     */
+    public void testSuiteInitSingleTest()
+    {
+        tracer.info("testSuiteInitSingleTest");
+        ++testDepth;
+        noAutoStart = true;
     }
 
     /**
@@ -130,6 +152,40 @@ public class LucidDbTestHarness extends TestCase
         if (testDepth == 0) {
             shutdownEngine();
         }
+    }
+
+    /**
+     * called from tclose.xml
+     */
+    public void testCloseConnections()
+    {
+        tracer.info("testCloseConnections");
+        Util.squelchConnection(connection);
+        connection = null;
+        stmt = null;
+
+        // TODO: this should go away after LDB-164
+        haveSavedParameters = false;
+
+        tracer.info("All connections closed");
+    }
+
+    /**
+     * called from tsetcf.xml
+     */
+    public void testSetCleanupFlag()
+    {
+        tracer.info("set LucidDbTestHarness needCleanup flag to true");
+        needCleanup = true;
+    }
+
+    /** 
+     * called from tunsetcf.xml
+     */
+    public void testUnsetCleanupFlag()
+    {
+        tracer.info("set LucidDbTestHarness needCleanup flag to false");
+        needCleanup = false;
     }
 
     /**

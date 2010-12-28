@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,20 +25,19 @@ import java.util.*;
 
 
 /**
- * StringRepresentationComparator compares two objects by comparing their
- * toString() representations.
+ * StringRepresentationComparator compares two objects by comparing their {@link
+ * Object#toString()} representations.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class StringRepresentationComparator
-    implements Comparator
+public class StringRepresentationComparator<T>
+    implements Comparator<T>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement Comparator
-    public int compare(Object o1, Object o2)
+    public int compare(T o1, T o2)
     {
         return o1.toString().compareTo(o2.toString());
     }
@@ -47,6 +46,11 @@ public class StringRepresentationComparator
     public boolean equals(Object obj)
     {
         return obj.getClass().getName().equals(getClass().getName());
+    }
+
+    public int hashCode()
+    {
+        return getClass().getName().hashCode();
     }
 }
 

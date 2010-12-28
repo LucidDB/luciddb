@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,8 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
-import net.sf.farrago.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -40,7 +35,6 @@ import org.eigenbase.util.*;
 public class FarragoJavaUdxRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -55,7 +49,7 @@ public class FarragoJavaUdxRule
      */
     public FarragoJavaUdxRule()
     {
-        super(new RelOptRuleOperand(TableFunctionRel.class, null));
+        super(new RelOptRuleOperand(TableFunctionRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -70,13 +64,38 @@ public class FarragoJavaUdxRule
     public void onMatch(RelOptRuleCall call)
     {
         TableFunctionRel callRel = (TableFunctionRel) call.rels[0];
+        final RelNode [] inputs = callRel.getInputs().clone();
+
+        for (int i = 0; i < inputs.length; i++) {
+            RelNode input = inputs[i];
+            final RelTraitSet traits = RelOptUtil.clone(input.getTraits());
+
+            // copy over other traits
+            for (int j = 0; j < callRel.getTraits().size(); j++) {
+                RelTrait trait = callRel.getTraits().getTrait(j);
+                if (trait.getTraitDef()
+                    != CallingConventionTraitDef.instance)
+                {
+                    if (traits.getTrait(trait.getTraitDef()) != null) {
+                        traits.setTrait(trait.getTraitDef(), trait);
+                    } else {
+                        traits.addTrait(trait);
+                    }
+                }
+            }
+            inputs[i] =
+                mergeTraitsAndConvert(
+                    traits,
+                    CallingConvention.ITERATOR,
+                    input);
+        }
         FarragoJavaUdxRel javaTableFunctionRel =
             new FarragoJavaUdxRel(
                 callRel.getCluster(),
                 callRel.getCall(),
                 callRel.getRowType(),
                 null,
-                RelOptUtil.clone(callRel.getInputs()));
+                inputs);
         javaTableFunctionRel.setColumnMappings(callRel.getColumnMappings());
         call.transformTo(javaTableFunctionRel);
     }

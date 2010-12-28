@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,8 @@ package net.sf.farrago.ddl;
 
 import java.sql.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -36,7 +38,6 @@ import org.eigenbase.util.*;
  */
 public abstract class DdlSqlj
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -54,10 +55,19 @@ public abstract class DdlSqlj
         }
         url = url.trim();
         jar = jar.trim();
-        String sql =
-            "CREATE JAR " + jar + " library '" + url
-            + "' options(" + deploy + ")";
-        executeSql(sql);
+        SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
+        sql.append("CREATE JAR ");
+        // REVIEW: We can't use sql.identifier(jar), because
+        // the jar argument to install_jar is already quoted
+        // if needed.  But is there some sanitization we need
+        // to do, or is no SQL injection attack possible?
+        sql.append(jar);
+        sql.append(" library ");
+        sql.literal(url);
+        sql.append(" options(");
+        sql.append(deploy);
+        sql.append(")");
+        executeSql(sql.getSql());
     }
 
     /**
@@ -88,10 +98,15 @@ public abstract class DdlSqlj
             // TODO jvs 18-Jan-2005
             throw Util.needToImplement("deploy");
         }
-        String sql =
-            "DROP JAR " + jar
-            + " options (" + undeploy + ")" + " RESTRICT";
-        executeSql(sql);
+        SqlBuilder sql = new SqlBuilder(SqlDialect.EIGENBASE);
+        sql.append("DROP JAR ");
+        // REVIEW: see comments in install_jar regarding possible
+        // sanitization needed
+        sql.append(jar);
+        sql.append(" options (");
+        sql.append(undeploy);
+        sql.append(") RESTRICT");
+        executeSql(sql.getSql());
     }
 
     /**

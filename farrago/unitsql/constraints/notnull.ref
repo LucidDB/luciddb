@@ -1,15 +1,35 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test NOT NULL constraints
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- use Java calc because it gives better error messages
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOT NULL enforcement:  should fail
-0: jdbc:farrago:> insert into sales.depts values (null,'Nullification');
+> -- $Id$
+> -- Test NOT NULL constraints
+> 
+> -- use Java calc because it gives better error messages
+> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+> 
+> -- NOT NULL enforcement:  should fail
+> insert into sales.depts values (null,'Nullification');
 Error: Target CAST($t0):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOT NULL enforcement:  should fail due to implicit NULL
-0: jdbc:farrago:> insert into sales.emps(name,empno) values ('wael',300);
+> 
+> -- NOT NULL enforcement:  should fail due to implicit NULL
+> insert into sales.emps(name,empno) values ('wael',300);
 Error: Target CAST($t3):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- switch to LucidDB personality
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session set "logDir" = 'testlog';
+> 
+> -- NOT NULL row rejection, should succeed with errors
+> create schema test_rejection;
+> set schema 'TEST_REJECTION';
+> alter session set "errorMax" = 10;
+> create table test_not_null_rejection(col1 varchar(255), col2 integer not null);
+> insert into test_not_null_rejection values ('aa', 1), ('bb', 2), ('cc', null), ('dd', 4);
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
+> select * from sys_boot.mgmt.session_parameters_view
+>      where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 1            |
++-------------------+--------------+
+> drop schema TEST_REJECTION cascade;
+> 
+> !quit

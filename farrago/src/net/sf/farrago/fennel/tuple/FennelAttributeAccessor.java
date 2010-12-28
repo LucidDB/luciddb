@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,11 +35,11 @@ import java.nio.*;
  * non-polymorphic access code in cases where the entire tuple is being
  * processed, but polymorphic access code in cases where only a small subset of
  * the attributes are being processed. In theory, this hybrid should yield the
- * highest efficiency, but it needs to be benchmarked and tuned.
+ * highest efficiency, but it needs to be benchmarked and tuned. This class is
+ * JDK 1.4 compatible.
  */
 public abstract class FennelAttributeAccessor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -220,10 +220,18 @@ public abstract class FennelAttributeAccessor
              */
             tupleAccessor.getCurrentTupleBuf().position(fixedOffset);
             value.setLength(value.getCapacity());
-            tupleAccessor.getCurrentTupleBuf().get(
-                value.setRawBytes(),
-                0,
-                value.getLength());
+            int len = value.getLength();
+
+            // NOTE jvs 18-Jun-2007:  call setRawBytes unconditionally,
+            // otherwise a zero-length string gets converted into
+            // a null value.
+            byte [] rawBytes = value.setRawBytes();
+            if (len > 0) {
+                tupleAccessor.getCurrentTupleBuf().get(
+                    rawBytes,
+                    0,
+                    value.getLength());
+            }
         }
     }
 
@@ -464,14 +472,19 @@ public abstract class FennelAttributeAccessor
              value.getLength() + " bytes from offset " + offset + ", length " +
              value.getLength());
              */
-            srcBuf.position(offset);
-            srcBuf.get(
-                value.setRawBytes(),
-                0,
-                value.getLength());
+            // NOTE jvs 18-Jun-2007:  call setRawBytes unconditionally,
+            // otherwise a zero-length string gets converted into
+            // a null value.
+            byte [] rawBytes = value.setRawBytes();
+            if (value.getLength() > 0) {
+                srcBuf.position(offset);
+                srcBuf.get(
+                    rawBytes,
+                    0,
+                    value.getLength());
+            }
         }
     }
 }
-;
 
 // End FennelAttributeAccessor.java

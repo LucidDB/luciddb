@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,10 +34,11 @@ import org.eigenbase.rex.*;
 /**
  * A <code>RelOptQuery</code> represents a set of {@link RelNode relational
  * expressions} which derive from the same <code>select</code> statement.
+ *
+ * @version $Id$
  */
 public class RelOptQuery
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -59,12 +60,18 @@ public class RelOptQuery
      * Maps name of correlating variable (e.g. "$cor3") to the {@link RelNode}
      * which implements it.
      */
-    final HashMap mapCorrelToRel = new HashMap();
+    final Map<String, RelNode> mapCorrelToRel = new HashMap<String, RelNode>();
+
     private final RelOptPlanner planner;
     private int nextCorrel = 0;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a query.
+     *
+     * @param planner Planner
+     */
     public RelOptQuery(RelOptPlanner planner)
     {
         this.planner = planner;
@@ -72,17 +79,40 @@ public class RelOptQuery
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Converts a correlating variable name into an ordinal, unqiue within the
+     * query.
+     *
+     * @param correlName Name of correlating variable
+     *
+     * @return Correlating variable ordinal
+     */
     public static int getCorrelOrdinal(String correlName)
     {
         assert (correlName.startsWith(correlPrefix));
         return Integer.parseInt(correlName.substring(correlPrefix.length()));
     }
 
+    /**
+     * Returns the map which identifies which correlating variable each {@link
+     * org.eigenbase.relopt.RelOptQuery.DeferredLookup} will set.
+     *
+     * @return Map of deferred lookups
+     */
     public Map<DeferredLookup, String> getMapDeferredToCorrel()
     {
         return mapDeferredToCorrel;
     }
 
+    /**
+     * Creates a cluster.
+     *
+     * @param env OpenJava environment
+     * @param typeFactory Type factory
+     * @param rexBuilder Expression builder
+     *
+     * @return New cluster
+     */
     public RelOptCluster createCluster(
         Environment env,
         RelDataTypeFactory typeFactory,
@@ -121,7 +151,7 @@ public class RelOptQuery
      */
     public RelNode lookupCorrel(String name)
     {
-        return (RelNode) mapCorrelToRel.get(name);
+        return mapCorrelToRel.get(name);
     }
 
     /**
@@ -138,10 +168,35 @@ public class RelOptQuery
 
     /**
      * Contains the information necessary to repeat a call to {@link
-     * SqlToRelConverter.Blackboard#lookup}.
+     * org.eigenbase.sql2rel.SqlToRelConverter.Blackboard#lookup}.
      */
     public interface DeferredLookup
     {
+        /**
+         * Creates an expression which accesses a particular field of this
+         * lookup.
+         *
+         * <p>For example, when resolving
+         *
+         * <pre>
+         * select *
+         * from dept
+         * where exists (
+         *   select *
+         *   from emp
+         *   where deptno = dept.deptno
+         *   and specialty = 'Karate')</pre>
+         *
+         * the expression <code>dept.deptno</code> would be handled using a
+         * deferred lookup for <code>dept</code> (because the sub-query is
+         * validated before the outer query) and the translator would call
+         * <code>getFieldAccess("DEPTNO")</code> on that lookup.
+         *
+         * @param name Name of field
+         *
+         * @return Expression which retrieves the given field of this lookup's
+         * correlating variable
+         */
         RexFieldAccess getFieldAccess(String name);
     }
 }

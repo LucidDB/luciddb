@@ -24,6 +24,14 @@
 | false   |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null parameters
+0: jdbc:luciddb:> values applib.contains_number(cast(null as varchar(20)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.contains_number
 0: jdbc:luciddb:> create view has_number(fname, fcol, phcol) as
 . . . . . . . . > select fname, applib.contains_number(fname), applib.contains_number(phone) 
@@ -47,22 +55,22 @@
 0: jdbc:luciddb:> select * from customers
 . . . . . . . . > where applib.contains_number(fname)
 . . . . . . . . > order by 1;
-+---------------+------------+------+------+-------------------------+
-|     FNAME     |   LNAME    | AGE  | SEX  |          PHONE          |
-+---------------+------------+------+------+-------------------------+
-| 2Tito1        |            | 17   | F    | 888 888 8888            |
-| Dirk the 3rd  | Treethorn  | 39   | M    | 8622399175              |
-+---------------+------------+------+------+-------------------------+
++---------------+------------+------+------+---------------+
+|     FNAME     |   LNAME    | AGE  | SEX  |     PHONE     |
++---------------+------------+------+------+---------------+
+| 2Tito1        |            | 17   | F    | 888 888 8888  |
+| Dirk the 3rd  | Treethorn  | 39   | M    | 8622399175    |
++---------------+------------+------+------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from customers
 . . . . . . . . > where applib.contains_number(fname) 
 . . . . . . . . > and sex = 'F'
 . . . . . . . . > order by 1;
-+---------------+------------+------+------+-------------------------+
-|     FNAME     |   LNAME    | AGE  | SEX  |          PHONE          |
-+---------------+------------+------+------+-------------------------+
-| 2Tito1        |            | 17   | F    | 888 888 8888            |
-+---------------+------------+------+------+-------------------------+
++---------+--------+------+------+---------------+
+|  FNAME  | LNAME  | AGE  | SEX  |     PHONE     |
++---------+--------+------+------+---------------+
+| 2Tito1  |        | 17   | F    | 888 888 8888  |
++---------+--------+------+------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup 
 0: jdbc:luciddb:> drop view has_number;

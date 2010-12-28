@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ SharedSegInputStream SegInputStream::newSegInputStream(
     PageId beginPageId)
 {
     return SharedSegInputStream(
-        new SegInputStream(segmentAccessor,beginPageId),
+        new SegInputStream(segmentAccessor, beginPageId),
         ClosableObjectDestructor());
 }
 
@@ -39,7 +39,7 @@ SegInputStream::SegInputStream(
     SegmentAccessor const &segmentAccessor,
     PageId beginPageId,
     uint cbExtraHeader)
-    : SegStream(segmentAccessor,cbExtraHeader)
+    : SegStream(segmentAccessor, cbExtraHeader)
 {
     if (beginPageId == FIRST_LINEAR_PAGE_ID) {
         assert(
@@ -51,7 +51,7 @@ SegInputStream::SegInputStream(
 
 void SegInputStream::startPrefetch()
 {
-    pageIter.mapRange(segmentAccessor,currPageId);
+    pageIter.mapRange(segmentAccessor, currPageId);
 }
 
 void SegInputStream::endPrefetch()
@@ -65,7 +65,7 @@ void SegInputStream::lockBuffer()
     SegStreamNode const &node = pageLock.getNodeForRead();
     PConstBuffer pFirstByte =
         reinterpret_cast<PConstBuffer>(&node) + cbPageHeader;
-    setBuffer(pFirstByte,node.cbData);
+    setBuffer(pFirstByte, node.cbData);
 }
 
 void SegInputStream::readNextBuffer()
@@ -122,8 +122,8 @@ void SegInputStream::closeImpl()
 
 void SegInputStream::getSegPos(SegStreamPosition &pos)
 {
-    CompoundId::setPageId(pos.segByteId,currPageId);
-    CompoundId::setByteOffset(pos.segByteId,getBytesConsumed());
+    CompoundId::setPageId(pos.segByteId, currPageId);
+    CompoundId::setByteOffset(pos.segByteId, getBytesConsumed());
     pos.cbOffset = cbOffset;
 }
 
@@ -138,7 +138,7 @@ void SegInputStream::seekSegPos(SegStreamPosition const &pos)
     } else {
         consumeReadPointer(cb);
     }
-    
+
     cbOffset = pos.cbOffset;
 }
 
@@ -161,7 +161,7 @@ SharedByteStreamMarker SegInputStream::newMarker()
 void SegInputStream::mark(ByteStreamMarker &marker)
 {
     assert(&(marker.getStream()) == this);
-    
+
     // memorize SegStream-specific info
     SegStreamMarker &segMarker =
         dynamic_cast<SegStreamMarker &>(marker);
@@ -179,7 +179,7 @@ void SegInputStream::reset(ByteStreamMarker const &marker)
     // disable prefetch during seek
     bool prefetch = !pageIter.isSingular();
     endPrefetch();
-    
+
     seekSegPos(segMarker.segPos);
 
     // restore prefetch preference

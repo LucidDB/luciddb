@@ -1,0 +1,60 @@
+-- create foreign server
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '9',
+    log_directory '@DIR@'
+);
+
+----------------------------------------------------------------------
+-- large dataset from bench tables
+
+set schema 'analyzetest';
+
+-- download
+
+INSERT INTO BENCH10K
+SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
+FROM ff_server."BCP"."bench10K";
+
+
+INSERT INTO BENCH1M
+SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
+FROM ff_server."BCP"."bench1M";
+
+
+-- check the download
+
+select count(*) from bench10K;
+select count(*) from bench1M;
+
+
+-- synthesize other tables
+
+insert into bench1k select * from bench10k where "kseq" <= 1000;
+
+select count(*) from bench1k;
+
+insert into concurrent_sim 
+  select "kseq", "k100" from bench1m where "kseq" <= 100;
+
+select count(*) from concurrent_sim;
+
+insert into index_est ("kseq", "kuniq", "kuniq_null", "k10", "k1k")
+    select
+        "kseq",
+        2 * "kseq" + 1,
+        case "kseq" < 100 when true then null else "kseq" end,
+        "k10",
+        "k1k"
+    from bench10k;
+
+select count(*) from index_est;

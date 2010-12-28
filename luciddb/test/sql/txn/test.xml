@@ -8,6 +8,7 @@
             <test-suite-modifier value="txn"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/txn" target="copy-csv"/>
       </init-hook>
 
       <test name="negative">
@@ -16,6 +17,24 @@
 
       <test name="rollback">
         <junit-sql file="${open.dir}/luciddb/test/sql/txn/rollback.sql"/>
+      </test>
+
+      <test name="labels">
+        <junit-sql file="${open.dir}/luciddb/test/sql/txn/labels.sql"/>
+      </test>
+
+      <test name="labelAliases">
+        <junit-sql file="${open.dir}/luciddb/test/sql/txn/labelAliases.sql"/>
+      </test>
+
+      <test name="labelAlterTable">
+        <junit-sql file="${open.dir}/luciddb/test/sql/txn/labelAlterTable.sql"/>
+      </test>
+
+      <!-- Run this test last in this suite, so cleanup is done after it -->
+      <test name="jdbcLabels">
+        <junit testclass="com.lucidera.luciddb.test.LucidDbJdbcLabelTest"
+          methodnames="testInvalidLabelInConnectString,testLabelSetting"/>
       </test>
 
       <cleanup-hook>

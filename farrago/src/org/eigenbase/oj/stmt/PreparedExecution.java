@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.lang.reflect.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
@@ -40,25 +41,30 @@ import org.eigenbase.util.*;
 public class PreparedExecution
     implements PreparedResult
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ParseTree parseTree;
+    private final RelNode rootRel;
     private final RelDataType rowType;
     private final boolean isDml;
+    private final TableModificationRel.Operation tableModOp;
     private final BoundMethod boundMethod;
 
     //~ Constructors -----------------------------------------------------------
 
     PreparedExecution(
         ParseTree parseTree,
+        RelNode rootRel,
         RelDataType rowType,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         BoundMethod boundMethod)
     {
         this.parseTree = parseTree;
+        this.rootRel = rootRel;
         this.rowType = rowType;
         this.isDml = isDml;
+        this.tableModOp = tableModOp;
         this.boundMethod = boundMethod;
     }
 
@@ -74,6 +80,11 @@ public class PreparedExecution
         return isDml;
     }
 
+    public TableModificationRel.Operation getTableModOp()
+    {
+        return tableModOp;
+    }
+
     /**
      * Returns the physical row type of this prepared statement. May not be
      * identical to the row type returned by the validator; for example, the
@@ -87,6 +98,11 @@ public class PreparedExecution
     public Method getMethod()
     {
         return boundMethod.method;
+    }
+
+    public RelNode getRootRel()
+    {
+        return rootRel;
     }
 
     public Object execute()

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,20 +22,11 @@
 */
 package net.sf.farrago.util;
 
-import java.io.*;
-
 import java.util.*;
 import java.util.logging.*;
 
-import javax.jmi.reflect.*;
-
-import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
-import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
-
-import org.openide.ErrorManager;
-import org.openide.util.*;
-import org.openide.util.lookup.*;
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.netbeans.*;
 
 
 // NOTE:  This class gets compiled independently of everything else since
@@ -50,17 +41,6 @@ import org.openide.util.lookup.*;
  */
 public abstract class MdrUtil
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    // NOTE jvs 23-Dec-2004: This tracer cannot be statically initialized,
-    // because MdrUtil is not allowed to depend on FarragoTrace.  Instead, this
-    // tracer must be initialized via the integrateTracing() method.  Don't use
-    // it outside of TracingErrorManager.
-    private static Logger tracer;
-
-    private static final String LOOKUP_PROP_NAME = "org.openide.util.Lookup";
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -74,86 +54,21 @@ public abstract class MdrUtil
      *
      * @return loaded repository
      */
-    public static MDRepository loadRepository(
+    public static EnkiMDRepository loadRepository(
         String storageFactoryClassName,
         Properties storageProps)
     {
-        Iterator iter;
         String classNameProp =
             "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
-        Properties sysProps = System.getProperties();
-        Map savedProps = new HashMap();
 
-        String storagePrefix = "MDRStorageProperty.";
-
-        if (storageFactoryClassName == null) {
-            // may be specified as a property
-            storageFactoryClassName = storageProps.getProperty(classNameProp);
+        if (storageFactoryClassName != null) {
+            storageProps.put(classNameProp, storageFactoryClassName);
         }
 
-        if (storageFactoryClassName == null) {
-            // use default
-            storageFactoryClassName = BtreeFactory.class.getName();
-        }
+        EnkiMDRepository repos =
+            MDRepositoryFactory.newMDRepository(storageProps);
 
-        if (storageFactoryClassName.equals(BtreeFactory.class.getName())) {
-            // special case
-            storagePrefix = "";
-        }
-
-        // save existing system properties first
-        savedProps.put(
-            classNameProp,
-            sysProps.get(classNameProp));
-        iter = storageProps.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String propName =
-                applyPrefix(
-                    storagePrefix,
-                    entry.getKey().toString());
-            savedProps.put(
-                propName,
-                sysProps.get(propName));
-        }
-
-        try {
-            // set desired properties
-            sysProps.put(classNameProp, storageFactoryClassName);
-            iter = storageProps.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                sysProps.put(
-                    applyPrefix(
-                        storagePrefix,
-                        entry.getKey().toString()),
-                    entry.getValue());
-            }
-
-            // load repository
-            return new NBMDRepositoryImpl();
-        } finally {
-            // restore saved system properties
-            iter = savedProps.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                if (entry.getValue() == null) {
-                    sysProps.remove(entry.getKey());
-                } else {
-                    sysProps.put(
-                        entry.getKey(),
-                        entry.getValue());
-                }
-            }
-        }
-    }
-
-    private static String applyPrefix(String storagePrefix, String propName)
-    {
-        if (propName.startsWith(storagePrefix)) {
-            return propName;
-        }
-        return storagePrefix + propName;
+        return repos;
     }
 
     /**
@@ -164,157 +79,7 @@ public abstract class MdrUtil
      */
     public static void integrateTracing(Logger mdrTracer)
     {
-        tracer = mdrTracer;
-
-        // Install a lookup mechanism which will register our
-        // TracingErrorManager.
-        try {
-            System.setProperty(
-                LOOKUP_PROP_NAME,
-                TraceIntegrationLookup.class.getName());
-
-            // Force load of our lookup now if it hasn't been done yet.
-            Lookup.getDefault();
-        } finally {
-            System.getProperties().remove(LOOKUP_PROP_NAME);
-        }
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Helper class for implementing Farrago/MDR trace integration.
-     */
-    public static class TraceIntegrationLookup
-        extends ProxyLookup
-    {
-        public TraceIntegrationLookup()
-        {
-            // Delete the property we set to get here.
-            System.getProperties().remove(LOOKUP_PROP_NAME);
-
-            // Now it's safe to call the default.  This
-            // is a recursive call, but it will hit the base case
-            // now since we cleared the property first.
-            Lookup defaultLookup = Lookup.getDefault();
-
-            // Register our custom ErrorManager together with the default.
-            ErrorManager em = new TracingErrorManager(tracer);
-            setLookups(new Lookup[] {
-                    defaultLookup,
-                Lookups.singleton(em)
-                });
-        }
-    }
-
-    /**
-     * TracingErrorManager overrides the Netbeans ErrorManager to intercept
-     * messages and route them to Farrago tracing.
-     */
-    private static class TracingErrorManager
-        extends ErrorManager
-    {
-        private final Logger tracer;
-
-        TracingErrorManager(Logger tracer)
-        {
-            this.tracer = tracer;
-        }
-
-        // implement ErrorManager
-        public Throwable attachAnnotations(
-            Throwable t,
-            Annotation [] arr)
-        {
-            return t;
-        }
-
-        // implement ErrorManager
-        public Annotation [] findAnnotations(Throwable t)
-        {
-            return null;
-        }
-
-        // implement ErrorManager
-        public Throwable annotate(
-            Throwable t,
-            int severity,
-            String message,
-            String localizedMessage,
-            Throwable stackTrace,
-            java.util.Date date)
-        {
-            Level level = convertSeverity(severity);
-            if (!tracer.isLoggable(level)) {
-                return t;
-            }
-            tracer.throwing(
-                "MdrUtil.TracingErrorManager",
-                "annotate",
-                t);
-            if (tracer.isLoggable(Level.FINEST) && (stackTrace != null)) {
-                tracer.throwing(
-                    "MdrUtil.TracingErrorManager",
-                    "annotate:stackTrace",
-                    stackTrace);
-            }
-            tracer.log(level, message, t);
-            if (t instanceof JmiException) {
-                JmiException ex = (JmiException) t;
-                tracer.log(
-                    level,
-                    "JmiException.ELEMENT:  " + ex.getElementInError());
-                tracer.log(
-                    level,
-                    "JmiException.OBJECT:  " + ex.getObjectInError());
-            }
-            if (t instanceof TypeMismatchException) {
-                TypeMismatchException ex = (TypeMismatchException) t;
-                tracer.log(
-                    level,
-                    "TypeMismatchException.EXPECTED:  "
-                    + ex.getExpectedType());
-            }
-            return t;
-        }
-
-        // implement ErrorManager
-        public void notify(int severity, Throwable t)
-        {
-            tracer.throwing("MdrUtil.TracingErrorManager", "notify", t);
-        }
-
-        // implement ErrorManager
-        public void log(int severity, String s)
-        {
-            tracer.log(
-                convertSeverity(severity),
-                s);
-        }
-
-        private static Level convertSeverity(int severity)
-        {
-            switch (severity) {
-            case INFORMATIONAL:
-                return Level.FINE;
-            case WARNING:
-                return Level.WARNING;
-            case USER:
-                return Level.INFO;
-            case EXCEPTION:
-                return Level.SEVERE;
-            case ERROR:
-                return Level.SEVERE;
-            default:
-                return Level.FINER;
-            }
-        }
-
-        // implement ErrorManager
-        public ErrorManager getInstance(String name)
-        {
-            return this;
-        }
+        MdrTraceUtil.integrateTracing(mdrTracer);
     }
 }
 

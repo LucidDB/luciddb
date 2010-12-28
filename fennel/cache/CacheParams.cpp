@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,33 +31,70 @@ ParamName CacheParams::paramMaxPages = "cachePagesMax";
 ParamName CacheParams::paramPagesInit = "cachePagesInit";
 ParamName CacheParams::paramPageSize = "cachePageSize";
 ParamName CacheParams::paramIdleFlushInterval = "cacheIdleFlushInterval";
+ParamName CacheParams::paramFreshmenQueuePercentage =
+    "freshmenPageQueuePercentage";
+ParamName CacheParams::paramPageHistoryQueuePercentage =
+    "pageHistoryQueuePercentage";
+ParamName CacheParams::paramPrefetchPagesMax =
+    "prefetchPagesMax";
+ParamName CacheParams::paramPrefetchThrottleRate = "prefetchThrottleRate";
+ParamName CacheParams::paramProcessorCacheBytes = "processorCacheBytes";
+
+uint CacheParams::defaultMemPagesMax = 1024;
+uint CacheParams::defaultMemPagesInit = MAXU;
+uint CacheParams::defaultPageSize = 4096;
+uint CacheParams::defaultIdleFlushInterval = 100;
+uint CacheParams::defaultFreshmenQueuePercentage = 25;
+uint CacheParams::defaultPageHistoryQueuePercentage = 100;
+uint CacheParams::defaultPrefetchPagesMax = 12;
+uint CacheParams::defaultPrefetchThrottleRate = 10;
+// assume 2MB is typical
+uint CacheParams::defaultProcessorCacheBytes = 2097152;
 
 CacheParams::CacheParams()
 {
-    nMemPagesMax = 1024;
-    cbPage = 4096;
-    nMemPagesInit = MAXU;
-    idleFlushInterval = 100;
+    nMemPagesMax = defaultMemPagesMax;
+    cbPage = defaultPageSize;
+    nMemPagesInit = defaultMemPagesInit;
+    idleFlushInterval = defaultIdleFlushInterval;
+    freshmenQueuePercentage = defaultFreshmenQueuePercentage;
+    pageHistoryQueuePercentage = defaultPageHistoryQueuePercentage;
+    prefetchPagesMax = defaultPrefetchPagesMax;
+    prefetchThrottleRate = defaultPrefetchThrottleRate;
+    processorCacheBytes = defaultProcessorCacheBytes;
 }
 
 void CacheParams::readConfig(ConfigMap const &configMap)
 {
     schedParams.readConfig(configMap);
     nMemPagesMax = configMap.getIntParam(
-        paramMaxPages,nMemPagesMax);
+        paramMaxPages, nMemPagesMax);
     cbPage = configMap.getIntParam(
-        paramPageSize,cbPage);
+        paramPageSize, cbPage);
     nMemPagesInit = configMap.getIntParam(
-        paramPagesInit,nMemPagesInit);
+        paramPagesInit, nMemPagesInit);
     if (!isMAXU(nMemPagesInit)) {
         if (nMemPagesMax < nMemPagesInit) {
             nMemPagesMax = nMemPagesInit;
         }
     }
     idleFlushInterval = configMap.getIntParam(
-        paramIdleFlushInterval,idleFlushInterval);
+        paramIdleFlushInterval, idleFlushInterval);
+    freshmenQueuePercentage = configMap.getIntParam(
+        paramFreshmenQueuePercentage, freshmenQueuePercentage);
+    pageHistoryQueuePercentage = configMap.getIntParam(
+        paramPageHistoryQueuePercentage, pageHistoryQueuePercentage);
+    prefetchPagesMax = configMap.getIntParam(
+        paramPrefetchPagesMax, prefetchPagesMax);
+    prefetchThrottleRate = configMap.getIntParam(
+        paramPrefetchThrottleRate, prefetchThrottleRate);
+    int iProcessorCacheBytes = configMap.getIntParam(
+        paramProcessorCacheBytes, processorCacheBytes);
+    if (iProcessorCacheBytes != -1) {
+        processorCacheBytes = iProcessorCacheBytes;
+    }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/cache/CacheParams.cpp#12 $");
 
 // End CacheParams.cpp

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,11 +23,13 @@
 package net.sf.farrago.query;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -43,10 +45,15 @@ abstract class FarragoExecutableStmtImpl
     extends FarragoCompoundAllocation
     implements FarragoSessionExecutableStmt
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final Logger tracer =
+        FarragoTrace.getClassTracer(FarragoExecutableStmtImpl.class);
 
     //~ Instance fields --------------------------------------------------------
 
     private final boolean isDml;
+    private final TableModificationRel.Operation tableModOp;
     private final RelDataType dynamicParamRowType;
     private final TableAccessMap tableAccessMap;
 
@@ -55,9 +62,11 @@ abstract class FarragoExecutableStmtImpl
     protected FarragoExecutableStmtImpl(
         RelDataType dynamicParamRowType,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         TableAccessMap tableAccessMap)
     {
         this.isDml = isDml;
+        this.tableModOp = tableModOp;
         this.dynamicParamRowType = dynamicParamRowType;
         this.tableAccessMap = tableAccessMap;
     }
@@ -71,15 +80,27 @@ abstract class FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
+    public TableModificationRel.Operation getTableModOp()
+    {
+        return tableModOp;
+    }
+
+    // implement FarragoSessionExecutableStmt
     public RelDataType getDynamicParamRowType()
     {
         return dynamicParamRowType;
     }
 
     // implement FarragoSessionExecutableStmt
-    public Set getReferencedObjectIds()
+    public Set<String> getReferencedObjectIds()
     {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public String getReferencedObjectModTime(String mofid)
+    {
+        return null;
     }
 
     // implement FarragoSessionExecutableStmt
@@ -91,7 +112,7 @@ abstract class FarragoExecutableStmtImpl
     // implement FarragoSessionExecutableStmt
     public Map<String, RelDataType> getResultSetTypeMap()
     {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     // implement FarragoSessionExecutableStmt

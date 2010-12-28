@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2006-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,8 @@ import org.eigenbase.util14.*;
 
 /**
  * FarragoJdbcFennelTupleParamDef represents a parameter associated with a
- * FennelTupleDatum. It handles data converstions to the target type.
+ * FennelTupleDatum. It handles data converstions to the target type. This class
+ * is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -44,7 +45,6 @@ import org.eigenbase.util14.*;
 public class FarragoJdbcFennelTupleParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /* ParamDef (non fennel version) used to override scrubValue */
@@ -65,20 +65,20 @@ public class FarragoJdbcFennelTupleParamDef
 
         switch (paramMetaData.type) {
         case Types.TINYINT:
-            min = Byte.valueOf(Byte.MIN_VALUE);
-            max = Byte.valueOf(Byte.MAX_VALUE);
+            min = NumberUtil.MIN_BYTE;
+            max = NumberUtil.MAX_BYTE;
             break;
         case Types.SMALLINT:
-            min = Short.valueOf(Short.MIN_VALUE);
-            max = Short.valueOf(Short.MAX_VALUE);
+            min = NumberUtil.MIN_SHORT;
+            max = NumberUtil.MAX_SHORT;
             break;
         case Types.INTEGER:
-            min = Integer.valueOf(Integer.MIN_VALUE);
-            max = Integer.valueOf(Integer.MAX_VALUE);
+            min = NumberUtil.MIN_INTEGER;
+            max = NumberUtil.MAX_INTEGER;
             break;
         case Types.BIGINT:
-            min = Long.valueOf(Long.MIN_VALUE);
-            max = Long.valueOf(Long.MAX_VALUE);
+            min = NumberUtil.MIN_LONG;
+            max = NumberUtil.MAX_LONG;
             break;
         case Types.NUMERIC:
         case Types.DECIMAL:
@@ -87,17 +87,17 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            min = Integer.valueOf(0);
-            max = Integer.valueOf(1);
+            min = NumberUtil.INTEGER_ZERO;
+            max = NumberUtil.INTEGER_ONE;
             break;
         case Types.REAL:
-            min = Float.valueOf(-Float.MAX_VALUE);
-            max = Float.valueOf(Float.MAX_VALUE);
+            min = NumberUtil.MIN_FLOAT;
+            max = NumberUtil.MAX_FLOAT;
             break;
         case Types.FLOAT:
         case Types.DOUBLE:
-            min = Double.valueOf(-Double.MAX_VALUE);
-            max = Double.valueOf(Double.MAX_VALUE);
+            min = NumberUtil.MIN_DOUBLE;
+            max = NumberUtil.MAX_DOUBLE;
             break;
         }
     }
@@ -140,7 +140,7 @@ public class FarragoJdbcFennelTupleParamDef
         case Types.NUMERIC:
         case Types.DECIMAL:
             datum.setLong(
-                b ? BigInteger.TEN.pow(paramMetaData.scale).longValue() : 0);
+                b ? NumberUtil.powTen(paramMetaData.scale).longValue() : 0);
             break;
         case Types.BIT:
         case Types.BOOLEAN:
@@ -155,7 +155,8 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.VARCHAR:
         case Types.CHAR:
-            setString(paramMetaData.type == Types.CHAR,
+            setString(
+                paramMetaData.type == Types.CHAR,
                 datum,
                 b ? "true" : "false",
                 Boolean.class);
@@ -244,7 +245,8 @@ public class FarragoJdbcFennelTupleParamDef
         setDouble(datum, (double) val, false);
     }
 
-    private void setDouble(FennelTupleDatum datum,
+    private void setDouble(
+        FennelTupleDatum datum,
         double val,
         boolean isFloat)
     {
@@ -270,7 +272,7 @@ public class FarragoJdbcFennelTupleParamDef
         case Types.DECIMAL:
             BigDecimal bd =
                 NumberUtil.rescaleBigDecimal(
-                    BigDecimal.valueOf(val),
+                    new BigDecimal(val),
                     paramMetaData.scale);
             checkRange(
                 bd.unscaledValue(),
@@ -370,7 +372,7 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            datum.setBoolean(!val.equals(BigDecimal.ZERO));
+            datum.setBoolean(!val.equals(BigDecimal.valueOf(0)));
             break;
         case Types.REAL:
             checkRange(
@@ -400,13 +402,16 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    private void setString(boolean pad,
+    private void setString(
+        boolean pad,
         FennelTupleDatum datum,
         String val,
         Class clazz)
     {
         if (datum.getCapacity() >= val.length()) {
             if (pad && (datum.getCapacity() > val.length())) {
+                // Use StringBuffer instead of StringBuilder for JDK 1.4
+                // compatibility
                 StringBuffer buf = new StringBuffer(datum.getCapacity());
                 buf.append(val);
                 for (int i = val.length(); i < datum.getCapacity(); i++) {
@@ -537,7 +542,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setDate(FennelTupleDatum datum, Date val)
+    public void setDate(FennelTupleDatum datum, ZonelessDate val)
     {
         if (val == null) {
             setNull(datum);
@@ -561,7 +566,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setTime(FennelTupleDatum datum, Time val)
+    public void setTime(FennelTupleDatum datum, ZonelessTime val)
     {
         if (val == null) {
             setNull(datum);
@@ -584,7 +589,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setTimestamp(FennelTupleDatum datum, Timestamp val)
+    public void setTimestamp(FennelTupleDatum datum, ZonelessTimestamp val)
     {
         if (val == null) {
             setNull(datum);
@@ -655,9 +660,12 @@ public class FarragoJdbcFennelTupleParamDef
                     datum,
                     n.doubleValue(),
                     true);
-            } else if ((val instanceof Byte) || (val instanceof Short)
+            } else if (
+                (val instanceof Byte)
+                || (val instanceof Short)
                 || (val instanceof Integer)
-                || (val instanceof Long)) {
+                || (val instanceof Long))
+            {
                 setLong(
                     datum,
                     n.longValue(),
@@ -667,12 +675,12 @@ public class FarragoJdbcFennelTupleParamDef
                     datum,
                     NumberUtil.toBigDecimal(n));
             }
-        } else if (val instanceof Time) {
-            setTime(datum, (Time) val);
-        } else if (val instanceof Date) {
-            setDate(datum, (Date) val);
-        } else if (val instanceof Timestamp) {
-            setTimestamp(datum, (Timestamp) val);
+        } else if (val instanceof ZonelessTime) {
+            setTime(datum, (ZonelessTime) val);
+        } else if (val instanceof ZonelessDate) {
+            setDate(datum, (ZonelessDate) val);
+        } else if (val instanceof ZonelessTimestamp) {
+            setTimestamp(datum, (ZonelessTimestamp) val);
         } else if (val instanceof byte []) {
             setBytes(datum, (byte []) val);
         } else {

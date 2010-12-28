@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public abstract class AbstractRelNode
     implements RelNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // TODO jvs 10-Oct-2003:  Make this thread safe.  Either synchronize, or
@@ -116,23 +115,7 @@ public abstract class AbstractRelNode
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Clones this RelNode. Traits of the RelNode must be explicitly cloned as
-     * the RelNode may have traits of which it has no knowledge. Example
-     * implementation:
-     *
-     * <pre>
-     *     public Object clone()
-     *     {
-     *         MyRelNode clone = new MyRelNode(...);
-     *         clone.inheritTraitsFrom(this);
-     *         return clone;
-     *     }
-     * </pre>
-     *
-     * @return a clone of this RelNode
-     */
-    public abstract Object clone();
+    public abstract RelNode clone();
 
     public boolean isAccessTo(RelOptTable table)
     {
@@ -151,9 +134,8 @@ public abstract class AbstractRelNode
 
     public final CallingConvention getConvention()
     {
-        return
-            (CallingConvention) traits.getTrait(
-                CallingConventionTraitDef.instance);
+        return (CallingConvention) traits.getTrait(
+            CallingConventionTraitDef.instance);
     }
 
     public RelTraitSet getTraits()
@@ -172,9 +154,30 @@ public abstract class AbstractRelNode
         return RelOptUtil.clone(traits);
     }
 
-    public void inheritTraitsFrom(AbstractRelNode rel)
+    /**
+     * Sets this relational expression's traits to the same as another
+     * relational expression. The other relational expression must be the same
+     * type as this.
+     *
+     * <p>The typical use of this method is in the implementation of a {@link
+     * #clone()} method:
+     *
+     * <blockquote><code>class MyRel { public MyRel clone() { return new MyRel(
+     * getCluster(), getChild().clone(), fieldX.clone(), fieldY.clone())
+     * .inheritTraitsFrom(this); } }</code></blockquote>
+     *
+     * <p>To enable calls to be chained in this way, this method returns <code>
+     * this</code> as a convenience.
+     *
+     * @param rel Relational expression whose traits to copy
+     *
+     * @return This relational expression
+     */
+    @SuppressWarnings({ "unchecked" })
+    public <T extends AbstractRelNode> T inheritTraitsFrom(T rel)
     {
         traits = rel.cloneTraits();
+        return (T) this;
     }
 
     public void setCorrelVariable(String correlVariable)
@@ -317,9 +320,9 @@ public abstract class AbstractRelNode
         double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
         return planner.makeCost(
-                rowCount,
-                rowCount,
-                0);
+            rowCount,
+            rowCount,
+            0);
     }
 
     public void explain(RelOptPlanWriter pw)
@@ -336,11 +339,11 @@ public abstract class AbstractRelNode
             if (e != input) {
                 // TODO: change 'equal' to 'eq', which is stronger.
                 assert RelOptUtil.equal(
-                        "rowtype of rel before registration",
-                        input.getRowType(),
-                        "rowtype of rel after registration",
-                        e.getRowType(),
-                        true);
+                    "rowtype of rel before registration",
+                    input.getRowType(),
+                    "rowtype of rel after registration",
+                    e.getRowType(),
+                    true);
                 replaceInput(i, e);
             }
         }
@@ -404,7 +407,10 @@ public abstract class AbstractRelNode
     {
         StringWriter sw = new StringWriter();
         RelOptPlanWriter pw =
-            new RelOptPlanWriter(new PrintWriter(sw), SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            new RelOptPlanWriter(
+                new PrintWriter(sw),
+                SqlExplainLevel.DIGEST_ATTRIBUTES)
+            {
                 public void explain(
                     RelNode rel,
                     String [] terms,
@@ -413,7 +419,8 @@ public abstract class AbstractRelNode
                     RelNode [] inputs = rel.getInputs();
                     RexNode [] childExps = rel.getChildExps();
                     assert terms.length
-                        == (inputs.length + childExps.length + values.length) : "terms.length="
+                        == (inputs.length + childExps.length + values.length)
+                        : "terms.length="
                         + terms.length
                         + " inputs.length=" + inputs.length
                         + " childExps.length=" + childExps.length
@@ -445,7 +452,7 @@ public abstract class AbstractRelNode
                         if (j > 0) {
                             write(",");
                         }
-                        write(terms[j++] + "=" + value.toString());
+                        write(terms[j++] + "=" + value);
                     }
                     write(")");
                 }

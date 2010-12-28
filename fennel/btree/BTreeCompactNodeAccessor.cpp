@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,17 +30,17 @@ BTreeCompactNodeAccessor::BTreeCompactNodeAccessor()
 {
     cbEntry = MAXU;
 }
-    
+
 void BTreeCompactNodeAccessor::onInit()
 {
     BTreeNodeAccessor::onInit();
     cbEntry = tupleAccessor.getMaxByteCount();
 }
-    
+
 PBuffer BTreeCompactNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint)
 {
-    assert(iEntry < node.nEntries+1);
+    assert(iEntry < node.nEntries + 1);
     assert(node.cbTotalFree >= cbEntry);
 
     // shift everything over to make room for the new entry
@@ -65,7 +65,7 @@ void BTreeCompactNodeAccessor::deallocateEntry(
     // page to memmove.  It should be unnecessary, since in that case the
     // number of bytes to be moved is 0, but paranoid memmove
     // implementations might complain.
-    if (iEntry != node.nEntries-1) {
+    if (iEntry != node.nEntries - 1) {
         // shift over everything after the entry to delete it
         PBuffer pBuffer = node.getDataForWrite() + iEntry*cbEntry;
         memmove(

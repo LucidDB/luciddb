@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ SharedSegOutputStream SegOutputStream::newSegOutputStream(
 SegOutputStream::SegOutputStream(
     SegmentAccessor const &segmentAccessor,
     uint cbExtraHeader)
-    : SegStream(segmentAccessor,cbExtraHeader)
+    : SegStream(segmentAccessor, cbExtraHeader)
 {
     firstPageId = NULL_PAGE_ID;
     lastPageId = NULL_PAGE_ID;
@@ -92,7 +92,7 @@ void SegOutputStream::flushBuffer(uint cbRequested)
     if (firstPageId == NULL_PAGE_ID) {
         firstPageId = pageId;
     } else {
-        getSegment()->setPageSuccessor(lastPageId,pageId);
+        getSegment()->setPageSuccessor(lastPageId, pageId);
     }
     lastPageId = pageId;
     SegStreamNode &node = pageLock.getNodeForWrite();
@@ -114,14 +114,14 @@ uint SegOutputStream::getBytesWrittenThisPage() const
 
 void SegOutputStream::getSegPos(SegStreamPosition &pos)
 {
-    CompoundId::setPageId(pos.segByteId,lastPageId);
+    CompoundId::setPageId(pos.segByteId, lastPageId);
     if (getBytesAvailable()) {
-        CompoundId::setByteOffset(pos.segByteId,getBytesWrittenThisPage());
+        CompoundId::setByteOffset(pos.segByteId, getBytesWrittenThisPage());
     } else {
         // after a hard page break, use a special sentinel value to indicate
         // the last byte on the page
         CompoundId::setByteOffset(
-            pos.segByteId,CompoundId::MAX_BYTE_OFFSET);
+            pos.segByteId, CompoundId::MAX_BYTE_OFFSET);
     }
     pos.cbOffset = cbOffset;
 }

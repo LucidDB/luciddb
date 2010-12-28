@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,14 +35,13 @@ import org.eigenbase.sql.validate.*;
 public class SqlStringContextVariable
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlStringContextVariable(String name)
     {
         super(
             name,
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiVarchar2000,
             null,
             SqlTypeStrategies.otcNiladic,
@@ -57,15 +56,17 @@ public class SqlStringContextVariable
     }
 
     // All of the string constants are monotonic.
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Constant;
     }
 
-    // Context variables are never deterministic
-    public boolean isDeterministic()
+    // Plans referencing context variables should never be cached
+    public boolean isDynamicFunction()
     {
-        return false;
+        return true;
     }
 }
 

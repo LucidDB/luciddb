@@ -5,7 +5,7 @@ create server csv_server
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     schema_name 'TESTDATA');
 
 -- test direct table reference
@@ -30,6 +30,11 @@ from
     csv_schema.explicit_example 
 order by 3;
 
+-- verify that we can buffer cartesian product inputs instead
+-- of trying to restart them
+select count(*) 
+from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
+
 -- should fail:  required metadata support not available
 import foreign schema testdata
 from server csv_server
@@ -48,7 +53,7 @@ create server csv_server_missing_schema
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med');
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med');
 
 -- should fail due to missing schema name
 create foreign table csv_schema.missing_schema
@@ -65,3 +70,27 @@ create foreign table csv_schema.explicit_example(
     extra_field char(1) not null)
 server csv_server
 options (table_name 'example', schema_name 'grub');
+
+-- test an extended option
+create server csv_server_with_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
+    extended_options 'TRUE',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_with_extended_option.testdata."example";
+
+-- verify that without extended_option enabled, extra properties are
+-- not passed through
+create server csv_server_without_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_without_extended_option.testdata."example";

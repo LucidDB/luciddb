@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,7 +53,7 @@ void CheckpointThread::run()
         CheckpointType currentType = checkpointType;
         checkpointType = CHECKPOINT_DISCARD;
         mutexGuard.unlock();
-        
+
         SXMutexExclusiveGuard actionMutexGuard(actionMutex);
         database.checkpointImpl(currentType);
         actionMutexGuard.unlock();
@@ -68,6 +68,11 @@ SXMutex &CheckpointThread::getActionMutex()
 void CheckpointThread::closeImpl()
 {
     StrictMutexGuard mutexGuard(mutex);
+
+    if (!isStarted()) {
+        return;
+    }
+
     quit = true;
     condition.notify_all();
     mutexGuard.unlock();
@@ -78,7 +83,7 @@ void CheckpointThread::closeImpl()
 void CheckpointThread::requestCheckpoint(CheckpointType request)
 {
     StrictMutexGuard mutexGuard(mutex);
-    switch(request) {
+    switch (request) {
     case CHECKPOINT_FLUSH_ALL:
         checkpointType = request;
         break;

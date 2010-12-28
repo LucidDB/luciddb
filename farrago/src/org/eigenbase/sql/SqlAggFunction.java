@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,9 @@ package org.eigenbase.sql;
 import openjava.mop.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -38,7 +40,6 @@ public abstract class SqlAggFunction
     extends SqlFunction
     implements Aggregation
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlAggFunction(
@@ -68,6 +69,17 @@ public abstract class SqlAggFunction
     public boolean isQuantifierAllowed()
     {
         return true;
+    }
+
+    // override SqlFunction
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        super.validateCall(call, validator, scope, operandScope);
+        validator.validateAggregateParams(call, scope);
     }
 }
 

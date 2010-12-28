@@ -1,0 +1,201 @@
+0: jdbc:luciddb:> -- negative test cases
+0: jdbc:luciddb:> create schema uc;
+0: jdbc:luciddb:> set schema 'uc';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlProcessId"='errors_uc';
+0: jdbc:luciddb:> alter session set "logDir"='@ERRLOGDIR@';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create constraint table
+0: jdbc:luciddb:> create table part_uc(
+. . . . . . . . >   partkey integer primary key,
+. . . . . . . . >   name varchar(55),
+. . . . . . . . >   mfgr varchar(25),
+. . . . . . . . >   brand varchar(10),
+. . . . . . . . >   type varchar(25),
+. . . . . . . . >   size integer,
+. . . . . . . . >   container varchar(10),
+. . . . . . . . >   retailprice decimal(15,2),
+. . . . . . . . >   comment varchar(23),
+. . . . . . . . >   constraint p_mfgr_name_unique UNIQUE(mfgr,name)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- load constraint table w/20 rows
+0: jdbc:luciddb:> insert into part_uc select * from ff_tpch.bcp."part" where mod(F1,1000)=0;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts before merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 20                 | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  |              |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- update columns in constraint, with row rejection enabled
+0: jdbc:luciddb:> create view part_10000 as select * from ff_tpch.bcp."part" where F1 <= 10000;
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_update_constrain_columns_keepgoing';
+0: jdbc:luciddb:> alter session set "errorMax" = 500;
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using part_10000 src on partkey = F1
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set mfgr='New'||mfgr, size=size+100 
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values(F1,F2,F3,F4,F5,F6,F7,F8,F9);
+Error: Cannot update unique key column (MFGR) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge rolled back
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 20                 | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  |              |
++-------------------------+--------------+
+0: jdbc:luciddb:> select * from part_uc where size > 100;
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+
+| PARTKEY  | NAME  | MFGR  | BRAND  | TYPE  | SIZE  | CONTAINER  | RETAILPRICE  | COMMENT  |
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rollback on error limit exceeded for insert
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_error_limit_exceeded_setup';
+0: jdbc:luciddb:> alter session set "errorMax"=500;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into uc_src.nation_src select * from uc_src.nation_ft;
+0: jdbc:luciddb:> merge into uc_src.nation_src as tgt
+. . . . . . . . >   using uc_src.nation_ft as src 
+. . . . . . . . >   on tgt.nationkey=src.nationkey and mod(cast(tgt.nationkey as integer),5)=0 
+. . . . . . . . >   when matched then update set regionkey = ('2007-9-'||src.regionkey);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table nation_uc(
+. . . . . . . . >   nationkey integer primary key,
+. . . . . . . . >   name varchar(25),
+. . . . . . . . >   regionkey integer,
+. . . . . . . . >   comment varchar(152),
+. . . . . . . . >   constraint n_nkey_rkey_unique UNIQUE(nationkey,regionkey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_error_limit_exceeded';
+0: jdbc:luciddb:> alter session set "errorMax"=4;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into nation_uc select cast(nationkey as integer), name, 
+. . . . . . . . >   cast(regionkey as integer), comment from uc_src.nation_src;
+Error: Exceeded limit of 4 errors. Last error was:
+Could not calculate result column REGIONKEY for the following row:
+[20, SAUDI ARABIA, 2007-9-4, ts. silent requests haggle. closely express packages sleep across the blithely]
+Messages: Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException
+Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify rollback
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='NATION_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| NATION_UC   | 0                  | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name='lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rollback on error limit exceeded for merge
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_error_limit_exceeded_setup';
+0: jdbc:luciddb:> alter session set "errorMax"=500;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into nation_uc (nationkey) values (0),(5),(10),(15),(20);
+0: jdbc:luciddb:> insert into nation_uc select cast(nationkey as integer), name,
+. . . . . . . . >   cast(regionkey as integer), comment from uc_src.nation_src
+. . . . . . . . >   where nationkey in ('1', '4', '6', '8');
+0: jdbc:luciddb:> insert into uc_src.nation_src (nationkey, name, regionkey) 
+. . . . . . . . >   values ('1', 'one', '10'), ('4', 'four', '4'), ('6', 'six', '6'),
+. . . . . . . . >     ('8', 'eight', '8');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_error_limit_exceeded';
+0: jdbc:luciddb:> alter session set "errorMax"=7;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into nation_uc tgt
+. . . . . . . . >   using uc_src.nation_src src on cast(src.nationkey as integer) = tgt.nationkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set name = cast(cast(src.regionkey as integer) as varchar(25));
+Error: Exceeded limit of 7 errors. Last error was:
+Could not process input:
+[6,3,15]
+Messages: Unique constraint violation
+Unique constraint violation (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify rollback
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='NATION_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| NATION_UC   | 9                  | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name='lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> select nationkey, name, regionkey from nation_uc order by 1,2,3;
++------------+------------+------------+
+| NATIONKEY  |    NAME    | REGIONKEY  |
++------------+------------+------------+
+| 0          |            |            |
+| 1          | ARGENTINA  | 1          |
+| 4          | EGYPT      | 4          |
+| 5          |            |            |
+| 6          | FRANCE     | 3          |
+| 8          | INDIA      | 2          |
+| 10         |            |            |
+| 15         |            |            |
+| 20         |            |            |
++------------+------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='errors_uc'
+. . . . . . . . >   order by 1,2,3,4;
++------------------------------+--------------+----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|          ACTION_ID           | ERROR_COUNT  | WARNING_COUNT  |                                                                                                   SQL                                                                                                   |
++------------------------------+--------------+----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| insert_error_limit_exceeded  | 5            | 0              | insert into nation_uc select cast(nationkey as integer), name,
+  cast(regionkey as integer), comment from uc_src.nation_src                                                                             |
+| merge_error_limit_exceeded   | 3            | 0              | merge into nation_uc tgt
+  using uc_src.nation_src src on cast(src.nationkey as integer) = tgt.nationkey
+  when matched then
+    update set name = cast(cast(src.regionkey as integer) as varchar(25))  |
+| merge_error_limit_exceeded   | 5            | 0              | merge into nation_uc tgt
+  using uc_src.nation_src src on cast(src.nationkey as integer) = tgt.nationkey
+  when matched then
+    update set name = cast(cast(src.regionkey as integer) as varchar(25))  |
++------------------------------+--------------+----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema uc cascade;
+0: jdbc:luciddb:> truncate table uc_src.nation_src;
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,5 @@
+These files are only incorporated into the build (via copy
+to src/org/eigenbase/jdbc4) for Java 1.5 builds.
+
+See http://pub.eigenbase.org/wiki/Jdbc4Transition for more
+information.

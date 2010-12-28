@@ -1,0 +1,9 @@
+<vjdbc-configuration>
+<connection 
+    id="FarragoDBMS"
+    driver="net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver" 
+    user="sa"
+    password="sa"
+    connectionPooling="on"
+    url="jdbc:farrago:;remoteProtocol=\"HTTP\""/>
+</vjdbc-configuration>

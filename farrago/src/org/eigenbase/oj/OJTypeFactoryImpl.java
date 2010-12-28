@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,10 +47,10 @@ public class OJTypeFactoryImpl
     extends SqlTypeFactoryImpl
     implements OJTypeFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    protected final HashMap mapOJClassToType = new HashMap();
+    protected final HashMap<OJClass, RelDataType> mapOJClassToType =
+        new HashMap<OJClass, RelDataType>();
 
     private final OJClassMap ojClassMap;
 
@@ -96,14 +96,14 @@ public class OJTypeFactoryImpl
         final OJClass [] fieldClasses = new OJClass[fields.length];
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
-            fieldNames[i] = Util.toJavaId(
+            fieldNames[i] =
+                Util.toJavaId(
                     field.getName(),
                     i);
             final RelDataType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer, fieldType, this);
         }
-        return ojClassMap.createProject(declarer, fieldClasses,
-                fieldNames);
+        return ojClassMap.createProject(declarer, fieldClasses, fieldNames);
     }
 
     public OJClass toOJClass(
@@ -146,7 +146,7 @@ public class OJTypeFactoryImpl
 
     public RelDataType toType(final OJClass ojClass)
     {
-        RelDataType type = (RelDataType) mapOJClassToType.get(ojClass);
+        RelDataType type = mapOJClassToType.get(ojClass);
         if (type != null) {
             return type;
         }
@@ -175,8 +175,9 @@ public class OJTypeFactoryImpl
      * <ul>
      * <li>If the {@link OJClass} is based upon a Java class, call {@link
      * #createJavaType} instead.</li>
-     * <li>If the {@link OJClass} is synthetic, call {@link #createStructType}
-     * or {@link #createJoinType} instead.</li>
+     * <li>If the {@link OJClass} is synthetic, call {@link
+     * OJTypeFactoryImpl#createStructType} or {@link
+     * OJTypeFactoryImpl#createJoinType} instead.</li>
      * </ul>
      * </p>
      */
@@ -217,7 +218,7 @@ public class OJTypeFactoryImpl
             return toType(colType);
         }
 
-        protected void generateTypeString(StringBuffer sb, boolean withDetail)
+        protected void generateTypeString(StringBuilder sb, boolean withDetail)
         {
             sb.append("OJScalarType(");
             sb.append(ojClass);

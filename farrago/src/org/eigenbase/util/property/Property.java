@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by the
@@ -52,12 +52,16 @@ import java.util.*;
  */
 public abstract class Property
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final Properties properties;
     private final String path;
     private final String defaultValue;
+
+    /**
+     * List of triggers on this property. Access must be synchronized on this
+     * Property object.
+     */
     private final TriggerList triggerList = new TriggerList();
 
     //~ Constructors -----------------------------------------------------------
@@ -87,6 +91,9 @@ public abstract class Property
     //~ Methods ----------------------------------------------------------------
 
     /**
+     * Returns the name of this property. Typically a dotted path such as
+     * "com.acme.foo.Bar".
+     *
      * @return this property's name (typically a dotted path)
      */
     public String getPath()
@@ -130,7 +137,7 @@ public abstract class Property
     /**
      * Adds a trigger to this property.
      */
-    public void addTrigger(Trigger trigger)
+    public synchronized void addTrigger(Trigger trigger)
     {
         triggerList.add(trigger);
     }
@@ -138,7 +145,7 @@ public abstract class Property
     /**
      * Removes a trigger from this property.
      */
-    public void removeTrigger(Trigger trigger)
+    public synchronized void removeTrigger(Trigger trigger)
     {
         triggerList.remove(trigger);
     }
@@ -212,11 +219,10 @@ public abstract class Property
      * @return true if the string is "1" or "true" or "yes", ignoring case and
      * any leading or trailing spaces
      */
-    protected static boolean toBoolean(final String value)
+    public static boolean toBoolean(final String value)
     {
         String trimmedLowerValue = value.toLowerCase().trim();
-        return
-            trimmedLowerValue.equals("1")
+        return trimmedLowerValue.equals("1")
             || trimmedLowerValue.equals("true")
             || trimmedLowerValue.equals("yes");
     }
@@ -238,9 +244,10 @@ public abstract class Property
      * <p/>A trigger list is associated with a property key, and contains zero
      * or more {@link Trigger} objects.
      *
-     * <p/>Each {@link Trigger} is stored in a {@link WeakReference} so that when
-     * the Trigger is only reachable via weak references the Trigger will be be
-     * collected and the contents of the WeakReference will be set to null.
+     * <p/>Each {@link Trigger} is stored in a {@link WeakReference} so that
+     * when the Trigger is only reachable via weak references the Trigger will
+     * be be collected and the contents of the WeakReference will be set to
+     * null.
      */
     private static class TriggerList
         extends ArrayList
@@ -255,10 +262,10 @@ public abstract class Property
             // this is the object to add to list
             Object o =
                 (trigger.isPersistent()) ? trigger
-                : (Object) new WeakReference(trigger);
+                : (Object) new WeakReference /*<Trigger>*/(trigger);
 
             // Add a Trigger in the correct group of phases in the list
-            for (ListIterator it = listIterator(); it.hasNext();) {
+            for (ListIterator /*<Object>*/ it = listIterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -303,6 +310,8 @@ public abstract class Property
          *
          * <p/>In addition, removes any {@link WeakReference} that is empty.
          *
+         * <p>Synchronizes on {@code property} while modifying the trigger list.
+         *
          * @param property The property whose change caused this property to
          * fire
          */
@@ -313,20 +322,22 @@ public abstract class Property
             // Trigger is added or removed, we do not get a concurrent
             // modification exception. We do an explicit copy (rather than
             // a clone) so that we can remove any WeakReference whose
-            // content has become null.
-            List l = new ArrayList();
-            for (Iterator it = iterator(); it.hasNext();) {
-                Trigger t = convert(it.next());
-
-                if (t == null) {
-                    it.remove();
-                } else {
-                    l.add(t);
+            // content has become null. Synchronize, per the locking strategy,
+            // while the copy is being made.
+            List /*<Trigger>*/ l = new ArrayList /*<Trigger>*/();
+            synchronized (property) {
+                for (Iterator /*<Object>*/ it = iterator(); it.hasNext();) {
+                    Trigger t = convert(it.next());
+                    if (t == null) {
+                        it.remove();
+                    } else {
+                        l.add(t);
+                    }
                 }
             }
 
-            for (Iterator it = l.iterator(); it.hasNext();) {
-                Trigger t = (Trigger) it.next();
+            for (int i = 0; i < l.size(); i++) {
+                Trigger t = (Trigger) l.get(i);
                 t.execute(property, value);
             }
         }

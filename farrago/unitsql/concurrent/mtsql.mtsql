@@ -1,0 +1,83 @@
+-- Unit test for mtsql itself. Tests all mtsql script features.
+
+@plugin org.eigenbase.test.concurrent.SamplePlugin
+
+@setup
+  @include mtsql.included
+
+ create table bar (
+  id integer generated always as identity (start with 1 increment by 1) primary key,
+  n integer, 
+  s varchar(32)
+ );
+
+ create view crossview as (
+   select * from sales.depts x 
+   cross join sales.emps y
+ );
+
+@end
+
+@cleanup
+  drop schema foo cascade;
+@end
+
+@thread write-to-bar
+  -- no prepared inserts yet
+  insert into foo.bar (n,s) values (1, 'one');
+  insert into foo.bar (n,s) values (2, 'two');
+  @repeat 12
+    insert into foo.bar (n,s) values (3, 'three');
+  @end
+  @repeat 4
+    insert into foo.bar (n,s) values (4, 'four');
+    insert into foo.bar (n,s) values (5, 'five');
+    insert into foo.bar (n,s) values (6, 'six');
+  @end
+  @sync
+  @echo select all rows
+  select * from foo.bar;
+  @echo select first two rows
+  @rowlimit 2 select * from foo.bar;
+  @sync
+@end
+
+@thread read-from-bar
+  @sync
+  @sleep 4000
+  @echo select all rows
+  select * from foo.bar;
+  @sleep 1000
+  @echo select first two rows
+  @rowlimit 2 select * from foo.bar;
+  @sleep 1000
+  @err select (z) from foo.bar;
+  @sync
+@end
+
+@thread printer
+  @sync
+  @prepare select * from foo.crossview;
+  @describeResultSet
+  @shell echo mtsql.*
+  @sync
+
+  @echo printing all
+  @print all
+  @fetch 
+
+  @echo printing none
+  @print none
+  @fetch 
+
+  @echo printing every 5th row
+  @print count every 5
+  @fetch 
+
+  @echo printing every other row
+  @print count every 2
+  @fetch 
+  
+  @close
+@end
+

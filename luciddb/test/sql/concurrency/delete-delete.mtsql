@@ -41,7 +41,7 @@
 
   @sync
   @sleep 1000
-  @err delete from t2 where c=5;
+  delete from t2 where c=5;
   @sync
 
   @end
@@ -65,7 +65,7 @@
 
   @sync
   @sleep 1000
-  @err delete from t1 where c=2;
+  delete from t1 where c=2;
   @sync
 
 @end

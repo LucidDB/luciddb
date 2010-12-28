@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -38,26 +40,52 @@ import org.eigenbase.rex.*;
 public final class MultiJoinRel
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode [] inputs;
-    RexNode joinFilter;
-    RelDataType rowType;
+    private RexNode joinFilter;
+    private RelDataType rowType;
+    private boolean isFullOuterJoin;
+    private RexNode [] outerJoinConditions;
+    private JoinRelType [] joinTypes;
+    private BitSet [] projFields;
+    private Map<Integer, int[]> joinFieldRefCountsMap;
+    private RexNode postJoinFilter;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
+     * Constructs a MultiJoinRel.
+     *
      * @param cluster cluster that join belongs to
      * @param inputs inputs into this multirel join
-     * @param joinFilters join filters applicable to this join node
+     * @param joinFilter join filter applicable to this join node
      * @param rowType row type of the join result of this node
+     * @param isFullOuterJoin true if the join is a full outer join
+     * @param outerJoinConditions outer join condition associated with each join
+     * input, if the input is null-generating in a left or right outer join;
+     * null otherwise
+     * @param joinTypes the join type corresponding to each input; if an input
+     * is null-generating in a left or right outer join, the entry indicates the
+     * type of outer join; otherwise, the entry is set to INNER
+     * @param projFields fields that will be projected from each input; if null,
+     * projection information is not available yet so it's assumed that all
+     * fields from the input are projected
+     * @param joinFieldRefCountsMap counters of the number of times each field
+     * is referenced in join conditions, indexed by the input #
+     * @param postJoinFilter filter to be applied after the joins are executed
      */
     public MultiJoinRel(
         RelOptCluster cluster,
         RelNode [] inputs,
         RexNode joinFilter,
-        RelDataType rowType)
+        RelDataType rowType,
+        boolean isFullOuterJoin,
+        RexNode [] outerJoinConditions,
+        JoinRelType [] joinTypes,
+        BitSet [] projFields,
+        Map<Integer, int[]> joinFieldRefCountsMap,
+        RexNode postJoinFilter)
     {
         super(
             cluster,
@@ -65,33 +93,119 @@ public final class MultiJoinRel
         this.inputs = inputs;
         this.joinFilter = joinFilter;
         this.rowType = rowType;
+        this.isFullOuterJoin = isFullOuterJoin;
+        this.outerJoinConditions = outerJoinConditions;
+        this.joinTypes = joinTypes;
+        this.projFields = projFields;
+        this.joinFieldRefCountsMap = joinFieldRefCountsMap;
+        this.postJoinFilter = postJoinFilter;
+    }
+
+    /*
+     * @deprecated
+     */
+    public MultiJoinRel(
+        RelOptCluster cluster,
+        RelNode [] inputs,
+        RexNode joinFilter,
+        RelDataType rowType,
+        boolean isFullOuterJoin,
+        RexNode [] outerJoinConditions,
+        JoinRelType [] joinTypes,
+        BitSet [] projFields,
+        Map<Integer, int[]> joinFieldRefCountsMap)
+    {
+        this(
+            cluster,
+            inputs,
+            joinFilter,
+            rowType,
+            isFullOuterJoin,
+            outerJoinConditions,
+            joinTypes,
+            projFields,
+            joinFieldRefCountsMap,
+            null);
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public MultiJoinRel clone()
     {
         MultiJoinRel clone =
             new MultiJoinRel(
                 getCluster(),
                 RelOptUtil.clone(inputs),
-                RexUtil.clone(joinFilter),
-                rowType);
+                joinFilter.clone(),
+                rowType,
+                isFullOuterJoin,
+                RexUtil.clone(outerJoinConditions),
+                joinTypes.clone(),
+                projFields.clone(),
+                cloneJoinFieldRefCountsMap(),
+                postJoinFilter);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
+    /**
+     * Returns a deep copy of {@link #joinFieldRefCountsMap}.
+     */
+    private Map<Integer, int[]> cloneJoinFieldRefCountsMap()
+    {
+        Map<Integer, int[]> clonedMap = new HashMap<Integer, int[]>();
+        for (int i = 0; i < inputs.length; i++) {
+            clonedMap.put(i, joinFieldRefCountsMap.get(i).clone());
+        }
+        return clonedMap;
+    }
+
     public void explain(RelOptPlanWriter pw)
     {
-        String [] terms = new String[inputs.length + 1];
-        for (int i = 0; i < inputs.length; i++) {
+        int nInputs = inputs.length;
+        int nExtraTerms = (postJoinFilter != null) ? 6 : 5;
+        String [] terms = new String[nInputs + nExtraTerms];
+        for (int i = 0; i < nInputs; i++) {
             terms[i] = "input#" + i;
         }
-        terms[inputs.length] = "joinFilter";
-        pw.explain(
-            this,
-            terms,
-            new Object[] {});
+        terms[nInputs] = "joinFilter";
+        terms[nInputs + 1] = "isFullOuterJoin";
+        terms[nInputs + 2] = "joinTypes";
+        terms[nInputs + 3] = "outerJoinConditions";
+        terms[nInputs + 4] = "projFields";
+        if (postJoinFilter != null) {
+            terms[nInputs + 5] = "postJoinFilter";
+        }
+        List<String> joinTypeNames = new ArrayList<String>();
+        List<String> outerJoinConds = new ArrayList<String>();
+        List<String> projFieldObjects = new ArrayList<String>();
+        for (int i = 0; i < nInputs; i++) {
+            joinTypeNames.add(joinTypes[i].name());
+            if (outerJoinConditions[i] == null) {
+                outerJoinConds.add("NULL");
+            } else {
+                outerJoinConds.add(outerJoinConditions[i].toString());
+            }
+            if (projFields[i] == null) {
+                projFieldObjects.add("ALL");
+            } else {
+                projFieldObjects.add(projFields[i].toString());
+            }
+        }
+
+        // Note that we don't need to include the join field reference counts
+        // in the digest because that field does not change for a given set
+        // of inputs
+        Object [] objects = new Object[nExtraTerms - 1];
+        objects[0] = isFullOuterJoin;
+        objects[1] = joinTypeNames;
+        objects[2] = outerJoinConds;
+        objects[3] = projFieldObjects;
+        if (postJoinFilter != null) {
+            objects[4] = postJoinFilter;
+        }
+
+        pw.explain(this, terms, objects);
     }
 
     public RelDataType deriveRowType()
@@ -117,11 +231,70 @@ public final class MultiJoinRel
     }
 
     /**
-     * Returns join filters associated with this MultiJoinRel
+     * @return join filters associated with this MultiJoinRel
      */
     public RexNode getJoinFilter()
     {
         return joinFilter;
+    }
+
+    /**
+     * @return true if the MultiJoinRel corresponds to a full outer join.
+     */
+    public boolean isFullOuterJoin()
+    {
+        return isFullOuterJoin;
+    }
+
+    /**
+     * @return outer join conditions for null-generating inputs
+     */
+    public RexNode [] getOuterJoinConditions()
+    {
+        return outerJoinConditions;
+    }
+
+    /**
+     * @return join types of each input
+     */
+    public JoinRelType [] getJoinTypes()
+    {
+        return joinTypes;
+    }
+
+    /**
+     * @return bitmaps representing the fields projected from each input; if an
+     * entry is null, all fields are projected
+     */
+    public BitSet [] getProjFields()
+    {
+        return projFields;
+    }
+
+    /**
+     * @return the map of reference counts for each input, representing the
+     * fields accessed in join conditions
+     */
+    public Map<Integer, int[]> getJoinFieldRefCountsMap()
+    {
+        return joinFieldRefCountsMap;
+    }
+
+    /**
+     * @return a copy of the map of reference counts for each input,
+     * representing the fields accessed in join conditions
+     */
+    public Map<Integer, int[]> getCopyJoinFieldRefCountsMap()
+    {
+        return cloneJoinFieldRefCountsMap();
+    }
+
+    /**
+     * @return post-join filter associated with this MultiJoinRel
+     */
+    public RexNode getPostJoinFilter()
+    {
+        return postJoinFilter;
     }
 }
 

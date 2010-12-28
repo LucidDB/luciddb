@@ -3,6 +3,7 @@
 0: jdbc:luciddb:> set schema 'TESTSCHEMA';
 0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should be null
 0: jdbc:luciddb:> select LAST_ANALYZE_ROW_COUNT from SYS_ROOT.DBA_STORED_TABLES where TABLE_NAME = 'T1';
 +-------------------------+
@@ -16,8 +17,10 @@
 +-------------------------+
 |                         |
 +-------------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- analyze them
 0: jdbc:luciddb:> call applib.compute_statistics_for_schema('TESTSCHEMA');
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should be zero
 0: jdbc:luciddb:> select LAST_ANALYZE_ROW_COUNT from SYS_ROOT.DBA_STORED_TABLES where TABLE_NAME = 'T1';
 +-------------------------+
@@ -31,6 +34,14 @@
 +-------------------------+
 | 0                       |
 +-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that no read lock lingered from ANALYZE (FRG-141)
+0: jdbc:luciddb:> insert into T1 values (3, 3);
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema TESTSCHEMA cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try using on a nonexisting schema, should get error (LER-2608)
+0: jdbc:luciddb:> call applib.compute_statistics_for_schema('IMAGINARY_SCHEMA');
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

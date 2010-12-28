@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,13 +36,14 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeWriter extends BTreeReader to provide read-write access to the contents
  * of a BTree.  Optionally, it can also be used as a transaction participant.
  */
-class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
+class FENNEL_BTREE_EXPORT BTreeWriter
+    : public BTreeReader, public LogicalTxnParticipant
 {
     /**
      * LogicalActionType for inserting an entry into a BTree.
      */
     static const LogicalActionType ACTION_INSERT = 1;
-    
+
     /**
      * LogicalActionType for deleting an entry from a BTree.
      */
@@ -52,7 +53,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * Accessor for scratch segment.
      */
     SegmentAccessor scratchAccessor;
-    
+
     /**
      * Lock on scratch page used during splits.
      */
@@ -81,7 +82,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     bool monotonic;
 
     inline void optimizeRootLockMode();
-    
+
     /**
      * Performs compaction on a node to free up space for inserting a tuple.
      * This method uses swapBuffers for efficiency; as a side-effect,
@@ -120,7 +121,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param rightPageId PageId corresponding to rightNode
      */
     void grow(
-        BTreeNode &rightNode, PageId rightPageId);
+        BTreeNode const &rightNode, PageId rightPageId);
 
     /**
      * Finds the parent page by using the page stack (plus searches if root
@@ -129,10 +130,14 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      *
      * @param height is the current height of the btree.
      *
+     * @param rightMostNode true if the node being split is the rightmost
+     * node at that level in the btree; thus, the entry in the parent page
+     * corresponding to that node is the infinity key
+     *
      * @return 0-based entry position on parent page corresponding
      * to searchKeyData
      */
-    uint lockParentPage(uint height);
+    uint lockParentPage(uint height, bool rightMostNode);
 
     /**
      * Attempts to perform an insertion without splitting, performing
@@ -151,7 +156,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      */
     bool attemptInsertWithoutSplit(
         BTreePageLock &targetPageLock,
-        PConstBuffer pTupleBuffer,uint cbTuple,uint iNewTuple);
+        PConstBuffer pTupleBuffer, uint cbTuple, uint iNewTuple);
 
     /**
      * Inserts a tuple read from a log stream.
@@ -159,13 +164,38 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param logStream stream containing tuple image
      */
     void insertLogged(ByteInputStream &logStream);
-    
+
     /**
      * Deletes a tuple read from a log stream.
      *
      * @param logStream stream containing tuple image
      */
     void deleteLogged(ByteInputStream &logStream);
+
+    /**
+     * Positions search key for insert, also detecting duplicate key values
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @return true if duplicate key found
+     */
+    bool positionSearchKey(BTreeNodeAccessor &nodeAccessor);
+
+    /**
+     * Checks to ensure that when monotonic insert mode is used,
+     * the keys really are increasing.  Note though that the check
+     * is only done for the 2nd and subsequent keys on a leaf page.
+     * I.e., the check is not done across page boundaries.
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @param pTupleBuffer tuple buffer for new key to be inserted
+     *
+     * @return true if new key is > previous key and it will be inserted
+     * in the last position in the node
+     */
+    bool checkMonotonicity(
+        BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer);
 
 public:
     /**
@@ -181,12 +211,14 @@ public:
         BTreeDescriptor const &descriptor,
         SegmentAccessor const &scratchAccessor,
         bool monotonic = false);
-    
+
     virtual ~BTreeWriter();
 
     /**
-     * Inserts a tuple from unmarshalled TupleData form.  See
-     * insertTupleFromBuffer for duplicate handling.
+     * Inserts a tuple from unmarshalled TupleData form; requires this writer
+     * to already be positioned to the correct location (the caller is trusted,
+     * with no verification).  See insertTupleFromBuffer for duplicate
+     * handling.
      *
      * @param tupleData tuple to be inserted
      *
@@ -195,7 +227,7 @@ public:
     void insertTupleData(
         TupleData const &tupleData,
         Distinctness distinctness);
-    
+
     /**
      * Inserts a tuple from a marshalled tuple buffer.  If the key already
      * exists, and distinctness is set to DUP_FAIL, a BTreeDuplicateKeyExcn
@@ -209,7 +241,7 @@ public:
      * @param distinctness how to handle duplicates
      */
     uint insertTupleFromBuffer(
-        PConstBuffer pTupleBuffer,Distinctness distinctness);
+        PConstBuffer pTupleBuffer, Distinctness distinctness);
 
     /**
      * Deletes the current tuple.  Can be called after one
@@ -237,31 +269,6 @@ public:
      * Releases any allocated scratch buffers.
      */
     void releaseScratchBuffers();
-
-    /**
-     * Positions search key for insert, also detecting duplicate key values
-     *
-     * @param nodeAccessor node accessor for leaf node
-     *
-     * @return true if duplicate key found
-     */
-    bool positionSearchKey(BTreeNodeAccessor &nodeAccessor);
-
-    /**
-     * Checks to ensure that when monotonic insert mode is used,
-     * the keys really are increasing.  Note though that the check
-     * is only done for the 2nd and subsequent keys on a leaf page.
-     * I.e., the check is not done across page boundaries.
-     *
-     * @param nodeAccessor node accessor for leaf node
-     *
-     * @param pTupleBuffer tuple buffer for new key to be inserted
-     *
-     * @return true if new key is > previous key and it will be inserted
-     * in the last position in the node
-     */
-    bool checkMonotonicity(
-        BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer);
 
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;

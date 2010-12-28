@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,8 @@ FENNEL_BEGIN_NAMESPACE
  * design docs</a> for more detail.
  *
  */
-class ScratchSegment : public Segment, public CacheAccessor
+class FENNEL_SEGMENT_EXPORT ScratchSegment
+    : public Segment, public CacheAccessor
 {
     friend class SegmentFactory;
 
@@ -58,25 +59,27 @@ class ScratchSegment : public Segment, public CacheAccessor
      * Mutex protecting page list.
      */
     StrictMutex mutex;
-    
+
     explicit ScratchSegment(
         SharedCache pCache,
         uint nPagesMax);
-    
+
     // implement ClosableObject
     virtual void closeImpl();
 
     void clearPages();
-    
+
 public:
-    
+
     // implementation of Segment interface
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual BlockNum getAllocatedSizeInPages();
+    virtual BlockNum getNumPagesOccupiedHighWater();
+    virtual BlockNum getNumPagesExtended();
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual AllocationOrder getAllocationOrder() const;
@@ -91,11 +94,11 @@ public:
     virtual void unlockPage(
         CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
     virtual void discardPage(BlockId blockId);
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void flushPage(CachePage &page,bool async);
     virtual void nicePage(CachePage &page);
@@ -104,6 +107,10 @@ public:
     virtual void setMaxLockedPages(uint nPages);
     virtual void setTxnId(TxnId txnId);
     virtual TxnId getTxnId() const;
+    virtual void getPrefetchParams(
+        uint &nPagesPerBatch,
+        uint &nBatchPrefetches);
+    virtual uint getProcessorCacheBytes();
 };
 
 FENNEL_END_NAMESPACE

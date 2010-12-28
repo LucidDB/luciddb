@@ -1,0 +1,27 @@
+# properties
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+
+##################
+# foreign server #
+##################
+
+SERVER=localhost
+PORT=3306
+USERNAME=root
+PASSWORD=
+CATALOG_NAME=MEDJDBC_TEST
+
+SCHEMA=TEST
+
+## Comma-separated list of table types wanted, without spaces
+TABLE_TYPES=TABLE
+
+DRIVER_CLASS=com.mysql.jdbc.Driver
+URL=jdbc:mysql://@SERVER@:@PORT@/@CATALOG_NAME@
+
+DATATYPE_TABLE=DATATYPES

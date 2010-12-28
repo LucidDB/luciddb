@@ -1,0 +1,253 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- Tests LucidDB support for label aliases
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ---------------------------------------------------------------------------------- Setup labels and their aliases for different points-in-time
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema "labelAlias";
+0: jdbc:luciddb:> set schema '"labelAlias"';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t(a int);
+0: jdbc:luciddb:> create label l0 description 'empty table';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(1);
+0: jdbc:luciddb:> create label l1 description 'one row';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(2);
+0: jdbc:luciddb:> create label l2 description 'two rows';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(3);
+0: jdbc:luciddb:> create label l3 description 'three rows';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(4);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create label l0alias from label l0 description 'L0 alias';
+0: jdbc:luciddb:> create label l1alias from label l1 description 'L1 alias';
+0: jdbc:luciddb:> create label l2alias from label l2 description 'L2 alias';
+0: jdbc:luciddb:> create label l3alias from label l3;
+0: jdbc:luciddb:> create label chainedAlias from label l0alias description 'chained alias';
+0: jdbc:luciddb:> create label doublyChainedAlias from label chainedAlias;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select label_name, parent_label_name, remarks from sys_root.dba_labels
+. . . . . . . . >     order by label_name;
++---------------------+--------------------+----------------+
+|     LABEL_NAME      | PARENT_LABEL_NAME  |    REMARKS     |
++---------------------+--------------------+----------------+
+| CHAINEDALIAS        | L0ALIAS            | chained alias  |
+| DOUBLYCHAINEDALIAS  | CHAINEDALIAS       |                |
+| L0                  |                    | empty table    |
+| L0ALIAS             | L0                 | L0 alias       |
+| L1                  |                    | one row        |
+| L1ALIAS             | L1                 | L1 alias       |
+| L2                  |                    | two rows       |
+| L2ALIAS             | L2                 | L2 alias       |
+| L3                  |                    | three rows     |
+| L3ALIAS             | L3                 |                |
++---------------------+--------------------+----------------+
+0: jdbc:luciddb:> -- make sure the aliases have null csn's
+0: jdbc:luciddb:> select label_name, csn from sys_root.dba_labels
+. . . . . . . . >     where parent_label_name is not null order by label_name;
++---------------------+------+
+|     LABEL_NAME      | CSN  |
++---------------------+------+
+| CHAINEDALIAS        |      |
+| DOUBLYCHAINEDALIAS  |      |
+| L0ALIAS             |      |
+| L1ALIAS             |      |
+| L2ALIAS             |      |
+| L3ALIAS             |      |
++---------------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Set the various label aliases and validate the data returned
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- default case
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'L0ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'L3ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'L2ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'L1ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'CHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = 'DOUBLYCHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Recreate labels and make sure their aliases "follow" the new labels
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> create or replace label l0;
+0: jdbc:luciddb:> select label_name, parent_label_name, remarks from sys_root.dba_labels
+. . . . . . . . >     order by label_name;
++---------------------+--------------------+----------------+
+|     LABEL_NAME      | PARENT_LABEL_NAME  |    REMARKS     |
++---------------------+--------------------+----------------+
+| CHAINEDALIAS        | L0ALIAS            | chained alias  |
+| DOUBLYCHAINEDALIAS  | CHAINEDALIAS       |                |
+| L0                  |                    |                |
+| L0ALIAS             | L0                 | L0 alias       |
+| L1                  |                    | one row        |
+| L1ALIAS             | L1                 | L1 alias       |
+| L2                  |                    | two rows       |
+| L2ALIAS             | L2                 | L2 alias       |
+| L3                  |                    | three rows     |
+| L3ALIAS             | L3                 |                |
++---------------------+--------------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- the following selects should now return 4 rows
+0: jdbc:luciddb:> alter session set "label" = 'L0';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'L0ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'CHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'DOUBLYCHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> create or replace label chainedAlias from label l2alias
+. . . . . . . . >     description 'new chained label alias';
+0: jdbc:luciddb:> select label_name, parent_label_name, remarks from sys_root.dba_labels
+. . . . . . . . >     order by label_name;
++---------------------+--------------------+--------------------------+
+|     LABEL_NAME      | PARENT_LABEL_NAME  |         REMARKS          |
++---------------------+--------------------+--------------------------+
+| CHAINEDALIAS        | L2ALIAS            | new chained label alias  |
+| DOUBLYCHAINEDALIAS  | CHAINEDALIAS       |                          |
+| L0                  |                    |                          |
+| L0ALIAS             | L0                 | L0 alias                 |
+| L1                  |                    | one row                  |
+| L1ALIAS             | L1                 | L1 alias                 |
+| L2                  |                    | two rows                 |
+| L2ALIAS             | L2                 | L2 alias                 |
+| L3                  |                    | three rows               |
+| L3ALIAS             | L3                 |                          |
++---------------------+--------------------+--------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- the following selects should now return 2 rows
+0: jdbc:luciddb:> alter session set "label" = 'CHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'DOUBLYCHAINEDALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- make sure the other labels are unchanged
+0: jdbc:luciddb:> alter session set "label" = 'L1ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'L2ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> alter session set "label" = 'L3ALIAS';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

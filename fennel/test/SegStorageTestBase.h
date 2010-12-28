@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,11 +33,12 @@ FENNEL_BEGIN_NAMESPACE
  * SegStorageTestBase is a common base for any test which depends on the
  * Segment interface.
  */
-class SegStorageTestBase : virtual public CacheTestBase
+class FENNEL_TEST_EXPORT SegStorageTestBase
+    : virtual public CacheTestBase
 {
 protected:
     SharedSegmentFactory pSegmentFactory;
-    
+
     /**
      * Segment supporting linear page allocation.
      */
@@ -48,6 +49,16 @@ protected:
      */
     SharedSegment pRandomSegment;
 
+    /**
+     * (Optional) segment supporting versioned random page allocation.
+     */
+    SharedSegment pVersionedRandomSegment;
+
+    /**
+     * (Optional) segment supporting snapshot random page allocation.
+     */
+    SharedSegment pSnapshotRandomSegment;
+
 public:
     virtual void openStorage(DeviceMode openMode);
 
@@ -55,14 +66,18 @@ public:
 
     virtual void openRandomSegment();
 
-    SharedSegment createLinearDeviceSegment(DeviceId deviceId,uint nPages);
-    
+    SharedSegment createLinearDeviceSegment(DeviceId deviceId, uint nPages);
+
     void closeLinearSegment();
 
     void closeRandomSegment();
-    
+
+    void closeVersionedRandomSegment();
+
+    void closeSnapshotRandomSegment();
+
     virtual void closeStorage();
-    
+
     explicit SegStorageTestBase();
 };
 

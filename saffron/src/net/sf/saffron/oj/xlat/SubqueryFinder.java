@@ -90,7 +90,7 @@ class SubqueryFinder extends ScopeHandler
                         exprs,
                         RexUtil.createStructType(
                             typeFactory, exprs),
-                        ProjectRel.Flags.None, RelCollation.emptyList);
+                        ProjectRel.Flags.None, Collections.<RelCollation>emptyList());
             }
 
             boolean isNullable = false;
@@ -143,7 +143,7 @@ class SubqueryFinder extends ScopeHandler
                             rightRowType,
                             true)),
                     JoinRelType.LEFT,
-                    Collections.EMPTY_SET);
+                    Collections.<String>emptySet());
             queryInfo.setRoot(join);
 
             // Replace the 'in' condition with '$input0.$f1.$f1'
@@ -182,18 +182,26 @@ class SubqueryFinder extends ScopeHandler
             RelNode rightRel = queryInfo.convertFromExpToRel(right);
             final RexNode[] exprs = { queryInfo.rexBuilder.makeLiteral(true) };
             RelNode rightProject =
-                new ProjectRel(queryInfo.cluster, rightRel,
+                new ProjectRel(
+                    queryInfo.cluster,
+                    rightRel,
                     exprs,
                     RexUtil.createStructType(
-                        queryInfo.cluster.getTypeFactory(), exprs),
-                    ProjectRel.Flags.None, RelCollation.emptyList);
+                        queryInfo.cluster.getTypeFactory(),
+                        exprs),
+                    ProjectRel.Flags.None,
+                    Collections.<RelCollation>emptyList());
             RelNode rightDistinct =
                 RelOptUtil.createDistinctRel(rightProject);
             queryInfo.leaves.add(rightDistinct);
             JoinRel join =
-                new JoinRel(queryInfo.cluster, oldFrom, rightDistinct,
+                new JoinRel(
+                    queryInfo.cluster,
+                    oldFrom,
+                    rightDistinct,
                     queryInfo.rexBuilder.makeLiteral(true),
-                    JoinRelType.LEFT, Collections.EMPTY_SET);
+                    JoinRelType.LEFT,
+                    Collections.<String>emptySet());
             queryInfo.setRoot(join);
 
             // Replace the 'exists' with a test as to whether the single

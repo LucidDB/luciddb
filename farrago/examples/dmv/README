@@ -1,0 +1,11 @@
+This directory contains 
+
+- test.sql:  creates an example schema and then runs a number of
+example visualizations; results are written into subdirectory named
+"results" in .dot form
+
+- *.lurql:  LURQL queries used by example visualizations
+
+- *.xml:  transformation rule files used by example visualizations
+
+For more information, see farrago/doc/dmv/index.html

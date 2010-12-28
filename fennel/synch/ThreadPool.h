@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,11 +32,12 @@
 FENNEL_BEGIN_NAMESPACE
 
 class PooledThread;
+class ThreadTracker;
 
 /**
  * ThreadPoolBase defines the non-templated portion of ThreadPool.
  */
-class ThreadPoolBase : protected SynchMonitoredObject
+class FENNEL_SYNCH_EXPORT ThreadPoolBase : protected SynchMonitoredObject
 {
     friend class PooledThread;
     void runPooledThread();
@@ -47,16 +48,17 @@ protected:
         STATE_STOPPING,
         STATE_STOPPED
     };
-    
+
     std::vector<PooledThread *> threads;
     State state;
     LocalCondition stoppingCondition;
-    
+    ThreadTracker *pThreadTracker;
+
     explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
     virtual bool isQueueEmpty() = 0;
     virtual void runOneTask(StrictMutexGuard &) = 0;
-    
+
 public:
     /**
      * Starts the given number of threads in the pool.
@@ -64,13 +66,20 @@ public:
      * @param nThreads number of threads to start
      */
     void start(uint nThreads);
-    
+
     /**
      * Shuts down the pool, waiting for any pending tasks to complete.
      * The start/stop calls should never be invoked from more than one thread
      * simultaneously.
      */
     void stop();
+
+    /**
+     * Sets a tracker to use for created threads.
+     *
+     * @param threadTracker tracker to use
+     */
+    void setThreadTracker(ThreadTracker &threadTracker);
 };
 
 /**
@@ -91,7 +100,7 @@ class ThreadPool : public ThreadPoolBase
     {
         return queue.empty();
     }
-    
+
     virtual void runOneTask(StrictMutexGuard &guard)
     {
         Task task = queue.front();
@@ -100,13 +109,14 @@ class ThreadPool : public ThreadPoolBase
         task.execute();
         guard.lock();
     }
-    
+
 public:
     /**
      * Constructor.
      */
     explicit ThreadPool()
     {
+        pThreadTracker = NULL;
     }
 
     /**

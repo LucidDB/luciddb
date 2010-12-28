@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,6 +44,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -59,9 +60,10 @@
         <property file="run.properties"/>
       </else>
     </if>
+    <ant dir="enforceRowConstraints" target="gen-all-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${udx.dir}"
       testscript="${testfile}"
@@ -69,11 +71,19 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+    <ant dir="enforceRowConstraints" target="clean"/>
+    <ant dir="impexp" target="clean"/>	
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${udx.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <ant dir="enforceRowConstraints" target="clean-test"/>
+    <ant dir="impexp" target="clean-test"/>
   </target>
 
 </project>

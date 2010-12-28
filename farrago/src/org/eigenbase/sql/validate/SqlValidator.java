@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,14 +58,23 @@ import org.eigenbase.util.*;
  * particular point in the query; and a {@link SqlValidatorNamespace} is a
  * description of a data source used in a query.
  *
+ * <p>There are different kinds of namespace for different parts of the query.
+ * for example {@link IdentifierNamespace} for table names, {@link
+ * SelectNamespace} for SELECT queries, {@link SetopNamespace} for UNION, EXCEPT
+ * and INTERSECT. A validator is allowed to wrap namespaces in other objects
+ * which implement {@link SqlValidatorNamespace}, so don't try to cast your
+ * namespace or use <code>instanceof</code>; use {@link
+ * SqlValidatorNamespace#unwrap(Class)} and {@link
+ * SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
+ *
  * <p>The validator builds the map by making a quick scan over the query when
  * the root {@link SqlNode} is first provided. Thereafter, it supplies the
- * correct scope or namespace object when it calls validation methods.
+ * correct scope or namespace object when it calls validation methods.</p>
  *
  * <p>The methods {@link #getSelectScope}, {@link #getFromScope}, {@link
  * #getWhereScope}, {@link #getGroupScope}, {@link #getHavingScope}, {@link
  * #getOrderScope} and {@link #getJoinScope} get the correct scope to resolve
- * names in a particular clause of a SQL statement.
+ * names in a particular clause of a SQL statement.</p>
  *
  * @author jhyde
  * @version $Id$
@@ -73,22 +82,27 @@ import org.eigenbase.util.*;
  */
 public interface SqlValidator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the dialect of SQL (SQL:2003, etc.) this validator recognizes.
-     * Default is {@link Compatible#Default}.
+     * Default is {@link SqlConformance#Default}.
+     *
+     * @return dialect of SQL this validator recognizes
      */
-    Compatible getCompatible();
+    SqlConformance getConformance();
 
     /**
      * Returns the catalog reader used by this validator.
+     *
+     * @return catalog reader
      */
     SqlValidatorCatalogReader getCatalogReader();
 
     /**
      * Returns the operator table used by this validator.
+     *
+     * @return operator table
      */
     SqlOperatorTable getOperatorTable();
 
@@ -121,13 +135,24 @@ public interface SqlValidator
         Map<String, RelDataType> nameToTypeMap);
 
     /**
-     * Checks that a query (<code>select</code> statement, or a set operation
-     * <code>union</code>, <code>intersect</code>, <code>except</code>) is
-     * valid.
+     * Checks that a query is valid.
+     *
+     * <p>Valid queries include:
+     *
+     * <ul>
+     * <li><code>SELECT</code> statement,
+     * <li>set operation (<code>UNION</code>, <code>INTERSECT</code>, <code>
+     * EXCEPT</code>)
+     * <li>identifier (e.g. representing use of a table in a FROM clause)
+     * <li>query aliased with the <code>AS</code> operator
+     * </ul>
+     *
+     * @param node Query node
+     * @param scope Scope in which the query occurs
      *
      * @throws RuntimeException if the query is not valid
      */
-    void validateQuery(SqlNode node);
+    void validateQuery(SqlNode node, SqlValidatorScope scope);
 
     /**
      * Returns the type assigned to a node by validation.
@@ -154,46 +179,63 @@ public interface SqlValidator
      * Resolves an identifier to a fully-qualified name.
      *
      * @param id Identifier
+     * @param scope Naming scope
      */
     void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope);
 
     /**
      * Validates a literal.
+     *
+     * @param literal Literal
      */
     void validateLiteral(SqlLiteral literal);
 
     /**
      * Validates a {@link SqlIntervalQualifier}
+     *
+     * @param qualifier Interval qualifier
      */
     void validateIntervalQualifier(SqlIntervalQualifier qualifier);
 
     /**
      * Validates an INSERT statement.
+     *
+     * @param insert INSERT statement
      */
     void validateInsert(SqlInsert insert);
 
     /**
      * Validates an UPDATE statement.
+     *
+     * @param update UPDATE statement
      */
     void validateUpdate(SqlUpdate update);
 
     /**
      * Validates a DELETE statement.
+     *
+     * @param delete DELETE statement
      */
     void validateDelete(SqlDelete delete);
 
     /**
      * Validates a MERGE statement.
+     *
+     * @param merge MERGE statement
      */
     void validateMerge(SqlMerge merge);
 
     /**
      * Validates a data type expression.
+     *
+     * @param dataType Data type
      */
     void validateDataType(SqlDataTypeSpec dataType);
 
     /**
      * Validates a dynamic parameter.
+     *
+     * @param dynamicParam Dynamic parameter
      */
     void validateDynamicParam(SqlDynamicParam dynamicParam);
 
@@ -201,6 +243,13 @@ public interface SqlValidator
      * Validates the right-hand side of an OVER expression. It might be either
      * an {@link SqlIdentifier identifier} referencing a window, or an {@link
      * SqlWindow inline window specification}.
+     *
+     * @param windowOrId SqlNode that can be either SqlWindow with all the
+     * components of a window spec or a SqlIdentifier with the name of a window
+     * spec.
+     * @param scope Naming scope
+     * @param call is the SqlNode if a function call if the window is attached
+     * to one.
      */
     void validateWindow(
         SqlNode windowOrId,
@@ -209,8 +258,33 @@ public interface SqlValidator
 
     /**
      * Validates a call to an operator.
+     *
+     * @param call Operator call
+     * @param scope Naming scope
      */
-    void validateCall(SqlCall call, SqlValidatorScope scope);
+    void validateCall(
+        SqlCall call,
+        SqlValidatorScope scope);
+
+    /**
+     * Validates parameters for aggregate function.
+     *
+     * @param aggFunction function containing COLUMN_LIST parameter
+     * @param scope Syntactic scope
+     */
+    void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
+
+    /**
+     * Validates a COLUMN_LIST parameter
+     *
+     * @param function function containing COLUMN_LIST parameter
+     * @param argTypes function arguments
+     * @param operands operands passed into the function call
+     */
+    void validateColumnListParams(
+        SqlFunction function,
+        RelDataType [] argTypes,
+        SqlNode [] operands);
 
     /**
      * Derives the type of a node in a given scope. If the type has already been
@@ -236,7 +310,7 @@ public interface SqlValidator
      * @param e The validation error
      * @param node The place where the exception occurred
      *
-     * @return
+     * @return Exception containing positional information
      *
      * @pre node != null
      * @post return != null
@@ -250,8 +324,21 @@ public interface SqlValidator
      * contains GROUP BY, or (2) contains HAVING, or (3) SELECT or ORDER BY
      * clause contains aggregate functions. (Windowed aggregate functions, such
      * as <code>SUM(x) OVER w</code>, don't count.)
+     *
+     * @param select SELECT statement
+     *
+     * @return whether SELECT statement is an aggregation
      */
     boolean isAggregate(SqlSelect select);
+
+    /**
+     * Returns whether a select list expression is an aggregate function.
+     *
+     * @param selectNode Expression in SELECT clause
+     *
+     * @return whether expression is an aggregate function
+     */
+    boolean isAggregate(SqlNode selectNode);
 
     /**
      * Converts a window specification or window name into a fully-resolved
@@ -263,10 +350,9 @@ public interface SqlValidator
      * @param windowOrRef Either the name of a window (a {@link SqlIdentifier})
      * or a window specification (a {@link SqlWindow}).
      * @param scope Scope in which to resolve window names
-     *
      * @param populateBounds Whether to populate bounds. Doing so may alter the
-     *   definition of the window. It is recommended that populate bounds when
-     *   translating to physical algebra, but not when validating.
+     * definition of the window. It is recommended that populate bounds when
+     * translating to physical algebra, but not when validating.
      *
      * @return A window
      *
@@ -283,6 +369,10 @@ public interface SqlValidator
      * <p>For example, in the query <code>SELECT * FROM (SELECT * FROM t), t1 AS
      * alias</code>, the both items in the FROM clause have a corresponding
      * namespace.
+     *
+     * @param node Parse tree node
+     *
+     * @return namespace of node
      */
     SqlValidatorNamespace getNamespace(SqlNode node);
 
@@ -290,6 +380,12 @@ public interface SqlValidator
      * Derives an alias for an expression. If no alias can be derived, returns
      * null if <code>ordinal</code> is less than zero, otherwise generates an
      * alias <code>EXPR$<i>ordinal</i></code>.
+     *
+     * @param node Expression
+     * @param ordinal Ordinal of expression
+     *
+     * @return derived alias, or null if no alias can be derived and ordinal is
+     * less than zero
      */
     String deriveAlias(
         SqlNode node,
@@ -298,6 +394,12 @@ public interface SqlValidator
     /**
      * Returns a list of expressions, with every occurrence of "&#42;" or
      * "TABLE.&#42;" expanded.
+     *
+     * @param selectList Select clause to be expanded
+     * @param query Query
+     * @param includeSystemVars Whether to include system variables
+     *
+     * @return expanded select clause
      */
     SqlNodeList expandStar(
         SqlNodeList selectList,
@@ -308,11 +410,17 @@ public interface SqlValidator
      * Returns the scope that expressions in the WHERE and GROUP BY clause of
      * this query should use. This scope consists of the tables in the FROM
      * clause, and the enclosing scope.
+     *
+     * @param select Query
+     *
+     * @return naming scope of WHERE clause
      */
     SqlValidatorScope getWhereScope(SqlSelect select);
 
     /**
      * Returns the type factory used by this validator.
+     *
+     * @return type factory
      */
     RelDataTypeFactory getTypeFactory();
 
@@ -333,7 +441,16 @@ public interface SqlValidator
         RelDataType type);
 
     /**
+     * Removes a node from the set of validated nodes
+     *
+     * @param node node to be removed
+     */
+    void removeValidatedNodeType(SqlNode node);
+
+    /**
      * Returns an object representing the "unknown" type.
+     *
+     * @return unknown type
      */
     RelDataType getUnknownType();
 
@@ -365,6 +482,10 @@ public interface SqlValidator
      * <li>In ORDER BY ({@link #getOrderScope}), you can see the column alias
      * 'x'; and tables 'emp', 'dept', and 'foo'.
      * </ul>
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for SELECT statement
      */
     SqlValidatorScope getSelectScope(SqlSelect select);
 
@@ -372,12 +493,20 @@ public interface SqlValidator
      * Returns the scope for resolving the SELECT, GROUP BY and HAVING clauses.
      * Always a {@link SelectScope}; if this is an aggregation query, the {@link
      * AggregatingScope} is stripped away.
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for SELECT statement, sans any aggregating scope
      */
     SelectScope getRawSelectScope(SqlSelect select);
 
     /**
      * Returns a scope containing the objects visible from the FROM clause of a
      * query.
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for FROM clause
      */
     SqlValidatorScope getFromScope(SqlSelect select);
 
@@ -388,6 +517,8 @@ public interface SqlValidator
      * @param node The item in the FROM clause which contains the ON or USING
      * expression
      *
+     * @return naming scope for JOIN clause
+     *
      * @see #getFromScope
      */
     SqlValidatorScope getJoinScope(SqlNode node);
@@ -395,12 +526,20 @@ public interface SqlValidator
     /**
      * Returns a scope containing the objects visible from the GROUP BY clause
      * of a query.
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for GROUP BY clause
      */
     SqlValidatorScope getGroupScope(SqlSelect select);
 
     /**
      * Returns a scope containing the objects visible from the HAVING clause of
      * a query.
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for HAVING clause
      */
     SqlValidatorScope getHavingScope(SqlSelect select);
 
@@ -409,25 +548,68 @@ public interface SqlValidator
      * this query should use. This scope consists of the FROM clause and the
      * enclosing scope. If the query is aggregating, only columns in the GROUP
      * BY clause may be used.
+     *
+     * @param select SELECT statement
+     *
+     * @return naming scope for ORDER BY clause
      */
     SqlValidatorScope getOrderScope(SqlSelect select);
 
     /**
-     * Returns the boolean result of testing the node to see if it's a constant
-     */
-    boolean isConstant(SqlNode expr);
-
-    /**
      * Declares a SELECT expression as a cursor.
+     *
+     * @param select select expression associated with the cursor
+     * @param scope scope of the parent query associated with the cursor
      */
-    void declareCursor(SqlSelect select);
+    void declareCursor(SqlSelect select, SqlValidatorScope scope);
 
     /**
-     * Enables or disables expansion of identifiers.
+     * Pushes a new instance of a function call on to a function call stack.
+     */
+    void pushFunctionCall();
+
+    /**
+     * Removes the topmost entry from the function call stack.
+     */
+    void popFunctionCall();
+
+    /**
+     * Retrieves the name of the parent cursor referenced by a column list
+     * parameter.
+     *
+     * @param columnListParamName name of the column list parameter
+     *
+     * @return name of the parent cursor
+     */
+    String getParentCursor(String columnListParamName);
+
+    /**
+     * Enables or disables expansion of identifiers other than column
+     * references.
      *
      * @param expandIdentifiers new setting
      */
     void setIdentifierExpansion(boolean expandIdentifiers);
+
+    /**
+     * Enables or disables expansion of column references. (Currently this does
+     * not apply to the ORDER BY clause; may be fixed in the future.)
+     *
+     * @param expandColumnReferences new setting
+     */
+    void setColumnReferenceExpansion(boolean expandColumnReferences);
+
+    /**
+     * @return whether column reference expansion is enabled
+     */
+    boolean getColumnReferenceExpansion();
+
+    /**
+     * Returns expansion of identifiers.
+     *
+     * @return whether this validator should expand identifiers
+     */
+    boolean shouldExpandIdentifiers();
 
     /**
      * Enables or disables rewrite of "macro-like" calls such as COALESCE.
@@ -436,6 +618,17 @@ public interface SqlValidator
      */
     void setCallRewrite(boolean rewriteCalls);
 
+    /**
+     * Derives the type of a constructor.
+     *
+     * @param scope Scope
+     * @param call Call
+     * @param unresolvedConstructor TODO
+     * @param resolvedConstructor TODO
+     * @param argTypes Types of arguments
+     *
+     * @return Resolved type of constructor
+     */
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,
         SqlCall call,
@@ -443,6 +636,15 @@ public interface SqlValidator
         SqlFunction resolvedConstructor,
         RelDataType [] argTypes);
 
+    /**
+     * Handles a call to a function which cannot be resolved, throwing an
+     * appropriately descriptive error.
+     *
+     * @param call Call
+     * @param unresolvedFunction Overloaded function which is the target of the
+     * call
+     * @param argTypes Types of arguments
+     */
     void handleUnresolvedFunction(
         SqlCall call,
         SqlFunction unresolvedFunction,
@@ -470,93 +672,41 @@ public interface SqlValidator
      */
     SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr);
 
+    /**
+     * Expands an expression.
+     *
+     * @param expr Expression
+     * @param scope Scope
+     *
+     * @return Expanded expression
+     */
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
 
-    //~ Inner Classes ----------------------------------------------------------
+    /**
+     * Returns whether a field is a system field. Such fields may have
+     * particular properties such as sortedness and nullability.
+     *
+     * <p>In the default implementation, always returns {@code false}.
+     *
+     * @param field Field
+     *
+     * @return whether field is a system field
+     */
+    boolean isSystemField(RelDataTypeField field);
 
     /**
-     * Enumeration of valid SQL compatiblity modes.
+     * Returns a description of how each field in the row type maps to a
+     * catalog, schema, table and column in the schema.
      *
-     * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
+     * <p>The returned list is never null, and has one element for each field
+     * in the row type. Each element is a list of four elements (catalog,
+     * schema, table, column), or may be null if the column is an expression.
+     *
+     * @param sqlQuery Query
+     * @return Description of how each field in the row type maps to a schema
+     *     object
      */
-    public class Compatible
-        extends EnumeratedValues.BasicValue
-    {
-        public static final int Default_ordinal = 0;
-        public static final int Strict92_ordinal = 1;
-        public static final int Strict99_ordinal = 2;
-        public static final int Pragmatic99_ordinal = 3;
-        public static final int Oracle10g_ordinal = 4;
-        public static final int Sql2003_ordinal = 5;
-        public static final int Pragmatic2003_ordinal = 6;
-
-        public static final Compatible Strict92 =
-            new Compatible("Strict92", Strict92_ordinal);
-        public static final Compatible Strict99 =
-            new Compatible("Strict99", Strict99_ordinal);
-        public static final Compatible Pragmatic99 =
-            new Compatible("Pragmatic99", Pragmatic99_ordinal);
-        public static final Compatible Oracle10g =
-            new Compatible("Oracle10g", Oracle10g_ordinal);
-        public static final Compatible Sql2003 =
-            new Compatible("Sql2003", Sql2003_ordinal);
-        public static final Compatible Default =
-            new Compatible("Default", Default_ordinal);
-        public static final Compatible Pragmatic2003 =
-            new Compatible("Pragmatic2003", Pragmatic2003_ordinal);
-
-        public static final Compatible [] Values =
-            {
-                Default,
-                Strict92,
-                Strict99,
-                Pragmatic99,
-                Oracle10g,
-                Sql2003,
-                Pragmatic2003,
-            };
-
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(Values);
-
-        private Compatible(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-
-        /**
-         * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
-         * in the select list'.
-         */
-        public boolean isSortByOrdinal()
-        {
-            return
-                (this == Compatible.Default) || (this == Compatible.Oracle10g)
-                || (this == Compatible.Strict92)
-                || (this == Compatible.Pragmatic99)
-                || (this == Compatible.Pragmatic2003);
-        }
-
-        /**
-         * Whether 'order by x' is interpreted to mean 'sort by the select list
-         * item whose alias is x' even if there is a column called x.
-         */
-        public boolean isSortByAlias()
-        {
-            return
-                (this == Compatible.Default) || (this == Compatible.Oracle10g)
-                || (this == Compatible.Strict92);
-        }
-
-        /**
-         * Whether "empno" is invalid in "select empno as x from emp order by
-         * empno" because the alias "x" obscures it.
-         */
-        public boolean isSortByAliasObscures()
-        {
-            return this == Compatible.Strict92;
-        }
-    }
+    List<List<String>> getFieldOrigins(SqlNode sqlQuery);
 }
 
 // End SqlValidator.java

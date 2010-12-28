@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
  */
 public class SqlValidatorUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -55,21 +54,26 @@ public class SqlValidatorUtil
      * @param schema Schema
      * @param datasetName Name of sample dataset to substitute, or null to use
      * the regular table
+     * @param usedDataset Output parameter which is set to true if a sample
+     * dataset is found; may be null
      */
     public static RelOptTable getRelOptTable(
         SqlValidatorNamespace namespace,
         RelOptSchema schema,
-        String datasetName)
+        String datasetName,
+        boolean [] usedDataset)
     {
-        if (namespace instanceof IdentifierNamespace) {
+        if (namespace.isWrapperFor(IdentifierNamespace.class)) {
             IdentifierNamespace identifierNamespace =
-                (IdentifierNamespace) namespace;
+                namespace.unwrap(IdentifierNamespace.class);
             final String [] names = identifierNamespace.getId().names;
             if ((datasetName != null)
-                && (schema instanceof RelOptSchemaWithSampling)) {
-                return
-                    ((RelOptSchemaWithSampling) schema).getTableForMember(names,
-                        datasetName);
+                && (schema instanceof RelOptSchemaWithSampling))
+            {
+                return ((RelOptSchemaWithSampling) schema).getTableForMember(
+                    names,
+                    datasetName,
+                    usedDataset);
             } else {
                 // Schema does not support substitution. Ignore the dataset,
                 // if any.
@@ -110,7 +114,7 @@ public class SqlValidatorUtil
      *
      * @return Ordinal of field, or -1 if not found
      */
-    static int lookupField(
+    public static int lookupField(
         final RelDataType rowType,
         String columnName)
     {
@@ -156,7 +160,7 @@ public class SqlValidatorUtil
     {
         final SqlParserPos pos = expr.getParserPosition();
         final SqlIdentifier id = new SqlIdentifier(alias, pos);
-        return SqlStdOperatorTable.asOperator.createCall(expr, id, pos);
+        return SqlStdOperatorTable.asOperator.createCall(pos, expr, id);
     }
 
     /**
@@ -193,19 +197,16 @@ public class SqlValidatorUtil
      */
     public static String getAlias(SqlNode node, int ordinal)
     {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
-
+        switch (node.getKind()) {
+        case AS:
             // E.g. "1 + 2 as foo" --> "foo"
             return ((SqlCall) node).getOperands()[1].toString();
 
-        case SqlKind.OverORDINAL:
-
+        case OVER:
             // E.g. "bids over w" --> "bids"
             return getAlias(((SqlCall) node).getOperands()[0], ordinal);
 
-        case SqlKind.IdentifierORDINAL:
-
+        case IDENTIFIER:
             // E.g. "foo.bar" --> "bar"
             final String [] names = ((SqlIdentifier) node).names;
             return names[names.length - 1];
@@ -254,12 +255,11 @@ public class SqlValidatorUtil
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
     {
-        return
-            new SqlValidatorImpl(
-                opTab,
-                catalogReader,
-                typeFactory,
-                SqlValidator.Compatible.Default);
+        return new SqlValidatorImpl(
+            opTab,
+            catalogReader,
+            typeFactory,
+            SqlConformance.Default);
     }
 
     /**
@@ -296,11 +296,79 @@ public class SqlValidatorUtil
             if (i == 0) {
                 namespace = scope.resolve(name, null, null);
             } else {
-                namespace = namespace.lookupChild(name, null, null);
+                namespace = namespace.lookupChild(name);
             }
         }
         Util.permAssert(namespace != null, "post: namespace != null");
         return namespace;
+    }
+
+    public static void getSchemaObjectMonikers(
+        SqlValidatorCatalogReader catalogReader,
+        List<String> names,
+        List<SqlMoniker> hints)
+    {
+        // Assume that the last name is 'dummy' or similar.
+        List<String> subNames = names.subList(0, names.size() - 1);
+        hints.addAll(catalogReader.getAllSchemaObjectNames(subNames));
+
+        // If the name has length 0, try prepending the name of the default
+        // schema. So, the empty name would yield a list of tables in the
+        // default schema, as well as a list of schemas from the above code.
+        if (subNames.size() == 0) {
+            hints.addAll(
+                catalogReader.getAllSchemaObjectNames(
+                    Collections.singletonList(
+                        catalogReader.getSchemaName())));
+        }
+    }
+
+    public static SelectScope getEnclosingSelectScope(SqlValidatorScope scope)
+    {
+        while (scope instanceof DelegatingScope) {
+            if (scope instanceof SelectScope) {
+                return (SelectScope) scope;
+            }
+            scope = ((DelegatingScope) scope).getParent();
+        }
+        return null;
+    }
+
+    /**
+     * Derives the list of column names suitable for NATURAL JOIN. These are the
+     * columns that occur exactly once on each side of the join.
+     *
+     * @param leftRowType Row type of left input to the join
+     * @param rightRowType Row type of right input to the join
+     *
+     * @return List of columns that occur once on each side
+     */
+    public static List<String> deriveNaturalJoinColumnList(
+        RelDataType leftRowType,
+        RelDataType rightRowType)
+    {
+        List<String> naturalColumnNames = new ArrayList<String>();
+        final String [] leftNames = SqlTypeUtil.getFieldNames(leftRowType);
+        final String [] rightNames = SqlTypeUtil.getFieldNames(rightRowType);
+        for (String name : leftNames) {
+            if ((countOccurrences(name, leftNames) == 1)
+                && (countOccurrences(name, rightNames) == 1))
+            {
+                naturalColumnNames.add(name);
+            }
+        }
+        return naturalColumnNames;
+    }
+
+    static int countOccurrences(String name, String [] names)
+    {
+        int count = 0;
+        for (String s : names) {
+            if (s.equals(name)) {
+                ++count;
+            }
+        }
+        return count;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,33 +22,27 @@
 */
 package net.sf.farrago.ddl;
 
-import java.io.*;
-
-import java.nio.charset.*;
-
 import java.sql.*;
 
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -62,7 +56,6 @@ import org.eigenbase.util.*;
 public class DdlRelationalHandler
     extends DdlHandler
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final DdlMedHandler medHandler;
@@ -80,6 +73,13 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(CwmCatalog catalog)
     {
+        // since servers are in the same namespace with CWM catalogs,
+        // need a special name uniquness check here
+        validator.validateUniqueNames(
+            repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
+            repos.allOfType(CwmCatalog.class),
+            false);
+
         validator.validateUniqueNames(
             catalog,
             catalog.getOwnedElement(),
@@ -95,9 +95,23 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
+        // NOTE jvs 7-Nov-2006:  CWM specifies table constraints as
+        // owned by tables, but SQL:2003 specifies them as identified
+        // directly by schemas.  So we have to flatten out the
+        // schema namespace here.
+
+        List<CwmModelElement> elements =
+            new ArrayList<CwmModelElement>(schema.getOwnedElement());
+
+        for (CwmModelElement element : schema.getOwnedElement()) {
+            if (element instanceof CwmTable) {
+                elements.addAll(((CwmTable) element).getOwnedElement());
+            }
+        }
+
         validator.validateUniqueNames(
             schema,
-            schema.getOwnedElement(),
+            elements,
             true);
     }
 
@@ -118,7 +132,7 @@ public class DdlRelationalHandler
                     index.refClass()));
         }
 
-        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {
                 // REVIEW: support this?  What to do about instances of the
@@ -126,6 +140,20 @@ public class DdlRelationalHandler
                 throw res.ValidatorIndexOnExistingTempTable.ex(
                     repos.getLocalizedObjectName(index),
                     repos.getLocalizedObjectName(table));
+            }
+        }
+
+        // check that columns are distinct
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
+        boolean [] includesColumn = new boolean[table.getFeature().size()];
+        for (CwmIndexedFeature column : indexedFeatures) {
+            int ordinal =
+                ((FemAbstractAttribute) column.getFeature()).getOrdinal();
+            if (includesColumn[ordinal]) {
+                throw res.ValidatorIndexedColumnsNotDistinct.ex(
+                    repos.getLocalizedObjectName(index));
+            } else {
+                includesColumn[ordinal] = true;
             }
         }
 
@@ -165,7 +193,16 @@ public class DdlRelationalHandler
                     table.refClass()));
         }
 
-        validateLocalTable(table, true);
+        boolean creation = true;
+
+        if (((DdlValidator) validator).isReplace()) {
+            // revalidation of this table is being triggered by
+            // CREATE OR REPLACE of something else, probably
+            // the local data server
+            creation = false;
+        }
+
+        validateLocalTable(table, creation);
     }
 
     // implement FarragoSessionDdlHandler
@@ -188,7 +225,16 @@ public class DdlRelationalHandler
 
         validateAttributeSet(table);
 
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
+        int nSequences = 0;
+        for (CwmFeature feature : table.getFeature()) {
+            if (((FemStoredColumn) feature).getSequence() != null) {
+                nSequences++;
+            }
+        }
+        if (nSequences > 1) {
+            throw res.ValidatorMultipleTableSequences.ex(
+                repos.getLocalizedObjectName(table));
+        }
 
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
@@ -196,14 +242,18 @@ public class DdlRelationalHandler
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
-        Iterator constraintIter = table.getOwnedElement().iterator();
-        while (constraintIter.hasNext()) {
-            Object obj = constraintIter.next();
-            if (!(obj instanceof FemAbstractUniqueConstraint)) {
-                continue;
-            }
-            FemAbstractUniqueConstraint constraint =
-                (FemAbstractUniqueConstraint) obj;
+
+        // Sort constraints into the order in which they were created
+        // (to keep unit tests deterministic across repository
+        // implementations).
+        List<FemAbstractUniqueConstraint> contraints =
+            new ArrayList<FemAbstractUniqueConstraint>(
+                Util.filter(
+                    table.getOwnedElement(),
+                    FemAbstractUniqueConstraint.class));
+        Collections.sort(contraints, new UniqueConstraintComparator());
+
+        for (FemAbstractUniqueConstraint constraint : contraints) {
             if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
                     throw res.ValidatorMultiplePrimaryKeys.ex(
@@ -215,7 +265,7 @@ public class DdlRelationalHandler
                 // Implement constraints via system-owned indexes.
                 FemLocalIndex index =
                     createUniqueConstraintIndex(table, constraint);
-                if (constraint == primaryKey) {
+                if ((primaryKey != null) && constraint.equals(primaryKey)) {
                     generatedPrimaryKeyIndex = index;
                 }
 
@@ -234,13 +284,15 @@ public class DdlRelationalHandler
         // Perform validation specific to the local data server
         FarragoMedDataServer medDataServer =
             validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
-        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer
-            .getClass().getName();
+        assert medDataServer instanceof FarragoMedLocalDataServer
+            : medDataServer.getClass().getName();
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {
-            medLocalDataServer.validateTableDefinition(table,
-                generatedPrimaryKeyIndex);
+            medLocalDataServer.validateTableDefinition(
+                table,
+                generatedPrimaryKeyIndex,
+                creation);
         } catch (SQLException ex) {
             throw res.ValidatorDataServerTableInvalid.ex(
                 repos.getLocalizedObjectName(table),
@@ -257,6 +309,10 @@ public class DdlRelationalHandler
     {
         FarragoSession session = validator.newReentrantSession();
 
+        // Disable subquery reduction during validation of views because
+        // errors should only be returned during the actual selection
+        // from the view
+        session.disableSubqueryReduction();
         try {
             validateViewImpl(session, view);
         } catch (FarragoUnvalidatedDependencyException ex) {
@@ -276,10 +332,9 @@ public class DdlRelationalHandler
         FemLocalView view)
         throws Throwable
     {
-        String sql = view.getQueryExpression().getBody();
-
+        final FarragoSessionAnalyzedSql analyzedSql;
+        final String sql = view.getQueryExpression().getBody();
         tracer.fine(sql);
-        FarragoSessionAnalyzedSql analyzedSql;
         try {
             analyzedSql =
                 session.analyzeSql(
@@ -287,13 +342,13 @@ public class DdlRelationalHandler
                     validator.getTypeFactory(),
                     null,
                     false);
+            assert analyzedSql != null;
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }
 
-        RelDataType rowType = analyzedSql.resultType;
-
-        List columnList = view.getFeature();
+        final RelDataType rowType = analyzedSql.resultType;
+        List<CwmFeature> columnList = view.getFeature();
         boolean implicitColumnNames = true;
 
         if (columnList.size() != 0) {
@@ -311,12 +366,7 @@ public class DdlRelationalHandler
             throw res.ValidatorInvalidViewDynamicParam.ex();
         }
 
-        if (analyzedSql.hasTopLevelOrderBy) {
-            throw res.ValidatorInvalidViewOrderBy.ex();
-        }
-
         // Derive column information from result set metadata
-        FarragoTypeFactory typeFactory = validator.getTypeFactory();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             FemViewColumn column;
@@ -337,9 +387,24 @@ public class DdlRelationalHandler
 
         validator.fixupView(view, analyzedSql);
 
-        view.setOriginalDefinition(sql);
-        view.getQueryExpression().setBody(analyzedSql.canonicalString);
+        if (!session.getPersonality().shouldReplacePreserveOriginalSql()
+            && validator.isReplace())
+        {
+            view.setOriginalDefinition(analyzedSql.canonicalString.getSql());
+        } else if (view.getOriginalDefinition() == null) {
+            view.setOriginalDefinition(sql);
+        }
+        view.getQueryExpression().setBody(analyzedSql.canonicalString.getSql());
         analyzedSql.setModality(view);
+
+        // check if top level order by is permissible for the view based on
+        // modality of the view.
+        if (analyzedSql.hasTopLevelOrderBy
+            && view.getModality() != ModalityTypeEnum.MODALITYTYPE_STREAM)
+        {
+            // ORDER BY is not allowed for relational views.
+            throw res.ValidatorInvalidViewOrderBy.ex();
+        }
 
         validator.createDependency(view, analyzedSql.dependencies);
     }
@@ -351,7 +416,8 @@ public class DdlRelationalHandler
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
         FemLocalIndex index = repos.newFemLocalIndex();
-        FarragoCatalogUtil.generateConstraintIndexName(repos,
+        FarragoCatalogUtil.generateConstraintIndexName(
+            repos,
             constraint,
             index);
         index.setSpannedClass(table);
@@ -359,9 +425,8 @@ public class DdlRelationalHandler
         index.setSorted(true);
 
         int iOrdinal = 0;
-        Iterator columnIter = constraint.getFeature().iterator();
-        while (columnIter.hasNext()) {
-            CwmColumn column = (CwmColumn) columnIter.next();
+        for (CwmStructuralFeature o : constraint.getFeature()) {
+            CwmColumn column = (CwmColumn) o;
             FemLocalIndexColumn indexColumn = repos.newFemLocalIndexColumn();
             indexColumn.setName(column.getName());
             indexColumn.setAscending(Boolean.TRUE);
@@ -376,10 +441,10 @@ public class DdlRelationalHandler
         FemAbstractUniqueConstraint constraint)
     {
         int iOrdinal = 0;
-        Iterator columnIter = constraint.getFeature().iterator();
-        while (columnIter.hasNext()) {
-            FemAbstractAttribute column =
-                (FemAbstractAttribute) columnIter.next();
+        for (
+            FemAbstractAttribute column
+            : Util.cast(constraint.getFeature(), FemAbstractAttribute.class))
+        {
             FemKeyComponent component = repos.newFemKeyComponent();
             component.setName(column.getName());
             component.setAttribute(column);
@@ -391,17 +456,41 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDrop(FemLocalIndex index)
     {
-        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (validator.isDeletedObject(table)) {
             // This index is being deleted together with its containing table,
             // which is always OK.
             return;
         }
 
+        // The test for primary key should go before isClustered()
+        // or tests in unitsql/ddl/misc.sql will fail
+        // because primary key will be identified as clustered
+        if (FarragoCatalogUtil.isIndexPrimaryKey(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropPrimaryKeyIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index,
                 res.ValidatorDropClusteredIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isDeletionIndex(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropDeletionIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isIndexUnique(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropUniqueConstraintIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
@@ -415,13 +504,34 @@ public class DdlRelationalHandler
     }
 
     // implement FarragoSessionDdlHandler
-    public void validateTruncation(FemLocalTable table)
+    public void validateDefinition(FemLabel label)
     {
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-        Iterator indexIter = indexes.iterator();
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
-            validator.scheduleTruncation(index);
+        if (!validator.getInvokingSession().getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsLabels))
+        {
+            throw EigenbaseResource.instance().PersonalitySupportsLabels.ex();
+        }
+
+        // Detect circular label chains
+        FemLabel parentLabel = label.getParentLabel();
+        while (parentLabel != null) {
+            if (parentLabel.getName().equals(label.getName())) {
+                throw res.ValidatorCircularLabelChain.ex();
+            }
+            parentLabel = parentLabel.getParentLabel();
+        }
+    }
+
+    // implement FarragoSessionDdlHandler
+    public void validateDrop(FemLabel label)
+    {
+        // If the personality doesn't support labels, then it shouldn't
+        // be possible to have created a label in the first place; so this
+        // check shouldn't be needed.  But just in case ...
+        if (!validator.getInvokingSession().getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsLabels))
+        {
+            throw EigenbaseResource.instance().PersonalitySupportsLabels.ex();
         }
     }
 
@@ -437,18 +547,48 @@ public class DdlRelationalHandler
             validator.getDataWrapperCache(),
             index);
 
-        FemLocalTable table =
-            (FemLocalTable) FarragoCatalogUtil.getIndexTable(index);
-
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (!validator.isCreatedObject(table)) {
             indexExistingRows(table, index);
         }
     }
 
-    private void indexExistingRows(
+    // implement FarragoSessionDdlHandler
+    public void executeCreation(FemLabel label)
+    {
+        // For label creates, we need to get the commit sequence
+        // number of the last committed txn from Fennel so we can
+        // associate that with the label, unless the label is an alias.
+        if (label.getParentLabel() == null) {
+            FemCmdGetLastCommittedTxnId cmd =
+                repos.newFemCmdGetLastCommittedTxnId();
+            FennelDbHandle fennelDbHandle = validator.getFennelDbHandle();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(repos));
+            fennelDbHandle.executeCmd(cmd);
+            label.setCommitSequenceNumber(
+                cmd.getResultHandle().getLongHandle());
+        }
+    }
+
+    protected void indexExistingRows(
         FemLocalTable table,
         FemLocalIndex index)
     {
+        // indicate that while we're building it, the optimizer
+        // should not allow the index to be accessed for any other
+        // reason
+        index.setInvalid(true);
+
+        if (index.isClustered()) {
+            // Normally, it's not meaningful to create a clustered index
+            // on existing rows.  However, this can arise during
+            // ALTER TABLE ADD COLUMN for column store (and could
+            // come up for a row store which allows reclustering).
+            // Such operations are responsible for calling
+            // index.setInvalid(false) when done.
+            return;
+        }
+
         FemDataServer dataServer = table.getServer();
         FarragoMedLocalDataServer medDataServer =
             (FarragoMedLocalDataServer) validator.getDataWrapperCache()
@@ -466,6 +606,7 @@ public class DdlRelationalHandler
         } finally {
             validator.releaseReentrantSession(session);
         }
+        index.setInvalid(false);
     }
 
     // implement FarragoSessionDdlHandler
@@ -479,15 +620,6 @@ public class DdlRelationalHandler
             validator.getDataWrapperCache(),
             index,
             false);
-    }
-
-    // implement FarragoSessionDdlHandler
-    public void executeTruncation(FemLocalIndex index)
-    {
-        validator.getIndexMap().dropIndexStorage(
-            validator.getDataWrapperCache(),
-            index,
-            true);
     }
 
     protected boolean isReplacingType(CwmModelElement obj)
@@ -509,6 +641,7 @@ public class DdlRelationalHandler
             FemLocalIndex index,
             FarragoMedLocalDataServer medDataServer)
         {
+            super(null);
             this.table = table;
             this.index = index;
             this.medDataServer = medDataServer;
@@ -527,10 +660,21 @@ public class DdlRelationalHandler
                     getPreparingStmt().getRelOptCluster());
             getStmtContext().prepare(
                 indexBuildPlan,
-                SqlKind.Insert,
+                SqlKind.INSERT,
                 true,
                 getPreparingStmt());
             getStmtContext().execute();
+        }
+    }
+
+    private static class UniqueConstraintComparator
+        implements Comparator<FemAbstractUniqueConstraint>
+    {
+        public int compare(
+            FemAbstractUniqueConstraint o1,
+            FemAbstractUniqueConstraint o2)
+        {
+            return o1.refMofId().compareTo(o2.refMofId());
         }
     }
 }

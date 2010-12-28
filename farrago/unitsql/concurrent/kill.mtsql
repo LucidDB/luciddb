@@ -1,0 +1,19 @@
+@nolockstep
+
+@thread t1
+        @prepare values sys_boot.mgmt.sleep(60000);
+        
+        @sync
+
+        -- sleep 60 seconds
+        @fetch
+@end
+
+@thread t2
+        -- wati for t1's stmt to finish preparing
+        @sync
+
+        -- delay 5 seconds and kill t1's stmt
+        @sleep 5000
+        call sys_boot.mgmt.kill_statement_match('values sys_boot.mgmt.sleep(60000)');
+@end

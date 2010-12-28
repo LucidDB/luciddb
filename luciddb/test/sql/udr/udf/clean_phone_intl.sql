@@ -24,6 +24,9 @@ values applib.clean_phone_international('sdf', true);
 
 values applib.clean_phone_international('dsf', false);
 
+-- null parameters
+values applib.clean_phone_international(cast(null as varchar(20)), true);
+
 -- create view with reference to applib.clean_phone_international
 create view internationalphone(before, after) as
 select ph, applib.clean_phone_international(ph, true)

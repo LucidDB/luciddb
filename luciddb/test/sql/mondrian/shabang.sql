@@ -1,4 +1,4 @@
-set schema 'foodmart';
+set schema 'foodmart_test';
 select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ASC;
 select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ASC;
 select "store"."store_country" from "store" as "store" group by "store"."store_country" order by "store"."store_country" ASC;

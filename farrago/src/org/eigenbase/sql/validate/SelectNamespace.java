@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,11 +21,9 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -40,22 +38,32 @@ import org.eigenbase.sql.parser.*;
 public class SelectNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlSelect select;
 
     //~ Constructors -----------------------------------------------------------
 
-    public SelectNamespace(SqlValidatorImpl validator, SqlSelect select)
+    /**
+     * Creates a SelectNamespace.
+     *
+     * @param validator Validate
+     * @param select Select node
+     * @param enclosingNode Enclosing node
+     */
+    public SelectNamespace(
+        SqlValidatorImpl validator,
+        SqlSelect select,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.select = select;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public SqlNode getNode()
+    // implement SqlValidatorNamespace, overriding return type
+    public SqlSelect getNode()
     {
         return select;
     }
@@ -66,9 +74,13 @@ public class SelectNamespace
         return rowType;
     }
 
-    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        validator.lookupSelectHints(select, pos, hintList);
+        final RelDataType rowType = this.getRowTypeSansSystemColumns();
+        final int field = SqlTypeUtil.findField(rowType, columnName);
+        final SqlNodeList selectList = select.getSelectList();
+        final SqlNode selectItem = selectList.get(field);
+        return validator.getSelectScope(select).getMonotonicity(selectItem);
     }
 }
 

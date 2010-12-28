@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 ExecStreamBuilder::ExecStreamBuilder(
     ExecStreamGraphEmbryo &graphEmbryoInit,
     ExecStreamFactory &streamFactoryInit)
-    : graphEmbryo(graphEmbryoInit), 
+    : graphEmbryo(graphEmbryoInit),
       streamFactory(streamFactoryInit)
 {
 }
@@ -53,13 +53,13 @@ void ExecStreamBuilder::buildStreamGraph(
         buildStream(*pStreamDef);
     }
 
-    // PASS 2: add dataflows
+    // PASS 2: add input dataflows (provided the source input has only output)
     pStreamDef = cmd.getStreamDefs();
     for (; pStreamDef; ++pStreamDef) {
         buildStreamInputs(*pStreamDef);
-        
-        if (!pStreamDef->getOutputFlow() && assumeOutputFromSinks) {
-            // Streams with no consumer are read directly by clients.  They 
+
+        if (!getExplicitOutputCount(*pStreamDef) && assumeOutputFromSinks) {
+            // Streams with no consumer are read directly by clients.  They
             // are expected to support producer provisioned results.
             std::string name = pStreamDef->getName();
             SharedExecStream pAdaptedStream =
@@ -69,7 +69,14 @@ void ExecStreamBuilder::buildStreamGraph(
         }
     }
 
-    // PASS 3: sort and prepare streams
+    // PASS 3: add output dataflows in the cases where a stream has multiple
+    // outputs
+    pStreamDef = cmd.getStreamDefs();
+    for (; pStreamDef; ++pStreamDef) {
+        buildStreamOutputs(*pStreamDef);
+    }
+
+    // PASS 4: sort and prepare streams
     graphEmbryo.prepareGraph(
         streamFactory.getDatabase()->getSharedTraceTarget(),
         "xo.");
@@ -80,6 +87,25 @@ void ExecStreamBuilder::buildStream(
 {
     ExecStreamEmbryo embryo = streamFactory.visitStream(streamDef);
     graphEmbryo.saveStreamEmbryo(embryo);
+    SharedProxyDynamicParamUse pParamUse = streamDef.getDynamicParamUse();
+    for (; pParamUse; ++pParamUse) {
+        DynamicParamId dynamicParamId(pParamUse->getDynamicParamId());
+        if (pParamUse->isRead()) {
+            if (false)
+                std::cout << "stream " << embryo.getStream()->getStreamId()
+                          << " reads param " << dynamicParamId << std::endl;
+            graphEmbryo.getGraph().declareDynamicParamReader(
+                embryo.getStream()->getStreamId(),
+                dynamicParamId);
+        } else {
+            if (false)
+                std::cout << "stream " << embryo.getStream()->getStreamId()
+                          << " writes param " << dynamicParamId << std::endl;
+            graphEmbryo.getGraph().declareDynamicParamWriter(
+                embryo.getStream()->getStreamId(),
+                dynamicParamId);
+        }
+    }
 }
 
 void ExecStreamBuilder::buildStreamInputs(
@@ -89,9 +115,48 @@ void ExecStreamBuilder::buildStreamInputs(
     SharedProxyExecStreamDataFlow pInputFlow = streamDef.getInputFlow();
     for (; pInputFlow; ++pInputFlow) {
         SharedProxyExecutionStreamDef pInput = pInputFlow->getProducer();
+        // If the source input has multiple outputs, defer adding that flow
+        // till later so we can add those flows in the order in which they
+        // appear in the output flow list.
+        //
+        // NOTE zfong 12/4/06 - By deferring adding the input flows in the
+        // scenario described above, this means we don't handle the case where
+        // a dataflow is an ordered dataflow for both an input and an output.
+        // The ordering will only be preserved on the output flows.
+        if (getExplicitOutputCount(*pInput) > 1) {
+            continue;
+        }
         std::string inputName = pInput->getName();
-        graphEmbryo.addDataflow(inputName, name);
+        graphEmbryo.addDataflow(inputName, name, pInputFlow->isImplicit());
     }
+}
+
+void ExecStreamBuilder::buildStreamOutputs(
+    ProxyExecutionStreamDef &streamDef)
+{
+    std::string name = streamDef.getName();
+    SharedProxyExecStreamDataFlow pOutputFlow = streamDef.getOutputFlow();
+    if (!(getExplicitOutputCount(streamDef) > 1)) {
+        return;
+    }
+    for (; pOutputFlow; ++pOutputFlow) {
+        SharedProxyExecutionStreamDef pOutput = pOutputFlow->getConsumer();
+        std::string outputName = pOutput->getName();
+        graphEmbryo.addDataflow(name, outputName, pOutputFlow->isImplicit());
+    }
+}
+
+int ExecStreamBuilder::getExplicitOutputCount(
+    ProxyExecutionStreamDef &streamDef)
+{
+    int nExplicitOutputs = 0;
+    SharedProxyExecStreamDataFlow pOutputFlow = streamDef.getOutputFlow();
+    for (; pOutputFlow; ++pOutputFlow) {
+        if (!pOutputFlow->isImplicit()) {
+            ++nExplicitOutputs;
+        }
+    }
+    return nExplicitOutputs;
 }
 
 FENNEL_END_CPPFILE("$Id$");

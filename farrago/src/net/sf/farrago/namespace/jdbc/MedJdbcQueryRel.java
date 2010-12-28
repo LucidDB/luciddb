@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.namespace.jdbc;
 
-import java.sql.*;
-
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
@@ -36,8 +34,10 @@ import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * MedJdbcQueryRel adapts JdbcQuery to the SQL/MED framework.
@@ -45,23 +45,40 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcQueryRel
+public class MedJdbcQueryRel
     extends JdbcQuery
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private MedJdbcColumnSet columnSet;
+    MedJdbcDataServer server;
+    MedJdbcColumnSet columnSet;
+    Set<BitSet> uniqueKeys;
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcQueryRel(
+    public MedJdbcQueryRel(
+        MedJdbcDataServer server,
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
         RelDataType rowType,
         RelOptConnection connection,
         SqlDialect dialect,
         SqlSelect sql)
+    {
+        this(
+            server, columnSet, cluster, rowType, connection, dialect,
+            sql, null);
+    }
+
+    public MedJdbcQueryRel(
+        MedJdbcDataServer server,
+        MedJdbcColumnSet columnSet,
+        RelOptCluster cluster,
+        RelDataType rowType,
+        RelOptConnection connection,
+        SqlDialect dialect,
+        SqlSelect sql,
+        Set<BitSet> uniqueKeys)
     {
         super(
             cluster,
@@ -70,7 +87,9 @@ class MedJdbcQueryRel
             dialect,
             sql,
             new JdbcDataSource(""));
+        this.server = server;
         this.columnSet = columnSet;
+        this.uniqueKeys = uniqueKeys;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,7 +100,7 @@ class MedJdbcQueryRel
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
 
-        String sql = columnSet.directory.normalizeQueryString(queryString);
+        SqlString sql = MedJdbcNameDirectory.normalizeQueryString(queryString);
 
         Expression allocExpression =
             new CastExpression(
@@ -91,14 +110,72 @@ class MedJdbcQueryRel
                     "getDataServerRuntimeSupport",
                     new ExpressionList(
                         Literal.makeLiteral(
-                            columnSet.directory.server.getServerMofId()),
-                        Literal.makeLiteral(sql))));
-        return
-            new MethodCall(
-                allocExpression,
-                "getResultSet",
-                new ExpressionList());
+                            server.getServerMofId()),
+                        Literal.makeLiteral(sql.getSql()))));
+        return allocExpression;
     }
+
+    // override JdbcQuery
+    public MedJdbcQueryRel clone()
+    {
+        MedJdbcQueryRel clone =
+            new MedJdbcQueryRel(
+                getServer(),
+                getColumnSet(),
+                getCluster(),
+                getRowType(),
+                getConnection(),
+                getDialect(),
+                getSql(),
+                uniqueKeys);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    /**
+     * @return the server accessed by this query
+     */
+    public MedJdbcDataServer getServer()
+    {
+        return server;
+    }
+
+    /**
+     * @return the column set accessed by this query, or null
+     * if it accesses more than one column set
+     */
+    public MedJdbcColumnSet getColumnSet()
+    {
+        return columnSet;
+    }
+
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
+    {
+        boolean omitServerMofId = false;
+        switch (pw.getDetailLevel()) {
+        case NO_ATTRIBUTES:
+        case EXPPLAN_ATTRIBUTES:
+            omitServerMofId = true;
+            break;
+        }
+        if (server == null) {
+            omitServerMofId = true;
+        }
+        if (omitServerMofId) {
+            super.explain(pw);
+            return;
+        }
+        // For plan digests, we need to include the server MOFID
+        // so that two identical queries against different servers
+        // do not get merged by the optimizer.
+        String serverMofId = server.getServerMofId();
+        pw.explain(
+            this,
+            new String[] { "foreignSql", "serverMofId" },
+            new Object[] { getForeignSql(), serverMofId });
+    }
+
 }
 
 // End MedJdbcQueryRel.java

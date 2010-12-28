@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel;
 
+import java.util.*;
+
 import org.eigenbase.relopt.*;
 
 
@@ -33,7 +35,7 @@ import org.eigenbase.relopt.*;
  *
  * <ul>
  * <li>{@link org.eigenbase.rel.rules.PullConstantsThroughAggregatesRule}
- * <li>{@link RemoveDistinctAggregateRule}
+ * <li>{@link org.eigenbase.rel.rules.RemoveDistinctAggregateRule}
  * <li>{@link org.eigenbase.rel.rules.ReduceAggregatesRule}.
  *
  * @author jhyde
@@ -43,13 +45,12 @@ import org.eigenbase.relopt.*;
 public final class AggregateRel
     extends AggregateRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AggregateRel.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param groupCount Number of columns to group on
@@ -61,7 +62,7 @@ public final class AggregateRel
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        List<AggregateCall> aggCalls)
     {
         super(
             cluster,
@@ -73,12 +74,12 @@ public final class AggregateRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public AggregateRel clone()
     {
         AggregateRel clone =
             new AggregateRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 groupCount,
                 aggCalls);
         clone.inheritTraitsFrom(this);

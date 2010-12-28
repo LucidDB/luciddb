@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -39,6 +38,35 @@ import org.eigenbase.util.*;
 public class SqlTrimFunction
     extends SqlFunction
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
+     */
+    public enum Flag
+        implements SqlLiteral.SqlSymbol
+    {
+        BOTH(1, 1), LEADING(1, 0), TRAILING(0, 1);
+
+        private final int left;
+        private final int right;
+
+        Flag(int left, int right)
+        {
+            this.left = left;
+            this.right = right;
+        }
+
+        public int getLeft()
+        {
+            return left;
+        }
+
+        public int getRight()
+        {
+            return right;
+        }
+    }
 
     //~ Constructors -----------------------------------------------------------
 
@@ -46,7 +74,7 @@ public class SqlTrimFunction
     {
         super(
             "TRIM",
-            SqlKind.Trim,
+            SqlKind.TRIM,
             new SqlTypeTransformCascade(
                 SqlTypeStrategies.rtiThirdArgType,
                 SqlTypeTransforms.toNullable,
@@ -93,20 +121,31 @@ public class SqlTrimFunction
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
+        SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlNode ... operands)
     {
         assert functionQualifier == null;
-        assert (3 == operands.length);
+
+        // Be defensive, in case the parser instantiates a call using say
+        // "TRIM"('a').
+        if (operands.length != 3) {
+            operands =
+                new SqlNode[] {
+                    (operands.length > 0) ? operands[0] : null,
+                    (operands.length > 1) ? operands[1] : null,
+                    (operands.length > 2) ? operands[2]
+                    : SqlLiteral.createNull(SqlParserPos.ZERO)
+                };
+        }
         if (null == operands[0]) {
-            operands[0] = SqlLiteral.createSymbol(Flag.Both, pos);
+            operands[0] = SqlLiteral.createSymbol(Flag.BOTH, pos);
         }
 
         if (null == operands[1]) {
             operands[1] = SqlLiteral.createCharString(" ", pos);
         }
-        return super.createCall(operands, pos, functionQualifier);
+        return super.createCall(functionQualifier, pos, operands);
     }
 
     public boolean checkOperandTypes(
@@ -114,15 +153,13 @@ public class SqlTrimFunction
         boolean throwOnFailure)
     {
         SqlCall call = callBinding.getCall();
-        SqlValidator validator = callBinding.getValidator();
-        SqlValidatorScope scope = callBinding.getScope();
-
         for (int i = 1; i < 3; i++) {
             if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                     callBinding,
                     call.operands[i],
                     0,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();
                 }
@@ -130,58 +167,12 @@ public class SqlTrimFunction
             }
         }
 
-        SqlNode [] ops = new SqlNode[2];
-        for (int i = 1; i < call.operands.length; i++) {
-            ops[i - 1] = call.operands[i];
-        }
+        SqlNode [] ops = { call.operands[1], call.operands[2] };
 
-        return
-            SqlTypeUtil.isCharTypeComparable(
-                validator,
-                scope,
-                ops,
-                throwOnFailure);
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
-     */
-    public static class Flag
-        extends EnumeratedValues.BasicValue
-    {
-        public static final int Both_ordinal = 0;
-        public static final Flag Both = new Flag("Both", 1, 1, Both_ordinal);
-        public static final int Leading_ordinal = 1;
-        public static final Flag Leading =
-            new Flag("Leading", 1, 0, Leading_ordinal);
-        public static final int Trailing_ordinal = 2;
-        public static final Flag Trailing =
-            new Flag("Trailing", 0, 1, Trailing_ordinal);
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Flag[] { Both, Leading, Trailing });
-        private final int left;
-        private final int right;
-
-        private Flag(String name,
-            int left,
-            int right, int ordinal)
-        {
-            super(name, ordinal, null);
-            this.left = left;
-            this.right = right;
-        }
-
-        public int getLeft()
-        {
-            return left;
-        }
-
-        public int getRight()
-        {
-            return right;
-        }
+        return SqlTypeUtil.isCharTypeComparable(
+            callBinding,
+            ops,
+            throwOnFailure);
     }
 }
 

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,16 +37,13 @@ import org.eigenbase.sql.validate.*;
 public class SqlAbstractTimeFunction
     extends SqlFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                SqlTypeStrategies.otcPositiveIntLit,
-            SqlTypeStrategies.otcNiladic
-            });
+            CompositeOperandTypeChecker.Composition.OR,
+            SqlTypeStrategies.otcPositiveIntLit,
+            SqlTypeStrategies.otcNiladic);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -56,8 +53,9 @@ public class SqlAbstractTimeFunction
 
     protected SqlAbstractTimeFunction(String name, SqlTypeName typeName)
     {
-        super(name,
-            SqlKind.Function,
+        super(
+            name,
+            SqlKind.OTHER_FUNCTION,
             null,
             null,
             otcCustom,
@@ -85,24 +83,27 @@ public class SqlAbstractTimeFunction
         }
         assert (precision >= 0);
         if (precision > SqlTypeName.MAX_DATETIME_PRECISION) {
-            throw EigenbaseResource.instance().ArgumentMustBeValidPrecision.ex(
-                opBinding.getOperator().getName(),
-                "0",
-                String.valueOf(SqlTypeName.MAX_DATETIME_PRECISION));
+            throw opBinding.newError(
+                EigenbaseResource.instance().ArgumentMustBeValidPrecision.ex(
+                    opBinding.getOperator().getName(),
+                    "0",
+                    String.valueOf(SqlTypeName.MAX_DATETIME_PRECISION)));
         }
         return opBinding.getTypeFactory().createSqlType(typeName, precision);
     }
 
-    // All of the time functions are monotonic.
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    // All of the time functions are increasing. Not strictly increasing.
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Increasing;
     }
 
-    // Context variables are never deterministic
-    public boolean isDeterministic()
+    // Plans referencing context variables should never be cached
+    public boolean isDynamicFunction()
     {
-        return false;
+        return true;
     }
 }
 

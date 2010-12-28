@@ -1,0 +1,11 @@
+<project name="bh" default="closeConn">
+  <target name="closeConn">
+    <test-suite name="closeConn">
+      <!-- Close connections in LucidDbTestHarness before server goes down -->
+      <custom-task>
+        <junit-utility testclass="com.lucidera.luciddb.test.LucidDbTestHarness"
+          methodnames="testCloseConnections"/>
+      </custom-task>
+    </test-suite>
+  </target>
+</project>

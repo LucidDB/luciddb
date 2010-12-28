@@ -14,18 +14,24 @@
 +------------+
 | C          |
 +------------+
+| 1          |
+| 2          |
+| 3          |
 +------------+
 
 > select * from t2;
 +------------+
 | C          |
 +------------+
+| 1          |
+| 2          |
+| 3          |
 +------------+
 
 > delete from t1;
-0 rows affected.
+3 rows affected.
 > delete from t2;
-0 rows affected.
+3 rows affected.
 > select * from t11;
 +------------+
 | N          |
@@ -281,6 +287,10 @@
 -- thread w1
 > set schema 'concurrency';
 0 rows affected.
+> insert into t1 values (1),(2),(3);
+3 rows affected.
+> insert into t2 select * from t1;
+3 rows affected.
 -- end of thread w1
 
 -- thread ddl1

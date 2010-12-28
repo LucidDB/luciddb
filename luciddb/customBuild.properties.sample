@@ -1,0 +1,22 @@
+# This file serves as an example of how to setup customed properties to overwrite 
+# the default build.
+#
+# Build mode can be either developer (development) or release (for distribution)
+build.mode=developer
+#
+#
+# Some database parameters are given default value as below in the ${luciddb.dir}/build.xml, 
+# 
+#  fennel.databaseInitSize=2000
+#  fennel.tempInitSize=3000
+#  fennel.checkpointInterval=0
+#  fennel.cachePageSize=32768
+#  fennel.cachePagesMax=5000
+#  fennel.cachePagesInit=5000
+#  fennel.groupCommitInterval=0
+#
+# You can overwrite the above defaults by defining the properties in this file as below.
+#
+fennel.cachePagesMax=20000
+fennel.cachePagesInit=15000
+

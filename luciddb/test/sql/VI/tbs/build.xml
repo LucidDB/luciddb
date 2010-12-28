@@ -2,8 +2,8 @@
 <!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@
   <property name="bh.log.basedir" value="${vi_tbs.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csvsource.dir" value="${open.dir}/luciddbtestdata/csv_BENCH"/>
   <property name="csv.dir" value="${vi_tbs.dir}/csv" />
   <property name="csv.copy.dir" value="${vi_tbs.dir}/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
@@ -54,6 +54,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -70,50 +71,43 @@
       </else>
     </if>
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <!-- generate sql files -->
-        <copy todir="${gensql.dir}/noidx" overwrite="true">
-          <fileset dir="${vi_tbs.dir}" includes="*.tmpl"/>
-          <filterset id="dir.filter">
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
+    <!-- generate sql files -->
+    <copy todir="${gensql.dir}/noidx" overwrite="true">
+      <fileset dir="${vi_tbs.dir}" includes="*.tmpl"/>
+      <filterset id="dir.filter">
+        <filter token="DIR" value="${csv.copy.dir}"/>
+       </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
 
-        <copy todir="${gensql.dir}/idx" overwrite="true">
-          <fileset dir="${vi_tbs.dir}" includes="*.tmpl"/>
-          <filterset refid="dir.filter"/>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
+    <copy todir="${gensql.dir}/idx" overwrite="true">
+      <fileset dir="${vi_tbs.dir}" includes="*.tmpl"/>
+      <filterset refid="dir.filter"/>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
 
-        <!-- copy over non-indexed tests -->
-        <copy todir="${gensql.dir}/noidx" overwrite="true">
-          <fileset dir="${vi_tbs.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-            <exclude name="*idx*"/>
-            <exclude name="benchins.*"/>
-          </fileset>
-        </copy>
+    <!-- copy over non-indexed tests -->
+    <copy todir="${gensql.dir}/noidx" overwrite="true">
+      <fileset dir="${vi_tbs.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+        <exclude name="*idx*"/>
+        <exclude name="benchins.*"/>
+      </fileset>
+    </copy>
 
-        <!-- copy over indexed tests -->
-        <copy todir="${gensql.dir}/idx" overwrite="true">
-          <fileset dir="${vi_tbs.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-            <exclude name="benchins10K.*"/>
-            <exclude name="benchins100K.*"/>
-          </fileset>
-        </copy>        
-      </else>
-    </if>
+    <!-- copy over indexed tests -->
+    <copy todir="${gensql.dir}/idx" overwrite="true">
+      <fileset dir="${vi_tbs.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+        <exclude name="benchins10K.*"/>
+        <exclude name="benchins100K.*"/>
+      </fileset>
+    </copy>        
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${vi_tbs.dir}"
       testscript="${testfile}"
@@ -149,23 +143,31 @@
         </sync>
       </then>
       <else>
-        <!-- sync data.dir <-> csv-copy.dir -->
-        <sync todir="${csv.copy.dir}"
-          overwrite="true"
-          verbose="true"
-          failonerror="true">
-          <fileset dir="${data.dir}" includes="bench100.csv"/>
-        </sync>
         <echo message="!! NO REMOTE CSV FILES !!"/>
       </else>
     </if>
   </target>
 
+  <target name="copy-local-csv">
+    <!-- sync data.dir <-> csv-copy.dir -->
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}" includes="bench100.csv"/>
+    </sync>
+  </target>
+
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
   </target>
 
   <target name="clean-csv" depends="clean">

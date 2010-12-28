@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,6 @@ public class FarragoTestPlanner
     extends HepPlanner
     implements FarragoSessionPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoPreparingStmt stmt;
@@ -80,7 +79,7 @@ public class FarragoTestPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(
-                rel.getCluster().getRexBuilder());
+            rel.getCluster().getRexBuilder());
     }
 }
 

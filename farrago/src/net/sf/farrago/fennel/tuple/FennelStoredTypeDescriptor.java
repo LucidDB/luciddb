@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,14 +37,13 @@ package net.sf.farrago.fennel.tuple;
  * <p>NOTE: this interface varies from the C++ implementation by requiring the
  * stored type to know how to create a FennelAttributeAccessor for itself. This
  * seems cleaner than trying to infer it within the standard
- * FennelTupleAccessor.
+ * FennelTupleAccessor. This class is JDK 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
  */
 public interface FennelStoredTypeDescriptor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -95,14 +94,6 @@ public interface FennelStoredTypeDescriptor
      * @return FennelAttributeAccessor
      */
     public FennelAttributeAccessor newAttributeAccessor();
-
-    /**
-     * Compares two tupledatums of this type.
-     *
-     * @return zero if they match, a negative value if the first is less than
-     * the second otherwise a positive value
-     */
-    public int compareValues(FennelTupleDatum datum1, FennelTupleDatum datum2);
 
     /**
      * Indicates whether numeric data type is signed.

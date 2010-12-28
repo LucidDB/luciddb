@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,6 @@ public class SargIntervalExpr
     extends SargIntervalBase
     implements SargExpr
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlNullSemantics nullSemantics;
@@ -55,7 +54,7 @@ public class SargIntervalExpr
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newIntervalExpr
+     * @see SargFactory#newIntervalExpr
      */
     SargIntervalExpr(
         SargFactory factory,
@@ -151,7 +150,8 @@ public class SargIntervalExpr
         // If at least one of the bounds got flipped by overflow, the
         // result is empty.
         if ((lowerBound.getBoundType() != SargBoundType.LOWER)
-            || (upperBound.getBoundType() != SargBoundType.UPPER)) {
+            || (upperBound.getBoundType() != SargBoundType.UPPER))
+        {
             // empty sequence
             return seq;
         }
@@ -159,13 +159,15 @@ public class SargIntervalExpr
         // Under the default null semantics, if one of the endpoints is
         // known to be null, the result is empty.
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
-            && (lowerBound.isNull() || upperBound.isNull())) {
+            && (lowerBound.isNull() || upperBound.isNull()))
+        {
             // empty sequence
             return seq;
         }
 
         // Copy the endpoints to the new interval.
-        SargInterval interval = new SargInterval(
+        SargInterval interval =
+            new SargInterval(
                 factory,
                 getDataType());
         interval.copyFrom(this);
@@ -178,7 +180,8 @@ public class SargIntervalExpr
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
             && getDataType().isNullable()
             && (lowerBound.isFinite() || upperBound.isFinite())
-            && (!lowerBound.isFinite() || lowerBound.isNull())) {
+            && (!lowerBound.isFinite() || lowerBound.isNull()))
+        {
             // The test above says that this is a constrained range
             // with no lower bound (or null for the lower bound).  Since nulls
             // aren't supposed to match anything, adjust the lower bound
@@ -187,8 +190,10 @@ public class SargIntervalExpr
                 factory.newNullLiteral(),
                 SargStrictness.OPEN);
         } else if (nullSemantics == SqlNullSemantics.NULL_MATCHES_ANYTHING) {
-            if (!lowerBound.isFinite() || lowerBound.isNull()
-                || upperBound.isNull()) {
+            if (!lowerBound.isFinite()
+                || lowerBound.isNull()
+                || upperBound.isNull())
+            {
                 // Since null is supposed to match anything, and it
                 // is included in the interval, expand the interval to
                 // match anything.
@@ -214,6 +219,88 @@ public class SargIntervalExpr
         if (upperBound.getCoordinate() instanceof RexDynamicParam) {
             dynamicParams.add((RexDynamicParam) upperBound.getCoordinate());
         }
+    }
+
+    // implement SargExpr
+    public SargIntervalSequence evaluateComplemented()
+    {
+        SargIntervalSequence originalSeq = evaluate();
+        SargIntervalSequence seq = new SargIntervalSequence();
+
+        // Complement of empty set is unconstrained set.
+        if (originalSeq.getList().isEmpty()) {
+            seq.addInterval(new SargInterval(
+                    factory,
+                    getDataType()));
+            return seq;
+        }
+
+        assert (originalSeq.getList().size() == 1);
+        SargInterval originalInterval = originalSeq.getList().get(0);
+
+        // Complement of universal set is empty set.
+        if (originalInterval.isUnconstrained()) {
+            return seq;
+        }
+
+        // Use null as a lower bound rather than infinity (see
+        // http://issues.eigenbase.org/browse/LDB-60).
+        // REVIEW jvs 17-Apr-2006:  This assumes NULL_MATCHES_NOTHING
+        // semantics.  We've lost the original null semantics
+        // flag by now.  Is there ever a case where other null
+        // semantics are required here?
+
+        SargInterval interval =
+            new SargInterval(
+                factory,
+                getDataType());
+        interval.setLower(
+            factory.newNullLiteral(),
+            SargStrictness.OPEN);
+
+        if (originalInterval.getUpperBound().isFinite()
+            && originalInterval.getLowerBound().isFinite())
+        {
+            // Complement of a fully bounded range is the union of two
+            // disjoint half-bounded ranges.
+            interval.setUpper(
+                originalInterval.getLowerBound().getCoordinate(),
+                originalInterval.getLowerBound().getStrictnessComplement());
+            if (!originalInterval.getLowerBound().isNull()) {
+                seq.addInterval(interval);
+            } else {
+                // Don't bother adding an empty interval.
+            }
+
+            interval =
+                new SargInterval(
+                    factory,
+                    getDataType());
+            interval.setLower(
+                originalInterval.getUpperBound().getCoordinate(),
+                originalInterval.getUpperBound().getStrictnessComplement());
+            seq.addInterval(interval);
+        } else if (originalInterval.getLowerBound().isFinite()) {
+            // Complement of a half-bounded range is the opposite
+            // half-bounded range (with open for closed and vice versa)
+            interval.setUpper(
+                originalInterval.getLowerBound().getCoordinate(),
+                originalInterval.getLowerBound().getStrictnessComplement());
+            if (!originalInterval.getLowerBound().isNull()) {
+                seq.addInterval(interval);
+            } else {
+                // Don't bother adding an empty interval.
+            }
+        } else {
+            // Mirror image of previous case.
+            assert (originalInterval.getUpperBound().isFinite());
+            interval.setLower(
+                originalInterval.getUpperBound().getCoordinate(),
+                originalInterval.getUpperBound().getStrictnessComplement());
+            seq.addInterval(interval);
+        }
+
+        return seq;
     }
 }
 

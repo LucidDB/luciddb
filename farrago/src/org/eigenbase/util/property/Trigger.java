@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by the
@@ -65,7 +65,6 @@ package org.eigenbase.util.property;
  */
 public interface Trigger
 {
-
     //~ Instance fields --------------------------------------------------------
 
     int PRIMARY_PHASE = 1;
@@ -82,14 +81,14 @@ public interface Trigger
      * that the Trigger will be wrapped in a WeakReference and thus can itself
      * be garbage collected.
      *
-     * @return
+     * @return whether trigger is persistent
      */
     boolean isPersistent();
 
     /**
      * Which phase does this Trigger belong to.
      *
-     * @return
+     * @return phase trigger belongs to
      */
     int phase();
 
@@ -97,7 +96,8 @@ public interface Trigger
      * Executes the trigger, passing in the key of the property whose change
      * triggered the execution.
      *
-     * @param property
+     * @param property Property being changed
+     * @param value New value of property
      */
     void execute(Property property, String value)
         throws VetoRT;

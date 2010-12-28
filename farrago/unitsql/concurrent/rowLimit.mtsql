@@ -1,0 +1,9 @@
+@lockstep
+
+@thread read1, read2
+    select empno, name, city from sales.emps order by empno;
+    @rowlimit 3 select empno, name, city from sales.emps order by empno;
+    select empno, name, city from sales.emps order by empno;
+    @rowlimit 1 select empno, name, city from sales.emps order by empno;
+    @rowlimit 0 select empno, name, city from sales.emps order by empno;
+@end

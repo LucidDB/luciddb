@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,6 @@ import org.eigenbase.util.*;
 public abstract class CalcTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected TupleIter inputIterator;
@@ -51,9 +50,27 @@ public abstract class CalcTupleIter
     //~ Methods ----------------------------------------------------------------
 
     // implement TupleIter
+    public boolean setTimeout(long timeout, boolean asUnderflow)
+    {
+        return inputIterator.setTimeout(timeout, asUnderflow);
+    }
+
+    // implement TupleIter
+    public boolean addListener(MoreDataListener c)
+    {
+        return inputIterator.addListener(c);
+    }
+
+    // implement TupleIter
     public void restart()
     {
         inputIterator.restart();
+    }
+
+    // implement TupleIter
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        return inputIterator.printStatus(b);
     }
 
     // implement TupleIter

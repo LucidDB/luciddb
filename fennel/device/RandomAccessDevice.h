@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,11 +36,11 @@ class RandomAccessRequestBinding;
  * stored bytes can be accessed at random in constant time.
  * For more information, see DeviceDesign.
  */
-class RandomAccessDevice : boost::noncopyable
+class FENNEL_DEVICE_EXPORT RandomAccessDevice : boost::noncopyable
 {
 public:
     virtual ~RandomAccessDevice();
-    
+
     /**
      * Gets the current size of this device.
      *
@@ -77,7 +77,7 @@ public:
      */
     virtual void prepareTransfer(
         RandomAccessRequest &request) = 0;
-    
+
     /**
      * Forces any buffered writes to permanent storage (e.g. fsync for a file
      * device).

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ class RandomAccessRequest;
 /**
  * FileDevice is a base class for devices built atop the OS file system.
  */
-class FileDevice
+class FENNEL_DEVICE_EXPORT FileDevice
 {
 protected:
     // REVIEW:  should this be synchronized here or at a higher level?
@@ -71,16 +71,29 @@ public:
      *
      * @param filename path to file
      * @param mode modifiers for how to open file
+     * @param initialSize the initial size (in bytes) of the device, if
+     * creating a new file
      */
-    FileDevice(std::string filename,DeviceMode mode);
+    FileDevice(std::string filename, DeviceMode mode, FileSize initialSize);
     virtual ~FileDevice();
 
-    void transfer(RandomAccessRequest const &);
-    
+    /**
+     * Executes a synchronous transfer request for a single
+     * random access binding.  This is an all-or-nothing request,
+     * so unless the result size is equal to the requested
+     * transfer size, the request is considered a failure.
+     * However, no exception is thrown when failure occurs;
+     * instead, the binding notification method is called.
+     *
+     * @param request transfer specification; must have exactly
+     * one binding
+     */
+    void transfer(RandomAccessRequest const &request);
+
     void flush();
-    
+
     void close();
-    
+
     /**
      * @return whether the device file is currently open
      */
@@ -93,7 +106,7 @@ public:
     {
         return cbFile;
     }
-    
+
     void setSizeInBytes(FileSize cbNew);
 };
 

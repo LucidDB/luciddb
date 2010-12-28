@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -143,15 +142,15 @@ public class SqlToOpenjavaConverter
         SqlNode node)
     {
         final SqlNode [] operands;
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
+        switch (node.getKind()) {
+        case AS:
             operands = ((SqlCall) node).getOperands();
             return new AliasedExpression(
                 convertExpression(scope, operands[0]),
                 operands[1].toString());
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             return convertIdentifier(scope, (SqlIdentifier) node);
-        case SqlKind.LiteralORDINAL:
+        case LITERAL:
             return convertLiteral((SqlLiteral) node);
         default:
             if (node instanceof SqlCall) {
@@ -191,13 +190,13 @@ public class SqlToOpenjavaConverter
         SqlNode from,
         boolean inAs)
     {
-        switch (from.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
+        switch (from.getKind()) {
+        case AS:
             final SqlNode [] operands = ((SqlCall) from).getOperands();
             return new AliasedExpression(
                 convertFrom(scope, operands[0], true),
                 operands[1].toString());
-        case SqlKind.IdentifierORDINAL:
+        case IDENTIFIER:
             Expression e = new Variable(OJStatement.connectionVariable);
             final SqlIdentifier id = (SqlIdentifier) from;
             String schemaName = null;
@@ -211,7 +210,7 @@ public class SqlToOpenjavaConverter
                 throw Util.newInternal("improperly qualified id:  " + id);
             }
             return new TableReference(e, schemaName, tableName);
-        case SqlKind.JoinORDINAL:
+        case JOIN:
             final SqlJoin join = (SqlJoin) from;
             SqlNode left = join.getLeft();
             SqlNode right = join.getRight();
@@ -229,11 +228,11 @@ public class SqlToOpenjavaConverter
                     "todo: implement natural join");
             }
             if (condition != null) {
-                switch (conditionType.getOrdinal()) {
-                case SqlJoinOperator.ConditionType.On_ORDINAL:
+                switch (conditionType) {
+                case On:
                     conditionExp = convertExpression(scope, condition);
                     break;
-                case SqlJoinOperator.ConditionType.Using_ORDINAL:
+                case Using:
                     SqlNodeList list = (SqlNodeList) condition;
                     for (int i = 0; i < list.size(); i++) {
                         final SqlNode columnName = list.get(i);
@@ -248,7 +247,7 @@ public class SqlToOpenjavaConverter
                         }
                     }
                 default:
-                    throw conditionType.unexpected();
+                    throw Util.unexpected(conditionType);
                 }
             }
             if (conditionExp == null) {
@@ -263,12 +262,12 @@ public class SqlToOpenjavaConverter
                 return new JoinExpression(leftExp, rightExp,
                     convertedJoinType, conditionExp);
             }
-        case SqlKind.SelectORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.ExceptORDINAL:
-        case SqlKind.UnionORDINAL:
+        case SELECT:
+        case INTERSECT:
+        case EXCEPT:
+        case UNION:
             return convertQueryRecursive(from);
-        case SqlKind.ValuesORDINAL:
+        case VALUES:
             return convertValues(scope, (SqlCall) from, inAs);
         default:
             throw Util.newInternal("not a join operator " + from);
@@ -277,19 +276,19 @@ public class SqlToOpenjavaConverter
 
     private static int convertJoinType(SqlJoinOperator.JoinType joinType)
     {
-        switch (joinType.getOrdinal()) {
-        case SqlJoinOperator.JoinType.Comma_ORDINAL:
-        case SqlJoinOperator.JoinType.Inner_ORDINAL:
-        case SqlJoinOperator.JoinType.Cross_ORDINAL:
+        switch (joinType) {
+        case Comma:
+        case Inner:
+        case Cross:
             return ParserConstants.INNER;
-        case SqlJoinOperator.JoinType.Full_ORDINAL:
+        case Full:
             return ParserConstants.FULL;
-        case SqlJoinOperator.JoinType.Left_ORDINAL:
+        case Left:
             return ParserConstants.LEFT;
-        case SqlJoinOperator.JoinType.Right_ORDINAL:
+        case Right:
             return ParserConstants.RIGHT;
         default:
-            throw joinType.unexpected();
+            throw Util.unexpected(joinType);
         }
     }
 
@@ -313,9 +312,9 @@ public class SqlToOpenjavaConverter
     private Expression convertLiteral(final SqlLiteral literal)
     {
         final Object value = literal.getValue();
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
+        switch (literal.getTypeName()) {
+        case DECIMAL:
+        case DOUBLE:
             BigDecimal bd = (BigDecimal) value;
 
             // Convert to integer if possible.
@@ -326,19 +325,19 @@ public class SqlToOpenjavaConverter
                 // TODO:  preserve fixed-point precision and large integers
                 return Literal.makeLiteral(bd.doubleValue());
             }
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             NlsString nlsStr = (NlsString) value;
             return Literal.makeLiteral(nlsStr.getValue());
-        case SqlTypeName.Boolean_ordinal:
+        case BOOLEAN:
             if (value != null) {
                 return Literal.makeLiteral((Boolean) value);
             }
 
         // fall through to handle UNKNOWN (the boolean NULL value)
-        case SqlTypeName.Null_ordinal:
+        case NULL:
             return Literal.constantNull();
         default:
-            throw literal.getTypeName().unexpected();
+            throw Util.unexpected(literal.getTypeName());
         }
     }
 
@@ -365,18 +364,18 @@ public class SqlToOpenjavaConverter
             final SqlCall call = (SqlCall) query;
             int op;
             final SqlKind kind = call.getKind();
-            switch (kind.getOrdinal()) {
-            case SqlKind.UnionORDINAL:
+            switch (kind) {
+            case UNION:
                 op = BinaryExpression.UNION;
                 break;
-            case SqlKind.IntersectORDINAL:
+            case INTERSECT:
                 op = BinaryExpression.INTERSECT;
                 break;
-            case SqlKind.ExceptORDINAL:
+            case EXCEPT:
                 op = BinaryExpression.EXCEPT;
                 break;
             default:
-                throw kind.unexpected();
+                throw Util.unexpected(kind);
             }
             final SqlNode [] operands = call.getOperands();
             final Expression left = convertQueryRecursive(operands[0]);
@@ -593,9 +592,9 @@ public class SqlToOpenjavaConverter
                         return list;
                     }
 
-                    public boolean isMonotonic(String columnName)
+                    public SqlMonotonicity getMonotonicity(String columnName)
                     {
-                        return false;
+                        return SqlMonotonicity.NotMonotonic;
                     }
 
                     public SqlAccessType getAllowedAccess()
@@ -613,7 +612,12 @@ public class SqlToOpenjavaConverter
             return null;
         }
 
-        public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+        public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getSchemaName()
         {
             throw new UnsupportedOperationException();
         }

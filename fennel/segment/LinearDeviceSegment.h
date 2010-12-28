@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,14 +33,14 @@ FENNEL_BEGIN_NAMESPACE
  * LinearDeviceSegmentParams defines initialization parameters for
  * LinearDeviceSegment.
  */
-struct LinearDeviceSegmentParams 
+struct FENNEL_SEGMENT_EXPORT LinearDeviceSegmentParams
 {
     /**
      * BlockId of the first page in the segment; the
      * owning device must already be registered with the cache.
      */
     BlockId firstBlockId;
-    
+
     /**
      * Minimum number of pages in segment.  If the device isn't big enough, it
      * is automatically extended when the segment is created.
@@ -82,33 +82,36 @@ struct LinearDeviceSegmentParams
  * This does not affect the size of the underlying device (REVIEW: maybe
  * it should?)
  */
-class LinearDeviceSegment : public Segment
+class FENNEL_SEGMENT_EXPORT LinearDeviceSegment
+    : public Segment
 {
     friend class SegmentFactory;
 
     SharedRandomAccessDevice pDevice;
     BlockId firstBlockId;
-    BlockNum nPagesMax,nPagesAllocated,nPagesIncrement;
-    
+    BlockNum nPagesMax, nPagesAllocated, nPagesIncrement, nPagesExtended;
+
     explicit LinearDeviceSegment(
         SharedCache cache,
         LinearDeviceSegmentParams const &);
-    
+
     BlockNum getAvailableDevicePages() const;
-    
+
 public:
     virtual ~LinearDeviceSegment();
 
     DeviceId getDeviceId() const;
-    
+
     // implementation of Segment interface
-    
+
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual BlockNum getAllocatedSizeInPages();
+    virtual BlockNum getNumPagesOccupiedHighWater();
+    virtual BlockNum getNumPagesExtended();
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual AllocationOrder getAllocationOrder() const;

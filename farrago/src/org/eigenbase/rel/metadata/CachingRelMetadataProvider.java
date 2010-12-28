@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class CachingRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<List, CacheEntry> cache;
@@ -71,9 +70,9 @@ public class CachingRelMetadataProvider
         // query results can stay fresh until the next Ice Age.
 
         // Compute hash key.
-        List hashKey;
+        List<Object> hashKey;
         if (args != null) {
-            hashKey = new ArrayList(args.length + 2);
+            hashKey = new ArrayList<Object>(args.length + 2);
             hashKey.add(rel);
             hashKey.add(metadataQueryName);
             hashKey.addAll(Arrays.asList(args));

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,8 +23,6 @@ package org.eigenbase.relopt.hep;
 
 import java.util.*;
 
-import org.eigenbase.relopt.*;
-
 
 /**
  * HepProgram specifies the order in which rules should be attempted by {@link
@@ -40,7 +38,6 @@ import org.eigenbase.relopt.*;
  */
 public class HepProgram
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -62,8 +59,8 @@ public class HepProgram
 
     /**
      * Creates a new empty HepProgram. The program has an initial match order of
-     * {@link HepMatchOrder#ARBIRARY}, and an initial match limit of {@link
-     * #MATCH_UNTIL_FIXPOINT}.
+     * {@link org.eigenbase.relopt.hep.HepMatchOrder#ARBITRARY}, and an initial
+     * match limit of {@link #MATCH_UNTIL_FIXPOINT}.
      */
     HepProgram(List<HepInstruction> instructions)
     {

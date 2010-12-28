@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,10 +36,9 @@ import org.eigenbase.sql.*;
  * @see ParameterNamespace
  * @since Mar 25, 2003
  */
-class ParameterScope
+public class ParameterScope
     extends EmptyScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -50,7 +49,7 @@ class ParameterScope
 
     //~ Constructors -----------------------------------------------------------
 
-    ParameterScope(
+    public ParameterScope(
         SqlValidatorImpl validator,
         Map<String, RelDataType> nameToTypeMap)
     {

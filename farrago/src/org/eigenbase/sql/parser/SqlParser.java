@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.io.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.impl.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -37,10 +38,10 @@ import org.eigenbase.sql.parser.impl.*;
  */
 public class SqlParser
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlParserImpl parser;
+    private String originalInput;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -50,6 +51,8 @@ public class SqlParser
     public SqlParser(String s)
     {
         parser = new SqlParserImpl(new StringReader(s));
+        parser.setTabSize(1);
+        this.originalInput = s;
     }
 
     /**
@@ -57,7 +60,17 @@ public class SqlParser
      */
     public SqlParser(Reader reader)
     {
+        if (reader instanceof StringReader) {
+            try {
+                char [] buffer = new char[4096];
+                int count = reader.read(buffer);
+                this.originalInput = new String(buffer, 0, count);
+                reader.reset();
+            } catch (IOException e) {
+            }
+        }
         parser = new SqlParserImpl(reader);
+        parser.setTabSize(1);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -73,6 +86,12 @@ public class SqlParser
         try {
             return parser.SqlExpressionEof();
         } catch (Throwable ex) {
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
+            }
             throw parser.normalizeException(ex);
         }
     }
@@ -92,6 +111,12 @@ public class SqlParser
         try {
             return parser.SqlQueryEof();
         } catch (Throwable ex) {
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
+            }
             throw parser.normalizeException(ex);
         }
     }
@@ -109,6 +134,12 @@ public class SqlParser
         try {
             return parser.SqlStmtEof();
         } catch (Throwable ex) {
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
+            }
             throw parser.normalizeException(ex);
         }
     }

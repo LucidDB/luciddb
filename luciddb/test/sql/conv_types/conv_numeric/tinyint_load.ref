@@ -59,9 +59,7 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-32768]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -102,9 +100,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-2147483647]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -145,9 +141,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-2147483647]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -193,9 +187,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-2147483647.0000]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -236,9 +228,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-2147483647.0000]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -279,9 +269,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-4.294967296E9]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -322,9 +310,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-4.294967296E9]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -365,9 +351,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . >   where target_type='tinyint'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: Could not calculate result column COL for the following row:
-[-4.2949673E9]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+

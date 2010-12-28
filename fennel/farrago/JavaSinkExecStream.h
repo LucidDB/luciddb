@@ -1,20 +1,20 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,18 +47,27 @@ struct JavaSinkExecStreamParams : public SingleInputExecStreamParams
  * @author jhyde
  * @version $Id$
  */
-class JavaSinkExecStream : public SingleInputExecStream
+class FENNEL_FARRAGO_EXPORT JavaSinkExecStream
+    : public SingleInputExecStream
 {
     ExecStreamResult lastResult;
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     int javaFennelPipeTupleIterId;
-    jobject javaFennelPipeTupleIter;         // our java peer, a FennelPipeTupleIter
-    jmethodID methFennelPipeTupleIter_write; // its method 'write(ByteBuffer, int byteCount)'
-    jmethodID methFennelPipeTupleIter_getByteBuffer; // its method 'getByteBuffer(int size)'
-    jmethodID methByteBuffer_array;     // java method ByteBuffer.array()
+
+    /// our java peer, a FennelPipeTupleIter
+    jobject javaFennelPipeTupleIter;
+
+    /// its method 'write(ByteBuffer, int byteCount)'
+    jmethodID methFennelPipeTupleIter_write;
+
+    /// its method 'getByteBuffer(int size)'
+    jmethodID methFennelPipeTupleIter_getByteBuffer;
+
+    /// java method ByteBuffer.array()
+    jmethodID methByteBuffer_array;
 
     /// sends data to the java peer
-    void sendData(PConstBuffer src, uint size);
+    bool sendData(PConstBuffer src, uint size);
 
     /// copies into a java ByteBuffer
     void stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size);

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,7 @@ import java.util.logging.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -51,6 +52,10 @@ import org.eigenbase.util14.*;
 public class FarragoServerTest
     extends TestCase
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    static private final String stmtMismatch =
+        "Returned statement does not match original";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -88,9 +93,24 @@ public class FarragoServerTest
         return new FarragoJdbcClientDriver();
     }
 
+    protected boolean isJRockit()
+    {
+        // See http://issues.eigenbase.org/browse/FRG-316
+
+        String vmName = System.getProperty("java.vm.name");
+        if (vmName == null) {
+            return false;
+        }
+        return vmName.indexOf("JRockit") != -1;
+    }
+
     public void testServer()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -103,7 +123,8 @@ public class FarragoServerTest
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
         String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
-        Connection connection = clientDriver.connect(
+        Connection connection =
+            clientDriver.connect(
                 uri,
                 new Properties());
         boolean stopped;
@@ -117,11 +138,22 @@ public class FarragoServerTest
         stopped = server.stopSoft();
         server = null;
         assertTrue(stopped);
+
+        // NOTE jvs 27-Nov-2008: next two calls are coverage for LDB-190, to
+        // make sure a shutdown call on an already-shutdown DB is treated as a
+        // NOP.
+        FarragoDbSingleton.shutdown();
+        stopped = FarragoDbSingleton.shutdownConditional(0);
+        assertTrue(stopped);
     }
 
     public void testKillServer()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -131,7 +163,8 @@ public class FarragoServerTest
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
         String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
-        Connection connection = clientDriver.connect(
+        Connection connection =
+            clientDriver.connect(
                 uri,
                 new Properties());
         connection.createStatement().execute("set schema 'sales'");
@@ -141,13 +174,17 @@ public class FarragoServerTest
     /**
      * Tests client driver connection URI parameters. The underlying
      * connect-string processing is tested by {@link
-     * FarragoEngineDriverTest#testConnectStrings} using the engine driver. This
-     * method adds tests of client connections and parameter precedence with the
-     * client driver.
+     * net.sf.farrago.test.jdbc.FarragoEngineDriverTest#testConnectStrings}
+     * using the engine driver. This method adds tests of client connections and
+     * parameter precedence with the client driver.
      */
     public void testConnectionParams()
         throws Throwable
     {
+        if (isJRockit()) {
+            return;
+        }
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -200,11 +237,85 @@ public class FarragoServerTest
     }
 
     /**
+     * Tests that Paser/Validator exceptions contain original statement.
+     *
+     * @throws Throwable
+     */
+    public void testExceptionContents()
+        throws Throwable
+    {
+        if (isJRockit()) {
+            return;
+        }
+
+        server = newServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+
+        // NOTE: can't call DriverManager.getConnection here, because that
+        // would deadlock
+        FarragoAbstractJdbcDriver clientDriver = newClientDriver();
+
+        // N.B. it is better practice to put the login credentials in the
+        // Properties object rather than on the URL, but this is a convenient
+        // test of the client driver's connect string processing.
+        String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
+        Connection connection =
+            clientDriver.connect(
+                uri,
+                new Properties());
+
+        boolean recieved = true;
+        String query = "create table sales.emps (col1 integer primary key)";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected DDL exception not received", recieved);
+
+        query = "select wqe from sales.emps";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected validator exception not received", recieved);
+
+        query = "select * frm sales.emps";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected parser exception not received", recieved);
+
+        connection.close();
+        boolean stopped = server.stopSoft();
+        server = null;
+        assertTrue(stopped);
+    }
+
+    /**
      * Tests error message when a 2nd server is started.
      */
     public void testTwoServers()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            // TODO jvs 1-Nov-2006:  Get spawn working on Windows too.
+            return;
+        }
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);

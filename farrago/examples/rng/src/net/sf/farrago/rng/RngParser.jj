@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,7 @@
 
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
+    UNICODE_INPUT = true;
     IGNORE_CASE = true;
 }
 
@@ -37,6 +37,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.util.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.DateTimeUtil;
+import java.math.*;
 import java.util.*;
 import javax.jmi.reflect.*;
 import java.sql.*;
@@ -103,6 +105,12 @@ public class RngParser extends FarragoAbstractParserImpl
             }
             return metadata;
         }
+    }
+
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
     }
 
     RngmodelPackage getRngModelPackage()
@@ -307,19 +315,17 @@ SqlNode ExtendedBuiltinFunctionCall() :
             RngRandomNumberGenerator.class);
         return
         FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
-            new SqlNode [] {
-                SqlLiteral.createExactNumeric(
-                    Integer.toString(ceiling),
-                    getPos()),
-                SqlLiteral.createCharString(
-                    FarragoCatalogUtil.getQualifiedName(rng).toString(),
-                    getPos()),
-                SqlLiteral.createCharString(
-                    FarragoProperties.instance().expandProperties(
-                        rng.getSerializedFile()),
-                    getPos())
-                }, 
-            getPos());
+            getPos(),
+            SqlLiteral.createExactNumeric(
+                Integer.toString(ceiling),
+                getPos()),
+            SqlLiteral.createCharString(
+                FarragoCatalogUtil.getQualifiedName(rng).toString(),
+                getPos()),
+            SqlLiteral.createCharString(
+                FarragoProperties.instance().expandProperties(
+                    rng.getSerializedFile()),
+                getPos()));
     }
 }
 

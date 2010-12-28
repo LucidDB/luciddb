@@ -1,9 +1,9 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <!-- $Id$ -->
 <!-- This stylesheet takes as input a list of .sql filenames and -->
 <!-- generates a JUnit class for running them as diff-based tests -->
-<xsl:stylesheet 
-  version="1.0" 
+<xsl:stylesheet
+  version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   >
   <xsl:output method="text" indent="no" />
@@ -18,12 +18,12 @@
 package <xsl:value-of select="$packagename"/>;
 
 /**
- * Wraps .sql file diff-based tests with JUnit test methods for 
+ * Wraps .sql file diff-based tests with JUnit test methods for
  * convenient execution from within your favorite JUnit-aware IDE.
  */
 public class <xsl:value-of select="$classname"/> extends <xsl:value-of select="$basename"/>
 {
-  
+
     public <xsl:value-of select="$classname"/>(String testName)
         throws Exception
     {
@@ -39,9 +39,11 @@ public class <xsl:value-of select="$classname"/> extends <xsl:value-of select="$
         addDiffMask("\\$Id.*\\$");
         setVerbose(true);
     }
-    <xsl:apply-templates select="node()" />
+<xsl:apply-templates select="node()" />
 }
-  </xsl:template>
+
+// End <xsl:value-of select="$classname"/>.java
+</xsl:template>
 
   <xsl:template match="fileset/file">
     public void test_<xsl:value-of select="translate(@path,'/.\:','____')"/>()
@@ -49,7 +51,7 @@ public class <xsl:value-of select="$classname"/> extends <xsl:value-of select="$
     {
         runSqlLineTest("<xsl:value-of select="translate(concat($rootpath,@path),'\','/')"/>");
     }
-  </xsl:template>
+</xsl:template>
 
 }
 

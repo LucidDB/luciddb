@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,11 +32,18 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * Exception class for wrapping Java exceptions.
+ *
+ *<p>
+ *
+ * REVIEW jvs 23-Aug-2007:  If any code actually handles one of these
+ * and carries on, it may need to delete the local jthrowable reference
+ * to avoid a leak.
  */
-class JavaExcn : public FennelExcn
+class FENNEL_FARRAGO_EXPORT JavaExcn
+    : public FennelExcn
 {
     jthrowable javaException;
-    
+
 public:
     /**
      * Constructs a new JavaExcn.
@@ -45,11 +52,19 @@ public:
      */
     explicit JavaExcn(
         jthrowable javaExceptionInit);
-    
+
     /**
      * @return the wrapped Java exception
      */
     jthrowable getJavaException() const;
+
+    /**
+     * @return the stack trace
+     */
+    const std::string& getStackTrace() const;
+
+    // override FennelExcn
+    virtual void throwSelf();
 };
 
 FENNEL_END_NAMESPACE

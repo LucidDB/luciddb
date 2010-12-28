@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class RexOver
     extends RexCall
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexWindow window;
@@ -96,16 +95,16 @@ public class RexOver
 
     protected String computeDigest(boolean withType)
     {
-        return super.computeDigest(withType) + " OVER " + window;
+        return super.computeDigest(withType) + " OVER (" + window + ")";
     }
 
-    public Object clone()
+    public RexOver clone()
     {
         return new RexOver(
-                getType(),
-                getAggOperator(),
-                operands,
-                window);
+            getType(),
+            getAggOperator(),
+            operands,
+            window);
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -147,7 +146,8 @@ public class RexOver
             }
         }
         if ((expr != null)
-            && Finder.instance.containsOver(expr)) {
+            && Finder.instance.containsOver(expr))
+        {
             return true;
         }
         return false;

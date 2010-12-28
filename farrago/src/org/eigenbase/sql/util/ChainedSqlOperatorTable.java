@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ChainedSqlOperatorTable
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<SqlOperatorTable> tableList;
@@ -56,13 +55,16 @@ public class ChainedSqlOperatorTable
 
     /**
      * Adds an underlying table. The order in which tables are added is
-     * significant; tables added earlier have higher lookup precedence.
+     * significant; tables added earlier have higher lookup precedence. A table
+     * is not added if it is already on the list.
      *
      * @param table table to add
      */
     public void add(SqlOperatorTable table)
     {
-        tableList.add(table);
+        if (!tableList.contains(table)) {
+            tableList.add(table);
+        }
     }
 
     // implement SqlOperatorTable

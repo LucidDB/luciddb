@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,13 +49,13 @@ import org.eigenbase.util.*;
 public class SqlLiteralChainOperator
     extends SqlInternalOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlLiteralChainOperator()
     {
-        super("$LiteralChain",
-            SqlKind.LiteralChain,
+        super(
+            "$LiteralChain",
+            SqlKind.LITERAL_CHAIN,
             80,
             true,
 
@@ -116,7 +116,8 @@ public class SqlLiteralChainOperator
         // which has a size (precision), but not a scale.
         RelDataType ret = opBinding.getOperandType(0);
         SqlTypeName typeName = ret.getSqlTypeName();
-        assert (typeName.allowsPrecNoScale()) : "LiteralChain has impossible operand type "
+        assert typeName.allowsPrecNoScale()
+            : "LiteralChain has impossible operand type "
             + typeName;
         int size = 0;
         RelDataType [] types = opBinding.collectOperandTypes();
@@ -183,7 +184,7 @@ public class SqlLiteralChainOperator
                 rand.unparse(writer, leftPrec, rightPrec);
             } else {
                 // print without prefix
-                if (rand.getTypeName() == SqlTypeName.Binary) {
+                if (rand.getTypeName() == SqlTypeName.BINARY) {
                     BitString bs = (BitString) rand.getValue();
                     writer.literal("'" + bs.toHexString() + "'");
                 } else {

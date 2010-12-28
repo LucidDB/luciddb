@@ -68,11 +68,11 @@ create table t(
 
 -- 350, 100, 300
 insert into t (j) values (1), (2), (3);
--- 500, 100 (fail), ...
+-- 500, 100 (fail), 300 (fail)
 insert into t (j) values (4), (5), (6);
--- 300 (fail)
-insert into t (j) values (7);
 -- 500
+insert into t (j) values (7);
+-- 100 (fail)
 insert into t (j) values (8);
 
 select * from t;
@@ -164,4 +164,25 @@ insert into s values (20, 20);
 -- VIEWS
 ----------------------------------------------------------------------
 
-select * from sys_boot.mgmt.sequences_view;
+select * from sys_boot.mgmt.sequences_view order by TABLE_NAME, COLUMN_NAME;
+
+----------------------------------------------------------------------
+-- INTERACTION WITH REBUILD (LDB-160)
+----------------------------------------------------------------------
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+create table cs(
+    i int primary key,
+    d decimal(10,0) generated always as identity
+        (minvalue 20 maxvalue 100));
+
+insert into cs (i) values (5);
+insert into cs (i) values (10);
+
+select * from cs order by i;
+
+alter table cs rebuild;
+
+select * from cs order by i;
+

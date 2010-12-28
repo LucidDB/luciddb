@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,12 @@
 */
 package net.sf.farrago.test;
 
-import com.disruptivetech.farrago.rel.*;
-
+import java.util.*;
 import java.util.logging.*;
 
 import junit.framework.*;
 
-import net.sf.farrago.namespace.ftrs.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
@@ -50,7 +49,6 @@ import org.eigenbase.test.*;
 public class FarragoOptRulesTest
     extends FarragoSqlToRelTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -138,6 +136,15 @@ public class FarragoOptRulesTest
         String sql)
         throws Exception
     {
+        check(program, sql, null);
+    }
+
+    private void check(
+        HepProgram program,
+        String sql,
+        List<RelOptRule> rules)
+        throws Exception
+    {
         this.program = program;
 
         final DiffRepository diffRepos = getDiffRepos();
@@ -145,7 +152,7 @@ public class FarragoOptRulesTest
 
         String explainQuery = "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql2;
 
-        checkQuery(explainQuery);
+        addRulesAndCheckQuery(explainQuery, rules);
     }
 
     private void check(
@@ -163,7 +170,8 @@ public class FarragoOptRulesTest
 
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
-        FarragoSessionPlanner planner = new FarragoTestPlanner(
+        FarragoSessionPlanner planner =
+            new FarragoTestPlanner(
                 program,
                 stmt);
         stmt.setPlanner(planner);
@@ -178,7 +186,7 @@ public class FarragoOptRulesTest
         programBuilder.addRuleInstance(FilterToCalcRule.instance);
         programBuilder.addRuleInstance(MergeCalcRule.instance);
         programBuilder.addRuleInstance(FennelCalcRule.instance);
-        programBuilder.addRuleInstance(new FennelCartesianJoinRule());
+        programBuilder.addRuleInstance(FennelCartesianJoinRule.instance);
         programBuilder.addRuleInstance(ProjectToCalcRule.instance);
         programBuilder.addRuleInstance(IterRules.IterCalcRule.instance);
         programBuilder.addRuleInstance(FennelToIteratorConverter.Rule);
@@ -252,7 +260,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         check(
-            new FennelSortRule(),
+            FennelSortRule.instance,
             "select * from sales.depts order by deptno");
     }
 
@@ -260,7 +268,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         check(
-            new FennelCartesianJoinRule(),
+            FennelCartesianJoinRule.instance,
             "select 1 from sales.emps,sales.depts");
     }
 
@@ -268,7 +276,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         check(
-            new FennelAggRule(),
+            FennelAggRule.instance,
             "select deptno from sales.depts group by deptno");
     }
 
@@ -303,9 +311,9 @@ public class FarragoOptRulesTest
     {
         // tests the case where the semijoin is pushed to the left
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
@@ -317,9 +325,9 @@ public class FarragoOptRulesTest
     {
         // tests the case where the semijoin is pushed to the right
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
@@ -330,9 +338,9 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastFilterRule.instance);
         check(
             programBuilder.createProgram(),
             "select e.name from sales.emps e, sales.depts d "
@@ -343,9 +351,9 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        programBuilder.addRuleInstance(new ConvertMultiJoinRule());
+        programBuilder.addRuleInstance(ConvertMultiJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
@@ -357,9 +365,11 @@ public class FarragoOptRulesTest
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(
-            new FarragoReduceExpressionsRule(ProjectRel.class));
+            FarragoReduceExpressionsRule.projectInstance);
         programBuilder.addRuleInstance(
-            new FarragoReduceExpressionsRule(FilterRel.class));
+            FarragoReduceExpressionsRule.filterInstance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.joinInstance);
 
         // NOTE jvs 27-May-2006: among other things, this verifies
         // intentionally different treatment for identical coalesce expression
@@ -367,19 +377,89 @@ public class FarragoOptRulesTest
 
         check(
             programBuilder.createProgram(),
-            "select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer),"
-            + " coalesce(2,null)"
-            + " from sales.depts"
-            + " where deptno=(7+8) and deptno=coalesce(2,null)");
+            "select 1+2, d.deptno+(3+4), (5+6)+d.deptno, cast(null as integer),"
+            + " coalesce(2,null), row(7+8)"
+            + " from sales.depts d inner join sales.emps e"
+            + " on d.deptno = e.deptno + (5-5)"
+            + " where d.deptno=(7+8) and d.deptno=coalesce(2,null)");
+    }
+
+    public void testReduceConstantsEliminatesFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.filterInstance);
+
+        // WHERE NULL is the same as WHERE FALSE, so get empty result
+        check(
+            programBuilder.createProgram(),
+            "select * from (values (1,2)) where 1 + 2 > 3 + CAST(NULL AS INTEGER)");
+    }
+
+    public void testAlreadyFalseEliminatesFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.filterInstance);
+
+        check(
+            programBuilder.createProgram(),
+            "select * from (values (1,2)) where false");
+    }
+
+    public void testReduceConstantsCalc()
+        throws Exception
+    {
+        // This reduction does not work using
+        // FarragoReduceExpressionsRule.projectInstance or filterInstance,
+        // only calcInstance, because we need to pull the project expression
+        //    upper('table')
+        // into the condition
+        //    upper('table') = 'TABLE'
+        // and reduce it to TRUE. Only in the Calc are projects and conditions
+        // combined.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastProjectRule.instance);
+        programBuilder.addRuleInstance(PushFilterPastSetOpRule.instance);
+        programBuilder.addRuleInstance(FilterToCalcRule.instance);
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.calcInstance);
+
+        // the hard part is done... a few more rule calls to clean up
+        programBuilder.addRuleInstance(RemoveEmptyRule.unionInstance);
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.calcInstance);
+
+        // Result should be same as typing
+        //  SELECT * FROM (VALUES ('TABLE        ', 'T')) AS T(U, S)
+        check(
+            programBuilder.createProgram(),
+            "select * from (\n"
+            + "  select upper(substring(x FROM 1 FOR 2) || substring(x FROM 3)) as u,\n"
+            + "      substring(x FROM 1 FOR 1) as s\n"
+            + "  from (\n"
+            + "    select 'table' as x from (values (true))\n"
+            + "    union\n"
+            + "    select 'view' from (values (true))\n"
+            + "    union\n"
+            + "    select 'foreign table' from (values (true))\n"
+            + "  )\n"
+            + ") where u = 'TABLE'");
     }
 
     public void testRemoveSemiJoin()
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(RemoveSemiJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e.name from sales.emps e, sales.depts d "
@@ -390,10 +470,10 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
-        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastFilterRule.instance);
+        programBuilder.addRuleInstance(RemoveSemiJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e.name from sales.emps e, sales.depts d "
@@ -404,10 +484,10 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
-        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastJoinRule.instance);
+        programBuilder.addRuleInstance(RemoveSemiJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
@@ -418,16 +498,284 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
-        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
-        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastFilterRule.instance);
+        programBuilder.addRuleInstance(RemoveSemiJoinRule.instance);
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
             + "where e1.deptno = d.deptno and d.deptno = e2.deptno "
             + "and d.name = 'foo'");
+    }
+
+    public void testConvertMultiJoinRuleOuterJoins()
+        throws Exception
+    {
+        stmt.executeUpdate("create schema oj");
+        stmt.executeUpdate("set schema 'oj'");
+        stmt.executeUpdate(
+            "create table A(a int primary key)");
+        stmt.executeUpdate(
+            "create table B(b int primary key)");
+        stmt.executeUpdate(
+            "create table C(c int primary key)");
+        stmt.executeUpdate(
+            "create table D(d int primary key)");
+        stmt.executeUpdate(
+            "create table E(e int primary key)");
+        stmt.executeUpdate(
+            "create table F(f int primary key)");
+        stmt.executeUpdate(
+            "create table G(g int primary key)");
+        stmt.executeUpdate(
+            "create table H(h int primary key)");
+        stmt.executeUpdate(
+            "create table I(i int primary key)");
+        stmt.executeUpdate(
+            "create table J(j int primary key)");
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        programBuilder.addRuleInstance(RemoveTrivialProjectRule.instance);
+        programBuilder.addRuleInstance(ConvertMultiJoinRule.instance);
+        check(
+            programBuilder.createProgram(),
+            "select * from "
+            + "    (select * from "
+            + "        (select * from "
+            + "            (select * from A right outer join B on a = b) "
+            + "            left outer join "
+            + "            (select * from C full outer join D on c = d)"
+            + "            on a = c and b = d) "
+            + "        right outer join "
+            + "        (select * from "
+            + "            (select * from E full outer join F on e = f) "
+            + "            right outer join "
+            + "            (select * from G left outer join H on g = h) "
+            + "            on e = g and f = h) "
+            + "        on a = e and b = f and c = g and d = h) "
+            + "    inner join "
+            + "    (select * from I inner join J on i = j) "
+            + "    on a = i and h = j");
+    }
+
+    public void testPushSemiJoinPastProject()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(PushSemiJoinPastProjectRule.instance);
+        check(
+            programBuilder.createProgram(),
+            "select e.* from "
+            + "(select name, trim(city), age * 2, deptno from sales.emps) e, "
+            + "sales.depts d "
+            + "where e.deptno = d.deptno");
+    }
+
+    public void testReduceValuesUnderFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastProjectRule.instance);
+        programBuilder.addRuleInstance(FarragoReduceValuesRule.filterInstance);
+
+        // Plan should be same as for
+        // select a, b from (values (10,'x')) as t(a, b)");
+        check(
+            programBuilder.createProgram(),
+            "select a, b from (values (10, 'x'), (20, 'y')) as t(a, b) where a < 15");
+    }
+
+    public void testReduceValuesUnderProject()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(MergeProjectRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.projectInstance);
+
+        // Plan should be same as for
+        // select a, b as x from (values (11), (23)) as t(x)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b from (values (10, 1), (20, 3)) as t(a, b)");
+    }
+
+    public void testReduceValuesUnderProjectFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastProjectRule.instance);
+        programBuilder.addRuleInstance(MergeProjectRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.projectFilterInstance);
+
+        // Plan should be same as for
+        // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b as x, b, a from (values (10, 1), (30, 7), (20, 3)) as t(a, b)"
+            + " where a - b < 21");
+    }
+
+    public void testReduceValuesNull()
+        throws Exception
+    {
+        // The NULL literal presents pitfalls for value-reduction. Only
+        // an INSERT statement contains un-CASTed NULL values.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.projectInstance);
+
+        check(
+            programBuilder.createProgram(),
+            "insert into sales.depts(deptno,name) values (NULL, 'null')");
+    }
+
+    public void testReduceValuesToEmpty()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastProjectRule.instance);
+        programBuilder.addRuleInstance(MergeProjectRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.projectFilterInstance);
+
+        // Plan should be same as for
+        // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b as x, b, a from (values (10, 1), (30, 7)) as t(a, b)"
+            + " where a - b < 0");
+    }
+
+    public void testEmptyFilterProjectUnion()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushFilterPastSetOpRule.instance);
+        programBuilder.addRuleInstance(PushFilterPastProjectRule.instance);
+        programBuilder.addRuleInstance(MergeProjectRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.projectFilterInstance);
+        programBuilder.addRuleInstance(RemoveEmptyRule.projectInstance);
+        programBuilder.addRuleInstance(RemoveEmptyRule.unionInstance);
+
+        // Plan should be same as for
+        // select * from (values (30, 3)) as t(x, y)");
+        check(
+            programBuilder.createProgram(),
+            "select * from (\n"
+            + "select * from (values (10, 1), (30, 3)) as t (x, y)\n"
+            + "union all\n"
+            + "select * from (values (20, 2))\n"
+            + ")\n"
+            + "where x + y > 30");
+    }
+
+    public void testReduceCasts()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.projectInstance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.filterInstance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.joinInstance);
+
+        // The resulting plan should have no cast expressions
+        check(
+            programBuilder.createProgram(),
+            "select cast(d.name as varchar(128)), cast(e.empno as integer) "
+            + "from sales.depts d inner join sales.emps e "
+            + "on cast(d.deptno as integer) = cast(e.deptno as integer) "
+            + "where cast(e.gender as char(1)) = 'M'");
+    }
+
+    public void testReduceCastAndConsts()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.filterInstance);
+
+        // Make sure constant expressions inside the cast can be reduced
+        // in addition to the casts.
+        check(
+            programBuilder.createProgram(),
+            "select * from sales.emps "
+            + "where cast((empno + (10/2)) as int) = 13");
+    }
+
+    public void testReduceCastsNullable()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+
+        // Simulate the way INSERT will insert casts to the target types
+        programBuilder.addRuleInstance(
+            new CoerceInputsRule(TableModificationRel.class, false));
+
+        // Convert projects to calcs, merge two calcs, and then
+        // reduce redundant casts in merged calc.
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.calcInstance);
+        check(
+            programBuilder.createProgram(),
+            "insert into sales.depts(name) "
+            + "select cast(gender as varchar(128)) from sales.emps");
+    }
+
+    public void testPushAggThroughUnion()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(PushProjectPastSetOpRule.instance);
+        programBuilder.addRuleInstance(PushAggregateThroughUnionRule.instance);
+        check(
+            programBuilder.createProgram(),
+            "select name,sum(empno),count(*) from "
+            + "(select * from sales.emps e1 union all "
+            + "select * from sales.emps e2) "
+            + "group by name");
+    }
+
+    public void testFennelBufferCommonRelSubExprRule()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+
+        // Explicitly add the instruction to apply common subexpression rules,
+        // so FennelBufferCommonRelSubExprRule will only be applied on
+        // subexpressions that appear more than once in the query.  Adding
+        // FennelBufferCommonRelSubExprRule as a rule instance in the program
+        // builder will incorrectly result in the rule being applied on all
+        // RelNodes.
+        programBuilder.addCommonRelSubExprInstruction();
+
+        List<RelOptRule> rules = new ArrayList<RelOptRule>();
+        rules.add(FennelBufferCommonRelSubExprRule.instance);
+
+        // Make sure the common subexpression is complex enough so buffering
+        // is beneficial.  Note that the 2nd sub-select is not the same as
+        // the other two, so it won't get buffered.
+        check(
+            programBuilder.createProgram(),
+            "select * from "
+            + "(select * from sales.emps e, sales.depts d "
+            + "   where e.deptno = d.deptno), "
+            + "(select * from sales.depts d, sales.emps e "
+            + "   where e.deptno = d.deptno), "
+            + "(select * from sales.emps e, sales.depts d "
+            + "   where e.deptno = d.deptno)",
+            rules);
     }
 }
 

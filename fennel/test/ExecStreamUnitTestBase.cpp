@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,6 +32,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/tuple/TuplePrinter.h"
+#include "fennel/cache/QuotaCacheAccessor.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -59,7 +60,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
 {
     pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo);
     std::vector<ExecStreamEmbryo>::iterator it;
-    
+
     // save all transforms
     for (it = transforms.begin(); it != transforms.end(); ++it) {
         pGraphEmbryo->saveStreamEmbryo(*it);
@@ -68,14 +69,17 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     // connect streams in a cascade
     ExecStreamEmbryo& previousStream = sourceStreamEmbryo;
     for (it = transforms.begin(); it != transforms.end(); ++it) {
-        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
-                                  (*it).getStream()->getName());
+        pGraphEmbryo->addDataflow(
+            previousStream.getStream()->getName(),
+            (*it).getStream()->getName());
         previousStream = *it;
     }
 
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
-                                    BUFPROV_PRODUCER);
+        pGraphEmbryo->addAdapterFor(
+            previousStream.getStream()->getName(),
+            0,
+            BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
     pGraphEmbryo->prepareGraph(shared_from_this(), "");
@@ -111,7 +115,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
         pGraphEmbryo->saveStreamEmbryo(*it);
     }
     pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
-    
+
     for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
         ++it)
     {
@@ -130,15 +134,18 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
     }
 
     for (it = transforms.begin(); it != transforms.end(); ++it) {
-        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
-                                  (*it).getStream()->getName());
+        pGraphEmbryo->addDataflow(
+            previousStream.getStream()->getName(),
+            (*it).getStream()->getName());
         previousStream = *it;
     }
 
-    
+
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
-                                    BUFPROV_PRODUCER);
+        pGraphEmbryo->addAdapterFor(
+            previousStream.getStream()->getName(),
+            0,
+            BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
     pGraphEmbryo->prepareGraph(shared_from_this(), "");
@@ -149,26 +156,46 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
     ExecStreamEmbryo &confluenceStreamEmbryo)
 {
+    std::vector<std::vector<ExecStreamEmbryo> > sourceStreamEmbryosList;
     std::vector<ExecStreamEmbryo>::iterator it;
-
+    std::vector<ExecStreamEmbryo> sourceStreamList;
     for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
+        it++)
     {
-        pGraphEmbryo->saveStreamEmbryo(*it);
+        sourceStreamList.clear();
+        sourceStreamList.push_back(*it);
+        sourceStreamEmbryosList.push_back(sourceStreamList);
     }
+
+    return
+        prepareConfluenceGraph(sourceStreamEmbryosList, confluenceStreamEmbryo);
+}
+
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
+    std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
+    ExecStreamEmbryo &confluenceStreamEmbryo)
+{
     pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
-    
-    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
-    {
+
+    for (int i = 0; i < sourceStreamEmbryosList.size(); i++) {
+        for (int j = 0; j < sourceStreamEmbryosList[i].size(); j++) {
+            pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryosList[i][j]);
+        }
+
+        // connect streams in each sourceStreamEmbryos list in a cascade
+        for (int j = 1; j < sourceStreamEmbryosList[i].size(); j++) {
+            pGraphEmbryo->addDataflow(
+                sourceStreamEmbryosList[i][j - 1].getStream()->getName(),
+                sourceStreamEmbryosList[i][j].getStream()->getName());
+        }
         pGraphEmbryo->addDataflow(
-            (*it).getStream()->getName(),
+            sourceStreamEmbryosList[i].back().getStream()->getName(),
             confluenceStreamEmbryo.getStream()->getName());
     }
 
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(
-            confluenceStreamEmbryo.getStream()->getName(), 0, 
+            confluenceStreamEmbryo.getStream()->getName(), 0,
             BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(
         pAdaptedStream->getStreamId());
@@ -224,13 +251,13 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
         // connect streams in each interStreamEmbryos list in a cascade
         for (int j = 1; j < interStreamEmbryos[i].size(); j++) {
             pGraphEmbryo->addDataflow(
-                interStreamEmbryos[i][j-1].getStream()->getName(),
+                interStreamEmbryos[i][j - 1].getStream()->getName(),
                 interStreamEmbryos[i][j].getStream()->getName());
         }
     }
 
     pGraphEmbryo->saveStreamEmbryo(destStreamEmbryo);
-    
+
     pGraphEmbryo->addDataflow(
         srcStreamEmbryo.getStream()->getName(),
         splitterStreamEmbryo.getStream()->getName());
@@ -249,7 +276,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
 
     if (createSink) {
         pAdaptedStream = pGraphEmbryo->addAdapterFor(
-            destStreamEmbryo.getStream()->getName(), 0, 
+            destStreamEmbryo.getStream()->getName(), 0,
             BUFPROV_PRODUCER);
         pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
@@ -266,6 +293,13 @@ void ExecStreamUnitTestBase::testCaseSetUp()
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
     pGraph->setResourceGovernor(pResourceGovernor);
+
+    // we don't bother with quotas for unit tests, but we do need
+    // to be able to associate TxnId's in order for parallel
+    // execution to work (since a cache page may be pinned
+    // by one thread and then released by another)
+    pCacheAccessor.reset(
+        new TransactionalCacheAccessor(pCache));
 }
 
 void ExecStreamUnitTestBase::resetExecStreamTest()
@@ -274,7 +308,7 @@ void ExecStreamUnitTestBase::resetExecStreamTest()
         pScheduler->stop();
     }
     tearDownExecStreamTest();
-                
+
     pScheduler.reset(newScheduler());
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
@@ -295,7 +329,7 @@ void ExecStreamUnitTestBase::verifyOutput(
     bool stopEarly)
 {
     // TODO:  assertions about output tuple
-    
+
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
@@ -307,7 +341,7 @@ void ExecStreamUnitTestBase::verifyOutput(
             break;
         }
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol = 
+        const uint nCol =
             bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
@@ -319,15 +353,15 @@ void ExecStreamUnitTestBase::verifyOutput(
             }
             BOOST_REQUIRE(nRows < nRowsExpected);
             bufAccessor.unmarshalTuple(inputTuple);
-            for (int col=0;col<nCol;++col) {
-                int64_t actualValue = 
+            for (int col = 0; col < nCol; ++col) {
+                int64_t actualValue =
                     *reinterpret_cast<int64_t const *>(inputTuple[col].pData);
                 int64_t expectedValue = generator.generateValue(nRows, col);
                 if (actualValue != expectedValue) {
                     std::cout << "(Row, Col) = (" << nRows << ", " << col <<")"
                               << std::endl;
-                    BOOST_CHECK_EQUAL(expectedValue,actualValue);
-                    return;
+                    BOOST_CHECK_EQUAL(expectedValue, actualValue);
+                    // return;
                 }
             }
             bufAccessor.consumeTuple();
@@ -337,16 +371,16 @@ void ExecStreamUnitTestBase::verifyOutput(
             }
         }
     }
-    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 void ExecStreamUnitTestBase::verifyConstantOutput(
-    ExecStream &stream, 
+    ExecStream &stream,
     const TupleData &expectedTuple,
     uint nRowsExpected)
 {
     // TODO:  assertions about output tuple
-    
+
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
@@ -373,14 +407,14 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
         bufAccessor.consumeTuple();
         ++nRows;
         if (c) {
-#if 1 
+#if 1
             TupleDescriptor statusDesc = bufAccessor.getTupleDesc();
             TuplePrinter tuplePrinter;
             tuplePrinter.print(std::cout, statusDesc, actualTuple);
             tuplePrinter.print(std::cout, statusDesc, expectedTuple);
             std::cout << std::endl;
 #endif
-            BOOST_CHECK_EQUAL(0,c);
+            BOOST_CHECK_EQUAL(0, c);
             break;
         }
     }
@@ -394,7 +428,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     PBuffer expectedBuffer)
 {
     // TODO:  assertions about output tuple
-    
+
     TupleAccessor expectedOutputAccessor;
     expectedOutputAccessor.compute(outputTupleDesc);
     TupleData expectedTuple(outputTupleDesc);
@@ -411,7 +445,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
         }
         BOOST_REQUIRE(bufAccessor.getTupleDesc() == outputTupleDesc);
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol = 
+        const uint nCol =
             bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
@@ -430,7 +464,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
             if (c) {
                 std::cout << "(Row) = (" << nRows << ")"
                     << " -- Tuples don't match"<< std::endl;
-                BOOST_CHECK_EQUAL(0,c);
+                BOOST_CHECK_EQUAL(0, c);
                 return;
             }
             bufAccessor.consumeTuple();
@@ -438,8 +472,9 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
             ++nRows;
         }
     }
-    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End ExecStreamUnitTestBase.cpp

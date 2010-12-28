@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,18 +44,20 @@ import org.eigenbase.rex.*;
 public class PushSemiJoinPastJoinRule
     extends RelOptRule
 {
-    //  ~ Constructors --------------------------------------------------------
+    public static final PushSemiJoinPastJoinRule instance =
+        new PushSemiJoinPastJoinRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    public PushSemiJoinPastJoinRule()
+    /**
+     * Creates a PushSemiJoinPastJoinRule.
+     */
+    private PushSemiJoinPastJoinRule()
     {
         super(
             new RelOptRuleOperand(
                 SemiJoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
+                new RelOptRuleOperand(JoinRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -177,9 +179,9 @@ public class PushSemiJoinPastJoinRule
                 rightJoinRel,
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
-                (Set<String>) Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.getSystemFieldList());
 
         call.transformTo(newJoinRel);
     }
@@ -211,8 +213,11 @@ public class PushSemiJoinPastJoinRule
         for (int i = nFieldsX; i < (nFieldsX + nFieldsY); i++) {
             adjustments[i] = adjustY;
         }
-        for (int i = nFieldsX + nFieldsY; i < (nFieldsX + nFieldsY + nFieldsZ);
-            i++) {
+        for (
+            int i = nFieldsX + nFieldsY;
+            i < (nFieldsX + nFieldsY + nFieldsZ);
+            i++)
+        {
             adjustments[i] = adjustZ;
         }
     }

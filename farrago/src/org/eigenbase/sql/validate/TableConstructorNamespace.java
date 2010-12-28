@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,20 +35,28 @@ import org.eigenbase.sql.*;
 public class TableConstructorNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private final SqlNode values;
+    private final SqlCall values;
     private final SqlValidatorScope scope;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a TableConstructorNamespace.
+     *
+     * @param validator Validator
+     * @param values VALUES parse tree node
+     * @param scope Scope
+     * @param enclosingNode Enclosing node
+     */
     TableConstructorNamespace(
         SqlValidatorImpl validator,
-        SqlNode values,
-        SqlValidatorScope scope)
+        SqlCall values,
+        SqlValidatorScope scope,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.values = values;
         this.scope = scope;
     }
@@ -57,7 +65,7 @@ public class TableConstructorNamespace
 
     protected RelDataType validateImpl()
     {
-        return validator.getTableConstructorRowType((SqlCall) values, scope);
+        return validator.getTableConstructorRowType(values, scope);
     }
 
     public SqlNode getNode()
@@ -65,6 +73,11 @@ public class TableConstructorNamespace
         return values;
     }
 
+    /**
+     * Returns the scope.
+     *
+     * @return scope
+     */
     public SqlValidatorScope getScope()
     {
         return scope;

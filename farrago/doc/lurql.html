@@ -70,7 +70,7 @@ Common Warehouse Metamodel (CWM)</a>, which defines standard
 relational objects such as Schema, Table, View, and Column using UML
 concepts such as Namespace, Class, and Attribute as a base.  More
 details on Farrago's usage of this model are provided in the <a
-href="fem/index.html">Farrago model documentation</a>.
+href="http://docs.eigenbase.org/FEM">Farrago model documentation</a>.
 
 <p>
 
@@ -500,8 +500,12 @@ class &lt;id&gt; [ as &lt;id&gt; ]
 &lt;where-clause&gt; ::=
 where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 
-&lt;filter&gt; ::=
+&lt;filter&gt; ::= [ NOT ] &lt;leaf-filter&gt;
+
+&lt;leaf-filter&gt; ::=
 &lt;id&gt; '=' &lt;value&gt;
+|
+&lt;id&gt; matches &lt;regular-expression-value&gt;
 |
 &lt;id&gt; in '(' &lt;value&gt; [, &lt;value&gt; ... ] ')'
 |
@@ -514,6 +518,8 @@ exists [ &lt;select-list&gt; in ] &lt;path-spec&gt;
 &lt;value&gt; ::=
 &lt;literal&gt;
 | &lt;dynamic-param&gt;
+
+&lt;regular-expression-value&gt; ::= &lt;value&gt;
 
 &lt;dynamic-param&gt; ::=
 '?' &lt;id&gt;
@@ -554,6 +560,7 @@ recursively ( &lt;path-spec-without-gather&gt; | '(' &lt;path-spec&gt; ')' )
 
 &lt;literal&gt; ::=
 &lt;single-quoted-string&gt;
+| null
 </code></pre>
 
 <ul>
@@ -563,11 +570,23 @@ recursively ( &lt;path-spec-without-gather&gt; | '(' &lt;path-spec&gt; ')' )
 <li>Identifiers only need to be quoted if they are keywords, contain
 non-alphanumeric characters, or start with a number.
 
+<li>All attribute comparison is currently string based; dynamic parameter
+values must be bound to either strings or sets of strings.
+
+<li>Unlike in SQL, there is no three-valued logic; the null literal
+can be used to test for null attributes via IN or equality predicates.
+It is not currently possible to pass null values via dynamic parameters.
+
 </ul>
 
 <h2>Formal Semantics</h2>
 
 TBD
+
+<h2>Related Topics</h2>
+
+For information on how to use LURQL queries to drive metadata visualization,
+see <a href="dmv/index.html">the DMV docs</a>.
 
 <h2>History and Credits</h2>
 
@@ -586,7 +605,7 @@ machines but no so nice for humans.
 <p>
 
 In 2005, the code was contributed under GPL licensing to The Eigenbase
-Project via LucidEra, a startup which has acquired the rights to the
+Project via LucidEra, a startup which acquired the rights to the
 Broadbase code.  Besides rechristening as LURQL, major changes from
 BERQL include:
 

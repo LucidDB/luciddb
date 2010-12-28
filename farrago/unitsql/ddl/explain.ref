@@ -1,161 +1,144 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test EXPLAIN command.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain logical plan brief
-0: jdbc:farrago:> explain plan excluding attributes without implementation for 
-. . . . . . . . > select 1 from depts;
-+-------------------+
-|      column0      |
-+-------------------+
-| ProjectRel        |
-|   TableAccessRel  |
-+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain logical plan normal
-0: jdbc:farrago:> explain plan including attributes without implementation for 
-. . . . . . . . > select 1 from depts;
-+----------------------------------------------------+
-|                      column0                       |
-+----------------------------------------------------+
-| ProjectRel(EXPR$0=[1])                             |
-|   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+----------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain logical plan verbose
-0: jdbc:farrago:> explain plan including all attributes without implementation for
-. . . . . . . . > select 1 from depts;
-+-----------------------------------------------------------------------------------------------+
-|                                            column0                                            |
-+-----------------------------------------------------------------------------------------------+
-| ProjectRel(EXPR$0=[1]): rowcount = 100.0, cumulative cost = 200.0                             |
-|   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]]): rowcount = 100.0, cumulative cost = 100.0  |
-+-----------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain physical plan brief
-0: jdbc:farrago:> explain plan excluding attributes for
-. . . . . . . . > select 1 from depts;
-+------------------------------+
-|           column0            |
-+------------------------------+
-| IterCalcRel                  |
-|   FennelToIteratorConverter  |
-|     FtrsIndexScanRel         |
-+------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain physical plan normal
-0: jdbc:farrago:> explain plan including attributes for
-. . . . . . . . > select 1 from depts;
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                       column0                                                                       |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])                                                                                            |
-|   FennelToIteratorConverter                                                                                                                         |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain physical plan verbose
-0: jdbc:farrago:> explain plan including all attributes for
-. . . . . . . . > select 1 from depts;
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                             column0                                                                                             |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1]): rowcount = 100.0, cumulative cost = 1200.0                                                                                            |
-|   FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0                                                                                                                         |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0  |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain physical plan in XML format.
-0: jdbc:farrago:> explain plan as xml for 
-. . . . . . . . > select 1 from depts;
-+-------------------------------------------------------------------+
-|                              column0                              |
-+-------------------------------------------------------------------+
-| <RelNode type="IterCalcRel">                                      |
-| 	<Property name="expr#0">                                         |
-| 		{inputs}	</Property>                                            |
-| 	<Property name="expr#1">                                         |
-| 		1	</Property>                                                   |
-| 	<Property name="EXPR$0">                                         |
-| 		$t1	</Property>                                                 |
-| 	<Inputs>                                                         |
-| 		<RelNode type="FennelToIteratorConverter">                      |
-| 			<Inputs>                                                       |
-| 				<RelNode type="FtrsIndexScanRel">                             |
-| 					<Property name="table">                                      |
-| 						[LOCALDB, SALES, DEPTS]					</Property>                     |
-| 					<Property name="projection">                                 |
-| 						[0]					</Property>                                         |
-| 					<Property name="index">                                      |
-| 						SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY					</Property>  |
-| 					<Property name="preserveOrder">                              |
-| 						false					</Property>                                       |
-| 					<Inputs/>                                                    |
-| 				</RelNode>                                                    |
-| 			</Inputs>                                                      |
-| 		</RelNode>                                                      |
-| 	</Inputs>                                                        |
-| </RelNode>                                                        |
-+-------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain type
-0: jdbc:farrago:> explain plan with type for
-. . . . . . . . > select 1 from depts;
-+--------------------------+
-|         column0          |
-+--------------------------+
-| EXPR$0 INTEGER NOT NULL  |
-+--------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Explain type as XML (ignores XML flag)
-0: jdbc:farrago:> explain plan with type as xml for
-. . . . . . . . > select 1 from depts;
-+--------------------------+
-|         column0          |
-+--------------------------+
-| EXPR$0 INTEGER NOT NULL  |
-+--------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Apply a tweak to the session personality and verify that
-0: jdbc:farrago:> -- the costing changes accordingly.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> set schema 's';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- first explain without tweak
-0: jdbc:farrago:> explain plan including all attributes for
-. . . . . . . . > select count(*) from (values(0));
-+----------------------------------------------------------------------------------------------------------+
-|                                                 column0                                                  |
-+----------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter: rowcount = 0.1, cumulative cost = 4.1                                         |
-|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 0.1, cumulative cost = 4.0                          |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 0.1, cumulative cost = 3.0                 |
-|       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0  |
-|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                         |
-+----------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create jar test_personality_plugin 
-. . . . . . . . > library 'class net.sf.farrago.test.FarragoTestPersonalityFactory' 
-. . . . . . . . > options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar test_personality_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- explain again with tweak
-0: jdbc:farrago:> explain plan including all attributes for
-. . . . . . . . > select count(*) from (values(0));
-+----------------------------------------------------------------------------------------------------------+
-|                                                 column0                                                  |
-+----------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 1000004.0                             |
-|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1000000.0, cumulative cost = 4.0                    |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 3.0           |
-|       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0  |
-|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                         |
-+----------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End explain.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> -- $Id$
+> -- Test EXPLAIN command.
+> 
+> set schema 'sales';
+> !set outputformat csv
+> 
+> -- Explain logical plan brief
+> explain plan excluding attributes without implementation for 
+> select 1 from depts;
+'column0'
+'ProjectRel'
+'  TableAccessRel'
+> 
+> -- Explain logical plan normal
+> explain plan including attributes without implementation for 
+> select 1 from depts;
+'column0'
+'ProjectRel(EXPR$0=[1])'
+'  TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+> 
+> -- Explain logical plan verbose
+> explain plan including all attributes without implementation for
+> select 1 from depts;
+'column0'
+'ProjectRel(EXPR$0=[1]): rowcount = 100.0, cumulative cost = 200.0'
+'  TableAccessRel(table=[[LOCALDB, SALES, DEPTS]]): rowcount = 100.0, cumulative cost = 100.0'
+> 
+> -- Explain physical plan brief
+> explain plan excluding attributes for
+> select 1 from depts;
+'column0'
+'IterCalcRel'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel'
+> 
+> -- Explain physical plan normal
+> explain plan including attributes for
+> select 1 from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> -- Explain physical plan verbose
+> explain plan including all attributes for
+> select 1 from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1]): rowcount = 100.0, cumulative cost = 1200.0'
+'  FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0'
+> 
+> -- Explain physical plan in XML format.
+> explain plan as xml for 
+> select 1 from depts;
+'column0'
+'<RelNode type="IterCalcRel">'
+'	<Property name="expr#0">'
+'		{inputs}	</Property>'
+'	<Property name="expr#1">'
+'		1	</Property>'
+'	<Property name="EXPR$0">'
+'		$t1	</Property>'
+'	<Inputs>'
+'		<RelNode type="FennelToIteratorConverter">'
+'			<Inputs>'
+'				<RelNode type="FtrsIndexScanRel">'
+'					<Property name="table">'
+'						[LOCALDB, SALES, DEPTS]					</Property>'
+'					<Property name="projection">'
+'						[0]					</Property>'
+'					<Property name="index">'
+'						SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS					</Property>'
+'					<Property name="preserveOrder">'
+'						false					</Property>'
+'					<Inputs/>'
+'				</RelNode>'
+'			</Inputs>'
+'		</RelNode>'
+'	</Inputs>'
+'</RelNode>'
+> 
+> -- Explain type
+> explain plan with type for
+> select 1 from depts;
+'column0'
+'EXPR$0 INTEGER NOT NULL'
+> 
+> -- Explain type as XML (ignores XML flag)
+> explain plan with type as xml for
+> select 1 from depts;
+'column0'
+'EXPR$0 INTEGER NOT NULL'
+> 
+> -- Verify rendering of literals in plans
+> explain plan for
+> values (1, -1.25, 1.0e50, true, 'bonjour', _UTF16'bonjour', 
+> _ISO-8859-1'bonjour', date '2006-11-08', time '15:05:05', 
+> timestamp '2006-11-08 15:05:05', X'CAFEBABE');
+'column0'
+'FennelToIteratorConverter'
+'  FennelValuesRel(tuples=[[{ 1, -1.25, 1.0E50, true, 'bonjour', _UTF-16LE'bonjour', 'bonjour', 2006-11-08, 15:05:05, 2006-11-08 15:05:05, X'CAFEBABE' }]])'
+> 
+> -- Apply a tweak to the session personality and verify that
+> -- the costing and rel visibility changes accordingly.
+> 
+> create schema s;
+> set schema 's';
+> 
+> -- first explain without tweak
+> explain plan including all attributes for
+> select count(*) from (values(0));
+'column0'
+'FennelToIteratorConverter: rowcount = 1.0, cumulative cost = 4.0'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()]): rowcount = 1.0, cumulative cost = 3.0'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0'
+'      FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0'
+> 
+> create jar test_personality_plugin 
+> library 'class net.sf.farrago.test.FarragoTestPersonalityFactory' 
+> options(0);
+> 
+> alter session implementation set jar test_personality_plugin;
+> 
+> -- explain again with tweak
+> explain plan including all attributes for
+> select count(*) from (values(0));
+'column0'
+'FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 2000002.0'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 1000002.0'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0'
+'      FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0'
+> 
+> -- explain again without attributes; converter should be hidden
+> explain plan for
+> select count(*) from (values(0));
+'column0'
+'FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'  FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'    FennelValuesRel(tuples=[[{ 0 }]])'
+> 
+> 
+> -- End explain.sql
+> 
+> !quit

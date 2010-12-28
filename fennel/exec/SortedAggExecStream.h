@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,14 +33,15 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * SortedAggExecStreamParams defines parameters for SortedAggExecStream.
  */
-struct SortedAggExecStreamParams : public ConduitExecStreamParams
+struct FENNEL_EXEC_EXPORT SortedAggExecStreamParams
+    : public ConduitExecStreamParams
 {
     AggInvocationList aggInvocations;
     int groupByKeyCount;
     explicit SortedAggExecStreamParams()
     {
         groupByKeyCount = 0;
-    }    
+    }
 };
 
 /**
@@ -51,14 +52,15 @@ struct SortedAggExecStreamParams : public ConduitExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class SortedAggExecStream : public ConduitExecStream
+class FENNEL_EXEC_EXPORT SortedAggExecStream
+    : public ConduitExecStream
 {
     enum State {
         STATE_ACCUMULATING,
         STATE_PRODUCING,
         STATE_DONE
     };
-    
+
     State state;
 
     AggComputerList aggComputers;
@@ -68,12 +70,12 @@ class SortedAggExecStream : public ConduitExecStream
     TupleDataWithBuffer prevTuple;
     TupleData outputTuple;
     bool prevTupleValid;
-    
+
     inline void clearAccumulator();
     inline void updateAccumulator();
     inline void computeOutput();
 
-    // Methods to store and compare group by keys 
+    // Methods to store and compare group by keys
     inline void copyPrevGroupByKey();
     inline void setCurGroupByKey();
     inline int  compareGroupByKeys();
@@ -83,7 +85,7 @@ protected:
     virtual AggComputer *newAggComputer(
         AggFunction aggFunction,
         TupleAttributeDescriptor const *pAttrDesc);
-   
+
 public:
     // implement ExecStream
     virtual void prepare(SortedAggExecStreamParams const &params);

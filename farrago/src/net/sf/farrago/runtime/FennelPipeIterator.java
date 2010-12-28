@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,7 @@ import org.eigenbase.runtime.*;
 
 /**
  * FennelPipeIterator implements the {@link RestartableIterator} interface,
- * receiving data from a producer as {@link ByteBuffer} objects, and
+ * receiving data from a producer as {@link java.nio.ByteBuffer} objects, and
  * unmarshalling them to a consumer. It does this by extending {@link
  * FennelPipeTupleIter} and adapting TupleIter semantics to Iterator semantics.
  *
@@ -40,7 +40,6 @@ public class FennelPipeIterator
     extends FennelPipeTupleIter
     implements RestartableIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Object next = null; // current row

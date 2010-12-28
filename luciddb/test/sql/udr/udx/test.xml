@@ -36,37 +36,64 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
       </test>
 
+      <test name="fiscalTimeDimension">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/fiscalTimeDimension.sql"/>
+      </test>
+
+      <test name="fiscalTimeDimDst">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/fiscalTimeDimDst.sql"/>
+      </test>
+
       <test name="viewTest">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/viewTest.sql"/>
       </test>
 
       <test name="cursorTests">
-        <!-- TODO: FRG-141, test also commented out in file so locking -->
-        <!-- problem doesn't endure -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/cursorTests.sql"/>
       </test>
 
       <test name="flatten">
-        <!-- LDB-125: update ref file after bug fix -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/flattenTest.sql"/>
       </test>
 
       <test name="generateCrc">
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/generateCrc.sql"/>
+      </test>
+
+      <test name="deriveEffectiveToTimestampTests">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/deriveEffectiveToTimestampTests.sql"/>
+      </test>
+
+      <test name="splitStringsTest">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTest.sql"/>
+      </test>
+      
+      <test name="topNTest">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/topNTest.sql"/>
+      </test>
+
+      <test name="splitStringsTestWithSequence">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTestWithSequence.sql"/>
       </test>
 
       <test name="collapseRows">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/collapseRows.sql"/>
       </test>
+
+      <test name="penultimateValues">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/penultimateValues.sql"/>
+      </test>
+
+      <test name="contiguousValueIntervals">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/contiguousValueIntervals.sql"/>
+
+      </test>
+
+      <test-suite-call testfile="enforceRowConstraints/test.xml"/>
+
+      <test-suite-call testfile="impexp/test.xml"/>
 
       <cleanup-hook>
         <test-suite name="cleanup">

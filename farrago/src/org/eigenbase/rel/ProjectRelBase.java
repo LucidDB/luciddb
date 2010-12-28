@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,16 +29,20 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 
 /**
  * <code>ProjectRelBase</code> is an abstract base class for implementations of
  * {@link ProjectRel}.
+ *
+ * @version $Id$
+ * @author jhyde
+ * @since March, 2004
  */
 public abstract class ProjectRelBase
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RexNode [] exps;
@@ -55,13 +59,13 @@ public abstract class ProjectRelBase
     /**
      * Creates a Project.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
-     * to
+     * @param cluster Cluster this relational expression belongs to
      * @param traits traits of this rel
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param rowType output row type
      * @param flags values as in {@link Flags}
+     * @param collationList List of sort keys
      */
     protected ProjectRelBase(
         RelOptCluster cluster,
@@ -79,7 +83,8 @@ public abstract class ProjectRelBase
         this.rowType = rowType;
         this.flags = flags;
         this.collationList =
-            collationList.isEmpty() ? RelCollation.emptyList : collationList;
+            collationList.isEmpty() ? Collections.<RelCollation>emptyList()
+            : collationList;
         assert isValid(true);
     }
 
@@ -123,17 +128,18 @@ public abstract class ProjectRelBase
         if (!RexUtil.compatibleTypes(
                 exps,
                 getRowType(),
-                true)) {
+                true))
+        {
             assert !fail;
             return false;
         }
-        Checker checker = new Checker(
-                fail,
-                getChild());
+        RexChecker checker =
+            new RexChecker(
+                getChild().getRowType(), fail);
         for (RexNode exp : exps) {
             exp.accept(checker);
         }
-        if (checker.failCount > 0) {
+        if (checker.getFailureCount() > 0) {
             assert !fail;
             return false;
         }
@@ -158,25 +164,31 @@ public abstract class ProjectRelBase
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    protected void defineTerms(String [] terms)
-    {
-        int i = 0;
-        terms[i++] = "child";
-        final RelDataTypeField [] fields = rowType.getFields();
-        for (int j = 0; j < fields.length; j++) {
-            String fieldName = fields[j].getName();
-            if (fieldName == null) {
-                fieldName = "field#" + j;
-            }
-            terms[i++] = fieldName;
-        }
-    }
-
     public void explain(RelOptPlanWriter pw)
     {
-        String [] terms = new String[1 + exps.length];
-        defineTerms(terms);
-        pw.explain(this, terms);
+        List<String> terms = new ArrayList<String>();
+        List<Object> values = new ArrayList<Object>();
+        terms.add("child");
+        for (RelDataTypeField field : rowType.getFields()) {
+            String fieldName = field.getName();
+            if (fieldName == null) {
+                fieldName = "field#" + (terms.size() - 1);
+            }
+            terms.add(fieldName);
+        }
+
+        // If we're generating a digest, include the rowtype. If two projects
+        // differ in return type, we don't want to regard them as equivalent,
+        // otherwise we will try to put rels of different types into the same
+        // planner equivalence set.
+        if ((pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES)
+            && false)
+        {
+            terms.add("type");
+            values.add(rowType);
+        }
+
+        pw.explain(this, terms, values);
     }
 
     /**
@@ -188,9 +200,9 @@ public abstract class ProjectRelBase
         String fieldName)
     {
         if (!isBoxed()) {
-            return
-                implementor.implementFieldAccess((JavaRel) getChild(),
-                    fieldName);
+            return implementor.implementFieldAccess(
+                (JavaRel) getChild(),
+                fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
@@ -222,20 +234,26 @@ public abstract class ProjectRelBase
         extends RexVisitorImpl<Boolean>
     {
         private final boolean fail;
-        private final RelNode child;
+        private final RelDataType inputRowType;
         int failCount = 0;
 
-        public Checker(boolean fail, RelNode child)
+        /**
+         * Creates a Checker.
+         *
+         * @param inputRowType Input row type to expressions
+         * @param fail Whether to throw if checker finds an error
+         */
+        private Checker(RelDataType inputRowType, boolean fail)
         {
             super(true);
             this.fail = fail;
-            this.child = child;
+            this.inputRowType = inputRowType;
         }
 
         public Boolean visitInputRef(RexInputRef inputRef)
         {
             final int index = inputRef.getIndex();
-            final RelDataTypeField [] fields = child.getRowType().getFields();
+            final RelDataTypeField [] fields = inputRowType.getFields();
             if ((index < 0) || (index >= fields.length)) {
                 assert !fail;
                 ++failCount;
@@ -246,7 +264,8 @@ public abstract class ProjectRelBase
                     inputRef.getType(),
                     "underlying field",
                     fields[index].getType(),
-                    fail)) {
+                    fail))
+            {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -280,7 +299,8 @@ public abstract class ProjectRelBase
                     typeField.getType(),
                     "type2",
                     fieldAccess.getType(),
-                    fail)) {
+                    fail))
+            {
                 assert !fail;
                 ++failCount;
                 return false;

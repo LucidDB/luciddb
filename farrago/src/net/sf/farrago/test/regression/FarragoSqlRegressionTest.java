@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import net.sf.farrago.util.*;
 public class FarragoSqlRegressionTest
     extends FarragoSqlTest
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlRegressionTest(String testName)
@@ -53,22 +52,23 @@ public class FarragoSqlRegressionTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetRegression.get(true),
-                new FarragoSqlTestFactory() {
-                    public FarragoTestCase createSqlTest(String testName)
-                        throws Exception
-                    {
-                        return new FarragoSqlRegressionTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetRegression.get(true),
+            new FarragoSqlTestFactory() {
+                public FarragoTestCase createSqlTest(String testName)
+                    throws Exception
+                {
+                    return new FarragoSqlRegressionTest(testName);
+                }
+            });
     }
 
     protected void runTest()
         throws Exception
     {
-        addDiffMask("\\$Id.*\\$");
+        // mask out source control Id and other data sections that are not
+        // pertinent to the test being performed.
+        setRefFileDiffMasks();
 
         // Need to have a specific pair comparison.
         // only both matches then it passes.
@@ -89,11 +89,6 @@ public class FarragoSqlRegressionTest
             FarragoCalcSystemTest.VirtualMachine.Fennel
             .getAlterSystemCommand());
         runSqlLineTest(getName());
-
-        // stmt.execute(FarragoCalcSystemTest.VirtualMachine.Java
-        //      .getAlterSystemCommand());
-        // runSqlLineTest(getName());
-
     }
 }
 

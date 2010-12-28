@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,7 +52,6 @@ import org.eigenbase.sql2rel.*;
 public interface FarragoSessionPreparingStmt
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -124,6 +123,11 @@ public interface FarragoSessionPreparingStmt
     public boolean mayCacheImplementation();
 
     /**
+     * Disables caching for the statement
+     */
+    public void disableStatementCaching();
+
+    /**
      * @return generic stmt validator
      */
     public FarragoSessionStmtValidator getStmtValidator();
@@ -178,6 +182,11 @@ public interface FarragoSessionPreparingStmt
     public FarragoSession getSession();
 
     /**
+     * @return SQL text of the statement being prepared
+     */
+    public String getSql();
+
+    /**
      * Obtains an implementor for relational expressions.
      *
      * @param rexBuilder RexBuilder to use for constructing row expressions
@@ -194,6 +203,11 @@ public interface FarragoSessionPreparingStmt
      * @return optimizer representation, or null if not found
      */
     public RelOptTable loadColumnSet(SqlIdentifier name);
+
+    /**
+     * @return the root statement context for this statement
+     */
+    public FarragoSessionStmtContext getRootStmtContext();
 }
 
 // End FarragoSessionPreparingStmt.java

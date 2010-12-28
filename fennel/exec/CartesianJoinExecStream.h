@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,7 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  Take a join filter?
  */
-struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
+struct FENNEL_EXEC_EXPORT CartesianJoinExecStreamParams
+    : public ConfluenceExecStreamParams
 {
     bool leftOuter;
 };
@@ -46,14 +47,17 @@ struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
 /**
  * CartesianJoinExecStream produces the Cartesian product of two input
  * streams.  The first input will be iterated only once, while the second
- * input will be opened and re-iterated for each tuple from the first
- * input.
+ * input will be opened and re-iterated for each tuple from the first input.
+ * Optionally, additional processing can be applied on the records read from
+ * the first input before iterating over the second input.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class CartesianJoinExecStream : public ConfluenceExecStream
+class FENNEL_EXEC_EXPORT CartesianJoinExecStream
+    : public ConfluenceExecStream
 {
+protected:
     bool leftOuter;
     bool rightInputEmpty;
     TupleData outputData;
@@ -61,6 +65,23 @@ class CartesianJoinExecStream : public ConfluenceExecStream
     SharedExecStreamBufAccessor pRightBufAccessor;
     SharedExecStream pRightInput;
     uint nLeftAttributes;
+
+    /**
+     * @return true if the number of inputs to the stream is correct
+     */
+    virtual bool checkNumInputs();
+
+    /**
+     * Executes any pre-processing required on the right input
+     *
+     * @return EXECRC_YIELD if pre-processing successful
+     */
+    virtual ExecStreamResult preProcessRightInput();
+
+    /**
+     * Processes the left input after it has been read from the input stream
+     */
+    virtual void processLeftInput();
 
 public:
     // implement ExecStream

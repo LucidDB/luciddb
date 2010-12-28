@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,7 @@ package net.sf.farrago.jdbc.param;
 /**
  * FarragoJdbcEngineStringParamDef defines a string parameter. Values which are
  * not strings are converted into strings. Strings are not padded, even for CHAR
- * columns.
+ * columns. This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -33,7 +33,6 @@ package net.sf.farrago.jdbc.param;
 class FarragoJdbcStringParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int maxCharCount;
@@ -58,6 +57,10 @@ class FarragoJdbcStringParamDef
             return x;
         }
         if (x instanceof String) {
+            if (((String) x).length() > maxCharCount) {
+                // TODO: SQLWarning
+                return ((String) x).substring(0, maxCharCount);
+            }
             return x;
         }
         if (x instanceof byte []) {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 Xiaoyang
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2005 Xiaoyang Luo
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
@@ -32,13 +31,13 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
  * FarragoOJRexBuiltinImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for builtin functions
+ * org.eigenbase.oj.rex.OJRexImplementor} for builtin functions
  *
  * @author Xiaoyang Luo
  * @version $Id$
@@ -46,37 +45,25 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexBuiltinImplementor
     extends FarragoOJRexImplementor
 {
+    //~ Enums ------------------------------------------------------------------
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    public static final int FLOOR_FUNCTION = 1;
-    public static final int CEIL_FUNCTION = 2;
-    public static final int ABS_FUNCTION = 3;
-    public static final int POW_FUNCTION = 4;
-    public static final int LN_FUNCTION = 5;
-    public static final int LOG10_FUNCTION = 6;
-    public static final int SUBSTRING_FUNCTION = 7;
-    public static final int OVERLAY_FUNCTION = 8;
-    public static final int MOD_FUNCTION = 9;
-    public static final int EXP_FUNCTION = 10;
-    public static final int CONCAT_OPERATOR = 11;
-    public static final int TRIM_FUNCTION = 12;
-    public static final int POSITION_FUNCTION = 13;
-    public static final int CHAR_LENGTH_FUNCTION = 14;
-    public static final int CHARACTER_LENGTH_FUNCTION = 15;
-    public static final int UPPER_FUNCTION = 16;
-    public static final int LOWER_FUNCTION = 17;
-    public static final int INITCAP_FUNCTION = 18;
-    public static final int CONVERT_FUNCTION = 19;
-    public static final int TRANSLATE_FUNCTION = 20;
+    /**
+     * Enumeration of SQL operators that can be implemented in OJ.
+     */
+    public enum Function
+    {
+        FLOOR, CEIL, ABS, POWER, LN, LOG10, SUBSTRING, OVERLAY, MOD, EXP,
+        CONCAT, TRIM, POSITION, CHAR_LENGTH, CHARACTER_LENGTH, UPPER, LOWER,
+        INITCAP, CONVERT, TRANSLATE,
+    }
 
     //~ Instance fields --------------------------------------------------------
 
-    protected int builtinFunction;
+    protected final Function builtinFunction;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FarragoOJRexBuiltinImplementor(int function)
+    public FarragoOJRexBuiltinImplementor(Function function)
     {
         builtinFunction = function;
     }
@@ -89,12 +76,8 @@ public class FarragoOJRexBuiltinImplementor
         RexCall call,
         Expression [] operands)
     {
-        Variable varResult = null;
+        Variable varResult;
         Expression nullTest = null;
-        /*
-        System.out.println(operands[0]); System.out.println(call.operands[0]);
-         System.out.println(call.operands[0].getType());
-         */
 
         RelDataType retType = call.getType();
 
@@ -125,48 +108,49 @@ public class FarragoOJRexBuiltinImplementor
         StatementList stmtList = new StatementList();
 
         switch (builtinFunction) {
-        case FLOOR_FUNCTION:
-        case CEIL_FUNCTION:
+        case FLOOR:
+        case CEIL:
             implementFloorCeil(translator, call, operands, varResult, stmtList);
             break;
-        case ABS_FUNCTION:
+        case ABS:
             implementAbs(translator, call, operands, varResult, stmtList);
             break;
-        case POW_FUNCTION:
-            implementPow(translator, call, operands, varResult, stmtList);
+        case POWER:
+            implementPower(translator, call, operands, varResult, stmtList);
             break;
-        case LN_FUNCTION:
-        case LOG10_FUNCTION:
+        case LN:
+        case LOG10:
             implementLog(translator, call, operands, varResult, stmtList);
             break;
-        case SUBSTRING_FUNCTION:
+        case SUBSTRING:
             implementSubstring(translator, call, operands, varResult, stmtList);
             break;
-        case OVERLAY_FUNCTION:
+        case OVERLAY:
             implementOverlay(translator, call, operands, varResult, stmtList);
             break;
-        case CONCAT_OPERATOR:
+        case CONCAT:
             implementConcat(translator, call, operands, varResult, stmtList);
             break;
-        case MOD_FUNCTION:
+        case MOD:
             implementMod(translator, call, operands, varResult, stmtList);
             break;
-        case EXP_FUNCTION:
+        case EXP:
             implementExp(translator, call, operands, varResult, stmtList);
             break;
-        case LOWER_FUNCTION:
-        case UPPER_FUNCTION:
-        case INITCAP_FUNCTION:
-            implementChangeCase(translator,
+        case LOWER:
+        case UPPER:
+        case INITCAP:
+            implementChangeCase(
+                translator,
                 call,
                 operands,
                 varResult,
                 stmtList);
             break;
-        case TRIM_FUNCTION:
+        case TRIM:
             implementTrim(translator, call, operands, varResult, stmtList);
             break;
-        case POSITION_FUNCTION:
+        case POSITION:
             translator.addAssignmentStatement(
                 stmtList,
                 new MethodCall(
@@ -177,8 +161,8 @@ public class FarragoOJRexBuiltinImplementor
                 varResult,
                 false);
             break;
-        case CHAR_LENGTH_FUNCTION:
-        case CHARACTER_LENGTH_FUNCTION:
+        case CHAR_LENGTH:
+        case CHARACTER_LENGTH:
             translator.addAssignmentStatement(
                 stmtList,
                 new MethodCall(
@@ -190,11 +174,11 @@ public class FarragoOJRexBuiltinImplementor
                 false);
             break;
         default:
-            assert (false);
+            throw Util.unexpected(builtinFunction);
         }
 
-        // All the builtin function returns null if
-        // one of the arguements is null.
+        // All the builtin functions return null if
+        // one of the arguments is null.
 
         if (nullTest != null) {
             translator.addStatement(
@@ -228,20 +212,17 @@ public class FarragoOJRexBuiltinImplementor
                 new Literal(Literal.STRING, "java.lang.Math"),
                 "log",
                 new ExpressionList(argument));
-        if (builtinFunction == LOG10_FUNCTION) {
+        if (builtinFunction == Function.LOG10) {
             Expression ln10 =
                 new MethodCall(
                     new Literal(Literal.STRING, "java.lang.Math"),
                     "log",
                     new ExpressionList(new Literal(Literal.DOUBLE, "10.0")));
             logFunc =
-                new BinaryExpression(logFunc,
+                new BinaryExpression(
+                    logFunc,
                     BinaryExpression.DIVIDE,
                     ln10);
-        }
-        String funcName = "LN";
-        if (builtinFunction == LOG10_FUNCTION) {
-            funcName = "LOG10";
         }
         StatementList stmtList1 = new StatementList();
         translator.addAssignmentStatement(
@@ -257,7 +238,7 @@ public class FarragoOJRexBuiltinImplementor
                     BinaryExpression.GREATER,
                     Literal.constantZero()),
                 stmtList1,
-                getThrowStatementList(funcName));
+                getThrowStatementList(builtinFunction));
 
         stmtList.add(ifStmt);
     }
@@ -275,7 +256,7 @@ public class FarragoOJRexBuiltinImplementor
                 call.operands[0]);
 
         String funcStr = "floor";
-        if (builtinFunction == CEIL_FUNCTION) {
+        if (builtinFunction == Function.CEIL) {
             funcStr = "ceil";
         }
         Expression floorOrCeilFunction =
@@ -317,16 +298,16 @@ public class FarragoOJRexBuiltinImplementor
     }
 
     /**
-     * @2003.sql Part 2 Section 6.27 General Rule 12
+     * @sql.2003 Part 2 Section 6.27 General Rule 12
      */
-
-    private void implementPow(
+    private void implementPower(
         FarragoRexToOJTranslator translator,
         RexCall call,
         Expression [] operands,
         Variable varResult,
         StatementList stmtList)
     {
+        assert builtinFunction == Function.POWER;
         Expression argument1 =
             translator.convertPrimitiveAccess(
                 operands[0],
@@ -385,7 +366,7 @@ public class FarragoOJRexBuiltinImplementor
         Statement ifStmt =
             new IfStatement(
                 condition,
-                getThrowStatementList("POW"),
+                getThrowStatementList(builtinFunction),
                 stmtList1);
         stmtList.add(ifStmt);
     }
@@ -416,9 +397,8 @@ public class FarragoOJRexBuiltinImplementor
     }
 
     /**
-     * @2003.sql Part 2 Section 6.27 General Rule 9
+     * @sql.2003 Part 2 Section 6.27 General Rule 9
      */
-
     private void implementMod(
         FarragoRexToOJTranslator translator,
         RexCall call,
@@ -550,13 +530,19 @@ public class FarragoOJRexBuiltinImplementor
         Variable varResult,
         StatementList stmtList)
     {
-        String funcName = null;
-        if (builtinFunction == LOWER_FUNCTION) {
+        String funcName;
+        switch (builtinFunction) {
+        case LOWER:
             funcName = BytePointer.LOWER_METHOD_NAME;
-        } else if (builtinFunction == UPPER_FUNCTION) {
+            break;
+        case UPPER:
             funcName = BytePointer.UPPER_METHOD_NAME;
-        } else if (builtinFunction == INITCAP_FUNCTION) {
+            break;
+        case INITCAP:
             funcName = BytePointer.INITCAP_METHOD_NAME;
+            break;
+        default:
+            throw Util.unexpected(builtinFunction);
         }
         stmtList.add(
             new ExpressionStatement(
@@ -588,19 +574,21 @@ public class FarragoOJRexBuiltinImplementor
                         operands[2]))));
     }
 
-    private StatementList getThrowStatementList(String funcName)
+    private StatementList getThrowStatementList(Function function)
     {
         // String quotedName = "\"" + funcName + "\"";
-        return
-            new StatementList(
-                new ThrowStatement(
-                    new MethodCall(
-                        new Literal(
-                            Literal.STRING,
-                            "net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument"),
-                        "ex",
-                        new ExpressionList(
-                            Literal.makeLiteral(funcName)))));
+        Util.discard(
+            net.sf.farrago.resource.FarragoResource.instance()
+            .InvalidFunctionArgument);
+        return new StatementList(
+            new ThrowStatement(
+                new MethodCall(
+                    new Literal(
+                        Literal.STRING,
+                        "net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument"),
+                    "ex",
+                    new ExpressionList(
+                        Literal.makeLiteral(function.name())))));
     }
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,6 @@ package org.eigenbase.sql;
 public class SqlOrderByOperator
     extends SqlSpecialOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -46,7 +45,7 @@ public class SqlOrderByOperator
     public SqlOrderByOperator()
     {
         // NOTE:  make precedence lower then SELECT to avoid extra parens
-        super("ORDER BY", SqlKind.OrderBy, 0);
+        super("ORDER BY", SqlKind.ORDER_BY, 0);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -64,14 +63,14 @@ public class SqlOrderByOperator
     {
         assert (operands.length == 2);
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.OrderBy);
+            writer.startList(SqlWriter.FrameTypeEnum.OrderBy);
         operands[QUERY_OPERAND].unparse(
             writer,
             getLeftPrec(),
             getRightPrec());
         writer.sep(getName());
         final SqlWriter.Frame listFrame =
-            writer.startList(SqlWriter.FrameType.OrderByList);
+            writer.startList(SqlWriter.FrameTypeEnum.OrderByList);
         unparseListClause(writer, operands[ORDER_OPERAND]);
         writer.endList(listFrame);
         writer.endList(frame);

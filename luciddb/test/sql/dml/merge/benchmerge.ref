@@ -1,5 +1,23 @@
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge entails a cartesian join
+0: jdbc:luciddb:> merge into bench1 tr
+. . . . . . . . > using bench1M as rf
+. . . . . . . . > on tr."k2" = 0
+. . . . . . . . > when matched then
+. . . . . . . . >   update set "k2" = 3
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert ("kseq","k4") values (rf."kseq",5);
+0: jdbc:luciddb:> -- should be 1M + 1
+0: jdbc:luciddb:> select count(*) from bench1;
++----------+
+|  EXPR$0  |
++----------+
+| 1000001  |
++----------+
+0: jdbc:luciddb:> truncate table bench1;
+0: jdbc:luciddb:> insert into bench1 select * from bench10k where "kseq" = 1;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- 100K updates, no insert
 0: jdbc:luciddb:> --
@@ -453,6 +471,7 @@
 +----------+
 | 1000000  |
 +----------+
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- do an analyze table, which implicitly verifies the btree pages
+0: jdbc:luciddb:> analyze table bench1M compute statistics for all columns;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,22 +40,23 @@ FENNEL_BEGIN_NAMESPACE
  * AioPollingScheduler implements DeviceAccessScheduler via Unix aio calls and
  * threads which poll for completion.
  */
-class AioPollingScheduler : public DeviceAccessScheduler, public Thread
+class FENNEL_DEVICE_EXPORT AioPollingScheduler
+    : public DeviceAccessScheduler, public Thread
 {
     StrictMutex mutex;
     LocalCondition newRequestPending;
     bool quit;
-    
+
     std::vector<aiocb *> currentRequests;
     std::vector<aiocb *> newRequests;
-    
+
 public:
     /**
      * Constructor.
      */
     explicit AioPollingScheduler(
         DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */
@@ -64,9 +65,9 @@ public:
 // ----------------------------------------------------------------------
 // Implementation of DeviceAccessScheduler interface (q.v.)
 // ----------------------------------------------------------------------
-    virtual void schedule(RandomAccessRequest &request);
+    virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of Thread interface (q.v.)
 // ----------------------------------------------------------------------

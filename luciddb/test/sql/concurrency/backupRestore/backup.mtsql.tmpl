@@ -1,0 +1,97 @@
+-- Test system backup executing concurrently with other threads
+
+@nolockstep
+
+@setup
+
+set schema 'rwconcur';
+
+-- load two lineitem tables; this should use up enough space to make the
+-- backup run for a non-trivial amount of time
+insert into lineitem select * from "lineitem";
+insert into lineitemu1 select * from "lineitem";
+
+-- give the stats thread a chance to update the pages allocated stat; hence
+-- the sleep calls
+select count(*), sys_boot.mgmt.sleep(1000) from lineitem;
+select count(*), sys_boot.mgmt.sleep(1000) from lineitemu1;
+
+call applib.create_var('RWCONCUR', null, 'backup context');
+call applib.create_var('RWCONCUR', 'pageCount', 'used as a page counter');
+call applib.set_var(
+    'RWCONCUR',
+    'pageCount',
+    (select counter_value from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated'));
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+
+set schema 'rwconcur';
+
+-- verify that the table got truncated
+@sync
+select count(*) from lineitem;
+truncate table lineitemu1;
+
+-- the purge should now be reenabled; sleep briefly to allow time for the
+-- stat counters to be updated
+alter system deallocate old;
+select sys_boot.mgmt.sleep(1000) from "lineitem" where f1 = 1 and f4 = 1;
+select (cast(counter_value as bigint) <
+        cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
+    from sys_root.dba_performance_counters
+    where counter_name = 'DatabasePagesAllocated';
+
+call applib.delete_var('RWCONCUR', 'pageCount');
+
+@end
+
+-----------------------------------------------------------
+
+@thread backup
+
+-- this backup needs to execute longer than the truncate thread; so use
+-- compression to lengthen the backup time
+call sys_root.backup_database('@TEST_DIR@/fullArchive', 'FULL', 'COMPRESSED');
+
+@sync
+@end
+
+-----------------------------------------------------------
+
+@thread backup2
+
+@sleep 3000
+
+-- Can't execute 2 backups at the same time
+@err call sys_root.backup_database('@TEST_DIR@/fullArchive2', 'FULL', 'UNCOMPRESSED');
+
+@sync
+@end
+
+-----------------------------------------------------------
+
+@thread truncate
+
+-- give the backup a chance to start
+@sleep 3000
+truncate table rwconcur.lineitem;
+
+alter system deallocate old;
+
+-- Verify that the #pages allocated hasn't shrunk, even though the table
+-- was truncated and alter system deallocate old was run.  We need the greater
+-- than check because the number of pages allocated will actually grow slightly
+-- as a result of the truncate.
+select (cast(counter_value as bigint) > 
+        cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
+    from sys_root.dba_performance_counters
+    where counter_name = 'DatabasePagesAllocated';
+
+@sync
+@end
+

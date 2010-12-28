@@ -1,0 +1,483 @@
+-- $Id$
+-- Tests LucidDB support for labels
+
+alter system deallocate old;
+
+--------------------------------------------------------------------------------
+-- Setup schema, tables, data, labels, etc.
+--------------------------------------------------------------------------------
+
+create schema label;
+set schema 'label';
+set path 'label';
+
+create procedure setLabel(labelName varchar(128)) language java reads sql data
+    external name 'class net.sf.farrago.test.FarragoTestUDR.setLabel';
+
+create table t(a int);
+create index it on t(a);
+create label l0 description 'empty table';
+
+insert into t values(1);
+create label l1 description 'one row';
+
+insert into t values(2);
+analyze table t compute statistics for all columns;
+create function times2(a int)
+    returns int
+    contains sql
+    return a*2;
+create label l2 description 'two rows';
+
+insert into t values(3);
+create view v as select * from t;
+create label l3 description 'three rows';
+
+analyze table t compute statistics for all columns;
+insert into t values(4);
+create table t2(a int);
+insert into t2 values(-1);
+create label l4 description 'four rows';
+
+insert into t values(5);
+insert into t values(6);
+analyze table t compute statistics for all columns;
+delete from t where a = 6;
+analyze table t compute statistics for all columns;
+
+-- verify that the labels got created
+select label_name, creator, remarks from sys_root.dba_labels
+    order by label_name;
+
+-- create a foreign table
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '1'
+);
+create foreign table EMPS
+server ff_server
+options(
+    SCHEMA_NAME 'BCP',
+    filename 'EMP'
+);
+
+--------------------------------------------------------------------------------
+-- Validate stats
+--------------------------------------------------------------------------------
+
+-- make sure the rowcount in dba_stored_tables reflects all rows inserted
+select table_name, current_row_count, deleted_row_count
+    from sys_root.dba_stored_tables where table_name like 'T%'
+    order by table_name;
+-- make sure there are 5 rows corresponding to T in RowCountStatistics,
+-- corresponding to each of the labels (except the first, since the table
+-- was empty when the first label was created) plus 1 for the DML statements
+-- that occurred after the last label was created
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+
+-- verify the number of rows for column stats
+-- the latest set of histogram bars for T should number 5; but there should be
+-- 3 sets of histograms for T -- one for each of the 3 analyze's
+select count(*) from sys_root.dba_column_histograms where table_name = 'T';
+select table_name, "barCount" 
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on c."mofId" = h."Column"
+    where c.table_name = 'T'
+    order by "barCount";
+-- the count of the number of records in ColumnHistogramBar should match the
+-- sum of the barcounts from above
+select count(*) from sys_fem.med."ColumnHistogramBar";
+
+-- verify the number of rows for index stats -- there should be 9 because there
+-- are 3 clusters (1 column cluster, 1 index cluster, 1 deletion index) times
+-- 3 analyzes
+select "name", s."pageCount"
+    from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+    on i."mofId" = s."LocalIndex"
+    where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+    order by 1, 2;
+
+--------------------------------------------------------------------------------
+-- Validate that the correct data is returned and the behavior is correct
+-- with various label settings, including the case where no label is set
+--------------------------------------------------------------------------------
+
+-- default setting -- should return all rows
+select * from t order by a;
+-- make sure the row count stats used by the optimizer correctly reflect the
+-- latest row counts; the row count for the second query should be > 1
+!set outputformat csv
+explain plan including all attributes for select * from t;
+explain plan including all attributes for select * from t where a >= 4;
+!set outputformat table
+
+-- try setting the label to a non-existent label
+alter session set "label" = 'NONE';
+
+-- should return 1 row
+alter session set "label" = 'L1';
+select * from t order by a;
+-- can access UDF even though it was created after L1
+select * from t where a*2 = times2(a);
+
+-- should return no rows
+alter session set "label" = 'L0';
+select * from t order by a;
+-- make sure we handle the case where there are no analyze stats yet
+select * from t where a >= 4;
+-- access the foreign table, even though it was created after L1
+select * from EMPS order by empno;
+
+-- should return 2 rows
+alter session set "label" = 'L2';
+select * from t order by a;
+-- can see V, even though it was created after L2
+select * from v order by a;
+
+-- should return 4 rows
+alter session set "label" = 'L4';
+select * from t order by a;
+-- can see T2 since it was created before L4
+select * from t2 order by a;
+
+-- should return 3 rows
+alter session set "label" = 'L3';
+select * from t order by a;
+!set outputformat csv
+-- make sure the row count stats used by the optimizer correctly reflect the
+-- label setting (i.e., 3 rows)
+explain plan including all attributes for select * from t;
+-- make sure the right column level stats are used by the optimizer; the row
+-- count in the plan should be only 1 row vs > 1 if the latest stats were used
+explain plan including all attributes for select * from t where a >= 4;
+!set outputformat table
+
+-- can't see T2, since it was created after L3
+select * from t2;
+
+-- replace an existing label and make sure its point in time now reflects
+-- the latest point in time; also make sure the stats associated with the
+-- original label have been removed
+alter session set "label" = null;
+create or replace label l4 description 'all rows';
+alter session set "label" = 'L4';
+select * from t order by a;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'T'
+    order by t."name", st."rowCount";
+select table_name, "barCount" 
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on c."mofId" = h."Column"
+    where c.table_name = 'T'
+    order by "barCount";
+select count(*) from sys_fem.med."ColumnHistogramBar";
+select "name", s."pageCount"
+    from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+    on i."mofId" = s."LocalIndex"
+    where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+    order by 1, 2;
+
+-- ok to execute these SET statements even though there is a label setting
+set schema 'label';
+set path 'label';
+
+-- verify that DML and DDL statements are disallowed since there is a label
+-- setting
+insert into t values(6);
+truncate table t;
+analyze table t compute statistics for all columns;
+call applib.compute_statistics_for_schema('LABEL');
+alter system deallocate old;
+alter table t rebuild;
+
+-- verify that you can't set a label inside a UDR
+call setLabel('L0');
+call setLabel(null);
+
+-- go back to the default
+alter session set "label" = null;
+select * from t order by a;
+
+-- DML should now be allowed since there's no longer a label setting
+insert into t values(6);
+select * from t order by a;
+
+-- Verify label setting via JDBC connect string
+!closeall
+!connect jdbc:luciddb:;schema="LABEL";label="L3" sa sa
+-- Make sure the label is set
+select * from sys_root.user_session_parameters where param_name = 'label';
+select * from t order by a;
+
+--------------------------------------------------------------------------------
+-- Verify that ALTER SYSTEM DEALLOCATE can't deallocate any pages until certain
+-- labels have been dropped.  Use an appvar to temporarily store the before
+-- pageCount.  Make sure to sleep before getting the pages allocated counter
+-- to give the stats a chance to be updated.  
+--------------------------------------------------------------------------------
+
+-- Note that we can call these UDP's even though there is a label setting
+-- because these UDP's don't execute any DDL and DML statements as part of
+-- their execution.
+call applib.create_var('LABEL', null, 'Label context');
+call applib.create_var('LABEL', 'pageCount', 'used as a page counter');
+call applib.set_var(
+    'LABEL',
+    'pageCount',
+    (select counter_value from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated'));
+
+-- Unset the label
+alter session set "label" = null;
+
+-- nothing can be deallocated because no labels have been dropped
+alter system deallocate old;
+select sys_boot.mgmt.sleep(1000) from t where a = 1;
+select (counter_value = applib.get_var('LABEL', 'pageCount'))
+   from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated';
+
+-- drop a label that's not the oldest and make sure no pages are deallocated;
+-- and make sure only the associated row count stat has been removed since
+-- there are no column stats associated with L3
+drop label l3;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+select table_name, "barCount" 
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on c."mofId" = h."Column"
+    where c.table_name = 'T'
+    order by "barCount";
+select count(*) from sys_fem.med."ColumnHistogramBar";
+select "name", s."pageCount"
+    from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+    on i."mofId" = s."LocalIndex"
+    where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+    order by 1, 2;
+alter system deallocate old;
+select sys_boot.mgmt.sleep(1000) from t where a = 1;
+select (counter_value = applib.get_var('LABEL', 'pageCount'))
+    from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated';
+
+-- Drop the three oldest label.  Pages SHOULD be deallocated.  Note that we
+-- have to drop 3 labels because L0 corresponds to the empty table.  L1
+-- corresponds to an anchor page, which can't be dropped.  Therefore,
+-- deallocations can only start after dropping L2.
+drop label l0;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+drop label l1;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+drop label l2;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+alter system deallocate old;
+select sys_boot.mgmt.sleep(1000) from t where a = 1;
+select (cast(counter_value as bigint) < 
+        cast(applib.get_var('LABEL', 'pageCount') as bigint))
+    from sys_root.dba_performance_counters
+        where counter_name = 'DatabasePagesAllocated';
+
+call applib.delete_var('LABEL', 'pageCount');
+
+-- Verify that stats have been removed from the other stat tables.
+
+-- Should be 1 row instead of 3 since L2 and the original L4 have been removed.
+-- (There are no column stats associated with L0, L1, L3, and the new L4
+-- since analyzes weren't done for those labels.)
+select table_name, "barCount" 
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on c."mofId" = h."Column"
+    where c.table_name = 'T';
+-- the count of the number of records in ColumnHistogramBar should match the
+-- sum of the barcounts from above
+select count(*) from sys_fem.med."ColumnHistogramBar";
+-- Should be 3 rows instead of 9 since L2 and the original L4 were dropped.
+-- The 3 rows correspond to the latest set of stats, which weren't removed.
+select "name", s."pageCount"
+    from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+    on i."mofId" = s."LocalIndex"
+    where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+    order by 1, 2;
+
+-- Make sure we can still select from the table
+select * from t where a >= 0 order by a;
+
+-- Drop the remaining label and make sure one set of stats still remains
+-- for all stats.
+drop label l4;
+select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" like 'T%'
+    order by t."name", st."rowCount";
+select table_name, "barCount" 
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on c."mofId" = h."Column"
+    where c.table_name = 'T';
+select count(*) from sys_fem.med."ColumnHistogramBar";
+select "name", s."pageCount"
+    from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+    on i."mofId" = s."LocalIndex"
+    where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+    order by "name";
+
+-- Make sure we can still select from the table
+select * from t where a >= -1 order by a;
+
+--------------------------------------------------------------------------------
+-- One more stat-related test to exercise a scenario not covered by the above
+-- tests.  The setup is as follows:
+--
+-- Stat0, L0, L1, Stat2, L2, L3
+--
+-- Dropping L0 should not remove Stat0 because it's still needed by L1.
+-- Likewise for the drop of L2 because Stat2 is now associated with L3.
+--------------------------------------------------------------------------------
+
+create table stat(a int);
+insert into stat values(1);
+create label l0;
+create label l1;
+insert into stat values(2);
+create label l2;
+create label l3;
+select t."name", st."rowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'STAT'
+    order by t."name", st."rowCount";
+
+drop label l0;
+select t."name", st."rowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'STAT'
+    order by t."name", st."rowCount";
+
+drop label l2;
+select t."name", st."rowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'STAT'
+    order by t."name", st."rowCount";
+
+-- Still, nothing's removed because Stat2 is now the latest
+drop label l3;
+select t."name", st."rowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'STAT'
+    order by t."name", st."rowCount";
+
+-- Finally, something's removed
+drop label l1;
+select t."name", st."rowCount"
+    from
+        sys_fem.med."StoredTable" t
+    inner join
+        sys_fem.med."RowCountStatistics" st
+    on
+        t."mofId" = st."ColumnSet"
+    where
+        t."name" = 'STAT'
+    order by t."name", st."rowCount";

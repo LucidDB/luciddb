@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,13 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
 
@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 class FarragoView
     extends FarragoQueryNamedColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String datasetName;
@@ -55,7 +54,7 @@ class FarragoView
      * @param cwmView catalog definition for view
      * @param rowType type for rows produced by view
      * @param datasetName Name of sample dataset, or null to use vanilla
-     * @param modality
+     * @param modality Modality of the view (relational versus streaming)
      */
     FarragoView(
         FemLocalView cwmView,
@@ -82,17 +81,17 @@ class FarragoView
     {
         String queryString = getFemView().getQueryExpression().getBody();
         if (datasetName != null) {
-            queryString =
-                (
-                    (modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
-                    ? "SELECT STREAM"
-                    : "SELECT"
-                )
-                + " * FROM ("
-                + queryString
-                + ") TABLESAMPLE SUBSTITUTE ("
-                + SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName)
-                + ") AS x";
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+            buf.append(
+                ((modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
+                 ? "SELECT STREAM"
+                 : "SELECT"))
+                .append(" * FROM (")
+                .append(queryString)
+                .append(") AS x TABLESAMPLE SUBSTITUTE (")
+                .literal(datasetName)
+                .append(")");
+            queryString = buf.getSql();
         }
         return expandView(queryString);
     }
@@ -105,11 +104,23 @@ class FarragoView
                 getPreparingStmt().expandView(
                     getRowType(),
                     queryString);
-            rel = RelOptUtil.createRenameRel(rowType, rel);
+
+            // NOTE jvs 22-Jan-2007:  It would be nice if we could
+            // state that we only need a rename here (not a cast)
+            // since the view column types should have been updated
+            // as part of doing CREATE OR REPLACE on any objects
+            // the view depends on.  However, this is not the case
+            // for direct SQL/MED references without an
+            // explicit CREATE FOREIGN TABLE or IMPORT FOREIGN SCHEMA,
+            // since there the external system can change at
+            // any time.
+
+            rel = RelOptUtil.createCastRel(rel, rowType, true);
             rel = getPreparingStmt().flattenTypes(rel, false);
             return rel;
         } catch (Throwable e) {
-            throw Util.newInternal(e,
+            throw Util.newInternal(
+                e,
                 "Error while parsing view definition:  " + queryString);
         }
     }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,6 +30,7 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.runtime.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
@@ -43,7 +44,6 @@ import org.eigenbase.util.*;
  */
 public class OJClassMap
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getClassMapTracer();
@@ -57,7 +57,8 @@ public class OJClassMap
      * classes and names to the {@link OJSyntheticClass} which implements that
      * array of types.
      */
-    private Hashtable mapKey2SyntheticClass = new Hashtable();
+    private Hashtable<String, OJSyntheticClass> mapKey2SyntheticClass =
+        new Hashtable<String, OJSyntheticClass>();
 
     /**
      * Class from which synthetic classes should be subclassed.
@@ -83,7 +84,7 @@ public class OJClassMap
 
     //~ Constructors -----------------------------------------------------------
 
-    public OJClassMap(Class syntheticSuperClass)
+    public OJClassMap(Class<SyntheticObject> syntheticSuperClass)
     {
         this(syntheticSuperClass, true);
     }
@@ -121,7 +122,9 @@ public class OJClassMap
         if (fieldNames == null) {
             fieldNames = new String[classes.length];
         }
-        assert classes.length == fieldNames.length : "OJSyntheticClass.create: mismatch between classes and field names";
+        assert classes.length == fieldNames.length
+            : "OJSyntheticClass.create: "
+            + "mismatch between classes and field names";
         for (int i = 0; i < fieldNames.length; i++) {
             if (fieldNames[i] == null) {
                 fieldNames[i] = OJSyntheticClass.makeField(i);
@@ -129,7 +132,7 @@ public class OJClassMap
         }
 
         // make description
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (int i = 0; i < classes.length; i++) {
             if (i > 0) {
@@ -140,22 +143,20 @@ public class OJClassMap
             sb.append(classes[i].toString().replace('$', '.'));
 
             if (isJoin) {
-                assert !OJSyntheticClass.isJoinClass(classes[i]) : "join classes cannot contain join classes";
+                assert !OJSyntheticClass.isJoinClass(classes[i])
+                    : "join classes cannot contain join classes";
             }
         }
         sb.append("}");
         String description = sb.toString();
 
         // is there already an equivalent OJSyntheticClass?
-        OJSyntheticClass clazz =
-            (OJSyntheticClass) mapKey2SyntheticClass.get(description);
+        OJSyntheticClass clazz = mapKey2SyntheticClass.get(description);
         if (clazz == null) {
             Environment env = declarer.getEnvironment();
             String className =
-                (
-                    isJoin ? OJSyntheticClass.JOIN_CLASS_PREFIX
-                    : OJSyntheticClass.PROJECT_CLASS_PREFIX
-                )
+                (isJoin ? OJSyntheticClass.JOIN_CLASS_PREFIX
+                    : OJSyntheticClass.PROJECT_CLASS_PREFIX)
                 + Integer.toHexString(id++);
             ClassDeclaration decl =
                 makeDeclaration(
@@ -312,7 +313,7 @@ public class OJClassMap
         OJClass left,
         OJClass right)
     {
-        Vector classesVector = new Vector();
+        Vector<OJClass> classesVector = new Vector<OJClass>();
         addAtomicClasses(classesVector, left);
         addAtomicClasses(classesVector, right);
         OJClass [] classes = new OJClass[classesVector.size()];
@@ -320,7 +321,9 @@ public class OJClassMap
         return createJoin(declarer, classes);
     }
 
-    private static void addAtomicClasses(Vector classesVector, OJClass clazz)
+    private static void addAtomicClasses(
+        Vector<OJClass> classesVector,
+        OJClass clazz)
     {
         if (OJSyntheticClass.isJoinClass(clazz)) {
             OJClass [] classes = ((OJSyntheticClass) clazz).classes;

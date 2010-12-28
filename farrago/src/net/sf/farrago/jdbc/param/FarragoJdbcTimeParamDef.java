@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,11 +26,14 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import java.util.Calendar;
-import java.util.TimeZone;
+
+import org.eigenbase.util14.*;
 
 
 /**
  * FarragoJdbcEngineTimeParamDef defines a time parameter.
+ *
+ * <p>This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -38,11 +41,6 @@ import java.util.TimeZone;
 class FarragoJdbcTimeParamDef
     extends FarragoJdbcParamDef
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoJdbcTimeParamDef(
@@ -58,8 +56,8 @@ class FarragoJdbcTimeParamDef
     public Object scrubValue(Object x)
     {
         return scrubValue(
-                x,
-                Calendar.getInstance(gmtZone));
+            x,
+            Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -72,44 +70,36 @@ class FarragoJdbcTimeParamDef
         }
 
         if (x instanceof String) {
-            try {
-                // TODO: Does this need to take cal into account?
-                return Time.valueOf((String) x);
-            } catch (IllegalArgumentException e) {
+            String s = ((String) x).trim();
+            ZonelessTime zt = ZonelessTime.parse(s);
+            if (zt == null) {
                 throw newInvalidFormat(x);
             }
+            return zt;
         }
 
-        // Only java.sql.Time, java.sql.Timestamp are all OK.
-        // java.sql.Date is not okay (no time information)
-        if (!(x instanceof Timestamp) && !(x instanceof Time)) {
-            throw newInvalidType(x);
+        // Of the subtypes of java.util.Date,
+        // only java.sql.Timestamp and java.sql.Time are OK.
+        // java.sql.Date is not okay (no time information).
+        if ((x instanceof Timestamp) || (x instanceof Time)) {
+            java.util.Date timestamp = (java.util.Date) x;
+            ZonelessTimestamp zt = new ZonelessTimestamp();
+            zt.setZonedTime(timestamp.getTime(), DateTimeUtil.getTimeZone(cal));
+            return zt;
         }
 
-        java.util.Date time = (java.util.Date) x;
+        // ZonelessDatetime is not required by JDBC, but we allow it because
+        // it is a convenient format to serialize values over RMI.
+        // We disallow ZonelessTime for the same reasons we disallow
+        // java.sql.Time above.
+        if ((x instanceof ZonelessTimestamp) || (x instanceof ZonelessTime)) {
+            long time = ((ZonelessDatetime) x).getTime();
+            ZonelessTime zt = new ZonelessTime();
+            zt.setZonedTime(time, DateTimeUtil.getTimeZone(cal));
+            return zt;
+        }
 
-        // Make a copy of the calendar
-        cal = (Calendar) cal.clone();
-        cal.setTime(time);
-        final int hour = cal.get(Calendar.HOUR_OF_DAY);
-        final int minute = cal.get(Calendar.MINUTE);
-        final int second = cal.get(Calendar.SECOND);
-        final int millisecond = cal.get(Calendar.MILLISECOND);
-
-        // set date to epoch
-        cal.clear();
-
-        // shift to gmt
-        cal.setTimeZone(gmtZone);
-
-        // now restore the time part
-        cal.set(Calendar.HOUR_OF_DAY, hour);
-        cal.set(Calendar.MINUTE, minute);
-        cal.set(Calendar.SECOND, second);
-        cal.set(Calendar.MILLISECOND, millisecond);
-
-        // convert to a time object
-        return new Time(cal.getTimeInMillis());
+        throw newInvalidType(x);
     }
 }
 

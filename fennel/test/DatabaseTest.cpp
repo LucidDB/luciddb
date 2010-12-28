@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,9 +46,9 @@ class DatabaseTest
         public LogicalTxnParticipantFactory
 {
     static const LogicalActionType ACTION_INCREMENT;
-    
+
     static const LogicalActionType ACTION_INCREMENT_FORCE;
-    
+
     struct TestNode : public StoredNode
     {
         static const MagicNumber MAGIC_NUMBER = 0xa496c71bff0d41bdLL;
@@ -57,7 +57,7 @@ class DatabaseTest
     };
 
     typedef SegNodeLock<TestNode> TestPageLock;
-    
+
     SharedCache pCache;
     SharedDatabase pDatabase;
     PageId persistentPageId;
@@ -67,24 +67,24 @@ class DatabaseTest
     void executeIncrementAction(int i, LogicalActionType action);
     void executeIncrementTxn(int i);
     void executeCheckpointedTxn(
-        int i,int j,bool commit,CheckpointType = CHECKPOINT_FLUSH_ALL);
+        int i, int j, bool commit, CheckpointType = CHECKPOINT_FLUSH_ALL);
     void verifyData(uint x);
     PageId writeData(uint x);
     void addTxnParticipant(SharedLogicalTxn);
-    
+
 public:
     explicit DatabaseTest()
     {
         configMap.setStringParam(
-            Database::paramDatabaseDir,".");
+            Database::paramDatabaseDir, ".");
         configMap.setStringParam(
-            "databaseInitSize","1000");
+            "databaseInitSize", "1000");
         configMap.setStringParam(
-            "tempInitSize","1000");
+            "tempInitSize", "1000");
         configMap.setStringParam(
-            "databaseShadowLogInitSize","1000");
+            "databaseShadowLogInitSize", "1000");
         configMap.setStringParam(
-            "databaseTxnLogInitSize","1000");
+            "databaseTxnLogInitSize", "1000");
 
         CacheParams cacheParams;
         cacheParams.readConfig(configMap);
@@ -93,20 +93,20 @@ public:
         // FIXME jvs 6-Mar-2006:  some of these tests depend on
         // being run in this sequence; make each test self-contained
 
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testCreateEmpty);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testLoadEmpty);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverEmpty);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testCreateData);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testLoadData);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataWithFlush);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataWithoutFlush);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromCheckpoint);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromFuzzyCheckpoint);
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromRollback);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testCreateEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testLoadEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testCreateData);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testLoadData);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverDataWithFlush);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverDataWithoutFlush);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverDataFromCheckpoint);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverDataFromFuzzyCheckpoint);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testRecoverDataFromRollback);
 
-        FENNEL_UNIT_TEST_CASE(DatabaseTest,testForceTxns);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest, testForceTxns);
     }
-    
+
     virtual ~DatabaseTest()
     {
     }
@@ -115,11 +115,11 @@ public:
     {
         pDatabase.reset();
     }
-    
+
     void testCreateEmpty();
     void testLoadEmpty();
     void testRecoverEmpty();
-    
+
     void testCreateData();
     void testLoadData();
     void testRecoverData(bool);
@@ -130,7 +130,9 @@ public:
     void testRecoverDataWithFlush();
     void testRecoverDataWithoutFlush();
     void testForceTxns();
-    
+
+    void executeForceTxn();
+
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
     virtual void describeParticipant(ByteOutputStream &logStream);
@@ -184,6 +186,9 @@ void DatabaseTest::testLoadData()
 void DatabaseTest::testRecoverEmpty()
 {
     testCreateEmpty();
+    // Flush the pages that have been created in the empty db,
+    // then discard the checkpoint to simulate a crash
+    pDatabase->checkpointImpl();
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
     BOOST_CHECK(pDatabase->isRecoveryRequired());
     pDatabase.reset();
@@ -223,7 +228,7 @@ void DatabaseTest::testRecoverDataFromCheckpoint(CheckpointType checkpointType)
 {
     testCreateData();
     executeIncrementTxn(10);
-    executeCheckpointedTxn(25,70,true,checkpointType);
+    executeCheckpointedTxn(25, 70, true, checkpointType);
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
     BOOST_CHECK(pDatabase->isRecoveryRequired());
     pDatabase.reset();
@@ -247,7 +252,7 @@ void DatabaseTest::testRecoverDataFromRollback()
 {
     testCreateData();
     executeIncrementTxn(10);
-    executeCheckpointedTxn(25,70,false);
+    executeCheckpointedTxn(25, 70, false);
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
     BOOST_CHECK(pDatabase->isRecoveryRequired());
     pDatabase.reset();
@@ -260,23 +265,35 @@ void DatabaseTest::testRecoverDataFromRollback()
 void DatabaseTest::testForceTxns()
 {
     configMap.setStringParam(
-        "forceTxns","true");
+        "forceTxns", "true");
+    configMap.setStringParam(
+        "disableSnapshots", "true");
     testCreateData();
     pDatabase->checkpointImpl();
     verifyData(5);
 
     // Allocate an extra page for use below.
     PageId extraPageId = writeData(42);
-    
+
     pDatabase.reset();
     loadDatabase();
 
     // Pin the extra page to make sure that doesn't cause problems
     // for rollback on unrelated data.
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockShared(extraPageId);
-    
+
+    executeForceTxn();
+    executeForceTxn();
+
+    pageLock.unlock();
+
+    pDatabase.reset();
+}
+
+void DatabaseTest::executeForceTxn()
+{
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     addTxnParticipant(pTxn);
     executeIncrementAction(10, ACTION_INCREMENT_FORCE);
@@ -287,10 +304,6 @@ void DatabaseTest::testForceTxns()
     snooze(3);
     pDatabase->recoverOnline();
     verifyData(5);
-
-    pageLock.unlock();
-    
-    pDatabase.reset();
 }
 
 void DatabaseTest::loadDatabase()
@@ -321,7 +334,7 @@ void DatabaseTest::undoLogicalAction(
         return;
     }
     assert(actionType == ACTION_INCREMENT);
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x -= i;
@@ -337,7 +350,7 @@ void DatabaseTest::redoLogicalAction(
         return;
     }
     assert(actionType == ACTION_INCREMENT);
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x += i;
@@ -363,7 +376,7 @@ void DatabaseTest::executeIncrementAction(int i, LogicalActionType action)
         getLogicalTxn()->beginLogicalAction(*this,action);
     logStream.writeValue(i);
     getLogicalTxn()->endLogicalAction();
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x += i;
@@ -385,7 +398,7 @@ void DatabaseTest::executeIncrementTxn(int i)
 }
 
 void DatabaseTest::executeCheckpointedTxn(
-    int i,int j,bool commit,CheckpointType checkpointType)
+    int i, int j, bool commit, CheckpointType checkpointType)
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     addTxnParticipant(pTxn);
@@ -401,15 +414,15 @@ void DatabaseTest::executeCheckpointedTxn(
 
 void DatabaseTest::verifyData(uint x)
 {
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockShared(persistentPageId);
-    BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x,x);
+    BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x, x);
 }
 
 PageId DatabaseTest::writeData(uint x)
 {
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(), pCache);
     TestPageLock pageLock(segmentAccessor);
     PageId pageId = pageLock.allocatePage();
     pageLock.getNodeForWrite().x = x;

@@ -15,19 +15,19 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/creschema.sql"/>
       </test>
 
-      <test name="importschema" requiresSuccess="creschema">
+      <test name="importschema" requiresSuccess="creschema" timeoutSeconds="3600">
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/importschema.sql"/>
       </test>
 
-      <test name="benchload" requiresSuccess="importschema">
+      <test name="benchload" requiresSuccess="importschema" timeoutSeconds="3600">
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchload.sql"/>
       </test>
 
-      <test name="benchqueries" requiresSuccess="benchload">
+      <test name="benchqueries" requiresSuccess="benchload" timeoutSeconds="3600">
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchqueries.sql"/>
       </test>
 
-      <test name="deletes" requiresSuccess="benchload">
+      <test name="deletes" requiresSuccess="benchload" timeoutSeconds="3600">
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/deletes.sql"/>
       </test>
 

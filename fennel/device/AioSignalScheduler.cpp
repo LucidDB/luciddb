@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,15 +45,21 @@ public:
     }
     virtual void run();
 };
-    
-static void aio_handler(int,siginfo_t *pSiginfo,void *)
+
+static void aio_handler(int, siginfo_t *pSiginfo, void *)
 {
     assert(pSiginfo->si_code == SI_ASYNCIO);
     RandomAccessRequestBinding *pBinding =
         static_cast<RandomAccessRequestBinding *>(pSiginfo->si_value.sival_ptr);
-    int rc = aio_error(pBinding);
+
+    // static_cast assigned to lpBinding is a workaround
+    // for a gcc bug that shows up on Ubuntu 8.04 when
+    // passing pBinding to aio_* methods
+    aiocb *lpBinding = static_cast<aiocb *>(pBinding);
+
+    int rc = aio_error(lpBinding);
     if (rc != EINPROGRESS) {
-        rc = aio_return(pBinding);
+        rc = aio_return(lpBinding);
         pBinding->notifyTransferCompletion(rc >= 0);
     }
     // TODO:  chain?
@@ -63,26 +69,26 @@ AioSignalScheduler::AioSignalScheduler(
     DeviceAccessSchedulerParams const &params)
 {
     // TODO:  pass params.maxSimultaneousRequests on to OS
-    
+
     // block signal in this thread so that child threads will also have it
     // blocked
     int rc;
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask,SIGRTMIN);
-    rc = pthread_sigmask(SIG_BLOCK,&mask,NULL);
+    rc = pthread_sigmask(SIG_BLOCK, &mask, NULL);
     assert(!rc);
 
     // TODO:  come up with a way to ensure signal is blocked in all threads
     // except the one spawned below
-    
+
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = aio_handler;
     sigemptyset(&(sa.sa_mask));
     rc = sigaction(SIGRTMIN,&sa,&saOld);
     assert(!rc);
-    
+
     quit = false;
     for (uint i = 0; i < params.nThreads; ++i) {
         AioSignalHandlerThread *pThread = new AioSignalHandlerThread(*this);
@@ -96,7 +102,7 @@ AioSignalScheduler::~AioSignalScheduler()
     assert(!isStarted());
 }
 
-void AioSignalScheduler::schedule(RandomAccessRequest &request)
+bool AioSignalScheduler::schedule(RandomAccessRequest &request)
 {
     assert(isStarted());
 
@@ -111,13 +117,21 @@ void AioSignalScheduler::schedule(RandomAccessRequest &request)
         pBinding->aio_sigevent.sigev_notify = SIGEV_SIGNAL;
         pBinding->aio_sigevent.sigev_signo = SIGRTMIN;
         pBinding->aio_sigevent.sigev_value.sival_ptr = pBinding;
+
+        // static_cast assigned to lpBinding is a workaround
+        // for a gcc bug that shows up on Ubuntu 8.04 when
+        // passing pBinding to aio_* methods
+        aiocb *lpBinding = static_cast<aiocb *>(pBinding);
+
         if (request.type == RandomAccessRequest::READ) {
-            rc = aio_read(pBinding);
+            rc = aio_read(lpBinding);
         } else {
-            rc = aio_write(pBinding);
+            rc = aio_write(lpBinding);
         }
         assert(!rc);
     }
+
+    return true;
 }
 
 void AioSignalScheduler::stop()
@@ -134,8 +148,8 @@ void AioSignalScheduler::stop()
         deleteAndNullify(threads[i]);
     }
     threads.clear();
-    
-    int rc = sigaction(SIGRTMIN,&saOld,NULL);
+
+    int rc = sigaction(SIGRTMIN, &saOld, NULL);
     assert(!rc);
 }
 
@@ -147,7 +161,7 @@ void AioSignalHandlerThread::run()
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask,SIGRTMIN);
-    rc = pthread_sigmask(SIG_UNBLOCK,&mask,NULL);
+    rc = pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
     assert(!rc);
 
     // NOTE: had to boost priority of this thread to get signal handler
@@ -155,10 +169,10 @@ void AioSignalHandlerThread::run()
 #ifdef sun
     int policy;
     sched_param param;
-    rc = pthread_getschedparam(pthread_self(),&policy,&param);
+    rc = pthread_getschedparam(pthread_self(), &policy, &param);
     assert(!rc);
     param.sched_priority++;
-    rc = pthread_setschedparam(pthread_self(),SCHED_RR,&param);
+    rc = pthread_setschedparam(pthread_self(), SCHED_RR, &param);
     assert(!rc);
 #endif
 

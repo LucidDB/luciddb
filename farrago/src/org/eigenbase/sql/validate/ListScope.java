@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public abstract class ListScope
     extends DelegatingScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -70,13 +69,14 @@ public abstract class ListScope
         childrenNames.add(alias);
     }
 
-    public SqlValidatorNamespace getChild(int index)
+    /**
+     * Returns an immutable list of child namespaces.
+     *
+     * @return list of child namespaces
+     */
+    public List<SqlValidatorNamespace> getChildren()
     {
-        SqlValidatorNamespace rtSpace = null;
-        if ((index >= 0) && (index < children.size())) {
-            rtSpace = children.get(index);
-        }
-        return rtSpace;
+        return Collections.unmodifiableList(children);
     }
 
     protected SqlValidatorNamespace getChild(String alias)
@@ -97,29 +97,20 @@ public abstract class ListScope
         }
     }
 
-    public void findAllColumnNames(
-        String parentObjName,
-        List<SqlMoniker> result)
-    {
-        if (parentObjName == null) {
-            for (SqlValidatorNamespace ns : children) {
-                addColumnNames(ns, result);
-            }
-            parent.findAllColumnNames(parentObjName, result);
-        } else {
-            final SqlValidatorNamespace ns = resolve(parentObjName, null, null);
-            if (ns != null) {
-                addColumnNames(ns, result);
-            }
-        }
-    }
-
-    public void findAllTableNames(List<SqlMoniker> result)
+    public void findAllColumnNames(List<SqlMoniker> result)
     {
         for (SqlValidatorNamespace ns : children) {
-            addTableNames(ns, result);
+            addColumnNames(ns, result);
         }
-        parent.findAllTableNames(result);
+        parent.findAllColumnNames(result);
+    }
+
+    public void findAliases(List<SqlMoniker> result)
+    {
+        for (String childrenName : childrenNames) {
+            result.add(new SqlMonikerImpl(childrenName, SqlMonikerType.Table));
+        }
+        parent.findAliases(result);
     }
 
     public String findQualifyingTableName(

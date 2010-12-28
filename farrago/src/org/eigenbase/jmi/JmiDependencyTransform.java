@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import javax.jmi.reflect.*;
  */
 public interface JmiDependencyTransform
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -61,11 +60,11 @@ public interface JmiDependencyTransform
     public boolean shouldProduceSelfLoops();
 
     /**
-     * @return true if MOFID should be used to break ties in ordering; this
-     * provides stability during diff-based testing, but adds processing
-     * overhead
+     * @return a comparator which can be used for breaking ties in ordering, or
+     * null if no tie-breaking is desired (tie-breaking provides stability
+     * during diff-based testing, but adds processing overhead)
      */
-    public boolean shouldSortByMofId();
+    public Comparator<RefBaseObject> getTieBreaker();
 }
 
 // End JmiDependencyTransform.java

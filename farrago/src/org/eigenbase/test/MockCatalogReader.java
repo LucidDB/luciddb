@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -42,29 +41,63 @@ import org.eigenbase.util.*;
 public class MockCatalogReader
     implements SqlValidatorCatalogReader
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final String defaultCatalog = "CATALOG";
+    protected static final String defaultSchema = "SALES";
 
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
-    private final HashMap tables = new HashMap();
-    private final HashMap schemas = new HashMap();
-    private final RelDataType addressType;
+    private final Map<List<String>, MockTable> tables =
+        new HashMap<List<String>, MockTable>();
+    protected final Map<String, MockSchema> schemas =
+        new HashMap<String, MockSchema>();
+    private RelDataType addressType;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a MockCatalogReader.
+     *
+     * @param typeFactory Type factory
+     */
     public MockCatalogReader(RelDataTypeFactory typeFactory)
     {
+        this(typeFactory, false);
+        init();
+    }
+
+    /**
+     * Creates a MockCatalogReader but does not initialize.
+     *
+     * <p>Protected constructor for use by subclasses, which must call
+     * {@link #init} at the end of their public constructor.
+     *
+     * @param typeFactory Type factory
+     * @param dummy Dummy parameter to distinguish from public constructor
+     */
+    protected MockCatalogReader(RelDataTypeFactory typeFactory, boolean dummy)
+    {
         this.typeFactory = typeFactory;
+        assert !dummy;
+    }
+
+    /**
+     * Initializes this catalog reader.
+     */
+    protected void init()
+    {
         final RelDataType intType =
-            typeFactory.createSqlType(SqlTypeName.Integer);
+            typeFactory.createSqlType(SqlTypeName.INTEGER);
         final RelDataType varchar10Type =
-            typeFactory.createSqlType(SqlTypeName.Varchar, 10);
+            typeFactory.createSqlType(SqlTypeName.VARCHAR, 10);
         final RelDataType varchar20Type =
-            typeFactory.createSqlType(SqlTypeName.Varchar, 20);
+            typeFactory.createSqlType(SqlTypeName.VARCHAR, 20);
         final RelDataType timestampType =
-            typeFactory.createSqlType(SqlTypeName.Timestamp);
+            typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
         final RelDataType booleanType =
-            typeFactory.createSqlType(SqlTypeName.Boolean);
+            typeFactory.createSqlType(SqlTypeName.BOOLEAN);
         final RelDataType rectilinearCoordType =
             typeFactory.createStructType(
                 new RelDataType[] { intType, intType },
@@ -74,14 +107,14 @@ public class MockCatalogReader
         // factory
         addressType =
             new ObjectSqlType(
-                SqlTypeName.Structured,
+                SqlTypeName.STRUCTURED,
                 new SqlIdentifier("ADDRESS", SqlParserPos.ZERO),
                 false,
                 new RelDataTypeField[] {
                     new RelDataTypeFieldImpl("STREET", 0, varchar20Type),
-                new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
-                new RelDataTypeFieldImpl("ZIP", 1, intType),
-                new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
+                    new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
+                    new RelDataTypeFieldImpl("ZIP", 1, intType),
+                    new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
                 },
                 RelDataTypeComparability.None);
 
@@ -158,7 +191,7 @@ public class MockCatalogReader
     {
         table.onRegister(typeFactory);
         tables.put(
-            convertToVector(table.getQualifiedName()),
+            Arrays.asList(table.getQualifiedName()),
             table);
     }
 
@@ -169,83 +202,76 @@ public class MockCatalogReader
 
     public SqlValidatorTable getTable(final String [] names)
     {
-        if (names.length == 1) {
+        switch (names.length) {
+        case 1:
             // assume table in SALES schema (the original default)
             // if it's not supplied, because SqlValidatorTest is effectively
             // using SALES as its default schema.
-            String [] qualifiedName = { "SALES", names[0] };
-            return
-                (SqlValidatorTable) tables.get(
-                    convertToVector(qualifiedName));
-        } else if (names.length == 2) {
-            return (SqlValidatorTable) tables.get(convertToVector(names));
+            return tables.get(
+                Arrays.asList(defaultCatalog, defaultSchema, names[0]));
+        case 2:
+            return tables.get(
+                Arrays.asList(defaultCatalog, names[0], names[1]));
+        case 3:
+            return tables.get(Arrays.asList(names));
+        default:
+            return null;
         }
-        return null;
     }
 
     public RelDataType getNamedType(SqlIdentifier typeName)
     {
         if (typeName.equalsDeep(
                 addressType.getSqlIdentifier(),
-                false)) {
+                false))
+        {
             return addressType;
         } else {
             return null;
         }
     }
 
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
-        if (names.length == 1) {
-            // looking for both schema and object names
-            Collection schemasColl = schemas.values();
-            Iterator i = schemasColl.iterator();
-            ArrayList result = new ArrayList();
-            while (i.hasNext()) {
-                MockSchema schema = (MockSchema) i.next();
+        List<SqlMoniker> result;
+        switch (names.size()) {
+        case 0:
+            // looking for schema names
+            result = new ArrayList<SqlMoniker>();
+            for (MockSchema schema : schemas.values()) {
                 result.add(
                     new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
-                Iterator j = schema.tableNames.iterator();
-                while (j.hasNext()) {
-                    result.add(
-                        new SqlMonikerImpl((String) j.next(),
-                            SqlMonikerType.Table));
-                }
             }
-            return (SqlMoniker []) result.toArray(Util.emptySqlMonikerArray);
-        } else if (names.length == 2) {
-            // looking for table names under the schema
-            MockSchema schema = (MockSchema) schemas.get(names[0]);
+            return result;
+        case 1:
+            // looking for table names in the given schema
+            MockSchema schema = schemas.get(names.get(0));
             if (schema == null) {
-                return Util.emptySqlMonikerArray;
+                return Collections.emptyList();
             }
-            ArrayList result = new ArrayList();
-            Iterator j = schema.tableNames.iterator();
-            while (j.hasNext()) {
+            result = new ArrayList<SqlMoniker>();
+            for (String tableName : schema.tableNames) {
                 result.add(
-                    new SqlMonikerImpl((String) j.next(),
+                    new SqlMonikerImpl(
+                        tableName,
                         SqlMonikerType.Table));
             }
-            return (SqlMoniker []) result.toArray(Util.emptySqlMonikerArray);
-        } else {
-            return Util.emptySqlMonikerArray;
+            return result;
+        default:
+            return Collections.emptyList();
         }
     }
 
-    private Vector convertToVector(String [] names)
+    public String getSchemaName()
     {
-        Vector v = new Vector(names.length);
-        for (int i = 0; i < names.length; i++) {
-            v.addElement(names[i]);
-        }
-        return v;
+        return defaultSchema;
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
     public static class MockSchema
     {
-        private final ArrayList tableNames = new ArrayList();
+        private final List<String> tableNames = new ArrayList<String>();
         private String name;
 
         public MockSchema(String name)
@@ -256,6 +282,11 @@ public class MockCatalogReader
         public void addTable(String name)
         {
             tableNames.add(name);
+        }
+
+        public String getCatalogName()
+        {
+            return defaultCatalog;
         }
     }
 
@@ -271,15 +302,12 @@ public class MockCatalogReader
         private RelDataType rowType;
         private final String [] names;
 
-        public MockTable(String name)
-        {
-            // default schema is SALES
-            this.names = new String[] { "SALES", name };
-        }
-
         public MockTable(MockSchema schema, String name)
         {
-            this.names = new String[] { schema.name, name };
+            this.names =
+                new String[] {
+                    schema.getCatalogName(), schema.name, name
+                };
             schema.addTable(name);
         }
 
@@ -301,14 +329,20 @@ public class MockCatalogReader
             return names;
         }
 
-        public boolean isMonotonic(String columnName)
+        public SqlMonotonicity getMonotonicity(String columnName)
         {
-            return false;
+            return SqlMonotonicity.NotMonotonic;
         }
 
         public SqlAccessType getAllowedAccess()
         {
             return SqlAccessType.ALL;
+        }
+
+        public void addColumn(int index, String name, RelDataType type)
+        {
+            columnNameList.add(index, name);
+            columnTypeList.add(index, type);
         }
 
         public void addColumn(String name, RelDataType type)

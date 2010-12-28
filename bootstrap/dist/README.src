@@ -1,4 +1,4 @@
-Eigenbase Source Release 0.6.0pre1
+Eigenbase Source Release 0.5.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -17,11 +17,12 @@ together.
 ------------------------------------------------------------
 RELEASE NOTES
 
-This source release is intended for use by developers who want to
-build, test, and possibly modify the platform without having to access
-the Eigenbase source control system.  We encourage developers to
-explore the architecture and internals of the platform with an eye
-towards
+This initial source release is intended for use by developers who want
+to build, test, and possibly modify the platform without having to
+access the Eigenbase source control system.  Because the project is
+still under incubation, it is not suitable for any production use.
+Instead, we encourage developers to explore the architecture and
+internals of the platform with an eye towards
 
 - contributing enhancements 
 
@@ -37,9 +38,16 @@ officially frozen in future releases.
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2006 The Eigenbase Project and others
+Copyright (C) 1999-2005 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General
 Public License; see file COPYING for details.  License terms for
 third-party libraries contained in this distribution are provided as
 text files in the lib directory.
+
+------------------------------------------------------------
+ACKNOWLEDGEMENTS
+
+The project is hosted on Sourceforge
+
+http://sourceforge.net/projects/eigenbase

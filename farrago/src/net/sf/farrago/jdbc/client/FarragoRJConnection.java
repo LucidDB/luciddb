@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,8 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.rmi.*;
 
+import org.eigenbase.jdbc4.*;
+
 import org.objectweb.rmijdbc.*;
 
 
@@ -43,11 +45,10 @@ import org.objectweb.rmijdbc.*;
  * @version $Id$
  */
 public class FarragoRJConnection
-    extends RJConnection
+    extends UnwrappableRJConnection
     implements java.io.Serializable,
         FarragoConnection
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -112,6 +113,88 @@ public class FarragoRJConnection
             throw new SQLException(e.getMessage());
         }
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Connection
+    public Struct createStruct(String typeName, Object [] attributes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createStruct");
+    }
+
+    // implement Connection
+    public Array createArrayOf(String typeName, Object [] elements)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createArrayOf");
+    }
+
+    // implement Connection
+    public Properties getClientInfo()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public String getClientInfo(String name)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(String name, String value)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(Properties props)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public boolean isValid(int timeout)
+    {
+        throw new UnsupportedOperationException("isValid");
+    }
+
+    // implement Connection
+    public SQLXML createSQLXML()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createSQLXML");
+    }
+
+    // implement Connection
+    public NClob createNClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createNClob");
+    }
+
+    // implement Connection
+    public Clob createClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createClob");
+    }
+
+    // implement Connection
+    public Blob createBlob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createBlob");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End FarragoRJConnection.java

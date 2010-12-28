@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,19 +21,27 @@
 */
 package net.sf.farrago.query;
 
+import java.util.List;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -47,7 +55,6 @@ public class FarragoJavaUdxRel
     extends TableFunctionRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String serverMofId;
@@ -57,7 +64,7 @@ public class FarragoJavaUdxRel
     /**
      * Creates a <code>FarragoJavaUdxRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
@@ -84,7 +91,7 @@ public class FarragoJavaUdxRel
     /**
      * Creates a <code>FarragoJavaUdxRel</code> with no relational inputs.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
@@ -102,8 +109,95 @@ public class FarragoJavaUdxRel
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Constructs a new instance of {@link FarragoJavaUdxRel} via a lookup from
+     * the catalog. This is intended for use by optimizer rules which need to
+     * insert system-defined UDX invocations into a plan.
+     *
+     * @param preparingStmt statement being prepared
+     * @param rowType type descriptor for UDX output row
+     * @param udxSpecificName specific name with which the UDX was created
+     * (either via the SPECIFIC keyword or the invocation name if SPECIFIC was
+     * not specified); this can be a qualified name, possibly with quoted
+     * identifiers, e.g. x.y.z or x."y".z
+     * @param serverMofId if not null, the invoked UDX can access a SQL/MED data
+     * server with the given MOFID at runtime via {@link
+     * FarragoUdrRuntime#getDataServerRuntimeSupport}
+     * @param args arguments to UDX invocation
+     * @param relInputs relational inputs
+     */
+    public static RelNode newUdxRel(
+        FarragoPreparingStmt preparingStmt,
+        RelDataType rowType,
+        String udxSpecificName,
+        String serverMofId,
+        RexNode [] args,
+        RelNode [] relInputs)
+    {
+        // Parse the specific name of the UDX.
+        SqlIdentifier udxId;
+        try {
+            SqlParser parser = new SqlParser(udxSpecificName);
+            SqlNode parsedId = parser.parseExpression();
+            udxId = (SqlIdentifier) parsedId;
+        } catch (Exception ex) {
+            throw FarragoResource.instance().MedInvalidUdxId.ex(
+                udxSpecificName,
+                ex);
+        }
+
+        // Look up the UDX in the catalog.
+        List<SqlOperator> list =
+            preparingStmt.getSqlOperatorTable().lookupOperatorOverloads(
+                udxId,
+                SqlFunctionCategory.UserDefinedSpecificFunction,
+                SqlSyntax.Function);
+        FarragoUserDefinedRoutine udx = null;
+        if (list.size() == 1) {
+            SqlOperator obj = list.get(0);
+            if (obj instanceof FarragoUserDefinedRoutine) {
+                udx = (FarragoUserDefinedRoutine) obj;
+                if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {
+                    // Not a UDX.
+                    udx = null;
+                }
+            }
+        }
+        if (udx == null) {
+            throw FarragoResource.instance().MedUnknownUdx.ex(
+                udxId.toString());
+        }
+
+        // UDX wants all types nullable, so construct a corresponding
+        // type descriptor for the result of the call.
+        RelOptCluster cluster = preparingStmt.getRelOptCluster();
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+        RelDataType resultType =
+            typeFactory.createTypeWithNullability(
+                rowType,
+                true);
+
+        // Create a relational algebra expression for invoking the UDX.
+        RexNode rexCall = rexBuilder.makeCall(udx, args);
+        RelNode udxRel =
+            new FarragoJavaUdxRel(
+                cluster,
+                rexCall,
+                resultType,
+                serverMofId,
+                relInputs);
+
+        // Optimizer wants us to preserve original types,
+        // so cast back for the final result.
+        return RelOptUtil.createCastRel(
+            udxRel,
+            rowType,
+            true);
+    }
+
     // implement RelNode
-    public Object clone()
+    public FarragoJavaUdxRel clone()
     {
         FarragoJavaUdxRel clone =
             new FarragoJavaUdxRel(
@@ -127,14 +221,26 @@ public class FarragoJavaUdxRel
     // override TableFunctionRelBase
     public void explain(RelOptPlanWriter pw)
     {
+        // NOTE jvs 8-Jan-2009:  omit the serverMofId in the
+        // default EXPLAIN PLAN display so that diff-based testing can
+        // work (the MOFID isn't deterministic).
+
+        boolean omitServerMofId = false;
+
         if (serverMofId == null) {
+            omitServerMofId = true;
+        }
+
+        switch (pw.getDetailLevel()) {
+        case NO_ATTRIBUTES:
+        case EXPPLAN_ATTRIBUTES:
+            omitServerMofId = true;
+        }
+
+        if (omitServerMofId) {
             super.explain(pw);
             return;
         }
-
-        // NOTE jvs 7-Mar-2006:  including the serverMofId means
-        // we can't use EXPLAIN PLAN in diff-based testing because
-        // the MOFID isn't deterministic.
 
         pw.explain(
             this,
@@ -145,17 +251,62 @@ public class FarragoJavaUdxRel
     // implement JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
+        final FarragoRelImplementor farragoImplementor =
+            (FarragoRelImplementor) implementor;
         final RelDataType outputRowType = getRowType();
         OJClass outputRowClass =
             OJUtil.typeToOJClass(
                 outputRowType,
                 implementor.getTypeFactory());
+        StatementList executeMethodBody = new StatementList();
+        MemberDeclarationList memberList = new MemberDeclarationList();
+
+        // Hack to workaround the fact that janino 2.5.15 cannot see the
+        // "connection" variable from an inner class nested two deep:
+        //   final FarragoRuntimeContext connection =
+        //       (FarragoRuntimeContext) runtimeContext;
+        if (true)
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.FINAL),
+                TypeName.forOJClass(
+                    OJClass.forClass(FarragoRuntimeContext.class)),
+                OJPreparingStmt.connectionVariable,
+                new CastExpression(
+                    TypeName.forOJClass(
+                        OJClass.forClass(FarragoRuntimeContext.class)),
+                    new Variable("runtimeContext"))));
+
+        // Kludge to accomodate a push-mode scheduler.
+        // TODO mberkowitz 5/09 Same implementation should work with all
+        // schedulers.
+        FarragoSessionPersonality personality =
+            farragoImplementor.getPreparingStmt().getSession().getPersonality();
+        final boolean restartable = personality.isJavaUdxRestartable();
 
         // Translate relational inputs to ResultSet expressions.
         final Expression [] childExprs = new Expression[inputs.length];
         for (int i = 0; i < inputs.length; ++i) {
             childExprs[i] =
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
+
+            Variable varChild = implementor.newVariable();
+            memberList.add(
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.FINAL),
+                    TypeName.forOJClass(OJClass.forClass(TupleIter.class)),
+                    varChild.toString(),
+                    childExprs[i]));
+            childExprs[i] = varChild;
+            if (restartable) {
+                executeMethodBody.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            "addRestartableInput",
+                            new ExpressionList(
+                                varChild))));
+            }
+
             OJClass rowClass =
                 OJUtil.typeToOJClass(
                     inputs[i].getRowType(),
@@ -176,6 +327,15 @@ public class FarragoJavaUdxRel
                 new AllocationExpression(
                     OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
                     resultSetParams);
+
+            Variable varChild2 = implementor.newVariable();
+            memberList.add(
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.FINAL),
+                    OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
+                    varChild2.toString(),
+                    childExprs[i]));
+            childExprs[i] = varChild2;
         }
 
         // Rebind RexInputRefs accordingly.
@@ -185,23 +345,17 @@ public class FarragoJavaUdxRel
             new RexShuttle() {
                 public RexNode visitInputRef(RexInputRef inputRef)
                 {
-                    return
-                        rexBuilder.makeJava(
-                            getCluster().getEnv(),
-                            childExprs[inputRef.getIndex()]);
+                    return rexBuilder.makeJava(
+                        getCluster().getEnv(),
+                        childExprs[inputRef.getIndex()]);
                 }
             };
+
         RexNode rewrittenCall = getCall().accept(shuttle);
-
-        MemberDeclarationList memberList = new MemberDeclarationList();
-
-        StatementList executeMethodBody = new StatementList();
 
         // Set up server MOFID context while generating method call
         // so that it will be available to the UDX at runtime in case
         // it needs to call back to the foreign data server.
-        FarragoRelImplementor farragoImplementor =
-            (FarragoRelImplementor) implementor;
         farragoImplementor.setServerMofId(serverMofId);
         implementor.translateViaStatements(
             this,
@@ -209,6 +363,19 @@ public class FarragoJavaUdxRel
             executeMethodBody,
             memberList);
         farragoImplementor.setServerMofId(null);
+
+
+        if (!restartable) {
+            // Call QueueIterator's done method to indicate end-of-stream:
+            //     done(null);
+            executeMethodBody.add(
+                new ExpressionStatement(
+                    new MethodCall(
+                        (Expression) null,
+                        "done",
+                        new ExpressionList(
+                            Literal.constantNull()))));
+        }
 
         MemberDeclaration executeMethodDecl =
             new MethodDeclaration(
@@ -220,11 +387,12 @@ public class FarragoJavaUdxRel
                 executeMethodBody);
         memberList.add(executeMethodDecl);
 
-        Expression typeLookupCall = generateTypeLookupCall(
+        Expression typeLookupCall =
+            generateTypeLookupCall(
                 implementor,
                 this);
 
-        Expression iteratorExp =
+        Expression tupleIterExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
@@ -233,14 +401,13 @@ public class FarragoJavaUdxRel
                     typeLookupCall),
                 memberList);
 
-        // TODO jvs 23-Feb-2006:  get rid of adapter and write
-        // a new TupleIter implementation so that we can take
-        // advantage of the closeAllocation call.
-        Expression tupleIterExp =
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
-                new ExpressionList(
-                    iteratorExp));
+        if (restartable) {
+            tupleIterExp =
+                new AllocationExpression(
+                    OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
+                    new ExpressionList(
+                        tupleIterExp));
+        }
         return tupleIterExp;
     }
 

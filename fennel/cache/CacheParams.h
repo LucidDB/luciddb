@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,13 +33,28 @@ class ConfigMap;
 /**
  * CacheParams defines parameters used to instantiate a Cache.
  */
-class CacheParams 
+class FENNEL_CACHE_EXPORT CacheParams
 {
 public:
     static ParamName paramMaxPages;
     static ParamName paramPagesInit;
     static ParamName paramPageSize;
     static ParamName paramIdleFlushInterval;
+    static ParamName paramFreshmenQueuePercentage;
+    static ParamName paramPageHistoryQueuePercentage;
+    static ParamName paramPrefetchPagesMax;
+    static ParamName paramPrefetchThrottleRate;
+    static ParamName paramProcessorCacheBytes;
+
+    static uint defaultMemPagesMax;
+    static uint defaultMemPagesInit;
+    static uint defaultPageSize;
+    static uint defaultIdleFlushInterval;
+    static uint defaultFreshmenQueuePercentage;
+    static uint defaultPageHistoryQueuePercentage;
+    static uint defaultPrefetchPagesMax;
+    static uint defaultPrefetchThrottleRate;
+    static uint defaultProcessorCacheBytes;
 
     /**
      * Parameters for instantiating DeviceAccessScheduler.
@@ -66,6 +81,39 @@ public:
      * Number of milliseconds between idle flushes, or 0 to disable.
      */
     uint idleFlushInterval;
+
+    /**
+     * Percentage of the total cache set aside for the freshmen queue
+     * when using the 2Q page victimization policy
+     */
+    uint freshmenQueuePercentage;
+
+    /**
+     * The percentage of the total number of cache pages that dictates the
+     * number of pages in the history queue.  This is used as part of the 2Q
+     * page victimization policy.
+     */
+    uint pageHistoryQueuePercentage;
+
+    /**
+     * Maximum number of outstanding pre-fetch page requests
+     */
+    uint prefetchPagesMax;
+
+    /**
+     * Number of successful pre-fetches that must occur before the pre-fetch
+     * rate is throttled back up, in the event that it has been throttled down
+     * because of rejected requests.
+     */
+    uint prefetchThrottleRate;
+
+    /**
+     * Number of bytes assumed for the last-level CPU cache (typically L2, but
+     * sometimes L3) for the hardware in use.  Depending on how this
+     * parameter is set, this may only be a default or estimate based on
+     * calibration.
+     */
+    uint processorCacheBytes;
 
     /**
      * Define a default set of cache parameters.

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.sql.validate;
+
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -40,11 +42,12 @@ import org.eigenbase.sql.*;
  */
 public interface SqlValidatorCatalogReader
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Finds a table with the given name, possibly qualified.
+     *
+     * @param names Name of table
      *
      * @return named table, or null if not found
      */
@@ -57,6 +60,8 @@ public interface SqlValidatorCatalogReader
      * of on RelDataTypeFactory is that it has to take into account
      * context-dependent information such as SQL schema path, whereas a type
      * factory is context-independent.
+     *
+     * @param typeName Name of type
      *
      * @return named type, or null if not found
      */
@@ -76,7 +81,14 @@ public interface SqlValidatorCatalogReader
      * @return the list of all object (schema and table) names under the above
      * criteria
      */
-    SqlMoniker [] getAllSchemaObjectNames(String [] names);
+    List<SqlMoniker> getAllSchemaObjectNames(List<String> names);
+
+    /**
+     * Returns the name of the current schema.
+     *
+     * @return name of the current schema
+     */
+    String getSchemaName();
 }
 
 // End SqlValidatorCatalogReader.java

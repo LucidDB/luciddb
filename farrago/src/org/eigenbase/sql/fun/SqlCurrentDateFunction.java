@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,14 +35,13 @@ import org.eigenbase.sql.validate.*;
 public class SqlCurrentDateFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlCurrentDateFunction()
     {
         super(
             "CURRENT_DATE",
-            SqlKind.Function,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiDate,
             null,
             SqlTypeStrategies.otcNiladic,
@@ -56,15 +55,17 @@ public class SqlCurrentDateFunction
         return SqlSyntax.FunctionId;
     }
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Increasing;
     }
 
-    // Context variables are never deterministic
-    public boolean isDeterministic()
+    // Plans referencing context variables should never be cached
+    public boolean isDynamicFunction()
     {
-        return false;
+        return true;
     }
 }
 

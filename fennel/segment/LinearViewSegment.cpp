@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,7 +56,7 @@ PageId LinearViewSegment::translateBlockId(BlockId blockId)
     PageId underlyingPageId =
         DelegatingSegment::translateBlockId(blockId);
     std::vector<PageId>::const_iterator pFound;
-    pFound = std::find(pageTable.begin(),pageTable.end(),underlyingPageId);
+    pFound = std::find(pageTable.begin(), pageTable.end(), underlyingPageId);
     assert(pFound != pageTable.end());
     return getLinearPageId(pFound - pageTable.begin());
 }
@@ -74,14 +74,15 @@ PageId LinearViewSegment::allocatePageId(PageOwnerId ownerId)
     }
     if (!pageTable.empty()) {
         DelegatingSegment::setPageSuccessor(
-            pageTable.back(),underlyingPageId);
+            pageTable.back(), underlyingPageId);
     }
     PageId pageId = getLinearPageId(pageTable.size());
     pageTable.push_back(underlyingPageId);
     return pageId;
 }
 
-void LinearViewSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
+void LinearViewSegment::deallocatePageRange(
+    PageId startPageId, PageId endPageId)
 {
     // TODO:  support truncation with startPageId != NULL_PAGE_ID
     assert(startPageId == NULL_PAGE_ID);
@@ -108,9 +109,9 @@ PageId LinearViewSegment::getPageSuccessor(PageId pageId)
     return getLinearPageSuccessor(pageId);
 }
 
-void LinearViewSegment::setPageSuccessor(PageId pageId,PageId successorId)
+void LinearViewSegment::setPageSuccessor(PageId pageId, PageId successorId)
 {
-    setLinearPageSuccessor(pageId,successorId);
+    setLinearPageSuccessor(pageId, successorId);
 }
 
 Segment::AllocationOrder LinearViewSegment::getAllocationOrder() const
@@ -118,6 +119,14 @@ Segment::AllocationOrder LinearViewSegment::getAllocationOrder() const
     return LINEAR_ALLOCATION;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+PageId LinearViewSegment::updatePage(PageId pageId, bool needsTranslation)
+{
+    assert(isPageIdAllocated(pageId));
+    BlockNum blockNum = getLinearBlockNum(pageId);
+    PageId underlyingPageId = pageTable[blockNum];
+    return DelegatingSegment::updatePage(underlyingPageId, needsTranslation);
+}
+
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/LinearViewSegment.cpp#9 $");
 
 // End LinearViewSegment.cpp

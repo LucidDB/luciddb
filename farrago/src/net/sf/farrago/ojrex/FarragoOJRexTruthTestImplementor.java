@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,12 +27,12 @@ import net.sf.farrago.type.runtime.*;
 import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
  * FarragoOJRexTruthTestImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for truth-test row expressions IS TRUE and IS FALSE.
+ * org.eigenbase.oj.rex.OJRexImplementor} for truth-test row expressions <code>
+ * IS TRUE</code> and <code>IS FALSE</code>.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -40,16 +40,17 @@ import org.eigenbase.sql.*;
 public class FarragoOJRexTruthTestImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private boolean isTrue;
+    private final boolean isTrue;
+    private final boolean negated;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FarragoOJRexTruthTestImplementor(boolean isTrue)
+    public FarragoOJRexTruthTestImplementor(boolean isTrue, boolean negated)
     {
         this.isTrue = isTrue;
+        this.negated = negated;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -60,33 +61,41 @@ public class FarragoOJRexTruthTestImplementor
         RexCall call,
         Expression [] operands)
     {
+        // Expression     negated isTrue Implementation
+        // ============== ======= ====== ===================
+        // x is not true  true    true   !x.val || x.isnull
+        // x is true      false   true   x.val && !x.isnull
+        // x is not false true    false  x.val || x.isnull
+        // x is false     false   false  !x.val && !x.isnull
         Expression operand = operands[0];
         if (call.operands[0].getType().isNullable()) {
-            Expression nonNull =
+            Expression val =
                 new FieldAccess(operand, NullablePrimitive.VALUE_FIELD_NAME);
-            nonNull = maybeNegate(nonNull);
-
-            return
-                new BinaryExpression(
-                    new UnaryExpression(
-                        UnaryExpression.NOT,
-                        new MethodCall(
-                            operand,
-                            NullableValue.NULL_IND_ACCESSOR_NAME,
-                            new ExpressionList())),
-                    BinaryExpression.LOGICAL_AND,
-                    nonNull);
+            final MethodCall isnull =
+                new MethodCall(
+                    operand,
+                    NullableValue.NULL_IND_ACCESSOR_NAME,
+                    new ExpressionList());
+            return new BinaryExpression(
+                maybeNegate(
+                    isnull,
+                    !negated),
+                negated ? BinaryExpression.LOGICAL_OR
+                : BinaryExpression.LOGICAL_AND,
+                maybeNegate(
+                    val,
+                    negated == isTrue));
         } else {
-            return maybeNegate(operand);
+            return maybeNegate(operand, isTrue == negated);
         }
     }
 
-    private Expression maybeNegate(Expression expr)
+    private Expression maybeNegate(Expression expr, boolean negate)
     {
-        if (isTrue) {
-            return expr;
-        } else {
+        if (negate) {
             return new UnaryExpression(UnaryExpression.NOT, expr);
+        } else {
+            return expr;
         }
     }
 }

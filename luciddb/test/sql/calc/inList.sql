@@ -91,7 +91,14 @@ insert into bug3935 values ( 8, 6, 18, 54);
 insert into bug3935 values (null, null, null, null);
 SELECT   *   FROM  bug3935  WHERE   ti*si IN (-54, 48, -1, 54, 333, 0);
 SELECT * FROM bug3935 WHERE NOT ((ii*100) IN (-1800, 7654200, 1801, -45677800, 45677800)) ;
---SELECT * FROM bug3935 WHERE (ii*100) NOT IN (-1800, 7654200, 1801, -45677800, 45677800) ;
+SELECT * FROM bug3935 WHERE (ii*100) NOT IN (-1800, 7654200, 1801, -45677800, 45677800) ;
+
+-- tests with NULL in IN List (TODO: FRG-224)
+select * from bug3935 where ti IN (null) order by 1,2,3,4;
+select * from bug3935 where si IN (null, 6) order by 1,2,3,4;
+select * from bug3935 where ti NOT IN (null) order by 1,2,3,4;
+select * from bug3935 where si NOT IN (null, 6) order by 1,2,3,4;
+
 DROP TABLE BUG3935;
 DROP SCHEMA SBUG3935;
 
@@ -137,4 +144,5 @@ DROP SCHEMA sb7819;
 
 --}}}
 
+--
 -- End test calc;inList.sql

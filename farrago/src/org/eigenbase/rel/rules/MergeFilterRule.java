@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * MergeFilterRule implements the rule for combining two {@link FilterRel}s
  *
@@ -35,16 +36,19 @@ import org.eigenbase.rex.*;
 public class MergeFilterRule
     extends RelOptRule
 {
+    public static final MergeFilterRule instance = new MergeFilterRule();
+
     //~ Constructors -----------------------------------------------------------
 
-    public MergeFilterRule()
+    /**
+     * Creates a MergeFilterRule.
+     */
+    private MergeFilterRule()
     {
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
+                new RelOptRuleOperand(FilterRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -71,21 +75,21 @@ public class MergeFilterRule
         RexNode newCondition =
             mergedProgram.expandLocalRef(
                 mergedProgram.getCondition());
-        
+
         FilterRel newFilterRel =
             new FilterRel(
                 topFilter.getCluster(),
                 bottomFilter.getChild(),
                 newCondition);
-               
-        call.transformTo(newFilterRel); 
+
+        call.transformTo(newFilterRel);
     }
-    
+
     /**
      * Creates a RexProgram corresponding to a FilterRel
-     * 
+     *
      * @param filterRel the FilterRel
-     * 
+     *
      * @return created RexProgram
      */
     private RexProgram createProgram(FilterRel filterRel)

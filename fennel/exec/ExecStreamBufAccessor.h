@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,24 +42,25 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamBufAccessor : public boost::noncopyable
+class FENNEL_EXEC_EXPORT ExecStreamBufAccessor
+    : public boost::noncopyable
 {
     PBuffer pBufStart;
 
     PBuffer pBufEnd;
-    
+
     PBuffer pProducer;
-    
+
     PBuffer pConsumer;
-    
+
     ExecStreamBufProvision provision;
 
     ExecStreamBufState state;
-   
+
     bool pendingEOS;
 
     TupleDescriptor tupleDesc;
-    
+
     TupleFormat tupleFormat;
 
     TupleAccessor tupleProductionAccessor;
@@ -69,13 +70,13 @@ class ExecStreamBufAccessor : public boost::noncopyable
     TupleProjectionAccessor tupleProjectionAccessor;
 
     uint cbBuffer;
-    
+
     /** sets state to EXECBUF_EOS */
-    inline void setEOS(); 
+    inline void setEOS();
 
 public:
     inline explicit ExecStreamBufAccessor();
-    
+
     virtual ~ExecStreamBufAccessor()
     {
     }
@@ -102,7 +103,7 @@ public:
      * Initializes this accessor to the idle unprovided state.
      */
     inline void clear();
-    
+
     /**
      * Provides empty buffer space into which producers will write data;
      * called by consumer.
@@ -147,7 +148,7 @@ public:
      * produceData
      */
     inline bool isProductionPossible() const;
-    
+
     /**
      * @return whether the buffer is in a state to receive a call to
      * consumeData
@@ -161,7 +162,7 @@ public:
      * @return whether consumption is possible
      */
     inline bool demandData();
-    
+
     /**
      * Marks end of stream; called by producer when it knows it will not be
      * producing any more data. The state changes to EXECBUF_EOS as soon as
@@ -226,8 +227,20 @@ public:
     inline uint getConsumptionAvailable() const;
 
     /**
+     * Computes the largest number of contiguous bytes available to be consumed
+     * from this buffer, given the constraints that (a) the number of bytes
+     * must not be greater than cbLimit, and (b) partial tuples are not
+     * allowed.
+     *
+     * @param cbLimit upper bound on returned value
+     *
+     * @return number of bytes available for consumption with given limit
+     */
+    uint getConsumptionAvailableBounded(uint cbLimit);
+
+    /**
      * Computes the number of tuples available to be consumed from this buffer.
-     * 
+     *
      * @return the number of tuples available for consumption
      */
     inline uint getConsumptionTuplesAvailable();
@@ -311,7 +324,7 @@ public:
     inline void validateTupleSize(TupleData const &tupleData);
 
     /**
-     * Attempts to marshal a tuple into the production buffer, 
+     * Attempts to marshal a tuple into the production buffer,
      * placing the first byte at getProductionStart().
      *
      * @return true if tuple was successfully marshalled
@@ -524,7 +537,7 @@ inline uint ExecStreamBufAccessor::getConsumptionTuplesAvailable()
 }
 
 inline PConstBuffer ExecStreamBufAccessor::spanWholeTuples(
-    PConstBuffer start, uint size) 
+    PConstBuffer start, uint size)
 {
     TupleAccessor& acc = getScratchTupleAccessor();
     assert(size > 0);
@@ -561,7 +574,7 @@ inline PBuffer ExecStreamBufAccessor::getProductionEnd() const
 
 inline uint ExecStreamBufAccessor::getProductionAvailable() const
 {
-    return pProducer? (pBufEnd - pProducer) : 0;
+    return pProducer ? (pBufEnd - pProducer) : 0;
 }
 
 inline ExecStreamBufState ExecStreamBufAccessor::getState() const
@@ -644,8 +657,9 @@ inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
         return true;
     } else {
         validateTupleSize(tupleData);
-        if (getState() == EXECBUF_NONEMPTY)
+        if (getState() == EXECBUF_NONEMPTY) {
             requestConsumption();
+        }
         return false;
     }
 }
@@ -654,7 +668,7 @@ inline TupleAccessor &ExecStreamBufAccessor::accessConsumptionTuple()
 {
     assert(isConsumptionPossible());
     assert(!tupleConsumptionAccessor.getCurrentTupleBuf());
-    
+
     tupleConsumptionAccessor.setCurrentTupleBuf(getConsumptionStart());
     return tupleConsumptionAccessor;
 }
@@ -669,7 +683,7 @@ inline void ExecStreamBufAccessor::unmarshalTuple(
 inline void ExecStreamBufAccessor::consumeTuple()
 {
     assert(tupleConsumptionAccessor.getCurrentTupleBuf());
-    
+
     consumeData(
         getConsumptionStart() + tupleConsumptionAccessor.getCurrentByteCount());
     tupleConsumptionAccessor.resetCurrentTupleBuf();

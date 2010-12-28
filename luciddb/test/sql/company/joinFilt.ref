@@ -69,8 +69,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables, filters on both
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
-. . . . . . . . > --from sales, products, customers
-. . . . . . . . > from sales, customers, products
+. . . . . . . . > from sales, products, customers
 . . . . . . . . > where customers.custid=sales.custid
 . . . . . . . . > and sales.prodid = products.prodid
 . . . . . . . . > and customers.lname < 'C'
@@ -132,8 +131,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables but filter on only one
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
-. . . . . . . . > --from sales, products, customers
-. . . . . . . . > from sales, customers, products
+. . . . . . . . > from sales, products, customers
 . . . . . . . . > where customers.custid=sales.custid
 . . . . . . . . > and sales.prodid = products.prodid
 . . . . . . . . > and customers.lname = 'Andrews'
@@ -180,8 +178,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables, multiple filters
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
-. . . . . . . . > --from sales, products, customers
-. . . . . . . . > from sales, customers, products
+. . . . . . . . > from sales, products, customers
 . . . . . . . . > where customers.custid=sales.custid
 . . . . . . . . > and sales.prodid = products.prodid
 . . . . . . . . > and customers.lname < 'C'
@@ -216,15 +213,13 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- LER-787
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
-. . . . . . . . > --from sales, products, customers
-. . . . . . . . > from sales, customers, products
+. . . . . . . . > from sales, products, customers
 . . . . . . . . > where customers.custid=sales.custid
 . . . . . . . . > and sales.prodid = products.prodid
 . . . . . . . . > and customers.lname < 'C'
 . . . . . . . . > and customers.fname > 'S'
 . . . . . . . . > and sales.prodid < 10009
 . . . . . . . . > and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
-. . . . . . . . > --and (products.name='Soap' or products.name='Juice' or products.name='Microwave' or products.name='Soda')
 . . . . . . . . > and products.price < 5.00
 . . . . . . . . > order by 1,2,3;
 +----------+--------+--------+
@@ -242,15 +237,13 @@
 0: jdbc:luciddb:> -- dimension tables not referenced in select list, should drop
 0: jdbc:luciddb:> -- out of join
 0: jdbc:luciddb:> select sum(sales.price)
-. . . . . . . . > --from sales, products, customers
-. . . . . . . . > from sales, customers, products
+. . . . . . . . > from sales, products, customers
 . . . . . . . . > where customers.custid=sales.custid
 . . . . . . . . > and sales.prodid = products.prodid
 . . . . . . . . > and customers.lname < 'C'
 . . . . . . . . > and customers.fname > 'S'
 . . . . . . . . > and sales.prodid < 10009
 . . . . . . . . > and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
-. . . . . . . . > --and (products.name='Soap' or products.name='Juice' or products.name='Microwave' or products.name='Soda')
 . . . . . . . . > and products.price < 5.00;
 +---------+
 | EXPR$0  |

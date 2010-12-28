@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,13 +32,12 @@ package org.eigenbase.stat;
  */
 public interface RelStatColumnStatistics
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Estimates the percentage of a relational expression's rows which satisfy
      * a given condition. This corresponds to the metadata query {@link
-     * RelMetadataQuery#getSelectivity}
+     * org.eigenbase.rel.metadata.RelMetadataQuery#getSelectivity}.
      *
      * @return an estimated percentage from 0.0 to 1.0 or null if no reliable
      * estimate can be determined

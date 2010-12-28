@@ -1,0 +1,152 @@
+-- setup
+> create schema label;
+0 rows affected.
+> set schema 'label';
+0 rows affected.
+> create table t(a int);
+0 rows affected.
+> create label l1;
+0 rows affected.
+> insert into t values(1);
+1 row affected.
+> create label l2;
+0 rows affected.
+> insert into t values(2);
+1 row affected.
+> create label l3;
+0 rows affected.
+> create label lalias1 from label l1;
+0 rows affected.
+> create label lalias2 from label l1;
+0 rows affected.
+-- end of setup
+
+-- thread labeluser1
+> alter session set "label" = 'L1';
+0 rows affected.
+> set schema 'label';
+0 rows affected.
+> select * from t;
++------------+
+| A          |
++------------+
++------------+
+
+> alter session set "label" = null;
+0 rows affected.
+-- end of thread labeluser1
+
+-- thread labeluser2
+> alter session set "label" = 'L2';
+0 rows affected.
+> set schema 'label';
+0 rows affected.
+> select * from t;
++------------+
+| A          |
++------------+
+| 1          |
++------------+
+
+> select * from t where a = (select count(*) from t);
++------------+
+| A          |
++------------+
+| 1          |
++------------+
+
+> select max(a) from t;
++------------+
+| EXPR$0     |
++------------+
+| 1          |
++------------+
+
+> select * from t where a - 1 = (select max(a) from t);
+> alter session set "label" = 'L3';
+0 rows affected.
++------------+
+| A          |
++------------+
+| 2          |
++------------+
+
+> select * from t where a - 1 = (select max(a) from t);
++------------+
+| A          |
++------------+
++------------+
+
+-- end of thread labeluser2
+
+-- thread labeluser3
+> alter session set "label" = 'L3';
+0 rows affected.
+> set schema 'label';
+0 rows affected.
+> select * from t order by a;
++------------+
+| A          |
++------------+
+| 1          |
+| 2          |
++------------+
+
+-- end of thread labeluser3
+
+-- thread labeluser4
+> set schema 'label';
+0 rows affected.
+> alter session set "label" = 'LALIAS1';
+0 rows affected.
+> select * from t;
++------------+
+| A          |
++------------+
++------------+
+
+> alter session set "label" = 'LALIAS2';
+0 rows affected.
+> select * from t;
++------------+
+| A          |
++------------+
++------------+
+
+> alter session set "label" = null;
+0 rows affected.
+-- end of thread labeluser4
+
+-- thread labeldropper1
+> drop label l1 cascade;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop label "SYS_BOOT"."L1" because it is currently in use by a session
+-- end of thread labeldropper1
+
+-- thread labeldropper2
+> create or replace label l1 description 'this should still fail';
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot replace label "L1" because it is currently in use by a statement
+-- end of thread labeldropper2
+
+-- thread labeldropper3
+> drop label l1 cascade;
+0 rows affected.
+-- end of thread labeldropper3
+
+-- thread labelreplacer
+> drop label lalias1;
+0 rows affected.
+> create or replace label lalias2 from label l2;
+0 rows affected.
+> set schema 'label';
+0 rows affected.
+> alter session set "label" = 'LALIAS2';
+0 rows affected.
+> select * from t;
++------------+
+| A          |
++------------+
+| 1          |
++------------+
+
+-- end of thread labelreplacer
+

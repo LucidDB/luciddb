@@ -23,6 +23,7 @@ echo set JAVA_HOME="%JAVA_HOME%"> "%BIN_DIR%\classpath.bat"
 echo set LCP="%JAVA_HOME%\lib\tools.jar">> "%BIN_DIR%\classpath.bat"
 for %%j in ("%LIB_DIR%\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
 for %%j in ("%LIB_DIR%\mdrlibs\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
+for %%j in ("%LIB_DIR%\enki\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
 
 echo Installation successful
 
@@ -30,6 +31,6 @@ goto end
 
 :need_java
     echo "The JAVA_HOME environment variable must be set to the location"
-    echo "of your desired JVM, JDK Version 1.4 or newer."
+    echo "of a version 1.5 JVM."
 
 :end

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -39,7 +40,6 @@ import org.eigenbase.sql.*;
  */
 public abstract class SqlTypeTransforms
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -53,11 +53,10 @@ public abstract class SqlTypeTransforms
                 SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
-                return
-                    SqlTypeUtil.makeNullableIfOperandsAre(
-                        opBinding.getTypeFactory(),
-                        opBinding.collectOperandTypes(),
-                        typeToTransform);
+                return SqlTypeUtil.makeNullableIfOperandsAre(
+                    opBinding.getTypeFactory(),
+                    opBinding.collectOperandTypes(),
+                    typeToTransform);
             }
         };
 
@@ -71,10 +70,9 @@ public abstract class SqlTypeTransforms
                 SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
-                return
-                    opBinding.getTypeFactory().createTypeWithNullability(
-                        typeToTransform,
-                        true);
+                return opBinding.getTypeFactory().createTypeWithNullability(
+                    typeToTransform,
+                    true);
             }
         };
 
@@ -90,9 +88,9 @@ public abstract class SqlTypeTransforms
                 SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
-                switch (typeToTransform.getSqlTypeName().getOrdinal()) {
-                case SqlTypeName.Varchar_ordinal:
-                case SqlTypeName.Varbinary_ordinal:
+                switch (typeToTransform.getSqlTypeName()) {
+                case VARCHAR:
+                case VARBINARY:
                     return typeToTransform;
                 }
 
@@ -110,22 +108,21 @@ public abstract class SqlTypeTransforms
                             typeToTransform.getCharset(),
                             typeToTransform.getCollation());
                 }
-                return
-                    opBinding.getTypeFactory().createTypeWithNullability(
-                        ret,
-                        typeToTransform.isNullable());
+                return opBinding.getTypeFactory().createTypeWithNullability(
+                    ret,
+                    typeToTransform.isNullable());
             }
 
             private SqlTypeName toVar(RelDataType type)
             {
                 final SqlTypeName sqlTypeName = type.getSqlTypeName();
-                switch (sqlTypeName.getOrdinal()) {
-                case SqlTypeName.Char_ordinal:
-                    return SqlTypeName.Varchar;
-                case SqlTypeName.Binary_ordinal:
-                    return SqlTypeName.Varbinary;
+                switch (sqlTypeName) {
+                case CHAR:
+                    return SqlTypeName.VARCHAR;
+                case BINARY:
+                    return SqlTypeName.VARBINARY;
                 default:
-                    throw sqlTypeName.unexpected();
+                    throw Util.unexpected(sqlTypeName);
                 }
             }
         };
@@ -134,7 +131,7 @@ public abstract class SqlTypeTransforms
      * Parameter type-inference transform strategy where a derived type must be
      * a multiset type and the returned type is the multiset's element type.
      *
-     * @see {@link MultisetSqlType#getComponentType}
+     * @see MultisetSqlType#getComponentType
      */
     public static final SqlTypeTransform toMultisetElementType =
         new SqlTypeTransform() {

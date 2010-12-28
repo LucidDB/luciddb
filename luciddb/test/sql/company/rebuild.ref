@@ -1,0 +1,165 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> -- rebuild.sql -- test rebuild
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view index_page_counts as
+. . . . . . . . > select "name", "pageCount" from sys_fem."MED"."LocalIndex"
+. . . . . . . . > where "name" like '%RSALES%';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table RSALES(
+. . . . . . . . >   CUSTID integer
+. . . . . . . . >   ,EMPNO integer
+. . . . . . . . >   ,PRODID integer
+. . . . . . . . >   ,PRICE numeric(3,2)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index RSALES_PRICE on RSALES(PRICE);
+0: jdbc:luciddb:> create index RSALES_EMPNO on RSALES(EMPNO);
+0: jdbc:luciddb:> create index RSALES_PRODID on RSALES(PRODID);
+0: jdbc:luciddb:> create index RSALES_CUSTID on RSALES(CUSTID);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO RSALES SELECT * FROM ff_server."BCP".SALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- a few self-inserts to make sure they don't break rebuild and to
+0: jdbc:luciddb:> -- make the table a bit larger
+0: jdbc:luciddb:> INSERT INTO RSALES SELECT * FROM RSALES;
+0: jdbc:luciddb:> INSERT INTO RSALES SELECT * FROM RSALES;
+0: jdbc:luciddb:> INSERT INTO RSALES SELECT * FROM RSALES;
+0: jdbc:luciddb:> INSERT INTO RSALES SELECT * FROM RSALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOTE: commenting this out happens to check whether index only scan 
+0: jdbc:luciddb:> -- reopens dependent stream correctly
+0: jdbc:luciddb:> -- INSERT INTO RSALES SELECT * FROM RSALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
+0: jdbc:luciddb:> select * from index_page_counts order by 1;
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 4          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic rebuild on a table without deleted entries
+0: jdbc:luciddb:> alter table s.rsales rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
+0: jdbc:luciddb:> select * from index_page_counts order by 1;
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 3          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- deleted entries
+0: jdbc:luciddb:> delete from rsales 
+. . . . . . . . > where 
+. . . . . . . . >   mod(lcs_rid(custid), 2) = 0 or mod(lcs_rid(custid), 4) = 3
+. . . . . . . . >   or (lcs_rid(custid) > 500 and lcs_rid(custid) < 5000);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from rsales;
++---------+
+| EXPR$0  |
++---------+
+| 2875    |
++---------+
+0: jdbc:luciddb:> select max(lcs_rid(custid)) from rsales;
++---------+
+| EXPR$0  |
++---------+
+| 15997   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
+0: jdbc:luciddb:> select * from index_page_counts order by 1;
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 3          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- repeated rebuild, rebuild deleted entries
+0: jdbc:luciddb:> alter table s.rsales rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select max(lcs_rid(custid)) from rsales;
++---------+
+| EXPR$0  |
++---------+
+| 2874    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
+0: jdbc:luciddb:> select * from index_page_counts order by 1;
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 1          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 1          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- make sure rebuild doesn't change a table's contents by altering sales
+0: jdbc:luciddb:> -- and running through the rest of the tests with a rebuilt table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert duplicates and remove them
+0: jdbc:luciddb:> insert into sales select * from sales;
+0: jdbc:luciddb:> delete from sales where lcs_rid(custid) < 500 or lcs_rid(custid) >= 1500;
+0: jdbc:luciddb:> alter table sales rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> select max(lcs_rid(custid)) from sales;
++---------+
+| EXPR$0  |
++---------+
+| 999     |
++---------+
+0: jdbc:luciddb:> -- verify table row counts
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1
+. . . . . . . . >     where table_name = 'SALES'
+. . . . . . . . > order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| SALES       | 1000               | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,11 @@ package net.sf.farrago.ojrex;
 
 import net.sf.farrago.type.runtime.*;
 
+import openjava.mop.OJClass;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
+import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
@@ -44,7 +46,6 @@ import org.eigenbase.util.*;
 public class FarragoOJRexReinterpretImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -74,7 +75,7 @@ public class FarragoOJRexReinterpretImplementor
 
         RelDataType retType = call.getType();
         Expression retVal = null;
-        if (SqlTypeUtil.isDecimal(retType)) {
+        if (SqlTypeUtil.isDecimal(retType) || SqlTypeUtil.isInterval(retType)) {
             // cast long to decimal
             Variable varResult = translator.createScratchVariable(retType);
             ExpressionList args;
@@ -91,22 +92,47 @@ public class FarragoOJRexReinterpretImplementor
                         EncodedSqlDecimal.REINTERPRET_METHOD_NAME,
                         args)));
             retVal = varResult;
-        } else if (retType.isNullable()) {
-            // cast decimal to nullable long
-            Variable varResult = translator.createScratchVariable(retType);
-            translator.addStatement(
-                new ExpressionStatement(
-                    new MethodCall(
-                        operands[0],
-                        EncodedSqlDecimal.ASSIGN_TO_METHOD_NAME,
-                        new ExpressionList(varResult))));
-            retVal = varResult;
+        } else if (SqlTypeUtil.isExactNumeric(retType)) {
+            Expression source = operands[0];
+            // This is to handle case where source has already been cast to a
+            // long by FarragoOJRexBinaryExpressionImplementor or
+            // FarragoOJRexUnaryExpressionImplementor. This feels like two
+            // different patterns are being used to maintain type consistency
+            // meet at this point.
+            if (SqlTypeUtil.isInterval(call.getOperands()[0].getType())) {
+                OJClass retTypeOjClass =
+                    OJUtil.typeToOJClass(
+                        retType,
+                        translator.getFarragoTypeFactory());
+                OJClass clazz = null;
+                try {
+                    clazz = source.getType(retTypeOjClass.getEnvironment());
+                } catch (Exception e) {
+                }
+                if (retTypeOjClass.equals(clazz)) {
+                    return source;
+                }
+            }
+
+            if (retType.isNullable()) {
+                // cast decimal to nullable long
+                Variable varResult = translator.createScratchVariable(retType);
+                translator.addStatement(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            source,
+                            EncodedSqlDecimal.ASSIGN_TO_METHOD_NAME,
+                            new ExpressionList(varResult))));
+                retVal = varResult;
+            } else {
+                // cast decimal to non null long
+                retVal =
+                    new FieldAccess(
+                        source,
+                        EncodedSqlDecimal.VALUE_FIELD_NAME);
+            }
         } else {
-            // cast decimal to non null long
-            retVal =
-                new FieldAccess(
-                    operands[0],
-                    EncodedSqlDecimal.VALUE_FIELD_NAME);
+            assert false;
         }
         checkNullability(
             translator,
@@ -140,4 +166,4 @@ public class FarragoOJRexReinterpretImplementor
     }
 }
 
-// End OJRexReinterpretCastImplementor.java
+// End FarragoOJRexReinterpretImplementor.java

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,14 +22,10 @@
 */
 package net.sf.farrago.namespace.ftrs;
 
-import java.util.*;
-
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -43,17 +39,20 @@ import org.eigenbase.util.*;
 class FtrsRemoveRedundantSortRule
     extends RelOptRule
 {
+    public static final FtrsRemoveRedundantSortRule instance =
+        new FtrsRemoveRedundantSortRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    public FtrsRemoveRedundantSortRule()
+    /**
+     * Creates a FtrsRemoveRedundantSortRule.
+     */
+    private FtrsRemoveRedundantSortRule()
     {
         super(
             new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
-                }));
+                new RelOptRuleOperand(FtrsIndexScanRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

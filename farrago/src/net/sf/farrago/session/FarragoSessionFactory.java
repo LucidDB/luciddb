@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ import net.sf.farrago.util.*;
 public interface FarragoSessionFactory
     extends FarragoSessionPersonalityFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -108,6 +107,19 @@ public interface FarragoSessionFactory
     public FarragoSessionTxnMgr newTxnMgr();
 
     /**
+     * Sets the class loader for plugins.
+     *
+     * @param pluginClassLoader classloader to use
+     */
+    public void setPluginClassLoader(
+        FarragoPluginClassLoader pluginClassLoader);
+
+    /**
+     * @return plugin class loader to use
+     */
+    public FarragoPluginClassLoader getPluginClassLoader();
+
+    /**
      * Loads a model extension plugin instance.
      *
      * @param pluginClassLoader FarragoPluginClassLoader to use to load the
@@ -123,9 +135,8 @@ public interface FarragoSessionFactory
      * configuration parameters.
      *
      * @param map a non-null, modifiable Map where configuration parameters can
-     * be added. All map keys and values are Strings.
      */
-    public void applyFennelExtensionParameters(Map map);
+    public void applyFennelExtensionParameters(Properties map);
 
     /**
      * Allows extensions of Farrago to perform their own initialization tasks.
@@ -151,8 +162,7 @@ public interface FarragoSessionFactory
      *
      * @param bundleList receives instances of ResourceBundle
      */
-    public void defineResourceBundles(
-        List bundleList);
+    public void defineResourceBundles(List<ResourceBundle> bundleList);
 }
 
 // End FarragoSessionFactory.java

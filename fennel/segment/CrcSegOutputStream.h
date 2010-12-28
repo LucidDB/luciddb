@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,19 +35,20 @@ FENNEL_BEGIN_NAMESPACE
  * CRC/PseudoUuid/PageId combination.  This can be used to reliably
  * detect end-of-stream during recovery.
  */
-class CrcSegOutputStream : public SegOutputStream
+class FENNEL_SEGMENT_EXPORT CrcSegOutputStream
+    : public SegOutputStream
 {
     PseudoUuid onlineUuid;
-    
+
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     virtual void writeExtraHeaders(SegStreamNode &node);
-    
+
     explicit CrcSegOutputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid);
-    
+
 public:
     /**
      * Creates a new CrcSegOutputStream.

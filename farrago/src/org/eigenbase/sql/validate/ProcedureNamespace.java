@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 public class ProcedureNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidatorScope scope;
@@ -47,9 +46,10 @@ public class ProcedureNamespace
     ProcedureNamespace(
         SqlValidatorImpl validator,
         SqlValidatorScope scope,
-        SqlCall call)
+        SqlCall call,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.scope = scope;
         this.call = call;
     }
@@ -58,6 +58,7 @@ public class ProcedureNamespace
 
     public RelDataType validateImpl()
     {
+        validator.inferUnknownTypes(validator.unknownType, scope, call);
         return validator.deriveTypeImpl(scope, call);
     }
 

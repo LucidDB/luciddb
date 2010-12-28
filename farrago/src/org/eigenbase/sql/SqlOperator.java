@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,17 +19,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
+
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
@@ -56,7 +58,6 @@ import org.eigenbase.util.*;
  */
 public abstract class SqlOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
@@ -233,48 +234,19 @@ public abstract class SqlOperator
     public abstract SqlSyntax getSyntax();
 
     /**
-     * Runs a series of tests to verify that this operator validates and
-     * executes correctly.
-     *
-     * <p>The specific implementation should call the various <code>
-     * checkXxx</code> methods in the {@link SqlTester} interface. The test
-     * harness may call the test method several times with different
-     * implementations of {@link SqlTester} -- perhaps one which uses the
-     * farrago calculator, and another which implements operators by generating
-     * Java code.
-     *
-     * <p>The default implementation does nothing.
-     *
-     * <p>An example test function for the sin operator: <blockqoute>
-     *
-     * <pre><code>void test(SqlTester tester) {
-     *     tester.checkScalar("sin(0)", "0");
-     *     tester.checkScalar("sin(1.5707)", "1");
-     * }</code></pre>
-     *
-     * </blockqoute>
-     *
-     * @param tester The tester to use.
-     */
-    public void test(SqlOperatorTests tester)
-    {
-    }
-
-    /**
      * Creates a call to this operand with an array of operands.
      *
      * <p>The position of the resulting call is the union of the <code>
      * pos</code> and the positions of all of the operands.
      *
-     * @param operands array of operands
-     * @param pos parser position of the identifier of the call
      * @param functionQualifier function qualifier (e.g. "DISTINCT"), may be
-     * null
+     * @param pos parser position of the identifier of the call
+     * @param operands array of operands
      */
     public SqlCall createCall(
-        SqlNode [] operands,
+        SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlNode ... operands)
     {
         pos = pos.plusAll(operands);
         return new SqlCall(this, operands, pos, false, functionQualifier);
@@ -285,59 +257,52 @@ public abstract class SqlOperator
      *
      * <p>The position of the resulting call is the union of the <code>
      * pos</code> and the positions of all of the operands.
+     *
+     * @param pos Parser position
+     * @param operands List of arguments
+     *
+     * @return call to this operator
      */
     public final SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlNode ... operands)
     {
-        return createCall(operands, pos, null);
+        return createCall(null, pos, operands);
     }
 
     /**
-     * Creates a call to this operand with no operands.
-     */
-    public final SqlCall createCall(SqlParserPos pos)
-    {
-        return createCall(SqlNode.emptyArray, pos);
-    }
-
-    /**
-     * Creates a call to this operand with a single operand.
+     * Creates a call to this operand with a list of operands contained in a
+     * {@link SqlNodeList}.
+     *
+     * <p>The position of the resulting call inferred from the SqlNodeList.
+     *
+     * @param nodeList List of arguments
+     *
+     * @return call to this operator
      */
     public final SqlCall createCall(
-        SqlNode operand,
-        SqlParserPos pos)
+        SqlNodeList nodeList)
     {
         return createCall(
-                new SqlNode[] { operand },
-                pos);
+            null,
+            nodeList.getParserPosition(),
+            nodeList.toArray());
     }
 
     /**
-     * Creates a call to this operand with two operands.
+     * Creates a call to this operand with a list of operands.
+     *
+     * <p>The position of the resulting call is the union of the <code>
+     * pos</code> and the positions of all of the operands.
      */
     public final SqlCall createCall(
-        SqlNode operand1,
-        SqlNode operand2,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        List<? extends SqlNode> operandList)
     {
         return createCall(
-                new SqlNode[] { operand1, operand2 },
-                pos);
-    }
-
-    /**
-     * Creates a call to this operand with three operands.
-     */
-    public final SqlCall createCall(
-        SqlNode operand1,
-        SqlNode operand2,
-        SqlNode operand3,
-        SqlParserPos pos)
-    {
-        return createCall(
-                new SqlNode[] { operand1, operand2, operand3 },
-                pos);
+            null,
+            pos,
+            operandList.toArray(new SqlNode[operandList.size()]));
     }
 
     /**
@@ -380,8 +345,20 @@ public abstract class SqlOperator
     // for why this method exists.
     protected void unparseListClause(SqlWriter writer, SqlNode clause)
     {
+        unparseListClause(writer, clause, null);
+    }
+
+    protected void unparseListClause(
+        SqlWriter writer,
+        SqlNode clause,
+        SqlKind sepKind)
+    {
         if (clause instanceof SqlNodeList) {
-            ((SqlNodeList) clause).commaList(writer);
+            if (sepKind != null) {
+                ((SqlNodeList) clause).andOrList(writer, sepKind);
+            } else {
+                ((SqlNodeList) clause).commaList(writer);
+            }
         } else {
             clause.unparse(writer, 0, 0);
         }
@@ -397,7 +374,7 @@ public abstract class SqlOperator
             return false;
         }
         SqlOperator other = (SqlOperator) obj;
-        return name.equals(other.name) && kind.equals(other.kind);
+        return name.equals(other.name) && kind == other.kind;
     }
 
     public boolean isName(String testName)
@@ -408,7 +385,7 @@ public abstract class SqlOperator
     // override Object
     public int hashCode()
     {
-        return (kind.getOrdinal() * 31) + name.hashCode();
+        return kind.hashCode() + name.hashCode();
     }
 
     /**
@@ -574,12 +551,11 @@ public abstract class SqlOperator
         RelDataTypeFactory typeFactory,
         RelDataType [] operandTypes)
     {
-        return
-            inferReturnType(
-                new ExplicitOperatorBinding(
-                    typeFactory,
-                    this,
-                    operandTypes));
+        return inferReturnType(
+            new ExplicitOperatorBinding(
+                typeFactory,
+                this,
+                operandTypes));
     }
 
     /**
@@ -604,10 +580,9 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        return
-            operandTypeChecker.checkOperandTypes(
-                callBinding,
-                throwOnFailure);
+        return operandTypeChecker.checkOperandTypes(
+            callBinding,
+            throwOnFailure);
     }
 
     protected void checkOperandCount(
@@ -619,7 +594,7 @@ public abstract class SqlOperator
         if (od.isVariadic()) {
             return;
         }
-        if (!od.getAllowedList().contains(new Integer(call.operands.length))) {
+        if (!od.getAllowedList().contains(call.operands.length)) {
             if (od.getAllowedList().size() == 1) {
                 throw validator.newValidationError(
                     call,
@@ -666,10 +641,11 @@ public abstract class SqlOperator
      */
     public String getAllowedSignatures(String opNameToUse)
     {
-        assert (operandTypeChecker != null) : "If you see this, assign operandTypeChecker a value "
+        assert operandTypeChecker != null
+            : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
-        return
-            operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
+        return operandTypeChecker.getAllowedSignatures(this, opNameToUse)
+            .trim();
     }
 
     public SqlOperandTypeInference getOperandTypeInference()
@@ -711,9 +687,9 @@ public abstract class SqlOperator
 
     /**
      * Accepts a {@link SqlVisitor}, directing an {@link
-     * SqlBasicVisitor.ArgHandler} to visit operand of a call. The argument
-     * handler allows fine control about how the operands are visited, and how
-     * the results are combined.
+     * org.eigenbase.sql.util.SqlBasicVisitor.ArgHandler} to visit operand of a
+     * call. The argument handler allows fine control about how the operands are
+     * visited, and how the results are combined.
      *
      * @param visitor Visitor
      * @param call Call to visit
@@ -721,7 +697,8 @@ public abstract class SqlOperator
      * expressions. For example, in the call to the <code>AS</code> operator
      * @param argHandler Called for each operand
      */
-    public <R> void acceptCall(SqlVisitor<R> visitor,
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
@@ -733,8 +710,8 @@ public abstract class SqlOperator
     }
 
     /**
-     * @return the return type inference strategy for this operator, or
-     * null if return type inference is implemented by a subclass override
+     * @return the return type inference strategy for this operator, or null if
+     * return type inference is implemented by a subclass override
      */
     public SqlReturnTypeInference getReturnTypeInference()
     {
@@ -742,12 +719,18 @@ public abstract class SqlOperator
     }
 
     /**
-     * Method to check if call to this function is monotonic. Default
-     * implementation is to return false.
+     * Returns whether this operator is monotonic.
+     *
+     * <p>Default implementation returns {@link SqlMonotonicity#NotMonotonic}.
+     *
+     * @param call Call to this operator
+     * @param scope Scope in which the call occurs
      */
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     /**
@@ -760,6 +743,15 @@ public abstract class SqlOperator
     }
 
     /**
+     * @return true iff it is unsafe to cache query plans referencing this
+     * operator; false is assumed by default
+     */
+    public boolean isDynamicFunction()
+    {
+        return false;
+    }
+
+    /**
      * Method to check if call requires expansion when it has decimal operands.
      * The default implementation is to return true.
      */
@@ -769,15 +761,15 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns whether the <code>ordinal</code>th argument to this operator
-     * must be scalar (as opposed to a query).
+     * Returns whether the <code>ordinal</code>th argument to this operator must
+     * be scalar (as opposed to a query).
      *
-     * <p>If true (the default), the validator will attempt to
-     * convert the argument into a scalar subquery, which must have one column
-     * and return at most one row.
+     * <p>If true (the default), the validator will attempt to convert the
+     * argument into a scalar subquery, which must have one column and return at
+     * most one row.
      *
-     * <p>Operators such as <code>SELECT</code> and <code>EXISTS</code>
-     * override this method.
+     * <p>Operators such as <code>SELECT</code> and <code>EXISTS</code> override
+     * this method.
      */
     public boolean argumentMustBeScalar(int ordinal)
     {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -69,13 +69,13 @@ FENNEL_BEGIN_NAMESPACE
  * For a PageId or BlockId, the byte offset portion is always 0 (except for
  * NULL_PAGE_ID and NULL_BLOCK_ID).
  */
-class CompoundId
+class FENNEL_COMMON_EXPORT CompoundId
 {
      // masks for extracting portions of a PageId, BlockId, or SegByteId
     static const uint64_t DEVICE_ID_MASK =   0xFFF0000000000000ULL;
     static const uint64_t BYTE_OFFSET_MASK = 0x000FFFFF00000000ULL;
     static const uint64_t BLOCK_NUM_MASK =   0x00000000FFFFFFFFULL;
-    
+
     /**
      * Number of bits to right-shift a masked PageId to extract the DeviceId.
      */
@@ -101,7 +101,7 @@ public:
      * Extracts the BlockNum from a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to access
-     * 
+     *
      * @return the extracted BlockNum
      */
     template <class PageOrBlockId>
@@ -133,9 +133,9 @@ public:
     template <class PageOrBlockId>
     static void incBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId)+1);
+        setBlockNum(pageId, getBlockNum(pageId) + 1);
     }
-    
+
     /**
      * Decrements the BlockNum of a PageId or BlockId.
      *
@@ -144,9 +144,9 @@ public:
     template <class PageOrBlockId>
     static void decBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId)-1);
+        setBlockNum(pageId, getBlockNum(pageId) - 1);
     }
-    
+
     /**
      * Extracts the DeviceId from a PageId or BlockId.
      *
@@ -160,7 +160,7 @@ public:
         return DeviceId(
             (opaqueToInt(pageId) & DEVICE_ID_MASK) >> DEVICE_ID_SHIFT);
     }
-        
+
     /**
      * Sets just the DeviceId of a PageId or BlockId.
      *
@@ -229,7 +229,7 @@ public:
             opaqueToInt(getPageId(segByteId))
             | (SegByteIdPrimitive(offset) << BYTE_OFFSET_SHIFT));
     }
-    
+
     /**
      * Compares two PageIds.
      *
@@ -240,12 +240,12 @@ public:
      * @return memcmp convention (negative if p1 is less than p2; zero if
      * equal; positive if greater)
      */
-    static int comparePageIds(PageId p1,PageId p2)
+    static int comparePageIds(PageId p1, PageId p2)
     {
         return (p1 > p2) ? 1
             : ((p1 < p2) ? -1 : 0);
     }
-    
+
     /**
      * Compares two SegByteIds.
      *
@@ -256,12 +256,12 @@ public:
      * @return memcmp convention (negative if t1 is less than t2; zero if
      * equal; positive if greater)
      */
-    static int compareSegByteIds(SegByteId t1,SegByteId t2)
+    static int compareSegByteIds(SegByteId t1, SegByteId t2)
     {
         return (t1 > t2) ? 1
             : ((t1 < t2) ? -1 : 0);
     }
-    
+
     /**
      * @return the maximum number of devices permitted by the page ID
      * encoding

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,12 +39,11 @@ import org.eigenbase.sql.validate.*;
 public class SqlProcedureCallOperator
     extends SqlPrefixOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlProcedureCallOperator()
     {
-        super("CALL", SqlKind.ProcedureCall, 0, null, null, null);
+        super("CALL", SqlKind.PROCEDURE_CALL, 0, null, null, null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -56,25 +55,23 @@ public class SqlProcedureCallOperator
         // TODO jvs 18-Jan-2005:  rewrite to SELECT * FROM TABLE f(x)
         // once we support function calls as tables
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-        return
-            opTab.selectOperator.createCall(
-                null,
-                new SqlNodeList(
-                    Collections.singletonList(
-                        call.getOperands()[0]),
-                    SqlParserPos.ZERO),
-                opTab.valuesOperator.createCall(
-                    opTab.rowConstructor.createCall(
-                        SqlLiteral.createExactNumeric("0",
-                            SqlParserPos.ZERO),
-                        SqlParserPos.ZERO),
-                    SqlParserPos.ZERO),
-                null,
-                null,
-                null,
-                null,
-                null,
-                SqlParserPos.ZERO);
+        return SqlStdOperatorTable.selectOperator.createCall(
+            null,
+            new SqlNodeList(
+                Collections.singletonList(
+                    call.getOperands()[0]),
+                SqlParserPos.ZERO),
+            SqlStdOperatorTable.valuesOperator.createCall(
+                SqlParserPos.ZERO,
+                SqlStdOperatorTable.rowConstructor.createCall(
+                    SqlParserPos.ZERO,
+                    SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO))),
+            null,
+            null,
+            null,
+            null,
+            null,
+            SqlParserPos.ZERO);
     }
 }
 

@@ -75,7 +75,7 @@ returns varchar(128)
 language java
 no sql
 called on null input
-external name 
+external name
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 
 create function null_preserving_int_to_hex_string(i int)
@@ -83,10 +83,10 @@ returns varchar(128)
 language java
 no sql
 returns null on null input
-external name 
+external name
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 
-create function decimal_abs(n decimal(6, 4)) 
+create function decimal_abs(n decimal(6, 4))
 returns decimal(6, 4)
 language java
 no sql
@@ -158,6 +158,14 @@ no sql
 not deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
 
+-- alias to avoid common subexpression elimination
+create function generate_random_number2(seed bigint)
+returns bigint
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+
 -- test UDF which depends on FarragoUdrRuntime, with
 -- ClosableAllocation support
 create function gargle()
@@ -187,6 +195,25 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
 
+-- UDX that allows a null argument
+create function nullableRamp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
+
+
+-- The identity UDX copies its input to its output.
+-- Its name is "self" because "identity" is a SQL reserved word.
+create function self(c cursor)
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+
 -- UDX with input
 create function stringify(c cursor, delimiter varchar(128))
 returns table(v varchar(65535))
@@ -203,13 +230,133 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
 
+-- UDX which specifies a calendar argument
+create function foreign_time(
+  ts timestamp, tsZoneId varchar(256), foreignZoneId varchar(256))
+returns table(
+  the_timestamp timestamp, the_date date, the_time time)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
+
+-- UDX that contains a column list parameter
+create function stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+
+-- UDX that contains 2 column list parameters referencing the same cursor
+create function stringify2ColumnLists(
+    cl select from c,
+    c2 select from c,
+    c cursor,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify2ColumnLists';
+
+-- UDX that contains 2 column list parameters referencing different cursors
+create function combineStringifyColumns(
+    c1 cursor,
+    cl1 select from c1,
+    c2 cursor,
+    cl2 select from c2,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumns';
+
+-- same as above but arguments are jumbled
+create function combineStringifyColumnsJumbledArgs(
+    cl2 select from c2,
+    c1 cursor,
+    delimiter varchar(128),
+    c2 cursor,
+    cl1 select from c1)
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumnsJumbledArgs';
+
+-- UDX's that returns columns from parameters that select from cursors
+create function returnInput(
+    inputCursor cursor,
+    columnSubset select from inputCursor)
+returns table(columnSubset.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnInput';
+
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset1.*, columnSubset2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+
 create view ramp_view as select * from table(ramp(3));
 
-create view stringified_view as 
-select * 
+create view stringified_view as
+select *
 from table(stringify(
     cursor(select * from sales.depts where deptno=20 order by 1),
     '|'));
+
+create view stringifiedColumns_view as
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    '|'));
+
+create view combineStringifiedColumns_view as
+select *
+from table(combineStringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    cursor(select * from sales.depts where deptno= 20 order by 1),
+    row(name),
+    '|'));
+
+-- should fail : empno doesn't exist
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.depts where deptno=20 order by 1),
+    row(name, empno),
+    '|'));
+
+-- should fail : should reference column by its alias
+select *
+from table(stringifyColumns(
+    cursor(select name as n from sales.depts where deptno=20 order by 1),
+    row(name),
+    '|'));
+
+-- should fail : wrong number of arguments
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender)));
 
 -- should fail:  we don't allow mutual recursion either
 create schema crypto
@@ -280,6 +427,22 @@ values substring24(cast(null as varchar(128)));
 
 values prim_int_to_hex_string(255);
 
+!set outputformat csv
+-- make sure the cast to a non-null type is preserved in the UDF argument
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+-- whereas in this case, the cast can be removed because the argument is 
+-- nullable
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '64';
+!set outputformat table
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '50';
+
 -- this should fail with an SQL exception for NULL detected
 values prim_int_to_hex_string(cast(null as integer));
 
@@ -339,18 +502,24 @@ select generate_random_number(42) as rng from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- identical sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(42) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- different sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(43) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify closeAllocation
 values get_java_property('feeble');
 values gargle();
 values get_java_property('feeble');
+
+-- should fail:  numeric can't be implicitly cast to any integer type
+values generate_random_number(42.0);
+
+-- should pass
+values generate_random_number(cast(42.0 as int));
 
 !set outputformat csv
 
@@ -365,6 +534,27 @@ explain plan for select atoi('99') from sales.depts;
 -- with non-constant input
 explain plan for select atoi(name) from sales.depts;
 
+-- verify that UDX no-input rowcount is 1.0
+explain plan including all attributes for
+select * from table(ramp(5));
+
+-- verify that UDX one-input rowcount propagates through to output
+explain plan including all attributes for
+select v
+from table(stringify(
+    cursor(select * from sales.depts),
+    '|'));
+
+-- verify that UDX multi-input rowcount gets summed like UNION ALL
+explain plan including all attributes for
+select v
+from table(combineStringifyColumns(
+    cursor(select empno, name, deptno, gender from sales.emps),
+    row(empno, name, gender),
+    cursor(select empno, name, deptno, city from sales.emps),
+    row(empno, name, city),
+    '|'));
+
 !set outputformat table
 
 -- udx invocation
@@ -376,20 +566,115 @@ select * from ramp_view order by 1;
 -- udx invocation with restart on RHS of Cartesian product
 select count(*) from sales.depts, table(ramp(5));
 
+--  udx invocation with a null argument
+select * from table(nullableRamp(cast(null as integer)));
+
 -- udx invocation with input
 select upper(v)
 from table(stringify(
     cursor(select * from sales.depts order by 1),
     '|'))
 order by 1;
+select upper(v)
+from table(stringifyColumns(
+    cursor(select * from sales.depts order by 1),
+    row(name),
+    '|'))
+order by 1;
+select upper(v)
+from table(stringifyColumns(
+    cursor(select name as n from sales.depts order by 1),
+    row(n),
+    '|'))
+order by 1;
+select upper(v)
+from table(stringify2ColumnLists(
+    row(empno, name),
+    row(deptno, gender),
+    cursor(select * from sales.emps order by 1),
+    '|'))
+order by 1;
+select upper(v)
+from table(combineStringifyColumns(
+    cursor(select empno, name, deptno, gender from sales.emps order by 1),
+    row(empno, name, gender),
+    cursor(select empno, name, deptno, city from sales.emps order by 1),
+    row(empno, name, city),
+    '|'))
+order by 1;
+select upper(v)
+from table(combineStringifyColumnsJumbledArgs(
+    row(empno, name, city),
+    cursor(select empno, name, deptno, gender from sales.emps order by 1),
+    '|',
+    cursor(select empno, name, deptno, city from sales.emps order by 1),
+    row(empno, name, gender)))
+order by 1;
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.depts where deptno=20 order by 1),
+    row(name),
+    '|'))
+union all
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    '|'));
 
 -- udx invocation with input via view
 select * from stringified_view;
+select * from stringifiedColumns_view;
+select * from combineStringifiedColumns_view;
 
 -- udx invocation with input auto-propagated to output
-select * 
+select *
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
+
+-- udx invocation where the result is determined by parameters that select
+-- from cursor parameters
+select * from table(
+    returnInput(
+        cursor(select * from sales.emps),
+        row(name, empno, age)))
+order by empno;
+select * from table(
+    returnInput(
+        cursor(select name as n, gender as g, city as c, age as a
+            from sales.emps),
+        row(c, n, a)))
+order by n;
+select * from table(
+    returnInput(
+        cursor(select * from sales.emps),
+        row(name)))
+union
+select * from table(
+    returnInput(
+        cursor(select * from sales.depts),
+        row(name)))
+order by name;
+select * from table(
+    returnTwoInputs(
+        cursor(select * from sales.emps where empno <= 110 order by empno),
+        cursor(select deptno as dno, name as dname from sales.depts
+            order by deptno),
+        row(empno, name),
+        row(dname)));
+-- this will fail because of duplicate column names
+select * from table(
+    returnTwoInputs(
+        cursor(select * from sales.emps where empno <= 110 order by empno),
+        cursor(select * from sales.depts
+            order by deptno),
+        row(empno, name),
+        row(name)));
+
+-- commented out until jrockit R27 bug fixed
+-- udx with specified calendar
+-- select *
+-- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 
 
 set path 'crypto2';
@@ -536,3 +821,4 @@ values lower('COBOL');
 
 -- should fail
 values confusing(true);
+

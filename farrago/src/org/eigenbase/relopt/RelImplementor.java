@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,14 +30,21 @@ import org.eigenbase.rel.*;
  * relational expressions} into a plan. Calling conventions typically have their
  * own protocol for walking over a tree, and correspondingly have their own
  * implementors, which are subclasses of <code>RelImplementor</code>.
+ *
+ * @version $Id$
  */
 public interface RelImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Implements a relational expression according to a calling convention.
+     *
+     * @param parent Parent relational expression
+     * @param ordinal Ordinal of child within its parent
+     * @param child Child relational expression
+     *
+     * @return Interpretation of the return value is left to the implementor
      */
     Object visitChild(
         RelNode parent,
@@ -50,9 +57,20 @@ public interface RelImplementor
      *
      * @param child Child relational expression
      *
-     * @return
+     * @return Interpretation of the return value is left to the implementor
      */
     Object visitChildInternal(RelNode child);
+
+    /**
+     * Called from {@link #visitChild} after the frame has been set up. Specific
+     * implementors should override this method.
+     *
+     * @param child Child relational expression
+     * @param ordinal Ordinal of child within its parent
+     *
+     * @return Interpretation of the return value is left to the implementor
+     */
+    Object visitChildInternal(RelNode child, int ordinal);
 }
 
 // End RelImplementor.java

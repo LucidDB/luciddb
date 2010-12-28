@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,9 @@
 */
 package net.sf.farrago.fennel;
 
+import net.sf.farrago.fem.fennel.*;
+
+
 /**
  * FennelDynamicParamId is an opaque type for the 32-bit integers used to
  * uniquely identify dynamic parameters within a {@link FennelStreamGraph}.
@@ -37,16 +40,48 @@ package net.sf.farrago.fennel;
  */
 public class FennelDynamicParamId
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Indicates whether a stream that accesses a dynamic parameter produces or
+     * consumes the dynamic parameter
+     */
+    public enum StreamType
+    {
+        PRODUCER, CONSUMER, UNKNOWN
+    }
 
     //~ Instance fields --------------------------------------------------------
 
     private final int id;
 
+    private FemExecutionStreamDef producerStream;
+
+    private FemExecutionStreamDef consumerStream;
+
     //~ Constructors -----------------------------------------------------------
 
     public FennelDynamicParamId(int id)
     {
+        this(id, null, StreamType.UNKNOWN);
+    }
+
+    public FennelDynamicParamId(
+        int id,
+        FemExecutionStreamDef streamDef,
+        StreamType streamType)
+    {
         this.id = id;
+        if (streamType == StreamType.CONSUMER) {
+            consumerStream = streamDef;
+            producerStream = null;
+        } else if (streamType == StreamType.PRODUCER) {
+            producerStream = streamDef;
+            consumerStream = null;
+        } else {
+            producerStream = null;
+            consumerStream = null;
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,14 +94,51 @@ public class FennelDynamicParamId
         return id;
     }
 
+    /**
+     * Associates a stream with the dynamic parameter. The stream either
+     * produces or consumes the dynamic parameter.
+     *
+     * @param streamDef the stream
+     * @param streamType whether the stream produces or consumes the parameter
+     */
+    public void associateStream(
+        FemExecutionStreamDef streamDef,
+        StreamType streamType)
+    {
+        if (streamType == StreamType.PRODUCER) {
+            assert (producerStream == null);
+            producerStream = streamDef;
+        } else if (streamType == StreamType.CONSUMER) {
+            assert (consumerStream == null);
+            consumerStream = streamDef;
+        } else {
+            assert ((streamDef == null) && (streamType == StreamType.UNKNOWN));
+        }
+    }
+
+    /**
+     * @return the stream that produces this dynamic parameter
+     */
+    public FemExecutionStreamDef getProducerStream()
+    {
+        assert (consumerStream != null);
+        return producerStream;
+    }
+
+    /**
+     * @return the stream that consumes this dynamic parameter
+     */
+    public FemExecutionStreamDef getConsumerStream()
+    {
+        assert (producerStream != null);
+        return consumerStream;
+    }
+
     // implement Object
     public boolean equals(Object other)
     {
-        return
-            (
-                (other instanceof FennelDynamicParamId)
-                && (((FennelDynamicParamId) other).intValue() == id)
-            );
+        return ((other instanceof FennelDynamicParamId)
+            && (((FennelDynamicParamId) other).intValue() == id));
     }
 
     // implement Object

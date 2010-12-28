@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlDelete
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -85,9 +84,9 @@ public class SqlDelete
      * @return the condition expression for the data to be deleted, or null for
      * all rows in the table
      */
-    public SqlCall getCondition()
+    public SqlNode getCondition()
     {
-        return (SqlCall) operands[CONDITION_OPERAND];
+        return operands[CONDITION_OPERAND];
     }
 
     /**
@@ -109,7 +108,7 @@ public class SqlDelete
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Select, "DELETE FROM", "");
+            writer.startList(SqlWriter.FrameTypeEnum.Select, "DELETE FROM", "");
         getTargetTable().unparse(
             writer,
             getOperator().getLeftPrec(),

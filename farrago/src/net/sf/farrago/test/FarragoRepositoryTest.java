@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,20 +21,24 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
+
 import java.util.*;
+
+import javax.xml.parsers.*;
 
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.util.*;
 
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
 
-import net.sf.farrago.cwm.core.VisibilityKindEnum;
 
 /**
  * FarragoRepositoryTest contains unit tests for the repository.
@@ -45,7 +49,6 @@ import net.sf.farrago.cwm.core.VisibilityKindEnum;
 public class FarragoRepositoryTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -74,53 +77,68 @@ public class FarragoRepositoryTest
      */
     public void testTags()
     {
-        FemAnnotatedElement element =
-            (FemAnnotatedElement) repos.getSelfAsCatalog();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        try {
+            txn.beginWriteTxn();
 
-        String TAG_NAME = "SHIP_TO";
-        String TAG_VALUE = "BUGS_BUNNY";
+            FemAnnotatedElement element =
+                (FemAnnotatedElement) repos.getSelfAsCatalog();
 
-        assertNull(repos.getTagAnnotation(element, TAG_NAME));
-        repos.setTagAnnotationValue(element, TAG_NAME, TAG_VALUE);
-        assertEquals(
-            TAG_VALUE,
-            repos.getTagAnnotationValue(element, TAG_NAME));
+            String TAG_NAME = "SHIP_TO";
+            String TAG_VALUE = "BUGS_BUNNY";
 
-        FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
-        assertNotNull(tag);
-        assertEquals(
-            TAG_NAME,
-            tag.getName());
-        assertEquals(
-            TAG_VALUE,
-            tag.getValue());
+            assertNull(repos.getTagAnnotation(element, TAG_NAME));
+            repos.setTagAnnotationValue(element, TAG_NAME, TAG_VALUE);
+            assertEquals(
+                TAG_VALUE,
+                repos.getTagAnnotationValue(element, TAG_NAME));
 
-        // Clean up the repo
-        tag.refDelete();
+            FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
+            assertNotNull(tag);
+            assertEquals(
+                TAG_NAME,
+                tag.getName());
+            assertEquals(
+                TAG_VALUE,
+                tag.getValue());
+
+            // Clean up the repo
+            tag.refDelete();
+        } finally {
+            txn.commit();
+        }
     }
 
     public void testObjIntegrityVerificationPass()
     {
-        // Verify an existing object
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        CwmSchema schema = (CwmSchema)
-            FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                "SALES");
-        CwmTable tbl = (CwmTable)
-            FarragoCatalogUtil.getModelElementByName(
-                schema.getOwnedElement(),
-                "DEPTS");
-        
-        List<FarragoReposIntegrityErr> errs =
-            repos.verifyIntegrity(tbl);
-        assertEquals(0, errs.size());
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        try {
+            txn.beginReadTxn();
+
+            // Verify an existing object
+            CwmCatalog catalog = repos.getSelfAsCatalog();
+            CwmSchema schema =
+                (CwmSchema) FarragoCatalogUtil.getModelElementByName(
+                    catalog.getOwnedElement(),
+                    "SALES");
+            CwmTable tbl =
+                (CwmTable) FarragoCatalogUtil.getModelElementByName(
+                    schema.getOwnedElement(),
+                    "DEPTS");
+
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
+            assertEquals(0, errs.size());
+        } finally {
+            txn.commit();
+        }
     }
 
     public void testObjIntegrityVerificationFail()
     {
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
         try {
+            txn.beginWriteTxn();
+
             CwmTable tbl = repos.newCwmTable();
             tbl.setName("BOOFAR");
 
@@ -129,7 +147,7 @@ public class FarragoRepositoryTest
             tbl.setTemporary(false);
             tbl.setSystem(false);
             tbl.setAbstract(false);
-        
+
             CwmColumn col = repos.newCwmColumn();
             tbl.getFeature().add(col);
 
@@ -147,16 +165,15 @@ public class FarragoRepositoryTest
             col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
 
             // Now run verification on table
-            List<FarragoReposIntegrityErr> errs =
-                repos.verifyIntegrity(tbl);
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
             assertEquals(1, errs.size());
 
             FarragoReposIntegrityErr err = errs.get(0);
 
             assertEquals(
                 "javax.jmi.reflect.WrongSizeException, "
-                + "Attribute$Impl = visibility, Table = BOOFAR",
-                err.getDescription());
+                + "Attribute = visibility, Table = BOOFAR",
+                stripDollarImpl(err.getDescription()));
 
             // Now run verification on column
             errs = repos.verifyIntegrity(col);
@@ -171,12 +188,158 @@ public class FarragoRepositoryTest
                     "javax.jmi.reflect.WrongSizeException:  "
                     + "Not enough objects linked to "));
             assertTrue(
-                err.getDescription().endsWith(
+                stripDollarImpl(err.getDescription()).endsWith(
                     "at end 'structuralFeature'., "
-                    + "AssociationEnd$Impl = type, Column = SNEE"));
+                    + "AssociationEnd = type, Column = SNEE"));
         } finally {
             // Always rollback to clean up repo
-            repos.endReposTxn(true);
+            txn.rollback();
+        }
+    }
+
+    private String stripDollarImpl(String str)
+    {
+        // Handle Enki Hibernate vs. Netbeans difference in class names
+        return str.replaceAll("\\$Impl", "");
+    }
+
+    public void testDefaultCharacterSet()
+    {
+        assertEquals("ISO-8859-1", repos.getDefaultCharsetName());
+    }
+
+    public void testInvalidCharFilter()
+        throws Exception
+    {
+        String [] validFiles =
+        {
+            "valid-utf8.xml",
+            "valid-utf8-bom.xml",
+            "valid-utf16be.xml",
+            "valid-utf16be-bom.xml",
+            "valid-utf16le.xml",
+            "valid-utf16le-bom.xml",
+        };
+
+        String [] invalidFiles =
+        {
+            "invalid-ascii.xml",
+            "invalid-utf8.xml",
+            "invalid-utf8-bom.xml",
+            "invalid-utf16be.xml",
+            "invalid-utf16be-bom.xml",
+            "invalid-utf16le.xml",
+            "invalid-utf16le-bom.xml",
+        };
+
+        String [] allFiles =
+            new String[validFiles.length + invalidFiles.length];
+        for (int i = 0; i < validFiles.length; i++) {
+            allFiles[i] = validFiles[i];
+        }
+        for (int i = 0; i < invalidFiles.length; i++) {
+            allFiles[i + validFiles.length] = invalidFiles[i];
+        }
+
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParser parser = spf.newSAXParser();
+
+        // Verify that these files pass XML parsing.
+        final String DIR =
+            FarragoProperties.instance().expandProperties(
+                "${FARRAGO_HOME}/testcases/xml");
+        for (String filename : validFiles) {
+            File file = new File(DIR, filename);
+
+            parser.reset();
+
+            // will throw on invalid file
+            parser.parse(file, new DefaultHandler());
+        }
+
+        // Verify that these files cause XML parsing to fail.
+        for (String filename : invalidFiles) {
+            File file = new File(DIR, filename);
+
+            parser.reset();
+            try {
+                parser.parse(file, new DefaultHandler());
+
+                fail("Missing expected exception");
+            } catch (SAXParseException e) {
+                // Expected.
+            }
+        }
+
+        // Verify that we're able to filter out the invalid chars and parse
+        // all the files.
+        for (String filename : allFiles) {
+            File file = new File(DIR, filename);
+
+            FileInputStream in = new FileInputStream(file);
+            FarragoReposUtil.InvalidXmlCharFilterInputStream filter =
+                new FarragoReposUtil.InvalidXmlCharFilterInputStream(in);
+
+            parser.reset();
+            parser.parse(
+                filter,
+                new DefaultHandler() {
+                    private int elemNum = -1;
+
+                    @Override public void startElement(
+                        String uri,
+                        String localName,
+                        String name,
+                        Attributes attributes)
+                    {
+                        String value;
+                        elemNum++;
+
+                        switch (elemNum) {
+                        case 0: // test
+                            return;
+
+                        case 1:
+                        case 2: // elem
+                            value = attributes.getValue(0);
+                            break;
+
+                        default:
+                            fail("too many elements");
+                            return;
+                        }
+
+                        assertTrue(value.startsWith("a" + elemNum));
+                        if (value.length() > 2) {
+                            assertEquals(3, value.length());
+                            assertTrue(value.endsWith(":"));
+                        }
+                    }
+
+                    @Override public void characters(
+                        char [] ch,
+                        int start,
+                        int length)
+                    {
+                        if ((elemNum < 1) || (elemNum > 2)) {
+                            return;
+                        }
+
+                        String value = new String(ch, start, length);
+                        value = value.trim();
+                        if (value.length() == 0) {
+                            return;
+                        }
+
+                        assertTrue(value.startsWith("e" + elemNum));
+                        if (value.length() > 2) {
+                            assertEquals(3, value.length());
+                            assertTrue(value.endsWith(":"));
+                        }
+                    }
+                });
+
+            filter.close();
         }
     }
 }

@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> set schema 'foodmart_test';
 0: jdbc:luciddb:> select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ;
 +-----------+
 | the_year  |

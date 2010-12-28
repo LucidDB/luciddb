@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,6 @@ import org.eigenbase.util.*;
 public class DdlMedHandler
     extends DdlHandler
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DdlMedHandler(FarragoSessionDdlValidator validator)
@@ -89,17 +88,29 @@ public class DdlMedHandler
 
         FarragoMedColumnSet medColumnSet = validateMedColumnSet(columnSet);
 
-        List columnList = columnSet.getFeature();
+        List<CwmFeature> columnList = columnSet.getFeature();
         if (columnList.isEmpty()) {
             // derive column information
             RelDataType rowType = medColumnSet.getRowType();
-            RelDataTypeField [] fields = rowType.getFields();
-            for (int i = 0; i < fields.length; ++i) {
-                FemStoredColumn column = repos.newFemStoredColumn();
-                columnList.add(column);
-                convertFieldToCwmColumn(fields[i], column, columnSet);
-                validateAttribute(column);
+            if (rowType != null) {
+                RelDataTypeField [] fields = rowType.getFields();
+                for (int i = 0; i < fields.length; ++i) {
+                    FemStoredColumn column = repos.newFemStoredColumn();
+                    columnList.add(column);
+                    convertFieldToCwmColumn(fields[i], column, columnSet);
+                    validateAttribute(column);
+                }
             }
+        }
+
+        SqlAccessType allowedAccess = medColumnSet.getAllowedAccess();
+        if (columnSet.getAllowedAccess() == null) {
+            columnSet.setAllowedAccess(allowedAccess.toString());
+        } else {
+            Util.permAssert(
+                columnSet.getAllowedAccess().equals(
+                    medColumnSet.getAllowedAccess().toString()),
+                "Catalog allowed access doesn't match MED allowed access");
         }
     }
 
@@ -113,13 +124,28 @@ public class DdlMedHandler
             repos.allOfType(CwmCatalog.class),
             false);
 
-        try {
-            // validate that we can successfully initialize the server
-            validator.getDataWrapperCache().loadServerFromCatalog(femServer);
-        } catch (Throwable ex) {
-            throw res.ValidatorDefinitionInvalid.ex(
-                repos.getLocalizedObjectName(femServer),
-                ex);
+        // See http://issues.eigenbase.org/browse/FRG-276 for
+        // an enhancement related to providing more control here.
+        // For now, we avoid failing CREATE OR REPLACE FOREIGN WRAPPER
+        // just because a dependent foreign server can't be
+        // accessed.
+
+        // FIXME jvs 21-Jun-2007:  promote methods up to
+        // FarragoSessionDdlValidator level instead of downcasting.
+        DdlValidator ddlValidator = (DdlValidator) validator;
+
+        if (!ddlValidator.isReplace()
+            || ddlValidator.isReplacingType(femServer))
+        {
+            try {
+                // validate that we can successfully initialize the server
+                validator.getDataWrapperCache().loadServerFromCatalog(
+                    femServer);
+            } catch (Throwable ex) {
+                throw res.ValidatorDefinitionInvalid.ex(
+                    repos.getLocalizedObjectName(femServer),
+                    ex);
+            }
         }
 
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
@@ -146,7 +172,8 @@ public class DdlMedHandler
         FarragoMedDataWrapper wrapper;
         try {
             if (!FarragoPluginClassLoader.isLibraryClass(
-                    femWrapper.getLibraryFile())) {
+                    femWrapper.getLibraryFile()))
+            {
                 // convert library filename to absolute path, if necessary
                 String libraryFile = femWrapper.getLibraryFile();
 

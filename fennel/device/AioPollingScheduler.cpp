@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@ AioPollingScheduler::~AioPollingScheduler()
 {
 }
 
-void AioPollingScheduler::schedule(RandomAccessRequest &request)
+bool AioPollingScheduler::schedule(RandomAccessRequest &request)
 {
     StrictMutexGuard guard(mutex);
     uint iFirst = newRequests.size();
@@ -57,10 +57,11 @@ void AioPollingScheduler::schedule(RandomAccessRequest &request)
         newRequests.push_back(pBinding);
     }
     aiocb **pFirst = &(newRequests.front()) + iFirst;
-    int rc = lio_listio(LIO_NOWAIT,pFirst,newRequests.size() - iFirst,NULL);
+    int rc = lio_listio(LIO_NOWAIT, pFirst, newRequests.size() - iFirst, NULL);
     // TODO:  handle error cases
     assert(rc == 0);
     newRequestPending.notify_all();
+    return true;
 }
 
 void AioPollingScheduler::stop()

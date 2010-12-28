@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,13 +30,11 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.release.*;
 
+
 /**
- * FarragoUnregisteredJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the VJDBC proxy.  It does not
- * register itself; for that, use {@link FarragoVjdbcClientDriver}.
- *
- * @author John V. Sichi
- * @version $Id$
+ * FarragoUnregisteredJdbcClientDriver implements the Farrago client side of the
+ * {@link java.sql.Driver} interface via the VJDBC proxy. It does not register
+ * itself; for that, use {@link FarragoVjdbcClientDriver}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -44,7 +42,6 @@ import net.sf.farrago.release.*;
 public abstract class FarragoUnregisteredVjdbcClientDriver
     extends FarragoAbstractJdbcDriver
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

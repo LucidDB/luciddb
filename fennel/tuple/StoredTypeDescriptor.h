@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,10 +33,9 @@ class DataVisitor;
  * characterize values stored in tuples, as described in
  * <a href="structTupleDesign.html#StoredTypeDescriptor">the design docs</a>.
  */
-class StoredTypeDescriptor
+class FENNEL_TUPLE_EXPORT StoredTypeDescriptor
 {
 public:
-    // REVIEW:  should this be a uuid instead?
     /**
      * Each type must have a unique positive integer ordinal associated with
      * it.  This is used to reconstruct a StoredTypeDescriptor object from a
@@ -45,7 +44,7 @@ public:
     typedef uint Ordinal;
 
     virtual ~StoredTypeDescriptor();
-    
+
     /**
      * @return the ordinal representing this type.
      */
@@ -63,7 +62,7 @@ public:
      * for bit types, this yields the size of the unmarshalled representation
      */
     virtual uint getFixedByteCount() const = 0;
-    
+
     /**
      * Gets the number of bytes required to store the narrowest value with this
      * type, given a particular max byte count.  For a fixed-width
@@ -78,7 +77,7 @@ public:
     /**
      * Gets the alignment size in bytes required for values of this type, given
      * a particular max byte count.  This must be 1, 2, 4, or 8, and may not be
-     * greater than 1 for variable-width datatypes.  For fixed-width datatypes,
+     * greater than 2 for variable-width datatypes.  For fixed-width datatypes,
      * the width must be a multiple of the alignment size.
      *
      * @param cbWidth width for which to compute the alignment

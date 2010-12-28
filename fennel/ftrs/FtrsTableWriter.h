@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,12 +26,14 @@
 
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/txn/LogicalTxnParticipant.h"
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
 class SXMutex;
 
-struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
+struct FENNEL_FTRS_EXPORT FtrsTableIndexWriterParams
+    : public BTreeInsertExecStreamParams
 {
     TupleProjection inputProj;
 
@@ -41,7 +43,8 @@ struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
 /**
  * FtrsTableWriterParams defines parameters for instantiating a FtrsTableWriter.
  */
-struct FtrsTableWriterParams : public ConduitExecStreamParams 
+struct FENNEL_FTRS_EXPORT FtrsTableWriterParams
+    : public ConduitExecStreamParams
 {
     /**
      * Parameters for individual indexes making up table.
@@ -60,7 +63,7 @@ struct FtrsTableWriterParams : public ConduitExecStreamParams
     TupleProjection updateProj;
 };
 
-struct FtrsTableIndexWriter 
+struct FENNEL_FTRS_EXPORT FtrsTableIndexWriter
 {
     SharedBTreeWriter pWriter;
     Distinctness distinctness;
@@ -75,7 +78,8 @@ struct FtrsTableIndexWriter
  * FtrsTableWriter performs inserts, updates, and deletes on the indexes making
  * up a table.
  */
-class FtrsTableWriter : public LogicalTxnParticipant
+class FENNEL_FTRS_EXPORT FtrsTableWriter
+    : public LogicalTxnParticipant
 {
     friend class FtrsTableWriterFactory;
 
@@ -88,6 +92,7 @@ class FtrsTableWriter : public LogicalTxnParticipant
     TupleProjection updateProj;
     TupleData updateTupleData;
     TupleData *pTupleData;
+    boost::scoped_array<FixedBuffer> logBuf;
 
     FtrsTableIndexWriter &createIndexWriter(
         FtrsTableIndexWriter &,
@@ -105,7 +110,7 @@ class FtrsTableWriter : public LogicalTxnParticipant
     inline void copyNewValues();
     inline void copyOldValues();
     inline bool searchForIndexKey(FtrsTableIndexWriter &);
-    
+
     explicit FtrsTableWriter(FtrsTableWriterParams const &params);
     PageOwnerId getTableId();
 
@@ -114,22 +119,22 @@ public:
      * LogicalActionType for inserting a table tuple.
      */
     static const LogicalActionType ACTION_INSERT;
-    
+
     /**
      * LogicalActionType for deleting a table tuple.
      */
     static const LogicalActionType ACTION_DELETE;
-    
+
     /**
      * LogicalActionType for updating a table tuple.
      */
     static const LogicalActionType ACTION_UPDATE;
-    
+
     /**
      * LogicalActionType for reversing the update of a table tuple.
      */
     static const LogicalActionType ACTION_REVERSE_UPDATE;
-    
+
     /**
      * Reads all tuples from a buffer and uses them as input to perform the
      * requested action on the target table.

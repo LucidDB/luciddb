@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package net.sf.farrago.util;
 
 import java.sql.*;
 
+import org.eigenbase.runtime.*;
 
 /**
  * FarragoStatementAllocation takes care of closing a JDBC Statement (and its
@@ -33,13 +34,14 @@ import java.sql.*;
  * @version $Id$
  */
 public class FarragoStatementAllocation
-    implements FarragoAllocation
+    implements FarragoAllocation, ResultSetProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
+    private Connection conn;
     private Statement stmt;
     private ResultSet resultSet;
+    private String sql;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -48,11 +50,22 @@ public class FarragoStatementAllocation
         this.stmt = stmt;
     }
 
+    public FarragoStatementAllocation(Connection conn, Statement stmt)
+    {
+        this.conn = conn;
+        this.stmt = stmt;
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     public void setResultSet(ResultSet resultSet)
     {
         this.resultSet = resultSet;
+    }
+
+    public void setSql(String sql)
+    {
+        this.sql = sql;
     }
 
     // implement FarragoAllocation
@@ -65,6 +78,14 @@ public class FarragoStatementAllocation
             stmt.close();
         } catch (SQLException ex) {
             // REVIEW:  is it OK to suppress?  Should at least trace.
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    // REVIEW:  is it OK to suppress?  Should at least trace.
+                }
+            }
         }
     }
 
@@ -73,8 +94,15 @@ public class FarragoStatementAllocation
         return stmt;
     }
 
+    // implement ResultSetProvider
     public ResultSet getResultSet()
+        throws SQLException
     {
+        if (resultSet == null) {
+            if (sql != null) {
+                resultSet = stmt.executeQuery(sql);
+            }
+        }
         return resultSet;
     }
 }

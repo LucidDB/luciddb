@@ -12,6 +12,10 @@ set path 'udftest';
 values applib.rand (9, 2);
 values applib.rand(1.1, 3);
 
+-- null input
+values applib.rand(cast(null as integer), 9);
+values applib.rand(2, cast(null as integer));
+
 -- create view with reference to applib.rand
 create view randt as
 select colname, applib.rand(coltiny, coltiny+50) as rcoltiny, applib.rand(colsmall, colsmall+100) as rcolsmall

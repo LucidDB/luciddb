@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public abstract class EncodedCharPointer
     extends BytePointer
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // TODO:  preallocate a CharsetDecoder
@@ -48,18 +47,17 @@ public abstract class EncodedCharPointer
         }
         try {
             return new String(
-                    buf,
-                    pos,
-                    count - pos,
-                    getCharsetName());
+                buf,
+                pos,
+                count - pos,
+                getCharsetName());
         } catch (UnsupportedEncodingException ex) {
             throw Util.newInternal(ex);
         }
     }
 
-    /**
-     * @return the charset used for this pointer's encoding
-     */
+    // refine BytePointer to make this method abstract so that subclasses
+    // are forced to override it
     protected abstract String getCharsetName();
 
     // implement BytePointer
@@ -76,24 +74,6 @@ public abstract class EncodedCharPointer
     public Object getNullableData()
     {
         return toString();
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    public static class EncodedCharPointerWithCharset
-        extends EncodedCharPointer
-    {
-        protected final String charSet;
-
-        public EncodedCharPointerWithCharset(String charSet)
-        {
-            this.charSet = charSet;
-        }
-
-        protected String getCharsetName()
-        {
-            return charSet;
-        }
     }
 }
 

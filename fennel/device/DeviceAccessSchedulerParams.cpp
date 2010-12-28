@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,12 +24,17 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/device/DeviceAccessSchedulerParams.h"
 #include "fennel/common/ConfigMap.h"
+#include "fennel/common/FennelExcn.h"
+#include "fennel/common/FennelResource.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-ParamName DeviceAccessSchedulerParams::paramSchedulerType = "schedType";
-ParamName DeviceAccessSchedulerParams::paramThreadCount = "schedThreadCount";
-ParamName DeviceAccessSchedulerParams::paramMaxRequests = "schedMaxRequests";
+ParamName DeviceAccessSchedulerParams::paramSchedulerType =
+    "deviceSchedulerType";
+ParamName DeviceAccessSchedulerParams::paramThreadCount =
+    "deviceSchedulerThreadCount";
+ParamName DeviceAccessSchedulerParams::paramMaxRequests =
+    "deviceSchedulerMaxRequests";
 
 ParamVal DeviceAccessSchedulerParams::valThreadPoolScheduler = "threadPool";
 ParamVal DeviceAccessSchedulerParams::valIoCompletionPortScheduler =
@@ -40,7 +45,7 @@ ParamVal DeviceAccessSchedulerParams::valAioLinuxScheduler = "aioLinux";
 
 DeviceAccessSchedulerParams::DeviceAccessSchedulerParams()
 {
-#ifdef __MINGW32__
+#ifdef __MSVC__
     schedulerType = IO_COMPLETION_PORT_SCHEDULER;
 #elif defined(USE_LIBAIO_H)
     schedulerType = AIO_LINUX_SCHEDULER;
@@ -49,10 +54,12 @@ DeviceAccessSchedulerParams::DeviceAccessSchedulerParams()
 #endif
     nThreads = 1;
     maxRequests = 1024;
+    usingDefaultSchedulerType = true;
 }
 
 void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
 {
+    usingDefaultSchedulerType = false;
     std::string s = configMap.getStringParam(paramSchedulerType);
     if (s == valThreadPoolScheduler) {
         schedulerType = THREAD_POOL_SCHEDULER;
@@ -65,12 +72,13 @@ void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
     } else if (s == valIoCompletionPortScheduler) {
         schedulerType = IO_COMPLETION_PORT_SCHEDULER;
     } else {
-        assert(s == "");
+        // treat unrecognized as default
+        usingDefaultSchedulerType = true;
     }
     nThreads = configMap.getIntParam(
-        paramThreadCount,nThreads);
+        paramThreadCount, nThreads);
     maxRequests = configMap.getIntParam(
-        paramMaxRequests,maxRequests);
+        paramMaxRequests, maxRequests);
 }
 
 FENNEL_END_CPPFILE("$Id$");

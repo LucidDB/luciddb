@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,7 +54,6 @@ import org.eigenbase.util.mapping.*;
 public class PullConstantsThroughAggregatesRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -65,16 +64,15 @@ public class PullConstantsThroughAggregatesRule
 
     //~ Constructors -----------------------------------------------------------
 
-    //  ~ Constructors --------------------------------------------------------
-
+    /**
+     * Private: use singleton
+     */
     private PullConstantsThroughAggregatesRule()
     {
         super(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(CalcRel.class, null)
-                }));
+                new RelOptRuleOperand(CalcRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -111,16 +109,16 @@ public class PullConstantsThroughAggregatesRule
         // reduce the group count.
         if (constantList.get(0) == newGroupCount) {
             // Clone aggregate calls.
-            final AggregateRelBase.Call [] newAggCalls =
-                aggregate.getAggCalls().clone();
-            for (int i = 0; i < newAggCalls.length; i++) {
-                final AggregateRelBase.Call aggCall = newAggCalls[i];
-                newAggCalls[i] =
-                    new AggregateRelBase.Call(
+            final List<AggregateCall> newAggCalls =
+                new ArrayList<AggregateCall>();
+            for (AggregateCall aggCall : aggregate.getAggCallList()) {
+                newAggCalls.add(
+                    new AggregateCall(
                         aggCall.getAggregation(),
                         aggCall.isDistinct(),
-                        aggCall.args.clone(),
-                        aggCall.getType());
+                        new ArrayList<Integer>(aggCall.getArgList()),
+                        aggCall.getType(),
+                        aggCall.getName()));
             }
             newAggregate =
                 new AggregateRel(
@@ -137,8 +135,11 @@ public class PullConstantsThroughAggregatesRule
 
             // Ensure that the first positions in the mapping are for the new
             // group columns.
-            for (int i = 0, groupOrdinal = 0, constOrdinal = newGroupCount;
-                i < groupCount; ++i) {
+            for (
+                int i = 0, groupOrdinal = 0, constOrdinal = newGroupCount;
+                i < groupCount;
+                ++i)
+            {
                 if (i >= groupCount) {
                     mapping.set(i, i);
                 } else if (constants.containsKey(i)) {
@@ -152,20 +153,22 @@ public class PullConstantsThroughAggregatesRule
             final RelNode project = createProjection(mapping, child);
 
             // Adjust aggregate calls for new field positions.
-            final AggregateRelBase.Call [] newAggCalls =
-                aggregate.getAggCalls().clone();
-            for (int i = 0; i < newAggCalls.length; i++) {
-                final AggregateRelBase.Call aggCall = newAggCalls[i];
-                final int [] args = aggCall.getArgs().clone();
-                for (int j = 0; j < args.length; j++) {
-                    args[j] = mapping.getTarget(args[j]);
+            final List<AggregateCall> newAggCalls =
+                new ArrayList<AggregateCall>();
+            for (AggregateCall aggCall : aggregate.getAggCallList()) {
+                final int argCount = aggCall.getArgList().size();
+                final List<Integer> args = new ArrayList<Integer>(argCount);
+                for (int j = 0; j < argCount; j++) {
+                    final Integer arg = aggCall.getArgList().get(j);
+                    args.add(mapping.getTarget(arg));
                 }
-                newAggCalls[i] =
-                    new AggregateRelBase.Call(
+                newAggCalls.add(
+                    new AggregateCall(
                         aggCall.getAggregation(),
                         aggCall.isDistinct(),
                         args,
-                        aggCall.getType());
+                        aggCall.getType(),
+                        aggCall.getName()));
             }
 
             // Aggregate on projection.
@@ -236,9 +239,7 @@ public class PullConstantsThroughAggregatesRule
             exprList.add(RelOptUtil.createInputRef(child, source));
             nameList.add(childRowType.getFields()[source].getName());
         }
-        final RelNode project =
-            CalcRel.createProject(child, exprList, nameList);
-        return project;
+        return CalcRel.createProject(child, exprList, nameList);
     }
 }
 

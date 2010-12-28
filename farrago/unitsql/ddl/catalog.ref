@@ -1,0 +1,121 @@
+> -- $Id$
+> -- Test catalog access
+> 
+> create schema "S";
+> 
+> create table "S"."T" (i int not null primary key);
+> 
+> !metadata getCatalogs
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
++-------------------------------+
+> 
+> -- okay
+> select * from "LOCALDB"."S"."T";
++----+
+| I  |
++----+
++----+
+> 
+> -- nonexistent catalog
+> select * from "NONEXISTENT"."S"."T";
+Error: From line 1, column 15 to line 1, column 35: Table 'NONEXISTENT.S.T' not found (state=,code=0)
+> 
+> -- nonexistent catalog
+> create table "NONEXISTENT"."S"."T" (i int not null primary key);
+Error: DDL validation error near line 1, column 32: Reference to unknown catalog "NONEXISTENT" (state=,code=0)
+> 
+> create catalog universe description 'all kinds of stuff';
+> 
+> -- should fail:  duplicate name
+> create catalog universe description 'all kinds of stuff';
+Error: DDL validation error near line 1, column 16: Target catalog "SYS_BOOT" already contains catalog "UNIVERSE" with same name (state=,code=0)
+> 
+> -- should fail:  clashes with a data server name
+> create catalog hsqldb_demo;
+Error: DDL validation error near line 1, column 16: Target catalog "SYS_BOOT" already contains data server "HSQLDB_DEMO" with same name (state=,code=0)
+> 
+> !metadata getCatalogs
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
+| UNIVERSE                      |
++-------------------------------+
+> 
+> create schema universe.s;
+> 
+> create table universe.s.t(i int not null primary key);
+> 
+> insert into s.t values (5);
+> 
+> insert into universe.s.t values (6);
+> 
+> select * from s.t;
++----+
+| I  |
++----+
+| 5  |
++----+
+> 
+> select * from universe.s.t;
++----+
+| I  |
++----+
+| 6  |
++----+
+> 
+> set catalog 'universe';
+> 
+> select * from s.t;
++----+
+| I  |
++----+
+| 6  |
++----+
+> 
+> set catalog 'localdb';
+> 
+> -- should fail
+> drop catalog universe;
+Error: Dropping schema "UNIVERSE"."S" requires CASCADE because other objects still reference it (state=,code=0)
+> 
+> drop catalog universe cascade;
+> 
+> !metadata getCatalogs
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
++-------------------------------+
+> 
+> !quit

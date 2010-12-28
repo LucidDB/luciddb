@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,8 +32,8 @@ using namespace fennel;
 
 ThreadedTestBase::ThreadedTestBase()
 {
-    nSeconds = configMap.getIntParam("testDuration",10);
-    defaultThreadCount = configMap.getIntParam("defaultThreads",1);
+    nSeconds = configMap.getIntParam("testDuration", 10);
+    defaultThreadCount = configMap.getIntParam("defaultThreads", 1);
 }
 
 ThreadedTestBase::~ThreadedTestBase()
@@ -59,11 +59,11 @@ void ThreadedTestBase::runThreadedTestCase()
 
     // initialize a barrier to make sure they all start at once
     pStartBarrier.reset(new boost::barrier(nThreads));
-    
+
     // fire 'em up
     ThreadPool<ThreadedTestBaseTask> threadPool;
     threadPool.start(nThreads);
-    
+
     // and distribute the tasks
     for (uint i = 0; i < threadCounts.size(); ++i) {
         for (int j = 0; j < threadCounts[i]; ++j) {

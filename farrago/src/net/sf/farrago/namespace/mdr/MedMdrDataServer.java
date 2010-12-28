@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,24 +26,20 @@ import java.sql.*;
 
 import java.util.*;
 
-import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import openjava.mop.*;
-
 import openjava.ptree.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
 
@@ -61,7 +57,6 @@ import org.netbeans.api.mdr.*;
 public class MedMdrDataServer
     extends MedAbstractDataServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_STORAGE_FACTORY_CLASS =
@@ -112,9 +107,9 @@ public class MedMdrDataServer
     /**
      * @return the MDR repository instance
      */
-    public MDRepository getMdrRepository()
+    public EnkiMDRepository getMdrRepository()
     {
-        return repository;
+        return (EnkiMDRepository) repository;
     }
 
     void initialize()
@@ -133,7 +128,8 @@ public class MedMdrDataServer
         schemaName = getNonStorageProperty(props, PROP_SCHEMA_NAME);
 
         if (extentName != null) {
-            initAsForeignServer(storageFactoryClassName,
+            initAsForeignServer(
+                storageFactoryClassName,
                 extentName,
                 storageProps);
         } else {
@@ -215,7 +211,7 @@ public class MedMdrDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         assert (repository != null);
@@ -223,12 +219,11 @@ public class MedMdrDataServer
         assert (className != null);
 
         MedMdrNameDirectory directory = getMdrNameDirectory();
-        return
-            directory.lookupColumnSetAndImposeType(
-                typeFactory,
-                className.split("\\."),
-                localName,
-                rowType);
+        return directory.lookupColumnSetAndImposeType(
+            typeFactory,
+            className.split("\\."),
+            localName,
+            rowType);
     }
 
     // implement FarragoMedDataServer
@@ -264,13 +259,12 @@ public class MedMdrDataServer
     {
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
-        return
-            new MethodCall(
-                connectionVariable,
-                "getDataServerRuntimeSupport",
-                new ExpressionList(
-                    Literal.makeLiteral(getServerMofId()),
-                    arg));
+        return new MethodCall(
+            connectionVariable,
+            "getDataServerRuntimeSupport",
+            new ExpressionList(
+                Literal.makeLiteral(getServerMofId()),
+                arg));
     }
 }
 

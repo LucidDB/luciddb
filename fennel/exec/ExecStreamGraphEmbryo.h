@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,9 +38,10 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamGraphEmbryo : public boost::noncopyable
+class FENNEL_EXEC_EXPORT ExecStreamGraphEmbryo
+    : public boost::noncopyable
 {
-    typedef std::map<std::string,ExecStreamEmbryo> StreamMap;
+    typedef std::map<std::string, ExecStreamEmbryo> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
     typedef StreamMap::iterator StreamMapIter;
 
@@ -48,7 +49,7 @@ class ExecStreamGraphEmbryo : public boost::noncopyable
      * Unprepared graph.
      */
     SharedExecStreamGraph pGraph;
-    
+
     /**
      * Scheduler which will execute streams.
      */
@@ -85,10 +86,10 @@ class ExecStreamGraphEmbryo : public boost::noncopyable
         std::string const &streamName,
         uint iOutput,
         std::string const &adapterName);
-    
+
 public:
     explicit ExecStreamGraphEmbryo(
-        SharedExecStreamGraph pGraph, 
+        SharedExecStreamGraph pGraph,
         SharedExecStreamScheduler pScheduler,
         SharedCache pCache,
         SharedSegmentFactory pSegmentFactory);
@@ -113,12 +114,12 @@ public:
     SegmentAccessor &getScratchAccessor();
 
     /**
-     * Ensures that a producer is capable of the specified buffer 
+     * Ensures that a producer is capable of the specified buffer
      * provisioning requirements. If producer is not capable, an adapter
-     * stream is appended to supply the required buffer provisioning. 
+     * stream is appended to supply the required buffer provisioning.
      *
-     * <p>The "producer" may be a single stream or may be a chain of 
-     * streams. In either case, the adapter is appended to the end of the 
+     * <p>The "producer" may be a single stream or may be a chain of
+     * streams. In either case, the adapter is appended to the end of the
      * group under the name of the original stream. It is named according
      * to the last stream:
      * <code><i>lastName</i>#<i>iOutput</i>.provisioner</code>
@@ -143,7 +144,7 @@ public:
      */
     void saveStreamEmbryo(
         ExecStreamEmbryo &embryo);
-    
+
     /**
      * Looks up a registered stream. The stream *must* already be registered.
      *
@@ -153,7 +154,7 @@ public:
      */
     ExecStreamEmbryo &getStreamEmbryo(
         const std::string &name);
-    
+
     /**
      * Adds dataflow to graph, from one stream's output, after adapters, to
      * another stream.
@@ -161,10 +162,15 @@ public:
      * @param source name of source stream
      *
      * @param target name of target stream
+     *
+     * @param isImplicit false (the default) if the edge represents
+     * direct dataflow; true if the edge represents an implicit
+     * dataflow dependency
      */
     void addDataflow(
         const std::string &source,
-        const std::string &target);
+        const std::string &target,
+        bool isImplicit = false);
 
     /**
      * Prepares graph and all of its streams.

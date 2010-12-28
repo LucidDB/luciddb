@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -60,7 +60,7 @@ SharedFtrsTableWriter FtrsTableWriterFactory::newTableWriter(
     pool.push_back(pNewWriter);
     return pNewWriter;
 }
-    
+
 SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &logStream)
@@ -68,7 +68,7 @@ SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     assert(classId == getParticipantClassId());
 
     TupleDescriptor clusteredTupleDesc;
-    clusteredTupleDesc.readPersistent(logStream,typeFactory);
+    clusteredTupleDesc.readPersistent(logStream, typeFactory);
 
     uint nIndexes;
     logStream.readValue(nIndexes);
@@ -77,7 +77,7 @@ SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     params.indexParams.resize(nIndexes);
 
     for (uint i = 0; i < nIndexes; ++i) {
-        loadIndex(clusteredTupleDesc,params.indexParams[i],logStream);
+        loadIndex(clusteredTupleDesc, params.indexParams[i], logStream);
     }
 
     params.updateProj.readPersistent(logStream);
@@ -101,10 +101,11 @@ void FtrsTableWriterFactory::loadIndex(
     if (params.inputProj.empty()) {
         params.tupleDesc = clusteredTupleDesc;
     } else {
-        params.tupleDesc.projectFrom(clusteredTupleDesc,params.inputProj);
+        params.tupleDesc.projectFrom(clusteredTupleDesc, params.inputProj);
     }
     params.pCacheAccessor = pCacheAccessor;
-    params.pSegment = pSegmentMap->getSegmentById(params.segmentId);
+    SharedSegment pSegment;
+    params.pSegment = pSegmentMap->getSegmentById(params.segmentId, pSegment);
     params.scratchAccessor = scratchAccessor;
 }
 
@@ -113,6 +114,6 @@ LogicalTxnClassId FtrsTableWriterFactory::getParticipantClassId()
     return LogicalTxnClassId(0xaa6576b8efadbcdcLL);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#9 $");
 
 // End FtrsTableWriterFactory.cpp

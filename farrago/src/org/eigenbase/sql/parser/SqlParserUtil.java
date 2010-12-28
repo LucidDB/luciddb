@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,12 +30,13 @@ import java.text.*;
 
 import java.util.*;
 import java.util.logging.*;
-import java.util.regex.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -47,17 +48,16 @@ import org.eigenbase.util.*;
  */
 public final class SqlParserUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final Logger tracer = EigenbaseTrace.getParserTracer();
     public static final String [] emptyStringArray = new String[0];
     public static final List emptyList = Collections.EMPTY_LIST;
-    public static final String DateFormatStr = "yyyy-MM-dd";
-    public static final String TimeFormatStr = "HH:mm:ss";
+    public static final String DateFormatStr = DateTimeUtil.DateFormatStr;
+    public static final String TimeFormatStr = DateTimeUtil.TimeFormatStr;
     public static final String PrecisionTimeFormatStr = TimeFormatStr + ".S";
     public static final String TimestampFormatStr =
-        DateFormatStr + " " + TimeFormatStr;
+        DateTimeUtil.TimestampFormatStr;
     public static final String PrecisionTimestampFormatStr =
         TimestampFormatStr + ".S";
 
@@ -86,7 +86,9 @@ public final class SqlParserUtil
     }
 
     /**
-     * Converts the contents of an sql quoted string literal into a java string.
+     * Converts the contents of an sql quoted string literal into the
+     * corresponding Java string representation (removing leading and trailing
+     * quotes and unescaping internal doubled quotes).
      */
     public static String parseString(String s)
     {
@@ -107,6 +109,9 @@ public final class SqlParserUtil
         return new BigDecimal(s);
     }
 
+    /**
+     * @deprecated this method is not localized for Farrago standards
+     */
     public static java.sql.Date parseDate(String s)
     {
         return java.sql.Date.valueOf(s);
@@ -120,6 +125,9 @@ public final class SqlParserUtil
         return java.sql.Time.valueOf(s);
     }
 
+    /**
+     * @deprecated this method is not localized for Farrago standards
+     */
     public static java.sql.Timestamp parseTimestamp(String s)
     {
         return java.sql.Timestamp.valueOf(s);
@@ -128,7 +136,7 @@ public final class SqlParserUtil
     /**
      * Checks if the date/time format is valid
      *
-     * @param pattern {@link SimpleDateFormat} pattern
+     * @param pattern {@link SimpleDateFormat}  pattern
      */
     public static void checkDateFormat(String pattern)
     {
@@ -137,483 +145,9 @@ public final class SqlParserUtil
     }
 
     /**
-     * Parses a string using {@link SimpleDateFormat} and a given pattern
-     *
-     * @param s string to be parsed
-     * @param pattern {@link SimpleDateFormat} pattern
-     * @param pp position to start parsing from
-     *
-     * @return Null if parsing failed.
-     *
-     * @pre pattern != null
-     */
-    private static Calendar parseDateFormat(
-        String s,
-        String pattern,
-        TimeZone tz,
-        ParsePosition pp)
-    {
-        Util.pre(pattern != null, "pattern != null");
-        SimpleDateFormat df = new SimpleDateFormat(pattern);
-        if (tz == null) {
-            tz = new SimpleTimeZone(0, "GMT+00:00");
-        }
-        Calendar ret = Calendar.getInstance(tz);
-        df.setCalendar(ret);
-        df.setLenient(false);
-
-        Date d = df.parse(s, pp);
-        if (null == d) {
-            return null;
-        }
-        ret.setTime(d);
-        return ret;
-    }
-
-    /**
-     * Parses a string using {@link SimpleDateFormat} and a given pattern.
-     *
-     * @param s string to be parsed
-     * @param pattern {@link SimpleDateFormat} pattern
-     *
-     * @return Null if parsing failed.
-     *
-     * @pre pattern != null
-     */
-    public static Calendar parseDateFormat(
-        String s,
-        String pattern,
-        TimeZone tz)
-    {
-        Util.pre(pattern != null, "pattern != null");
-        ParsePosition pp = new ParsePosition(0);
-        Calendar ret = parseDateFormat(s, pattern, tz, pp);
-        if (pp.getIndex() != s.length()) {
-            // Didn't consume entire string - not good
-            return null;
-        }
-        return ret;
-    }
-
-    public static PrecisionTime parsePrecisionDateTimeLiteral(
-        String s,
-        String pattern,
-        TimeZone tz)
-    {
-        ParsePosition pp = new ParsePosition(0);
-        Calendar cal = parseDateFormat(s, pattern, tz, pp);
-        if (cal == null) {
-            return null; // Invalid date/time format
-        }
-
-        int p = 0;
-        if (pp.getIndex() < s.length()) {
-            // Check to see if rest is decimal portion
-            if (s.charAt(pp.getIndex()) != '.') {
-                return null;
-            }
-
-            // Skip decimal sign
-            pp.setIndex(pp.getIndex() + 1);
-
-            // Parse decimal portion
-            if (pp.getIndex() < s.length()) {
-                String secFraction = s.substring(pp.getIndex());
-                if (!secFraction.matches("\\d+")) {
-                    return null;
-                }
-                NumberFormat nf = NumberFormat.getIntegerInstance();
-                Number num = nf.parse(s, pp);
-                if ((num == null) || (pp.getIndex() != s.length())) {
-                    // Invalid decimal portion
-                    return null;
-                }
-
-                // Determine precision - only support prec 3 or lower
-                // (milliseconds) Higher precisions are quietly rounded away
-                p = Math.min(
-                        3,
-                        secFraction.length());
-
-                // Calculate milliseconds
-                int ms =
-                    (int) Math.round(
-                        num.longValue()
-                        * Math.pow(10,
-                            3 - secFraction.length()));
-                cal.add(Calendar.MILLISECOND, ms);
-            }
-        }
-
-        assert (pp.getIndex() == s.length());
-        PrecisionTime ret = new PrecisionTime(cal, p);
-        return ret;
-    }
-
-
-    // TODO: angel 2006-08-27 There is duplication of logic in
-    // parseIntervalValue and getIntervalValue
-    // Combine into one function for easier maintenance
-
-    /**
-     * Parses a INTERVAL value.
-     *
-     * @return null if the interval value is illegal. Illegal values are:
-     *
-     * <ul>
-     * <li>non digit character (except optional minus '-' at the first character
-     * in the input string.)</li>
-     * <li>the number of time units described in intervalQualifer doesn't match
-     * the parsed number of time units.</li>
-     * </ul>
-     */
-    public static int [] parseIntervalValue(
-        SqlIntervalLiteral.IntervalValue interval)
-    {
-        String value = interval.getIntervalLiteral();
-        SqlIntervalQualifier intervalQualifier =
-            interval.getIntervalQualifier();
-
-        value = value.trim();
-        if (Util.isNullOrEmpty(value)) {
-            return null;
-        }
-
-        int sign = 1;
-        if ('-' == value.charAt(0)) {
-            sign = -1;
-            if (value.length() == 1) {
-                // handles the case when we have a single input value of '-'
-                return null;
-            }
-            value = value.substring(1);
-        } else if ('+' == value.charAt(0)) {
-            sign = +1;
-            if (value.length() == 1) {
-                // handles the case when we have a single input value of '+'
-                return null;
-            }
-            value = value.substring(1);
-        }
-
-        try {
-            if (intervalQualifier.isYearMonth()) {
-                int years = 0;
-                int months = 0;
-                String [] valArray = value.split("-");
-                if (intervalQualifier.getEndUnit() == null) {
-                    if (valArray.length != 1) {
-                        return null;
-                    }
-                } else if ((intervalQualifier.getEndUnit().getOrdinal() -
-                    intervalQualifier.getStartUnit().getOrdinal() + 1)
-                                != valArray.length) {
-                    return null;
-                }
-                if (2 == valArray.length) {
-                    years = parsePositiveInt(valArray[0]);
-                    months = parsePositiveInt(valArray[1]);
-                    return new int[] { sign, years, months };
-                } else if (1 == valArray.length) {
-                    return new int[] { sign, parsePositiveInt(valArray[0]) };
-                }
-                return null;
-            } else {
-                String [] withDayPattern =
-                    { "(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
-                        , "(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
-                        , "(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
-                        , "(\\d+)", "(\\d+) (\\d+)", "(\\d+) (\\d+):(\\d+)", "(\\d+) (\\d+):(\\d+):(\\d+)"};
-
-                String [] withoutDayPattern =
-                    {
-                        "(\\d+):(\\d+):(\\d+)\\.(\\d+)", "(\\d+):(\\d+)\\.(\\d+)", "(\\d+)\\.(\\d+)", "(\\d+)", "(\\d+):(\\d+)", "(\\d+):(\\d+):(\\d+)"
-                    };
-
-                String [] ps;
-                if (SqlIntervalQualifier.TimeUnit.Day.equals(
-                        intervalQualifier.getStartUnit())) {
-                    ps = withDayPattern;
-                } else {
-                    ps = withoutDayPattern;
-                }
-
-                boolean bWithDecimal = false;
-                for (int iPattern = 0; iPattern < ps.length; iPattern++) {
-                    String p = ps[iPattern];
-                    Matcher m = Pattern.compile(p).matcher(value);
-                    if (m.matches()) {
-                        int timeUnitsCount = m.groupCount();
-                        int [] ret = new int[timeUnitsCount + 1];
-                        ret[0] = sign;
-                        for (int iGroup = 1; iGroup <= m.groupCount();
-                            iGroup++) {
-                            ret[iGroup] = Integer.parseInt(m.group(iGroup));
-                        }
-
-                        if (iPattern < 3) {
-                            timeUnitsCount--;
-                            bWithDecimal = true;
-                        }
-
-                        SqlIntervalQualifier.TimeUnit start =
-                            intervalQualifier.getStartUnit();
-                        SqlIntervalQualifier.TimeUnit end =
-                            intervalQualifier.getEndUnit();
-                        if (null == end) {
-                            if ((timeUnitsCount > 1) ||
-                                (bWithDecimal && start.getOrdinal() !=
-                                    SqlIntervalQualifier.TimeUnit.Second_ordinal)) {
-                                return null;
-                            }
-                        } else {
-                            if (((end.getOrdinal() - start.getOrdinal() + 1)
-                                    != timeUnitsCount) ||
-                                (bWithDecimal && end.getOrdinal() !=
-                                    SqlIntervalQualifier.TimeUnit.Second_ordinal)) {
-                                return null;
-                            }
-                        }
-                        return ret;
-                    }
-                }
-                return null;
-            }
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Parses a INTERVAL value.
-     *
-     * @return null if the interval value is illegal. Illegal values are:
-     *
-     * <ul>
-     * <li>non digit character (except optional minus '-' at the first character
-     * in the input string.)</li>
-     * <li>the number of time units described in intervalQualifer doesn't match
-     * the parsed number of time units.</li>
-     * </ul>
-     */
-    public static int [] getIntervalValue(
-        String value, SqlIntervalQualifier intervalQualifier)
-    {
-        value = value.trim();
-        if (Util.isNullOrEmpty(value)) {
-            return null;
-        }
-
-        int sign = 1;
-        if ('-' == value.charAt(0)) {
-            sign = -1;
-            if (value.length() == 1) {
-                // handles the case when we have a single input value of '-'
-                return null;
-            }
-            value = value.substring(1);
-        } else if ('+' == value.charAt(0)) {
-            sign = +1;
-            if (value.length() == 1) {
-                // handles the case when we have a single input value of '+'
-                return null;
-            }
-            value = value.substring(1);
-        }
-
-        int [] ret = null;
-        try {
-            if (intervalQualifier.isYearMonth()) {
-                // sign, years, months
-                ret = new int[3];
-                for (int i = 0; i < ret.length; i++) {
-                    ret[i] = 0;
-                }
-                ret[0] = sign;
-
-                String [] valArray = value.split("-");
-                if (intervalQualifier.getEndUnit() == null) {
-                    if (valArray.length != 1) {
-                        return null;
-                    }
-                } else if ((intervalQualifier.getEndUnit().getOrdinal() -
-                    intervalQualifier.getStartUnit().getOrdinal() + 1)
-                                != valArray.length) {
-                    return null;
-                }
-                if (2 == valArray.length) {
-                    if (intervalQualifier.getStartUnit().getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Year_ordinal) {
-                        ret[1] = parsePositiveInt(valArray[0]);
-                        ret[2] = parsePositiveInt(valArray[1]);
-                    } else {
-                        return null;
-                    }
-                } else if (1 == valArray.length) {
-                    if (intervalQualifier.getStartUnit().getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Year_ordinal) {
-                        ret[1] = parsePositiveInt(valArray[0]);
-                    } else if (intervalQualifier.getStartUnit().getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Month_ordinal) {
-                        ret[2] = parsePositiveInt(valArray[0]);
-                    } else {
-                        return null;
-                    }
-                } else {
-                    return null;
-                }
-                return ret;
-            }
-
-            // sign, day, hour, minute, second, millisecond
-            ret = new int[6];
-            for (int i = 0; i < ret.length; i++) {
-                ret[i] = 0;
-            }
-            ret[0] = sign;
-            String [] withDayPattern =
-                { "(\\d+)" // day
-                    , "(\\d+) (\\d+)" // day to hour
-                    , "(\\d+) (\\d+):(\\d+)" // day to minute
-                    , "(\\d+) (\\d+):(\\d+):(\\d+)" // day to second
-                    , "(\\d+) (\\d+):(\\d+):(\\d+)\\.(\\d+)" // day to second
-                };
-
-            // Add spurious groups (:) so that each pattern has different
-            // number of groups.
-            String [] withoutDayPattern =
-                { "(\\d+)" // hour, minute, second
-                    , "(\\d+)\\.(\\d+)" // second
-                    , "(\\d+)(:)(\\d+)" // hour to minute, minute to second
-                    , "(\\d+)(:)(\\d+)\\.(\\d+)" // minute to second
-                    , "(\\d+)(:)(\\d+)(:)(\\d+)" // hour to second
-                    , "(\\d+)(:)(\\d+)(:)(\\d+)\\.(\\d+)" // hour to second
-                };
-
-            String [] ps;
-            boolean bWithDayPattern = false;
-            boolean bWithDecimal = false;
-            if (SqlIntervalQualifier.TimeUnit.Day.equals(
-                    intervalQualifier.getStartUnit())) {
-                ps = withDayPattern;
-                bWithDayPattern = true;
-            } else {
-                ps = withoutDayPattern;
-                bWithDayPattern = false;
-            }
-
-            for (int iPattern = 0; iPattern < ps.length; iPattern++) {
-                String p = ps[iPattern];
-                Matcher m = Pattern.compile(p).matcher(value);
-                if (!m.matches()) {
-                    continue;
-                }
-                int timeUnitsCount = m.groupCount();
-                if (bWithDayPattern) {
-                    if (timeUnitsCount >= 1) {
-                        ret[1] = Integer.parseInt(m.group(1));
-                    }
-                    if (timeUnitsCount >= 2) {
-                        ret[2] = Integer.parseInt(m.group(2));
-                    }
-                    if (timeUnitsCount >= 3) {
-                        ret[3] = Integer.parseInt(m.group(3));
-                    }
-                    if (timeUnitsCount >= 4) {
-                        ret[4] = Integer.parseInt(m.group(4));
-                    }
-                    if (timeUnitsCount >= 5) {
-                        // Decimal value can be more than 3 digits. So just get
-                        // the millisecond part.
-                        ret[5] =
-                            (int) (Float.parseFloat("0." + m.group(5)) * 1000);
-                        bWithDecimal = true;
-                    }
-                } else {
-                    switch (timeUnitsCount) {
-                    case 1:
-                        if (intervalQualifier.getStartUnit().getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Hour_ordinal) {
-                            ret[2] = Integer.parseInt(m.group(1));
-                        } else if (intervalQualifier.getStartUnit()
-                            .getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Minute_ordinal) {
-                            ret[3] = Integer.parseInt(m.group(1));
-                        } else if (intervalQualifier.getStartUnit()
-                            .getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Second_ordinal) {
-                            ret[4] = Integer.parseInt(m.group(1));
-                        } else {
-                            return null;
-                        }
-                        break;
-                    case 2:
-                        ret[4] = Integer.parseInt(m.group(1));
-                        ret[5] =
-                            (int) (Float.parseFloat("0." + m.group(2)) * 1000);
-                        bWithDecimal = true;
-                        break;
-                    case 3:
-                        if (intervalQualifier.getStartUnit().getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Hour_ordinal) {
-                            ret[2] = Integer.parseInt(m.group(1));
-                            ret[3] = Integer.parseInt(m.group(3));
-                        } else if (intervalQualifier.getStartUnit()
-                            .getOrdinal()
-                            == SqlIntervalQualifier.TimeUnit.Minute_ordinal) {
-                            ret[3] = Integer.parseInt(m.group(1));
-                            ret[4] = Integer.parseInt(m.group(3));
-                        } else {
-                            return null;
-                        }
-                        break;
-                    case 4:
-                        ret[3] = Integer.parseInt(m.group(1));
-                        ret[4] = Integer.parseInt(m.group(3));
-                        ret[5] =
-                            (int) (Float.parseFloat("0." + m.group(4)) * 1000);
-                        bWithDecimal = true;
-                        break;
-                    case 5:
-                        ret[2] = Integer.parseInt(m.group(1));
-                        ret[3] = Integer.parseInt(m.group(3));
-                        ret[4] = Integer.parseInt(m.group(5));
-                        break;
-                    case 6:
-                        ret[2] = Integer.parseInt(m.group(1));
-                        ret[3] = Integer.parseInt(m.group(3));
-                        ret[4] = Integer.parseInt(m.group(5));
-                        ret[5] =
-                            (int) (Float.parseFloat("0." + m.group(6)) * 1000);
-                        bWithDecimal = true;
-                        break;
-                    default:
-                        break;
-                    }
-                }
-                break;
-            }
-            if (bWithDecimal)  {
-                if (intervalQualifier.getEndUnit() == null) {
-                    if (intervalQualifier.getStartUnit().getOrdinal()
-                        != SqlIntervalQualifier.TimeUnit.Second_ordinal) {
-                        return null;
-                    }
-                } else if (intervalQualifier.getEndUnit().getOrdinal()
-                        != SqlIntervalQualifier.TimeUnit.Second_ordinal) {
-                    return null;
-                }
-            }
-        } catch (NumberFormatException e) {
-            return null;
-        }
-        return ret;
-    }
-
-    /**
      * Converts the interval value into a millisecond representation.
      *
-     * @param interval
+     * @param interval Interval
      *
      * @return a long value that represents millisecond equivalent of the
      * interval value.
@@ -627,12 +161,20 @@ public final class SqlParserUtil
     }
 
     public static long intervalToMillis(
-        String literal, SqlIntervalQualifier intervalQualifier)
+        String literal,
+        SqlIntervalQualifier intervalQualifier)
     {
-        Util.permAssert(!intervalQualifier.isYearMonth(), "interval must be day time");
-        int [] ret = getIntervalValue(literal, intervalQualifier);
-        Util.permAssert(ret != null, "error parsing day month interval " + literal);
-
+        Util.permAssert(
+            !intervalQualifier.isYearMonth(),
+            "interval must be day time");
+        int [] ret;
+        try {
+            ret = intervalQualifier.evaluateIntervalLiteral(literal);
+            assert ret != null;
+        } catch (SqlValidatorException e) {
+            throw Util.newInternal(
+                e, "while parsing day-to-second interval " + literal);
+        }
         long l = 0;
         long [] conv = new long[5];
         conv[4] = 1; // millisecond
@@ -644,15 +186,15 @@ public final class SqlParserUtil
             l += conv[i - 1] * ret[i];
         }
         return ret[0] * l;
-
     }
+
     /**
      * Converts the interval value into a months representation.
      *
-     * @param interval
+     * @param interval Interval
      *
-     * @return a long value that represents months equivalent of the
-     * interval value.
+     * @return a long value that represents months equivalent of the interval
+     * value.
      */
     public static long intervalToMonths(
         SqlIntervalLiteral.IntervalValue interval)
@@ -663,11 +205,20 @@ public final class SqlParserUtil
     }
 
     public static long intervalToMonths(
-        String literal, SqlIntervalQualifier intervalQualifier)
+        String literal,
+        SqlIntervalQualifier intervalQualifier)
     {
-        Util.permAssert(intervalQualifier.isYearMonth(), "interval must be year month");
-        int [] ret = getIntervalValue(literal, intervalQualifier);
-        Util.permAssert(ret != null, "error parsing year month interval " + literal);
+        Util.permAssert(
+            intervalQualifier.isYearMonth(),
+            "interval must be year month");
+        int [] ret;
+        try {
+            ret = intervalQualifier.evaluateIntervalLiteral(literal);
+            assert ret != null;
+        } catch (SqlValidatorException e) {
+            throw Util.newInternal(
+                e, "error parsing year-to-month interval " + literal);
+        }
 
         long l = 0;
         long [] conv = new long[2];
@@ -682,7 +233,7 @@ public final class SqlParserUtil
     /**
      * Parses a positive int. All characters have to be digits.
      *
-     * @see {@link java.lang.Integer#parseInt(String)}
+     * @see Integer#parseInt(String)
      */
     public static int parsePositiveInt(String value)
         throws NumberFormatException
@@ -806,16 +357,19 @@ public final class SqlParserUtil
                 + sql.substring(secondCaret + 1);
             int [] start = indexToLineCol(sql, firstCaret);
 
-            // subtract 1 because first caret pushed the string out
-            --secondCaret;
-
             // subtract 1 because the col position needs to be inclusive
             --secondCaret;
             int [] end = indexToLineCol(sql, secondCaret);
+
+            // if second caret is on same line as first, decrement its column,
+            // because first caret pushed the string out
+            if (start[0] == end[0]) {
+                --end[1];
+            }
+
             SqlParserPos pos =
                 new SqlParserPos(start[0], start[1], end[0], end[1]);
-            StringAndPos sap = new StringAndPos(sqlSansCaret, firstCaret, pos);
-            return sap;
+            return new StringAndPos(sqlSansCaret, firstCaret, pos);
         }
     }
 
@@ -869,8 +423,7 @@ public final class SqlParserUtil
         --column;
         int i = 0;
         while (line-- > 0) {
-            i =
-                sql.indexOf(Util.lineSeparator, i)
+            i = sql.indexOf(Util.lineSeparator, i)
                 + Util.lineSeparator.length();
         }
         return i + column;
@@ -964,14 +517,19 @@ public final class SqlParserUtil
         return new ParsedCollation(charset, locale, strength);
     }
 
-    public static String [] toStringArray(List list)
+    public static String [] toStringArray(List<String> list)
     {
-        return (String []) list.toArray(emptyStringArray);
+        return list.toArray(new String[list.size()]);
     }
 
-    public static SqlNode [] toNodeArray(List list)
+    public static SqlNode [] toNodeArray(List<SqlNode> list)
     {
-        return (SqlNode []) list.toArray(SqlNode.emptyArray);
+        return list.toArray(new SqlNode[list.size()]);
+    }
+
+    public static SqlNode [] toNodeArray(SqlNodeList list)
+    {
+        return list.toArray();
     }
 
     public static String rightTrim(
@@ -995,11 +553,11 @@ public final class SqlParserUtil
      * example, if list contains <code>{A, B, C, D, E}</code> then <code>
      * replaceSublist(list, X, 1, 4)</code> returns <code>{A, X, E}</code>.
      */
-    public static void replaceSublist(
-        List list,
+    public static <T> void replaceSublist(
+        List<T> list,
         int start,
         int end,
-        Object o)
+        T o)
     {
         Util.pre(list != null, "list != null");
         Util.pre(start < end, "start < end");
@@ -1020,7 +578,7 @@ public final class SqlParserUtil
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer("Attempting to reduce " + list);
         }
-        final SqlNode node = toTreeEx(list, 0, 0, SqlKind.Other);
+        final SqlNode node = toTreeEx(list, 0, 0, SqlKind.OTHER);
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("Reduced " + node);
         }
@@ -1038,13 +596,13 @@ public final class SqlParserUtil
      * use value 1.
      * @param minPrec Minimum precedence to consider. If the method encounters
      * an operator of lower precedence, it doesn't reduce any further.
-     * @param stopperKind If not {@link SqlKind#Other}, stop reading the list if
+     * @param stopperKind If not {@link SqlKind#OTHER}, stop reading the list if
      * we encounter a token of this kind.
      *
-     * @return
+     * @return the root node of the tree which the list condenses into
      */
     public static SqlNode toTreeEx(
-        List list,
+        List<Object> list,
         int start,
         int minPrec,
         SqlKind stopperKind)
@@ -1062,8 +620,9 @@ outer:
                 SqlOperator previous;
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
                 SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
-                if ((stopperKind != SqlKind.Other)
-                    && (current.getKind() == stopperKind)) {
+                if ((stopperKind != SqlKind.OTHER)
+                    && (current.getKind() == stopperKind))
+                {
                     break outer;
                 }
                 SqlOperator next;
@@ -1089,7 +648,8 @@ outer:
                         next = ((ToTreeListItem) list.get(i + 2)).op;
                         nextLeft = next.getLeftPrec();
                         if ((next.getKind() == stopperKind)
-                            && (stopperKind != SqlKind.Other)) {
+                            && (stopperKind != SqlKind.OTHER))
+                        {
                             // Suppose we're looking at 'AND' in
                             //    a BETWEEN b OR c AND d
                             //
@@ -1123,7 +683,7 @@ outer:
                             currentPos.plusAll(
                                 new SqlNode[] { leftExp, rightExp });
                         final SqlCall newExp =
-                            current.createCall(leftExp, rightExp, callPos);
+                            current.createCall(callPos, leftExp, rightExp);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced infix: " + newExp);
                         }
@@ -1157,7 +717,7 @@ outer:
                         SqlParserPos callPos =
                             currentPos.plusAll(new SqlNode[] { leftExp });
                         final SqlCall newExp =
-                            current.createCall(leftExp, callPos);
+                            current.createCall(callPos, leftExp);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced postfix: " + newExp);
                         }
@@ -1196,8 +756,9 @@ outer:
                             if (listItem instanceof ToTreeListItem) {
                                 next = ((ToTreeListItem) listItem).op;
                                 nextLeft = next.getLeftPrec();
-                                if ((stopperKind != SqlKind.Other)
-                                    && (next.getKind() == stopperKind)) {
+                                if ((stopperKind != SqlKind.OTHER)
+                                    && (next.getKind() == stopperKind))
+                                {
                                     break outer;
                                 } else {
                                     break;
@@ -1230,6 +791,32 @@ outer:
         return (SqlNode) list.get(start);
     }
 
+    /**
+     * Checks a UESCAPE string for validity, and returns the escape character if
+     * no exception is thrown.
+     *
+     * @param s UESCAPE string to check
+     *
+     * @return validated escape character
+     */
+    public static char checkUnicodeEscapeChar(String s)
+    {
+        if (s.length() != 1) {
+            throw EigenbaseResource.instance().UnicodeEscapeCharLength.ex(s);
+        }
+        char c = s.charAt(0);
+        if (Character.isDigit(c)
+            || Character.isWhitespace(c)
+            || (c == '+')
+            || (c == '"')
+            || ((c >= 'a') && (c <= 'f'))
+            || ((c >= 'A') && (c <= 'F')))
+        {
+            throw EigenbaseResource.instance().UnicodeEscapeCharIllegal.ex(s);
+        }
+        return c;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     public static class ParsedCollation
@@ -1238,7 +825,8 @@ outer:
         private final Locale locale;
         private final String strength;
 
-        public ParsedCollation(Charset charset,
+        public ParsedCollation(
+            Charset charset,
             Locale locale,
             String strength)
         {
@@ -1264,34 +852,9 @@ outer:
     }
 
     /**
-     * Helper class for {@link SqlParserUtil#parsePrecisionDateTimeLiteral}
-     */
-    public static class PrecisionTime
-    {
-        private final Calendar cal;
-        private final int precision;
-
-        public PrecisionTime(Calendar cal, int precision)
-        {
-            this.cal = cal;
-            this.precision = precision;
-        }
-
-        public Calendar getCalendar()
-        {
-            return cal;
-        }
-
-        public int getPrecision()
-        {
-            return precision;
-        }
-    }
-
-    /**
      * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}. Used
-     * by {@link SqlSpecialOperator#reduceExpr(int, List)} and the parser to
-     * associate a parsed operator with a parser position.
+     * by {@link SqlSpecialOperator#reduceExpr} and the parser to associate a
+     * parsed operator with a parser position.
      */
     public static class ToTreeListItem
     {

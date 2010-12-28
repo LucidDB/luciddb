@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoTypeFactory
     extends OJTypeFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -107,12 +106,32 @@ public interface FarragoTypeFactory
         boolean substitute);
 
     /**
+     * Creates a type which represents the row datatype of a JDBC ResultSet.
+     * Optionally, unsupported types can be replaced with substitutes. In the
+     * worst case, the substitute is VARCHAR(1024). Less drastic examples are
+     * ignoring datetime fractional seconds precision or capping numeric
+     * precision at our maximum.
+     *
+     * @param metaData metadata for JDBC ResultSet
+     * @param substitute if true, use substitutions; if false, throw exception
+     * for unsupported types or type attributes
+     * @param typeMapping types to substitute
+     *
+     * @return generated type
+     */
+    public RelDataType createResultSetType(
+        ResultSetMetaData metaData,
+        boolean substitute,
+        Properties typeMapping);
+
+    /**
      * Creates a type which represents column metadata returned by the {@link
      * DatabaseMetaData#getColumns} call. See {@link #createResultSetType} for
      * details on type substitutions.
      *
-     * @param getColumnsResultSet {@link ResultSet} positioned on a row returned
-     * from the getColumns call; result set position is unchanged by this method
+     * @param getColumnsResultSet {@link ResultSet}  positioned on a row
+     * returned from the getColumns call; result set position is unchanged by
+     * this method
      * @param substitute if true, use substitutions; if false, throw exception
      * for unsupported types or type attributes
      *
@@ -121,6 +140,25 @@ public interface FarragoTypeFactory
     public RelDataType createJdbcColumnType(
         ResultSet getColumnsResultSet,
         boolean substitute);
+
+    /**
+     * Creates a type which represents column metadata returned by the {@link
+     * DatabaseMetaData#getColumns} call. See {@link #createResultSetType} for
+     * details on type substitutions.
+     *
+     * @param getColumnsResultSet {@link ResultSet}  positioned on a row
+     * returned from the getColumns call; result set position is unchanged by
+     * this method
+     * @param substitute if true, use substitutions; if false, throw exception
+     * for unsupported types or type attributes
+     * @param typeMapping types to substitute
+     *
+     * @return generated type
+     */
+    public RelDataType createJdbcColumnType(
+        ResultSet getColumnsResultSet,
+        boolean substitute,
+        Properties typeMapping);
 
     /**
      * Creates a type which represents a MOF feature.

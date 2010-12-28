@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,11 +39,14 @@ import org.eigenbase.sql.fun.*;
  */
 public class SargRexAnalyzer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SargFactory factory;
-    
+
+    /**
+     * If true, conjuntions on the same input reference are disallowed, as well
+     * as all disjunctions. Also, only a single range predicate is allowed.
+     */
     private final boolean simpleMode;
 
     private final Map<SqlOperator, CallConvertlet> convertletMap;
@@ -62,11 +65,23 @@ public class SargRexAnalyzer
 
     private List<RexNode> rexCFList;
 
-    private List<RexNode> rexPostFilterList;
+    private List<RexNode> nonSargFilterList;
 
     private List<SargBinding> sargBindingList;
 
     private Map<SargExpr, RexNode> sarg2RexMap;
+
+    /**
+     * If >= 0, treat RexInputRefs whose index is within the range
+     * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
+     */
+    private int lowerRexInputIdx;
+
+    /**
+     * If >= 0, treat RexInputRefs whose index is within the range
+     * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
+     */
+    private int upperRexInputIdx;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -74,8 +89,21 @@ public class SargRexAnalyzer
         SargFactory factory,
         boolean simpleMode)
     {
+        this(factory, simpleMode, -1, -1);
+    }
+
+    SargRexAnalyzer(
+        SargFactory factory,
+        boolean simpleMode,
+        int lowerRexInputRef,
+        int upperRexInputRef)
+    {
         this.factory = factory;
         this.simpleMode = simpleMode;
+        this.lowerRexInputIdx = lowerRexInputRef;
+        this.upperRexInputIdx = upperRexInputRef;
+        assert (((lowerRexInputIdx < 0) && (upperRexInputIdx < 0))
+            || ((lowerRexInputIdx >= 0) && (upperRexInputIdx >= 0)));
 
         convertletMap = new HashMap<SqlOperator, CallConvertlet>();
 
@@ -84,30 +112,30 @@ public class SargRexAnalyzer
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isNullOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isTrueOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isFalseOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isUnknownOperator,
             new ComparisonConvertlet(
                 null,
-                SargStrictness.CLOSED));       
+                SargStrictness.CLOSED));
 
         registerConvertlet(
             SqlStdOperatorTable.lessThanOperator,
@@ -175,7 +203,7 @@ public class SargRexAnalyzer
      * Reconstructs a rex predicate from a list of SargExprs which will be
      * AND'ed together.
      */
-    public void recompCF()
+    private void recomposeConjunction()
     {
         SargBinding currBinding, nextBinding;
         RexInputRef currRef, nextRef;
@@ -194,7 +222,6 @@ public class SargRexAnalyzer
             // will be have new mapping put back if currSargExpr remain
             // unchanged.
             sarg2RexMap.remove(currSargExpr);
-
             recomp = false;
 
             // search the rest of the list to find SargExpr on the same col.
@@ -231,12 +258,13 @@ public class SargRexAnalyzer
             }
 
             if (recomp) {
+                assert (!simpleMode);
                 if (!testDynamicParamSupport(currSargExpr)) {
                     // Oops, we can't actually support the conjunction we
                     // recomposed.  Toss it.  (We could do a better job by at
                     // least using part of it, but the effort might be better
                     // spent on implementing deferred expression evaluation.)
-                    rexPostFilterList.add(currAndNode);
+                    nonSargFilterList.add(currAndNode);
                     sargBindingList.remove(i);
                     continue;
                 }
@@ -264,34 +292,36 @@ public class SargRexAnalyzer
         rexCFList = new ArrayList<RexNode>();
         sargBindingList = new ArrayList<SargBinding>();
         sarg2RexMap = new HashMap<SargExpr, RexNode>();
-        rexPostFilterList = new ArrayList<RexNode>();
+        nonSargFilterList = new ArrayList<RexNode>();
 
         SargBinding sargBinding;
 
         // Flatten out the RexNode tree into a list of terms that
         // are AND'ed together
-        RelOptUtil.decompCF(rexPredicate, rexCFList);
+        RelOptUtil.decomposeConjunction(rexPredicate, rexCFList);
 
         // In simple mode, each input ref can only be referenced once, so
         // keep a list of them.  We also only allow one non-point expression.
-        List<RexInputRef> boundRefList = new ArrayList<RexInputRef>();
+        List<Integer> boundRefList = new ArrayList<Integer>();
         boolean rangeFound = false;
-        
+
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);
             if (sargBinding != null) {
                 if (simpleMode) {
                     RexInputRef inputRef = sargBinding.getInputRef();
-                    if (boundRefList.contains(inputRef)) {
-                        rexPostFilterList.add(rexPred);
+                    if (boundRefList.contains(inputRef.getIndex())) {
+                        nonSargFilterList.add(rexPred);
+                        continue;
                     } else {
-                        boundRefList.add(inputRef);
+                        boundRefList.add(inputRef.getIndex());
                     }
                     SargIntervalSequence sargSeq =
                         sargBinding.getExpr().evaluate();
                     if (sargSeq.isRange()) {
                         if (rangeFound) {
-                            rexPostFilterList.add(rexPred);
+                            nonSargFilterList.add(rexPred);
+                            continue;
                         } else {
                             rangeFound = true;
                         }
@@ -302,7 +332,7 @@ public class SargRexAnalyzer
                     sargBinding.getExpr(),
                     rexPred);
             } else {
-                rexPostFilterList.add(rexPred);
+                nonSargFilterList.add(rexPred);
             }
         }
 
@@ -312,7 +342,7 @@ public class SargRexAnalyzer
         clearLeaf();
 
         // Combine the AND terms back together.
-        recompCF();
+        recomposeConjunction();
 
         return sargBindingList;
     }
@@ -356,44 +386,53 @@ public class SargRexAnalyzer
      *
      * @return the rex predicate reconstructed from the non-sargable predicates.
      */
-    public RexNode getPostFilterRexNode()
+    public RexNode getNonSargFilterRexNode()
     {
-        if (rexPostFilterList.isEmpty()) {
+        if (nonSargFilterList.isEmpty()) {
             return null;
         }
 
-        RexNode newAndNode = rexPostFilterList.get(0);
+        RexNode newAndNode = nonSargFilterList.get(0);
 
-        for (int i = 1; i < rexPostFilterList.size(); i++) {
+        for (int i = 1; i < nonSargFilterList.size(); i++) {
             newAndNode =
                 factory.getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
                     newAndNode,
-                    rexPostFilterList.get(i));
+                    nonSargFilterList.get(i));
         }
 
         return newAndNode;
     }
 
     /**
+     * @deprecated use {@link #getNonSargFilterRexNode()}
+     */
+    public RexNode getPostFilterRexNode()
+    {
+        return getNonSargFilterRexNode();
+    }
+
+    /**
      * Reconstructs a rex predicate from a list of SargBindings which are AND'ed
      * together.
      *
-     * @param residualSargList list of SargBindings to be converted.
+     * @param sargBindingList list of SargBindings to be converted.
      *
      * @return the rex predicate reconstructed from the list of SargBindings.
      */
-    public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
+    public RexNode getSargBindingListToRexNode(
+        List<SargBinding> sargBindingList)
     {
-        if (residualSargList.isEmpty()) {
+        if (sargBindingList.isEmpty()) {
             return null;
         }
 
-        RexNode newAndNode = sarg2RexMap.get(residualSargList.get(0).getExpr());
+        RexNode newAndNode = sarg2RexMap.get(sargBindingList.get(0).getExpr());
 
-        for (int i = 1; i < residualSargList.size(); i++) {
+        for (int i = 1; i < sargBindingList.size(); i++) {
             RexNode nextNode =
-                sarg2RexMap.get(residualSargList.get(i).getExpr());
+                sarg2RexMap.get(sargBindingList.get(i).getExpr());
             newAndNode =
                 factory.getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
@@ -401,6 +440,14 @@ public class SargRexAnalyzer
                     nextNode);
         }
         return newAndNode;
+    }
+
+    /**
+     * @deprecated use {@link #getSargBindingListToRexNode(List)}
+     */
+    public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
+    {
+        return getSargBindingListToRexNode(residualSargList);
     }
 
     /**
@@ -480,14 +527,14 @@ public class SargRexAnalyzer
 
         // implement CallConvertlet
         public void convert(RexCall call)
-        {          
+        {
             if (!variableSeen) {
                 failed = true;
             }
-            
+
             SqlOperator op = call.getOperator();
-            if (op == SqlStdOperatorTable.isNullOperator ||
-                op == SqlStdOperatorTable.isUnknownOperator)
+            if ((op == SqlStdOperatorTable.isNullOperator)
+                || (op == SqlStdOperatorTable.isUnknownOperator))
             {
                 coordinate = factory.getRexBuilder().constantNull();
             } else if (op == SqlStdOperatorTable.isTrueOperator) {
@@ -588,6 +635,11 @@ public class SargRexAnalyzer
 
         public Void visitInputRef(RexInputRef inputRef)
         {
+            boolean coordinate = !isRealRexInputRef(inputRef);
+            if (coordinate) {
+                visitCoordinate(inputRef);
+                return null;
+            }
             variableSeen = true;
             if (boundInputRef == null) {
                 boundInputRef = inputRef;
@@ -599,6 +651,19 @@ public class SargRexAnalyzer
                 return null;
             }
             return null;
+        }
+
+        private boolean isRealRexInputRef(RexInputRef inputRef)
+        {
+            if ((lowerRexInputIdx < 0) && (upperRexInputIdx < 0)) {
+                return true;
+            }
+            int idx = inputRef.getIndex();
+            if ((idx >= lowerRexInputIdx) && (idx < upperRexInputIdx)) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
         public Void visitLiteral(RexLiteral literal)
@@ -640,7 +705,7 @@ public class SargRexAnalyzer
                 failed = true;
             } else {
                 visitCoordinate(dynamicParam);
-            }              
+            }
             return null;
         }
 

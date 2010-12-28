@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,6 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -36,7 +35,6 @@ import org.eigenbase.util.*;
 public class SqlMonikerImpl
     implements SqlMoniker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String [] names;
@@ -49,10 +47,10 @@ public class SqlMonikerImpl
      */
     public SqlMonikerImpl(String [] names, SqlMonikerType type)
     {
-        Util.pre(names != null, "names != null");
-        Util.pre(type != null, "type != null");
-        for (int i = 0; i < names.length; i++) {
-            Util.pre(names[i] != null, "names[i] != null");
+        assert names != null;
+        assert type != null;
+        for (String name : names) {
+            assert name != null;
         }
         this.names = names;
         this.type = type;
@@ -87,13 +85,27 @@ public class SqlMonikerImpl
 
     public String toString()
     {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < names.length; i++) {
             if (i > 0) {
                 result.append('.');
             }
             result.append(names[i]);
         }
+        return result.toString();
+    }
+
+    public String id()
+    {
+        StringBuilder result = new StringBuilder(type.name());
+        result.append("(");
+        for (int i = 0; i < names.length; i++) {
+            if (i > 0) {
+                result.append('.');
+            }
+            result.append(names[i]);
+        }
+        result.append(")");
         return result.toString();
     }
 }

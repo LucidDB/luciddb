@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,12 +23,17 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+import javax.sql.DataSource;
 
 import java.util.*;
 import java.util.regex.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.plugin.*;
+import net.sf.farrago.fennel.FennelDbHandle;
+import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
@@ -45,7 +50,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoSession
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -67,6 +71,20 @@ public interface FarragoSession
      */
     public FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory);
+
+    /**
+     * Creates a new statement context within this session.
+     *
+     * @param paramDefFactory a factory for FarragoSessionStmtParamDef instances
+     * @param rootStmtContext the root statement context for an internally
+     * prepared statement; for an externally prepared statement, this will be
+     * null
+     *
+     * @return new statement context
+     */
+    public FarragoSessionStmtContext newStmtContext(
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoSessionStmtContext rootStmtContext);
 
     /**
      * Creates a new SQL statement validator.
@@ -91,6 +109,25 @@ public interface FarragoSession
      * @return {@link FarragoSessionPrivilegeMap} for this session
      */
     public FarragoSessionPrivilegeMap getPrivilegeMap();
+
+    /**
+     * Create and returns a new empty cache.
+     *
+     * @return the new cache.
+     * @param owner FarragoAllocationOwner for this cache, to make sure
+     *   everything gets discarded eventually
+     * @param sharedCache underlying shared cache
+     * @param repos FarragoRepos for wrapper initialization
+     * @param fennelDbHandle FennelDbHandle for wrapper initialization
+     * @param loopbackDataSource a DataSource for establishing a loopback
+     *   connection into Farrago, or null if none is available
+     */
+    public FarragoDataWrapperCache newFarragoDataWrapperCache(
+        FarragoAllocationOwner owner,
+        FarragoObjectCache sharedCache,
+        FarragoRepos repos,
+        FennelDbHandle fennelDbHandle,
+        DataSource loopbackDataSource);
 
     /**
      * @return JDBC URL used to establish this session
@@ -137,6 +174,12 @@ public interface FarragoSession
     public void kill();
 
     /**
+     * Cancels execution of any statements on this session (but does not kill it
+     * or them).
+     */
+    public void cancel();
+
+    /**
      * @return whether this session currently has a transaction in progress
      */
     public boolean isTxnInProgress();
@@ -179,6 +222,11 @@ public interface FarragoSession
     public FarragoSessionConnectionSource getConnectionSource();
 
     /**
+     * @return session index map
+     */
+    public FarragoSessionIndexMap getSessionIndexMap();
+
+    /**
      * Initializes the database metadata associated with this session.
      *
      * @param dbMetaData metadata to set
@@ -191,6 +239,13 @@ public interface FarragoSession
      * @param source connection source to set
      */
     public void setConnectionSource(FarragoSessionConnectionSource source);
+
+    /**
+     * Overrides the index map associated with this session
+     *
+     * @param sessionIndexMap index map to set
+     */
+    public void setSessionIndexMap(FarragoSessionIndexMap sessionIndexMap);
 
     /**
      * Clones this session. TODO: document what this entails.
@@ -281,9 +336,9 @@ public interface FarragoSession
      *
      * @return collection of RefObjects retrieved by query
      */
-    public Collection executeLurqlQuery(
+    public Collection<RefObject> executeLurqlQuery(
         String lurql,
-        Map argMap);
+        Map<String, ?> argMap);
 
     /**
      * Returns a FarragoSessionInfo object which contains information on the
@@ -295,7 +350,8 @@ public interface FarragoSession
 
     /**
      * Sets the exclusion filter to use for planners created by this session.
-     * See {@link RelOptPlanner#setRuleDescExclusionFilter} for details.
+     * See {@link org.eigenbase.relopt.RelOptPlanner#setRuleDescExclusionFilter}
+     * for details.
      *
      * @param exclusionFilter pattern to match for exclusion; null to disable
      * filtering
@@ -306,6 +362,69 @@ public interface FarragoSession
      * @return exclusion filter in effect for planners created by this session
      */
     public Pattern getOptRuleDescExclusionFilter();
+
+    /**
+     * Gets the warning queue for this session.
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
+
+    /**
+     * Disables subquery reduction for the current session.
+     */
+    public void disableSubqueryReduction();
+
+    /**
+     * Retrieves the commit sequence number associated with a session's label,
+     * if it's set.
+     *
+     * @return the commit sequence number of a session's label; null if the
+     * session does not have a label setting
+     */
+    public Long getSessionLabelCsn();
+
+    /**
+     * Retrieves the creation timestamp for the session's label setting, if a
+     * label setting is set.
+     *
+     * @return the creation timestamp; null if the session does not have a label
+     * setting
+     */
+    public Timestamp getSessionLabelCreationTimestamp();
+
+    /**
+     * Flags this FarragoSession as being a loopback session. Loopback sessions
+     * do not block server shutdown.
+     */
+    public void setLoopback();
+
+    /**
+     * Tests whether this session is a loopback session.
+     *
+     * @return true if this is a loopback session, false otherwise
+     *
+     * @see #setLoopback()
+     */
+    public boolean isLoopback();
+
+    /**
+     * Tests whether this is a reentrant session executing DML on behalf of
+     * ALTER TABLE REBUILD.
+     *
+     * @return true if this session is doing ALTER TABLE REBUILD, false
+     * otherwise
+     */
+    public boolean isReentrantAlterTableRebuild();
+
+    /**
+     * Tests whether this is a reentrant session executing DML on behalf of
+     * ALTER TABLE ADD COLUMN.
+     *
+     * @return true if this session is doing ALTER TABLE ADD COLUMN, false
+     * otherwise
+     */
+    public boolean isReentrantAlterTableAddColumn();
 }
 
 // End FarragoSession.java

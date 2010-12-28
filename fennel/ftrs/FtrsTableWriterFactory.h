@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,8 @@ class FtrsTableIndexWriterParams;
  * by constructing FtrsTableWriters to be used for recovery.  It also implements
  * online pooling, currently for a single txn at a time.
  */
-class FtrsTableWriterFactory : public LogicalTxnParticipantFactory
+class FENNEL_FTRS_EXPORT FtrsTableWriterFactory
+    : public LogicalTxnParticipantFactory
 {
     SharedSegmentMap pSegmentMap;
     SharedCacheAccessor pCacheAccessor;
@@ -50,7 +51,7 @@ class FtrsTableWriterFactory : public LogicalTxnParticipantFactory
 
     void loadIndex(
         TupleDescriptor const &,FtrsTableIndexWriterParams &,ByteInputStream &);
-    
+
 public:
     explicit FtrsTableWriterFactory(
         SharedSegmentMap pSegmentMap,
@@ -59,12 +60,12 @@ public:
         SegmentAccessor scratchAccessor);
 
     SharedFtrsTableWriter newTableWriter(FtrsTableWriterParams const &params);
-    
+
     // implement the LogicalTxnParticipantFactory interface
     virtual SharedLogicalTxnParticipant loadParticipant(
         LogicalTxnClassId classId,
         ByteInputStream &logStream);
-    
+
     static LogicalTxnClassId getParticipantClassId();
 };
 

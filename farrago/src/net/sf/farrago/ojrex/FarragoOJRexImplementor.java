@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public abstract class FarragoOJRexImplementor
     implements OJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement OJRexImplementor
@@ -47,10 +46,10 @@ public abstract class FarragoOJRexImplementor
         RexCall call,
         Expression [] operands)
     {
-        return
-            implementFarrago((FarragoRexToOJTranslator) translator,
-                call,
-                operands);
+        return implementFarrago(
+            (FarragoRexToOJTranslator) translator,
+            call,
+            operands);
     }
 
     /**

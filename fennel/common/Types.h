@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,23 @@
 
 #include "fennel/common/SharedTypes.h"
 
+#include <set>
+
+#ifdef __MSVC__
+#include <boost/cstdint.hpp>
+typedef boost::int8_t int8_t;
+typedef boost::int16_t int16_t;
+typedef boost::int32_t int32_t;
+typedef boost::int64_t int64_t;
+typedef boost::uint8_t uint8_t;
+typedef boost::uint16_t uint16_t;
+typedef boost::uint32_t uint32_t;
+typedef boost::uint64_t uint64_t;
+
+#define snprintf _snprintf
+#define strcasecmp strcmpi
+#endif
+
 FENNEL_BEGIN_NAMESPACE
 
 // use these symbols when you want to indicate that a variable points to
@@ -33,6 +50,12 @@ FENNEL_BEGIN_NAMESPACE
 typedef uint8_t FixedBuffer;      // e.g. FixedBuffer buf[10];
 typedef uint8_t *PBuffer;
 typedef uint8_t const *PConstBuffer;
+
+// a single UCS-2 character
+typedef uint16_t Ucs2Char;
+// a buffer of UCS-2 characters (with no byte order mark)
+typedef Ucs2Char *Ucs2Buffer;
+typedef Ucs2Char const *Ucs2ConstBuffer;
 
 // use FileSize for all file sizes and offsets
 typedef uint64_t FileSize;
@@ -52,10 +75,10 @@ class SegNodeLock;
 /**
  * See class IntrusiveList for details.
  */
-struct IntrusiveListNode
+struct FENNEL_COMMON_EXPORT IntrusiveListNode
 {
     IntrusiveListNode *pNext;
-    
+
 #ifdef DEBUG
     IntrusiveListNode()
     {
@@ -70,21 +93,36 @@ struct IntrusiveListNode
 // compiler knows that an unsigned number can't possibly be negative.
 // Instead, use MAXU, defined here.
 
-class MaxU {
+class FENNEL_COMMON_EXPORT MaxU {
 public:
-    MaxU(){}    
+    MaxU()
+    {
+    }
+
     operator uint8_t() const
-    { return 0xFF; }
+    {
+        return 0xFF;
+    }
+
     operator uint16_t() const
-    { return 0xFFFF; }
+    {
+        return 0xFFFF;
+    }
+
     operator uint32_t() const
-    { return 0xFFFFFFFF; }
+    {
+        return 0xFFFFFFFF;
+    }
+
     operator uint64_t() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
-    // TODO:  something better
-#ifdef __CYGWIN__
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
+#ifdef __MSVC__
     operator uint() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
 #endif
 };
 
@@ -124,7 +162,7 @@ enum LockMode
      * Exclusive lock; fail immediately rather than waiting.
      */
     LOCKMODE_X_NOWAIT
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -153,7 +191,7 @@ enum CheckpointType
      * Flush some dirty data (criteria for flush is context-specific).
      */
     CHECKPOINT_FLUSH_FUZZY
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -184,7 +222,7 @@ enum DuplicateSeek
  * serving as typo-safe parameter names.
  */
 typedef char const * const ParamName;
-    
+
 /**
  * ParamName can be used to declare static string symbolic constants
  * serving as early-bound parameter values.
@@ -192,39 +230,47 @@ typedef char const * const ParamName;
 typedef char const * const ParamVal;
 
 // PageOwnerId is a 64-bit integer identifying the owner of a page allocated
-// from a segment.
-DEFINE_OPAQUE_INTEGER(PageOwnerId,uint64_t);
+// from a segment.  Only the low 62 bits should be used (with the exception
+// of ANON_PAGE_OWNER_ID), as the high order bit may be used to flag special
+// settings, and if that high order bit is used and set, we need to be able
+// to distinguish an ownerId with that bit set from ANON_PAGE_OWNER_ID.  So,
+// that's why we also need to reserve the second highest bit.
+DEFINE_OPAQUE_INTEGER(PageOwnerId, uint64_t);
+
+#define VALID_PAGE_OWNER_ID(pageOwnerId) \
+    (!(opaqueToInt(pageOwnerId) & 0xC000000000000000LL))
 
 // DeviceID is an integer identifying a device.
-DEFINE_OPAQUE_INTEGER(DeviceId,uint);
+DEFINE_OPAQUE_INTEGER(DeviceId, uint);
 
 // SegmentId is an integer identifying a segment.
-DEFINE_OPAQUE_INTEGER(SegmentId,uint);
+DEFINE_OPAQUE_INTEGER(SegmentId, uint);
 
 // BlockId is a 64-bit identifier for a physical block on disk.
-DEFINE_OPAQUE_INTEGER(BlockId,uint64_t);
+DEFINE_OPAQUE_INTEGER(BlockId, uint64_t);
 
 // PageId is a 64-bit identifier for a logical page within the scope of a
 // particular segment.
-DEFINE_OPAQUE_INTEGER(PageId,uint64_t);
+DEFINE_OPAQUE_INTEGER(PageId, uint64_t);
 
 // SegByteId is the logical 64-bit address of a byte within the scope of a
 // particular segment.
-DEFINE_OPAQUE_INTEGER(SegByteId,uint64_t);
+DEFINE_OPAQUE_INTEGER(SegByteId, uint64_t);
 
-// TxnId is the 64-bit identifier for a transaction.
-DEFINE_OPAQUE_INTEGER(TxnId,uint64_t);
+// TxnId is the 64-bit identifier for a transaction.  Only the low 63 bits
+// should be used, as the high order bit may be used to flag special settings.
+DEFINE_OPAQUE_INTEGER(TxnId, uint64_t);
 
 // TxnId is an integer identifier for a txn-relative savepoint.
-DEFINE_OPAQUE_INTEGER(SavepointId,uint);
+DEFINE_OPAQUE_INTEGER(SavepointId, uint);
 
 // LogicalTxnClassId is a magic number identifying the type of
 // a logged LogicalTxnParticipant.
-DEFINE_OPAQUE_INTEGER(LogicalTxnClassId,uint64_t);
+DEFINE_OPAQUE_INTEGER(LogicalTxnClassId, uint64_t);
 
 // DynamicParamId is an identifier for a dynamic parameter within the
 // scope of an ExecStreamGraph.
-DEFINE_OPAQUE_INTEGER(DynamicParamId,uint);
+DEFINE_OPAQUE_INTEGER(DynamicParamId, uint);
 
 // LogicalActionType enumerates the possible actions in a LogicalTxn in a
 // participant-defined manner.  Each participant class defines its own
@@ -232,6 +278,10 @@ DEFINE_OPAQUE_INTEGER(DynamicParamId,uint);
 // different participant classes.  Negative integers are used for
 // system-defined actions.
 typedef int LogicalActionType;
+
+// Set of pageIds
+typedef std::set<PageId> PageSet;
+typedef PageSet::const_iterator PageSetConstIter;
 
 /**
  * Sentinel value for an invalid PageId.
@@ -257,7 +307,11 @@ static const PageOwnerId ANON_PAGE_OWNER_ID = PageOwnerId(0xFFFFFFFFFFFFFFFFLL);
 /**
  * Sentinel value for an invalid SavepointId.
  */
+#ifdef __MSVC__
+static const SavepointId NULL_SVPT_ID = SavepointId(0xFFFFFFFFFFFFFFFFLL);
+#else
 static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
+#endif
 
 /**
  * Symbolic value indicating that some implicit value (typically the current
@@ -266,13 +320,9 @@ static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
 static const TxnId IMPLICIT_TXN_ID = TxnId(0);
 
 /**
- * Symbolic value for first valid TxnId.  Note that we use a number above the
- * 32-bit ID range because some locks uses real TxnId's and others use thread
- * ID's, and we'd like to be able to tell them apart.  This won't work on a
- * platform which actually generates 64-bit thread ID's, which is conceivable
- * (like if the OS uses a pointer to a thread descriptor as an ID).
+ * Symbolic value for first valid TxnId.
  */
-static const TxnId FIRST_TXN_ID = TxnId(0x0000000100000000LL);
+static const TxnId FIRST_TXN_ID = TxnId(1);
 
 /**
  * Sentinel value for an invalid TxnId.

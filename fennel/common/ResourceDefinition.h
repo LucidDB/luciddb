@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,13 +30,15 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class ResourceDefinition
+class FENNEL_COMMON_EXPORT ResourceDefinition
 {
     const std::string _key;
 
 public:
-    explicit ResourceDefinition(ResourceBundle *bundle,
-                                const std::string &key);
+    explicit ResourceDefinition(
+        ResourceBundle *bundle,
+        const std::string &key);
+
     virtual ~ResourceDefinition();
 
     std::string format() const;
@@ -61,13 +63,13 @@ public:
     std::string format(const t0 &p0, const t1 &p1, const t2 &p2) const
     {
         boost::format fmt = prepareFormatter(3);
-      
+
         return boost::io::str(fmt % p0 % p1 % p2);
     }
 
     template<typename t0, typename t1, typename t2, typename t3>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, 
-                       const t3 &p3) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3) const
     {
         boost::format fmt = prepareFormatter(4);
 
@@ -75,8 +77,9 @@ public:
     }
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4) const
     {
         boost::format fmt = prepareFormatter(5);
 
@@ -85,8 +88,9 @@ public:
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4,
              typename t5>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4, const t5 &p5) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4, const t5 &p5) const
     {
         boost::format fmt = prepareFormatter(6);
 
@@ -95,8 +99,9 @@ public:
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4,
              typename t5, typename t6>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4, const t5 &p5, const t6 &p6) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4, const t5 &p5, const t6 &p6) const
     {
         boost::format fmt = prepareFormatter(7);
 
@@ -105,8 +110,9 @@ public:
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4,
              typename t5, typename t6, typename t7>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7) const
     {
         boost::format fmt = prepareFormatter(8);
 
@@ -115,9 +121,10 @@ public:
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4,
              typename t5, typename t6, typename t7, typename t8>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7,
-                  const t8 &p8) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7,
+        const t8 &p8) const
     {
         boost::format fmt = prepareFormatter(9);
 
@@ -126,14 +133,15 @@ public:
 
     template<typename t0, typename t1, typename t2, typename t3, typename t4,
              typename t5, typename t6, typename t7, typename t8, typename t9>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
-                  const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7,
-                  const t8 &p8, const t9 &p9) const
+    std::string format(
+        const t0 &p0, const t1 &p1, const t2 &p2, const t3 &p3,
+        const t4 &p4, const t5 &p5, const t6 &p6, const t7 &p7,
+        const t8 &p8, const t9 &p9) const
     {
         boost::format fmt = prepareFormatter(10);
 
-        return boost::io::str(fmt % p0 % p1 % p2 % p3 % p4 % p5 % p6 % p7 % p8
-                              % p9);
+        return boost::io::str(
+            fmt % p0 % p1 % p2 % p3 % p4 % p5 % p6 % p7 % p8 % p9);
     }
 
     // TODO: more format methods?
@@ -148,3 +156,5 @@ private:
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_ResourceDefinition_Included
+
+// End ResourceDefinition.h

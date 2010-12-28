@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,8 +23,6 @@ package org.eigenbase.sql;
 
 import java.util.*;
 
-import org.eigenbase.util.*;
-
 
 /**
  * SqlAccessType is represented by a set of allowed access types
@@ -35,72 +33,57 @@ import org.eigenbase.util.*;
  */
 public class SqlAccessType
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlAccessType ALL =
-        new SqlAccessType(SqlAccessEnum.ALL);
+        new SqlAccessType(EnumSet.allOf(SqlAccessEnum.class));
     public static final SqlAccessType READ_ONLY =
-        new SqlAccessType(SqlAccessEnum.READ_ONLY);
+        new SqlAccessType(EnumSet.of(SqlAccessEnum.SELECT));
     public static final SqlAccessType WRITE_ONLY =
-        new SqlAccessType(SqlAccessEnum.WRITE_ONLY);
+        new SqlAccessType(EnumSet.of(SqlAccessEnum.INSERT));
 
     //~ Instance fields --------------------------------------------------------
 
-    // TODO: Change to use EnumSet
-    private EnumeratedValues accessEnums;
+    private final EnumSet<SqlAccessEnum> accessEnums;
 
     //~ Constructors -----------------------------------------------------------
 
-    public SqlAccessType(SqlAccessEnum [] accessEnums)
+    public SqlAccessType(EnumSet<SqlAccessEnum> accessEnums)
     {
-        this.accessEnums = new EnumeratedValues(accessEnums);
+        this.accessEnums = accessEnums;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public boolean allowsAccess(SqlAccessEnum access)
     {
-        return accessEnums.containsName(access.getName());
-    }
-
-    public String [] getNames()
-    {
-        return accessEnums.getNames();
+        return accessEnums.contains(access);
     }
 
     public String toString()
     {
-        String [] names = accessEnums.getNames();
-        return Arrays.asList(names).toString();
+        return accessEnums.toString();
     }
 
     public static SqlAccessType create(String [] accessNames)
     {
-        if (accessNames != null) {
-            SqlAccessEnum [] accessEnums =
-                new SqlAccessEnum[accessNames.length];
-            for (int i = 0; i < accessNames.length; i++) {
-                accessEnums[i] =
-                    SqlAccessEnum.get(
-                        accessNames[i].trim().toUpperCase());
-            }
-            return new SqlAccessType(accessEnums);
-        } else {
-            return null;
+        assert accessNames != null;
+        EnumSet<SqlAccessEnum> enumSet = EnumSet.noneOf(SqlAccessEnum.class);
+        for (int i = 0; i < accessNames.length; i++) {
+            enumSet.add(
+                SqlAccessEnum.valueOf(
+                    accessNames[i].trim().toUpperCase()));
         }
+        return new SqlAccessType(enumSet);
     }
 
     public static SqlAccessType create(String accessString)
     {
-        if (accessString != null) {
-            accessString = accessString.replace('[', ' ');
-            accessString = accessString.replace(']', ' ');
-            String [] accessNames = accessString.split(",");
-            return create(accessNames);
-        } else {
-            return null;
-        }
+        assert accessString != null;
+        accessString = accessString.replace('[', ' ');
+        accessString = accessString.replace(']', ' ');
+        String [] accessNames = accessString.split(",");
+        return create(accessNames);
     }
 }
 

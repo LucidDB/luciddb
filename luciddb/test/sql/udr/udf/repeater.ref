@@ -17,17 +17,31 @@
 | 222     |
 +---------+
 0: jdbc:luciddb:> values applib.repeater('lola ', 1000000000);
-+-----------------------------------------------------------------------------------------------------------------------------------+
-|                                                              EXPR$0                                                               |
-+-----------------------------------------------------------------------------------------------------------------------------------+
-| lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lol  |
-+-----------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
 0: jdbc:luciddb:> values applib.repeater(3, 3);
 Error: From line 1, column 15 to line 1, column 28: No match found for function signature REPEATER(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> values applib.repeater('lola ', X'02');
 Error: From line 1, column 15 to line 1, column 38: No match found for function signature REPEATER(<CHARACTER>, <BINARY>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.repeater(cast(null as varchar(33)), 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.repeater('this', cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.repeater
 0: jdbc:luciddb:> create view repview as
@@ -56,11 +70,11 @@ Error: From line 1, column 15 to line 1, column 38: No match found for function 
 | is who? VoterVoter  |
 +---------------------+
 0: jdbc:luciddb:> values(cast (applib.repeater('25', 2) as integer) / 25 - 1);
-+---------+
-| EXPR$0  |
-+---------+
-| 100     |
-+---------+
++-------------+
+|   EXPR$0    |
++-------------+
+| 100.000000  |
++-------------+
 0: jdbc:luciddb:> values(cast (applib.repeater('11', 3) as integer) + 10000000000);
 +--------------+
 |    EXPR$0    |
@@ -78,4 +92,5 @@ Error: From line 1, column 15 to line 1, column 38: No match found for function 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view repview;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,18 +26,21 @@ import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import openjava.ptree.Literal;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+
 
 /**
  * FtrsIndexScanRel is the relational expression corresponding to a scan via a
@@ -50,7 +53,6 @@ class FtrsIndexScanRel
     extends TableAccessRelBase
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -70,7 +72,7 @@ class FtrsIndexScanRel
      */
     final Integer [] projectedColumns;
     final boolean isOrderPreserving;
-    
+
     private FtrsIndexGuide indexGuide;
 
     //~ Constructors -----------------------------------------------------------
@@ -120,7 +122,7 @@ class FtrsIndexScanRel
         }
         return indexGuide;
     }
-    
+
     /**
      * Gets the column referenced by a FieldAccess relative to this scan.
      *
@@ -135,13 +137,12 @@ class FtrsIndexScanRel
             fieldOrdinal = projectedColumns[fieldOrdinal].intValue();
         }
         int columnOrdinal = getIndexGuide().unFlattenOrdinal(fieldOrdinal);
-        return
-            (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
-                columnOrdinal);
+        return (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
+            columnOrdinal);
     }
 
     // implement RelNode
-    public Object clone()
+    public FtrsIndexScanRel clone()
     {
         FtrsIndexScanRel clone =
             new FtrsIndexScanRel(
@@ -179,26 +180,25 @@ class FtrsIndexScanRel
             return flattenedRowType;
         } else {
             final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return
-                getCluster().getTypeFactory().createStructType(
-                    new RelDataTypeFactory.FieldInfo() {
-                        public int getFieldCount()
-                        {
-                            return projectedColumns.length;
-                        }
+            return getCluster().getTypeFactory().createStructType(
+                new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return projectedColumns.length;
+                    }
 
-                        public String getFieldName(int index)
-                        {
-                            final int i = projectedColumns[index].intValue();
-                            return fields[i].getName();
-                        }
+                    public String getFieldName(int index)
+                    {
+                        final int i = projectedColumns[index].intValue();
+                        return fields[i].getName();
+                    }
 
-                        public RelDataType getFieldType(int index)
-                        {
-                            final int i = projectedColumns[index].intValue();
-                            return fields[i].getType();
-                        }
-                    });
+                    public RelDataType getFieldType(int index)
+                    {
+                        final int i = projectedColumns[index].intValue();
+                        return fields[i].getType();
+                    }
+                });
         }
     }
 
@@ -216,7 +216,7 @@ class FtrsIndexScanRel
             new String[] { "table", "projection", "index", "preserveOrder" },
             new Object[] {
                 Arrays.asList(ftrsTable.getQualifiedName()), projection,
-            index.getName(), Boolean.valueOf(isOrderPreserving)
+                index.getName(), Boolean.valueOf(isOrderPreserving)
             });
     }
 
@@ -278,11 +278,24 @@ class FtrsIndexScanRel
             // the plan.
             scanStream.setRootPageId(-1);
         }
+        scanStream.setReadOnlyCommittedData(false);
+        scanStream.setRootPageIdParamId(0);
         scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
-        scanStream.setIndexId(JmiUtil.getObjectId(index));
+        scanStream.setIndexId(JmiObjUtil.getObjectId(index));
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
+        CwmTable oldTable = stmt.getIndexMap().getOldTableStructure();
+        if (oldTable != null) {
+            // REVIEW jvs 4-Dec-2008:  this wouldn't work for
+            // an unclustered index scan, so if somehow we ever
+            // ended up choosing one of those for ALTER TABLE
+            // ADD COLUMN, I think we'd be in trouble.
+            indexGuide =
+                new FtrsIndexGuide(
+                    stmt.getFarragoTypeFactory(),
+                    oldTable);
+        }
         scanStream.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));
 
@@ -297,14 +310,14 @@ class FtrsIndexScanRel
         } else {
             // transform from table-relative to index-relative ordinals
             indexProjection = new Integer[projection.length];
-            List indexTableColList =
+            List<Integer> indexTableColList =
                 Arrays.asList(
                     indexGuide.getUnclusteredCoverageArray(index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
                 assert (iIndexCol != -1);
-                indexProjection[i] = new Integer(iIndexCol);
+                indexProjection[i] = iIndexCol;
             }
         }
 
@@ -328,7 +341,8 @@ class FtrsIndexScanRel
     {
         Integer [] indexedCols =
             ftrsTable.getIndexGuide().getCollationKeyArray(index);
-        List collationList = new ArrayList();
+        List<RelFieldCollation> collationList =
+            new ArrayList<RelFieldCollation>();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();
             RelFieldCollation collation = null;
@@ -347,9 +361,8 @@ class FtrsIndexScanRel
             }
             collationList.add(collation);
         }
-        return
-            (RelFieldCollation []) collationList.toArray(
-                RelFieldCollation.emptyCollationArray);
+        return collationList.toArray(
+            new RelFieldCollation[collationList.size()]);
     }
 }
 

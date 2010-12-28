@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,6 @@ public class Permutation
     implements Mapping,
         Mappings.TargetMapping
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private int [] targets;
@@ -102,8 +101,8 @@ public class Permutation
     public Object clone()
     {
         return new Permutation(
-                targets.clone(),
-                sources.clone());
+            targets.clone(),
+            sources.clone());
     }
 
     /**
@@ -156,7 +155,7 @@ public class Permutation
      */
     public String toString()
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("[");
         for (int i = 0; i < targets.length; i++) {
             if (i > 0) {
@@ -412,8 +411,9 @@ public class Permutation
      */
     public Permutation inverse()
     {
-        return
-            new Permutation((int []) sources.clone(), (int []) targets.clone());
+        return new Permutation(
+            (int []) sources.clone(),
+            (int []) targets.clone());
     }
 
     /**
@@ -496,8 +496,7 @@ public class Permutation
     public boolean equals(Object obj)
     {
         // not very efficient
-        return
-            (obj instanceof Permutation)
+        return (obj instanceof Permutation)
             && toString().equals(obj.toString());
     }
 
@@ -505,25 +504,25 @@ public class Permutation
     public Iterator<IntPair> iterator()
     {
         return new Iterator<IntPair>() {
-                private int i = 0;
+            private int i = 0;
 
-                public boolean hasNext()
-                {
-                    return i < targets.length;
-                }
+            public boolean hasNext()
+            {
+                return i < targets.length;
+            }
 
-                public IntPair next()
-                {
-                    final IntPair pair = new IntPair(i, targets[i]);
-                    ++i;
-                    return pair;
-                }
+            public IntPair next()
+            {
+                final IntPair pair = new IntPair(i, targets[i]);
+                ++i;
+                return pair;
+            }
 
-                public void remove()
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
+            public void remove()
+            {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     public int getSourceCount()
@@ -556,6 +555,21 @@ public class Permutation
         for (IntPair pair : mapping) {
             set(pair.source, pair.target);
         }
+    }
+
+    /**
+     * Returns the product of this Permutation with a given Permutation. Does
+     * not modify this Permutation or <code>permutation</code>.
+     *
+     * <p>For example, perm.product(perm.inverse()) yields the identity.
+     */
+    public Permutation product(Permutation permutation)
+    {
+        Permutation product = new Permutation(sources.length);
+        for (int i = 0; i < targets.length; ++i) {
+            product.set(i, permutation.getTarget(targets[i]));
+        }
+        return product;
     }
 }
 

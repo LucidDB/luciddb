@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,11 +29,13 @@ import java.lang.reflect.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
@@ -42,21 +44,17 @@ import org.eigenbase.util.*;
 
 /**
  * FarragoExecutableJavaStmt implements FarragoSessionExecutableStmt via a
- * compiled Java class.
+ * compiled Java class. It extends upon FarragoExecutableFennelStmt, which
+ * implements the Fennel portion of a statement.
  *
  * <p>NOTE: be sure to read superclass warnings before modifying this class.
- *
- * <p>TODO: another implementation, FarragoExecutableFennelStmt, which operates
- * off of a pure Fennel plan; for use when there is no Java needed in the
- * implementation
  *
  * @author John V. Sichi
  * @version $Id$
  */
 class FarragoExecutableJavaStmt
-    extends FarragoExecutableStmtImpl
+    extends FarragoExecutableFennelStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final File packageDir;
@@ -65,63 +63,62 @@ class FarragoExecutableJavaStmt
     // just the class name, and dynamically load it per-execution.  This
     // will keep cache memory usage down.
     private final Class rowClass;
-    private final ClassLoader statementClassLoader;
-    private final RelDataType rowType;
-    private final Method method;
-    private final String xmiFennelPlan;
-    private final Set referencedObjectIds;
+    private final ClassLoader stmtClassLoader;
+    private final Method stmtMethod;
+    private final List<FarragoTransformDef> transformDefs;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
+    private final int totalByteCodeSize;
 
     //~ Constructors -----------------------------------------------------------
 
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
-        ClassLoader statementClassLoader,
+        ClassLoader stmtClassLoader,
         RelDataType preparedRowType,
+        List<List<String>> fieldOrigins,
         RelDataType dynamicParamRowType,
-        Method method,
+        Method stmtMethod,
+        List<FarragoTransformDef> transformDefs,
         String xmiFennelPlan,
         boolean isDml,
-        Set referencedObjectIds,
+        TableModificationRel.Operation tableModOp,
+        Map<String, String> referencedObjectTimestampMap,
         TableAccessMap tableAccessMap,
         Map<String, RelDataType> resultSetTypeMap,
-        Map<String, RelDataType> iterCalcTypeMap)
+        Map<String, RelDataType> iterCalcTypeMap,
+        int totalByteCodeSize)
     {
-        super(dynamicParamRowType, isDml, tableAccessMap);
+        super(
+            preparedRowType,
+            fieldOrigins,
+            dynamicParamRowType,
+            xmiFennelPlan,
+            null,
+            isDml,
+            tableModOp,
+            referencedObjectTimestampMap,
+            tableAccessMap,
+            resultSetTypeMap);
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;
-        this.statementClassLoader = statementClassLoader;
-        this.method = method;
-        this.xmiFennelPlan = xmiFennelPlan;
-        this.referencedObjectIds = referencedObjectIds;
+        this.stmtClassLoader = stmtClassLoader;
+        this.stmtMethod = stmtMethod;
+        this.transformDefs = transformDefs;
         this.resultSetTypeMap = resultSetTypeMap;
         this.iterCalcTypeMap = iterCalcTypeMap;
-
-        rowType = preparedRowType;
+        this.totalByteCodeSize = totalByteCodeSize;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionExecutableStmt
-    public RelDataType getRowType()
-    {
-        return rowType;
-    }
-
-    // implement FarragoSessionExecutableStmt
-    public Set getReferencedObjectIds()
-    {
-        return referencedObjectIds;
-    }
-
-    // implement FarragoSessionExecutableStmt
     public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
         try {
-            runtimeContext.setStatementClassLoader(statementClassLoader);
+            runtimeContext.setStatementClassLoader(stmtClassLoader);
 
             if (xmiFennelPlan != null) {
                 runtimeContext.loadFennelPlan(xmiFennelPlan);
@@ -129,22 +126,30 @@ class FarragoExecutableJavaStmt
 
             // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
-            // input, and the Java streams are created by method.invoke below
-            // (which calls the generated execute method to obtain an iterator).
-            //  This means that the generated execute must NOT try to prefetch
-            // any data, since the Fennel streams aren't open yet. In
+            // input, and the Java streams are created by stmtMethod.invoke
+            // below (which calls the generated execute stmtMethod to obtain an
+            // iterator). This means that the generated execute must NOT try to
+            // prefetch any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
-            ResultSet resultSet;
             TupleIter iter =
-                (TupleIter) method.invoke(
+                (TupleIter) stmtMethod.invoke(
                     null,
                     new Object[] { runtimeContext });
-            resultSet =
-                new FarragoTupleIterResultSet(iter,
+
+            FarragoTupleIterResultSet resultSet =
+                new FarragoTupleIterResultSet(
+                    iter,
                     rowClass,
                     rowType,
-                    runtimeContext);
+                    fieldOrigins,
+                    runtimeContext,
+                    null);
+
+            // instantiate and initialize all generated FarragoTransforms.
+            for (FarragoTransformDef tdef : transformDefs) {
+                tdef.init(runtimeContext);
+            }
 
             if (xmiFennelPlan != null) {
                 // Finally, it's safe to open all streams.
@@ -152,6 +157,8 @@ class FarragoExecutableJavaStmt
             }
 
             runtimeContext = null;
+            resultSet.setOpened();
+
             return resultSet;
         } catch (IllegalAccessException e) {
             throw Util.newInternal(e);
@@ -167,22 +174,27 @@ class FarragoExecutableJavaStmt
     // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
-        // TODO: a better approximation.  This only sums the bytecode size of
-        // the compiled classes.  Other allocations to estimate are loaded
-        // class overhead (e.g. constants and reflection info), type
-        // descriptor, JIT code size, and "this" object and fields such as
-        // packageDir/referencedObjectIds.
-        long nBytes = 0;
-        File [] files = packageDir.listFiles();
-        for (int i = 0; i < files.length; ++i) {
-            if (!files[i].getName().endsWith(".class")) {
-                continue;
+        // The size of the Java portion of the statement is estimated based on
+        // the bytecode size times an additional factor of .75. That factor was
+        // derived from measurements capturing the relative size of JIT code
+        // versus bytecode size.  JIT code size relative to bytecode size varied
+        // from .25 to .5.  So, we use .5 to account for the JIT code and then
+        // add an additional .25 factor for other class overhead (e.g. constants
+        // and reflection info), type descriptor, and "this" object and fields
+        // such as packageDir/referencedObjectIds.
+        long nBytes = (long) ((double) totalByteCodeSize * 1.75);
+
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine("Java bytecode size = " + totalByteCodeSize + " bytes");
+            if (xmiFennelPlan != null) {
+                int xmiSize = FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+                tracer.fine("XMI Fennel plan size = " + xmiSize + " bytes");
             }
-            nBytes += files[i].length();
         }
 
+        // call the superclass to account for the Fennel XMI plan
         if (xmiFennelPlan != null) {
-            nBytes += FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+            nBytes += super.getMemoryUsage();
         }
 
         return nBytes;

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.rex.*;
 public abstract class CalcRelBase
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RexProgram program;
@@ -59,7 +58,8 @@ public abstract class CalcRelBase
         this.rowType = rowType;
         this.program = program;
         this.collationList =
-            collationList.isEmpty() ? RelCollation.emptyList : collationList;
+            collationList.isEmpty() ? Collections.<RelCollation>emptyList()
+            : collationList;
         assert isValid(true);
     }
 
@@ -72,7 +72,8 @@ public abstract class CalcRelBase
                 program.getInputRowType(),
                 "child's output type",
                 getChild().getRowType(),
-                fail)) {
+                fail))
+        {
             return false;
         }
         if (!RelOptUtil.equal(
@@ -80,16 +81,21 @@ public abstract class CalcRelBase
                 program.getOutputRowType(),
                 "declared rowtype of rel",
                 rowType,
-                fail)) {
+                fail))
+        {
             return false;
         }
         if (!program.isValid(fail)) {
             return false;
         }
+        if (!program.isNormalized(fail, getCluster().getRexBuilder())) {
+            return false;
+        }
         if (!RelCollationImpl.isValid(
                 getRowType(),
                 collationList,
-                fail)) {
+                fail))
+        {
             return false;
         }
         return true;
@@ -102,10 +108,9 @@ public abstract class CalcRelBase
 
     public double getRows()
     {
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                program.getCondition());
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            program);
     }
 
     public List<RelCollation> getCollationList()

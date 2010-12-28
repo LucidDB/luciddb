@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ import net.sf.farrago.cwm.relational.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -41,7 +42,6 @@ public abstract class FarragoQueryNamedColumnSet
     extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -90,9 +90,9 @@ public abstract class FarragoQueryNamedColumnSet
     }
 
     // implement SqlValidatorTable
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     // implement SqlValidatorTable
@@ -124,6 +124,20 @@ public abstract class FarragoQueryNamedColumnSet
     {
         return cwmColumnSet;
     }
+
+    // implement FarragoMedColumnSet
+    public String[] getForeignName()
+    {
+        // this method is not appropriate to all column sets; subclasses for
+        // which it is appropriate should override
+        throw new UnsupportedOperationException();
+    }
+
+    // implement FarragoMedColumnSet
+    public final String[] getLocalName()
+    {
+        return getQualifiedName();
+    }
 }
 
-// End FarragoTable.java
+// End FarragoQueryNamedColumnSet.java

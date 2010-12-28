@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,8 +28,8 @@ import junit.framework.*;
 
 
 /**
- * ReflectVisitorTest tests {@link ReflectUtil.invokeVisitor} and provides a
- * contrived example of how to use it.
+ * ReflectVisitorTest tests {@link ReflectUtil#invokeVisitor} and {@link
+ * ReflectiveVisitor} and provides a contrived example of how to use them.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -37,7 +37,6 @@ import junit.framework.*;
 public class ReflectVisitorTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public ReflectVisitorTest(String name)
@@ -172,8 +171,14 @@ public class ReflectVisitorTest
      * subclass of Number.
      */
     public abstract class NumberNegater
+        implements ReflectiveVisitor
     {
         protected Number result;
+        private final ReflectiveVisitDispatcher<NumberNegater, Number>
+            dispatcher =
+                ReflectUtil.createDispatcher(
+                    NumberNegater.class,
+                    Number.class);
 
         /**
          * Negates the given number.
@@ -181,9 +186,31 @@ public class ReflectVisitorTest
          * @param n the number to be negated
          *
          * @return the negated result; not guaranteed to be the same concrete
-         * type as n; null is returend if n's type wasn't handled
+         * type as n; null is returned if n's type wasn't handled
          */
         public Number negate(Number n)
+        {
+            // we specify Number.class as the hierarchy root so
+            // that extraneous visit methods are ignored
+            result = null;
+            dispatcher.invokeVisitor(
+                this,
+                n,
+                "visit");
+            return result;
+        }
+
+        /**
+         * Negates the given number without using a dispatcher object to cache
+         * applicable methods. The results should be the same as {@link
+         * #negate(Number)}.
+         *
+         * @param n the number to be negated
+         *
+         * @return the negated result; not guaranteed to be the same concrete
+         * type as n; null is returned if n's type wasn't handled
+         */
+        public Number negateWithoutDispatcher(Number n)
         {
             // we specify Number.class as the hierarchy root so
             // that extraneous visit methods are ignored

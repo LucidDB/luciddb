@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ AggComputer *AggComputer::newAggComputer(
         assert(pAttrDesc);
         // TODO jvs 6-Oct-2005:  gotta use some of that template
         // metaprogramming mumbo jumbo to get rid of this
-        switch(pAttrDesc->pTypeDescriptor->getOrdinal()) {
+        switch (pAttrDesc->pTypeDescriptor->getOrdinal()) {
         case STANDARD_TYPE_INT_8:
             return new SumAggComputer<int8_t>();
         case STANDARD_TYPE_UINT_8:
@@ -233,12 +233,12 @@ void ExtremeAggComputer::clearAccumulator(TupleDatum &accumulatorDatum)
 }
 
 inline void ExtremeAggComputer::copyInputToAccumulator(
-    TupleDatum &accumulatorDatum, 
+    TupleDatum &accumulatorDatum,
     TupleDatum const &inputDatum)
 {
     // Use the utility function to copy from inputDatum's buffer to
     // accumulatorDatum.
-    accumulatorDatum.memCopyFrom(inputDatum);    
+    accumulatorDatum.memCopyFrom(inputDatum);
 }
 
 void ExtremeAggComputer::updateAccumulator(
@@ -260,7 +260,7 @@ void ExtremeAggComputer::updateAccumulator(
         return;
     } else if (aggFunction == AGG_FUNC_SINGLE_VALUE) {
         throw FennelExcn(
-            FennelResource::instance().scalarQueryReturnedMultipleRows() );
+            FennelResource::instance().scalarQueryReturnedMultipleRows());
     }
 
     // c = (input - accumulator)
@@ -315,11 +315,11 @@ void ExtremeAggComputer::updateAccumulator(
 {
     if (aggFunction == AGG_FUNC_SINGLE_VALUE) {
         throw FennelExcn(
-            FennelResource::instance().scalarQueryReturnedMultipleRows() );
+            FennelResource::instance().scalarQueryReturnedMultipleRows());
     }
 
     TupleDatum const &inputDatum = inputTuple[iInputAttr];
-    
+
     if (!accumulatorDatumSrc.pData) {
         accumulatorDatumDest.memCopyFrom(inputDatum);
     } else if (inputDatum.pData) {
@@ -336,12 +336,12 @@ void ExtremeAggComputer::updateAccumulator(
         if (c <= 0) {
             // for MAX, input has to be greater than accumulator for accumulator
             // to be updated
-            accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
+            accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
         } else {
-            accumulatorDatumDest.memCopyFrom(inputDatum);            
+            accumulatorDatumDest.memCopyFrom(inputDatum);
         }
     } else {
-        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
+        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
     }
 }
 

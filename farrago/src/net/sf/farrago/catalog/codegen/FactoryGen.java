@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,8 @@ package net.sf.farrago.catalog.codegen;
 
 import java.io.*;
 
+import java.lang.reflect.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
@@ -31,11 +33,10 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import org.netbeans.api.mdr.*;
 import org.netbeans.lib.jmi.util.*;
 
 
@@ -50,6 +51,9 @@ import org.netbeans.lib.jmi.util.*;
  */
 public class FactoryGen
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final int MAX_LARGE_NUMERICS = 4;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -65,12 +69,13 @@ public class FactoryGen
      * <li>args[4] = target class name
      * <li>args[5] = source package Java metaclass name
      * <li>args[6] = source extent name
+     * <li>(optional) args[7] = model timestamp
      * </ul>
      */
     public static void main(String [] args)
         throws ClassNotFoundException, IOException
     {
-        assert (args.length == 7);
+        assert ((args.length == 7) || (args.length == 8));
         FileWriter writerInterface = new FileWriter(args[0]);
         FileWriter writerClass = new FileWriter(args[1]);
         String targetPackageName = args[2];
@@ -78,6 +83,10 @@ public class FactoryGen
         String targetClassName = args[4];
         String sourcePackageJavaMetaclassName = args[5];
         String sourceExtentName = args[6];
+        String modelTimestamp = "NO_TIMESTAMP_ASSIGNED";
+        if (args.length == 8) {
+            modelTimestamp = args[7];
+        }
 
         FarragoModelLoader modelLoader = null;
         PrintWriter pwInterface = new PrintWriter(writerInterface);
@@ -113,6 +122,12 @@ public class FactoryGen
             pw.println("        return rootPackage;");
             pw.println("    }");
             pw.println();
+            pw.print("    public String");
+            pw.println(" getCompiledModelTimestamp()");
+            pw.println("    {");
+            pw.println("        return \"" + modelTimestamp + "\";");
+            pw.println("    }");
+            pw.println();
 
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =
@@ -142,9 +157,8 @@ public class FactoryGen
         if (iface.isInstance(refPackage)) {
             return refPackage;
         }
-        Iterator iter = refPackage.refAllPackages().iterator();
-        while (iter.hasNext()) {
-            RefPackage p = (RefPackage) iter.next();
+        Collection<RefPackage> allPackages = refPackage.refAllPackages();
+        for (RefPackage p : allPackages) {
             RefPackage f = findPackage(p, iface);
             if (f != null) {
                 return f;
@@ -162,7 +176,8 @@ public class FactoryGen
         TagProvider tagProvider = new TagProvider();
 
         // first generate accessor for package
-        Class pkgInterface = JmiUtil.getJavaInterfaceForRefPackage(refPackage);
+        Class pkgInterface =
+            JmiObjUtil.getJavaInterfaceForRefPackage(refPackage);
         pw.print("    public ");
         pw.print(pkgInterface.getName());
         pw.print(" get");
@@ -176,15 +191,17 @@ public class FactoryGen
         pw.println();
 
         // then generate factory methods for all classes in package
-        Iterator iter = refPackage.refAllClasses().iterator();
-        while (iter.hasNext()) {
-            RefClass refClass = (RefClass) iter.next();
+        Collection<RefClass> allClasses = refPackage.refAllClasses();
+        for (RefClass refClass : allClasses) {
             MofClass mofClass = (MofClass) refClass.refMetaObject();
             if (mofClass.isAbstract()) {
                 continue;
             }
             Class classInterface =
-                JmiUtil.getJavaInterfaceForRefObject(refClass);
+                JmiObjUtil.getJavaInterfaceForRefObject(refClass);
+
+            validateClass(classInterface);
+
             String unqualifiedInterfaceName =
                 ReflectUtil.getUnqualifiedClassName(classInterface);
             pw.print("    public ");
@@ -203,9 +220,8 @@ public class FactoryGen
             pw.println("    }");
             pw.println();
         }
-        iter = refPackage.refAllPackages().iterator();
-        while (iter.hasNext()) {
-            RefPackage refSubPackage = (RefPackage) iter.next();
+        Collection<RefPackage> allPackages = refPackage.refAllPackages();
+        for (RefPackage refSubPackage : allPackages) {
             MofPackage mofSubPackage =
                 (MofPackage) refSubPackage.refMetaObject();
 
@@ -217,16 +233,82 @@ public class FactoryGen
             Package childJavaPackage = refSubPackage.getClass().getPackage();
             if (!childJavaPackage.getName().equals(
                     javaPackage.getName() + "."
-                    + subPackageName.toLowerCase())) {
+                    + subPackageName.toLowerCase()))
+            {
                 continue;
             }
 
             subPackageName = tagProvider.getSubstName(mofSubPackage);
 
-            generatePackage(pw,
+            generatePackage(
+                pw,
                 refSubPackage,
                 packageAccessor + ".get" + subPackageName + "()");
         }
+    }
+
+    /**
+     * Validates the given class. In particular, this method detects classes
+     * that can trigger intermittent bugs in Farrago's MDR implementation.
+     *
+     * @param classInterface class to validate
+     *
+     * @see #countLargeNumerics(Class)
+     */
+    private static void validateClass(Class classInterface)
+    {
+        int numLargeNumerics = countLargeNumerics(classInterface);
+
+        if (numLargeNumerics > MAX_LARGE_NUMERICS) {
+            throw new RuntimeException(
+                classInterface.getName()
+                + ": A maximum of 4 long and/or double attributes are allowed "
+                + "in any catalog class. See FRG-295.");
+        }
+    }
+
+    /**
+     * Counts the number of attributes in the given class that are of type <tt>
+     * long</tt> or <tt>double</tt>. The count includes attributes from super
+     * interfaces. This method looks at only the methods whose names begin with
+     * "set" and are therefore mutators/setters. Attributes of type {@link
+     * java.lang.Long} or {@link java.lang.Double} are not counted as large
+     * numberics (because they do not require extra operand stack space).
+     *
+     * <p>This method can be removed when the corresponding bug in MDR is fixed.
+     *
+     * @param classInterface a Farrago catalog interface class
+     *
+     * @return the number of longs and doubles in the class
+     *
+     * @see <a href="http://issues.eigenbase.org/browse/FRG-295">FRG-295</a>
+     */
+    private static int countLargeNumerics(Class classInterface)
+    {
+        if ((classInterface == null)
+            || !classInterface.getName().startsWith("net.sf.farrago.fem"))
+        {
+            return 0;
+        }
+
+        int numLargeNumerics = 0;
+        for (Class superInterface : classInterface.getInterfaces()) {
+            numLargeNumerics += countLargeNumerics(superInterface);
+        }
+
+        for (Method method : classInterface.getDeclaredMethods()) {
+            if (method.getName().startsWith("set")) {
+                Class [] paramTypes = method.getParameterTypes();
+                if (((paramTypes.length == 1)
+                        && (paramTypes[0] == long.class))
+                    || (paramTypes[0] == double.class))
+                {
+                    numLargeNumerics++;
+                }
+            }
+        }
+
+        return numLargeNumerics;
     }
 
     //~ Inner Classes ----------------------------------------------------------

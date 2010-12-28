@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,6 +36,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -49,7 +50,6 @@ import org.eigenbase.reltype.*;
 public class FarragoDataWrapperCache
     extends FarragoPluginCache
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
@@ -111,7 +111,8 @@ public class FarragoDataWrapperCache
             // verify if the private cache entry is valid (with matching
             // library name and options)
             if (options.equals(wrapper.getProperties())
-                && libraryName.equals(wrapper.getLibraryName())) {
+                && libraryName.equals(wrapper.getLibraryName()))
+            {
                 // already privately cached
                 return wrapper;
             }
@@ -126,11 +127,17 @@ public class FarragoDataWrapperCache
 
         wrapper = (FarragoMedDataWrapper) entry.getValue();
 
-        // if the share cache is invalid (mismatching library name or options),
+        // If the share cache is invalid (mismatching library name or options),
         // discard that entry and re-pin it (which will initialize a new entry
-        // in the shared cache with the wrapper factory
+        // in the shared cache with the wrapper factory.
+        //
+        // FIXME: If another user has pinned this entry, then discard will
+        // fail. We should make libraryName and options part of the key, so
+        // that cache entries are always valid.
         if (!options.equals(wrapper.getProperties())
-            || !libraryName.equals(wrapper.getLibraryName())) {
+            || !libraryName.equals(wrapper.getLibraryName()))
+        {
+            getSharedCache().unpin(entry);
             getSharedCache().discard(mofId);
             entry = getSharedCache().pin(mofId, factory, true);
         }
@@ -188,11 +195,10 @@ public class FarragoDataWrapperCache
         FemDataWrapper femWrapper)
     {
         Properties props = getStorageOptionsAsProperties(femWrapper);
-        return
-            loadWrapper(
-                femWrapper.refMofId(),
-                femWrapper.getLibraryFile(),
-                props);
+        return loadWrapper(
+            femWrapper.refMofId(),
+            femWrapper.getLibraryFile(),
+            props);
     }
 
     /**
@@ -226,9 +232,39 @@ public class FarragoDataWrapperCache
             loadWrapperFromCatalog(femDataWrapper);
 
         return loadServer(
-                femServer.refMofId(),
-                dataWrapper,
-                props);
+            femServer.refMofId(),
+            dataWrapper,
+            props);
+    }
+
+    private String[] getQualifiedName(FemBaseColumnSet baseColumnSet)
+    {
+        return new String[] {
+            baseColumnSet.getNamespace().getNamespace().getName(),
+            baseColumnSet.getNamespace().getName(),
+            baseColumnSet.getName()
+        };
+    }
+
+    private Map<String, Properties>
+        getColumnPropertiesMap(FemBaseColumnSet baseColumnSet)
+    {
+        Map<String, Properties> columnPropMap =
+            new HashMap<String, Properties>();
+        for (
+            FemStoredColumn column
+                : Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class))
+            {
+                columnPropMap.put(
+                    column.getName(),
+                    getStorageOptionsAsProperties(column));
+            }
+        return columnPropMap;
+    }
+
+    protected Properties getColumnSetProperties(FemBaseColumnSet baseColumnSet)
+    {
+        return getStorageOptionsAsProperties(baseColumnSet);
     }
 
     /**
@@ -243,36 +279,21 @@ public class FarragoDataWrapperCache
         FemBaseColumnSet baseColumnSet,
         FarragoTypeFactory typeFactory)
     {
-        FemDataServer femServer = baseColumnSet.getServer();
-
-        String [] qualifiedName =
-            new String[] {
-                baseColumnSet.getNamespace().getNamespace().getName(),
-                baseColumnSet.getNamespace().getName(),
-                baseColumnSet.getName()
-            };
-
-        Properties props = getStorageOptionsAsProperties(baseColumnSet);
-
-        Map columnPropMap = new HashMap();
-
+        String [] qualifiedName = getQualifiedName(baseColumnSet);
+        Properties props = getColumnSetProperties(baseColumnSet);
         RelDataType rowType =
             typeFactory.createStructTypeFromClassifier(baseColumnSet);
+        Map<String, Properties> columnPropMap =
+            getColumnPropertiesMap(baseColumnSet);
 
-        Iterator iter = baseColumnSet.getFeature().iterator();
-        while (iter.hasNext()) {
-            FemStoredColumn column = (FemStoredColumn) iter.next();
-            columnPropMap.put(
-                column.getName(),
-                getStorageOptionsAsProperties(column));
-        }
-
+        FemDataServer femServer = baseColumnSet.getServer();
         FarragoMedDataServer medServer = loadServerFromCatalog(femServer);
 
         FarragoMedColumnSet loadedColumnSet;
         try {
             loadedColumnSet =
-                medServer.newColumnSet(qualifiedName,
+                medServer.newColumnSet(
+                    qualifiedName,
                     props,
                     typeFactory,
                     rowType,
@@ -283,15 +304,6 @@ public class FarragoDataWrapperCache
                     baseColumnSet,
                     null),
                 ex);
-        }
-
-        if (baseColumnSet.getAllowedAccess() == null) {
-            // Allowed access not specified, use allowed access from
-            // loadedColumnSet
-            baseColumnSet.setAllowedAccess(
-                loadedColumnSet.getAllowedAccess().toString());
-        } else {
-            // TODO: Check allowed access are the same
         }
 
         if (rowType != null) {
@@ -313,21 +325,21 @@ public class FarragoDataWrapperCache
     public Properties getStorageOptionsAsProperties(
         FemElementWithStorageOptions element)
     {
-        Properties props = new Properties();
+        return FarragoCatalogUtil.getStorageOptionsAsProperties(
+            getRepos(),
+            element);
+    }
 
-        // TODO:  validate no duplicates
-        String optName, optValue;
-        Iterator iter = element.getStorageOptions().iterator();
-        while (iter.hasNext()) {
-            FemStorageOption option = (FemStorageOption) iter.next();
-            optName = option.getName();
-            assert (!props.containsKey(optName));
-            optValue = getRepos().expandProperties(option.getValue());
-            props.setProperty(
-                optName,
-                optValue);
+    // implement FarragoAllocation
+    public void closeAllocation()
+    {
+        super.closeAllocation();
+        Map<String, Object> mapMofIdToPlugin = getMapMofIdToPlugin();
+        for (Object plugin : mapMofIdToPlugin.values()) {
+            if (plugin instanceof FarragoMedDataServer) {
+                ((FarragoMedDataServer) plugin).releaseResources();
+            }
         }
-        return props;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -357,12 +369,19 @@ public class FarragoDataWrapperCache
             assert (mofId == key);
 
             FarragoMedDataWrapper wrapper =
-                (FarragoMedDataWrapper) initializePlugin(libraryName,
+                (FarragoMedDataWrapper) initializePlugin(
+                    libraryName,
                     "DataWrapperClassName",
                     options);
 
-            // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(wrapper, 1);
+            // TODO:  better resource usage estimation for wrappers
+            entry.initialize(wrapper, 1000, true);
+        }
+
+        // implement CachedObjectFactory
+        public boolean isStale(Object value)
+        {
+            return false;
         }
     }
 
@@ -403,8 +422,14 @@ public class FarragoDataWrapperCache
                 localServer.setFennelDbHandle(fennelDbHandle);
             }
 
-            // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(server, 1);
+            // TODO:  better resource usage estimation for servers
+            entry.initialize(server, 10000, true);
+        }
+
+        // implement CachedObjectFactory
+        public boolean isStale(Object value)
+        {
+            return false;
         }
     }
 }

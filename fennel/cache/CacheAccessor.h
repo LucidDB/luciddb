@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,11 +38,11 @@ class MappedPageListener;
  * interface is derived from CacheAccessor, so any Cache implementation can
  * alway be used directly as a vanilla CacheAccessor.
  */
-class CacheAccessor : public boost::noncopyable
+class FENNEL_CACHE_EXPORT CacheAccessor : public boost::noncopyable
 {
 public:
     virtual ~CacheAccessor();
-    
+
     /**
      * Locks a page into memory with the specified concurrency mode.  When the
      * page contents are no longer needed, the caller must invoke the
@@ -84,7 +84,7 @@ public:
      *
      *</ul>
      *
-     * 
+     *
      * @param blockId the BlockId of the page to be locked
      *
      * @param lockMode the desired concurrency mode
@@ -109,7 +109,7 @@ public:
         bool readIfUnmapped = true,
         MappedPageListener *pMappedPageListener = NULL,
         TxnId txnId = IMPLICIT_TXN_ID) = 0;
-    
+
     /**
      * Releases lock held on page.
      *
@@ -134,7 +134,7 @@ public:
      * @param blockId the BlockId of the page to be discarded
      */
     virtual void discardPage(BlockId blockId) = 0;
-    
+
     /**
      * Hints that a page should be prefetched in preparation for a
      * future lock request.
@@ -144,8 +144,10 @@ public:
      * @param pMappedPageListener optional listener to receive notifications
      * when this page is written; if specified, it must match all prior and
      * subsequent lock requests for the same page mapping
+     *
+     * @return true if the pre-fetch request was successful
      */
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
@@ -162,7 +164,7 @@ public:
      * subsequent lock requests for the same page mapping
      */
     virtual void prefetchBatch(
-        BlockId blockId,uint nPages,
+        BlockId blockId, uint nPages,
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
     /**
@@ -218,6 +220,27 @@ public:
      * @return default TxnId associated with this accessor
      */
     virtual TxnId getTxnId() const = 0;
+
+    /**
+     * Retrieves the current pre-fetch caching parameters that determine how
+     * many pages should be pre-fetched and how often the pre-fetches should
+     * occur.
+     *
+     * @param [out] prefetchPagesMax max number of outstanding pre-fetch pages
+     *
+     * @param [out] prefetchThrottleRate the number of successful pre-fetches
+     * that have to occur before the pre-fetch rate is throttled back up,
+     * in the event that it has been throttled down due to rejected requests
+     */
+    virtual void getPrefetchParams(
+        uint &prefetchPagesMax,
+        uint &prefetchThrottleRate) = 0;
+
+    /**
+     * @return the limit on the number of bytes of processor cache (e.g. L2)
+     * which should be used by this accessor for optimal coherence
+     */
+    virtual uint getProcessorCacheBytes() = 0;
 };
 
 FENNEL_END_NAMESPACE

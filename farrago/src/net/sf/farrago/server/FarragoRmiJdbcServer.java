@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import net.sf.farrago.jdbc.engine.*;
 public class FarragoRmiJdbcServer
     extends FarragoAbstractServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -85,7 +84,7 @@ public class FarragoRmiJdbcServer
     protected int startNetwork(FarragoJdbcServerDriver jdbcDriver)
         throws Exception
     {
-        List argList = new ArrayList();
+        List<String> argList = new ArrayList<String>();
 
         if (rmiRegistry != null) {
             // A server instance was previously in existence, so don't
@@ -101,7 +100,7 @@ public class FarragoRmiJdbcServer
             argList.add(Integer.toString(singleListenerPort));
         }
 
-        FarragoRJJdbcServer.main((String []) argList.toArray(new String[0]));
+        FarragoRJJdbcServer.main(argList.toArray(new String[argList.size()]));
         locateRmiRegistry();
 
         return rmiRegistryPort;

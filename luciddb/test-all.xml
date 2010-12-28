@@ -17,7 +17,7 @@
 
       <test-suite-call testfile="test-nightly-flatfile.xml">
         <test-suite-modifier value="flatfile"/>
-        <property name="foreign.db" value="csvjdbc"/>
+        <property name="foreign.db" value="flatfile"/>
       </test-suite-call>
 
       <test-suite-call testfile="test-nightly-nondb.xml">

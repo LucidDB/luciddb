@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ package org.eigenbase.relopt;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -38,6 +37,13 @@ import org.eigenbase.util.*;
  */
 public abstract class RelOptRule
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * Shorthand for {@link RelOptRuleOperand.Dummy#ANY}.
+     */
+    public static final RelOptRuleOperand.Dummy ANY =
+        RelOptRuleOperand.Dummy.ANY;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -46,7 +52,7 @@ public abstract class RelOptRule
      * of the class sans package name, but derived classes are encouraged to
      * override.
      */
-    protected String description;
+    protected final String description;
 
     /**
      * Root of operand tree.
@@ -58,46 +64,134 @@ public abstract class RelOptRule
      */
     public RelOptRuleOperand [] operands;
 
-    private RelTraitSet traits;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a rule.
      *
      * @param operand root operand, must not be null
-     *
-     * @pre operand != null
      */
     public RelOptRule(RelOptRuleOperand operand)
     {
-        Util.pre(operand != null, "operand != null");
-        this.operand = operand;
-        this.description = guessDescription(getClass().getName());
+        this(operand, null);
+    }
 
-        Walker<RelOptRuleOperand> operandWalker =
-            new Walker<RelOptRuleOperand>(getOperand());
-        List<RelOptRuleOperand> operandsOfRule =
-            new ArrayList<RelOptRuleOperand>();
-        while (operandWalker.hasNext()) {
-            RelOptRuleOperand flattenedOperand = operandWalker.next();
-            flattenedOperand.setRule(this);
-            flattenedOperand.setParent(operandWalker.getParent());
-            operandsOfRule.add(flattenedOperand);
+    /**
+     * Creates a rule with an explicit description.
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param description Description, or null to guess description
+     */
+    public RelOptRule(RelOptRuleOperand operand, String description)
+    {
+        assert operand != null;
+        this.operand = operand;
+        if (description == null) {
+            description = guessDescription(getClass().getName());
         }
-        operands = operandsOfRule.toArray(RelOptRuleOperand.noOperands);
+        this.description = description;
+        this.operands = flattenOperands(operand);
+        assignSolveOrder();
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Creates a flattened list of this operand and its descendants in prefix
+     * order.
+     *
+     * @param rootOperand Root operand
+     *
+     * @return Flattened list of operands
+     */
+    private RelOptRuleOperand [] flattenOperands(
+        RelOptRuleOperand rootOperand)
+    {
+        List<RelOptRuleOperand> operandList =
+            new ArrayList<RelOptRuleOperand>();
+
+        // Flatten the operands into a list.
+        rootOperand.setRule(this);
+        rootOperand.setParent(null);
+        rootOperand.ordinalInParent = 0;
+        rootOperand.ordinalInRule = operandList.size();
+        operandList.add(rootOperand);
+        flattenRecurse(operandList, rootOperand);
+        return operandList.toArray(new RelOptRuleOperand[operandList.size()]);
+    }
+
+    /**
+     * Adds the operand and its descendants to the list in prefix order.
+     *
+     * @param operandList Flattened list of operands
+     * @param parentOperand Parent of this operand
+     */
+    private void flattenRecurse(
+        List<RelOptRuleOperand> operandList,
+        RelOptRuleOperand parentOperand)
+    {
+        if (parentOperand.getChildOperands() == null) {
+            return;
+        }
+        int k = 0;
+        for (RelOptRuleOperand operand : parentOperand.getChildOperands()) {
+            operand.setRule(this);
+            operand.setParent(parentOperand);
+            operand.ordinalInParent = k++;
+            operand.ordinalInRule = operandList.size();
+            operandList.add(operand);
+            flattenRecurse(operandList, operand);
+        }
+    }
+
+    /**
+     * Builds each operand's solve-order. Start with itself, then its parent, up
+     * to the root, then the remaining operands in prefix order.
+     */
+    private void assignSolveOrder()
+    {
+        for (RelOptRuleOperand operand : operands) {
+            operand.solveOrder = new int[operands.length];
+            int m = 0;
+            for (RelOptRuleOperand o = operand; o != null; o = o.getParent()) {
+                operand.solveOrder[m++] = o.ordinalInRule;
+            }
+            for (int k = 0; k < operands.length; k++) {
+                boolean exists = false;
+                for (int n = 0; n < m; n++) {
+                    if (operand.solveOrder[n] == k) {
+                        exists = true;
+                    }
+                }
+                if (!exists) {
+                    operand.solveOrder[m++] = k;
+                }
+            }
+
+            // Assert: operand appears once in the sort-order.
+            assert m == operands.length;
+        }
+    }
+
+    /**
+     * Returns the root operand of this rule
+     *
+     * @return the root operand of this rule
+     */
     public RelOptRuleOperand getOperand()
     {
         return operand;
     }
 
-    public RelOptRuleOperand [] getOperands()
+    /**
+     * Returns a flattened list of operands of this rule.
+     *
+     * @return flattened list of operands
+     */
+    public List<RelOptRuleOperand> getOperands()
     {
-        return operands;
+        return Collections.unmodifiableList(Arrays.asList(operands));
     }
 
     public int hashCode()
@@ -111,10 +205,8 @@ public abstract class RelOptRule
 
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof RelOptRule)) {
-            return false;
-        }
-        return equals((RelOptRule) obj);
+        return (obj instanceof RelOptRule)
+            && equals((RelOptRule) obj);
     }
 
     /**
@@ -127,10 +219,52 @@ public abstract class RelOptRule
     {
         // Include operands and class in the equality criteria just in case
         // they have chosen a poor description.
-        return
-            this.description.equals(that.description)
+        return this.description.equals(that.description)
             && (this.getClass() == that.getClass())
             && this.operand.equals(that.operand);
+    }
+
+    /**
+     * Returns whether this rule could possibly match the given operands.
+     *
+     * <p>This method is an opportunity to apply side-conditions to a rule. The
+     * {@link RelOptPlanner} calls this method after matching all operands of
+     * the rule, and before calling {@link #onMatch(RelOptRuleCall)}.
+     *
+     * <p>In implementations of {@link RelOptPlanner} which may queue up a
+     * matched {@link RelOptRuleCall} for a long time before calling {@link
+     * #onMatch(RelOptRuleCall)}, this method is beneficial because it allows
+     * the planner to discard rules earlier in the process.
+     *
+     * <p>The default implementation of this method returns <code>true</code>.
+     * It is acceptable for any implementation of this method to give a false
+     * positives, that is, to say that the rule matches the operands but have
+     * {@link #onMatch(RelOptRuleCall)} subsequently not generate any
+     * successors.
+     *
+     * <p>The following script is useful to identify rules which commonly
+     * produce no successors. You should override this method for these rules:
+     *
+     * <blockquote>
+     * <pre><code>awk '
+     * /Apply rule/ {rule=$4; ruleCount[rule]++;}
+     * /generated 0 successors/ {ruleMiss[rule]++;}
+     * END {
+     *   printf "%-30s %s %s\n", "Rule", "Fire", "Miss";
+     *   for (i in ruleCount) {
+     *     printf "%-30s %5d %5d\n", i, ruleCount[i], ruleMiss[i];
+     *   }
+     * } ' FarragoTrace.log</code></pre>
+     * </blockquote>
+     *
+     * @param call Rule call which has been determined to match all operands of
+     * this rule
+     *
+     * @return whether this RelOptRule matches a given RelOptRuleCall
+     */
+    public boolean matches(RelOptRuleCall call)
+    {
+        return true;
     }
 
     /**
@@ -142,6 +276,11 @@ public abstract class RelOptRule
      * <p>Typically a rule would check that the nodes are valid matches, creates
      * a new expression, then calls back {@link RelOptRuleCall#transformTo} to
      * register the expression.</p>
+     *
+     * @param call Rule call
+     *
+     * @see #matches(RelOptRuleCall)
+     * @pre matches(call)
      */
     public abstract void onMatch(RelOptRuleCall call);
 
@@ -155,25 +294,12 @@ public abstract class RelOptRule
     }
 
     /**
-     * Returns the set of traits of the result of firing this rule. An empty
-     * RelTraitSet is returned if the results are not known.
+     * Returns the trait which will be modified as a result of firing this rule,
+     * or null if the rule is not a converter rule.
      */
-    public RelTraitSet getOutTraits()
+    public RelTrait getOutTrait()
     {
-        // REVIEW: SZ: 2/17/05: Lazy initialization here.  Some RelOptRule
-        // implementations accept their "OutConvention" as a parameter to
-        // their constructor.  If we did this in the constructor, we'd get the
-        // wrong CallingConvention.  In the future, we could require that
-        // the CallingConvention be passed to RelOptRule's constructor.
-        if (traits == null) {
-            traits = new RelTraitSet(new RelTrait[] { getOutConvention() });
-        }
-
-        // Changing the CallingConvention RelTrait via RelTraitSet.setTrait
-        // is not supported!
-        assert (getOutConvention() == traits.getTrait(0));
-
-        return traits;
+        return null;
     }
 
     public String toString()
@@ -273,11 +399,20 @@ public abstract class RelOptRule
      * Deduces a name for a rule by taking the name of its class and returning
      * the segment after the last '.' or '$'.
      *
+     * <p>Examples:
+     * <ul>
+     * <li>"com.foo.Bar" yields "Bar";</li>
+     * <li>"com.flatten.Bar$Baz" yields "Baz";</li>
+     * <li>"com.foo.Bar$1" yields "1" (which as an integer is an invalid
+     *      name, and writer of the rule is encouraged to give it an
+     *      explicit name).</li>
+     * </ul>
+     *
      * @param className Name of the rule's class
      *
      * @return Last segment of the class
      */
-    private static String guessDescription(String className)
+    static String guessDescription(String className)
     {
         String description = className;
         int punc =
@@ -285,11 +420,13 @@ public abstract class RelOptRule
                 className.lastIndexOf('.'),
                 className.lastIndexOf('$'));
         if (punc >= 0) {
-            // Examples:  * "com.foo.Bar" yields "Bar"  * "com.foo.Bar$Baz"
-            // yields "Baz";  * "com.foo.Bar$1" yields "1" (which as an integer
-            // is an invalid     name, and writer of the rule is encouraged to
-            // give it an     explicit name)
             description = className.substring(punc + 1);
+        }
+        if (description.matches("[0-9]+")) {
+            throw new RuntimeException(
+                "Derived description of rule class " + className
+                + " is an integer, not valid. "
+                + "Supply a description manually.");
         }
         return description;
     }

@@ -1,6 +1,0 @@
-
-net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
-
-oj_var0.assignFromAnd3VL( ID$0$SLACKER.isNull(), ID$0$SLACKER.value, false, ID$1$MANAGER );
-
-return oj_var0;

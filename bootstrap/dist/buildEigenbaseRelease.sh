@@ -62,12 +62,6 @@ if [ $cygwin = "true" ]; then
     ARCHIVE_SUFFIX=zip
 else
     ARCHIVE_SUFFIX=tar.bz2
-    
-    # Verify that chrpath is available
-    if [ ! -e /usr/bin/chrpath ]; then
-        echo "Error:  /usr/bin/chrpath is not installed"
-        exit -1
-    fi
 fi
 
 # Generate version info

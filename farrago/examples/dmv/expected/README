@@ -1,0 +1,9 @@
+This directory contains pre-generated .dot output for the
+example visualizations.  Compare with the actual results in sibling
+directory "results" after running the visualizations yourself.
+
+View .dot files with a command like
+
+dot -Tpng eventsUpstream.dot | display
+
+(Requires installation of Graphviz and ImageMagick.)

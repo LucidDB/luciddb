@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.rel.*;
 public class FarragoColumnMetadata
     extends MedAbstractColumnMetadata
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected int mapColumnToField(
@@ -66,18 +65,16 @@ public class FarragoColumnMetadata
         if ((colno == -1) || (colno >= numColumns(rel))) {
             return null;
         } else {
-            return
-                (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable())
+            return (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable())
                 .getCwmColumnSet().getFeature().get(colno);
         }
     }
 
     private int numColumns(RelNode rel)
     {
-        return
-            ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet()
+        return ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet()
             .getFeature().size();
     }
 }
 
-// End FarragoRelMdUtil.java
+// End FarragoColumnMetadata.java

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
  * LogicalTxnLog defines the log structure used by LogicalTxn to record
  * transaction data.
  */
-class LogicalTxnLog
+class FENNEL_TXN_EXPORT LogicalTxnLog
     : public boost::noncopyable,
         public boost::enable_shared_from_this<LogicalTxnLog>,
         public SynchMonitoredObject
@@ -46,7 +46,7 @@ class LogicalTxnLog
 
     typedef std::vector<SharedLogicalTxn> TxnList;
     typedef std::vector<SharedLogicalTxn>::iterator TxnListIter;
-    
+
     typedef std::vector<SharedSegment> SegList;
     typedef std::vector<SharedSegment>::iterator SegListIter;
 
@@ -103,7 +103,7 @@ class LogicalTxnLog
         SharedSegmentFactory pSegmentFactory);
 
     void removeTxn(SharedLogicalTxn pTxn);
-    
+
     void commitTxn(SharedLogicalTxn pTxn);
 
     void rollbackTxn(SharedLogicalTxn pTxn);
@@ -130,9 +130,16 @@ public:
         SegmentAccessor const &logSegmentAccessor,
         PseudoUuid const &onlineUuid,
         SharedSegmentFactory pSegmentFactory);
-        
+
     virtual ~LogicalTxnLog();
-    
+
+    /**
+     * Sets the nextTxnId.
+     *
+     * @param nextTxnIdInit nextTxnId to be set
+     */
+    void setNextTxnId(TxnId nextTxnIdInit);
+
     /**
      * Starts a new LogicalTxn.
      *
@@ -170,6 +177,14 @@ public:
     void deallocateCheckpointedLog(
         LogicalTxnLogCheckpointMemento const &memento,
         CheckpointType checkpointType = CHECKPOINT_FLUSH_ALL);
+
+    /**
+     * Returns the transaction id of the oldest, active transaction
+     *
+     * @return txnId of the oldest, active txn; if there are no active
+     * transactions, returns the current transaction id
+     */
+    TxnId getOldestActiveTxnId();
 };
 
 FENNEL_END_NAMESPACE

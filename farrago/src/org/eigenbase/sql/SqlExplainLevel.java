@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,9 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlExplainLevel {
+public enum SqlExplainLevel
+    implements SqlLiteral.SqlSymbol
+{
     /**
      * Suppress all attributes.
      */
@@ -37,12 +39,12 @@ public enum SqlExplainLevel {
      * Display only attributes which contribute to the plan output.
      */
     EXPPLAN_ATTRIBUTES,
-    
+
     /**
      * Display only attributes which contribute to an expression's digest.
      */
     DIGEST_ATTRIBUTES,
-    
+
     /**
      * Display all attributes, including cost.
      */

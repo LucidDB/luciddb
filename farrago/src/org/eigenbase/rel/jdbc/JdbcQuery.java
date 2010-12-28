@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlString;
 import org.eigenbase.util.*;
 
 
@@ -51,7 +52,6 @@ public class JdbcQuery
     extends AbstractRelNode
     implements ResultSetRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final DataSource dataSource;
@@ -66,26 +66,26 @@ public class JdbcQuery
     /**
      * For debug. Set on register.
      */
-    protected String queryString;
+    protected SqlString queryString;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>JdbcQuery</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param connection a {@link RelOptConnection}; must also implement {@link
-     * DataSource}, because that's how we will acquire the JDBC
-     * connection
+     * DataSource}, because that's how we will acquire the JDBC connection
      * @param sql SQL parse tree, may be null, otherwise must be a SELECT
      * statement
      * @param dataSource Provides a JDBC connection to run this query against.
-     * If the query is implementing a JDBC table, then the connection's schema
-     * will implement {@link net.sf.saffron.ext.JdbcSchema}, and data source
-     * will typically be the same as calling {@link
-     * net.sf.saffron.ext.JdbcSchema#getDataSource}. But non-JDBC schemas are
-     * also acceptable.
+     *
+     * <p>In saffron, if the query is implementing a JDBC table, then the
+     * connection's schema will implement <code>
+     * net.sf.saffron.ext.JdbcSchema</code>, and data source will typically be
+     * the same as calling the <code>getDataSource()</code> method on that
+     * schema. But non-JDBC schemas are also acceptable.
      *
      * @pre connection != null
      * @pre sql == null || sql.isA(SqlNode.Kind.Select)
@@ -109,7 +109,8 @@ public class JdbcQuery
         this.dialect = dialect;
         if (sql == null) {
             sql =
-                SqlStdOperatorTable.selectOperator.createCall(null,
+                SqlStdOperatorTable.selectOperator.createCall(
+                    null,
                     null,
                     null,
                     null,
@@ -120,7 +121,7 @@ public class JdbcQuery
                     SqlParserPos.ZERO);
         } else {
             Util.pre(
-                sql.isA(SqlKind.Select),
+                sql.getKind() == SqlKind.SELECT,
                 "sql == null || sql.isA(SqlNode.Kind.Select)");
         }
         this.sql = sql;
@@ -129,14 +130,32 @@ public class JdbcQuery
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the connection
+     *
+     * @return connection
+     */
     public RelOptConnection getConnection()
     {
         return connection;
     }
 
+    /**
+     * Returns the JDBC data source
+     *
+     * @return data source
+     */
     public DataSource getDataSource()
     {
         return dataSource;
+    }
+
+    /**
+     * @return the SQL dialect understood by the data source
+     */
+    public SqlDialect getDialect()
+    {
+        return dialect;
     }
 
     // override RelNode
@@ -148,7 +167,15 @@ public class JdbcQuery
             new Object[] { getForeignSql() });
     }
 
-    public String getForeignSql()
+    /**
+     * Returns the SQL that this query will execute against the foreign
+     * database, in the SQL dialect of that database.
+     *
+     * @return foreign SQL
+     *
+     * @see #getSql()
+     */
+    public SqlString getForeignSql()
     {
         if (queryString == null) {
             queryString = sql.toSqlString(dialect);
@@ -156,7 +183,7 @@ public class JdbcQuery
         return queryString;
     }
 
-    public Object clone()
+    public JdbcQuery clone()
     {
         JdbcQuery clone =
             new JdbcQuery(
@@ -201,6 +228,12 @@ public class JdbcQuery
         Util.discard(getForeignSql()); // compute query string now
     }
 
+    /**
+     * Registers any planner rules needed to implement queries using JdbcQuery
+     * objects.
+     *
+     * @param planner Planner
+     */
     public static void register(RelOptPlanner planner)
     {
         // FIXME jvs 29-Aug-2004
@@ -255,11 +288,20 @@ public class JdbcQuery
                     Literal.makeLiteral(url),
                     Literal.makeLiteral("SA"),
                     Literal.makeLiteral("")));
-        return
-            new MethodCall(
-                new MethodCall(connectionExpr, "createStatement", null),
-                "executeQuery",
-                new ExpressionList(Literal.makeLiteral(queryString)));
+        return new MethodCall(
+            new MethodCall(connectionExpr, "createStatement", null),
+            "executeQuery",
+            new ExpressionList(Literal.makeLiteral(queryString.getSql())));
+    }
+
+    /**
+     * Returns the parse tree of the SQL statement which populates this query.
+     *
+     * @return SQL query
+     */
+    public SqlSelect getSql()
+    {
+        return this.sql;
     }
 }
 

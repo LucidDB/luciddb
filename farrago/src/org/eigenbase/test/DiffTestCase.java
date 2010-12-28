@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,11 +24,14 @@ package org.eigenbase.test;
 
 import java.io.*;
 
+import java.util.*;
 import java.util.regex.*;
 
 import junit.framework.*;
 
 import org.eigenbase.util.*;
+
+import org.incava.util.diff.*;
 
 
 /**
@@ -41,23 +44,22 @@ import org.eigenbase.util.*;
 public abstract class DiffTestCase
     extends TestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
      * Name of current .log file.
      */
-    private File logFile;
+    protected File logFile;
 
     /**
      * Name of current .ref file.
      */
-    private File refFile;
+    protected File refFile;
 
     /**
      * OutputStream for current test log.
      */
-    private OutputStream logOutputStream;
+    protected OutputStream logOutputStream;
 
     /**
      * Diff masks defined so far
@@ -93,8 +95,9 @@ public abstract class DiffTestCase
         compiledIgnoreMatcher = null;
         compiledDiffMatcher = null;
         gcInterval = 0;
-        if (System.getProperty(DiffTestCase.class.getName() + ".verbose", "")
-            != null) {
+        String verboseVal =
+            System.getProperty(DiffTestCase.class.getName() + ".verbose");
+        if (verboseVal != null) {
             verbose = true;
         }
     }
@@ -149,7 +152,8 @@ public abstract class DiffTestCase
                 getTestlogRoot(),
                 ReflectUtil.getUnqualifiedClassName(getClass()));
         testClassDir.mkdirs();
-        File testLogFile = new File(
+        File testLogFile =
+            new File(
                 testClassDir,
                 getName());
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
@@ -191,11 +195,12 @@ public abstract class DiffTestCase
      * <p>NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
      * PrintWriter), be sure to flush the wrapping Writer before calling this
      * method.</p>
+     *
+     * @see #diffFile(File, File)
      */
     protected void diffTestLog()
         throws IOException
     {
-        int n = 0;
         assert (logOutputStream != null);
         logOutputStream.close();
         logOutputStream = null;
@@ -203,8 +208,24 @@ public abstract class DiffTestCase
         if (!refFile.exists()) {
             Assert.fail("Reference file " + refFile + " does not exist");
         }
+        diffFile(logFile, refFile);
+    }
 
-        // TODO:  separate utility method somewhere
+    /**
+     * Compares a log file with its reference log.
+     *
+     * <p>Usually, the log file and the reference log are in the same directory,
+     * one ending with '.log' and the other with '.ref'.
+     *
+     * <p>If the files are identical, removes logFile.
+     *
+     * @param logFile Log file
+     * @param refFile Reference log
+     */
+    protected void diffFile(File logFile, File refFile)
+        throws IOException
+    {
+        int n = 0;
         FileReader logReader = null;
         FileReader refReader = null;
         try {
@@ -217,6 +238,18 @@ public abstract class DiffTestCase
                     }
                 }
             }
+
+            // NOTE: Use of diff.mask is deprecated, use diff_mask.
+            String diffMask = System.getProperty("diff.mask", null);
+            if (diffMask != null) {
+                addDiffMask(diffMask);
+            }
+
+            diffMask = System.getProperty("diff_mask", null);
+            if (diffMask != null) {
+                addDiffMask(diffMask);
+            }
+
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
@@ -337,18 +370,168 @@ public abstract class DiffTestCase
         final String message =
             "diff detected at line " + lineNumber + " in " + logFile;
         if (verbose) {
-            Assert.assertEquals(
-                message + TestUtil.NL,
-                fileContents(refFile),
-                fileContents(logFile));
+            if (inIde()) {
+                // If we're in IntelliJ, it's worth printing the 'expected
+                // <...> actual <...>' string, becauase IntelliJ can format
+                // this intelligently. Otherwise, use the more concise
+                // diff format.
+                Assert.assertEquals(
+                    message,
+                    fileContents(refFile),
+                    fileContents(logFile));
+            } else {
+                String s = diff(refFile, logFile);
+                Assert.fail(
+                    message + TestUtil.NL + s + TestUtil.NL);
+            }
         }
         Assert.fail(message);
     }
 
     /**
-     * Returns the contents of a file as a string.
+     * Returns whether this test is running inside the IntelliJ IDE.
+     *
+     * @return whether we're running in IntelliJ.
      */
-    private static String fileContents(File file)
+    private static boolean inIde()
+    {
+        Throwable runtimeException = new Throwable();
+        runtimeException.fillInStackTrace();
+        final StackTraceElement [] stackTrace =
+            runtimeException.getStackTrace();
+        StackTraceElement lastStackTraceElement =
+            stackTrace[stackTrace.length - 1];
+
+        // Junit test launched from IntelliJ 6.0
+        if (lastStackTraceElement.getClassName().equals(
+                "com.intellij.rt.execution.junit.JUnitStarter")
+            && lastStackTraceElement.getMethodName().equals("main"))
+        {
+            return true;
+        }
+
+        // Application launched from IntelliJ 6.0
+        if (lastStackTraceElement.getClassName().equals(
+                "com.intellij.rt.execution.application.AppMain")
+            && lastStackTraceElement.getMethodName().equals("main"))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns a string containing the difference between the contents of two
+     * files. The string has a similar format to the UNIX 'diff' utility.
+     */
+    private static String diff(File file1, File file2)
+    {
+        List<String> lines1 = fileLines(file1);
+        List<String> lines2 = fileLines(file2);
+        return diffLines(lines1, lines2);
+    }
+
+    /**
+     * Returns a string containing the difference between the two sets of lines.
+     */
+    public static String diffLines(List<String> lines1, List<String> lines2)
+    {
+        Diff differencer = new Diff(lines1, lines2);
+        List<Difference> differences = differencer.diff();
+        StringWriter sw = new StringWriter();
+        int offset = 0;
+        for (Difference d : differences) {
+            final int as = d.getAddedStart() + 1;
+            final int ae = d.getAddedEnd() + 1;
+            final int ds = d.getDeletedStart() + 1;
+            final int de = d.getDeletedEnd() + 1;
+            if (ae == 0) {
+                if (de == 0) {
+                    // no change
+                } else {
+                    // a deletion: "<ds>,<de>d<as>"
+                    sw.append(String.valueOf(ds));
+                    if (de > ds) {
+                        sw.append(",").append(String.valueOf(de));
+                    }
+                    sw.append("d").append(String.valueOf(as - 1)).append(
+                        TestUtil.NL);
+                    for (int i = ds - 1; i < de; ++i) {
+                        sw.append("< ").append(lines1.get(i)).append(
+                            TestUtil.NL);
+                    }
+                }
+            } else {
+                if (de == 0) {
+                    // an addition: "<ds>a<as,ae>"
+                    sw.append(String.valueOf(ds - 1)).append("a").append(
+                        String.valueOf(as));
+                    if (ae > as) {
+                        sw.append(",").append(String.valueOf(ae));
+                    }
+                    sw.append(TestUtil.NL);
+                    for (int i = as - 1; i < ae; ++i) {
+                        sw.append("> ").append(lines2.get(i)).append(
+                            TestUtil.NL);
+                    }
+                } else {
+                    // a change: "<ds>,<de>c<as>,<ae>
+                    sw.append(String.valueOf(ds));
+                    if (de > ds) {
+                        sw.append(",").append(String.valueOf(de));
+                    }
+                    sw.append("c").append(String.valueOf(as));
+                    if (ae > as) {
+                        sw.append(",").append(String.valueOf(ae));
+                    }
+                    sw.append(TestUtil.NL);
+                    for (int i = ds - 1; i < de; ++i) {
+                        sw.append("< ").append(lines1.get(i)).append(
+                            TestUtil.NL);
+                    }
+                    sw.append("---").append(TestUtil.NL);
+                    for (int i = as - 1; i < ae; ++i) {
+                        sw.append("> ").append(lines2.get(i)).append(
+                            TestUtil.NL);
+                    }
+                    offset = offset + (ae - as) - (de - ds);
+                }
+            }
+        }
+        return sw.toString();
+    }
+
+    /**
+     * Returns a list of the lines in a given file.
+     *
+     * @param file File
+     *
+     * @return List of lines
+     */
+    private static List<String> fileLines(File file)
+    {
+        List<String> lines = new ArrayList<String>();
+        try {
+            LineNumberReader r = new LineNumberReader(new FileReader(file));
+            String line;
+            while ((line = r.readLine()) != null) {
+                lines.add(line);
+            }
+            return lines;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns the contents of a file as a string.
+     *
+     * @param file File
+     *
+     * @return Contents of the file
+     */
+    protected static String fileContents(File file)
     {
         try {
             char [] buf = new char[2048];
@@ -370,6 +553,34 @@ public abstract class DiffTestCase
     protected void setVerbose(boolean verbose)
     {
         this.verbose = verbose;
+    }
+
+    /**
+     * Sets the diff masks that are common to .REF files
+     */
+    protected void setRefFileDiffMasks()
+    {
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
+
+        // NOTE hersker 2006-06-02:
+        // The following two patterns can be used to mask out the
+        // sqlline JDBC URI and continuation prompts. This is useful
+        // during transition periods when URIs are changed, or when
+        // new drivers are deployed which have their own URIs but
+        // should first pass the existing test suite before their
+        // own .ref files get checked in.
+        //
+        // It is not recommended to use these patterns on an everyday
+        // basis. Real differences in the output are difficult to spot
+        // when diff-ing .ref and .log files which have different
+        // sqlline prompts at the start of each line.
+
+        // mask out sqlline JDBC URI prompt
+        addDiffMask("0: \\bjdbc(:[^:>]+)+:>");
+
+        // mask out different-length sqlline continuation prompts
+        addDiffMask("^(\\.\\s?)+>");
     }
 }
 

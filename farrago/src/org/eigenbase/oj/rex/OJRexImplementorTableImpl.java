@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@
 */
 package org.eigenbase.oj.rex;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
 import openjava.ptree.*;
 
@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class OJRexImplementorTableImpl
     implements OJRexImplementorTable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static OJRexImplementorTableImpl instance;
@@ -54,8 +53,11 @@ public class OJRexImplementorTableImpl
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map implementorMap = new HashMap();
-    private final Map aggImplementorMap = new HashMap();
+    private final Map<SqlOperator, OJRexImplementor> implementorMap =
+        new HashMap<SqlOperator, OJRexImplementor>();
+
+    private final Map<SqlAggFunction, OJSumAggImplementor> aggImplementorMap =
+        new HashMap<SqlAggFunction, OJSumAggImplementor>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -86,13 +88,13 @@ public class OJRexImplementorTableImpl
     // implement OJRexImplementorTable
     public OJRexImplementor get(SqlOperator op)
     {
-        return (OJRexImplementor) implementorMap.get(op);
+        return implementorMap.get(op);
     }
 
     // implement OJRexImplementorTable
     public OJAggImplementor get(Aggregation agg)
     {
-        return (OJAggImplementor) aggImplementorMap.get(agg);
+        return aggImplementorMap.get(agg);
     }
 
     /**
@@ -143,6 +145,10 @@ public class OJRexImplementorTableImpl
 
         registerBinaryOperator(
             SqlStdOperatorTable.divideOperator,
+            BinaryExpression.DIVIDE);
+
+        registerBinaryOperator(
+            SqlStdOperatorTable.divideIntegerOperator,
             BinaryExpression.DIVIDE);
 
         registerBinaryOperator(
@@ -231,13 +237,13 @@ public class OJRexImplementorTableImpl
 
         /**
          * This is a default implementation of {@link
-         * Aggregation#implementStartAndNext}; particular derived classes may do
-         * better.
+         * org.eigenbase.oj.rex.OJAggImplementor#implementStartAndNext};
+         * particular derived classes may do better.
          */
         public Expression implementStartAndNext(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             StatementList stmtList = implementor.getStatementList();
             Variable var = implementor.newVariable();
@@ -273,14 +279,15 @@ public class OJRexImplementorTableImpl
             JavaRelImplementor implementor,
             JavaRel rel,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
-            final int [] args = call.args;
+            final List<Integer> args = call.getArgList();
             final SqlSumAggFunction agg =
                 (SqlSumAggFunction) call.getAggregation();
-            assert (args.length == 1);
+            assert (args.size() == 1);
             StatementList stmtList = implementor.getStatementList();
-            Expression arg = implementor.translateInputField(rel, 0, args[0]);
+            Expression arg =
+                implementor.translateInputField(rel, 0, args.get(0));
 
             // e.g. "((Holder.int_Holder) acc).value += arg"
             stmtList.add(
@@ -288,7 +295,8 @@ public class OJRexImplementorTableImpl
                     new AssignmentExpression(
                         new FieldAccess(
                             new CastExpression(
-                                new TypeName(holderClassName + "."
+                                new TypeName(
+                                    holderClassName + "."
                                     + agg.getType()
                                     + "_Holder"),
                                 accumulator),
@@ -300,34 +308,32 @@ public class OJRexImplementorTableImpl
         public Expression implementResult(
             JavaRelImplementor implementor,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             // e.g. "o" becomes "((Holder.int_Holder) o).value"
             final SqlSumAggFunction agg =
                 (SqlSumAggFunction) call.getAggregation();
-            return
-                new FieldAccess(
-                    new CastExpression(
-                        new TypeName(
-                            holderClassName + "."
-                            + agg.getType() + "_Holder"),
-                        accumulator),
-                    "value");
+            return new FieldAccess(
+                new CastExpression(
+                    new TypeName(
+                        holderClassName + "."
+                        + agg.getType() + "_Holder"),
+                    accumulator),
+                "value");
         }
 
         public Expression implementStart(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             // e.g. "new Holder.int_Holder(0)"
             final SqlSumAggFunction agg =
                 (SqlSumAggFunction) call.getAggregation();
-            return
-                new AllocationExpression(
-                    new TypeName(
-                        holderClassName + "." + agg.getType() + "_Holder"),
-                    new ExpressionList(Literal.constantZero()));
+            return new AllocationExpression(
+                new TypeName(
+                    holderClassName + "." + agg.getType() + "_Holder"),
+                new ExpressionList(Literal.constantZero()));
         }
 
         String getName()
@@ -352,7 +358,7 @@ public class OJRexImplementorTableImpl
             JavaRelImplementor implementor,
             JavaRel rel,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             SqlCountAggFunction agg =
                 (SqlCountAggFunction) call.getAggregation();
@@ -364,12 +370,13 @@ public class OJRexImplementorTableImpl
                         new FieldAccess(
                             new CastExpression(
                                 new TypeName(
-                                    holderClassName + "." + agg.type
+                                    holderClassName + "."
+                                    + SqlCountAggFunction.type
                                     + "_Holder"),
                                 accumulator),
                             "value")));
-            final int [] args = call.args;
-            if (args.length == 0) {
+            final List<Integer> argList = call.getArgList();
+            if (argList.size() == 0) {
                 // e.g. "((Holder.int_Holder) acc).value++;"
                 stmtList.add(stmt);
             } else {
@@ -377,17 +384,18 @@ public class OJRexImplementorTableImpl
                 //  ((Holder.int_Holder) acc).value++;
                 // }
                 Expression condition = null;
-                for (int i = 0; i < args.length; i++) {
+                for (Integer arg : argList) {
                     Expression term =
                         new BinaryExpression(
-                            implementor.translateInputField(rel, 0, args[i]),
+                            implementor.translateInputField(rel, 0, arg),
                             BinaryExpression.NOTEQUAL,
                             Literal.constantNull());
                     if (condition == null) {
                         condition = term;
                     } else {
                         condition =
-                            new BinaryExpression(condition,
+                            new BinaryExpression(
+                                condition,
                                 BinaryExpression.LOGICAL_AND,
                                 term);
                     }
@@ -402,34 +410,33 @@ public class OJRexImplementorTableImpl
         public Expression implementResult(
             JavaRelImplementor implementor,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             // e.g. "o" becomes "((Holder.int_Holder) o).value"
             SqlCountAggFunction agg =
                 (SqlCountAggFunction) call.getAggregation();
-            return
-                new FieldAccess(
-                    new CastExpression(
-                        new TypeName(
-                            holderClassName
-                            + "." + agg.type + "_Holder"),
-                        accumulator),
-                    "value");
+            return new FieldAccess(
+                new CastExpression(
+                    new TypeName(
+                        holderClassName
+                        + "." + SqlCountAggFunction.type + "_Holder"),
+                    accumulator),
+                "value");
         }
 
         public Expression implementStart(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             // e.g. "new Holder.int_Holder(0)"
             SqlCountAggFunction agg =
                 (SqlCountAggFunction) call.getAggregation();
-            return
-                new AllocationExpression(
-                    new TypeName(holderClassName
-                        + "." + agg.type + "_Holder"),
-                    new ExpressionList(Literal.constantZero()));
+            return new AllocationExpression(
+                new TypeName(
+                    holderClassName
+                    + "." + SqlCountAggFunction.type + "_Holder"),
+                new ExpressionList(Literal.constantZero()));
         }
     }
 
@@ -449,18 +456,18 @@ public class OJRexImplementorTableImpl
             JavaRelImplementor implementor,
             JavaRel rel,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             SqlMinMaxAggFunction agg =
                 (SqlMinMaxAggFunction) call.getAggregation();
             StatementList stmtList = implementor.getStatementList();
-            final int [] args = call.args;
+            final List<Integer> argList = call.getArgList();
             switch (agg.getMinMaxKind()) {
             case SqlMinMaxAggFunction.MINMAX_PRIMITIVE:
 
                 // "((Holder.int_Holder) acc).setLesser(arg)"
                 Expression arg =
-                    implementor.translateInputField(rel, 0, args[0]);
+                    implementor.translateInputField(rel, 0, argList.get(0));
                 stmtList.add(
                     new ExpressionStatement(
                         new MethodCall(
@@ -478,7 +485,7 @@ public class OJRexImplementorTableImpl
                 // if (acc == null || (t != null && t.compareTo(acc) < 0)) {
                 //   acc = t;
                 // }
-                arg = implementor.translateInputField(rel, 0, args[0]);
+                arg = implementor.translateInputField(rel, 0, argList.get(0));
                 Variable var_t = implementor.newVariable();
                 stmtList.add(
                     new VariableDeclaration(
@@ -511,7 +518,8 @@ public class OJRexImplementorTableImpl
                                     Literal.constantZero()))),
                         new StatementList(
                             new ExpressionStatement(
-                                new AssignmentExpression(accumulator,
+                                new AssignmentExpression(
+                                    accumulator,
                                     AssignmentExpression.EQUALS,
                                     var_t)))));
                 return;
@@ -519,7 +527,7 @@ public class OJRexImplementorTableImpl
 
                 // "((Holder.ComparatorHolder)
                 // acc).setLesser(arg)"
-                arg = implementor.translateInputField(rel, 0, args[1]);
+                arg = implementor.translateInputField(rel, 0, argList.get(1));
                 stmtList.add(
                     new ExpressionStatement(
                         new MethodCall(
@@ -539,7 +547,7 @@ public class OJRexImplementorTableImpl
         public Expression implementResult(
             JavaRelImplementor implementor,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             SqlMinMaxAggFunction agg =
                 (SqlMinMaxAggFunction) call.getAggregation();
@@ -547,39 +555,36 @@ public class OJRexImplementorTableImpl
             case SqlMinMaxAggFunction.MINMAX_PRIMITIVE:
 
                 // ((Holder.int_Holder) acc).value
-                return
-                    new FieldAccess(
-                        new CastExpression(
-                            new TypeName(
-                                holderClassName + "." + agg.argTypes[1]
-                                + "_Holder"),
-                            accumulator),
-                        "value");
+                return new FieldAccess(
+                    new CastExpression(
+                        new TypeName(
+                            holderClassName + "." + agg.argTypes[1]
+                            + "_Holder"),
+                        accumulator),
+                    "value");
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
 
                 // (T) acc
-                return
-                    new CastExpression(
-                        TypeName.forOJClass(
-                            OJUtil.typeToOJClass(
-                                agg.argTypes[0],
-                                implementor.getTypeFactory())),
-                        accumulator);
+                return new CastExpression(
+                    TypeName.forOJClass(
+                        OJUtil.typeToOJClass(
+                            agg.argTypes[0],
+                            implementor.getTypeFactory())),
+                    accumulator);
             case SqlMinMaxAggFunction.MINMAX_COMPARATOR:
 
                 // (T) ((Holder.int_Holder) acc).value
-                return
-                    new CastExpression(
-                        TypeName.forOJClass(
-                            OJUtil.typeToOJClass(
-                                agg.argTypes[1],
-                                implementor.getTypeFactory())),
-                        new FieldAccess(
-                            new CastExpression(
-                                new TypeName(
-                                    holderClassName + ".ComparatorHolder"),
-                                accumulator),
-                            "value"));
+                return new CastExpression(
+                    TypeName.forOJClass(
+                        OJUtil.typeToOJClass(
+                            agg.argTypes[1],
+                            implementor.getTypeFactory())),
+                    new FieldAccess(
+                        new CastExpression(
+                            new TypeName(
+                                holderClassName + ".ComparatorHolder"),
+                            accumulator),
+                        "value"));
             default:
                 throw Util.newInternal("bad kind: " + agg.getKind());
             }
@@ -588,7 +593,7 @@ public class OJRexImplementorTableImpl
         public Expression implementStart(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             SqlMinMaxAggFunction agg =
                 (SqlMinMaxAggFunction) call.getAggregation();
@@ -597,19 +602,18 @@ public class OJRexImplementorTableImpl
 
                 // "new Holder.int_Holder(Integer.MAX_VALUE)" if
                 // the type is "int" and the function is "min"
-                return
-                    new AllocationExpression(
-                        new TypeName(
-                            holderClassName + "." + agg.argTypes[0]
-                            + "_Holder"),
-                        new ExpressionList(
-                            new FieldAccess(
-                                TypeName.forOJClass(
-                                    OJUtil.typeToOJClass(
-                                        agg.argTypes[0],
-                                        implementor.getTypeFactory())
-                                    .primitiveWrapper()),
-                                agg.isMin() ? "MAX_VALUE" : "MIN_VALUE")));
+                return new AllocationExpression(
+                    new TypeName(
+                        holderClassName + "." + agg.argTypes[0]
+                        + "_Holder"),
+                    new ExpressionList(
+                        new FieldAccess(
+                            TypeName.forOJClass(
+                                OJUtil.typeToOJClass(
+                                          agg.argTypes[0],
+                                          implementor.getTypeFactory())
+                                      .primitiveWrapper()),
+                            agg.isMin() ? "MAX_VALUE" : "MIN_VALUE")));
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
 
                 // "null"
@@ -618,13 +622,15 @@ public class OJRexImplementorTableImpl
 
                 // "new saffron.runtime.ComparatorAndObject(comparator, null)"
                 Expression arg =
-                    implementor.translateInputField(rel, 0, call.args[0]);
-                return
-                    new AllocationExpression(
-                        new TypeName("saffron.runtime.ComparatorAndObject"),
-                        new ExpressionList(
-                            arg,
-                            Literal.constantNull()));
+                    implementor.translateInputField(
+                        rel,
+                        0,
+                        call.getArgList().get(0));
+                return new AllocationExpression(
+                    new TypeName("saffron.runtime.ComparatorAndObject"),
+                    new ExpressionList(
+                        arg,
+                        Literal.constantNull()));
             default:
                 throw Util.newInternal("bad kind: " + agg.getKind());
             }

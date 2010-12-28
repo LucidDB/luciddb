@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -40,7 +40,7 @@ void MockResourceExecStream::prepare(
     expected = params.expected;
 
     optTypeInput = params.optTypeInput;
-    
+
     scratchAccessor = params.scratchAccessor;
     scratchLock.accessSegment(scratchAccessor);
 
@@ -92,13 +92,12 @@ ExecStreamResult MockResourceExecStream::execute(
 
     if (numToAllocate == expected.nCachePages) {
         for (uint i = 0; i < numToAllocate; i++) {
-
             // REVIEW jvs 8-Sept--2006: The NULL_PAGE_ID case will never
             // happen, because allocatePage asserts; you probably meant to use
             // tryAllocatePage instead.  But the case must never actually be
             // tested anyway, because on lu/dev after I changed the cache back
             // to retry forever on lockScratchPage, no test hangs.
-            
+
             PageId page = scratchLock.allocatePage();
             // if we can't allocate a page, break out of the loop; the stream
             // will return 0 instead of 1

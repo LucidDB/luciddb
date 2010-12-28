@@ -92,11 +92,10 @@ Error: From line 1, column 32 to line 1, column 39: Cannot apply '<' to argument
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select d1 from calctypes where d1 < cast (ts1 as date)
 . . . . . . . . > ;
-+-------------+
-|     D1      |
-+-------------+
-| 1996-11-30  |
-+-------------+
++-----+
+| D1  |
++-----+
++-----+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- errors
 0: jdbc:luciddb:> select d1 + 1, d1 - 10, t1 + 1000, t1 - 1000, ts1 + 1000, ts1 - 1000 from calctypes

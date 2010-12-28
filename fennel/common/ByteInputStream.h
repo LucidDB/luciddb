@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,13 +31,13 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * ByteInputStream defines an interface for reading from a stream of bytes.
  */
-class ByteInputStream : virtual public ByteStream
+class FENNEL_COMMON_EXPORT ByteInputStream : virtual public ByteStream
 {
     /**
      * First buffered byte of data.
      */
     PConstBuffer pFirstByte;
-    
+
     /**
      * Next buffered byte of data.
      */
@@ -56,7 +56,7 @@ protected:
      * setBuffer or nullifyBuffer.
      */
     virtual void readNextBuffer() = 0;
-    
+
     /**
      * Must be implemented by derived class if seekBackward is
      * to be supported.
@@ -83,12 +83,12 @@ protected:
      * @return number of bytes remaining in current buffer
      */
     uint getBytesAvailable() const;
-    
+
     /**
      * @return number of bytes already consumed from current buffer
      */
     uint getBytesConsumed() const;
-    
+
 public:
     /**
      * Reads bytes from the stream.
@@ -113,7 +113,7 @@ public:
     {
         return readBytes(&value,sizeof(value));
     }
-    
+
     /**
      * Copyless alternative for reading bytes from the stream.
      * Provides direct access to the stream's internal buffer, but doesn't
@@ -140,7 +140,7 @@ public:
      * @return pointer to cbActual bytes of available data, or NULL for
      * end-of-stream
      */
-    PConstBuffer getReadPointer(uint cbRequested,uint *pcbActual = NULL);
+    PConstBuffer getReadPointer(uint cbRequested, uint *pcbActual = NULL);
 
     /**
      * Advances stream position after a call to getReadPointer.
@@ -165,7 +165,7 @@ public:
      */
     void seekBackward(uint cb);
 
-    
+
     /**
      * Creates a new uninitialized marker for this stream.  The returned marker
      * must be passed to mark() in order to initialize it.
@@ -173,7 +173,7 @@ public:
      * @return shared pointer to new marker
      */
     virtual SharedByteStreamMarker newMarker();
-    
+
     /**
      * Marks the current stream position in preparation for a future call to
      * reset().  How long this marker remains valid depends upon the
@@ -207,7 +207,7 @@ inline uint ByteInputStream::getBytesConsumed() const
 }
 
 inline PConstBuffer ByteInputStream::getReadPointer(
-    uint cbRequested,uint *pcbActual)
+    uint cbRequested, uint *pcbActual)
 {
     if (getBytesAvailable() < cbRequested) {
         assert(pNextByte == pEndByte);
@@ -227,7 +227,7 @@ inline PConstBuffer ByteInputStream::getReadPointer(
 
 inline void ByteInputStream::seekForward(uint cb)
 {
-    uint cbActual = readBytes(NULL,cb);
+    uint cbActual = readBytes(NULL, cb);
     assert(cbActual == cb);
 }
 
@@ -249,7 +249,7 @@ inline void ByteInputStream::setBuffer(
 
 inline void ByteInputStream::nullifyBuffer()
 {
-    setBuffer(NULL,0);
+    setBuffer(NULL, 0);
 }
 
 FENNEL_END_NAMESPACE

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,20 +22,19 @@
 */
 package org.eigenbase.rel;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 
 
 /**
  * A <code>TableAccessRel</code> reads all the rows from a {@link RelOptTable}.
  *
- * <p>If the table is a {@link net.sf.saffron.ext.JdbcTable}, then this is
+ * <p>If the table is a <code>net.sf.saffron.ext.JdbcTable</code>, then this is
  * literally possible. But for other kinds of tables, there may be many ways to
  * read the data from the table. For some kinds of table, it may not even be
  * possible to read all of the rows unless some narrowing constraint is applied.
- * In the example of the {@link net.sf.saffron.ext.ReflectSchema} schema,
+ *
+ * <p>In the example of the <code>net.sf.saffron.ext.ReflectSchema</code>
+ * schema,
  *
  * <blockquote>
  * <pre>select from fields</pre>
@@ -58,9 +57,15 @@ import org.eigenbase.reltype.*;
 public final class TableAccessRel
     extends TableAccessRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a TableAccessRel.
+     *
+     * @param cluster Cluster
+     * @param table Table
+     * @param connection Connection
+     */
     public TableAccessRel(
         RelOptCluster cluster,
         RelOptTable table,

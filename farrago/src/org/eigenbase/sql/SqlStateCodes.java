@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,9 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.*;
-
-
 /**
  * Contains {@link org.eigenbase.util.Glossary#Sql2003} SQL state codes. Sql
  * Sate codes are defined in
@@ -34,54 +31,27 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Mar 30, 2005
  */
-public class SqlStateCodes
-    extends EnumeratedValues.BasicValue
+public enum SqlStateCodes
 {
+    CardinalityViolation("cardinality violation", "21", "000"),
 
-    //~ Static fields/initializers ---------------------------------------------
+    NullValueNotAllowed("null value not allowed", "22", "004"),
 
-    public static final int CardinalityViolation_ORDINAL = 0;
-    public static final SqlStateCodes CardinalityViolation =
-        new SqlStateCodes(
-            "cardinality violation",
-            CardinalityViolation_ORDINAL,
-            "21",
-            "000");
+    NumericValueOutOfRange("numeric value out of range", "22", "003");
 
-    public static final int NullValueNotAllowed_ORDINAL = 1;
-    public static final SqlStateCodes NullValueNotAllowed =
-        new SqlStateCodes(
-            "null value not allowed",
-            NullValueNotAllowed_ORDINAL,
-            "22",
-            "004");
-
-    public static final int NumericValueOutOfRange_ORDINAL = 2;
-    public static final SqlStateCodes NumericValueOutOfRange =
-        new SqlStateCodes(
-            "numeric value out of range",
-            NumericValueOutOfRange_ORDINAL,
-            "22",
-            "003");
-
-    //~ Instance fields --------------------------------------------------------
-
+    private final String msg;
     private final String stateClass;
     private final String stateSubClass;
 
-    //~ Constructors -----------------------------------------------------------
-
-    public SqlStateCodes(String name,
-        int ordinal,
+    SqlStateCodes(
+        String msg,
         String stateClass,
         String stateSubClass)
     {
-        super(name, ordinal, null);
+        this.msg = msg;
         this.stateClass = stateClass;
         this.stateSubClass = stateSubClass;
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     public String getStateClass()
     {

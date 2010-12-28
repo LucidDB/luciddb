@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * PushFilterPastProjectRule implements the rule for pushing a {@link FilterRel}
  * past a {@link ProjectRel}.
@@ -36,16 +37,20 @@ import org.eigenbase.rex.*;
 public class PushFilterPastProjectRule
     extends RelOptRule
 {
+    public static final PushFilterPastProjectRule instance =
+        new PushFilterPastProjectRule();
+
     //~ Constructors -----------------------------------------------------------
 
-    public PushFilterPastProjectRule()
+    /**
+     * Creates a PushFilterPastProjectRule.
+     */
+    private PushFilterPastProjectRule()
     {
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -56,36 +61,10 @@ public class PushFilterPastProjectRule
         FilterRel filterRel = (FilterRel) call.rels[0];
         ProjectRel projRel = (ProjectRel) call.rels[1];
 
-        // use RexPrograms to merge the FilterRel and ProjectRel into a
-        // single program so we can convert the FilterRel condition to
-        // directly reference the ProjectRel's child
-        RexBuilder rexBuilder = filterRel.getCluster().getRexBuilder();
-        RexProgram bottomProgram =
-            RexProgram.create(
-                projRel.getChild().getRowType(),
-                projRel.getProjectExps(),
-                null,
-                projRel.getRowType(),
-                rexBuilder);
-
-        RexProgramBuilder topProgramBuilder =
-            new RexProgramBuilder(
-                filterRel.getRowType(),
-                rexBuilder);
-        topProgramBuilder.addIdentity();
-        topProgramBuilder.addCondition(filterRel.getCondition());
-        RexProgram topProgram = topProgramBuilder.getProgram();
-
-        RexProgram mergedProgram =
-            RexProgramBuilder.mergePrograms(
-                topProgram,
-                bottomProgram,
-                rexBuilder);
-
+        // convert the filter to one that references the child of the project
         RexNode newCondition =
-            mergedProgram.expandLocalRef(
-                mergedProgram.getCondition());
-        
+            RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projRel);
+
         FilterRel newFilterRel =
             new FilterRel(
                 filterRel.getCluster(),
@@ -97,8 +76,8 @@ public class PushFilterPastProjectRule
                 newFilterRel,
                 projRel.getProjectExps(),
                 RelOptUtil.getFieldNames(projRel.getRowType()));
-               
-        call.transformTo(newProjRel); 
+
+        call.transformTo(newProjRel);
     }
 }
 

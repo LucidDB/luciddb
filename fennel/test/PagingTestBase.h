@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ class CachePage;
  * PagingTestBase is a common base for multi-threaded tests which exercise
  * cache paging.
  */
-class PagingTestBase
+class FENNEL_TEST_EXPORT PagingTestBase
     : virtual public CacheTestBase,
         virtual public ThreadedTestBase
 {
@@ -67,7 +67,7 @@ protected:
      * SXMutex used to synchronize checkpoints with write actions.
      */
     SXMutex checkpointMutex;
-    
+
     /**
      * Flag indicating that the cache should be dynamically resized
      * during the multi-threaded portion of the test.
@@ -75,7 +75,7 @@ protected:
     bool bTestResize;
 
     uint generateRandomNumber(uint iMax);
-    
+
 public:
     /**
      * The various operations that can be run in the multi-threaded test.
@@ -87,6 +87,7 @@ public:
         OP_WRITE_RAND,
         OP_READ_NOWAIT,
         OP_WRITE_NOWAIT,
+        OP_WRITE_SKIP,
         OP_SCRATCH,
         OP_PREFETCH,
         OP_PREFETCH_BATCH,
@@ -100,7 +101,7 @@ public:
     explicit PagingTestBase();
 
     virtual ~PagingTestBase();
-    
+
     /**
      * Scribbles on the contents of a page.  The data written is derived from
      * the parameter x.
@@ -115,8 +116,8 @@ public:
     virtual CachePage *lockPage(OpType opType,uint iPage) = 0;
     virtual void unlockPage(CachePage &page,LockMode lockMode) = 0;
     virtual void prefetchPage(uint iPage) = 0;
-    virtual void prefetchBatch(uint iPage,uint nPagesPerBatch) = 0;
-    
+    virtual void prefetchBatch(uint iPage, uint nPagesPerBatch) = 0;
+
     /**
      * Carries out one operation on a page.  This involves locking the page,
      * calling verifyPage or fillPage, and then unlocking the page.
@@ -131,7 +132,7 @@ public:
      * false if NoWait locking was requested and the page lock could
      * not be acquired
      */
-    bool testOp(OpType opType,uint iPage,bool bNice);
+    bool testOp(OpType opType, uint iPage, bool bNice);
 
     /**
      * Makes up an operation name based on an OpType.
@@ -142,7 +143,7 @@ public:
      * Gets the LockMode corresponding to an OpType.
      */
     LockMode getLockMode(OpType opType);
-    
+
     /**
      * Carries out an operation on each disk page in order from
      * 0 to nDiskPages-1.
@@ -150,13 +151,22 @@ public:
      * @param opType see testOp
      */
     void testSequentialOp(OpType opType);
-    
+
     /**
      * Carries out an operation on nRandomOps pages selected at random.
      *
      * @param opType see testOp
      */
     void testRandomOp(OpType opType);
+
+    /**
+     * Carries out an operation on every "n" pages, starting at page 0
+     *
+     * @param opType see testOp
+     *
+     * @param n the offset between each page
+     */
+    void testSkipOp(OpType opType, uint n);
 
     /**
      * Performs nRandomOps scratch operations.  A scratch operation
@@ -181,7 +191,7 @@ public:
      * Performs a periodic checkpoint.
      */
     virtual void testCheckpoint();
-    
+
     /**
      * Initializes all disk pages, filling them with information based
      * on their block numbers.
@@ -208,23 +218,30 @@ public:
      */
     void testRandomWrite();
 
+    /**
+     * Carries out write operations every n pages
+     *
+     * @param n offset between pages
+     */
+    void testSkipWrite(uint n);
+
     virtual void testAllocate();
-    
+
     virtual void testDeallocate();
 
     void testCheckpointGuarded();
 
     void testCacheResize();
-    
+
     /**
      * Carries out specified tests in multi-threaded mode.
      */
     void testMultipleThreads();
-    
+
     virtual void threadInit();
-    
+
     virtual void threadTerminate();
-    
+
     virtual bool testThreadedOp(int iOp);
 };
 

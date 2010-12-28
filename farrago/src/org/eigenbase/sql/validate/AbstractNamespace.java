@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
 
@@ -39,7 +38,6 @@ import org.eigenbase.util.*;
 abstract class AbstractNamespace
     implements SqlValidatorNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SqlValidatorImpl validator;
@@ -56,37 +54,46 @@ abstract class AbstractNamespace
      * column. Set on validate.
      */
     protected RelDataType rowType;
-    private Object extra;
 
     private boolean forceNullable;
+
+    protected final SqlNode enclosingNode;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AbstractNamespace.
+     *
+     * @param validator Validator
+     * @param enclosingNode Enclosing node
      */
-    AbstractNamespace(SqlValidatorImpl validator)
+    AbstractNamespace(
+        SqlValidatorImpl validator,
+        SqlNode enclosingNode)
     {
         this.validator = validator;
+        this.enclosingNode = enclosingNode;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
+    public SqlValidator getValidator()
     {
-        // no hints
+        return validator;
     }
 
-    public void validate()
+    public final void validate()
     {
-        switch (status.getOrdinal()) {
-        case SqlValidatorImpl.Status.Unvalidated_ordinal:
+        switch (status) {
+        case Unvalidated:
             try {
                 status = SqlValidatorImpl.Status.InProgress;
-                Util.permAssert(rowType == null,
+                Util.permAssert(
+                    rowType == null,
                     "Namespace.rowType must be null before validate has been called");
                 rowType = validateImpl();
-                Util.permAssert(rowType != null,
+                Util.permAssert(
+                    rowType != null,
                     "validateImpl() returned null");
                 if (forceNullable) {
                     // REVIEW jvs 10-Oct-2005: This may not be quite right
@@ -101,12 +108,12 @@ abstract class AbstractNamespace
                 status = SqlValidatorImpl.Status.Valid;
             }
             break;
-        case SqlValidatorImpl.Status.InProgress_ordinal:
+        case InProgress:
             throw Util.newInternal("todo: Cycle detected during type-checking");
-        case SqlValidatorImpl.Status.Valid_ordinal:
+        case Valid:
             break;
         default:
-            throw status.unexpected();
+            throw Util.unexpected(status);
         }
     }
 
@@ -130,9 +137,19 @@ abstract class AbstractNamespace
         return rowType;
     }
 
+    public RelDataType getRowTypeSansSystemColumns()
+    {
+        return getRowType();
+    }
+
     public void setRowType(RelDataType rowType)
     {
         this.rowType = rowType;
+    }
+
+    public SqlNode getEnclosingNode()
+    {
+        return enclosingNode;
     }
 
     public SqlValidatorTable getTable()
@@ -140,17 +157,11 @@ abstract class AbstractNamespace
         return null;
     }
 
-    public SqlValidatorNamespace lookupChild(
-        String name,
-        SqlValidatorScope [] ancestorOut,
-        int [] offsetOut)
+    public SqlValidatorNamespace lookupChild(String name)
     {
-        return
-            validator.lookupFieldNamespace(
-                getRowType(),
-                name,
-                ancestorOut,
-                offsetOut);
+        return validator.lookupFieldNamespace(
+            getRowType(),
+            name);
     }
 
     public boolean fieldExists(String name)
@@ -161,29 +172,34 @@ abstract class AbstractNamespace
         return dataType != null;
     }
 
-    public Object getExtra()
+    public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
     {
-        return extra;
+        return Collections.emptyList();
     }
 
-    public void setExtra(Object o)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        this.extra = o;
-    }
-
-    public SqlNodeList getMonotonicExprs()
-    {
-        return SqlNodeList.Empty;
-    }
-
-    public boolean isMonotonic(String columnName)
-    {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     public void makeNullable()
     {
         forceNullable = true;
+    }
+
+    public String translate(String name)
+    {
+        return name;
+    }
+
+    public <T> T unwrap(Class<T> clazz)
+    {
+        return clazz.cast(this);
+    }
+
+    public boolean isWrapperFor(Class<?> clazz)
+    {
+        return clazz.isInstance(this);
     }
 }
 

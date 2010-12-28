@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ class SegStreamTest : virtual public SegStorageTestBase
     size_t maxWordLength;
     uint totalDictLength;
 
-    void testWrite(SharedByteOutputStream pOutputStream,uint nRuns)
+    void testWrite(SharedByteOutputStream pOutputStream, uint nRuns)
     {
         maxWordLength = 0;
         totalDictLength = 0;
@@ -53,27 +53,27 @@ class SegStreamTest : virtual public SegStorageTestBase
                 if (word == "") {
                     break;
                 }
-                maxWordLength = std::max(word.size(),maxWordLength);
+                maxWordLength = std::max(word.size(), maxWordLength);
                 if (i == 0) {
                     totalDictLength += word.size();
                 }
                 if (i < 2) {
-                    pOutputStream->writeBytes(word.c_str(),word.size());
+                    pOutputStream->writeBytes(word.c_str(), word.size());
                 } else {
                     uint cbActual;
                     PBuffer pBuf = pOutputStream->getWritePointer(
-                        word.size(),&cbActual);
+                        word.size(), &cbActual);
                     BOOST_CHECK(cbActual >= word.size());
-                    memcpy(pBuf,word.c_str(),word.size());
+                    memcpy(pBuf, word.c_str(), word.size());
                     pOutputStream->consumeWritePointer(word.size());
                 }
             }
         }
     }
 
-    void testRead(SharedByteInputStream pInputStream,uint nRuns)
+    void testRead(SharedByteInputStream pInputStream, uint nRuns)
     {
-        boost::scoped_array<char> wordArray(new char[maxWordLength+1]);
+        boost::scoped_array<char> wordArray(new char[maxWordLength + 1]);
         for (uint i = 0; i < nRuns; ++i) {
             if (i == 0) {
                 pInputStream->seekForward(totalDictLength);
@@ -81,7 +81,7 @@ class SegStreamTest : virtual public SegStorageTestBase
             }
             std::ifstream wordStream(
                 configMap.getStringParam(paramDictionaryFileName).c_str());
-            std::string word,segWord;
+            std::string word, segWord;
             for (;;) {
                 word.clear();
                 wordStream >> word;
@@ -91,13 +91,13 @@ class SegStreamTest : virtual public SegStorageTestBase
                 segWord.clear();
                 if (i < 2) {
                     uint nChars = pInputStream->readBytes(
-                        wordArray.get(),word.size());
-                    BOOST_CHECK_EQUAL(nChars,word.size());
-                    segWord.assign(wordArray.get(),word.size());
+                        wordArray.get(), word.size());
+                    BOOST_CHECK_EQUAL(nChars, word.size());
+                    segWord.assign(wordArray.get(), word.size());
                 } else {
                     uint cbActual;
                     PConstBuffer pBuf = pInputStream->getReadPointer(
-                        word.size(),&cbActual);
+                        word.size(), &cbActual);
                     BOOST_CHECK(pBuf);
                     BOOST_CHECK(cbActual >= word.size());
                     segWord.assign(
@@ -105,34 +105,34 @@ class SegStreamTest : virtual public SegStorageTestBase
                         word.size());
                     pInputStream->consumeReadPointer(word.size());
                 }
-                BOOST_CHECK_EQUAL(word,segWord);
+                BOOST_CHECK_EQUAL(word, segWord);
             }
         }
-        uint nChars = pInputStream->readBytes(wordArray.get(),1);
+        uint nChars = pInputStream->readBytes(wordArray.get(), 1);
         BOOST_CHECK(!nChars);
         BOOST_CHECK(!pInputStream->getReadPointer(1));
     }
-    
+
 public:
     explicit SegStreamTest()
     {
         // Grow page-by-page since preallocation will result in garbage at end
         // of stream.
         nDiskPages = 0;
-        
-        FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSeg);
-        FENNEL_UNIT_TEST_CASE(SegStreamTest,testReadSeg);
-        FENNEL_UNIT_TEST_CASE(SegStreamTest,testMarkReset);
-        FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSpillAndRead);
+
+        FENNEL_UNIT_TEST_CASE(SegStreamTest, testWriteSeg);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest, testReadSeg);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest, testMarkReset);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest, testWriteSpillAndRead);
     }
 
     void testWriteSeg()
     {
         openStorage(DeviceMode::createNew);
-        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SegmentAccessor segmentAccessor(pLinearSegment, pCache);
         SharedSegOutputStream pOutputStream =
             SegOutputStream::newSegOutputStream(segmentAccessor);
-        testWrite(pOutputStream,3);
+        testWrite(pOutputStream, 3);
         pOutputStream.reset();
         segmentAccessor.reset();
         closeStorage();
@@ -141,11 +141,11 @@ public:
     void testReadSeg()
     {
         openStorage(DeviceMode::load);
-        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SegmentAccessor segmentAccessor(pLinearSegment, pCache);
         SharedSegInputStream pInputStream =
             SegInputStream::newSegInputStream(segmentAccessor);
         pInputStream->startPrefetch();
-        testRead(pInputStream,3);
+        testRead(pInputStream, 3);
         pInputStream.reset();
         segmentAccessor.reset();
         closeStorage();
@@ -154,34 +154,34 @@ public:
     void testMarkReset()
     {
         openStorage(DeviceMode::load);
-        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SegmentAccessor segmentAccessor(pLinearSegment, pCache);
         SharedSegInputStream pInputStream =
             SegInputStream::newSegInputStream(segmentAccessor);
         SharedByteStreamMarker pMarker = pInputStream->newMarker();
         pInputStream->mark(*pMarker);
         pInputStream->startPrefetch();
-        testRead(pInputStream,3);
+        testRead(pInputStream, 3);
         pInputStream->reset(*pMarker);
-        testRead(pInputStream,3);
+        testRead(pInputStream, 3);
         pInputStream.reset();
         segmentAccessor.reset();
         closeStorage();
     }
-    
+
     void testWriteSpillAndRead()
     {
         openStorage(DeviceMode::createNew);
         SharedSpillOutputStream pOutputStream =
             SpillOutputStream::newSpillOutputStream(
-                pSegmentFactory,pCache,"spill.dat");
-        testWrite(pOutputStream,2);
+                pSegmentFactory, pCache, "spill.dat");
+        testWrite(pOutputStream, 2);
         SharedByteInputStream pInputStream = pOutputStream->getInputStream();
         pOutputStream.reset();
-        testRead(pInputStream,2);
+        testRead(pInputStream, 2);
         pInputStream.reset();
         closeStorage();
     }
-    
+
 };
 
 FENNEL_UNIT_TEST_SUITE(SegStreamTest);

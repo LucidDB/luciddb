@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ void SegStorageTestBase::openSegmentStorage(DeviceMode openMode)
     pLinearSegment = createLinearDeviceSegment(
         dataDeviceId,
         openMode.create ? 0
-        : pRandomAccessDevice->getSizeInBytes()/cbPageFull);
+        : pRandomAccessDevice->getSizeInBytes() / cbPageFull);
 }
 
 void SegStorageTestBase::openRandomSegment()
@@ -54,17 +54,17 @@ void SegStorageTestBase::openRandomSegment()
 }
 
 SharedSegment SegStorageTestBase::createLinearDeviceSegment(
-    DeviceId deviceId,uint nPages)
+    DeviceId deviceId, uint nPages)
 {
-    BlockId blockId;
-    CompoundId::setDeviceId(blockId,deviceId);
-    CompoundId::setBlockNum(blockId,0);
+    BlockId blockId(0);
+    CompoundId::setDeviceId(blockId, deviceId);
+    CompoundId::setBlockNum(blockId, 0);
     LinearDeviceSegmentParams deviceParams;
     deviceParams.firstBlockId = blockId;
     deviceParams.nPagesMin = nPages;
     deviceParams.nPagesAllocated = nPages;
     return pSegmentFactory->newLinearDeviceSegment(
-        pCache,deviceParams);
+        pCache, deviceParams);
 }
 
 void SegStorageTestBase::closeLinearSegment()
@@ -82,19 +82,36 @@ void SegStorageTestBase::closeRandomSegment()
         pRandomSegment.reset();
     }
 }
-    
+
+void SegStorageTestBase::closeVersionedRandomSegment()
+{
+    if (pVersionedRandomSegment) {
+        assert(pVersionedRandomSegment.unique());
+        pVersionedRandomSegment.reset();
+    }
+}
+
+void SegStorageTestBase::closeSnapshotRandomSegment()
+{
+    if (pSnapshotRandomSegment) {
+        assert(pSnapshotRandomSegment.unique());
+        pSnapshotRandomSegment.reset();
+    }
+}
+
 void SegStorageTestBase::closeStorage()
 {
     closeLinearSegment();
     closeRandomSegment();
+    closeVersionedRandomSegment();
     // TODO:  assert pSegmentFactory.unique(), but not here
     CacheTestBase::closeStorage();
 }
 
 SegStorageTestBase::SegStorageTestBase()
 {
-    pSegmentFactory = 
-        SegmentFactory::newSegmentFactory(configMap,shared_from_this());
+    pSegmentFactory =
+        SegmentFactory::newSegmentFactory(configMap, shared_from_this());
 }
 
 // End SegStorageTestBase.cpp

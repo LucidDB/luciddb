@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,6 @@ public abstract class NullablePrimitive
     implements NullableValue,
         AssignableValue
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -230,7 +229,7 @@ public abstract class NullablePrimitive
          * Implements cast from string to non-nullable boolean Invoked by
          * generated code
          */
-        public static final boolean convertString(String s)
+        public static boolean convertString(String s)
         {
             s = s.trim();
             if (s.equalsIgnoreCase(TRUE_LITERAL)) {
@@ -254,7 +253,7 @@ public abstract class NullablePrimitive
          * @param n1 null indicator for arg1
          * @param v1 truth value of arg1 when !n1
          */
-        public final void assignFromAnd3VL(
+        public void assignFromAnd3VL(
             boolean n0,
             boolean v0,
             boolean n1,
@@ -297,7 +296,7 @@ public abstract class NullablePrimitive
          * @param n1 null indicator for arg1
          * @param v1 truth value of arg1 when !n1
          */
-        public final void assignFromOr3VL(
+        public void assignFromOr3VL(
             boolean n0,
             boolean v0,
             boolean n1,
@@ -346,9 +345,13 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (byte) NumberUtil.round(number.doubleValue());
+            if ((number instanceof Float) || (number instanceof Double)) {
+                value = (byte) NumberUtil.round(number.doubleValue());
+            } else {
+                value = number.byteValue();
+            }
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {
@@ -372,7 +375,7 @@ public abstract class NullablePrimitive
         {
             value = number.doubleValue();
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {
@@ -396,7 +399,7 @@ public abstract class NullablePrimitive
         {
             value = number.floatValue();
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {
@@ -418,9 +421,13 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (int) NumberUtil.round(number.doubleValue());
+            if ((number instanceof Float) || (number instanceof Double)) {
+                value = (int) NumberUtil.round(number.doubleValue());
+            } else {
+                value = number.intValue();
+            }
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {
@@ -442,13 +449,43 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = NumberUtil.round(number.doubleValue());
+            if ((number instanceof Float) || (number instanceof Double)) {
+                value = (long) NumberUtil.round(number.doubleValue());
+            } else {
+                value = number.longValue();
+            }
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {
             value = (long) n;
+        }
+
+        // override NullablePrimitive
+        public void assignFrom(Object o)
+        {
+            if (o == null) {
+                setNull(true);
+            } else if (o instanceof SqlDateTimeWithoutTZ) {
+                SqlDateTimeWithoutTZ datetime = (SqlDateTimeWithoutTZ) o;
+                if (datetime.isNull()) {
+                    setNull(true);
+                } else {
+                    setNull(false);
+                    setLong(datetime.value.getTime());
+                }
+            } else if (o instanceof EncodedSqlInterval) {
+                EncodedSqlInterval interval = (EncodedSqlInterval) o;
+                if (interval.isNull()) {
+                    setNull(true);
+                } else {
+                    setNull(false);
+                    setLong(interval.value);
+                }
+            } else {
+                super.assignFrom(o);
+            }
         }
     }
 
@@ -466,9 +503,13 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (short) NumberUtil.round(number.doubleValue());
+            if ((number instanceof Float) || (number instanceof Double)) {
+                value = (short) NumberUtil.round(number.doubleValue());
+            } else {
+                value = number.shortValue();
+            }
         }
-        
+
         // implement NullablePrimitive
         protected void setLong(long n)
         {

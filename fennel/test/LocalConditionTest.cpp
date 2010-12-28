@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,17 +35,17 @@ public:
     StrictMutex mutex;
     LocalCondition cond;
     bool bFlag;
-    
+
     explicit LocalConditionTest()
     {
         bFlag = 0;
-        FENNEL_UNIT_TEST_CASE(LocalConditionTest,testNotifyAll);
+        FENNEL_UNIT_TEST_CASE(LocalConditionTest, testNotifyAll);
     }
-    
+
     virtual ~LocalConditionTest()
     {
     }
-    
+
     void testNotifyAll();
 };
 
@@ -54,9 +54,9 @@ class TestThread : public Thread
     LocalConditionTest &test;
 
 public:
-    
+
     TestThread(LocalConditionTest &testInit)
-        : test(testInit)    
+        : test(testInit)
     {
     }
 

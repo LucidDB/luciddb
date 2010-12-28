@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2004 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,10 +37,9 @@ import org.eigenbase.sql.*;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class JoinScope
+public class JoinScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidatorScope usingScope;
@@ -48,6 +47,13 @@ class JoinScope
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a <code>JoinScope</code>.
+     *
+     * @param parent Parent scope
+     * @param usingScope Scope for resolving USING clause
+     * @param join Call to JOIN operator
+     */
     JoinScope(
         SqlValidatorScope parent,
         SqlValidatorScope usingScope,
@@ -91,6 +97,14 @@ class JoinScope
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns the scope which is used for resolving USING clause.
+     */
+    public SqlValidatorScope getUsingScope()
+    {
+        return usingScope;
     }
 }
 

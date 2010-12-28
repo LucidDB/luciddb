@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,7 +56,7 @@ void SegStreamAllocation::endWrite()
     assert(pSegOutputStream);
 
     nPagesWritten = pSegOutputStream->getPageCount();
-    
+
     SegmentAccessor segmentAccessor = pSegOutputStream->getSegmentAccessor();
     PageId firstPageId = pSegOutputStream->getFirstPageId();
     pSegOutputStream->close();
@@ -65,7 +65,7 @@ void SegStreamAllocation::endWrite()
         // go directly to UNALLOCATED
         return;
     }
-    
+
     // go to state READING
     pSegInputStream = SegInputStream::newSegInputStream(
         segmentAccessor,
@@ -87,7 +87,7 @@ void SegStreamAllocation::closeImpl()
         // deallocate them
         endWrite();
     }
-    
+
     if (pSegInputStream) {
         // state READING
         assert(!pSegOutputStream);

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,12 +34,12 @@ package org.eigenbase.relopt;
  */
 public interface RelOptCost
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * @return number of rows processed; this should not be confused with the
-     * row count produced by a relational expression ({@link RelNode.getRows})
+     * row count produced by a relational expression ({@link
+     * org.eigenbase.rel.RelNode#getRows})
      */
     public double getRows();
 
@@ -71,6 +71,16 @@ public interface RelOptCost
      * @return true iff this is exactly equal to other cost
      */
     public boolean equals(RelOptCost cost);
+
+    /**
+     * Compares this to another cost, allowing for slight roundoff errors.
+     *
+     * @param cost another cost
+     *
+     * @return true iff this is the same as the other cost within a roundoff
+     * margin of error
+     */
+    public boolean isEqWithEpsilon(RelOptCost cost);
 
     /**
      * Compares this to another cost.
@@ -116,6 +126,19 @@ public interface RelOptCost
      * @return scalar product of this and factor
      */
     public RelOptCost multiplyBy(double factor);
+
+    /**
+     * Computes the ratio between this cost and another cost.
+     *
+     * <p>divideBy is the inverse of {@link #multiplyBy(double)}. For any
+     * finite, non-zero cost and factor f, <code>
+     * cost.divideBy(cost.multiplyBy(f))</code> yields <code>1 / f</code>.
+     *
+     * @param cost Other cost
+     *
+     * @return Ratio between costs
+     */
+    public double divideBy(RelOptCost cost);
 
     /**
      * Forces implementations to override {@link Object#toString} and provide a

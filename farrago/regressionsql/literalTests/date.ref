@@ -1,410 +1,406 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test date literal
-0: jdbc:farrago:> 
-0: jdbc:farrago:> VALUES date 'January 8, 1999';
+> -- $Id$ 
+> 
+> -- test date literal
+> 
+> VALUES date 'January 8, 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-18';
+> VALUES date '1999-01-18';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1/8/1999';
+> VALUES date '1/8/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1/18/1999';
+> VALUES date '1/18/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '18/1/1999';
+> VALUES date '18/1/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01/02/03';
+> VALUES date '01/02/03';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '19990108';
+> VALUES date '19990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '990108';
+> VALUES date '990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999.008';
+> VALUES date '1999.008';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'J2451187';
+> VALUES date 'J2451187';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
+> VALUES date 'January 8, 99 BC';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-Jan-08';
+> VALUES date '99-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-Jan-08';
+> VALUES date '1999-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-99';
+> VALUES date '08-Jan-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-1999';
+> VALUES date '08-Jan-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-99';
+> VALUES date 'Jan-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-1999';
+> VALUES date 'Jan-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-Jan';
+> VALUES date '99-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-08-Jan';
+> VALUES date '1999-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 Jan 08';
+> VALUES date '99 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 Jan 08';
+> VALUES date '1999 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 99';
+> VALUES date '08 Jan 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 1999';
+> VALUES date '08 Jan 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 99';
+> VALUES date 'Jan 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 1999';
+> VALUES date 'Jan 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 Jan';
+> VALUES date '99 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 Jan';
+> VALUES date '1999 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-01-08';
+> VALUES date '99-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '08-01-99';
+> VALUES date '08-01-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-01-1999';
+> VALUES date '08-01-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-99';
+> VALUES date '01-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-1999';
+> VALUES date '01-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-01';
+> VALUES date '99-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-08-01';
+> VALUES date '1999-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '99 01 08';
+> VALUES date '99 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 01 08';
+> VALUES date '1999 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 99';
+> VALUES date '08 01 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 1999';
+> VALUES date '08 01 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 99';
+> VALUES date '01 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 1999';
+> VALUES date '01 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 01';
+> VALUES date '99 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 01';
+> VALUES date '1999 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'January 8, 1999';
+> VALUES date 'January 8, 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-18';
+> VALUES date '1999-01-18';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1/8/1999';
+> VALUES date '1/8/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1/18/1999';
+> VALUES date '1/18/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '18/1/1999';
+> VALUES date '18/1/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01/02/03';
+> VALUES date '01/02/03';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '19990108';
+> VALUES date '19990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '990108';
+> VALUES date '990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999.008';
+> VALUES date '1999.008';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'J2451187';
+> VALUES date 'J2451187';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
+> VALUES date 'January 8, 99 BC';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-Jan-08';
+> VALUES date '99-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-Jan-08';
+> VALUES date '1999-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-99';
+> VALUES date '08-Jan-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-1999';
+> VALUES date '08-Jan-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-99';
+> VALUES date 'Jan-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-1999';
+> VALUES date 'Jan-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-Jan';
+> VALUES date '99-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-08-Jan';
+> VALUES date '1999-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 Jan 08';
+> VALUES date '99 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 Jan 08';
+> VALUES date '1999 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 99';
+> VALUES date '08 Jan 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 1999';
+> VALUES date '08 Jan 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 99';
+> VALUES date 'Jan 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 1999';
+> VALUES date 'Jan 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 Jan';
+> VALUES date '99 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 Jan';
+> VALUES date '1999 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-01-08';
+> VALUES date '99-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '08-01-99';
+> VALUES date '08-01-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-01-1999';
+> VALUES date '08-01-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-99';
+> VALUES date '01-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-1999';
+> VALUES date '01-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-01';
+> VALUES date '99-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-08-01';
+> VALUES date '1999-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '99 01 08';
+> VALUES date '99 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 01 08';
+> VALUES date '1999 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 99';
+> VALUES date '08 01 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 1999';
+> VALUES date '08 01 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 99';
+> VALUES date '01 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 1999';
+> VALUES date '01 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 01';
+> VALUES date '99 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 01';
+> VALUES date '1999 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'January 8, 1999';
+> VALUES date 'January 8, 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-18';
+> VALUES date '1999-01-18';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1/8/1999';
+> VALUES date '1/8/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1/18/1999';
+> VALUES date '1/18/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '18/1/1999';
+> VALUES date '18/1/1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01/02/03';
+> VALUES date '01/02/03';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '19990108';
+> VALUES date '19990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '990108';
+> VALUES date '990108';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999.008';
+> VALUES date '1999.008';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'J2451187';
+> VALUES date 'J2451187';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
+> VALUES date 'January 8, 99 BC';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-Jan-08';
+> VALUES date '99-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-Jan-08';
+> VALUES date '1999-Jan-08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-99';
+> VALUES date '08-Jan-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-Jan-1999';
+> VALUES date '08-Jan-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-99';
+> VALUES date 'Jan-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan-08-1999';
+> VALUES date 'Jan-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-Jan';
+> VALUES date '99-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999-08-Jan';
+> VALUES date '1999-08-Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 Jan 08';
+> VALUES date '99 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 Jan 08';
+> VALUES date '1999 Jan 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 99';
+> VALUES date '08 Jan 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 Jan 1999';
+> VALUES date '08 Jan 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 99';
+> VALUES date 'Jan 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date 'Jan 08 1999';
+> VALUES date 'Jan 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 Jan';
+> VALUES date '99 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 Jan';
+> VALUES date '1999 08 Jan';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-01-08';
+> VALUES date '99-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-01-08';
+> VALUES date '1999-01-08';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> VALUES date '08-01-99';
+> VALUES date '08-01-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08-01-1999';
+> VALUES date '08-01-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-99';
+> VALUES date '01-08-99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01-08-1999';
+> VALUES date '01-08-1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99-08-01';
+> VALUES date '99-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '1999-08-01';
+> VALUES date '1999-08-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> VALUES date '99 01 08';
+> VALUES date '99 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 01 08';
+> VALUES date '1999 01 08';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 99';
+> VALUES date '08 01 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '08 01 1999';
+> VALUES date '08 01 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 99';
+> VALUES date '01 08 99';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '01 08 1999';
+> VALUES date '01 08 1999';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '99 08 01';
+> VALUES date '99 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> VALUES date '1999 08 01';
+> VALUES date '1999 08 01';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- more ISO format tests that should work
-0: jdbc:farrago:> values date '1969-0004-0026';
+> 
+> -- more ISO format tests that should work
+> values date '1969-0004-0026';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1969-04-26  |
 +-------------+
-0: jdbc:farrago:> values date '2005-4-3';
+> values date '2005-4-3';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2005-04-03  |
 +-------------+
-0: jdbc:farrago:> values date '2004-2-30';
+> values date '2004-2-30';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2004-2-30' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> values date '20005-4-3';
-+-------------+
-|   EXPR$0    |
-+-------------+
-|  005-04-03  |
-+-------------+
-0: jdbc:farrago:> -- these should fail (bad month or date)
-0: jdbc:farrago:> values date '2003-10-32';
+> values date '20005-4-3';
+Error: From line 1, column 13 to line 1, column 23: Date literal 'DATE '20005-04-03'' out of range (state=,code=0)
+> -- these should fail (bad month or date)
+> values date '2003-10-32';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2003-10-32' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> values date '2003-13-10';
+> values date '2003-13-10';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2003-13-10' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_date(date_col date not null primary key, date_col2 date);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_date values('string value',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type CHAR(12) (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(true,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(1234,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(1e400,null);
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_date(date_col date not null primary key, date_col2 date);
+> 
+> -- negative test
+> insert into t_date values('string value',null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type CHAR(12) (state=,code=0)
+> insert into t_date values(true,null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
+> insert into t_date values(1234,null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type INTEGER (state=,code=0)
+> insert into t_date values(1e400,null);
 Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(-1.2345678901234e-200,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DOUBLE (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(-1234.03,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(x'ff',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(time '12:01:01',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> -- the next insert statement should be allowed.
-0: jdbc:farrago:> -- insert into t_date values(timestamp '2004-12-01 12:01:01',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right values
-0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_date values(null, null); 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_date;
+> insert into t_date values(-1.2345678901234e-200,null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DOUBLE (state=,code=0)
+> insert into t_date values(-1234.03,null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
+> insert into t_date values(x'ff',null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
+> insert into t_date values(time '12:01:01',null);
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
+> -- the next insert statement should be allowed.
+> -- insert into t_date values(timestamp '2004-12-01 12:01:01',null);
+> 
+> -- insert the right values
+> insert into t_date values(date '1999-01-08',null);
+> 
+> -- null value test
+> --insert into t_date values(null, null); 
+> 
+> select * from t_date;
 +-------------+------------+
 |  DATE_COL   | DATE_COL2  |
 +-------------+------------+
 | 1999-01-08  |            |
 +-------------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_date;
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table t_date;
+> drop schema test;
+> 
+> !quit

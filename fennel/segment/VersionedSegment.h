@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,6 @@
 #include "fennel/cache/FuzzyCheckpointSet.h"
 #include "fennel/common/PseudoUuid.h"
 
-#include <hash_map>
 #include <boost/crc.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -42,7 +41,8 @@ class WALSegment;
  * segment.  See <a href="structSegmentDesign.html#VersionedSegment">the design
  * docs</a> for more detail.
  */
-class VersionedSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT VersionedSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 
@@ -59,9 +59,6 @@ class VersionedSegment : public DelegatingSegment
 
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
-    typedef std::hash_map<PageId,PageId> PageMap;
-    typedef PageMap::const_iterator PageMapConstIter;
 
     PageMap dataToLogMap;
 
@@ -70,21 +67,43 @@ class VersionedSegment : public DelegatingSegment
         SharedSegment logSegment,
         PseudoUuid const &onlineUuid,
         SegVersionNum versionNumber);
-    
+
     uint64_t computeChecksum(void const *pPageData);
-    
+
 public:
     virtual ~VersionedSegment();
 
     /**
      * Recovers to a specific version from the log.
      *
+     * @param pDelegatingSegment segment from which pages to recover originate
+     *
      * @param firstLogPageId starting PageId in log segment
      *
      * @param versionNumber version number to recover to, or MAXU
      * to use current version number
      */
-    void recover(PageId firstLogPageId, SegVersionNum versionNumber = MAXU);
+    void recover(
+        SharedSegment pDelegatingSegment,
+        PageId firstLogPageId,
+        SegVersionNum versionNumber = MAXU);
+
+    /**
+     * Recovers to a specific version from the log and resets the online uuid.
+     *
+     * @param pDelegatingSegment segment from which pages to recover originate
+     *
+     * @param firstLogPageId starting PageId in log segment
+     *
+     * @param versionNumber version number to recover to
+     *
+     * @param onlineUuid online uuid corresponding to the recovered instance
+     */
+    void recover(
+        SharedSegment pDelegatingSegment,
+        PageId firstLogPageId,
+        SegVersionNum versionNumber,
+        PseudoUuid const &onlineUuid);
 
     /**
      * Prepares for "online" recovery, meaning a revert back to the last
@@ -97,13 +116,13 @@ public:
      * after a crash
      */
     PageId getRecoveryPageId() const;
-    
+
     /**
      * @return the PageId of the oldest log page still needed for recovery
      * while online
      */
     PageId getOnlineRecoveryPageId() const;
-    
+
     /**
      * Gets the version number of a locked page.
      *
@@ -117,7 +136,7 @@ public:
      * @return the current version number for this segment
      */
     SegVersionNum getVersionNumber() const;
-    
+
     /**
      * @return the WAL segment
      */
@@ -132,9 +151,9 @@ public:
      * call
      */
     void deallocateCheckpointedLog(CheckpointType checkpointType);
-    
+
     // implement the Segment interface
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
 

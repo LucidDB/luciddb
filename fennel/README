@@ -1,18 +1,23 @@
-Fennel Source Release 0.6.0pre1
+Fennel Source Release 0.9.3
 
 ----------------------------------------------------------------------
 HOME PAGE
-
-For information about the project, please see
 
 http://fennel.sourceforge.net
 
 ----------------------------------------------------------------------
 BUILD
 
-See file INSTALL for details.  If instead of building you would like
-to obtain pre-packaged binaries, download the full Eigenbase binary
-release for your platform.
+For build instructions, see
+
+http://pub.eigenbase.org/wiki/FennelBuildSystem
+
+You can use initBuild.sh with no options for a first attempt.
+
+If instead of building you would like to obtain pre-packaged binaries,
+download the full Eigenbase binary release for your platform:
+
+http://www.eigenbase.org/download.html
 
 ------------------------------------------------------------
 RELEASE NOTES
@@ -29,10 +34,14 @@ and class libraries) are still in a fluid state and subject to
 frequent review and change.  As interfaces solidify, they will be
 officially frozen in future releases.
 
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
+
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2006 The Eigenbase Project and others
+Copyright (C) 1999 The Eigenbase Project and others
 
 This distribution of Fennel is licensed under the GNU General Public
 License; see file COPYING for details.
@@ -63,11 +72,23 @@ db:  database implementation (top-level container)
 ftrs:  Fennel Transactional Row Store, a table storage implementation built on
 top of the btree library
 
+calculator:  SQL expression program evaluator
+
+sorter:  external mergesort implementation
+
+flatfile:  flatfile reader
+
+hashexe:  hash join/aggregation
+
+lcs:  LucidDB column store
+
+lbm:  LucidDB bitmap indexes
+
 test:  unit tests
 
+calctest:  unit tests for calculator
+
+ldbtest:  unit tests for lcs/lbm
+
 farrago:  JNI integration for the companion Farrago project
-
-disruptivetech:  components contributed by Disruptive Tech
-
-lucidera:  components contributed by LucidEra, Inc.
 

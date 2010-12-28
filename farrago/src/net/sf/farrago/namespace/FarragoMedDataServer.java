@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoMedDataServer
     extends FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -120,7 +119,7 @@ public interface FarragoMedDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException;
 
     /**
@@ -156,6 +155,11 @@ public interface FarragoMedDataServer
      * @param chain receives wrappers's custom providers, if any
      */
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
+
+    /**
+     * Gives this wrapper a chance to release any resources.
+     */
+    public void releaseResources();
 }
 
 // End FarragoMedDataServer.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,12 +21,8 @@
 */
 package org.eigenbase.sarg;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -38,11 +34,10 @@ import org.eigenbase.util.*;
 public class SargMutableEndpoint
     extends SargEndpoint
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newEndpoint
+     * @see SargFactory#newEndpoint
      */
     SargMutableEndpoint(SargFactory factory, RelDataType dataType)
     {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,17 +28,16 @@ import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
@@ -56,7 +55,6 @@ import org.netbeans.api.mdr.*;
  */
 class MedMdrJoinRelImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRelImplementor implementor;
@@ -225,7 +223,8 @@ class MedMdrJoinRelImplementor
 
         if ((joinRel.getRightReference() == null)
             || !joinRel.getRightReference().getType().equals(
-                rightRel.mdrClassExtent.refClass.refMetaObject())) {
+                rightRel.mdrClassExtent.refClass.refMetaObject()))
+        {
             // since the right-hand input is more specific than the
             // corresponding association end, we have to filter out any
             // unrelated types we might encounter
@@ -393,7 +392,10 @@ class MedMdrJoinRelImplementor
             joinRel.getRightReference().getReferencedEnd().getType();
         leftKeyRefClass =
             (RefClass) rightRel.getRefObjectFromModelElement(leftKeyClassifier);
-        leftKeyClass = JmiUtil.getClassForRefClass(leftKeyRefClass);
+        leftKeyClass =
+            JmiObjUtil.getClassForRefClass(
+                implementor.getRepos().getMdrRepos(),
+                leftKeyRefClass);
 
         boolean useAssocReflection = rightRel.useReflection;
 
@@ -418,7 +420,8 @@ class MedMdrJoinRelImplementor
                     varRepository,
                     "getByMofId",
                     new ExpressionList(
-                        new MethodCall(new FieldAccess(
+                        new MethodCall(
+                            new FieldAccess(
                                 varLeftRow,
                                 Util.toJavaId(
                                     leftFields[joinRel.getLeftOrdinal()]
@@ -435,7 +438,8 @@ class MedMdrJoinRelImplementor
                         OJUtil.typeNameForClass(leftKeyClass))),
                 new StatementList(
                     new ReturnStatement(
-                        new MethodCall(new FieldAccess(
+                        new MethodCall(
+                            new FieldAccess(
                                 OJClass.forClass(Collections.class),
                                 "EMPTY_LIST"),
                             "iterator",
@@ -451,7 +455,7 @@ class MedMdrJoinRelImplementor
         Expression collectionExpr = null;
         if (!useAssocReflection) {
             String accessorName =
-                JmiUtil.getAccessorName(
+                JmiObjUtil.getAccessorName(
                     joinRel.getRightReference().getExposedEnd());
             try {
                 // verify that the desired accessor method actually exists
@@ -492,14 +496,13 @@ class MedMdrJoinRelImplementor
                     new ExpressionList(
                         Literal.makeLiteral(
                             joinRel.getRightReference().getReferencedEnd()
-                            .getName()),
+                                   .getName()),
                         varLeftObj));
         }
-        return
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
-                new ExpressionList(
-                    collectionExpr));
+        return new AllocationExpression(
+            OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+            new ExpressionList(
+                collectionExpr));
     }
 
     private Expression generateManyToOneLookup()
@@ -525,16 +528,15 @@ class MedMdrJoinRelImplementor
                     "getByMofId",
                     new ExpressionList(varLeftObj)));
 
-        return
-            new ConditionalExpression(
-                new BinaryExpression(
-                    varLeftObj,
-                    BinaryExpression.EQUAL,
-                    Literal.constantNull()),
-                new CastExpression(
-                    OJSystem.OBJECT,
-                    new Variable("EMPTY_ITERATOR")),
-                lookupExpr);
+        return new ConditionalExpression(
+            new BinaryExpression(
+                varLeftObj,
+                BinaryExpression.EQUAL,
+                Literal.constantNull()),
+            new CastExpression(
+                OJSystem.OBJECT,
+                new Variable("EMPTY_ITERATOR")),
+            lookupExpr);
     }
 }
 

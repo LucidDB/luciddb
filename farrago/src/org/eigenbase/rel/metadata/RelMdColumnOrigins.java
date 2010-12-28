@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public class RelMdColumnOrigins
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdColumnOrigins()
@@ -62,20 +61,19 @@ public class RelMdColumnOrigins
     {
         if (iOutputColumn < rel.getGroupCount()) {
             // Group columns pass through directly.
-            return
-                RelMetadataQuery.getColumnOrigins(
-                    rel.getChild(),
-                    iOutputColumn);
+            return invokeGetColumnOrigins(
+                rel.getChild(),
+                iOutputColumn);
         }
 
         // Aggregate columns are derived from input columns
-        AggregateRel.Call call =
-            rel.getAggCalls()[iOutputColumn - rel.getGroupCount()];
+        AggregateCall call =
+            rel.getAggCallList().get(iOutputColumn - rel.getGroupCount());
 
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
-        for (int iInput : call.getArgs()) {
+        for (Integer iInput : call.getArgList()) {
             Set<RelColumnOrigin> inputSet =
-                RelMetadataQuery.getColumnOrigins(
+                invokeGetColumnOrigins(
                     rel.getChild(),
                     iInput);
             inputSet = createDerivedColumnOrigins(inputSet);
@@ -95,7 +93,7 @@ public class RelMdColumnOrigins
         boolean derived = false;
         if (iOutputColumn < nLeftColumns) {
             set =
-                RelMetadataQuery.getColumnOrigins(
+                invokeGetColumnOrigins(
                     rel.getLeft(),
                     iOutputColumn);
             if (rel.getJoinType().generatesNullsOnLeft()) {
@@ -103,7 +101,7 @@ public class RelMdColumnOrigins
             }
         } else {
             set =
-                RelMetadataQuery.getColumnOrigins(
+                invokeGetColumnOrigins(
                     rel.getRight(),
                     iOutputColumn - nLeftColumns);
             if (rel.getJoinType().generatesNullsOnRight()) {
@@ -125,7 +123,7 @@ public class RelMdColumnOrigins
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
         for (RelNode input : rel.getInputs()) {
             Set inputSet =
-                RelMetadataQuery.getColumnOrigins(
+                invokeGetColumnOrigins(
                     input,
                     iOutputColumn);
             if (inputSet == null) {
@@ -146,10 +144,9 @@ public class RelMdColumnOrigins
         if (rexNode instanceof RexInputRef) {
             // Direct reference:  no derivation added.
             RexInputRef inputRef = (RexInputRef) rexNode;
-            return
-                RelMetadataQuery.getColumnOrigins(
-                    child,
-                    inputRef.getIndex());
+            return invokeGetColumnOrigins(
+                child,
+                inputRef.getIndex());
         }
 
         // Anything else is a derivation, possibly from multiple
@@ -160,7 +157,7 @@ public class RelMdColumnOrigins
                 public Void visitInputRef(RexInputRef inputRef)
                 {
                     Set<RelColumnOrigin> inputSet =
-                        RelMetadataQuery.getColumnOrigins(
+                        invokeGetColumnOrigins(
                             child,
                             inputRef.getIndex());
                     if (inputSet != null) {
@@ -178,18 +175,18 @@ public class RelMdColumnOrigins
         FilterRelBase rel,
         int iOutputColumn)
     {
-        return RelMetadataQuery.getColumnOrigins(
-                rel.getChild(),
-                iOutputColumn);
+        return invokeGetColumnOrigins(
+            rel.getChild(),
+            iOutputColumn);
     }
 
     public Set<RelColumnOrigin> getColumnOrigins(
         SortRel rel,
         int iOutputColumn)
     {
-        return RelMetadataQuery.getColumnOrigins(
-                rel.getChild(),
-                iOutputColumn);
+        return invokeGetColumnOrigins(
+            rel.getChild(),
+            iOutputColumn);
     }
 
     public Set<RelColumnOrigin> getColumnOrigins(
@@ -214,8 +211,8 @@ public class RelMdColumnOrigins
             if (mapping.iOutputColumn != iOutputColumn) {
                 continue;
             }
-            Set<RelColumnOrigin> origins = 
-                RelMetadataQuery.getColumnOrigins(
+            Set<RelColumnOrigin> origins =
+                invokeGetColumnOrigins(
                     rel.getInputs()[mapping.iInputRel],
                     mapping.iInputColumn);
             if (origins == null) {
@@ -228,7 +225,7 @@ public class RelMdColumnOrigins
         }
         return set;
     }
-    
+
     // Catch-all rule when none of the others apply.
     public Set<RelColumnOrigin> getColumnOrigins(
         RelNode rel,
@@ -264,6 +261,13 @@ public class RelMdColumnOrigins
 
         set.add(new RelColumnOrigin(table, iOutputColumn, false));
         return set;
+    }
+
+    protected Set<RelColumnOrigin> invokeGetColumnOrigins(
+        RelNode rel,
+        int iOutputColumn)
+    {
+        return RelMetadataQuery.getColumnOrigins(rel, iOutputColumn);
     }
 
     private Set<RelColumnOrigin> createDerivedColumnOrigins(

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,12 +43,13 @@ FENNEL_BEGIN_NAMESPACE
  * the allocation point from wrapping around to the oldest allocated page, or
  * an assertion violation results.
  */
-class CircularSegment : public DelegatingSegment
+class FENNEL_SEGMENT_EXPORT CircularSegment
+    : public DelegatingSegment
 {
     friend class SegmentFactory;
 
     SharedCheckpointProvider pCheckpointProvider;
-    
+
     BlockNum oldestPageNum;
 
     // TODO:  change design doc diagram from newestPageId to nextPageId
@@ -56,14 +57,14 @@ class CircularSegment : public DelegatingSegment
 
     BlockNum nPages;
 
-    BlockNum checkpointThreshold1,checkpointThreshold2;
-    
+    BlockNum checkpointThreshold1, checkpointThreshold2;
+
     explicit CircularSegment(
         SharedSegment delegateSegment,
         SharedCheckpointProvider pCheckpointProvider,
         PageId oldestPageId,
         PageId newestPageId);
-    
+
 public:
     virtual ~CircularSegment();
 
@@ -72,11 +73,11 @@ public:
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId = ANON_PAGE_OWNER_ID);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
     virtual bool isPageIdAllocated(PageId pageId);
     virtual AllocationOrder getAllocationOrder() const;
     virtual PageId getPageSuccessor(PageId pageId);
-    virtual void setPageSuccessor(PageId pageId,PageId successorId);
+    virtual void setPageSuccessor(PageId pageId, PageId successorId);
 };
 
 FENNEL_END_NAMESPACE

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,11 +19,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.*;
-
+import org.eigenbase.sql.util.SqlString;
 
 /**
  * A <code>SqlWriter</code> is the target to construct a SQL statement from a
@@ -37,6 +36,201 @@ import org.eigenbase.util.*;
  */
 public interface SqlWriter
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Style of formatting subqueries.
+     */
+    enum SubqueryStyle
+    {
+        /**
+         * Julian's style of subquery nesting. Like this:
+         *
+         * <pre>SELECT *
+         * FROM (
+         *     SELECT *
+         *     FROM t
+         * )
+         * WHERE condition</pre>
+         */
+        Hyde,
+
+        /**
+         * Damian's style of subquery nesting. Like this:
+         *
+         * <pre>SELECT *
+         * FROM
+         * (   SELECT *
+         *     FROM t
+         * )
+         * WHERE condition</pre>
+         */
+        Black;
+    }
+
+    /**
+     * Enumerates the types of frame.
+     */
+    enum FrameTypeEnum
+        implements FrameType
+    {
+        /**
+         * SELECT query (or UPDATE or DELETE). The items in the list are the
+         * clauses: FROM, WHERE, etc.
+         */
+        Select,
+
+        /**
+         * Simple list.
+         */
+        Simple,
+
+        /**
+         * The SELECT clause of a SELECT statement.
+         */
+        SelectList,
+
+        /**
+         * The WINDOW clause of a SELECT statement.
+         */
+        WindowDeclList,
+
+        /**
+         * The SET clause of an UPDATE statement.
+         */
+        UpdateSetList,
+
+        /**
+         * Function declaration.
+         */
+        FunDecl,
+
+        /**
+         * Function call or datatype declaration.
+         *
+         * <p>Examples:
+         * <li>SUBSTRING('foobar' FROM 1 + 2 TO 4)</li>
+         * <li>DECIMAL(10, 5)</li>
+         */
+        FunCall,
+
+        /**
+         * Window specification.
+         *
+         * <p>Examples:
+         * <li>SUM(x) OVER (ORDER BY hireDate ROWS 3 PRECEDING)</li>
+         * <li>WINDOW w1 AS (ORDER BY hireDate), w2 AS (w1 PARTITION BY gender
+         * RANGE BETWEEN INTERVAL '1' YEAR PRECEDING AND '2' MONTH
+         * PRECEDING)</li>
+         */
+        Window,
+
+        /**
+         * ORDER BY clause of a SELECT statement. The "list" has only two items:
+         * the query and the order by clause, with ORDER BY as the separator.
+         */
+        OrderBy,
+
+        /**
+         * ORDER BY list.
+         *
+         * <p>Example:
+         * <li>ORDER BY x, y DESC, z
+         */
+        OrderByList,
+
+        /**
+         * GROUP BY list.
+         *
+         * <p>Example:
+         * <li>GROUP BY x, FLOOR(y)
+         */
+        GroupByList,
+
+        /**
+         * Sub-query list. Encloses a SELECT, UNION, EXCEPT, INTERSECT query
+         * with optional ORDER BY.
+         *
+         * <p>Example:
+         * <li>GROUP BY x, FLOOR(y)
+         */
+        Subquery,
+
+        /**
+         * Set operation.
+         *
+         * <p>Example:
+         * <li>SELECT * FROM a UNION SELECT * FROM b
+         */
+        Setop,
+
+        /**
+         * FROM clause (containing various kinds of JOIN).
+         */
+        FromList,
+
+        /**
+         * WHERE clause.
+         */
+        WhereList,
+
+        /**
+         * Compound identifier.
+         *
+         * <p>Example:
+         * <li>"A"."B"."C"
+         */
+        Identifier(false);
+
+        private final boolean needsIndent;
+
+        /**
+         * Creates a list type.
+         */
+        FrameTypeEnum()
+        {
+            this(true);
+        }
+
+        /**
+         * Creates a list type.
+         */
+        FrameTypeEnum(boolean needsIndent)
+        {
+            this.needsIndent = needsIndent;
+        }
+
+        public boolean needsIndent()
+        {
+            return needsIndent;
+        }
+
+        /**
+         * Creates a frame type.
+         *
+         * @param name Name
+         * @return frame type
+         */
+        public static FrameType create(final String name)
+        {
+            return new FrameType() {
+                public String getName()
+                {
+                    return name;
+                }
+
+                public boolean needsIndent()
+                {
+                    return true;
+                }
+            };
+        }
+
+        public String getName()
+        {
+            return name();
+        }
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -51,7 +245,19 @@ public interface SqlWriter
      */
     void resetSettings();
 
+    /**
+     * Returns the dialect of SQL.
+     *
+     * @return SQL dialect
+     */
     SqlDialect getDialect();
+
+    /**
+     * Returns the contents of this writer as a 'certified kocher' SQL string.
+     *
+     * @return SQL string
+     */
+    SqlString toSqlString();
 
     /**
      * Prints a literal, exactly as provided. Does not attempt to indent or
@@ -72,6 +278,11 @@ public interface SqlWriter
      */
     void print(String s);
 
+    /**
+     * Prints an integer.
+     *
+     * @param x Integer
+     */
     void print(int x);
 
     /**
@@ -84,12 +295,36 @@ public interface SqlWriter
      */
     void newlineAndIndent();
 
+    /**
+     * Returns whether this writer should quote all identifiers, even those
+     * that do not contain mixed-case identifiers or punctuation.
+     *
+     * @return whether to quote all identifiers
+     */
     boolean isQuoteAllIdentifiers();
 
+    /**
+     * Returns whether this writer should start each clause (e.g. GROUP BY) on
+     * a new line.
+     *
+     * @return whether to start each clause on a new line
+     */
     boolean isClauseStartsLine();
 
+    /**
+     * Returns whether the items in the SELECT clause should each be on a
+     * separate line.
+     *
+     * @return whether to put each SELECT clause item on a new line
+     */
     boolean isSelectListItemsOnSeparateLines();
 
+    /**
+     * Returns whether to output all keywords (e.g. SELECT, GROUP BY) in lower
+     * case.
+     *
+     * @return whether to output SQL keywords in lower case
+     */
     boolean isKeywordsLowerCase();
 
     /**
@@ -102,7 +337,7 @@ public interface SqlWriter
     /**
      * Ends a list which is a call to a function.
      *
-     * @param frame
+     * @param frame Frame
      *
      * @see #startFunCall(String)
      */
@@ -118,7 +353,7 @@ public interface SqlWriter
      *
      * @param frameType Type of list. For example, a SELECT list will be
      */
-    Frame startList(FrameType frameType);
+    Frame startList(FrameTypeEnum frameType);
 
     /**
      * Starts a list.
@@ -126,7 +361,7 @@ public interface SqlWriter
      * @param frameType Type of list. For example, a SELECT list will be
      * governed according to SELECT-list formatting preferences.
      * @param open String to start the list; typically "(" or the empty string.
-     * @param close
+     * @param close String to close the list
      */
     Frame startList(FrameType frameType, String open, String close);
 
@@ -206,233 +441,22 @@ public interface SqlWriter
     {
     }
 
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Style of formatting subqueries.
-     */
-    static class SubqueryStyle
-        extends EnumeratedValues.BasicValue
+    interface FrameType
     {
         /**
-         * Julian's style of subquery nesting. Like this:
+         * Returns the name of this frame type.
          *
-         * <pre>SELECT *
-         * FROM (
-         *     SELECT *
-         *     FROM t
-         * )
-         * WHERE condition</pre>
+         * @return name
          */
-        public static final SubqueryStyle Hyde = new SubqueryStyle("Hyde", 0);
+        String getName();
 
         /**
-         * Damian's style of subquery nesting. Like this:
+         * Returns whether this frame type should cause the code be further
+         * indented.
          *
-         * <pre>SELECT *
-         * FROM
-         * (   SELECT *
-         *     FROM t
-         * )
-         * WHERE condition</pre>
+         * @return whether to further indent code within a frame of this type
          */
-        public static final SubqueryStyle Black = new SubqueryStyle("Black", 1);
-
-        private SubqueryStyle(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-    }
-
-    /**
-     * Enumerates the types of frame.
-     */
-    static class FrameType
-        extends EnumeratedValues.BasicValue
-    {
-        public static final int Simple_ordinal = 0;
-        public static final int Select_ordinal = 1;
-        public static final int SelectList_ordinal = 2;
-        public static final int FromList_ordinal = 3;
-        public static final int OrderBy_ordinal = 4;
-        public static final int OrderByList_ordinal = 5;
-        public static final int GroupByList_ordinal = 6;
-        public static final int WindowDeclList_ordinal = 7;
-        public static final int Window_ordinal = 8;
-        public static final int UpdateSetList_ordinal = 9;
-        public static final int FunDecl_ordinal = 10;
-        public static final int FunCall_ordinal = 11;
-        public static final int Subquery_ordinal = 12;
-        public static final int Setop_ordinal = 13;
-        public static final int Identifier_ordinal = 14;
-
-        /**
-         * SELECT query (or UPDATE or DELETE). The items in the list are the
-         * clauses: FROM, WHERE, etc.
-         */
-        public static final FrameType Select =
-            new FrameType("Select", Select_ordinal);
-
-        /**
-         * Simple list.
-         */
-        public static final FrameType Simple =
-            new FrameType("Simple", Simple_ordinal);
-
-        /**
-         * The SELECT clause of a SELECT statement.
-         */
-        public static final FrameType SelectList =
-            new FrameType("SelectList", SelectList_ordinal);
-
-        /**
-         * The WINDOW clause of a SELECT statement.
-         */
-        public static final FrameType WindowDeclList =
-            new FrameType("WindowDeclList", WindowDeclList_ordinal);
-
-        /**
-         * The SET clause of an UPDATE statement.
-         */
-        public static final FrameType UpdateSetList =
-            new FrameType("UpdateSetList", UpdateSetList_ordinal);
-
-        /**
-         * Function declaration.
-         */
-        public static final FrameType FunDecl =
-            new FrameType("FunDecl", FunDecl_ordinal);
-
-        /**
-         * Function call or datatype declaration.
-         *
-         * <p>Examples:
-         * <li>SUBSTRING('foobar' FROM 1 + 2 TO 4)</li>
-         * <li>DECIMAL(10, 5)</li>
-         */
-        public static final FrameType FunCall =
-            new FrameType("FunCall", FunCall_ordinal);
-
-        /**
-         * Window specification.
-         *
-         * <p>Examples:
-         * <li>SUM(x) OVER (ORDER BY hireDate ROWS 3 PRECEDING)</li>
-         * <li>WINDOW w1 AS (ORDER BY hireDate), w2 AS (w1 PARTITION BY gender
-         * RANGE BETWEEN INTERVAL '1' YEAR PRECEDING AND '2' MONTH
-         * PRECEDING)</li>
-         */
-        public static final FrameType Window =
-            new FrameType("Window", Window_ordinal);
-
-        /**
-         * ORDER BY clause of a SELECT statement. The "list" has only two items:
-         * the query and the order by clause, with ORDER BY as the separator.
-         */
-        public static final FrameType OrderBy =
-            new FrameType("OrderBy", OrderBy_ordinal);
-
-        /**
-         * ORDER BY list.
-         *
-         * <p>Example:
-         * <li>ORDER BY x, y DESC, z
-         */
-        public static final FrameType OrderByList =
-            new FrameType("OrderByList", OrderByList_ordinal);
-
-        /**
-         * GROUP BY list.
-         *
-         * <p>Example:
-         * <li>GROUP BY x, FLOOR(y)
-         */
-        public static final FrameType GroupByList =
-            new FrameType("GroupByList", GroupByList_ordinal);
-
-        /**
-         * Sub-query list. Encloses a SELECT, UNION, EXCEPT, INTERSECT query
-         * with optional ORDER BY.
-         *
-         * <p>Example:
-         * <li>GROUP BY x, FLOOR(y)
-         */
-        public static final FrameType Subquery =
-            new FrameType("Subquery", Subquery_ordinal);
-
-        /**
-         * Set operation.
-         *
-         * <p>Example:
-         * <li>SELECT * FROM a UNION SELECT * FROM b
-         */
-        public static final FrameType Setop =
-            new FrameType("Setop", Setop_ordinal);
-
-        /**
-         * FROM clause (containing various kinds of JOIN).
-         */
-        public static final FrameType FromList =
-            new FrameType("From", FromList_ordinal);
-
-        /**
-         * Compound identifier.
-         *
-         * <p>Example:
-         * <li>"A"."B"."C"
-         */
-        public static final FrameType Identifier =
-            new FrameType("Identifier", Identifier_ordinal, false);
-
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new EnumeratedValues.Value[] {
-                    Select,
-                Simple,
-                SelectList,
-                WindowDeclList,
-                UpdateSetList,
-                FunDecl,
-                FunCall,
-                Window,
-                OrderBy,
-                OrderByList,
-                GroupByList,
-                Setop,
-                FromList,
-                Identifier,
-                });
-
-        private static int nextOrdinal = enumeration.getMax() + 1;
-
-        private final boolean needsIndent;
-
-        /**
-         * Creates a list type.
-         */
-        private FrameType(String name, int ordinal)
-        {
-            this(name, ordinal, true);
-        }
-
-        /**
-         * Creates a list type.
-         */
-        private FrameType(String name, int ordinal, boolean needsIndent)
-        {
-            super(name, ordinal, null);
-            this.needsIndent = needsIndent;
-        }
-
-        public boolean needsIndent()
-        {
-            return needsIndent;
-        }
-
-        public static FrameType create(String name)
-        {
-            return new FrameType(name, FrameType.nextOrdinal++);
-        }
+        boolean needsIndent();
     }
 }
 

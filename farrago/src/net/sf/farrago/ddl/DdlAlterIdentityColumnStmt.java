@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public class DdlAlterIdentityColumnStmt
     extends DdlAlterStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSequenceOptions options;
@@ -63,7 +62,8 @@ public class DdlAlterIdentityColumnStmt
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
-        CwmColumn column = (CwmColumn) getModelElement();
+        FemAbstractTypedElement column =
+            (FemAbstractTypedElement) getModelElement();
         FemSequenceGenerator sequence = null;
         if (column instanceof FemStoredColumn) {
             sequence = ((FemStoredColumn) column).getSequence();
@@ -73,8 +73,7 @@ public class DdlAlterIdentityColumnStmt
                 column.getName());
         }
         RelDataType dataType =
-            ddlValidator.getTypeFactory().createCwmElementType(
-                (FemAbstractTypedElement) column);
+            ddlValidator.getTypeFactory().createCwmElementType(column);
 
         FarragoSequenceAccessor accessor =
             session.getRepos().getSequenceAccessor(sequence.refMofId());

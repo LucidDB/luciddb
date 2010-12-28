@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,10 +54,9 @@ import org.eigenbase.util.*;
  * @author jhyde
  * @version $Id$
  */
-public class SqlToRelTestBase
+public abstract class SqlToRelTestBase
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -68,9 +67,39 @@ public class SqlToRelTestBase
 
     //~ Methods ----------------------------------------------------------------
 
+    public SqlToRelTestBase()
+    {
+        super();
+    }
+
+    public SqlToRelTestBase(String name)
+    {
+        super(name);
+    }
+
     protected Tester createTester()
     {
-        return new TesterImpl();
+        return new TesterImpl(getDiffRepos());
+    }
+
+    /**
+     * Returns the default diff repository for this test, or null if there is
+     * no repository.
+     *
+     * <p>The default implementation returns null.
+     *
+     * <p>Sub-classes that want to use a diff repository can override.
+     * Sub-sub-classes can override again, inheriting test cases and overriding
+     * selected test results.
+     *
+     * <p>And individual test cases can override by providing a different
+     * tester object.
+     *
+     * @return Diff repository
+     */
+    protected DiffRepository getDiffRepos()
+    {
+        return null;
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -123,7 +152,19 @@ public class SqlToRelTestBase
         /**
          * Returns the SQL dialect to test.
          */
-        SqlValidator.Compatible getCompatible();
+        SqlConformance getConformance();
+
+        /**
+         * Checks that a SQL statement converts to a given plan.
+         *
+         * @param sql SQL query
+         * @param plan Expected plan
+         */
+        void assertConvertsTo(
+            String sql,
+            String plan);
+
+        DiffRepository getDiffRepos();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -156,21 +197,38 @@ public class SqlToRelTestBase
             int i = -1;
             for (RelDataTypeField field : rowType.getFields()) {
                 ++i;
-                if (table.isMonotonic(field.getName())) {
+                final SqlMonotonicity monotonicity =
+                    table.getMonotonicity(field.getName());
+                if (monotonicity != SqlMonotonicity.NotMonotonic) {
+                    final RelFieldCollation.Direction direction =
+                        monotonicity.isDecreasing()
+                        ? RelFieldCollation.Direction.Descending
+                        : RelFieldCollation.Direction.Ascending;
                     collationList.add(
                         new RelCollationImpl(
                             Collections.singletonList(
                                 new RelFieldCollation(
                                     i,
-                                    RelFieldCollation.Direction.Ascending))));
+                                    direction))));
                 }
             }
-            return createColumnSet(names, rowType, collationList);
+            if (names.length < 3) {
+                String [] newNames = { "CATALOG", "SALES", "" };
+                System.arraycopy(
+                    names,
+                    0,
+                    newNames,
+                    newNames.length - names.length,
+                    names.length);
+                names = newNames;
+            }
+            return createColumnSet(table, names, rowType, collationList);
         }
 
         public RelOptTable getTableForMember(
             String [] names,
-            final String datasetName)
+            final String datasetName,
+            boolean [] usedDataset)
         {
             final RelOptTable table = getTableForMember(names);
 
@@ -187,10 +245,15 @@ public class SqlToRelTestBase
                         return qualifiedName;
                     }
                 };
+            if (usedDataset != null) {
+                assert usedDataset.length == 1;
+                usedDataset[0] = true;
+            }
             return datasetTable;
         }
 
         protected MockColumnSet createColumnSet(
+            SqlValidatorTable table,
             String [] names,
             final RelDataType rowType,
             final List<RelCollation> collationList)
@@ -252,7 +315,8 @@ public class SqlToRelTestBase
                 return MockRelOptSchema.this;
             }
 
-            public RelNode toRel(RelOptCluster cluster,
+            public RelNode toRel(
+                RelOptCluster cluster,
                 RelOptConnection connection)
             {
                 return new TableAccessRel(cluster, this, connection);
@@ -295,7 +359,8 @@ public class SqlToRelTestBase
             return parent.getRelOptSchema();
         }
 
-        public RelNode toRel(RelOptCluster cluster,
+        public RelNode toRel(
+            RelOptCluster cluster,
             RelOptConnection connection)
         {
             return new TableAccessRel(cluster, this, connection);
@@ -344,9 +409,16 @@ public class SqlToRelTestBase
     {
         private RelOptPlanner planner;
         private SqlOperatorTable opTab;
+        private final DiffRepository diffRepos;
 
-        protected TesterImpl()
+        /**
+         * Creates a TesterImpl.
+         *
+         * @param diffRepos Diff repository
+         */
+        protected TesterImpl(DiffRepository diffRepos)
         {
+            this.diffRepos = diffRepos;
         }
 
         public RelNode convertSqlToRel(String sql)
@@ -375,13 +447,9 @@ public class SqlToRelTestBase
                     relOptSchema,
                     relOptConnection,
                     typeFactory);
-            final RelNode rel;
-            if (Bug.Dt471Fixed) {
-                final SqlNode validatedQuery = validator.validate(sqlQuery);
-                rel = converter.convertQuery(validatedQuery, false, true);
-            } else {
-                rel = converter.convertQuery(sqlQuery, true, true);
-            }
+            final SqlNode validatedQuery = validator.validate(sqlQuery);
+            final RelNode rel =
+                converter.convertQuery(validatedQuery, false, true);
             Util.post(rel != null, "return != null");
             return rel;
         }
@@ -431,21 +499,20 @@ public class SqlToRelTestBase
             return sqlNode;
         }
 
-        public SqlValidator.Compatible getCompatible()
+        public SqlConformance getConformance()
         {
-            return SqlValidator.Compatible.Default;
+            return SqlConformance.Default;
         }
 
         public SqlValidator createValidator(
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
         {
-            return
-                new FarragoTestValidator(
-                    getOperatorTable(),
-                    new MockCatalogReader(typeFactory),
-                    typeFactory,
-                    getCompatible());
+            return new FarragoTestValidator(
+                getOperatorTable(),
+                new MockCatalogReader(typeFactory),
+                typeFactory,
+                getConformance());
         }
 
         public final SqlOperatorTable getOperatorTable()
@@ -474,32 +541,51 @@ public class SqlToRelTestBase
         {
             return new MockRelOptPlanner();
         }
+
+        public void assertConvertsTo(
+            String sql,
+            String plan)
+        {
+            String sql2 = getDiffRepos().expand("sql", sql);
+            final RelNode rel = convertSqlToRel(sql2);
+
+            assertTrue(rel != null);
+
+            // Check that every node is valid.
+            SqlToRelConverterTest.RelValidityChecker checker =
+                new SqlToRelConverterTest.RelValidityChecker();
+            checker.go(rel);
+            assertEquals(0, checker.invalidCount);
+
+            // NOTE jvs 28-Mar-2006:  insert leading newline so
+            // that plans come out nicely stacked instead of first
+            // line immediately after CDATA start
+            String actual = NL + RelOptUtil.toString(rel);
+            diffRepos.assertEquals("plan", plan, actual);
+        }
+
+        public DiffRepository getDiffRepos()
+        {
+            return diffRepos;
+        }
     }
 
     private static class FarragoTestValidator
         extends SqlValidatorImpl
     {
-        private final Compatible compatible;
-
         public FarragoTestValidator(
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
-            Compatible compatible)
+            SqlConformance conformance)
         {
-            super(opTab, catalogReader, typeFactory, compatible);
-            this.compatible = compatible;
+            super(opTab, catalogReader, typeFactory, conformance);
         }
 
         // override SqlValidator
-        protected boolean shouldExpandIdentifiers()
+        public boolean shouldExpandIdentifiers()
         {
             return true;
-        }
-
-        public Compatible getCompatible()
-        {
-            return compatible;
         }
     }
 }

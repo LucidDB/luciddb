@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,6 @@ import java.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -39,7 +38,6 @@ import org.eigenbase.util.*;
 public class SqlIdentifier
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -80,6 +78,9 @@ public class SqlIdentifier
         this.names = names;
         this.collation = collation;
         this.componentPositions = componentPositions;
+        for (String name : names) {
+            assert name != null;
+        }
     }
 
     public SqlIdentifier(
@@ -123,26 +124,30 @@ public class SqlIdentifier
 
     public SqlKind getKind()
     {
-        return SqlKind.Identifier;
+        return SqlKind.IDENTIFIER;
     }
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlIdentifier(
-                Util.clone(names),
-                collation,
-                pos,
-                componentPositions);
+        return new SqlIdentifier(
+            names.clone(),
+            collation,
+            pos,
+            componentPositions);
     }
 
     public String toString()
     {
-        String s = names[0];
-        for (int i = 1; i < names.length; i++) {
-            s += ("." + names[i]);
+        // Short-circuit for common case.
+        if (names.length == 1) {
+            return names[0];
         }
-        return s;
+        StringBuilder buf = new StringBuilder(names[0]);
+        for (int i = 1; i < names.length; i++) {
+            buf.append('.');
+            buf.append(names[i]);
+        }
+        return buf.toString();
     }
 
     /**
@@ -171,9 +176,19 @@ public class SqlIdentifier
     public SqlParserPos getComponentParserPosition(int i)
     {
         assert (i >= 0) && (i < names.length);
-        return
-            (componentPositions == null) ? getParserPosition()
+        return (componentPositions == null) ? getParserPosition()
             : componentPositions[i];
+    }
+
+    /**
+     * Copies names and components from another identifier. Does not modify the
+     * cross-component parser position.
+     *
+     * @param other identifer from which to copy
+     */
+    public void assignNamesFrom(SqlIdentifier other)
+    {
+        setNames(other.names, other.componentPositions);
     }
 
     /**
@@ -183,10 +198,9 @@ public class SqlIdentifier
      */
     public SqlIdentifier getComponent(int ordinal)
     {
-        return
-            new SqlIdentifier(
-                names[ordinal],
-                getComponentParserPosition(ordinal));
+        return new SqlIdentifier(
+            names[ordinal],
+            getComponentParserPosition(ordinal));
     }
 
     public void unparse(
@@ -195,9 +209,8 @@ public class SqlIdentifier
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Identifier);
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
+            writer.startList(SqlWriter.FrameTypeEnum.Identifier);
+        for (String name : names) {
             writer.sep(".");
             if (name.equals("*")) {
                 writer.print(name);
@@ -217,103 +230,12 @@ public class SqlIdentifier
         validator.validateIdentifier(this, scope);
     }
 
-    /**
-     * Lists all the valid alternatives for this identifier.
-     *
-     * @param validator Validator
-     * @param scope Validation scope
-     * @param hintList list of valid options
-     */
-    public void findValidOptions(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        List<SqlMoniker> hintList)
-    {
-        String tableName;
-        if (names.length > 1) {
-            tableName = names[names.length - 2];
-        } else {
-            tableName = null;
-
-            // table names are valid completion hints when the identifier
-            // has only 1 name part
-            scope.findAllTableNames(hintList);
-            findAllValidFunctionNames(validator, scope, hintList);
-        }
-        findAllValidUdfNames(names, validator, hintList);
-
-        // if the identifer has more than 1 part, use the tableName to limit
-        // the choices of valid column names
-        scope.findAllColumnNames(tableName, hintList);
-        Collections.sort(
-            hintList,
-            new SqlMonikerComparator());
-    }
-
-    private void findAllValidUdfNames(
-        String [] names,
-        SqlValidator validator,
-        List<SqlMoniker> result)
-    {
-        SqlMoniker [] objNames =
-            validator.getCatalogReader().getAllSchemaObjectNames(names);
-        for (int i = 0; i < objNames.length; i++) {
-            if (objNames[i].getType() == SqlMonikerType.Function) {
-                result.add(objNames[i]);
-            }
-        }
-    }
-
-    private void findAllValidFunctionNames(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        List<SqlMoniker> result)
-    {
-        // a function name can only be 1 part
-        if (names.length > 1) {
-            return;
-        }
-        for (SqlOperator op : validator.getOperatorTable().getOperatorList()) {
-            SqlIdentifier curOpId =
-                new SqlIdentifier(
-                    op.getName(),
-                    getParserPosition());
-
-            final SqlCall call =
-                SqlUtil.makeCall(
-                    validator.getOperatorTable(),
-                    curOpId);
-            if (call != null) {
-                result.add(
-                    new SqlMonikerImpl(
-                        op.getName(),
-                        SqlMonikerType.Function));
-            } else {
-                if ((op.getSyntax() == SqlSyntax.Function)
-                    || (op.getSyntax() == SqlSyntax.Prefix)) {
-                    if (op.getOperandTypeChecker() != null) {
-                        String sig = op.getAllowedSignatures();
-                        sig = sig.replaceAll("'", "");
-                        result.add(
-                            new SqlMonikerImpl(
-                                sig,
-                                SqlMonikerType.Function));
-                        continue;
-                    }
-                    result.add(
-                        new SqlMonikerImpl(
-                            op.getName(),
-                            SqlMonikerType.Function));
-                }
-            }
-        }
-    }
-
     public void validateExpr(SqlValidator validator, SqlValidatorScope scope)
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 this);
         if (call != null) {
@@ -377,23 +299,24 @@ public class SqlIdentifier
         return (names.length == 1) && !names[0].equals("*");
     }
 
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
         final SqlValidator validator = scope.getValidator();
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 this);
         if (call != null) {
-            return call.isMonotonic(scope);
+            return call.getMonotonicity(scope);
         }
         final SqlIdentifier fqId = scope.fullyQualify(this);
         final SqlValidatorNamespace ns =
             SqlValidatorUtil.lookup(
                 scope,
                 Arrays.asList(fqId.names).subList(0, fqId.names.length - 1));
-        return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
+        return ns.getMonotonicity(fqId.names[fqId.names.length - 1]);
     }
 
     public boolean equalsBaseName(String name)

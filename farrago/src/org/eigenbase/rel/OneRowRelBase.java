@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,13 +36,12 @@ import org.eigenbase.sql.type.*;
 public abstract class OneRowRelBase
     extends AbstractRelNode
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>OneRowRelBase</code> with specific traits.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param traits for this rel
      */
@@ -53,7 +52,7 @@ public abstract class OneRowRelBase
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public OneRowRelBase clone()
     {
         return this;
     }
@@ -70,13 +69,12 @@ public abstract class OneRowRelBase
 
     public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
     {
-        return
-            typeFactory.createStructType(
-                new RelDataType[] {
-                    typeFactory.createSqlType(
-                        SqlTypeName.Integer)
-                },
-                new String[] { "ZERO" });
+        return typeFactory.createStructType(
+            new RelDataType[] {
+                typeFactory.createSqlType(
+                    SqlTypeName.INTEGER)
+            },
+            new String[] { "ZERO" });
     }
 }
 

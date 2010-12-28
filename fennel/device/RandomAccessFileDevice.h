@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,17 +35,34 @@ class RandomAccessRequest;
  * RandomAccessFileDevice is an implementation of RandomAccessDevice in terms
  * of a FileDevice.
  */
-class RandomAccessFileDevice : public RandomAccessDevice, public FileDevice
+class FENNEL_DEVICE_EXPORT RandomAccessFileDevice
+    : public RandomAccessDevice, public FileDevice
 {
 public:
+    /**
+     * Opens a file device for random access, specifying an initial size on
+     * creation.
+     *
+     * @param filename path to file
+     * @param mode modifiers for how to open file
+     * @param initialSize the initial size (in bytes) of the device, if
+     * creating a new file
+     */
+    explicit RandomAccessFileDevice(
+        std::string filename,
+        DeviceMode mode,
+        FileSize initialSize);
+
     /**
      * Opens a file device for random access.
      *
      * @param filename path to file
      * @param mode modifiers for how to open file
      */
-    explicit RandomAccessFileDevice(std::string filename,DeviceMode mode);
-    
+    explicit RandomAccessFileDevice(
+        std::string filename,
+        DeviceMode mode);
+
 // ----------------------------------------------------------------------
 // Implementation of RandomAccessDevice interface (q.v.)
 // ----------------------------------------------------------------------

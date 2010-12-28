@@ -30,3 +30,11 @@ from (select ((1,2),(3,4,5)) r from sales.depts) t;
 explain plan for
 select t.r."EXPR$1", t.r."EXPR$0"
 from (select row(1,2) r from sales.depts) t;
+
+-- aliased columns
+select a + c as d
+from (values (1, 2, 3), (4, 5, 6)) as t(a, b, c)
+where b > 0
+order by a;
+
+-- End row.sql

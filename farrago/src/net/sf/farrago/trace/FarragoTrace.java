@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2004-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,14 +22,13 @@
 */
 package net.sf.farrago.trace;
 
-import com.disruptivetech.farrago.calc.*;
-
 import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.calc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.test.*;
@@ -49,7 +48,6 @@ import net.sf.farrago.util.*;
  */
 public abstract class FarragoTrace
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -151,6 +149,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.runtime.FarragoTransform" traces instances of
+     * {@link FarragoTransform}.
+     */
+    public static Logger getFarragoTransformTracer()
+    {
+        return getClassTracer(FarragoTransform.class);
+    }
+
+    /**
      * The tracer "net.sf.farrago.test.FarragoTestCase" controls tracing during
      * regression tests.
      *
@@ -192,6 +199,8 @@ public abstract class FarragoTrace
      * The tracer "net.sf.farrago.dynamic" controls whether dynamically
      * generated Java code is preserved for debugging (otherwise it is deleted
      * automatically).
+     *
+     * @see org.eigenbase.trace.EigenbaseTrace#getDynamicHandler()
      */
     public static Logger getDynamicTracer()
     {
@@ -257,7 +266,7 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The "com.disruptivetech.farrago.calc.CalcProgramBuilder" tracer prints
+     * The "net.sf.farrago.fennel.calc.CalcProgramBuilder" tracer prints
      * the generated program at level {@link java.util.logging.Level#FINE} or
      * higher.
      */
@@ -282,6 +291,15 @@ public abstract class FarragoTrace
     public static Logger getSyslibTracer()
     {
         return Logger.getLogger("net.sf.farrago.syslib");
+    }
+
+    /**
+     * The tracer "net.sf.farrago.namespace.FarragoMedJdbc" traces the built-in
+     * plugin FarragoMedJdbc.jar, which supports SQL/MED access via jdbc.
+     */
+    public static Logger getFarragoMedJdbcTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.namespace.FarragoMedJdbc");
     }
 
     /**

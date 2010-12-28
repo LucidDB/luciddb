@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,8 @@ class AttributeAccessor;
  * formats.  See <a href="structTupleDesign.html#TupleAccessor">the design
  * docs</a> for more details.
  */
-class TupleAccessor : public boost::noncopyable
+class FENNEL_TUPLE_EXPORT TupleAccessor
+    : public boost::noncopyable
 {
     /**
      * Precomputed accessors for attributes, in logical tuple order.
@@ -55,8 +56,15 @@ class TupleAccessor : public boost::noncopyable
     /**
      * Array of 0-based indices of variable-width attributes.
      */
-    std::vector<uint> pVarWidthAttrIndices;
-    
+    VectorOfUint pVarWidthAttrIndices;
+
+    /**
+     * Permutation in which attributes should be marshalled; empty when
+     * !bAlignedVar, in which case attributes should be marshalled in logical
+     * order.
+     */
+    VectorOfUint marshalOrder;
+
     /**
      * @see getMaxByteCount()
      */
@@ -71,7 +79,7 @@ class TupleAccessor : public boost::noncopyable
      * Precomputed size of bit field array (in bits).
      */
     uint nBitFields;
-    
+
     /**
      * Precomputed byte offset for bit array.
      */
@@ -94,7 +102,14 @@ class TupleAccessor : public boost::noncopyable
      * attribute, or MAXU if there are no variable-width attributes.
      */
     uint iFirstVarOffset;
-    
+
+    /**
+     * Whether any variable-width attributes with alignment requirements
+     * (currently restricted to 2-byte alignment for UNICODE strings) are
+     * present.
+     */
+    bool bAlignedVar;
+
     /**
      * @see getCurrentTupleBuf()
      */
@@ -108,7 +123,7 @@ class TupleAccessor : public boost::noncopyable
     TupleFormat format;
 
     // private helpers
-    void initFixedAccessors(TupleDescriptor const &,std::vector<uint> &);
+    void initFixedAccessors(TupleDescriptor const &,VectorOfUint &);
     void clear();
 
 public:
@@ -176,7 +191,7 @@ public:
     {
         return iBitFieldOffset;
     }
-    
+
     /**
      * Accesses the buffer storing the current tuple image.
      *
@@ -195,7 +210,8 @@ public:
      *  False means the buffer is free space; unmarshal binds a TupleData to the
      *  buffer. This is useful only for TUPLE_FORMAT_ALL_FIXED.
      *
-     * REVIEW: An alternative is to require the caller to zero out the buffer; but that seems riskier.
+     * REVIEW: An alternative is to require the caller to zero out the buffer;
+     * but that seems riskier.
      */
     void setCurrentTupleBuf(PConstBuffer pTupleBuf, bool valid = true);
 
@@ -269,7 +285,7 @@ public:
     {
         return *(ppAttributeAccessors[iAttribute]);
     }
-    
+
     /**
      * Marshals a tuple's values into a buffer.
      *
@@ -287,9 +303,9 @@ public:
     {
         return ppAttributeAccessors.size();
     }
-    
+
     // TODO:  private
-    
+
     /**
      * @return the array of bit fields for the current tuple image
      */
@@ -311,7 +327,7 @@ public:
             const_cast<PBuffer>(pTupleBuf),
             iIndirectOffset);
     }
-    
+
     /**
      * Resolves an indirect offset into a pointer to the data offset.
      *
@@ -322,10 +338,10 @@ public:
      * @return pointer to data offset
      */
     static StoredValueOffset *referenceIndirectOffset(
-        PBuffer pTupleBuf,uint iIndirectOffset)
+        PBuffer pTupleBuf, uint iIndirectOffset)
     {
         return reinterpret_cast<StoredValueOffset *>(
-            pTupleBuf+iIndirectOffset);
+            pTupleBuf + iIndirectOffset);
     }
 };
 

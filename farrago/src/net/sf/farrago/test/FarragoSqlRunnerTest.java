@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public class FarragoSqlRunnerTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String userName = "sa";
@@ -49,7 +48,9 @@ public class FarragoSqlRunnerTest
     //~ Instance fields --------------------------------------------------------
 
     private String serverUrl = "jdbc:farrago:";
-    private String testScript = "unitsql/runner/easy.sql";
+    private String testScript =
+        FarragoProperties.instance().expandProperties(
+            "${FARRAGO_HOME}/unitsql/runner/easy.sql");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -76,7 +77,8 @@ public class FarragoSqlRunnerTest
     public void testNullUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 null,
                 userName,
                 password);
@@ -88,7 +90,8 @@ public class FarragoSqlRunnerTest
     public void testNullUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 serverUrl,
                 null,
                 password);
@@ -100,7 +103,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidPath()
     {
         try {
-            SqlRunner.instance().runScript("foo.sql",
+            SqlRunner.instance().runScript(
+                "foo.sql",
                 serverUrl,
                 userName,
                 password);
@@ -112,7 +116,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 "jdbc:notfarrago",
                 userName,
                 password);
@@ -124,7 +129,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 serverUrl,
                 "bozo",
                 "clown");
@@ -138,7 +144,8 @@ public class FarragoSqlRunnerTest
     public void testScript()
         throws SQLException
     {
-        SqlRunner.instance().runScript(testScript,
+        SqlRunner.instance().runScript(
+            testScript,
             serverUrl,
             userName,
             password);
@@ -148,13 +155,15 @@ public class FarragoSqlRunnerTest
         throws IOException, SQLException
     {
         addDiffMask("\\$Id.*\\$");
+        addDiffMask("jdbc:.*:>"); // allows testing with other drivers/URLs
         String scriptBase =
             testScript.substring(
                 0,
                 testScript.lastIndexOf('.'));
         File f = new File(scriptBase);
         PrintStream stream = new PrintStream(openTestLogOutputStream(f));
-        SqlRunner.instance().runScript(testScript,
+        SqlRunner.instance().runScript(
+            testScript,
             serverUrl,
             userName,
             password,

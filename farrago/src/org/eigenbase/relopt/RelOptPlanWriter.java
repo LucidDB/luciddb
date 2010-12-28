@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,15 +37,10 @@ import org.eigenbase.util.*;
 public class RelOptPlanWriter
     extends java.io.PrintWriter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean withIdPrefix = true;
 
-    /**
-     * Recursion detection.
-     */
-    Set<RelNode> active = new HashSet<RelNode>();
     private final SqlExplainLevel detailLevel;
     int level;
 
@@ -73,6 +68,15 @@ public class RelOptPlanWriter
     }
 
     /**
+     * Prints the plan of a given relational expression to this writer.
+     *
+     * <p>The terms and values array must be specified. Individual values may
+     * be null.</p>
+     *
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
+     *
      * @pre rel != null
      * @pre terms.length == rel.getChildExps().length + values.length
      * @pre values != null
@@ -83,6 +87,16 @@ public class RelOptPlanWriter
         Object [] values)
     {
         RelNode [] inputs = rel.getInputs();
+
+        if (!RelMetadataQuery.isVisibleInExplain(
+                rel,
+                detailLevel))
+        {
+            // render children in place of this, at same level
+            explainInputs(inputs);
+            return;
+        }
+
         RexNode [] children = rel.getChildExps();
         assert terms.length
             == (inputs.length + children.length
@@ -115,7 +129,7 @@ public class RelOptPlanWriter
                 print(
                     ((j == 0) ? "(" : ", ")
                     + terms[inputs.length + j++] + "=["
-                    + value.toString() + "]");
+                    + value + "]");
             }
             if (j > 0) {
                 print(")");
@@ -128,11 +142,16 @@ public class RelOptPlanWriter
         }
         println("");
         level++;
+        explainInputs(inputs);
+        level--;
+    }
+
+    private void explainInputs(RelNode [] inputs)
+    {
         for (int i = 0; i < inputs.length; i++) {
             RelNode child = inputs[i];
             child.explain(this);
         }
-        level--;
     }
 
     public void explain(
@@ -143,8 +162,25 @@ public class RelOptPlanWriter
     }
 
     /**
+     * Shorthand for {@link #explain(RelNode, String[], Object[])}.
+     *
+     * @param rel Relational expression
+     * @param termList List of names of the attributes of the plan
+     * @param valueList List of values of the attributes of the plan
+     */
+    public final void explain(
+        RelNode rel,
+        List<String> termList,
+        List<Object> valueList)
+    {
+        String [] terms = termList.toArray(new String[termList.size()]);
+        Object [] values = valueList.toArray(new Object[valueList.size()]);
+        explain(rel, terms, values);
+    }
+
+    /**
      * Special form used by {@link
-     * com.disruptivetech.farrago.volcano.RelSubset}.
+     * org.eigenbase.relopt.volcano.RelSubset}.
      */
     public void explainSubset(
         String s,
@@ -168,50 +204,6 @@ public class RelOptPlanWriter
     public SqlExplainLevel getDetailLevel()
     {
         return detailLevel;
-    }
-
-    // REVIEW jvs 23-Dec-2005:  I'm not sure what the original purpose
-    // of this code was, but the output is hard to understand, and
-    // no one was using it, so I made it inaccessible.
-    private void explainBrief(
-        String s,
-        RelNode rel,
-        String [] terms)
-    {
-        print(s);
-        if (active.add(rel)) {
-            RelNode [] inputs = rel.getInputs();
-            RexNode [] children = rel.getChildExps();
-            if ((inputs.length > 0) || (children.length > 0)) {
-                level++;
-                print("(");
-                int j = 0;
-                for (int i = 0; i < inputs.length; i++) {
-                    if (j++ > 0) {
-                        print(", ");
-                    }
-                    RelNode input = inputs[i];
-                    if (active.add(input)) {
-                        input.explain(this);
-                        active.remove(input);
-                    } else {
-                        print(input.getId());
-                    }
-                }
-                for (int i = 0; i < children.length; i++) {
-                    if (j++ > 0) {
-                        print(", ");
-                    }
-                    RexNode child = children[i];
-                    print(child.toString());
-                }
-                print(")");
-                level--;
-                active.remove(rel);
-            }
-        } else {
-            print("Rel#" + rel.toString());
-        }
     }
 }
 

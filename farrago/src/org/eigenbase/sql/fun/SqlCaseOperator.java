@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -125,18 +125,18 @@ import org.eigenbase.sql.validate.*;
 public class SqlCaseOperator
     extends SqlOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType CaseFrameType =
-        SqlWriter.FrameType.create("CASE");
+        SqlWriter.FrameTypeEnum.create("CASE");
 
     //~ Constructors -----------------------------------------------------------
 
     public SqlCaseOperator()
     {
-        super("CASE",
-            SqlKind.Case,
+        super(
+            "CASE",
+            SqlKind.CASE,
             MaxPrec,
             true,
             null,
@@ -199,8 +199,7 @@ public class SqlCaseOperator
                     node);
             if (!SqlTypeUtil.inBooleanFamily(type)) {
                 if (throwOnFailure) {
-                    throw callBinding.getValidator().newValidationError(
-                        node,
+                    throw callBinding.newError(
                         EigenbaseResource.instance().ExpectedBoolean.ex());
                 }
                 return false;
@@ -217,7 +216,8 @@ public class SqlCaseOperator
 
         if (!SqlUtil.isNullLiteral(
                 caseCall.getElseOperand(),
-                false)) {
+                false))
+        {
             foundNotNull = true;
         }
 
@@ -225,7 +225,8 @@ public class SqlCaseOperator
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().MustNotNullInElse.ex();
+                throw callBinding.newError(
+                    EigenbaseResource.instance().MustNotNullInElse.ex());
             }
             return false;
         }
@@ -237,10 +238,9 @@ public class SqlCaseOperator
     {
         // REVIEW jvs 4-June-2005:  can't these be unified?
         if (!(opBinding instanceof SqlCallBinding)) {
-            return
-                inferTypeFromOperands(
-                    opBinding.getTypeFactory(),
-                    opBinding.collectOperandTypes());
+            return inferTypeFromOperands(
+                opBinding.getTypeFactory(),
+                opBinding.collectOperandTypes());
         }
         return inferTypeFromValidator((SqlCallBinding) opBinding);
     }
@@ -250,7 +250,7 @@ public class SqlCaseOperator
     {
         SqlCase caseCall = (SqlCase) callBinding.getCall();
         SqlNodeList thenList = caseCall.getThenOperands();
-        ArrayList nullList = new ArrayList();
+        ArrayList<SqlNode> nullList = new ArrayList<SqlNode>();
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = thenList.get(i);
@@ -279,7 +279,7 @@ public class SqlCaseOperator
                 EigenbaseResource.instance().IllegalMixingOfTypes.ex());
         }
         for (int i = 0; i < nullList.size(); i++) {
-            SqlNode node = (SqlNode) nullList.get(i);
+            SqlNode node = nullList.get(i);
             callBinding.getValidator().setValidatedNodeType(node, ret);
         }
         return ret;
@@ -313,31 +313,41 @@ public class SqlCaseOperator
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
+        SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlNode ... operands)
     {
         assert functionQualifier == null;
         return new SqlCase(this, operands, pos);
     }
 
-    public SqlCase createCall(
+    /**
+     * Creates a call to the switched form of the case operator, viz:
+     *
+     * <blockquote><code>CASE caseIdentifier<br/>
+     * WHEN whenList[0] THEN thenList[0]<br/>
+     * WHEN whenList[1] THEN thenList[1]<br/>
+     * ...<br/>
+     * ELSE elseClause<br/>
+     * END</code></blockquote>
+     */
+    public SqlCase createSwitchedCall(
+        SqlParserPos pos,
         SqlNode caseIdentifier,
         SqlNodeList whenList,
         SqlNodeList thenList,
-        SqlNode elseClause,
-        SqlParserPos pos)
+        SqlNode elseClause)
     {
         if (null != caseIdentifier) {
             List<SqlNode> list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
-                SqlNode e = (SqlNode) list.get(i);
+                SqlNode e = list.get(i);
                 list.set(
                     i,
                     SqlStdOperatorTable.equalsOperator.createCall(
+                        pos,
                         caseIdentifier,
-                        e,
-                        pos));
+                        e));
             }
         }
 
@@ -345,10 +355,11 @@ public class SqlCaseOperator
             elseClause = SqlLiteral.createNull(pos);
         }
 
-        return
-            (SqlCase) createCall(
-                new SqlNode[] { whenList, thenList, elseClause },
-                pos);
+        return (SqlCase) createCall(
+            pos,
+            whenList,
+            thenList,
+            elseClause);
     }
 
     public void unparse(

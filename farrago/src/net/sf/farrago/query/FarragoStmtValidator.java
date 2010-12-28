@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,6 +34,7 @@ import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
@@ -64,7 +65,6 @@ public class FarragoStmtValidator
     extends FarragoCompoundAllocation
     implements FarragoSessionStmtValidator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
@@ -82,6 +82,13 @@ public class FarragoStmtValidator
 
     private SqlParserPos parserPos;
     private EigenbaseTimingTracer timingTracer;
+    private FarragoReposTxnContext reposTxnContext;
+    private FarragoWarningQueue warningQueue;
+
+    private FemUser currentUser;
+    private FemRole currentRole;
+
+    private Map<String, CwmSqldataType> sqldataTypeCache;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -116,21 +123,36 @@ public class FarragoStmtValidator
         this.sharedDataWrapperCache = sharedDataWrapperCache;
         this.ddlLockManager = ddlLockManager;
 
-        parser = session.getPersonality().newParser(session);
+        // default is a private warning queue, but normally
+        // session resets queue to the one from stmt context
+        this.warningQueue = new FarragoWarningQueue();
 
-        // clone session variables so that any context changes we make during
-        // validation are transient
-        sessionVariables = session.getSessionVariables().cloneVariables();
-        typeFactory = new FarragoTypeFactoryImpl(repos);
-        dataWrapperCache =
-            new FarragoDataWrapperCache(
-                this,
-                sharedDataWrapperCache,
-                session.getPluginClassLoader(),
-                repos,
-                fennelDbHandle,
-                new FarragoSessionDataSource(session));
-        privilegeChecker = session.newPrivilegeChecker();
+        if (session != null) {
+            parser = session.getPersonality().newParser(session);
+
+            // clone session variables so that any context changes we make
+            // during validation are transient
+            sessionVariables = session.getSessionVariables().cloneVariables();
+            typeFactory =
+                (FarragoTypeFactory) session.getPersonality().newTypeFactory(
+                    repos);
+            dataWrapperCache =
+                session.newFarragoDataWrapperCache(
+                    this,
+                    sharedDataWrapperCache,
+                    repos,
+                    fennelDbHandle,
+                    new FarragoSessionDataSource(session));
+            privilegeChecker = session.newPrivilegeChecker();
+            sqldataTypeCache = new HashMap<String, CwmSqldataType>();
+        } else {
+            typeFactory = null;
+            sessionVariables = null;
+            dataWrapperCache = null;
+            parser = null;
+            privilegeChecker = null;
+            sqldataTypeCache = null;
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -208,19 +230,43 @@ public class FarragoStmtValidator
     }
 
     // implement FarragoSessionStmtValidator
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return warningQueue;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public void setWarningQueue(FarragoWarningQueue warningQueue)
+    {
+        this.warningQueue = warningQueue;
+    }
+
+    // implement FarragoSessionStmtValidator
     public void requestPrivilege(
         CwmModelElement obj,
         String action)
     {
-        // TODO jvs 27-Aug-2005:  cache user/role
+        if (currentUser == null) {
+            currentUser =
+                FarragoCatalogUtil.getUserByName(
+                    getRepos(),
+                    sessionVariables.currentUserName);
+        }
+
+        // Load the current role, but only if the role name has been set.
+        if ((currentRole == null)
+            && (sessionVariables.currentRoleName.length() > 0))
+        {
+            currentRole =
+                FarragoCatalogUtil.getRoleByName(
+                    getRepos(),
+                    sessionVariables.currentRoleName);
+        }
+
         privilegeChecker.requestAccess(
             obj,
-            FarragoCatalogUtil.getUserByName(
-                getRepos(),
-                sessionVariables.currentUserName),
-            FarragoCatalogUtil.getRoleByName(
-                getRepos(),
-                sessionVariables.currentRoleName),
+            currentUser,
+            currentRole,
             action);
     }
 
@@ -229,9 +275,9 @@ public class FarragoStmtValidator
         CwmNamedColumnSet namedColumnSet,
         String columnName)
     {
-        CwmColumn column = (CwmColumn)
-            FarragoCatalogUtil.getModelElementByName(
-                (List) namedColumnSet.getFeature(),
+        CwmColumn column =
+            (CwmColumn) FarragoCatalogUtil.getModelElementByName(
+                namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
             throw newPositionalError(
@@ -252,18 +298,18 @@ public class FarragoStmtValidator
     }
 
     // implement FarragoSessionStmtValidator
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
         // use default catalog.  If not set, don't do anything
         CwmCatalog catalog = repos.getCatalog(sessionVariables.catalogName);
         if (catalog == null) {
-            return Util.emptySqlMonikerArray;
+            return Collections.emptyList();
         }
 
         // look for both schema and object names
-        if (names.length == 1) {
+        if (names.size() == 1) {
             // get all schema names
-            List<SqlMonikerImpl> schemaNames =
+            List<SqlMoniker> schemaNames =
                 getAllObjectNamesByType(
                     catalog.getOwnedElement(),
                     FemLocalSchema.class);
@@ -274,44 +320,47 @@ public class FarragoStmtValidator
                     catalog,
                     sessionVariables.schemaName);
             if (schema != null) {
-                List<SqlMonikerImpl> tableNames =
+                List<SqlMoniker> tableNames =
                     getAllObjectNamesByType(
                         schema.getOwnedElement(),
                         FemLocalTable.class);
                 schemaNames.addAll(tableNames);
             }
-            return schemaNames.toArray(Util.emptySqlMonikerArray);
-        }
-        // looking for table names under the specified schema
-        else if (names.length == 2) {
+            return schemaNames;
+        } else if (names.size() == 2) {
+            // looking for table names under the specified schema
             FemLocalSchema schema =
                 FarragoCatalogUtil.getSchemaByName(
                     catalog,
-                    names[0]);
+                    names.get(0));
             if (schema != null) {
-                List<SqlMonikerImpl> tableNames =
+                List<SqlMoniker> tableNames =
                     getAllObjectNamesByType(
                         schema.getOwnedElement(),
                         FemLocalTable.class);
-                return tableNames.toArray(Util.emptySqlMonikerArray);
+                return tableNames;
             } else {
-                return Util.emptySqlMonikerArray;
+                return Collections.emptyList();
             }
-        }
-        // currently not supporting the likes of SALES.EMPS.$DUMMY
-        else {
-            return Util.emptySqlMonikerArray;
+        } else {
+            // currently not supporting the likes of SALES.EMPS.$DUMMY
+            return Collections.emptyList();
         }
     }
 
     /**
      * Returns a list of all object names of a given type in a collection.
+     *
+     * @param collection Collection
+     * @param type Type of object to return
+     *
+     * @return list of object names
      */
-    private List<SqlMonikerImpl> getAllObjectNamesByType(
+    private List<SqlMoniker> getAllObjectNamesByType(
         Collection<CwmModelElement> collection,
         Class<? extends CwmModelElement> type)
     {
-        List<SqlMonikerImpl> list = new ArrayList<SqlMonikerImpl>();
+        List<SqlMoniker> list = new ArrayList<SqlMoniker>();
         for (CwmModelElement element : collection) {
             if (type.isInstance(element)) {
                 // it only supports schema and table type right now
@@ -437,9 +486,8 @@ public class FarragoStmtValidator
         String dataServerName =
             session.getPersonality().getDefaultLocalDataServerName(
                 this);
-        return
-            findDataServer(
-                new SqlIdentifier(dataServerName, SqlParserPos.ZERO));
+        return findDataServer(
+            new SqlIdentifier(dataServerName, SqlParserPos.ZERO));
     }
 
     // implement FarragoSessionStmtValidator
@@ -527,7 +575,7 @@ public class FarragoStmtValidator
             SqlIdentifier schemaId =
                 new SqlIdentifier(schemaNames, SqlParserPos.ZERO);
             FemLocalSchema schema = findSchema(schemaId);
-            routines = (Collection<CwmModelElement>) schema.getOwnedElement();
+            routines = schema.getOwnedElement();
         } else {
             simpleName = invocationName.getSimple();
 
@@ -539,8 +587,7 @@ public class FarragoStmtValidator
                     continue;
                 }
                 FarragoCatalogUtil.filterTypedModelElements(
-                    (Collection<CwmModelElement>) searchedSchema
-                    .getOwnedElement(),
+                    searchedSchema.getOwnedElement(),
                     routines,
                     FemRoutine.class);
             }
@@ -564,6 +611,21 @@ public class FarragoStmtValidator
 
     // implement FarragoSessionStmtValidator
     public CwmSqldataType findSqldataType(SqlIdentifier typeName)
+    {
+        String fullName = typeName.toString();
+        CwmSqldataType type = sqldataTypeCache.get(fullName);
+        if (type != null) {
+            return type;
+        }
+
+        type = findSqldataTypeImpl(typeName);
+
+        sqldataTypeCache.put(fullName, type);
+
+        return type;
+    }
+
+    private CwmSqldataType findSqldataTypeImpl(SqlIdentifier typeName)
     {
         if (!typeName.isSimple()) {
             FemUserDefinedType udt =
@@ -633,8 +695,8 @@ public class FarragoStmtValidator
                 repos.getLocalizedObjectName(jarName));
         }
         return findSchemaObject(
-                qualifiedJarName,
-                FemJar.class);
+            qualifiedJarName,
+            FemJar.class);
     }
 
     private void checkValidated(CwmModelElement element)
@@ -698,7 +760,7 @@ public class FarragoStmtValidator
 
         resolved.object =
             FarragoCatalogUtil.getModelElementByNameAndType(
-                (Collection<CwmModelElement>) resolved.schema.getOwnedElement(),
+                resolved.schema.getOwnedElement(),
                 resolved.objectName,
                 clazz);
         if (resolved.object == null) {
@@ -713,9 +775,10 @@ public class FarragoStmtValidator
         String datasetName)
     {
         if (columnSet instanceof FemAbstractColumnSet) {
-            for (FemSampleDataset dataset
-                : (Collection<FemSampleDataset>)
-                ((FemAbstractColumnSet) columnSet).getSampleDataset()) {
+            for (
+                FemSampleDataset dataset
+                : ((FemAbstractColumnSet) columnSet).getSampleDataset())
+            {
                 if (dataset.getName().equals(datasetName)) {
                     return (CwmNamedColumnSet) dataset.getUsedColumnSet();
                 }
@@ -739,10 +802,9 @@ public class FarragoStmtValidator
             return parser.newPositionalError(ex);
         } else {
             String msg = parserPos.toString();
-            return
-                FarragoResource.instance().ValidatorPositionContext.ex(
-                    msg,
-                    ex);
+            return FarragoResource.instance().ValidatorPositionContext.ex(
+                msg,
+                ex);
         }
     }
 
@@ -784,6 +846,17 @@ public class FarragoStmtValidator
     }
 
     // implement FarragoSessionStmtValidator
+    public void setReposTxnContext(FarragoReposTxnContext reposTxnContext)
+    {
+        this.reposTxnContext = reposTxnContext;
+    }
+
+    public FarragoReposTxnContext getReposTxnContext()
+    {
+        return reposTxnContext;
+    }
+
+    // implement FarragoSessionStmtValidator
     public void validateDataType(SqlDataTypeSpec dataType)
         throws SqlValidatorException
     {
@@ -820,7 +893,7 @@ public class FarragoStmtValidator
             if (precision == null) {
                 int p = typeName.getDefaultPrecision();
                 if (p != -1) {
-                    precision = new Integer(p);
+                    precision = p;
                 }
             }
             if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
@@ -845,23 +918,22 @@ public class FarragoStmtValidator
         if (typeName != null) {
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
-        if (typeFamily == SqlTypeFamily.Character) {
+        if (typeFamily == SqlTypeFamily.CHARACTER) {
             String charsetName = dataType.getCharSetName();
-            if (JmiUtil.isBlank(charsetName)) {
+            if (JmiObjUtil.isBlank(charsetName)) {
                 charsetName = repos.getDefaultCharsetName();
             } else {
-                if (!Charset.isSupported(charsetName)) {
+                String javaCharsetName =
+                    SqlUtil.translateCharacterSetName(charsetName);
+                if (javaCharsetName == null) {
                     throw res.ValidatorCharsetUnsupported.ex(
-                        dataType.getCharSetName());
+                        charsetName);
                 }
+                charsetName = javaCharsetName;
             }
             Charset charSet = Charset.forName(charsetName);
-            if (charSet.newEncoder().maxBytesPerChar() > 1) {
-                // TODO:  implement multi-byte character sets
-                throw Util.needToImplement(charSet);
-            }
         } else {
-            if (!JmiUtil.isBlank(dataType.getCharSetName())) {
+            if (!JmiObjUtil.isBlank(dataType.getCharSetName())) {
                 throw res.ValidatorCharsetUnexpected.ex(
                     repos.getLocalizedObjectName(type));
             }
@@ -872,8 +944,9 @@ public class FarragoStmtValidator
             CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
 
             if (precision != null) {
-                if ((typeFamily == SqlTypeFamily.Binary)
-                    || (typeFamily == SqlTypeFamily.Character)) {
+                if ((typeFamily == SqlTypeFamily.BINARY)
+                    || (typeFamily == SqlTypeFamily.CHARACTER))
+                {
                     Integer maximum = simpleType.getCharacterMaximumLength();
                     assert (maximum != null);
                     if (precision.intValue() > maximum.intValue()) {
@@ -892,7 +965,7 @@ public class FarragoStmtValidator
                             precision,
                             maximum);
                     }
-                    if (typeFamily == SqlTypeFamily.Numeric) {
+                    if (typeFamily == SqlTypeFamily.NUMERIC) {
                         if (precision.intValue() <= 0) {
                             throw res.ValidatorPrecisionMustBePositive.ex();
                         }
@@ -918,15 +991,24 @@ public class FarragoStmtValidator
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (Iterator columnIter = rowType.getFeature().iterator();
-                columnIter.hasNext();) {
-                FemAbstractAttribute column =
-                    (FemAbstractAttribute) columnIter.next();
+            for (
+                FemAbstractAttribute column
+                : Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            {
                 // TODO: Validate
             }
         } else {
             throw Util.needToImplement(type);
         }
+    }
+
+    public void closeAllocation()
+    {
+        super.closeAllocation();
+
+        currentUser = null;
+        currentRole = null;
+        sqldataTypeCache.clear();
     }
 }
 

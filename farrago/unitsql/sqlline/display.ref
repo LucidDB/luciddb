@@ -1,37 +1,95 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test various sqlline display options
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- with full error stack
-0: jdbc:farrago:> !set shownestederrs true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table cylon;
+> -- $Id$
+> -- Test various sqlline display options
+> 
+> -- with full error stack
+> !set shownestederrs true
+> 
+> drop table cylon;
 Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
 Error: Parser Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- back to default:  just most significant error stack entry
-0: jdbc:farrago:> !set shownestederrs false
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table cylon;
+> 
+> -- back to default:  just most significant error stack entry
+> !set shownestederrs false
+> 
+> drop table cylon;
 Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- display numbers with rounding to limited scale
-0: jdbc:farrago:> !set numberformat #.###
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (6.666666);
+> 
+> --  default:  show warnings
+> !set showwarnings true
+> !closeall
+sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
+Warning: clientProcessId 'bogus' could not be parsed as an integer (state=,code=0)
+> 
+> -- suppress warnings
+> !set showwarnings false
+> !closeall
+sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
+> 
+> -- display numbers with rounding to limited scale
+> !set numberformat #.###
+> 
+> values (6.666666);
 +---------+
 | EXPR$0  |
 +---------+
 | 6.667   |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- display numbers the usual way
-0: jdbc:farrago:> !set numberformat default
-0: jdbc:farrago:> values (6.666666);
+> 
+> -- display numbers the usual way
+> !set numberformat default
+> values (6.666666);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 6.666666  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- stop after two rows
+> !set rowlimit 2
+> select * from sales.depts order by name;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 30      | Accounts   |
+| 20      | Marketing  |
++---------+------------+
+> 
+> -- revert to fetching all rows
+> !set rowlimit 0
+> select * from sales.depts order by name;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 30      | Accounts   |
+| 20      | Marketing  |
+| 10      | Sales      |
++---------+------------+
+> 
+> -- get rowcounts without times
+> !set silent off
+> !set showtime off
+> create schema rowcounts;
+No rows affected
+> create table rowcounts.t(i int not null primary key);
+No rows affected
+> insert into rowcounts.t values (1);
+1 row affected
+> select * from rowcounts.t;
++----+
+| I  |
++----+
+| 1  |
++----+
+1 row selected
+> 
+> -- revert to default
+> !set showtime on
+> !set silent on
+> select * from rowcounts.t;
++----+
+| I  |
++----+
+| 1  |
++----+
+> 
+> !quit

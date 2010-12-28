@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -42,38 +41,40 @@ import org.eigenbase.sql.*;
 public class PushProjectPastJoinRule
     extends RelOptRule
 {
+    public static final PushProjectPastJoinRule instance =
+        new PushProjectPastJoinRule();
 
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Expressions that should be preserved in the projection
+     * Condition for expressions that should be preserved in the projection.
      */
-    private Set<SqlOperator> preserveExprs;
+    private final PushProjector.ExprCondition preserveExprCondition;
 
     //~ Constructors -----------------------------------------------------------
 
-    //  ~ Constructors ---------------------------------------------------------
-
-    public PushProjectPastJoinRule()
+    /**
+     * Creates a PushProjectPastJoinRule.
+     */
+    private PushProjectPastJoinRule()
     {
-        super(
-            new RelOptRuleOperand(
-                ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
-        this.preserveExprs = Collections.EMPTY_SET;
+        this(PushProjector.ExprCondition.FALSE);
     }
 
-    public PushProjectPastJoinRule(Set<SqlOperator> preserveExprs)
+    /**
+     * Creates a PushProjectPastJoinRule with an explicit condition.
+     *
+     * @param preserveExprCondition Condition for expressions that should be
+     * preserved in the projection
+     */
+    public PushProjectPastJoinRule(
+        PushProjector.ExprCondition preserveExprCondition)
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
-        this.preserveExprs = preserveExprs;
+                new RelOptRuleOperand(JoinRel.class, ANY)));
+        this.preserveExprCondition = preserveExprCondition;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -93,17 +94,17 @@ public class PushProjectPastJoinRule
                 origProj,
                 joinRel.getCondition(),
                 joinRel,
-                preserveExprs);
+                preserveExprCondition);
         if (pushProject.locateAllRefs()) {
             return;
         }
-        
+
         // create left and right projections, projecting only those
         // fields referenced on each side
         RelNode leftProjRel =
             pushProject.createProjectRefsAndExprs(
                 joinRel.getLeft(),
-                false,
+                true,
                 false);
         RelNode rightProjRel =
             pushProject.createProjectRefsAndExprs(
@@ -115,25 +116,17 @@ public class PushProjectPastJoinRule
         RexNode newJoinFilter = null;
         int [] adjustments = pushProject.getAdjustments();
         if (joinRel.getCondition() != null) {
-            RelDataTypeField [] projLeftFields =
-                leftProjRel.getRowType().getFields();
-            RelDataTypeField [] projRightFields =
-                rightProjRel.getRowType().getFields();
+            List<RelDataTypeField> projJoinFieldList =
+                new ArrayList<RelDataTypeField>();
+            projJoinFieldList.addAll(
+                joinRel.getSystemFieldList());
+            projJoinFieldList.addAll(
+                leftProjRel.getRowType().getFieldList());
+            projJoinFieldList.addAll(
+                rightProjRel.getRowType().getFieldList());
             RelDataTypeField [] projJoinFields =
-                new RelDataTypeField[projLeftFields.length
-                + projRightFields.length];
-            System.arraycopy(
-                leftProjRel.getRowType().getFields(),
-                0,
-                projJoinFields,
-                0,
-                projLeftFields.length);
-            System.arraycopy(
-                rightProjRel.getRowType().getFields(),
-                0,
-                projJoinFields,
-                projLeftFields.length,
-                projRightFields.length);
+                projJoinFieldList.toArray(
+                    new RelDataTypeField[projJoinFieldList.size()]);
             newJoinFilter =
                 pushProject.convertRefsAndExprs(
                     joinRel.getCondition(),
@@ -149,9 +142,9 @@ public class PushProjectPastJoinRule
                 rightProjRel,
                 newJoinFilter,
                 joinRel.getJoinType(),
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.getSystemFieldList());
 
         // put the original project on top of the join, converting it to
         // reference the modified projection list

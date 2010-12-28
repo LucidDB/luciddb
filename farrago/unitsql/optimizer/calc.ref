@@ -1,39 +1,43 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which instantiate the calculator (filter and/or project)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which returns one row
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where lower(name) = 'wilma';
-+-------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                  column0                                                                  |
-+-------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                 |
-|   FennelCalcRel(expr#0=[{inputs}], expr#1=[LOWER($t0)], expr#2=[_ISO-8859-1'wilma'], expr#3=[=($t1, $t2)], NAME=[$t0], $condition=[$t3])  |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                            |
-+-------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- project
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select lower(name), empid + 1, empid / 1, empid - 1, empid from sales.emps;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                    column0                                                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                                      |
-|   FennelCalcRel(expr#0..1=[{inputs}], expr#2=[LOWER($t0)], expr#3=[1], expr#4=[+($t1, $t3)], expr#5=[/($t1, $t3)], expr#6=[-($t1, $t3)], EXPR$0=[$t2], EXPR$1=[$t4], EXPR$2=[$t5], EXPR$3=[$t6], EMPID=[$t1])  |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- dtbug#32
-0: jdbc:farrago:> select 1 + 2 from (values (3));
-+---------+
-| EXPR$0  |
-+---------+
-| 3       |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> -- $Id$
+> -- Test queries which instantiate the calculator (filter and/or project)
+> 
+> set schema 'sales';
+> !set outputformat csv
+> 
+> -- force usage of Fennel calculator for single expression
+> explain plan for
+> select lower(name), IN_FENNEL(empid + 1)
+> from sales.emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[LOWER($t0)], expr#3=[1], expr#4=[+($t1, $t3)], expr#5=[IN_FENNEL($t4)], EXPR$0=[$t2], EXPR$1=[$t5])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- filter which returns one row
+> explain plan for
+> select name from emps where lower(name) = 'wilma';
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0=[{inputs}], expr#1=[LOWER($t0)], expr#2=['wilma'], expr#3=[=($t1, $t2)], NAME=[$t0], $condition=[$t3])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> -- project
+> explain plan for
+> select lower(name), empid + 1, empid / 1, empid - 1, empid from sales.emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[LOWER($t0)], expr#3=[1], expr#4=[+($t1, $t3)], expr#5=[/($t1, $t3)], expr#6=[-($t1, $t3)], EXPR$0=[$t2], EXPR$1=[$t4], EXPR$2=[$t5], EXPR$3=[$t6], EMPID=[$t1])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> -- dtbug#32
+> select 1 + 2 from (values (3));
+'EXPR$0'
+'3'
+> 
+> -- End calc.sql
+> 
+> 
+> !quit

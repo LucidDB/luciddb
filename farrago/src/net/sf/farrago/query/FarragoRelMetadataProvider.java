@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,11 +21,14 @@
 */
 package net.sf.farrago.query;
 
+import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -50,7 +53,6 @@ import org.eigenbase.stat.*;
 public class FarragoRelMetadataProvider
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;
@@ -78,6 +80,15 @@ public class FarragoRelMetadataProvider
         args.add((Class) BitSet.class);
         args.add((Class) RexNode.class);
         mapParameterTypes("getDistinctRowCount", args);
+
+        mapParameterTypes(
+            "getUniqueKeys",
+            Collections.singletonList((Class) Boolean.TYPE));
+
+        args = new ArrayList<Class>();
+        args.add((Class) BitSet.class);
+        args.add((Class) Boolean.TYPE);
+        mapParameterTypes("areColumnsUnique", args);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,13 +103,30 @@ public class FarragoRelMetadataProvider
      */
     public RelStatSource getStatistics(RelNode rel)
     {
+        return getStatistics(rel, repos);
+    }
+
+    private static RelStatSource getStatistics(RelNode rel, FarragoRepos repos)
+    {
         RelOptTable table = rel.getTable();
         if (table == null) {
             return null;
         }
+        return getStatistics(
+            table,
+            repos,
+            FennelRelUtil.getPreparingStmt(rel).getSession()
+                         .getSessionLabelCreationTimestamp());
+    }
 
+    private static RelStatSource getStatistics(
+        RelOptTable table,
+        FarragoRepos repos,
+        Timestamp labelTimestamp)
+    {
         String [] qualifiedName = table.getQualifiedName();
-        assert (qualifiedName.length == 3) : "qualified name did not have three parts";
+        assert qualifiedName.length == 3
+            : "qualified name did not have three parts";
         String catalogName = qualifiedName[0];
         String schemaName = qualifiedName[1];
         String tableName = qualifiedName[2];
@@ -121,7 +149,70 @@ public class FarragoRelMetadataProvider
             return null;
         }
 
-        RelStatSource result = new FarragoTableStatistics(repos, columnSet);
+        RelStatSource result =
+            new FarragoTableStatistics(
+                repos,
+                columnSet,
+                labelTimestamp);
+        return result;
+    }
+
+    /**
+     * Retrieves the row count of a Farrago expression or null, using statistics
+     * stored in the catalog
+     *
+     * @param rel the relational expression
+     * @param repos repository
+     *
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(RelNode rel, FarragoRepos repos)
+    {
+        Double result = null;
+        RelStatSource source = getStatistics(rel, repos);
+        if (source != null) {
+            result = source.getRowCount();
+        }
+        return result;
+    }
+
+    /**
+     * Retrieves the row count of a relational table using statistics stored in
+     * the catalog
+     *
+     * @param table the relational table
+     * @param repos repository
+     *
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(
+        RelOptTable table,
+        FarragoRepos repos)
+    {
+        return getRowCountStat(table, repos, null);
+    }
+
+    /**
+     * Retrieves the row count of a relational table for a specific label, using
+     * statistics stored in the catalog.
+     *
+     * @param table the relational table
+     * @param repos repository
+     * @param labelTimestamp creation timestamp of the label that determines
+     * which stats to retrieve; null if there is no label setting
+     *
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(
+        RelOptTable table,
+        FarragoRepos repos,
+        Timestamp labelTimestamp)
+    {
+        Double result = null;
+        RelStatSource source = getStatistics(table, repos, labelTimestamp);
+        if (source != null) {
+            result = source.getRowCount();
+        }
         return result;
     }
 
@@ -134,17 +225,20 @@ public class FarragoRelMetadataProvider
      */
     public Double getRowCount(RelNode rel)
     {
-        Double result = null;
-        RelStatSource source = getStatistics(rel);
-        if (source != null) {
-            result = source.getRowCount();
-        }
-        return result;
+        return getRowCountStat(rel, repos);
     }
 
-    public Set<BitSet> getUniqueKeys(RelNode rel)
+    public Set<BitSet> getUniqueKeys(RelNode rel, boolean ignoreNulls)
     {
-        return columnMd.getUniqueKeys(rel, repos);
+        return columnMd.getUniqueKeys(rel, repos, ignoreNulls);
+    }
+
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        boolean ignoreNulls)
+    {
+        return columnMd.areColumnsUnique(rel, columns, repos, ignoreNulls);
     }
 
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
@@ -158,6 +252,20 @@ public class FarragoRelMetadataProvider
         RexNode predicate)
     {
         return columnMd.getDistinctRowCount(rel, groupKey, predicate);
+    }
+
+    public Boolean canRestart(RelNode rel)
+    {
+        // TODO jvs 4-Nov-2006:  Override this to ignore children
+        // and return true in cases where we know buffering
+        // is already being done.
+
+        for (RelNode child : rel.getInputs()) {
+            if (!FarragoRelMetadataQuery.canRestart(child)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

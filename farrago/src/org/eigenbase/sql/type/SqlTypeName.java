@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,10 +22,14 @@
 */
 package org.eigenbase.sql.type;
 
-import java.io.*;
+import java.math.*;
 
 import java.sql.*;
 
+import java.util.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
 
@@ -45,155 +49,112 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Nov 24, 2003
  */
-public class SqlTypeName
-    extends EnumeratedValues.SerializableValue
+public enum SqlTypeName
 {
-
-    //~ Static fields/initializers ---------------------------------------------
+    BOOLEAN(PrecScale.NoNo, false, Types.BOOLEAN),
+    TINYINT(PrecScale.NoNo, false, Types.TINYINT),
+    SMALLINT(PrecScale.NoNo, false, Types.SMALLINT),
+    INTEGER(PrecScale.NoNo, false, Types.INTEGER),
+    BIGINT(PrecScale.NoNo, false, Types.BIGINT),
+    DECIMAL(
+        PrecScale.NoNo
+        | PrecScale.YesNo
+        | PrecScale.YesYes,
+        false,
+        Types.DECIMAL), FLOAT(PrecScale.NoNo, false, Types.FLOAT),
+    REAL(PrecScale.NoNo, false, Types.REAL),
+    DOUBLE(PrecScale.NoNo, false, Types.DOUBLE),
+    DATE(PrecScale.NoNo, false, Types.DATE),
+    TIME(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIME),
+    TIMESTAMP(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIMESTAMP),
+    INTERVAL_YEAR_MONTH(PrecScale.NoNo, false, Types.OTHER),
+    INTERVAL_DAY_TIME(
+        PrecScale.NoNo
+        | PrecScale.YesNo
+        | PrecScale.YesYes,
+        false,
+        Types.OTHER),
+    CHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.CHAR),
+    VARCHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.VARCHAR),
+    BINARY(PrecScale.NoNo | PrecScale.YesNo, false, Types.BINARY),
+    VARBINARY(PrecScale.NoNo | PrecScale.YesNo, false, Types.VARBINARY),
+    NULL(PrecScale.NoNo, true, Types.NULL),
+    ANY(PrecScale.NoNo, true, Types.OTHER),
+    SYMBOL(PrecScale.NoNo, true, Types.OTHER),
+    MULTISET(PrecScale.NoNo, false, Types.ARRAY),
+    DISTINCT(PrecScale.NoNo, false, Types.DISTINCT),
+    STRUCTURED(PrecScale.NoNo, false, Types.STRUCT),
+    ROW(PrecScale.NoNo, false, Types.STRUCT),
+    CURSOR(PrecScale.NoNo, false, Types.OTHER + 1),
+    COLUMN_LIST(PrecScale.NoNo, false, Types.OTHER + 2);
 
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
 
-    // Flags indicating precision/scale combinations
-    private static final int PrecNoScaleNo = 1;
-    private static final int PrecYesScaleNo = 2;
-    private static final int PrecYesScaleYes = 4;
-
     private static SqlTypeName [] jdbcTypeToName;
-    public static final int MIN_JDBC_TYPE = Types.BIT;
-    public static final int MAX_JDBC_TYPE = Types.REF;
+
+    // Basing type name mapping on these constants is fragile, since newer
+    // JDK versions may introduce new types with values outside of these
+    // boundaries.
+    // TODO: Find a less fragile way to map type constants to names
+    public static final int MIN_JDBC_TYPE = ExtraSqlTypes.LONGNVARCHAR;
+    public static final int MAX_JDBC_TYPE = ExtraSqlTypes.NCLOB;
+
+    public static final int JAVA6_NCHAR = -15;
 
     public static final int MAX_DATETIME_PRECISION = 3;
     public static final int MAX_NUMERIC_PRECISION = 19;
     public static final int MAX_NUMERIC_SCALE = 19;
+    public static final int MAX_CHAR_LENGTH = 65536;
+    public static final int MAX_BINARY_LENGTH = 65536;
 
-    // SQL Type Definitions ------------------
-    public static final int Boolean_ordinal = 0;
-    public static final SqlTypeName Boolean =
-        new SqlTypeName("BOOLEAN", Boolean_ordinal, PrecNoScaleNo);
-    public static final int Tinyint_ordinal = 1;
-    public static final SqlTypeName Tinyint =
-        new SqlTypeName("TINYINT", Tinyint_ordinal, PrecNoScaleNo);
-    public static final int Smallint_ordinal = 2;
-    public static final SqlTypeName Smallint =
-        new SqlTypeName("SMALLINT", Smallint_ordinal, PrecNoScaleNo);
-    public static final int Integer_ordinal = 3;
-    public static final SqlTypeName Integer =
-        new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo);
-    public static final int Bigint_ordinal = 4;
-    public static final SqlTypeName Bigint =
-        new SqlTypeName("BIGINT", Bigint_ordinal, PrecNoScaleNo);
-    public static final int Decimal_ordinal = 5;
-    public static final SqlTypeName Decimal =
-        new SqlTypeName("DECIMAL",
-            Decimal_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo | PrecYesScaleYes);
-    public static final int Float_ordinal = 6;
-    public static final SqlTypeName Float =
-        new SqlTypeName("FLOAT", Float_ordinal, PrecNoScaleNo);
-    public static final int Real_ordinal = 7;
-    public static final SqlTypeName Real =
-        new SqlTypeName("REAL", Real_ordinal, PrecNoScaleNo);
-    public static final int Double_ordinal = 8;
-    public static final SqlTypeName Double =
-        new SqlTypeName("DOUBLE", Double_ordinal, PrecNoScaleNo);
-    public static final int Date_ordinal = 9;
-    public static final SqlTypeName Date =
-        new SqlTypeName("DATE", Date_ordinal, PrecNoScaleNo);
-    public static final int Time_ordinal = 10;
-    public static final SqlTypeName Time =
-        new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Timestamp_ordinal = 11;
-    public static final SqlTypeName Timestamp =
-        new SqlTypeName("TIMESTAMP",
-            Timestamp_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int IntervalYearMonth_ordinal = 12;
-    public static final SqlTypeName IntervalYearMonth =
-        new SqlTypeName("IntervalYearMonth",
-            IntervalYearMonth_ordinal,
-            PrecNoScaleNo);
-    public static final int IntervalDayTime_ordinal = 13;
-    public static final SqlTypeName IntervalDayTime =
-        new SqlTypeName("IntervalDayTime",
-            IntervalDayTime_ordinal,
-            PrecNoScaleNo);
-    public static final int Char_ordinal = 14;
-    public static final SqlTypeName Char =
-        new SqlTypeName("CHAR", Char_ordinal, PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Varchar_ordinal = 15;
-    public static final SqlTypeName Varchar =
-        new SqlTypeName("VARCHAR",
-            Varchar_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Binary_ordinal = 16;
-    public static final SqlTypeName Binary =
-        new SqlTypeName("BINARY",
-            Binary_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Varbinary_ordinal = 17;
-    public static final SqlTypeName Varbinary =
-        new SqlTypeName("VARBINARY",
-            Varbinary_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Null_ordinal = 18;
-    public static final SqlTypeName Null =
-        new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
-    public static final int Any_ordinal = 19;
-    public static final SqlTypeName Any =
-        new SqlTypeName("ANY", Any_ordinal, PrecNoScaleNo);
-    public static final int Symbol_ordinal = 20;
-    public static final SqlTypeName Symbol =
-        new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
-    public static final int Multiset_ordinal = 21;
-    public static final SqlTypeName Multiset =
-        new SqlTypeName("MULTISET", Multiset_ordinal, PrecNoScaleNo);
-    public static final int Distinct_ordinal = 22;
-    public static final SqlTypeName Distinct =
-        new SqlTypeName("DISTINCT", Distinct_ordinal, PrecNoScaleNo);
-    public static final int Structured_ordinal = 23;
-    public static final SqlTypeName Structured =
-        new SqlTypeName("STRUCTURED", Structured_ordinal, PrecNoScaleNo);
-    public static final int Row_ordinal = 24;
-    public static final SqlTypeName Row =
-        new SqlTypeName("ROW", Row_ordinal, PrecNoScaleNo);
-    public static final int Cursor_ordinal = 25;
-    public static final SqlTypeName Cursor =
-        new SqlTypeName("CURSOR", Cursor_ordinal, PrecNoScaleNo);
+    // Minimum and default interval precisions are  defined by SQL2003
+    // Maximum interval precisions are implementation dependent,
+    //  but must be at least the default value
+    public static final int DEFAULT_INTERVAL_START_PRECISION = 2;
+    public static final int DEFAULT_INTERVAL_FRACTIONAL_SECOND_PRECISION = 6;
+    public static final int MIN_INTERVAL_START_PRECISION = 1;
+    public static final int MIN_INTERVAL_FRACTIONAL_SECOND_PRECISION = 1;
+    public static final int MAX_INTERVAL_START_PRECISION = 10;
+    public static final int MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION = 9;
 
-    /**
-     * Array of all allowable {@link SqlTypeName} values.
-     */
-    public static final SqlTypeName [] allTypes =
-        new SqlTypeName[] {
-            Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
-            Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
-            Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset, Distinct, Structured, Row, Cursor
-        };
+    // Cached map of enum values
+    private static final Map<String, SqlTypeName> VALUES_MAP =
+        Util.enumConstants(SqlTypeName.class);
 
     // categorizations used by SqlTypeFamily definitions
 
-    public static final SqlTypeName [] booleanTypes = {
-            Boolean
+    // you probably want to use JDK 1.5 support for treating enumeration
+    // as collection instead; this is only here to support
+    // SqlTypeFamily.ANY
+    public static final SqlTypeName [] allTypes =
+        new SqlTypeName[] {
+            BOOLEAN, INTEGER, VARCHAR, DATE, TIME, TIMESTAMP, NULL, DECIMAL,
+            ANY, CHAR, BINARY, VARBINARY, TINYINT, SMALLINT, BIGINT, REAL,
+            DOUBLE, SYMBOL, INTERVAL_YEAR_MONTH, INTERVAL_DAY_TIME,
+            FLOAT, MULTISET, DISTINCT, STRUCTURED, ROW, CURSOR, COLUMN_LIST
         };
+
+    public static final SqlTypeName [] booleanTypes = {
+        BOOLEAN
+    };
 
     public static final SqlTypeName [] binaryTypes = {
-            Binary, Varbinary
-        };
+        BINARY, VARBINARY
+    };
 
     public static final SqlTypeName [] intTypes =
-        {
-            Tinyint, Smallint, Integer, Bigint
-        };
+    {
+        TINYINT, SMALLINT, INTEGER, BIGINT
+    };
 
     public static final SqlTypeName [] exactTypes =
         combine(
             intTypes,
-            new SqlTypeName[] { Decimal });
+            new SqlTypeName[] { DECIMAL });
 
     public static final SqlTypeName [] approxTypes = {
-            Float, Real, Double
-        };
+        FLOAT, REAL, DOUBLE
+    };
 
     public static final SqlTypeName [] numericTypes =
         combine(exactTypes, approxTypes);
@@ -201,134 +162,127 @@ public class SqlTypeName
     public static final SqlTypeName [] fractionalTypes =
         combine(
             approxTypes,
-            new SqlTypeName[] { Decimal });
+            new SqlTypeName[] { DECIMAL });
 
     public static final SqlTypeName [] charTypes = {
-            Char, Varchar
-        };
+        CHAR, VARCHAR
+    };
 
     public static final SqlTypeName [] stringTypes =
         combine(charTypes, binaryTypes);
 
     public static final SqlTypeName [] datetimeTypes =
-        {
-            Date, Time, Timestamp
-        };
+    {
+        DATE, TIME, TIMESTAMP
+    };
 
     public static final SqlTypeName [] timeIntervalTypes =
-        {
-            IntervalDayTime, IntervalYearMonth
-        };
+    {
+        INTERVAL_DAY_TIME, INTERVAL_YEAR_MONTH
+    };
 
     public static final SqlTypeName [] multisetTypes = {
-            Multiset
-        };
+        MULTISET
+    };
 
     public static final SqlTypeName [] cursorTypes = {
-            Cursor
-        };
+        CURSOR
+    };
 
-    /**
-     * Enumeration of all allowable {@link SqlTypeName} values.
-     */
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(allTypes);
+    public static final SqlTypeName [] columnListTypes = {
+        COLUMN_LIST
+    };
 
     static {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
         jdbcTypeToName = new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
 
-        setNameForJdbcType(Types.TINYINT, Tinyint);
-        setNameForJdbcType(Types.SMALLINT, Smallint);
-        setNameForJdbcType(Types.BIGINT, Bigint);
-        setNameForJdbcType(Types.INTEGER, Integer);
-        setNameForJdbcType(Types.NUMERIC, Decimal); // REVIEW
-        setNameForJdbcType(Types.DECIMAL, Decimal);
+        setNameForJdbcType(Types.TINYINT, TINYINT);
+        setNameForJdbcType(Types.SMALLINT, SMALLINT);
+        setNameForJdbcType(Types.BIGINT, BIGINT);
+        setNameForJdbcType(Types.INTEGER, INTEGER);
+        setNameForJdbcType(Types.NUMERIC, DECIMAL); // REVIEW
+        setNameForJdbcType(Types.DECIMAL, DECIMAL);
 
-        setNameForJdbcType(Types.FLOAT, Float);
-        setNameForJdbcType(Types.REAL, Real);
-        setNameForJdbcType(Types.DOUBLE, Double);
+        setNameForJdbcType(Types.FLOAT, FLOAT);
+        setNameForJdbcType(Types.REAL, REAL);
+        setNameForJdbcType(Types.DOUBLE, DOUBLE);
 
-        setNameForJdbcType(Types.CHAR, Char);
-        setNameForJdbcType(Types.VARCHAR, Varchar);
+        setNameForJdbcType(Types.CHAR, CHAR);
+        setNameForJdbcType(Types.VARCHAR, VARCHAR);
 
-        // TODO
+        // TODO: provide real support for these eventually
+        setNameForJdbcType(ExtraSqlTypes.NCHAR, CHAR);
+        setNameForJdbcType(ExtraSqlTypes.NVARCHAR, VARCHAR);
+
+        // TODO: additional types not yet supported. See ExtraSqlTypes.java
         // setNameForJdbcType(Types.LONGVARCHAR, Longvarchar);
         // setNameForJdbcType(Types.CLOB, Clob);
         // setNameForJdbcType(Types.LONGVARBINARY, Longvarbinary);
         // setNameForJdbcType(Types.BLOB, Blob);
+        // setNameForJdbcType(Types.LONGNVARCHAR, Longnvarchar);
+        // setNameForJdbcType(Types.NCLOB, Nclob);
+        // setNameForJdbcType(Types.ROWID, Rowid);
+        // setNameForJdbcType(Types.SQLXML, Sqlxml);
 
-        setNameForJdbcType(Types.BINARY, Binary);
-        setNameForJdbcType(Types.VARBINARY, Varbinary);
+        setNameForJdbcType(Types.BINARY, BINARY);
+        setNameForJdbcType(Types.VARBINARY, VARBINARY);
 
-        setNameForJdbcType(Types.DATE, Date);
-        setNameForJdbcType(Types.TIME, Time);
-        setNameForJdbcType(Types.TIMESTAMP, Timestamp);
-        setNameForJdbcType(Types.BIT, Boolean);
-        setNameForJdbcType(Types.BOOLEAN, Boolean);
-        setNameForJdbcType(Types.DISTINCT, Distinct);
-        setNameForJdbcType(Types.STRUCT, Structured);
+        setNameForJdbcType(Types.DATE, DATE);
+        setNameForJdbcType(Types.TIME, TIME);
+        setNameForJdbcType(Types.TIMESTAMP, TIMESTAMP);
+        setNameForJdbcType(Types.BIT, BOOLEAN);
+        setNameForJdbcType(Types.BOOLEAN, BOOLEAN);
+        setNameForJdbcType(Types.DISTINCT, DISTINCT);
+        setNameForJdbcType(Types.STRUCT, STRUCTURED);
     }
-
-    //~ Instance fields --------------------------------------------------------
 
     /**
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
 
-    //~ Constructors -----------------------------------------------------------
-
-    private SqlTypeName(
-        String name,
-        int ordinal,
-        int signatures)
-    {
-        super(name, ordinal, null);
-        this.signatures = signatures;
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
     /**
-     * Looks up a type name from its ordinal.
+     * Returns true if not of a "pure" standard sql type. "Inpure" types are
+     * {@link #ANY}, {@link #NULL} and {@link #SYMBOL}
      */
-    public static SqlTypeName get(int ordinal)
+    private final boolean special;
+    private final int jdbcOrdinal;
+
+    private SqlTypeName(int signatures, boolean special, int jdbcType)
     {
-        return (SqlTypeName) enumeration.getValue(ordinal);
+        this.signatures = signatures;
+        this.special = special;
+        this.jdbcOrdinal = jdbcType;
     }
 
     /**
      * Looks up a type name from its name.
+     *
+     * @return Type name, or null if not found
      */
     public static SqlTypeName get(String name)
     {
-        if (enumeration.containsName(name)) {
-            return (SqlTypeName) enumeration.getValue(name);
-        } else {
-            return null;
+        if (false) {
+            // The following code works OK, but the spurious exceptions are
+            // annoying.
+            try {
+                return SqlTypeName.valueOf(name);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         }
-    }
-
-    /**
-     * Returns true if <code>name</code> is defined in {@link
-     * SqlTypeName#enumeration}; otherwise, it returns false.
-     *
-     * @param name
-     */
-    public static boolean containsName(String name)
-    {
-        return enumeration.containsName(name);
+        return VALUES_MAP.get(name);
     }
 
     public boolean allowsNoPrecNoScale()
     {
-        return (signatures & PrecNoScaleNo) != 0;
+        return (signatures & PrecScale.NoNo) != 0;
     }
 
     public boolean allowsPrecNoScale()
     {
-        return (signatures & PrecYesScaleNo) != 0;
+        return (signatures & PrecScale.YesNo) != 0;
     }
 
     public boolean allowsPrec()
@@ -368,25 +322,14 @@ public class SqlTypeName
         boolean scale)
     {
         int mask =
-            precision ? (scale ? PrecYesScaleYes : PrecYesScaleNo)
-            : (scale ? 0 : PrecNoScaleNo);
+            precision ? (scale ? PrecScale.YesYes : PrecScale.YesNo)
+            : (scale ? 0 : PrecScale.NoNo);
         return (signatures & mask) != 0;
     }
 
-    /**
-     * Returns true if not of a "pure" standard sql type. "Inpure" types are
-     * {@link #Any}, {@link #Null} and {@link #Symbol}
-     */
     public boolean isSpecial()
     {
-        switch (getOrdinal()) {
-        case Any_ordinal:
-        case Null_ordinal:
-        case Symbol_ordinal:
-            return true;
-        }
-
-        return false;
+        return special;
     }
 
     /**
@@ -395,56 +338,11 @@ public class SqlTypeName
      */
     public int getJdbcOrdinal()
     {
-        switch (getOrdinal()) {
-        case Boolean_ordinal:
-            return Types.BOOLEAN;
-        case Tinyint_ordinal:
-            return Types.TINYINT;
-        case Smallint_ordinal:
-            return Types.SMALLINT;
-        case Integer_ordinal:
-            return Types.INTEGER;
-        case Bigint_ordinal:
-            return Types.BIGINT;
-        case Decimal_ordinal:
-            return Types.DECIMAL;
-        case Float_ordinal:
-            return Types.FLOAT;
-        case Real_ordinal:
-            return Types.REAL;
-        case Double_ordinal:
-            return Types.DOUBLE;
-        case Date_ordinal:
-            return Types.DATE;
-        case Time_ordinal:
-            return Types.TIME;
-        case Timestamp_ordinal:
-            return Types.TIMESTAMP;
-        case Char_ordinal:
-            return Types.CHAR;
-        case Varchar_ordinal:
-            return Types.VARCHAR;
-        case Binary_ordinal:
-            return Types.BINARY;
-        case Varbinary_ordinal:
-            return Types.VARBINARY;
-        case Null_ordinal:
-            return Types.NULL;
-        case Multiset_ordinal:
-            return Types.ARRAY;
-        case Distinct_ordinal:
-            return Types.DISTINCT;
-        case Row_ordinal:
-        case Structured_ordinal:
-            return Types.STRUCT;
-        case Cursor_ordinal:
-            return Types.OTHER + 1;
-        default:
-            return Types.OTHER;
-        }
+        return jdbcOrdinal;
     }
 
-    private static SqlTypeName [] combine(SqlTypeName [] array0,
+    private static SqlTypeName [] combine(
+        SqlTypeName [] array0,
         SqlTypeName [] array1)
     {
         SqlTypeName [] ret = new SqlTypeName[array0.length + array1.length];
@@ -459,21 +357,24 @@ public class SqlTypeName
      */
     public int getDefaultPrecision()
     {
-        switch (getOrdinal()) {
-        case Char_ordinal:
-        case Binary_ordinal:
-        case Varchar_ordinal:
-        case Varbinary_ordinal:
+        switch (this) {
+        case CHAR:
+        case BINARY:
+        case VARCHAR:
+        case VARBINARY:
             return 1;
-        case Time_ordinal:
+        case TIME:
             return 0;
-        case Timestamp_ordinal:
+        case TIMESTAMP:
 
             // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return 0;
-        case Decimal_ordinal:
+        case DECIMAL:
             return MAX_NUMERIC_PRECISION;
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return DEFAULT_INTERVAL_START_PRECISION;
         default:
             return -1;
         }
@@ -485,9 +386,12 @@ public class SqlTypeName
      */
     public int getDefaultScale()
     {
-        switch (getOrdinal()) {
-        case Decimal_ordinal:
+        switch (this) {
+        case DECIMAL:
             return 0;
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return DEFAULT_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
         }
@@ -523,21 +427,521 @@ public class SqlTypeName
     }
 
     /**
-     * Retrieves a matching SqlTypeName instance based on the <code>
-     * _ordinal</code> deserialized by {@link
-     * EnumeratedValues.SerializableValue#readObject}. Current instance is the
-     * candidate object deserialized from the ObjectInputStream. It is
-     * incomplete, cannot be used as-is, and this method must return a valid
-     * replacement.
+     * Returns the limit of this datatype. For example,
      *
-     * @return replacement instance that matches <code>_ordinal</code>
+     * <table border="1">
+     * <tr>
+     * <th>Datatype</th>
+     * <th>sign</th>
+     * <th>limit</th>
+     * <th>beyond</th>
+     * <th>precision</th>
+     * <th>scale</th>
+     * <th>Returns</th>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>2147483647 (2 ^ 31 -1 = MAXINT)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>2147483648 (2 ^ 31 = MAXINT + 1)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>false</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>-2147483648 (-2 ^ 31 = MININT)</td>
+     * </tr>
+     * <tr>
+     * <td>Boolean</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
+     * <td>TRUE</td>
+     * </tr>
+     * <tr>
+     * <td>Varchar</th>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>10</td>
+     * <td>-1</td>
+     * <td>'ZZZZZZZZZZ'</td>
+     * </tr>
+     * </table>
      *
-     * @throws java.io.ObjectStreamException
+     * @param sign If true, returns upper limit, otherwise lower limit
+     * @param limit If true, returns value at or near to overflow; otherwise
+     * value at or near to underflow
+     * @param beyond If true, returns the value just beyond the limit, otherwise
+     * the value at the limit
+     * @param precision Precision, or -1 if not applicable
+     * @param scale Scale, or -1 if not applicable
+     *
+     * @return Limit value
      */
-    protected Object readResolve()
-        throws ObjectStreamException
+    public Object getLimit(
+        boolean sign,
+        Limit limit,
+        boolean beyond,
+        int precision,
+        int scale)
     {
-        return SqlTypeName.get(_ordinal);
+        assert allowsPrecScale(precision != -1, scale != -1) : this;
+        if (limit == Limit.ZERO) {
+            if (beyond) {
+                return null;
+            }
+            sign = true;
+        }
+        Calendar calendar;
+
+        switch (this) {
+        case BOOLEAN:
+            switch (limit) {
+            case ZERO:
+                return false;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond || !sign) {
+                    return null;
+                } else {
+                    return true;
+                }
+            default:
+                throw Util.unexpected(limit);
+            }
+
+        case TINYINT:
+            return getNumericLimit(2, 8, sign, limit, beyond);
+
+        case SMALLINT:
+            return getNumericLimit(2, 16, sign, limit, beyond);
+
+        case INTEGER:
+            return getNumericLimit(2, 32, sign, limit, beyond);
+
+        case BIGINT:
+            return getNumericLimit(2, 64, sign, limit, beyond);
+
+        case DECIMAL:
+            BigDecimal decimal =
+                getNumericLimit(10, precision, sign, limit, beyond);
+            if (decimal == null) {
+                return null;
+            }
+
+            // Decimal values must fit into 64 bits. So, the maximum value of
+            // a DECIMAL(19, 0) is 2^63 - 1, not 10^19 - 1.
+            switch (limit) {
+            case OVERFLOW:
+                final BigDecimal other =
+                    (BigDecimal) BIGINT.getLimit(sign, limit, beyond, -1, -1);
+                if (decimal.compareTo(other) == (sign ? 1 : -1)) {
+                    decimal = other;
+                }
+            }
+
+            // Apply scale.
+            if (scale == 0) {
+                ;
+            } else if (scale > 0) {
+                decimal = decimal.divide(BigDecimal.TEN.pow(scale));
+            } else {
+                decimal = decimal.multiply(BigDecimal.TEN.pow(-scale));
+            }
+            return decimal;
+
+        case CHAR:
+        case VARCHAR:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            StringBuilder buf = new StringBuilder();
+            switch (limit) {
+            case ZERO:
+                break;
+            case UNDERFLOW:
+                if (beyond) {
+                    // There is no value between the empty string and the
+                    // smallest non-empty string.
+                    return null;
+                }
+                buf.append("a");
+                break;
+            case OVERFLOW:
+                for (int i = 0; i < precision; ++i) {
+                    buf.append("Z");
+                }
+                if (beyond) {
+                    buf.append("Z");
+                }
+                break;
+            }
+            return buf.toString();
+
+        case BINARY:
+        case VARBINARY:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            byte [] bytes;
+            switch (limit) {
+            case ZERO:
+                bytes = new byte[0];
+                break;
+            case UNDERFLOW:
+                if (beyond) {
+                    // There is no value between the empty string and the
+                    // smallest value.
+                    return null;
+                }
+                bytes = new byte[] { 0x00 };
+                break;
+            case OVERFLOW:
+                bytes = new byte[precision + (beyond ? 1 : 0)];
+                Arrays.fill(bytes, (byte) 0xff);
+                break;
+            default:
+                throw Util.unexpected(limit);
+            }
+            return bytes;
+
+        case DATE:
+            calendar = Calendar.getInstance();
+            switch (limit) {
+            case ZERO:
+
+                // The epoch.
+                calendar.set(Calendar.YEAR, 1970);
+                calendar.set(Calendar.MONTH, 0);
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond) {
+                    // It is impossible to represent an invalid year as a date
+                    // literal. SQL dates are represented as 'yyyy-mm-dd', and
+                    // 1 <= yyyy <= 9999 is valid. There is no year 0: the year
+                    // before 1AD is 1BC, so SimpleDateFormat renders the day
+                    // before 0001-01-01 (AD) as 0001-12-31 (BC), which looks
+                    // like a valid date.
+                    return null;
+                }
+
+                // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
+                // between 1 and 9999, and days/months are the valid Gregorian
+                // calendar values for these years.
+                if (sign) {
+                    calendar.set(Calendar.YEAR, 9999);
+                    calendar.set(Calendar.MONTH, 11);
+                    calendar.set(Calendar.DAY_OF_MONTH, 31);
+                } else {
+                    calendar.set(Calendar.YEAR, 1);
+                    calendar.set(Calendar.MONTH, 0);
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                }
+                break;
+            }
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            return calendar;
+
+        case TIME:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            if (beyond) {
+                return null; // invalid values are impossible to represent
+            }
+            calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+            switch (limit) {
+            case ZERO:
+
+                // The epoch.
+                calendar.set(Calendar.HOUR_OF_DAY, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                calendar.set(Calendar.HOUR_OF_DAY, 23);
+                calendar.set(Calendar.MINUTE, 59);
+                calendar.set(Calendar.SECOND, 59);
+                int millis =
+                    (precision >= 3) ? 999
+                    : ((precision == 2) ? 990 : ((precision == 1) ? 900 : 0));
+                calendar.set(Calendar.MILLISECOND, millis);
+                break;
+            }
+            return calendar;
+
+        case TIMESTAMP:
+            calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+            switch (limit) {
+            case ZERO:
+
+                // The epoch.
+                calendar.set(Calendar.YEAR, 1970);
+                calendar.set(Calendar.MONTH, 0);
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+                calendar.set(Calendar.HOUR_OF_DAY, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond) {
+                    // It is impossible to represent an invalid year as a date
+                    // literal. SQL dates are represented as 'yyyy-mm-dd', and
+                    // 1 <= yyyy <= 9999 is valid. There is no year 0: the year
+                    // before 1AD is 1BC, so SimpleDateFormat renders the day
+                    // before 0001-01-01 (AD) as 0001-12-31 (BC), which looks
+                    // like a valid date.
+                    return null;
+                }
+
+                // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
+                // between 1 and 9999, and days/months are the valid Gregorian
+                // calendar values for these years.
+                if (sign) {
+                    calendar.set(Calendar.YEAR, 9999);
+                    calendar.set(Calendar.MONTH, 11);
+                    calendar.set(Calendar.DAY_OF_MONTH, 31);
+                    calendar.set(Calendar.HOUR_OF_DAY, 23);
+                    calendar.set(Calendar.MINUTE, 59);
+                    calendar.set(Calendar.SECOND, 59);
+                    int millis =
+                        (precision >= 3) ? 999
+                        : ((precision == 2) ? 990
+                            : ((precision == 1) ? 900 : 0));
+                    calendar.set(Calendar.MILLISECOND, millis);
+                } else {
+                    calendar.set(Calendar.YEAR, 1);
+                    calendar.set(Calendar.MONTH, 0);
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);
+                }
+                break;
+            }
+            return calendar;
+
+        default:
+            throw Util.unexpected(this);
+        }
+    }
+
+    /**
+     * Returns the maximum precision (or length) allowed for this type, or -1 if
+     * precision/length are not applicable for this type.
+     *
+     * @return Maximum allowed precision
+     */
+    public int getMaxPrecision()
+    {
+        switch (this) {
+        case DECIMAL:
+            return MAX_NUMERIC_PRECISION;
+        case VARCHAR:
+        case CHAR:
+            return MAX_CHAR_LENGTH;
+        case VARBINARY:
+        case BINARY:
+            return MAX_BINARY_LENGTH;
+        case TIME:
+        case TIMESTAMP:
+            return MAX_DATETIME_PRECISION;
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return MAX_INTERVAL_START_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the maximum scale (or fractional second precision in the case of
+     * intervals) allowed for this type, or -1 if precision/length are not
+     * applicable for this type.
+     *
+     * @return Maximum allowed scale
+     */
+    public int getMaxScale()
+    {
+        switch (this) {
+        case DECIMAL:
+            return MAX_NUMERIC_SCALE;
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the minimum precision (or length) allowed for this type, or -1 if
+     * precision/length are not applicable for this type.
+     *
+     * @return Minimum allowed precision
+     */
+    public int getMinPrecision()
+    {
+        switch (this) {
+        case DECIMAL:
+        case VARCHAR:
+        case CHAR:
+        case VARBINARY:
+        case BINARY:
+        case TIME:
+        case TIMESTAMP:
+            return 1;
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return MIN_INTERVAL_START_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the minimum scale (or fractional second precision in the case of
+     * intervals) allowed for this type, or -1 if precision/length are not
+     * applicable for this type.
+     *
+     * @return Minimum allowed scale
+     */
+    public int getMinScale()
+    {
+        switch (this) {
+        //TODO: Minimum numeric scale for decimal
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+            return MIN_INTERVAL_FRACTIONAL_SECOND_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    public enum Limit
+    {
+        ZERO, UNDERFLOW, OVERFLOW
+    }
+
+    private BigDecimal getNumericLimit(
+        int radix,
+        int exponent,
+        boolean sign,
+        Limit limit,
+        boolean beyond)
+    {
+        switch (limit) {
+        case OVERFLOW:
+
+            // 2-based schemes run from -2^(N-1) to 2^(N-1)-1 e.g. -128 to +127
+            // 10-based schemas run from -(10^N-1) to 10^N-1 e.g. -99 to +99
+            final BigDecimal bigRadix = BigDecimal.valueOf(radix);
+            if (radix == 2) {
+                --exponent;
+            }
+            BigDecimal decimal = bigRadix.pow(exponent);
+            if (sign || (radix != 2)) {
+                decimal = decimal.subtract(BigDecimal.ONE);
+            }
+            if (beyond) {
+                decimal = decimal.add(BigDecimal.ONE);
+            }
+            if (!sign) {
+                decimal = decimal.negate();
+            }
+            return decimal;
+        case UNDERFLOW:
+            return beyond ? null
+                : (sign ? BigDecimal.ONE : BigDecimal.ONE.negate());
+        case ZERO:
+            return BigDecimal.ZERO;
+        default:
+            throw Util.unexpected(limit);
+        }
+    }
+
+    public SqlLiteral createLiteral(Object o, SqlParserPos pos)
+    {
+        switch (this) {
+        case BOOLEAN:
+            return SqlLiteral.createBoolean((Boolean) o, pos);
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case BIGINT:
+        case DECIMAL:
+            return SqlLiteral.createExactNumeric(o.toString(), pos);
+        case VARCHAR:
+        case CHAR:
+            return SqlLiteral.createCharString((String) o, pos);
+        case VARBINARY:
+        case BINARY:
+            return SqlLiteral.createBinaryString((byte []) o, pos);
+        case DATE:
+            return SqlLiteral.createDate((Calendar) o, pos);
+        case TIME:
+            return SqlLiteral.createTime((Calendar) o, 0 /* todo */, pos);
+        case TIMESTAMP:
+            return SqlLiteral.createTimestamp((Calendar) o, 0 /* todo */, pos);
+        default:
+            throw Util.unexpected(this);
+        }
+    }
+
+    /**
+     * @return name of this type
+     */
+    public String getName()
+    {
+        return toString();
+    }
+
+    /**
+     * Flags indicating precision/scale combinations.
+     *
+     * <p>Note: for intervals:
+     *
+     * <ul>
+     * <li>precision = start (leading field) precision</li>
+     * <li>scale = fractional second precision</li>
+     * </ul>
+     */
+    private interface PrecScale
+    {
+        int NoNo = 1;
+        int YesNo = 2;
+        int YesYes = 4;
     }
 }
 

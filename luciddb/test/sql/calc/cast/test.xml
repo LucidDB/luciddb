@@ -18,6 +18,19 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/basic.sql"/>
       </test>
 
+      <test name="nulls">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/nulls.sql"/>
+      </test>
+
+      <test name="datetime" requiresSuccess="setup">
+        <!-- UNRESOLVED ISSUE: FRG-133 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/datetime.sql"/>
+      </test>
+
+      
       <test name="cleanup">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/cleanup.sql"/>
       </test>

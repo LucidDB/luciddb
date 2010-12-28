@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,7 +25,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.traverse.*;
 
 
 // TODO jvs 6-Sep-2005:  use this in FarragoReposImpl for class name
@@ -40,7 +40,6 @@ import org._3pq.jgrapht.traverse.*;
  */
 public class JmiResourceMap
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JmiModelView modelView;
@@ -67,7 +66,7 @@ public class JmiResourceMap
     {
         this.modelView = modelView;
         map = new HashMap<JmiClassVertex, String>();
-        Enumeration keyEnum = bundle.getKeys();
+        Enumeration<String> keyEnum = bundle.getKeys();
         int prefixLength = 0;
         int suffixLength = 0;
         if (prefix != null) {
@@ -77,7 +76,7 @@ public class JmiResourceMap
             suffixLength = suffix.length();
         }
         while (keyEnum.hasMoreElements()) {
-            String key = (String) keyEnum.nextElement();
+            String key = keyEnum.nextElement();
             if (prefix != null) {
                 if (!key.startsWith(prefix)) {
                     continue;
@@ -104,26 +103,22 @@ public class JmiResourceMap
         // subclasses to superclasses; for each class, fill in all of its
         // subclass mappings except for the ones that are set already.  There
         // are more efficient means, but...
-        List topoList = new ArrayList();
-        Iterator topoIter =
-            new TopologicalOrderIterator(
+        List<JmiClassVertex> topoList = new ArrayList<JmiClassVertex>();
+        Iterator<JmiClassVertex> topoIter =
+            new TopologicalOrderIterator<JmiClassVertex, JmiInheritanceEdge>(
                 modelView.getModelGraph().getInheritanceGraph());
         while (topoIter.hasNext()) {
             topoList.add(topoIter.next());
         }
         Collections.reverse(topoList);
-        topoIter = topoList.iterator();
-        while (topoIter.hasNext()) {
-            JmiClassVertex classVertex = (JmiClassVertex) topoIter.next();
+        for (JmiClassVertex classVertex : topoList) {
             String value = map.get(classVertex);
             if (value == null) {
                 continue;
             }
-            Iterator subclassIter =
-                modelView.getAllSubclassVertices(classVertex).iterator();
-            while (subclassIter.hasNext()) {
-                JmiClassVertex subclassVertex =
-                    (JmiClassVertex) subclassIter.next();
+            final Set<JmiClassVertex> subclassVertices =
+                modelView.getAllSubclassVertices(classVertex);
+            for (JmiClassVertex subclassVertex : subclassVertices) {
                 if (!map.containsKey(subclassVertex)) {
                     map.put(subclassVertex, value);
                 }

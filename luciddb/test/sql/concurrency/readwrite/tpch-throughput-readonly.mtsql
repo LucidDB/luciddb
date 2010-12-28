@@ -1,0 +1,1959 @@
+@nolockstep
+
+@setup
+  set schema 'rwconcur';
+  
+  --load tables
+  insert into nation select * from "nation";
+  insert into region select * from "region";
+  insert into part select * from "part";
+  insert into supplier select * from "supplier";
+  insert into customer select * from "customer";
+  insert into partsupp select * from "partsupp";
+  insert into orders select * from "orders";
+  insert into lineitem select * from "lineitem";
+ 
+  --create views for all threads (otherwise ddl errors)
+  CREATE VIEW REVENUE0 (SUPPLIER_NO, TOTAL_REVENUE) AS
+    SELECT L_SUPPKEY, SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT))
+    FROM LINEITEM
+    WHERE
+        L_SHIPDATE >= DATE'1996-01-01' AND
+        L_SHIPDATE < DATE'1996-04-01'
+    GROUP BY L_SUPPKEY;
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table Nation;
+    truncate table Region;
+    truncate table Part;
+    truncate table Supplier;
+    truncate table Customer;
+    truncate table PartSupp;
+    truncate table Orders;
+    truncate table LineItem;
+    drop view revenue0;
+
+@end
+
+-----------------------------------------------------------
+
+@thread queries1
+
+  set schema 'rwconcur';
+
+  @sync
+
+--
+--3.sql
+--
+
+@rowlimit 10 SELECT 
+    L_ORDERKEY,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    C_MKTSEGMENT = 'BUILDING' AND
+    C_CUSTKEY = O_CUSTKEY AND
+    L_ORDERKEY = O_ORDERKEY AND
+    O_ORDERDATE < DATE '1995-03-15' AND
+    L_SHIPDATE > DATE '1995-03-15'
+GROUP BY
+    L_ORDERKEY,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+ORDER BY
+    REVENUE DESC,
+    O_ORDERDATE;
+
+--
+--18.sql
+--
+
+@rowlimit 10 SELECT
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE,
+    SUM(L_QUANTITY)
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    O_ORDERKEY IN (
+        SELECT
+            L_ORDERKEY
+        FROM
+            LINEITEM
+        GROUP BY
+            L_ORDERKEY 
+        HAVING
+            SUM(L_QUANTITY) > 300
+    )
+    AND C_CUSTKEY = O_CUSTKEY
+    AND O_ORDERKEY = L_ORDERKEY
+GROUP BY
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE
+ORDER BY
+    O_TOTALPRICE DESC,
+    O_ORDERDATE;
+
+--
+--5.sql
+--
+
+SELECT
+     N_NAME,
+     SUM(L_EXTENDEDPRICE * ( 1 - L_DISCOUNT)) AS REVENUE
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    SUPPLIER,
+    NATION,
+    REGION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND L_SUPPKEY = S_SUPPKEY
+    AND C_NATIONKEY = S_NATIONKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_REGIONKEY = R_REGIONKEY
+    AND R_NAME = 'ASIA'
+    AND O_ORDERDATE >=  date '1994-01-01'
+    AND O_ORDERDATE < DATE '1995-01-01'
+GROUP BY
+    N_NAME
+ORDER BY 
+    REVENUE DESC;
+
+--
+--11.sql
+--
+
+-- FIXME zfong 1/19/09 - All instances of query 11 should be parameterized to
+-- take into account the scale factor
+
+SELECT
+    PS_PARTKEY,
+    SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
+FROM
+    PARTSUPP,
+    SUPPLIER,
+    NATION
+WHERE
+    PS_SUPPKEY = S_SUPPKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_NAME = 'GERMANY'
+GROUP BY
+    PS_PARTKEY HAVING
+        SUM(PS_SUPPLYCOST * PS_AVAILQTY) > (
+            SELECT
+                SUM(PS_SUPPLYCOST * PS_AVAILQTY) * (0.0001 / 0.1)
+            FROM
+                PARTSUPP,
+                SUPPLIER,
+                NATION
+            WHERE
+                PS_SUPPKEY = S_SUPPKEY
+                AND S_NATIONKEY = N_NATIONKEY
+                AND N_NAME = 'GERMANY'
+            )
+ORDER BY
+    VAL DESC;
+
+--
+--7.sql
+--
+
+SELECT
+    SUPP_NATION,
+    CUST_NATION,
+    YYEAR,
+    SUM(VOLUME) AS REVENUE
+FROM
+    (SELECT 
+        N1.N_NAME AS SUPP_NATION,
+        N2.N_NAME AS CUST_NATION,
+        APPLIB.DATE_TO_CHAR('yyyy', L_SHIPDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME
+     FROM
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2
+     WHERE
+        S_SUPPKEY = L_SUPPKEY
+        AND O_ORDERKEY = L_ORDERKEY
+        AND C_CUSTKEY = O_CUSTKEY
+        AND S_NATIONKEY = N1.N_NATIONKEY
+        AND C_NATIONKEY = N2.N_NATIONKEY
+        AND ((N1.N_NAME = 'FRANCE' AND N2.N_NAME = 'GERMANY')
+                OR (N1.N_NAME = 'GERMANY' AND N2.N_NAME = 'FRANCE'))
+        AND L_SHIPDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        ) AS SHIPPING
+GROUP BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR
+ORDER BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR;
+
+--
+--6.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) AS REVENUE
+FROM LINEITEM
+WHERE
+    L_SHIPDATE >= DATE '1994-01-01' AND
+    L_SHIPDATE < date '1995-01-01' AND
+    L_DISCOUNT BETWEEN .06 - 0.01 AND .06 + 0.01 AND
+    L_QUANTITY <  24;
+
+--
+--20.sql
+--
+
+SELECT
+    S_NAME,
+    S_ADDRESS
+FROM
+    SUPPLIER,
+    NATION
+WHERE
+    S_SUPPKEY IN (
+        SELECT
+            PS_SUPPKEY
+        FROM
+            PARTSUPP
+        WHERE
+            PS_PARTKEY IN (
+                SELECT
+                    P_PARTKEY
+                FROM
+                    PART
+                WHERE
+                    P_NAME LIKE 'forest%'
+            )
+        AND PS_AVAILQTY > (
+            SELECT
+                0.5 * SUM(L_QUANTITY)
+            FROM
+                LINEITEM
+            WHERE
+                L_PARTKEY = PS_PARTKEY
+                AND L_SUPPKEY = PS_SUPPKEY
+                AND L_SHIPDATE >= DATE '1994-01-01'
+                AND L_SHIPDATE < DATE '1995-01-01'
+            )
+        )
+        AND S_NATIONKEY = N_NATIONKEY
+        AND N_NAME = 'CANADA'
+ORDER BY
+    S_NAME;
+
+--
+--17.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
+FROM LINEITEM L, PART,
+     (SELECT L1.L_PARTKEY, (0.2 * AVG(L_QUANTITY)) AS AVGQTY 
+      FROM LINEITEM L1
+      GROUP BY L1.L_PARTKEY) AS TEMP
+WHERE
+    P_PARTKEY = L.L_PARTKEY AND
+    P_BRAND = 'Brand#23' AND
+    P_CONTAINER = 'MED BOX' AND
+    P_PARTKEY = TEMP.L_PARTKEY AND
+    L.L_QUANTITY < TEMP.AVGQTY;
+
+--
+--12.sql
+--
+
+SELECT
+    L_SHIPMODE,
+    SUM(CASE WHEN O_ORDERPRIORITY = '1-URGENT'
+               OR O_ORDERPRIORITY = '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS HIGH_LINE_COUNT,
+    SUM(CASE WHEN O_ORDERPRIORITY <> '1-URGENT'
+               AND O_ORDERPRIORITY <> '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS LOW_LINE_COUNT
+FROM ORDERS, LINEITEM
+WHERE
+       O_ORDERKEY = L_ORDERKEY
+AND L_SHIPMODE IN ('MAIL', 'SHIP')
+AND L_COMMITDATE < L_RECEIPTDATE
+AND L_SHIPDATE < L_COMMITDATE
+AND L_RECEIPTDATE >= DATE'1994-01-01'
+AND L_RECEIPTDATE < DATE'1995-01-01'
+GROUP BY L_SHIPMODE
+ORDER BY L_SHIPMODE;
+
+--
+--16.sql
+--
+
+@rowlimit 10 SELECT
+    P_BRAND,
+    P_TYPE,
+    P_SIZE,
+    COUNT(DISTINCT PS_SUPPKEY) AS SUPPLIER_CNT
+FROM
+    PARTSUPP,
+    PART
+WHERE
+    P_PARTKEY = PS_PARTKEY
+    AND P_BRAND <> 'Brand#45'
+    AND P_TYPE NOT LIKE 'MEDIUM POLISHED%'
+    AND P_SIZE IN (49, 14, 23, 45, 19, 3, 36, 9)
+    AND PS_SUPPKEY NOT IN (
+        SELECT
+            S_SUPPKEY
+        FROM
+            SUPPLIER
+        WHERE
+            S_COMMENT LIKE '%Customer%Complaints%'
+    )
+GROUP BY
+    P_BRAND,
+    P_TYPE,
+    P_SIZE
+ORDER BY
+    SUPPLIER_CNT DESC,
+    P_BRAND,
+    P_TYPE,
+    P_SIZE;
+
+--
+--15.sql
+--
+
+SELECT
+    S_SUPPKEY,
+    S_NAME,
+    S_ADDRESS,
+    S_PHONE,
+    TOTAL_REVENUE
+FROM
+    SUPPLIER,
+    REVENUE0
+WHERE
+    S_SUPPKEY = SUPPLIER_NO
+    AND TOTAL_REVENUE = (
+        SELECT
+            MAX(TOTAL_REVENUE)
+        FROM
+            REVENUE0
+    )
+ORDER BY
+    S_SUPPKEY;
+
+--
+--13.sql
+--
+
+SELECT
+    C_COUNT, COUNT(*) AS CUSTDIST
+FROM (
+    SELECT
+        C_CUSTKEY,
+        COUNT(O_ORDERKEY)
+    FROM
+        CUSTOMER LEFT OUTER JOIN ORDERS ON
+            C_CUSTKEY = O_CUSTKEY
+            AND O_COMMENT NOT LIKE '%special%requests%' 
+    GROUP BY
+        C_CUSTKEY
+    )AS C_ORDERS (C_CUSTKEY, C_COUNT)
+GROUP BY
+    C_COUNT
+ORDER BY
+    CUSTDIST DESC,
+    C_COUNT DESC;
+
+--
+--10.sql
+--
+
+@rowlimit 10 SELECT
+    C_CUSTKEY,
+    C_NAME,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    C_ACCTBAL,
+    N_NAME,
+    C_ADDRESS,
+    C_PHONE,
+    C_COMMENT
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    NATION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND O_ORDERDATE >= date '1993-10-01'
+    AND O_ORDERDATE < DATE '1994-01-01' 
+    AND L_RETURNFLAG = 'R'
+    AND C_NATIONKEY = N_NATIONKEY
+GROUP BY
+    C_CUSTKEY,
+    C_NAME,
+    C_ACCTBAL,
+    C_PHONE,
+    N_NAME,
+    C_ADDRESS,
+    C_COMMENT
+ORDER BY
+    REVENUE DESC;
+
+--
+--2.sql
+--
+
+@rowlimit 10 SELECT S.S_ACCTBAL, S.S_NAME, N_NAME, PS.PS_PARTKEY, P.P_MFGR,
+       S.S_ADDRESS, S.S_PHONE, S.S_COMMENT
+FROM PART P, SUPPLIER S, PARTSUPP PS, NATION, REGION,
+     (SELECT PS1.PS_PARTKEY, MIN(PS1.PS_SUPPLYCOST) AS MINCOST
+      FROM PARTSUPP PS1, SUPPLIER S1, NATION N1, REGION R1
+      WHERE PS1.PS_SUPPKEY = S1.S_SUPPKEY AND
+            S1.S_NATIONKEY = N1.N_NATIONKEY AND
+            N1.N_REGIONKEY = R1.R_REGIONKEY AND
+            R1.R_NAME = 'EUROPE'
+      GROUP BY PS1.PS_PARTKEY) AS TEMP
+WHERE P.P_PARTKEY = PS.PS_PARTKEY AND
+      S.S_SUPPKEY = PS.PS_SUPPKEY AND
+      P.P_SIZE = 15 AND
+      P.P_TYPE LIKE '%BRASS' AND
+      S.S_NATIONKEY = N_NATIONKEY AND
+      N_REGIONKEY = R_REGIONKEY AND
+      PS.PS_PARTKEY = TEMP.PS_PARTKEY AND
+      PS.PS_SUPPLYCOST = TEMP.MINCOST
+ORDER BY S.S_ACCTBAL DESC, N_NAME, S.S_NAME, PS.PS_PARTKEY;
+
+--
+--8.sql
+--
+
+SELECT
+     YYEAR,
+     CAST(SUM(CASE WHEN NATION = 'BRAZIL'
+                   THEN VOLUME
+                   ELSE 0
+              END) AS DECIMAL(19,4))*1.0000 / 
+     CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
+FROM (SELECT
+        APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME,
+        N2.N_NAME AS NATION
+    FROM 
+        PART,
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2,
+        REGION
+    WHERE
+        P_PARTKEY = L_PARTKEY
+        AND S_SUPPKEY = L_SUPPKEY
+        AND L_ORDERKEY = O_ORDERKEY
+        AND O_CUSTKEY = C_CUSTKEY
+        AND C_NATIONKEY = N1.N_NATIONKEY
+        AND N1.N_REGIONKEY = R_REGIONKEY
+        AND R_NAME = 'AMERICA'
+        AND S_NATIONKEY = N2.N_NATIONKEY
+        AND O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        AND P_TYPE = 'ECONOMY ANODIZED STEEL') AS ALL_NATIONS
+GROUP BY YYEAR
+ORDER BY YYEAR;
+
+-- 
+-- 19.sql
+--
+
+SELECT
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) ) AS REVENUE
+FROM
+    LINEITEM,
+    PART
+WHERE
+    P_PARTKEY = L_PARTKEY
+    AND
+    ((
+         P_BRAND = 'Brand#12'
+         AND P_CONTAINER IN ( 'SM CASE', 'SM BOX', 'SM PACK', 'SM PKG')
+         AND L_QUANTITY >= 1 AND L_QUANTITY <= 1 + 10
+         AND P_SIZE BETWEEN 1 AND 5
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#23'
+         AND P_CONTAINER IN ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')
+         AND L_QUANTITY >= 10 AND L_QUANTITY <= 10 + 10
+         AND P_SIZE BETWEEN 1 AND 10
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#34'
+         AND P_CONTAINER IN ( 'LG CASE', 'LG BOX', 'LG PACK', 'LG PKG')
+         AND L_QUANTITY >= 20 AND L_QUANTITY <= 20 + 10
+         AND P_SIZE BETWEEN 1 AND 15
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    ));
+
+--
+--14.sql
+--
+
+SELECT
+    100.00 * SUM(CASE WHEN P_TYPE LIKE 'PROMO%'
+                   THEN L_EXTENDEDPRICE * (1 - L_DISCOUNT)
+                   ELSE 0
+                END) / SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT))
+                AS PROMO_REVENUE
+FROM LINEITEM, PART
+WHERE L_PARTKEY = P_PARTKEY
+    AND L_SHIPDATE >= DATE'1995-09-01'
+    AND L_SHIPDATE < DATE'1995-10-01';
+
+--
+--9.sql
+--
+
+@rowlimit 10 SELECT
+    NATION,
+    YYEAR,
+    SUM(AMOUNT) AS SUM_PROFIT
+FROM (SELECT
+          N_NAME AS NATION,  
+          APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+          L_EXTENDEDPRICE * (1 - L_DISCOUNT) - PS_SUPPLYCOST * L_QUANTITY AS AMOUNT
+      FROM
+          PART,
+          SUPPLIER,
+          LINEITEM,
+          PARTSUPP,
+          ORDERS,
+          NATION
+      WHERE
+          S_SUPPKEY = L_SUPPKEY
+          AND PS_SUPPKEY = L_SUPPKEY
+          AND PS_PARTKEY = L_PARTKEY
+          AND P_PARTKEY = L_PARTKEY
+          AND O_ORDERKEY = L_ORDERKEY
+          AND S_NATIONKEY = N_NATIONKEY
+          AND P_NAME LIKE '%green%'
+      ) AS PROFIT
+GROUP BY
+    NATION,
+    YYEAR
+ORDER BY
+    NATION,
+    YYEAR DESC;
+
+--
+--1.sql
+--
+
+SELECT
+    L_RETURNFLAG,
+    L_LINESTATUS,
+    SUM(L_QUANTITY) AS SUM_QTY,
+    SUM(L_EXTENDEDPRICE) AS SUM_BASE_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS SUM_DISC_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) AS SUM_CHARGE,
+    AVG(L_QUANTITY) AS AVG_QTY,
+    AVG(L_EXTENDEDPRICE) AS AVG_PRICE,
+    AVG(L_DISCOUNT) AS AVG_DISC,
+    COUNT(*) AS COUNT_ORDER
+FROM
+    LINEITEM
+WHERE
+    L_SHIPDATE <=  APPLIB.ADD_DAYS(DATE '1998-12-01', -90)
+GROUP BY
+    L_RETURNFLAG,
+    L_LINESTATUS
+ORDER BY
+    L_RETURNFLAG,
+    L_LINESTATUS;
+
+--
+--4.sql
+--
+
+SELECT
+    O_ORDERPRIORITY,
+    COUNT(*) AS ORDER_COUNT
+FROM ORDERS
+WHERE
+    O_ORDERDATE >= DATE '1993-07-01'
+    AND O_ORDERDATE < DATE '1993-10-01'
+    AND EXISTS (
+        SELECT
+            *
+        FROM
+            LINEITEM
+        WHERE
+            L_ORDERKEY = O_ORDERKEY
+            AND L_COMMITDATE < L_RECEIPTDATE
+    )
+GROUP BY
+    O_ORDERPRIORITY
+ORDER BY
+    O_ORDERPRIORITY;
+
+--
+-- 22.sql
+--
+
+SELECT
+    CNTRYCODE,
+    COUNT(*) AS NUMCUST,
+    SUM(C_ACCTBAL) AS TOTACCTBAL
+FROM (
+    SELECT
+        SUBSTRING(C_PHONE FROM 1 FOR 2) AS CNTRYCODE,
+        C_ACCTBAL
+    FROM
+        CUSTOMER
+    WHERE
+        SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+            ('13','31','23','29','30','18','17')
+        AND C_ACCTBAL > (
+            SELECT
+                AVG(C_ACCTBAL)
+            FROM
+                CUSTOMER
+            WHERE
+                C_ACCTBAL > 0.00
+                AND SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+                       ('13','31','23','29','30','18','17')
+        )
+        AND NOT EXISTS (
+            SELECT
+                *
+            FROM
+                ORDERS
+            WHERE
+                O_CUSTKEY = C_CUSTKEY
+        )
+    ) AS CUSTSALE
+GROUP BY
+    CNTRYCODE
+ORDER BY
+    CNTRYCODE;
+ 
+  @sync
+@end
+
+-----------------------------------------------------------
+
+@thread queries2
+
+  set schema 'rwconcur';
+
+  @sync
+
+--
+-- 22.sql
+--
+
+SELECT
+    CNTRYCODE,
+    COUNT(*) AS NUMCUST,
+    SUM(C_ACCTBAL) AS TOTACCTBAL
+FROM (
+    SELECT
+        SUBSTRING(C_PHONE FROM 1 FOR 2) AS CNTRYCODE,
+        C_ACCTBAL
+    FROM
+        CUSTOMER
+    WHERE
+        SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+            ('13','31','23','29','30','18','17')
+        AND C_ACCTBAL > (
+            SELECT
+                AVG(C_ACCTBAL)
+            FROM
+                CUSTOMER
+            WHERE
+                C_ACCTBAL > 0.00
+                AND SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+                       ('13','31','23','29','30','18','17')
+        )
+        AND NOT EXISTS (
+            SELECT
+                *
+            FROM
+                ORDERS
+            WHERE
+                O_CUSTKEY = C_CUSTKEY
+        )
+    ) AS CUSTSALE
+GROUP BY
+    CNTRYCODE
+ORDER BY
+    CNTRYCODE;
+
+--
+--6.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) AS REVENUE
+FROM LINEITEM
+WHERE
+    L_SHIPDATE >= DATE '1994-01-01' AND
+    L_SHIPDATE < date '1995-01-01' AND
+    L_DISCOUNT BETWEEN .06 - 0.01 AND .06 + 0.01 AND
+    L_QUANTITY <  24;
+
+--
+--17.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
+FROM LINEITEM L, PART,
+     (SELECT L1.L_PARTKEY, (0.2 * AVG(L_QUANTITY)) AS AVGQTY 
+      FROM LINEITEM L1
+      GROUP BY L1.L_PARTKEY) AS TEMP
+WHERE
+    P_PARTKEY = L.L_PARTKEY AND
+    P_BRAND = 'Brand#23' AND
+    P_CONTAINER = 'MED BOX' AND
+    P_PARTKEY = TEMP.L_PARTKEY AND
+    L.L_QUANTITY < TEMP.AVGQTY;
+
+--
+--14.sql
+--
+
+SELECT
+    100.00 * SUM(CASE WHEN P_TYPE LIKE 'PROMO%'
+                   THEN L_EXTENDEDPRICE * (1 - L_DISCOUNT)
+                   ELSE 0
+                END) / SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT))
+                AS PROMO_REVENUE
+FROM LINEITEM, PART
+WHERE L_PARTKEY = P_PARTKEY
+    AND L_SHIPDATE >= DATE'1995-09-01'
+    AND L_SHIPDATE < DATE'1995-10-01';
+
+--
+--16.sql
+--
+
+@rowlimit 10 SELECT
+    P_BRAND,
+    P_TYPE,
+    P_SIZE,
+    COUNT(DISTINCT PS_SUPPKEY) AS SUPPLIER_CNT
+FROM
+    PARTSUPP,
+    PART
+WHERE
+    P_PARTKEY = PS_PARTKEY
+    AND P_BRAND <> 'Brand#45'
+    AND P_TYPE NOT LIKE 'MEDIUM POLISHED%'
+    AND P_SIZE IN (49, 14, 23, 45, 19, 3, 36, 9)
+    AND PS_SUPPKEY NOT IN (
+        SELECT
+            S_SUPPKEY
+        FROM
+            SUPPLIER
+        WHERE
+            S_COMMENT LIKE '%Customer%Complaints%'
+    )
+GROUP BY
+    P_BRAND,
+    P_TYPE,
+    P_SIZE
+ORDER BY
+    SUPPLIER_CNT DESC,
+    P_BRAND,
+    P_TYPE,
+    P_SIZE;
+
+--
+--10.sql
+--
+
+@rowlimit 10 SELECT
+    C_CUSTKEY,
+    C_NAME,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    C_ACCTBAL,
+    N_NAME,
+    C_ADDRESS,
+    C_PHONE,
+    C_COMMENT
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    NATION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND O_ORDERDATE >= date '1993-10-01'
+    AND O_ORDERDATE < DATE '1994-01-01' 
+    AND L_RETURNFLAG = 'R'
+    AND C_NATIONKEY = N_NATIONKEY
+GROUP BY
+    C_CUSTKEY,
+    C_NAME,
+    C_ACCTBAL,
+    C_PHONE,
+    N_NAME,
+    C_ADDRESS,
+    C_COMMENT
+ORDER BY
+    REVENUE DESC;
+
+--
+--9.sql
+--
+
+@rowlimit 10 SELECT
+    NATION,
+    YYEAR,
+    SUM(AMOUNT) AS SUM_PROFIT
+FROM (SELECT
+          N_NAME AS NATION,  
+          APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+          L_EXTENDEDPRICE * (1 - L_DISCOUNT) - PS_SUPPLYCOST * L_QUANTITY AS AMOUNT
+      FROM
+          PART,
+          SUPPLIER,
+          LINEITEM,
+          PARTSUPP,
+          ORDERS,
+          NATION
+      WHERE
+          S_SUPPKEY = L_SUPPKEY
+          AND PS_SUPPKEY = L_SUPPKEY
+          AND PS_PARTKEY = L_PARTKEY
+          AND P_PARTKEY = L_PARTKEY
+          AND O_ORDERKEY = L_ORDERKEY
+          AND S_NATIONKEY = N_NATIONKEY
+          AND P_NAME LIKE '%green%'
+      ) AS PROFIT
+GROUP BY
+    NATION,
+    YYEAR
+ORDER BY
+    NATION,
+    YYEAR DESC;
+
+--
+--2.sql
+--
+
+@rowlimit 10 SELECT S.S_ACCTBAL, S.S_NAME, N_NAME, PS.PS_PARTKEY, P.P_MFGR,
+       S.S_ADDRESS, S.S_PHONE, S.S_COMMENT
+FROM PART P, SUPPLIER S, PARTSUPP PS, NATION, REGION,
+     (SELECT PS1.PS_PARTKEY, MIN(PS1.PS_SUPPLYCOST) AS MINCOST
+      FROM PARTSUPP PS1, SUPPLIER S1, NATION N1, REGION R1
+      WHERE PS1.PS_SUPPKEY = S1.S_SUPPKEY AND
+            S1.S_NATIONKEY = N1.N_NATIONKEY AND
+            N1.N_REGIONKEY = R1.R_REGIONKEY AND
+            R1.R_NAME = 'EUROPE'
+      GROUP BY PS1.PS_PARTKEY) AS TEMP
+WHERE P.P_PARTKEY = PS.PS_PARTKEY AND
+      S.S_SUPPKEY = PS.PS_SUPPKEY AND
+      P.P_SIZE = 15 AND
+      P.P_TYPE LIKE '%BRASS' AND
+      S.S_NATIONKEY = N_NATIONKEY AND
+      N_REGIONKEY = R_REGIONKEY AND
+      PS.PS_PARTKEY = TEMP.PS_PARTKEY AND
+      PS.PS_SUPPLYCOST = TEMP.MINCOST
+ORDER BY S.S_ACCTBAL DESC, N_NAME, S.S_NAME, PS.PS_PARTKEY;
+
+--
+-- 19.sql
+--
+
+SELECT
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) ) AS REVENUE
+FROM
+    LINEITEM,
+    PART
+WHERE
+    P_PARTKEY = L_PARTKEY
+    AND
+    ((
+         P_BRAND = 'Brand#12'
+         AND P_CONTAINER IN ( 'SM CASE', 'SM BOX', 'SM PACK', 'SM PKG')
+         AND L_QUANTITY >= 1 AND L_QUANTITY <= 1 + 10
+         AND P_SIZE BETWEEN 1 AND 5
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#23'
+         AND P_CONTAINER IN ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')
+         AND L_QUANTITY >= 10 AND L_QUANTITY <= 10 + 10
+         AND P_SIZE BETWEEN 1 AND 10
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#34'
+         AND P_CONTAINER IN ( 'LG CASE', 'LG BOX', 'LG PACK', 'LG PKG')
+         AND L_QUANTITY >= 20 AND L_QUANTITY <= 20 + 10
+         AND P_SIZE BETWEEN 1 AND 15
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    ));
+
+--
+--15.sql
+--
+
+SELECT
+    S_SUPPKEY,
+    S_NAME,
+    S_ADDRESS,
+    S_PHONE,
+    TOTAL_REVENUE
+FROM
+    SUPPLIER,
+    REVENUE0
+WHERE
+    S_SUPPKEY = SUPPLIER_NO
+    AND TOTAL_REVENUE = (
+        SELECT
+            MAX(TOTAL_REVENUE)
+        FROM
+            REVENUE0
+    )
+ORDER BY
+    S_SUPPKEY;
+
+--
+--8.sql
+--
+
+SELECT
+     YYEAR,
+     CAST(SUM(CASE WHEN NATION = 'BRAZIL'
+                   THEN VOLUME
+                   ELSE 0
+              END) AS DECIMAL(19,4))*1.0000 / 
+     CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
+FROM (SELECT
+        APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME,
+        N2.N_NAME AS NATION
+    FROM 
+        PART,
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2,
+        REGION
+    WHERE
+        P_PARTKEY = L_PARTKEY
+        AND S_SUPPKEY = L_SUPPKEY
+        AND L_ORDERKEY = O_ORDERKEY
+        AND O_CUSTKEY = C_CUSTKEY
+        AND C_NATIONKEY = N1.N_NATIONKEY
+        AND N1.N_REGIONKEY = R_REGIONKEY
+        AND R_NAME = 'AMERICA'
+        AND S_NATIONKEY = N2.N_NATIONKEY
+        AND O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        AND P_TYPE = 'ECONOMY ANODIZED STEEL') AS ALL_NATIONS
+GROUP BY YYEAR
+ORDER BY YYEAR;
+
+--
+--5.sql
+--
+
+SELECT
+     N_NAME,
+     SUM(L_EXTENDEDPRICE * ( 1 - L_DISCOUNT)) AS REVENUE
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    SUPPLIER,
+    NATION,
+    REGION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND L_SUPPKEY = S_SUPPKEY
+    AND C_NATIONKEY = S_NATIONKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_REGIONKEY = R_REGIONKEY
+    AND R_NAME = 'ASIA'
+    AND O_ORDERDATE >=  date '1994-01-01'
+    AND O_ORDERDATE < DATE '1995-01-01'
+GROUP BY
+    N_NAME
+ORDER BY 
+    REVENUE DESC;
+
+--
+--12.sql
+--
+
+SELECT
+    L_SHIPMODE,
+    SUM(CASE WHEN O_ORDERPRIORITY = '1-URGENT'
+               OR O_ORDERPRIORITY = '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS HIGH_LINE_COUNT,
+    SUM(CASE WHEN O_ORDERPRIORITY <> '1-URGENT'
+               AND O_ORDERPRIORITY <> '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS LOW_LINE_COUNT
+FROM ORDERS, LINEITEM
+WHERE
+       O_ORDERKEY = L_ORDERKEY
+AND L_SHIPMODE IN ('MAIL', 'SHIP')
+AND L_COMMITDATE < L_RECEIPTDATE
+AND L_SHIPDATE < L_COMMITDATE
+AND L_RECEIPTDATE >= DATE'1994-01-01'
+AND L_RECEIPTDATE < DATE'1995-01-01'
+GROUP BY L_SHIPMODE
+ORDER BY L_SHIPMODE;
+
+--
+--7.sql
+--
+
+SELECT
+    SUPP_NATION,
+    CUST_NATION,
+    YYEAR,
+    SUM(VOLUME) AS REVENUE
+FROM
+    (SELECT 
+        N1.N_NAME AS SUPP_NATION,
+        N2.N_NAME AS CUST_NATION,
+        APPLIB.DATE_TO_CHAR('yyyy', L_SHIPDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME
+     FROM
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2
+     WHERE
+        S_SUPPKEY = L_SUPPKEY
+        AND O_ORDERKEY = L_ORDERKEY
+        AND C_CUSTKEY = O_CUSTKEY
+        AND S_NATIONKEY = N1.N_NATIONKEY
+        AND C_NATIONKEY = N2.N_NATIONKEY
+        AND ((N1.N_NAME = 'FRANCE' AND N2.N_NAME = 'GERMANY')
+                OR (N1.N_NAME = 'GERMANY' AND N2.N_NAME = 'FRANCE'))
+        AND L_SHIPDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        ) AS SHIPPING
+GROUP BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR
+ORDER BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR;
+
+--
+--13.sql
+--
+
+SELECT
+    C_COUNT, COUNT(*) AS CUSTDIST
+FROM (
+    SELECT
+        C_CUSTKEY,
+        COUNT(O_ORDERKEY)
+    FROM
+        CUSTOMER LEFT OUTER JOIN ORDERS ON
+            C_CUSTKEY = O_CUSTKEY
+            AND O_COMMENT NOT LIKE '%special%requests%' 
+    GROUP BY
+        C_CUSTKEY
+    )AS C_ORDERS (C_CUSTKEY, C_COUNT)
+GROUP BY
+    C_COUNT
+ORDER BY
+    CUSTDIST DESC,
+    C_COUNT DESC;
+
+--
+--18.sql
+--
+
+@rowlimit 10 SELECT
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE,
+    SUM(L_QUANTITY)
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    O_ORDERKEY IN (
+        SELECT
+            L_ORDERKEY
+        FROM
+            LINEITEM
+        GROUP BY
+            L_ORDERKEY 
+        HAVING
+            SUM(L_QUANTITY) > 300
+    )
+    AND C_CUSTKEY = O_CUSTKEY
+    AND O_ORDERKEY = L_ORDERKEY
+GROUP BY
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE
+ORDER BY
+    O_TOTALPRICE DESC,
+    O_ORDERDATE;
+
+--
+--1.sql
+--
+
+SELECT
+    L_RETURNFLAG,
+    L_LINESTATUS,
+    SUM(L_QUANTITY) AS SUM_QTY,
+    SUM(L_EXTENDEDPRICE) AS SUM_BASE_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS SUM_DISC_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) AS SUM_CHARGE,
+    AVG(L_QUANTITY) AS AVG_QTY,
+    AVG(L_EXTENDEDPRICE) AS AVG_PRICE,
+    AVG(L_DISCOUNT) AS AVG_DISC,
+    COUNT(*) AS COUNT_ORDER
+FROM
+    LINEITEM
+WHERE
+    L_SHIPDATE <=  APPLIB.ADD_DAYS(DATE '1998-12-01', -90)
+GROUP BY
+    L_RETURNFLAG,
+    L_LINESTATUS
+ORDER BY
+    L_RETURNFLAG,
+    L_LINESTATUS;
+
+--
+--4.sql
+--
+
+SELECT
+    O_ORDERPRIORITY,
+    COUNT(*) AS ORDER_COUNT
+FROM ORDERS
+WHERE
+    O_ORDERDATE >= DATE '1993-07-01'
+    AND O_ORDERDATE < DATE '1993-10-01'
+    AND EXISTS (
+        SELECT
+            *
+        FROM
+            LINEITEM
+        WHERE
+            L_ORDERKEY = O_ORDERKEY
+            AND L_COMMITDATE < L_RECEIPTDATE
+    )
+GROUP BY
+    O_ORDERPRIORITY
+ORDER BY
+    O_ORDERPRIORITY;
+
+--
+--20.sql
+--
+
+SELECT
+    S_NAME,
+    S_ADDRESS
+FROM
+    SUPPLIER,
+    NATION
+WHERE
+    S_SUPPKEY IN (
+        SELECT
+            PS_SUPPKEY
+        FROM
+            PARTSUPP
+        WHERE
+            PS_PARTKEY IN (
+                SELECT
+                    P_PARTKEY
+                FROM
+                    PART
+                WHERE
+                    P_NAME LIKE 'forest%'
+            )
+        AND PS_AVAILQTY > (
+            SELECT
+                0.5 * SUM(L_QUANTITY)
+            FROM
+                LINEITEM
+            WHERE
+                L_PARTKEY = PS_PARTKEY
+                AND L_SUPPKEY = PS_SUPPKEY
+                AND L_SHIPDATE >= DATE '1994-01-01'
+                AND L_SHIPDATE < DATE '1995-01-01'
+            )
+        )
+        AND S_NATIONKEY = N_NATIONKEY
+        AND N_NAME = 'CANADA'
+ORDER BY
+    S_NAME;
+
+--
+--3.sql
+--
+
+@rowlimit 10 SELECT 
+    L_ORDERKEY,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    C_MKTSEGMENT = 'BUILDING' AND
+    C_CUSTKEY = O_CUSTKEY AND
+    L_ORDERKEY = O_ORDERKEY AND
+    O_ORDERDATE < DATE '1995-03-15' AND
+    L_SHIPDATE > DATE '1995-03-15'
+GROUP BY
+    L_ORDERKEY,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+ORDER BY
+    REVENUE DESC,
+    O_ORDERDATE;
+
+--
+--11.sql
+--
+
+SELECT
+    PS_PARTKEY,
+    SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
+FROM
+    PARTSUPP,
+    SUPPLIER,
+    NATION
+WHERE
+    PS_SUPPKEY = S_SUPPKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_NAME = 'GERMANY'
+GROUP BY
+    PS_PARTKEY HAVING
+        SUM(PS_SUPPLYCOST * PS_AVAILQTY) > (
+            SELECT
+                SUM(PS_SUPPLYCOST * PS_AVAILQTY) * (0.0001 / 0.1)
+            FROM
+                PARTSUPP,
+                SUPPLIER,
+                NATION
+            WHERE
+                PS_SUPPKEY = S_SUPPKEY
+                AND S_NATIONKEY = N_NATIONKEY
+                AND N_NAME = 'GERMANY'
+            )
+ORDER BY
+    VAL DESC;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread queries3
+
+  set schema 'rwconcur';
+
+  @sync
+
+--
+--8.sql
+--
+
+SELECT
+     YYEAR,
+     CAST(SUM(CASE WHEN NATION = 'BRAZIL'
+                   THEN VOLUME
+                   ELSE 0
+              END) AS DECIMAL(19,4))*1.0000 / 
+     CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
+FROM (SELECT
+        APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME,
+        N2.N_NAME AS NATION
+    FROM 
+        PART,
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2,
+        REGION
+    WHERE
+        P_PARTKEY = L_PARTKEY
+        AND S_SUPPKEY = L_SUPPKEY
+        AND L_ORDERKEY = O_ORDERKEY
+        AND O_CUSTKEY = C_CUSTKEY
+        AND C_NATIONKEY = N1.N_NATIONKEY
+        AND N1.N_REGIONKEY = R_REGIONKEY
+        AND R_NAME = 'AMERICA'
+        AND S_NATIONKEY = N2.N_NATIONKEY
+        AND O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        AND P_TYPE = 'ECONOMY ANODIZED STEEL') AS ALL_NATIONS
+GROUP BY YYEAR
+ORDER BY YYEAR;
+
+--
+--5.sql
+--
+
+SELECT
+     N_NAME,
+     SUM(L_EXTENDEDPRICE * ( 1 - L_DISCOUNT)) AS REVENUE
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    SUPPLIER,
+    NATION,
+    REGION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND L_SUPPKEY = S_SUPPKEY
+    AND C_NATIONKEY = S_NATIONKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_REGIONKEY = R_REGIONKEY
+    AND R_NAME = 'ASIA'
+    AND O_ORDERDATE >=  date '1994-01-01'
+    AND O_ORDERDATE < DATE '1995-01-01'
+GROUP BY
+    N_NAME
+ORDER BY 
+    REVENUE DESC;
+
+--
+--4.sql
+--
+
+SELECT
+    O_ORDERPRIORITY,
+    COUNT(*) AS ORDER_COUNT
+FROM ORDERS
+WHERE
+    O_ORDERDATE >= DATE '1993-07-01'
+    AND O_ORDERDATE < DATE '1993-10-01'
+    AND EXISTS (
+        SELECT
+            *
+        FROM
+            LINEITEM
+        WHERE
+            L_ORDERKEY = O_ORDERKEY
+            AND L_COMMITDATE < L_RECEIPTDATE
+    )
+GROUP BY
+    O_ORDERPRIORITY
+ORDER BY
+    O_ORDERPRIORITY;
+
+--
+--6.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) AS REVENUE
+FROM LINEITEM
+WHERE
+    L_SHIPDATE >= DATE '1994-01-01' AND
+    L_SHIPDATE < date '1995-01-01' AND
+    L_DISCOUNT BETWEEN .06 - 0.01 AND .06 + 0.01 AND
+    L_QUANTITY <  24;
+
+--
+--17.sql
+--
+
+SELECT SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
+FROM LINEITEM L, PART,
+     (SELECT L1.L_PARTKEY, (0.2 * AVG(L_QUANTITY)) AS AVGQTY 
+      FROM LINEITEM L1
+      GROUP BY L1.L_PARTKEY) AS TEMP
+WHERE
+    P_PARTKEY = L.L_PARTKEY AND
+    P_BRAND = 'Brand#23' AND
+    P_CONTAINER = 'MED BOX' AND
+    P_PARTKEY = TEMP.L_PARTKEY AND
+    L.L_QUANTITY < TEMP.AVGQTY;
+
+--
+--7.sql
+--
+
+SELECT
+    SUPP_NATION,
+    CUST_NATION,
+    YYEAR,
+    SUM(VOLUME) AS REVENUE
+FROM
+    (SELECT 
+        N1.N_NAME AS SUPP_NATION,
+        N2.N_NAME AS CUST_NATION,
+        APPLIB.DATE_TO_CHAR('yyyy', L_SHIPDATE) AS YYEAR,
+        L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME
+     FROM
+        SUPPLIER,
+        LINEITEM,
+        ORDERS,
+        CUSTOMER,
+        NATION N1,
+        NATION N2
+     WHERE
+        S_SUPPKEY = L_SUPPKEY
+        AND O_ORDERKEY = L_ORDERKEY
+        AND C_CUSTKEY = O_CUSTKEY
+        AND S_NATIONKEY = N1.N_NATIONKEY
+        AND C_NATIONKEY = N2.N_NATIONKEY
+        AND ((N1.N_NAME = 'FRANCE' AND N2.N_NAME = 'GERMANY')
+                OR (N1.N_NAME = 'GERMANY' AND N2.N_NAME = 'FRANCE'))
+        AND L_SHIPDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+        ) AS SHIPPING
+GROUP BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR
+ORDER BY
+     SUPP_NATION,
+     CUST_NATION,
+     YYEAR;
+
+--
+--1.sql
+--
+
+SELECT
+    L_RETURNFLAG,
+    L_LINESTATUS,
+    SUM(L_QUANTITY) AS SUM_QTY,
+    SUM(L_EXTENDEDPRICE) AS SUM_BASE_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS SUM_DISC_PRICE,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) AS SUM_CHARGE,
+    AVG(L_QUANTITY) AS AVG_QTY,
+    AVG(L_EXTENDEDPRICE) AS AVG_PRICE,
+    AVG(L_DISCOUNT) AS AVG_DISC,
+    COUNT(*) AS COUNT_ORDER
+FROM
+    LINEITEM
+WHERE
+    L_SHIPDATE <=  APPLIB.ADD_DAYS(DATE '1998-12-01', -90)
+GROUP BY
+    L_RETURNFLAG,
+    L_LINESTATUS
+ORDER BY
+    L_RETURNFLAG,
+    L_LINESTATUS;
+
+--
+--18.sql
+--
+
+@rowlimit 10 SELECT
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE,
+    SUM(L_QUANTITY)
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    O_ORDERKEY IN (
+        SELECT
+            L_ORDERKEY
+        FROM
+            LINEITEM
+        GROUP BY
+            L_ORDERKEY 
+        HAVING
+            SUM(L_QUANTITY) > 300
+    )
+    AND C_CUSTKEY = O_CUSTKEY
+    AND O_ORDERKEY = L_ORDERKEY
+GROUP BY
+    C_NAME,
+    C_CUSTKEY,
+    O_ORDERKEY,
+    O_ORDERDATE,
+    O_TOTALPRICE
+ORDER BY
+    O_TOTALPRICE DESC,
+    O_ORDERDATE;
+
+--
+--14.sql
+--
+
+SELECT
+    100.00 * SUM(CASE WHEN P_TYPE LIKE 'PROMO%'
+                   THEN L_EXTENDEDPRICE * (1 - L_DISCOUNT)
+                   ELSE 0
+                END) / SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT))
+                AS PROMO_REVENUE
+FROM LINEITEM, PART
+WHERE L_PARTKEY = P_PARTKEY
+    AND L_SHIPDATE >= DATE'1995-09-01'
+    AND L_SHIPDATE < DATE'1995-10-01';
+
+--
+--9.sql
+--
+
+@rowlimit 10 SELECT
+    NATION,
+    YYEAR,
+    SUM(AMOUNT) AS SUM_PROFIT
+FROM (SELECT
+          N_NAME AS NATION,  
+          APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
+          L_EXTENDEDPRICE * (1 - L_DISCOUNT) - PS_SUPPLYCOST * L_QUANTITY AS AMOUNT
+      FROM
+          PART,
+          SUPPLIER,
+          LINEITEM,
+          PARTSUPP,
+          ORDERS,
+          NATION
+      WHERE
+          S_SUPPKEY = L_SUPPKEY
+          AND PS_SUPPKEY = L_SUPPKEY
+          AND PS_PARTKEY = L_PARTKEY
+          AND P_PARTKEY = L_PARTKEY
+          AND O_ORDERKEY = L_ORDERKEY
+          AND S_NATIONKEY = N_NATIONKEY
+          AND P_NAME LIKE '%green%'
+      ) AS PROFIT
+GROUP BY
+    NATION,
+    YYEAR
+ORDER BY
+    NATION,
+    YYEAR DESC;
+
+--
+--10.sql
+--
+
+@rowlimit 10 SELECT
+    C_CUSTKEY,
+    C_NAME,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    C_ACCTBAL,
+    N_NAME,
+    C_ADDRESS,
+    C_PHONE,
+    C_COMMENT
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM,
+    NATION
+WHERE
+    C_CUSTKEY = O_CUSTKEY
+    AND L_ORDERKEY = O_ORDERKEY
+    AND O_ORDERDATE >= date '1993-10-01'
+    AND O_ORDERDATE < DATE '1994-01-01' 
+    AND L_RETURNFLAG = 'R'
+    AND C_NATIONKEY = N_NATIONKEY
+GROUP BY
+    C_CUSTKEY,
+    C_NAME,
+    C_ACCTBAL,
+    C_PHONE,
+    N_NAME,
+    C_ADDRESS,
+    C_COMMENT
+ORDER BY
+    REVENUE DESC;
+
+--
+--15.sql
+--
+
+SELECT
+    S_SUPPKEY,
+    S_NAME,
+    S_ADDRESS,
+    S_PHONE,
+    TOTAL_REVENUE
+FROM
+    SUPPLIER,
+    REVENUE0
+WHERE
+    S_SUPPKEY = SUPPLIER_NO
+    AND TOTAL_REVENUE = (
+        SELECT
+            MAX(TOTAL_REVENUE)
+        FROM
+            REVENUE0
+    )
+ORDER BY
+    S_SUPPKEY;
+
+--
+--11.sql
+--
+
+SELECT
+    PS_PARTKEY,
+    SUM(PS_SUPPLYCOST * PS_AVAILQTY) AS VAL
+FROM
+    PARTSUPP,
+    SUPPLIER,
+    NATION
+WHERE
+    PS_SUPPKEY = S_SUPPKEY
+    AND S_NATIONKEY = N_NATIONKEY
+    AND N_NAME = 'GERMANY'
+GROUP BY
+    PS_PARTKEY HAVING
+        SUM(PS_SUPPLYCOST * PS_AVAILQTY) > (
+            SELECT
+                SUM(PS_SUPPLYCOST * PS_AVAILQTY) * (0.0001 / 0.1)
+            FROM
+                PARTSUPP,
+                SUPPLIER,
+                NATION
+            WHERE
+                PS_SUPPKEY = S_SUPPKEY
+                AND S_NATIONKEY = N_NATIONKEY
+                AND N_NAME = 'GERMANY'
+            )
+ORDER BY
+    VAL DESC;
+
+--
+-- 19.sql
+--
+
+SELECT
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT) ) AS REVENUE
+FROM
+    LINEITEM,
+    PART
+WHERE
+    P_PARTKEY = L_PARTKEY
+    AND
+    ((
+         P_BRAND = 'Brand#12'
+         AND P_CONTAINER IN ( 'SM CASE', 'SM BOX', 'SM PACK', 'SM PKG')
+         AND L_QUANTITY >= 1 AND L_QUANTITY <= 1 + 10
+         AND P_SIZE BETWEEN 1 AND 5
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#23'
+         AND P_CONTAINER IN ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')
+         AND L_QUANTITY >= 10 AND L_QUANTITY <= 10 + 10
+         AND P_SIZE BETWEEN 1 AND 10
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    )
+    OR
+    (
+         P_BRAND = 'Brand#34'
+         AND P_CONTAINER IN ( 'LG CASE', 'LG BOX', 'LG PACK', 'LG PKG')
+         AND L_QUANTITY >= 20 AND L_QUANTITY <= 20 + 10
+         AND P_SIZE BETWEEN 1 AND 15
+         AND L_SHIPMODE IN ('AIR', 'AIR REG')
+         AND L_SHIPINSTRUCT = 'DELIVER IN PERSON'
+    ));
+
+--
+-- 22.sql
+--
+
+SELECT
+    CNTRYCODE,
+    COUNT(*) AS NUMCUST,
+    SUM(C_ACCTBAL) AS TOTACCTBAL
+FROM (
+    SELECT
+        SUBSTRING(C_PHONE FROM 1 FOR 2) AS CNTRYCODE,
+        C_ACCTBAL
+    FROM
+        CUSTOMER
+    WHERE
+        SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+            ('13','31','23','29','30','18','17')
+        AND C_ACCTBAL > (
+            SELECT
+                AVG(C_ACCTBAL)
+            FROM
+                CUSTOMER
+            WHERE
+                C_ACCTBAL > 0.00
+                AND SUBSTRING(C_PHONE FROM 1 FOR 2) IN
+                       ('13','31','23','29','30','18','17')
+        )
+        AND NOT EXISTS (
+            SELECT
+                *
+            FROM
+                ORDERS
+            WHERE
+                O_CUSTKEY = C_CUSTKEY
+        )
+    ) AS CUSTSALE
+GROUP BY
+    CNTRYCODE
+ORDER BY
+    CNTRYCODE;
+
+--
+--20.sql
+--
+
+SELECT
+    S_NAME,
+    S_ADDRESS
+FROM
+    SUPPLIER,
+    NATION
+WHERE
+    S_SUPPKEY IN (
+        SELECT
+            PS_SUPPKEY
+        FROM
+            PARTSUPP
+        WHERE
+            PS_PARTKEY IN (
+                SELECT
+                    P_PARTKEY
+                FROM
+                    PART
+                WHERE
+                    P_NAME LIKE 'forest%'
+            )
+        AND PS_AVAILQTY > (
+            SELECT
+                0.5 * SUM(L_QUANTITY)
+            FROM
+                LINEITEM
+            WHERE
+                L_PARTKEY = PS_PARTKEY
+                AND L_SUPPKEY = PS_SUPPKEY
+                AND L_SHIPDATE >= DATE '1994-01-01'
+                AND L_SHIPDATE < DATE '1995-01-01'
+            )
+        )
+        AND S_NATIONKEY = N_NATIONKEY
+        AND N_NAME = 'CANADA'
+ORDER BY
+    S_NAME;
+
+--
+--2.sql
+--
+
+@rowlimit 10 SELECT S.S_ACCTBAL, S.S_NAME, N_NAME, PS.PS_PARTKEY, P.P_MFGR,
+       S.S_ADDRESS, S.S_PHONE, S.S_COMMENT
+FROM PART P, SUPPLIER S, PARTSUPP PS, NATION, REGION,
+     (SELECT PS1.PS_PARTKEY, MIN(PS1.PS_SUPPLYCOST) AS MINCOST
+      FROM PARTSUPP PS1, SUPPLIER S1, NATION N1, REGION R1
+      WHERE PS1.PS_SUPPKEY = S1.S_SUPPKEY AND
+            S1.S_NATIONKEY = N1.N_NATIONKEY AND
+            N1.N_REGIONKEY = R1.R_REGIONKEY AND
+            R1.R_NAME = 'EUROPE'
+      GROUP BY PS1.PS_PARTKEY) AS TEMP
+WHERE P.P_PARTKEY = PS.PS_PARTKEY AND
+      S.S_SUPPKEY = PS.PS_SUPPKEY AND
+      P.P_SIZE = 15 AND
+      P.P_TYPE LIKE '%BRASS' AND
+      S.S_NATIONKEY = N_NATIONKEY AND
+      N_REGIONKEY = R_REGIONKEY AND
+      PS.PS_PARTKEY = TEMP.PS_PARTKEY AND
+      PS.PS_SUPPLYCOST = TEMP.MINCOST
+ORDER BY S.S_ACCTBAL DESC, N_NAME, S.S_NAME, PS.PS_PARTKEY;
+
+--
+--13.sql
+--
+
+SELECT
+    C_COUNT, COUNT(*) AS CUSTDIST
+FROM (
+    SELECT
+        C_CUSTKEY,
+        COUNT(O_ORDERKEY)
+    FROM
+        CUSTOMER LEFT OUTER JOIN ORDERS ON
+            C_CUSTKEY = O_CUSTKEY
+            AND O_COMMENT NOT LIKE '%special%requests%' 
+    GROUP BY
+        C_CUSTKEY
+    )AS C_ORDERS (C_CUSTKEY, C_COUNT)
+GROUP BY
+    C_COUNT
+ORDER BY
+    CUSTDIST DESC,
+    C_COUNT DESC;
+
+--
+--16.sql
+--
+
+@rowlimit 10 SELECT
+    P_BRAND,
+    P_TYPE,
+    P_SIZE,
+    COUNT(DISTINCT PS_SUPPKEY) AS SUPPLIER_CNT
+FROM
+    PARTSUPP,
+    PART
+WHERE
+    P_PARTKEY = PS_PARTKEY
+    AND P_BRAND <> 'Brand#45'
+    AND P_TYPE NOT LIKE 'MEDIUM POLISHED%'
+    AND P_SIZE IN (49, 14, 23, 45, 19, 3, 36, 9)
+    AND PS_SUPPKEY NOT IN (
+        SELECT
+            S_SUPPKEY
+        FROM
+            SUPPLIER
+        WHERE
+            S_COMMENT LIKE '%Customer%Complaints%'
+    )
+GROUP BY
+    P_BRAND,
+    P_TYPE,
+    P_SIZE
+ORDER BY
+    SUPPLIER_CNT DESC,
+    P_BRAND,
+    P_TYPE,
+    P_SIZE;
+
+--
+--12.sql
+--
+
+SELECT
+    L_SHIPMODE,
+    SUM(CASE WHEN O_ORDERPRIORITY = '1-URGENT'
+               OR O_ORDERPRIORITY = '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS HIGH_LINE_COUNT,
+    SUM(CASE WHEN O_ORDERPRIORITY <> '1-URGENT'
+               AND O_ORDERPRIORITY <> '2-HIGH'
+                    THEN 1
+                    ELSE 0
+                END) AS LOW_LINE_COUNT
+FROM ORDERS, LINEITEM
+WHERE
+       O_ORDERKEY = L_ORDERKEY
+AND L_SHIPMODE IN ('MAIL', 'SHIP')
+AND L_COMMITDATE < L_RECEIPTDATE
+AND L_SHIPDATE < L_COMMITDATE
+AND L_RECEIPTDATE >= DATE'1994-01-01'
+AND L_RECEIPTDATE < DATE'1995-01-01'
+GROUP BY L_SHIPMODE
+ORDER BY L_SHIPMODE;
+
+--
+--3.sql
+--
+
+@rowlimit 10 SELECT 
+    L_ORDERKEY,
+    SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) AS REVENUE,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+FROM
+    CUSTOMER,
+    ORDERS,
+    LINEITEM
+WHERE
+    C_MKTSEGMENT = 'BUILDING' AND
+    C_CUSTKEY = O_CUSTKEY AND
+    L_ORDERKEY = O_ORDERKEY AND
+    O_ORDERDATE < DATE '1995-03-15' AND
+    L_SHIPDATE > DATE '1995-03-15'
+GROUP BY
+    L_ORDERKEY,
+    O_ORDERDATE,
+    O_SHIPPRIORITY
+ORDER BY
+    REVENUE DESC,
+    O_ORDERDATE;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+

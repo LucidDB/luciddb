@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,9 +35,8 @@ import junit.framework.*;
  * @version $Id$
  * @since May 6, 2003
  */
-public class Graph
+public class Graph<T>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final Arc [] noArcs = new Arc[0];
@@ -47,8 +46,9 @@ public class Graph
     /**
      * Maps {@link Arc} to {@link Arc}[].
      */
-    private HashMap shortestPath = new HashMap();
-    private HashSet arcs = new HashSet();
+    private Map<Arc<T>, Arc<T>[]> shortestPath =
+        new HashMap<Arc<T>, Arc<T>[]>();
+    private Set<Arc<T>> arcs = new HashSet<Arc<T>>();
     private boolean mutable = true;
 
     //~ Methods ----------------------------------------------------------------
@@ -58,11 +58,11 @@ public class Graph
      *
      * <p>The current implementation is not optimal.</p>
      */
-    public Iterator getPaths(
-        Object from,
-        Object to)
+    public Iterator<Arc<T>[]> getPaths(
+        T from,
+        T to)
     {
-        ArrayList list = new ArrayList();
+        List<Arc<T>[]> list = new ArrayList<Arc<T>[]>();
         findPaths(from, to, list);
         return list.iterator();
     }
@@ -75,22 +75,22 @@ public class Graph
      *
      * @return A list of arcs, null if there is no path.
      */
-    public Arc [] getShortestPath(
-        Object from,
-        Object to)
+    public Arc<T> [] getShortestPath(
+        T from,
+        T to)
     {
         if (from.equals(to)) {
             return noArcs;
         }
         makeImmutable();
-        return (Arc []) shortestPath.get(new Arc(from, to));
+        return shortestPath.get(new Arc<T>(from, to));
     }
 
     public Arc createArc(
-        Object from,
-        Object to)
+        T from,
+        T to)
     {
-        final Arc arc = new Arc(from, to);
+        final Arc<T> arc = new Arc<T>(from, to);
         arcs.add(arc);
         mutable = true;
         return arc;
@@ -102,10 +102,10 @@ public class Graph
      * @return The arc removed, or null
      */
     public Arc deleteArc(
-        Object from,
-        Object to)
+        T from,
+        T to)
     {
-        final Arc arc = new Arc(from, to);
+        final Arc arc = new Arc<T>(from, to);
         if (arcs.remove(arc)) {
             mutable = true;
             return arc;
@@ -115,15 +115,15 @@ public class Graph
     }
 
     private void findPaths(
-        Object from,
-        Object to,
-        List list)
+        T from,
+        T to,
+        List<Arc<T>[]> list)
     {
         final Arc [] shortestPath = getShortestPath(from, to);
         if (shortestPath == null) {
             return;
         }
-        Arc arc = new Arc(from, to);
+        Arc<T> arc = new Arc<T>(from, to);
         if (arcs.contains(arc)) {
             list.add(new Arc[] { arc });
         }
@@ -131,8 +131,8 @@ public class Graph
             from,
             to,
             list,
-            new HashSet(),
-            new ArrayList());
+            new HashSet<T>(),
+            new ArrayList<Arc<T>>());
     }
 
     /**
@@ -140,20 +140,19 @@ public class Graph
      * intermediate nodes are not contained in "excludedNodes".
      */
     private void findPathsExcluding(
-        Object from,
-        Object to,
-        List list,
-        HashSet excludedNodes,
-        List prefix)
+        T from,
+        T to,
+        List<Arc<T>[]> list,
+        Set<T> excludedNodes,
+        List<Arc<T>> prefix)
     {
         excludedNodes.add(from);
-        for (Iterator arcsIter = arcs.iterator(); arcsIter.hasNext();) {
-            Arc arc = (Arc) arcsIter.next();
+        for (Arc<T> arc : arcs) {
             if (arc.from.equals(from)) {
                 if (arc.to.equals(to)) {
                     // We found a path.
                     prefix.add(arc);
-                    final Arc [] arcs = (Arc []) prefix.toArray(noArcs);
+                    final Arc<T> [] arcs = prefix.toArray(noArcs);
                     list.add(arcs);
                     prefix.remove(prefix.size() - 1);
                 } else if (excludedNodes.contains(arc.to)) {
@@ -173,8 +172,7 @@ public class Graph
         if (mutable) {
             mutable = false;
             shortestPath.clear();
-            for (Iterator iterator = arcs.iterator(); iterator.hasNext();) {
-                Arc arc = (Arc) iterator.next();
+            for (Arc<T> arc : arcs) {
                 shortestPath.put(
                     arc,
                     new Arc[] { arc });
@@ -182,22 +180,23 @@ public class Graph
             while (true) {
                 // Take a copy of the map's keys to avoid
                 // ConcurrentModificationExceptions.
-                ArrayList previous = new ArrayList(shortestPath.keySet());
+                ArrayList<Arc> previous =
+                    new ArrayList<Arc>(shortestPath.keySet());
                 int changeCount = 0;
-                for (Iterator arcsIter = arcs.iterator(); arcsIter.hasNext();) {
-                    Arc arc = (Arc) arcsIter.next();
-                    for (Iterator prevIter = previous.iterator();
-                        prevIter.hasNext();) {
-                        Arc arc2 = (Arc) prevIter.next();
+                for (Arc<T> arc : arcs) {
+                    for (Arc<T> arc2 : previous) {
                         if (arc.to.equals(arc2.from)) {
-                            final Arc newArc = new Arc(arc.from, arc2.to);
-                            Arc [] bestPath = (Arc []) shortestPath.get(newArc);
-                            Arc [] arc2Path = (Arc []) shortestPath.get(arc2);
+                            final Arc<T> newArc = new Arc<T>(arc.from, arc2.to);
+                            Arc [] bestPath = shortestPath.get(newArc);
+                            Arc [] arc2Path = shortestPath.get(arc2);
                             if ((bestPath == null)
-                                || (bestPath.length > (arc2Path.length + 1))) {
-                                Arc [] newPath = new Arc[arc2Path.length + 1];
+                                || (bestPath.length > (arc2Path.length + 1)))
+                            {
+                                Arc<T> [] newPath =
+                                    new Arc[arc2Path.length + 1];
                                 newPath[0] = arc;
-                                System.arraycopy(arc2Path,
+                                System.arraycopy(
+                                    arc2Path,
                                     0,
                                     newPath,
                                     1,
@@ -224,10 +223,10 @@ public class Graph
      * Object#hashCode}. We assume that their {@link Object#toString} works,
      * too.</p>
      */
-    public static class Arc
+    public static class Arc<T>
     {
-        public final Object from;
-        public final Object to;
+        public final T from;
+        public final T to;
         private final String string; // for debug
 
         /**
@@ -237,8 +236,8 @@ public class Graph
          * @pre to != null
          */
         public Arc(
-            Object from,
-            Object to)
+            T from,
+            T to)
         {
             this.from = from;
             this.to = to;
@@ -265,9 +264,9 @@ public class Graph
             return from + "-" + to;
         }
 
-        private static String toString(Arc [] arcs)
+        private static <T> String toString(Arc<T> [] arcs)
         {
-            StringBuffer buf = new StringBuffer("{");
+            StringBuilder buf = new StringBuilder("{");
             for (int i = 0; i < arcs.length; i++) {
                 if (i > 0) {
                     buf.append(", ");
@@ -289,7 +288,7 @@ public class Graph
 
         public void test()
         {
-            Graph g = new Graph();
+            Graph<String> g = new Graph<String>();
             g.createArc("A", "B");
             g.createArc("B", "C");
             g.createArc("D", "C");
@@ -317,12 +316,12 @@ public class Graph
                 toString(g.getPaths("A", "D")));
         }
 
-        private static String toString(final Iterator iter)
+        private static <T> String toString(final Iterator<Arc<T>[]> iter)
         {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             int count = 0;
             while (iter.hasNext()) {
-                Arc [] path = (Arc []) iter.next();
+                Arc<T> [] path = iter.next();
                 if (count++ > 0) {
                     buf.append(" ");
                 }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct DeviceMode
+struct FENNEL_DEVICE_EXPORT DeviceMode
 {
     bool create : 1;
     bool readOnly : 1;
@@ -35,7 +35,7 @@ struct DeviceMode
     bool sequential : 1;
 
     enum Initializer { load = 0, createNew = 1 };
-    
+
     explicit DeviceMode()
     {
         init();
@@ -46,12 +46,12 @@ struct DeviceMode
         init();
         create = i;
     }
-    
+
     DeviceMode(DeviceMode const &mode)
     {
         init(mode);
     }
-    
+
     void operator = (DeviceMode const &mode)
     {
         init(mode);
@@ -66,7 +66,7 @@ private:
         direct = 0;
         sequential = 0;
     }
-    
+
     void init(DeviceMode const &mode)
     {
         create = mode.create;

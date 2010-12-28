@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,8 +27,11 @@ import java.io.*;
 import java.lang.reflect.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
 
@@ -93,9 +96,16 @@ import org.eigenbase.util.*;
  * </tr>
  * <tr>
  * <td>{@link #setSubqueryStyle SubqueryStyle}</td>
- * <td>Style for formatting sub-queries. Values are: {@link SubqueryStyle#Hyde
- * Hyde}, {@link SubqueryStyle#Black Black}.</td>
- * <td>{@link SubqueryStyle#Hyde Hyde}</td>
+ * <td>Style for formatting sub-queries. Values are: {@link
+ * org.eigenbase.sql.SqlWriter.SubqueryStyle#Hyde Hyde}, {@link
+ * org.eigenbase.sql.SqlWriter.SubqueryStyle#Black Black}.</td>
+ * <td>{@link org.eigenbase.sql.SqlWriter.SubqueryStyle#Hyde Hyde}</td>
+ * </tr>
+ * <tr>
+ * <td>{@link #setLineLength LineLength}</td>
+ * <td>Set the desired maximum length for lines (to look nice in editors,
+ * printouts, etc.).</td>
+ * <td>0</td>
  * </tr>
  * </table>
  *
@@ -106,35 +116,38 @@ import org.eigenbase.util.*;
 public class SqlPrettyWriter
     implements SqlWriter
 {
-
     //~ Static fields/initializers ---------------------------------------------
+
+    protected static final EigenbaseLogger logger =
+        new EigenbaseLogger(
+            Logger.getLogger("org.eigenbase.sql.pretty.SqlPrettyWriter"));
 
     /**
      * Bean holding the default property values.
      */
     private static final Bean defaultBean =
-        new SqlPrettyWriter(SqlUtil.dummyDialect).getBean();
+        new SqlPrettyWriter(SqlDialect.DUMMY).getBean();
     protected static final String NL = System.getProperty("line.separator");
 
     private static final String [] spaces =
-        {
-            "",
-            " ",
-            "  ",
-            "   ",
-            "    ",
-            "     ",
-            "      ",
-            "       ",
-            "        ",
-        };
+    {
+        "",
+        " ",
+        "  ",
+        "   ",
+        "    ",
+        "     ",
+        "      ",
+        "       ",
+        "        ",
+    };
 
     //~ Instance fields --------------------------------------------------------
 
     private final SqlDialect dialect;
     private final StringWriter sw = new StringWriter();
     protected final PrintWriter pw;
-    private final Stack listStack = new Stack();
+    private final Stack<FrameImpl> listStack = new Stack<FrameImpl>();
     protected FrameImpl frame;
     private boolean needWhitespace;
     protected String nextWhitespace;
@@ -145,13 +158,17 @@ public class SqlPrettyWriter
     private int indentation;
     private boolean clauseStartsLine;
     private boolean selectListItemsOnSeparateLines;
+    private boolean selectListExtraIndentFlag;
     private int currentIndent;
     private boolean windowDeclListNewline;
     private boolean updateSetListNewline;
     private boolean windowNewline;
     private SubqueryStyle subqueryStyle;
+    private boolean whereListItemsOnSeparateLines;
 
     private boolean caseClausesOnNewLines;
+    private int lineLength;
+    private int charCount;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -194,11 +211,22 @@ public class SqlPrettyWriter
     }
 
     /**
-     * Sets the subquery style. Default is {@link SubqueryStyle#Hyde}.
+     * Sets the subquery style. Default is {@link
+     * org.eigenbase.sql.SqlWriter.SubqueryStyle#Hyde}.
      */
     public void setSubqueryStyle(SubqueryStyle subqueryStyle)
     {
         this.subqueryStyle = subqueryStyle;
+    }
+
+    public void setWindowNewline(boolean windowNewline)
+    {
+        this.windowNewline = windowNewline;
+    }
+
+    public void setWindowDeclListNewline(boolean windowDeclListNewline)
+    {
+        this.windowDeclListNewline = windowDeclListNewline;
     }
 
     public int getIndentation()
@@ -213,9 +241,9 @@ public class SqlPrettyWriter
 
     public boolean inQuery()
     {
-        return
-            (frame == null) || (frame.frameType == FrameType.OrderBy)
-            || (frame.frameType == FrameType.Setop);
+        return (frame == null)
+            || (frame.frameType == FrameTypeEnum.OrderBy)
+            || (frame.frameType == FrameTypeEnum.Setop);
     }
 
     public boolean isQuoteAllIdentifiers()
@@ -233,9 +261,24 @@ public class SqlPrettyWriter
         return selectListItemsOnSeparateLines;
     }
 
+    public boolean isWhereListItemsOnSeparateLines()
+    {
+        return whereListItemsOnSeparateLines;
+    }
+
+    public boolean isSelectListExtraIndentFlag()
+    {
+        return selectListExtraIndentFlag;
+    }
+
     public boolean isKeywordsLowerCase()
     {
         return keywordsLowerCase;
+    }
+
+    public int getLineLength()
+    {
+        return lineLength;
     }
 
     public void resetSettings()
@@ -244,6 +287,7 @@ public class SqlPrettyWriter
         indentation = 4;
         clauseStartsLine = true;
         selectListItemsOnSeparateLines = false;
+        selectListExtraIndentFlag = true;
         keywordsLowerCase = false;
         quoteAllIdentifiers = true;
         windowDeclListNewline = true;
@@ -251,13 +295,16 @@ public class SqlPrettyWriter
         windowNewline = false;
         subqueryStyle = SubqueryStyle.Hyde;
         alwaysUseParentheses = false;
+        whereListItemsOnSeparateLines = false;
+        lineLength = 0;
+        charCount = 0;
     }
 
     public void reset()
     {
         pw.flush();
         sw.getBuffer().setLength(0);
-        needWhitespace = false;
+        setNeedWhitespace(false);
         nextWhitespace = " ";
     }
 
@@ -345,12 +392,52 @@ public class SqlPrettyWriter
     }
 
     /**
+     * Sets whether to use a fix for SELECT list indentations.
+     *
+     * <ul>
+     * <li>If set to "false":
+     *
+     * <pre>
+     * SELECT
+     *     A as A
+     *         B as B
+     *         C as C
+     *     D
+     * </pre>
+     * <li>If set to "true":
+     *
+     * <pre>
+     * SELECT
+     *     A as A
+     *     B as B
+     *     C as C
+     *     D
+     * </pre>
+     * </ul>
+     */
+    public void setSelectListExtraIndentFlag(boolean b)
+    {
+        this.selectListExtraIndentFlag = b;
+    }
+
+    /**
      * Sets whether to print keywords (SELECT, AS, etc.) in lower-case. The
      * default is false: keywords are printed in upper-case.
      */
     public void setKeywordsLowerCase(boolean b)
     {
         this.keywordsLowerCase = b;
+    }
+
+    /**
+     * Sets whether to print a newline before each AND or OR (whichever is
+     * higher level) in WHERE clauses. NOTE: <i>Ignored when
+     * alwaysUseParentheses is set to true.</i>
+     */
+
+    public void setWhereListItemsOnSeparateLines(boolean b)
+    {
+        this.whereListItemsOnSeparateLines = b;
     }
 
     public void setAlwaysUseParentheses(boolean b)
@@ -361,8 +448,9 @@ public class SqlPrettyWriter
     public void newlineAndIndent()
     {
         pw.println();
+        charCount = 0;
         indent(currentIndent);
-        needWhitespace = false; // no further whitespace necessary
+        setNeedWhitespace(false); // no further whitespace necessary
     }
 
     void indent(int indent)
@@ -382,6 +470,7 @@ public class SqlPrettyWriter
                 pw.print(spaces[rem]);
             }
         }
+        charCount += indent;
     }
 
     /**
@@ -416,10 +505,12 @@ public class SqlPrettyWriter
         String close)
     {
         int indentation = getIndentation();
-        switch (frameType.getOrdinal()) {
-        case FrameType.WindowDeclList_ordinal:
-            return
-                new FrameImpl(
+        if (frameType instanceof FrameTypeEnum) {
+            FrameTypeEnum frameTypeEnum = (FrameTypeEnum) frameType;
+
+            switch (frameTypeEnum) {
+            case WindowDeclList:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -432,9 +523,8 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.UpdateSetList_ordinal:
-            return
-                new FrameImpl(
+            case UpdateSetList:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -447,11 +537,23 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.SelectList_ordinal:
-        case FrameType.OrderByList_ordinal:
-        case FrameType.GroupByList_ordinal:
-            return
-                new FrameImpl(
+            case SelectList:
+                return new FrameImpl(
+                    frameType,
+                    keyword,
+                    open,
+                    close,
+                    selectListExtraIndentFlag ? indentation : 0,
+                    selectListItemsOnSeparateLines,
+                    false,
+                    indentation,
+                    selectListItemsOnSeparateLines,
+                    false,
+                    false);
+
+            case OrderByList:
+            case GroupByList:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -464,15 +566,16 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.Subquery_ordinal:
-            if (subqueryStyle == SubqueryStyle.Black) {
-                // Generate, e.g.:
-                //
-                // WHERE foo = bar IN
-                // (   SELECT ...
-                open = "(" + spaces(indentation - 1);
-                return
-                    new FrameImpl(
+            case Subquery:
+                switch (subqueryStyle) {
+                case Black:
+
+                    // Generate, e.g.:
+                    //
+                    // WHERE foo = bar IN
+                    // (   SELECT ...
+                    open = "(" + spaces(indentation - 1);
+                    return new FrameImpl(
                         frameType,
                         keyword,
                         open,
@@ -483,19 +586,20 @@ public class SqlPrettyWriter
                         indentation,
                         false,
                         false,
-                        false) {
+                        false)
+                    {
                         protected void _before()
                         {
                             newlineAndIndent();
                         }
                     };
-            } else if (subqueryStyle == SubqueryStyle.Hyde) {
-                // Generate, e.g.:
-                //
-                // WHERE foo IN (
-                //     SELECT ...
-                return
-                    new FrameImpl(
+                case Hyde:
+
+                    // Generate, e.g.:
+                    //
+                    // WHERE foo IN (
+                    //     SELECT ...
+                    return new FrameImpl(
                         frameType,
                         keyword,
                         open,
@@ -506,19 +610,19 @@ public class SqlPrettyWriter
                         0,
                         false,
                         false,
-                        false) {
+                        false)
+                    {
                         protected void _before()
                         {
                             nextWhitespace = NL;
                         }
                     };
-            } else {
-                throw subqueryStyle.unexpected();
-            }
+                default:
+                    throw Util.unexpected(subqueryStyle);
+                }
 
-        case FrameType.OrderBy_ordinal:
-            return
-                new FrameImpl(
+            case OrderBy:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -531,9 +635,8 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.Select_ordinal:
-            return
-                new FrameImpl(
+            case Select:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -546,9 +649,8 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.Setop_ordinal:
-            return
-                new FrameImpl(
+            case Setop:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -561,9 +663,8 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.Window_ordinal:
-            return
-                new FrameImpl(
+            case Window:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -576,10 +677,9 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.FunCall_ordinal:
-            needWhitespace = false;
-            return
-                new FrameImpl(
+            case FunCall:
+                setNeedWhitespace(false);
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -592,10 +692,9 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.Identifier_ordinal:
-        case FrameType.Simple_ordinal:
-            return
-                new FrameImpl(
+            case Identifier:
+            case Simple:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -608,9 +707,22 @@ public class SqlPrettyWriter
                     false,
                     false);
 
-        case FrameType.FromList_ordinal:
-            return
-                new FrameImpl(
+            case WhereList:
+                return new FrameImpl(
+                    frameType,
+                    keyword,
+                    open,
+                    close,
+                    indentation,
+                    false,
+                    whereListItemsOnSeparateLines,
+                    0,
+                    false,
+                    false,
+                    false);
+
+            case FromList:
+                return new FrameImpl(
                     frameType,
                     keyword,
                     open,
@@ -621,55 +733,56 @@ public class SqlPrettyWriter
                     0, // all clauses appear below SELECT
                     isClauseStartsLine(), // newline after UNION, EXCEPT
                     false,
-                    false) {
+                    false)
+                {
                     protected void sep(boolean printFirst, String sep)
                     {
                         boolean newlineBefore =
                             newlineBeforeSep
                             && !sep.equals(",");
                         boolean newlineAfter =
-                            newlineAfterSep
-                            && sep.equals(",");
+                            (newlineAfterSep && sep.equals(","));
                         if ((itemCount > 0) || printFirst) {
                             if (newlineBefore && (itemCount > 0)) {
                                 pw.println();
+                                charCount = 0;
                                 indent(currentIndent + sepIndent);
-                                needWhitespace = false;
+                                setNeedWhitespace(false);
                             }
                             keyword(sep);
-                            nextWhitespace = newlineAfter ? NL : " ";
+                            nextWhitespace = (newlineAfter) ? NL : " ";
                         }
                         ++itemCount;
                     }
                 };
-
-        default:
-            boolean newlineAfterOpen = false;
-            boolean newlineBeforeSep = false;
-            boolean newlineBeforeClose = false;
-            int sepIndent = indentation;
-            if (frameType.getName().equals("CASE")) {
-                if (caseClausesOnNewLines) {
-                    newlineAfterOpen = true;
-                    newlineBeforeSep = true;
-                    newlineBeforeClose = true;
-                    sepIndent = 0;
-                }
+            default:
+                // fall through
             }
-            return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    newlineAfterOpen,
-                    newlineBeforeSep,
-                    sepIndent,
-                    false,
-                    newlineBeforeClose,
-                    false);
         }
+        boolean newlineAfterOpen = false;
+        boolean newlineBeforeSep = false;
+        boolean newlineBeforeClose = false;
+        int sepIndent = indentation;
+        if (frameType.getName().equals("CASE")) {
+            if (caseClausesOnNewLines) {
+                newlineAfterOpen = true;
+                newlineBeforeSep = true;
+                newlineBeforeClose = true;
+                sepIndent = 0;
+            }
+        }
+        return new FrameImpl(
+            frameType,
+            keyword,
+            open,
+            close,
+            indentation,
+            newlineAfterOpen,
+            newlineBeforeSep,
+            sepIndent,
+            false,
+            newlineBeforeClose,
+            false);
     }
 
     /**
@@ -724,7 +837,8 @@ public class SqlPrettyWriter
     public void endList(Frame frame)
     {
         FrameImpl endedFrame = (FrameImpl) frame;
-        Util.pre(frame == this.frame,
+        Util.pre(
+            frame == this.frame,
             "Frame " + endedFrame.frameType
             + " does not match current frame " + this.frame.frameType);
         if (this.frame == null) {
@@ -748,7 +862,7 @@ public class SqlPrettyWriter
             this.frame = null;
             assert currentIndent == 0 : currentIndent;
         } else {
-            this.frame = (FrameImpl) listStack.pop();
+            this.frame = listStack.pop();
             if (endedFrame.frameType.needsIndent()) {
                 currentIndent -= this.frame.extraIndent;
             }
@@ -769,6 +883,11 @@ public class SqlPrettyWriter
         return sw.toString();
     }
 
+    public SqlString toSqlString()
+    {
+        return new SqlBuilder(dialect, toString()).toSqlString();
+    }
+
     public SqlDialect getDialect()
     {
         return dialect;
@@ -777,7 +896,7 @@ public class SqlPrettyWriter
     public void literal(String s)
     {
         print(s);
-        needWhitespace = true;
+        setNeedWhitespace(true);
     }
 
     public void keyword(String s)
@@ -785,36 +904,33 @@ public class SqlPrettyWriter
         maybeWhitespace(s);
         pw.print(
             isKeywordsLowerCase() ? s.toLowerCase() : s.toUpperCase());
+        charCount += s.length();
         if (!s.equals("")) {
-            needWhitespace = needWhitespaceAfter(s);
+            setNeedWhitespace(needWhitespaceAfter(s));
         }
     }
 
     private void maybeWhitespace(String s)
     {
-        if (needWhitespace
-            && needWhitespaceBefore(s)) {
+        if (tooLong(s) || (needWhitespace && needWhitespaceBefore(s))) {
             whiteSpace();
         }
     }
 
     private static boolean needWhitespaceBefore(String s)
     {
-        return
-            !(
-                s.equals(",")
-                || s.equals(".")
-                || s.equals(")")
-                || s.equals("]")
-                || s.equals("")
-             );
+        return !(s.equals(",")
+            || s.equals(".")
+            || s.equals(")")
+            || s.equals("]")
+            || s.equals(""));
     }
 
     private static boolean needWhitespaceAfter(String s)
     {
         return !(s.equals("(")
-                || s.equals("[")
-                || s.equals("."));
+            || s.equals("[")
+            || s.equals("."));
     }
 
     protected void whiteSpace()
@@ -824,10 +940,24 @@ public class SqlPrettyWriter
                 newlineAndIndent();
             } else {
                 pw.print(nextWhitespace);
+                charCount += nextWhitespace.length();
             }
             nextWhitespace = " ";
-            needWhitespace = false;
+            setNeedWhitespace(false);
         }
+    }
+
+    protected boolean tooLong(String s)
+    {
+        boolean result =
+            ((lineLength > 0)
+                && (charCount > currentIndent)
+                && ((charCount + s.length()) >= lineLength));
+        if (result) {
+            nextWhitespace = NL;
+        }
+        logger.finest("Token is '" + s + "'; result is " + result);
+        return result;
     }
 
     public void print(String s)
@@ -840,31 +970,35 @@ public class SqlPrettyWriter
         }
         maybeWhitespace(s);
         pw.print(s);
+        charCount += s.length();
     }
 
     public void print(int x)
     {
         maybeWhitespace("0");
         pw.print(x);
+        charCount += String.valueOf(x).length();
     }
 
     public void identifier(String name)
     {
-        whiteSpace();
+        String qName = name;
         if (isQuoteAllIdentifiers()
-            || dialect.identifierNeedsToBeQuoted(name)) {
-            pw.print(dialect.quoteIdentifier(name));
-        } else {
-            pw.print(name);
+            || dialect.identifierNeedsToBeQuoted(name))
+        {
+            qName = dialect.quoteIdentifier(name);
         }
-        needWhitespace = true;
+        maybeWhitespace(qName);
+        pw.print(qName);
+        charCount += qName.length();
+        setNeedWhitespace(true);
     }
 
     public Frame startFunCall(String funName)
     {
         keyword(funName);
         setNeedWhitespace(false);
-        return startList(FrameType.FunCall, "(", ")");
+        return startList(FrameTypeEnum.FunCall, "(", ")");
     }
 
     public void endFunCall(Frame frame)
@@ -874,10 +1008,10 @@ public class SqlPrettyWriter
 
     public Frame startList(String open, String close)
     {
-        return startList(FrameType.Simple, null, open, close);
+        return startList(FrameTypeEnum.Simple, null, open, close);
     }
 
-    public Frame startList(FrameType frameType)
+    public Frame startList(FrameTypeEnum frameType)
     {
         assert frameType != null;
         return startList(frameType, null, "", "");
@@ -910,10 +1044,15 @@ public class SqlPrettyWriter
         this.needWhitespace = needWhitespace;
     }
 
+    public void setLineLength(int lineLength)
+    {
+        this.lineLength = lineLength;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Implementation of {@link Frame}.
+     * Implementation of {@link org.eigenbase.sql.SqlWriter.Frame}.
      */
     protected class FrameImpl
         implements Frame
@@ -992,12 +1131,13 @@ public class SqlPrettyWriter
         protected void sep(boolean printFirst, String sep)
         {
             if ((newlineBeforeSep && (itemCount > 0))
-                || (newlineAfterOpen && (itemCount == 0))) {
+                || (newlineAfterOpen && (itemCount == 0)))
+            {
                 newlineAndIndent();
             }
             if ((itemCount > 0) || printFirst) {
                 keyword(sep);
-                nextWhitespace = newlineAfterSep ? NL : " ";
+                nextWhitespace = (newlineAfterSep) ? NL : " ";
             }
             ++itemCount;
         }
@@ -1009,11 +1149,13 @@ public class SqlPrettyWriter
      */
     private static class Bean
     {
-        private final Object o;
-        private final Map getterMethods = new HashMap();
-        private final Map setterMethods = new HashMap();
+        private final SqlPrettyWriter o;
+        private final Map<String, Method> getterMethods =
+            new HashMap<String, Method>();
+        private final Map<String, Method> setterMethods =
+            new HashMap<String, Method>();
 
-        Bean(Object o)
+        Bean(SqlPrettyWriter o)
         {
             this.o = o;
 
@@ -1023,24 +1165,30 @@ public class SqlPrettyWriter
                 Method method = methods[i];
                 if (method.getName().startsWith("set")
                     && (method.getReturnType() == Void.class)
-                    && (method.getParameterTypes().length == 1)) {
-                    String attributeName = stripPrefix(
+                    && (method.getParameterTypes().length == 1))
+                {
+                    String attributeName =
+                        stripPrefix(
                             method.getName(),
                             3);
                     setterMethods.put(attributeName, method);
                 }
                 if (method.getName().startsWith("get")
                     && (method.getReturnType() != Void.class)
-                    && (method.getParameterTypes().length == 0)) {
-                    String attributeName = stripPrefix(
+                    && (method.getParameterTypes().length == 0))
+                {
+                    String attributeName =
+                        stripPrefix(
                             method.getName(),
                             3);
                     getterMethods.put(attributeName, method);
                 }
                 if (method.getName().startsWith("is")
                     && (method.getReturnType() == Boolean.class)
-                    && (method.getParameterTypes().length == 0)) {
-                    String attributeName = stripPrefix(
+                    && (method.getParameterTypes().length == 0))
+                {
+                    String attributeName =
+                        stripPrefix(
                             method.getName(),
                             2);
                     getterMethods.put(attributeName, method);
@@ -1050,19 +1198,17 @@ public class SqlPrettyWriter
 
         private String stripPrefix(String name, int offset)
         {
-            String attributeName =
-                name.substring(offset, offset + 1).toLowerCase()
+            return name.substring(offset, offset + 1).toLowerCase()
                 + name.substring(offset + 1);
-            return attributeName;
         }
 
         public void set(String name, String value)
         {
-            final Method method = (Method) setterMethods.get(name);
+            final Method method = setterMethods.get(name);
             try {
                 method.invoke(
                     o,
-                    new Object[] { value });
+                    value);
             } catch (IllegalAccessException e) {
                 throw Util.newInternal(e);
             } catch (InvocationTargetException e) {
@@ -1072,11 +1218,9 @@ public class SqlPrettyWriter
 
         public Object get(String name)
         {
-            final Method method = (Method) getterMethods.get(name);
+            final Method method = getterMethods.get(name);
             try {
-                return method.invoke(
-                        o,
-                        new Object[0]);
+                return method.invoke(o);
             } catch (IllegalAccessException e) {
                 throw Util.newInternal(e);
             } catch (InvocationTargetException e) {
@@ -1086,7 +1230,7 @@ public class SqlPrettyWriter
 
         public String [] getPropertyNames()
         {
-            final Set names = new HashSet();
+            final Set<String> names = new HashSet<String>();
             names.addAll(getterMethods.keySet());
             names.addAll(setterMethods.keySet());
             return (String []) names.toArray(new String[names.size()]);

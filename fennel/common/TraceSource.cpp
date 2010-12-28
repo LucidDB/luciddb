@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,18 +29,18 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 TraceSource::TraceSource()
 {
-    pTraceTarget.reset();
+    minimumLevel = TRACE_OFF;
 }
 
-TraceSource::TraceSource(SharedTraceTarget pTraceTargetInit,std::string nameInit)
+TraceSource::TraceSource(
+    SharedTraceTarget pTraceTargetInit,
+    std::string nameInit)
 {
-    pTraceTarget.reset();
-    initTraceSource(pTraceTargetInit,nameInit);
+    initTraceSource(pTraceTargetInit, nameInit);
 }
 
 TraceSource::~TraceSource()
 {
-    pTraceTarget.reset();
 }
 
 void TraceSource::initTraceSource(
@@ -48,8 +48,7 @@ void TraceSource::initTraceSource(
     std::string nameInit)
 {
     assert(!pTraceTarget.get());
-    assert(name == "");
-    
+
     pTraceTarget = pTraceTargetInit;
     name = nameInit;
     if (isTracing()) {
@@ -59,16 +58,17 @@ void TraceSource::initTraceSource(
     }
 }
 
-void TraceSource::trace(TraceLevel level,std::string message) const
+void TraceSource::trace(TraceLevel level, std::string message) const
 {
     if (isTracing()) {
-        getTraceTarget().notifyTrace(name,level,message);
+        getTraceTarget().notifyTrace(name, level, message);
     }
 }
 
 void TraceSource::disableTracing()
 {
     pTraceTarget.reset();
+    minimumLevel = TRACE_OFF;
 }
 
 FENNEL_END_CPPFILE("$Id$");

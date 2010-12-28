@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,8 +20,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.sql;
-
-import java.text.*;
 
 import java.util.*;
 
@@ -42,35 +40,19 @@ import org.eigenbase.sql.type.*;
 public class SqlDateLiteral
     extends SqlAbstractDateTimeLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlDateLiteral(Calendar d, SqlParserPos pos)
     {
-        super(d, false, SqlTypeName.Date, 0, SqlParserUtil.DateFormatStr, pos);
+        super(d, false, SqlTypeName.DATE, 0, SqlParserUtil.DateFormatStr, pos);
     }
 
     SqlDateLiteral(Calendar d, String format, SqlParserPos pos)
     {
-        super(d, false, SqlTypeName.Date, 0, format, pos);
+        super(d, false, SqlTypeName.DATE, 0, format, pos);
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Constructs a new dateformat object for the given string. Note that
-     * DateFormat objects aren't thread-safe.
-     *
-     * @param dfString
-     *
-     * @return date format object
-     */
-    static DateFormat getDateFormat(String dfString)
-    {
-        SimpleDateFormat df = new SimpleDateFormat(dfString);
-        df.setLenient(false);
-        return df;
-    }
 
     public SqlNode clone(SqlParserPos pos)
     {
@@ -87,12 +69,27 @@ public class SqlDateLiteral
      */
     public String toFormattedString()
     {
-        return getDateFormat(formatString).format(getDate());
+        return getDate().toString(formatString);
     }
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
         return typeFactory.createSqlType(getTypeName());
+    }
+
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
+        switch (writer.getDialect().getDatabaseProduct()) {
+        case MSSQL:
+            writer.literal("'" + this.toFormattedString() + "'");
+            break;
+        default:
+            writer.literal(this.toString());
+            break;
+        }
     }
 }
 

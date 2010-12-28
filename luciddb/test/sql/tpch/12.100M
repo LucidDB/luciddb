@@ -1,7 +1,4 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> -- Q12 (tpch2.6.1)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT
 . . . . . . . . >     L_SHIPMODE,
@@ -15,7 +12,7 @@
 . . . . . . . . >                     THEN 1
 . . . . . . . . >                     ELSE 0
 . . . . . . . . >                 END) AS LOW_LINE_COUNT
-. . . . . . . . > FROM ORDERS, LINEITEM
+. . . . . . . . > FROM TPCH.ORDERS, TPCH.LINEITEM
 . . . . . . . . > WHERE
 . . . . . . . . >        O_ORDERKEY = L_ORDERKEY
 . . . . . . . . > AND L_SHIPMODE IN ('MAIL', 'SHIP')

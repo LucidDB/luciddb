@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,6 +32,7 @@ import junit.extensions.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
@@ -47,7 +48,6 @@ import net.sf.farrago.util.*;
 public class FarragoSorterTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static File testdataDir;
@@ -142,19 +142,26 @@ public class FarragoSorterTest
 
     private static void computeExternalCount()
     {
-        // compute external count dynamically based on cache size
-        FemFennelConfig fennelConfig =
-            repos.getCurrentConfig().getFennelConfig();
+        FarragoReposTxnContext txn = new FarragoReposTxnContext(repos, true);
+        txn.beginReadTxn();
+        try {
+            // compute external count dynamically based on cache size
+            FemFennelConfig fennelConfig =
+                repos.getCurrentConfig().getFennelConfig();
 
-        // first, compute number of bytes in cache
-        long nBytes = fennelConfig.getCachePageSize();
-        nBytes *= fennelConfig.getCachePagesInit();
+            // first, compute number of bytes in cache
+            long nBytes = fennelConfig.getCachePageSize();
+            nBytes *= fennelConfig.getCachePagesInit();
 
-        // next, scale up to desired sort size
-        nBytes *= EXTERNAL_SCALE_FACTOR;
+            // next, scale up to desired sort size
+            nBytes *= EXTERNAL_SCALE_FACTOR;
 
-        // finally, convert from bytes to records, assuming 16 bytes per record
-        externalCount = nBytes / 16;
+            // finally, convert from bytes to records, assuming 16 bytes per
+            // record
+            externalCount = nBytes / 16;
+        } finally {
+            txn.commit();
+        }
     }
 
     private void testDistribution(DistributionGenerator gen)
@@ -222,7 +229,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(IN_MEM_COUNT,
+            new UniformDistributionGenerator(
+                IN_MEM_COUNT,
                 IN_MEM_COUNT * SPARSE_FACTOR));
     }
 
@@ -233,7 +241,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(IN_MEM_COUNT,
+            new UniformDistributionGenerator(
+                IN_MEM_COUNT,
                 IN_MEM_COUNT / DUP_FACTOR));
     }
 
@@ -297,7 +306,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(externalCount,
+            new UniformDistributionGenerator(
+                externalCount,
                 externalCount * SPARSE_FACTOR));
     }
 

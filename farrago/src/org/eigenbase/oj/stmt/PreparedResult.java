@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@
 */
 package org.eigenbase.oj.stmt;
 
-import java.sql.*;
+import org.eigenbase.rel.*;
 
 
 /**
@@ -33,7 +33,6 @@ import java.sql.*;
  */
 public interface PreparedResult
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -47,6 +46,12 @@ public interface PreparedResult
      * affected.
      */
     boolean isDml();
+
+    /**
+     * @return the table modification operation corresponding to this statement
+     * if it is a table modification statement; otherwise null
+     */
+    TableModificationRel.Operation getTableModOp();
 
     /**
      * Executes the prepared result.

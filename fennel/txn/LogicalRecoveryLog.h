@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,16 +39,16 @@ class LogicalTxnParticipantFactory;
  * LogicalRecoveryLog is the recovery-time counterpart to the online
  * LogicalTxnLog.
  */
-class LogicalRecoveryLog
+class FENNEL_TXN_EXPORT LogicalRecoveryLog
     : public boost::noncopyable
 {
-    typedef std::hash_map<TxnId,LogicalTxnEventMemento> TxnMap;
+    typedef std::hash_map<TxnId, LogicalTxnEventMemento> TxnMap;
     typedef TxnMap::iterator TxnMapIter;
 
     TxnMap checkpointTxnMap;
 
     LogicalTxnParticipantFactory &participantFactory;
-    
+
     SharedSegmentFactory pSegmentFactory;
 
     SegmentAccessor logSegmentAccessor;
@@ -65,7 +65,7 @@ class LogicalRecoveryLog
         LogicalTxnEventMemento const &commitMemento,
         LogicalTxnEventMemento const *pCheckpointMemento,
         SharedSegInputStream pTxnInputStream);
-    
+
     void undoTxn(
         LogicalTxnEventMemento const &checkpointMemento,
         SharedSegInputStream pTxnInputStream);
@@ -94,10 +94,10 @@ public:
         SegmentAccessor const &logSegmentAccessor,
         PseudoUuid const &onlineUuid,
         SharedSegmentFactory pSegmentFactory);
-        
+
     virtual ~LogicalRecoveryLog();
     void recover(LogicalTxnLogCheckpointMemento const &memento);
-    
+
     /**
      * Gets the relative filename for a long transaction log.  This is
      * deterministic based on the TxnId.

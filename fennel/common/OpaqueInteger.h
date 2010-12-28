@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ FENNEL_BEGIN_NAMESPACE
  * // TODO:  extend the mechanism to be able to handle
  * inheritance (e.g. BTreeId isa PageOwnerId).
  */
-template<class T,class Dummy>
+template<class T, class Dummy>
 class OpaqueInteger
 {
 protected:
@@ -71,162 +71,194 @@ public:
         // initialize to 0, because this doesn't match the non-DEBUG
         // behavior, AND actually breaks some  code (scary but true)
     }
-    
+
     explicit OpaqueInteger(T t)
     {
         val = t;
     }
 
-    int operator == (OpaqueInteger<T,Dummy> other) const
+    int operator == (OpaqueInteger<T, Dummy> other) const
     {
-        return val==other.val;
+        return val == other.val;
     }
-    int operator != (OpaqueInteger<T,Dummy> other) const
+
+    int operator != (OpaqueInteger<T, Dummy> other) const
     {
-        return val!=other.val;
+        return val != other.val;
     }
-    int operator < (OpaqueInteger<T,Dummy> other) const
+
+    int operator < (OpaqueInteger<T, Dummy> other) const
     {
-        return val<other.val;
+        return val < other.val;
     }
-    int operator > (OpaqueInteger<T,Dummy> other) const
+
+    int operator > (OpaqueInteger<T, Dummy> other) const
     {
-        return val>other.val;
+        return val > other.val;
     }
-    int operator <= (OpaqueInteger<T,Dummy> other) const
+
+    int operator <= (OpaqueInteger<T, Dummy> other) const
     {
-        return val<=other.val;
+        return val <= other.val;
     }
-    int operator >= (OpaqueInteger<T,Dummy> other) const
+
+    int operator >= (OpaqueInteger<T, Dummy> other) const
     {
-        return val>=other.val;
+        return val >= other.val;
     }
-    OpaqueInteger<T,Dummy> operator ++ ()
+
+    OpaqueInteger<T, Dummy> operator ++ ()
     {
-        return OpaqueInteger<T,Dummy>(++val);
+        return OpaqueInteger<T, Dummy>(++val);
     }
-    OpaqueInteger<T,Dummy> operator ++ (int)
+
+    OpaqueInteger<T, Dummy> operator ++ (int)
     {
-        return OpaqueInteger<T,Dummy>(val++);
+        return OpaqueInteger<T, Dummy>(val++);
     }
-    OpaqueInteger<T,Dummy> operator -- ()
+
+    OpaqueInteger<T, Dummy> operator -- ()
     {
-        return OpaqueInteger<T,Dummy>(--val);
+        return OpaqueInteger<T, Dummy>(--val);
     }
-    OpaqueInteger<T,Dummy> operator -- (int)
+
+    OpaqueInteger<T, Dummy> operator -- (int)
     {
-        return OpaqueInteger<T,Dummy>(val--);
+        return OpaqueInteger<T, Dummy>(val--);
     }
-    OpaqueInteger<T,Dummy> operator *= (OpaqueInteger<T,Dummy> i)
+
+    OpaqueInteger<T, Dummy> operator *= (OpaqueInteger<T, Dummy> i)
     {
         val *= i.val;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator /= (OpaqueInteger<T,Dummy> i)
+
+    OpaqueInteger<T, Dummy> operator /= (OpaqueInteger<T, Dummy> i)
     {
         val /= i.val;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator += (OpaqueInteger<T,Dummy> i)
+
+    OpaqueInteger<T, Dummy> operator += (OpaqueInteger<T, Dummy> i)
     {
         val += i.val;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator -= (OpaqueInteger<T,Dummy> i)
+
+    OpaqueInteger<T, Dummy> operator -= (OpaqueInteger<T, Dummy> i)
     {
         val -= i.val;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator %= (OpaqueInteger<T,Dummy> i)
+
+    OpaqueInteger<T, Dummy> operator %= (OpaqueInteger<T, Dummy> i)
     {
         val %= i.val;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator *= (T t)
+
+    OpaqueInteger<T, Dummy> operator *= (T t)
     {
         val *= t;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator /= (T t)
+
+    OpaqueInteger<T, Dummy> operator /= (T t)
     {
         val /= t;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator += (T t)
+
+    OpaqueInteger<T, Dummy> operator += (T t)
     {
         val += t;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator -= (T t)
+
+    OpaqueInteger<T, Dummy> operator -= (T t)
     {
         val -= t;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator %= (T t)
+
+    OpaqueInteger<T, Dummy> operator %= (T t)
     {
         val %= t;
         return *this;
     }
-    OpaqueInteger<T,Dummy> operator >>= (int i)
+
+    OpaqueInteger<T, Dummy> operator >>= (int i)
     {
         val >>= i;
         return *this;
-    }
-    OpaqueInteger<T,Dummy> operator <<= (int i)
-    {
-        val >>= i;
-        return *this;
-    }
-    OpaqueInteger<T,Dummy> operator >> (int i) const
-    {
-        return OpaqueInteger<T,Dummy>(val >> i);
-    }
-    OpaqueInteger<T,Dummy> operator << (int i) const
-    {
-        return OpaqueInteger<T,Dummy>(val << i);
-    }
-    OpaqueInteger<T,Dummy> operator % (T i) const
-    {
-        return OpaqueInteger<T,Dummy>(val % i);
-    }
-    OpaqueInteger<T,Dummy> operator / (T i) const
-    {
-        return OpaqueInteger<T,Dummy>(val / i);
-    }
-    OpaqueInteger<T,Dummy> operator * (T i) const
-    {
-        return OpaqueInteger<T,Dummy>(val * i);
-    }
-    OpaqueInteger<T,Dummy> operator + (T t) const
-    {
-        return OpaqueInteger<T,Dummy>(val+t);
-    }
-    OpaqueInteger<T,Dummy> operator - (T t) const
-    {
-        return OpaqueInteger<T,Dummy>(val-t);
     }
 
-    OpaqueInteger<T,Dummy> operator % (OpaqueInteger<T,Dummy> i) const
+    OpaqueInteger<T, Dummy> operator <<= (int i)
     {
-        return OpaqueInteger<T,Dummy>(val % i.val);
+        val >>= i;
+        return *this;
     }
-    OpaqueInteger<T,Dummy> operator / (OpaqueInteger<T,Dummy> i) const
+
+    OpaqueInteger<T, Dummy> operator >> (int i) const
     {
-        return OpaqueInteger<T,Dummy>(val / i.val);
+        return OpaqueInteger<T, Dummy>(val >> i);
     }
-    OpaqueInteger<T,Dummy> operator * (OpaqueInteger<T,Dummy> i) const
+
+    OpaqueInteger<T, Dummy> operator << (int i) const
     {
-        return OpaqueInteger<T,Dummy>(val * i.val);
+        return OpaqueInteger<T, Dummy>(val << i);
     }
-    OpaqueInteger<T,Dummy> operator + (OpaqueInteger<T,Dummy> i) const
+
+    OpaqueInteger<T, Dummy> operator % (T i) const
     {
-        return OpaqueInteger<T,Dummy>(val+i.val);
+        return OpaqueInteger<T, Dummy>(val % i);
     }
-    OpaqueInteger<T,Dummy> operator - (OpaqueInteger<T,Dummy> i) const
+
+    OpaqueInteger<T, Dummy> operator / (T i) const
     {
-        return OpaqueInteger<T,Dummy>(val-i.val);
+        return OpaqueInteger<T, Dummy>(val / i);
     }
-    
+
+    OpaqueInteger<T, Dummy> operator * (T i) const
+    {
+        return OpaqueInteger<T, Dummy>(val * i);
+    }
+
+    OpaqueInteger<T, Dummy> operator + (T t) const
+    {
+        return OpaqueInteger<T, Dummy>(val + t);
+    }
+
+    OpaqueInteger<T, Dummy> operator - (T t) const
+    {
+        return OpaqueInteger<T, Dummy>(val - t);
+    }
+
+    OpaqueInteger<T, Dummy> operator % (OpaqueInteger<T, Dummy> i) const
+    {
+        return OpaqueInteger<T, Dummy>(val % i.val);
+    }
+
+    OpaqueInteger<T, Dummy> operator / (OpaqueInteger<T, Dummy> i) const
+    {
+        return OpaqueInteger<T, Dummy>(val / i.val);
+    }
+
+    OpaqueInteger<T, Dummy> operator * (OpaqueInteger<T, Dummy> i) const
+    {
+        return OpaqueInteger<T, Dummy>(val * i.val);
+    }
+
+    OpaqueInteger<T, Dummy> operator + (OpaqueInteger<T, Dummy> i) const
+    {
+        return OpaqueInteger<T, Dummy>(val + i.val);
+    }
+
+    OpaqueInteger<T, Dummy> operator - (OpaqueInteger<T, Dummy> i) const
+    {
+        return OpaqueInteger<T, Dummy>(val - i.val);
+    }
+
     T getWrapped() const
     {
         return val;
@@ -234,11 +266,11 @@ public:
 };
 
 /**
- * Use opaqueToInt to explicitly cast an OpaqueInteger back to the 
+ * Use opaqueToInt to explicitly cast an OpaqueInteger back to the
  * wrapped type.
  */
-template<class T,class Dummy>
-inline T opaqueToInt(OpaqueInteger<T,Dummy> t)
+template<class T, class Dummy>
+inline T opaqueToInt(OpaqueInteger<T, Dummy> t)
 {
     return t.getWrapped();
 }
@@ -261,23 +293,23 @@ inline T opaqueToInt(T t)
 #ifdef OPAQUE_INTEGER_AS_CLASS
 // For debug build, define a dummy class to differentiate various
 // OpaqueInteger classes of the same size.
-#define DEFINE_OPAQUE_INTEGER(TypeName,TypeSize) \
-class Dummy##TypeName { \
+#define DEFINE_OPAQUE_INTEGER(TypeName, TypeSize) \
+class FENNEL_COMMON_EXPORT Dummy##TypeName { \
 }; \
-typedef OpaqueInteger<TypeSize,Dummy##TypeName> TypeName; \
+typedef OpaqueInteger<TypeSize, Dummy##TypeName> TypeName; \
 typedef TypeSize TypeName##Primitive;
 
-template<class T,class Dummy>
-inline std::ostream &operator <<(std::ostream &o,OpaqueInteger<T,Dummy> t)
+template<class T, class Dummy>
+inline std::ostream &operator <<(std::ostream &o,OpaqueInteger<T, Dummy> t)
 {
     o << opaqueToInt(t);
     return o;
 }
 
-#else  // OPAQUE_INTEGER_AS_PRIMITIVE
+#else
 
 // For release build, just typedef because we don't trust the compiler.
-#define DEFINE_OPAQUE_INTEGER(TypeName,TypeSize) \
+#define DEFINE_OPAQUE_INTEGER(TypeName, TypeSize) \
 typedef TypeSize TypeName; \
 typedef TypeSize TypeName##Primitive;
 

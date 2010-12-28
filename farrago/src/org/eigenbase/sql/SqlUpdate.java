@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlUpdate
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -73,7 +72,7 @@ public class SqlUpdate
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * @return the identifier for the target table of the insertion
+     * @return the identifier for the target table of the update
      */
     public SqlIdentifier getTargetTable()
     {
@@ -81,7 +80,7 @@ public class SqlUpdate
     }
 
     /**
-     * @return the alias for the target table of the deletion
+     * @return the alias for the target table of the update
      */
     public SqlIdentifier getAlias()
     {
@@ -110,9 +109,9 @@ public class SqlUpdate
      * @return the condition expression for the data to be updated, or null for
      * all rows in the table
      */
-    public SqlCall getCondition()
+    public SqlNode getCondition()
     {
-        return (SqlCall) operands[CONDITION_OPERAND];
+        return operands[CONDITION_OPERAND];
     }
 
     /**
@@ -134,7 +133,7 @@ public class SqlUpdate
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Select, "UPDATE", "");
+            writer.startList(SqlWriter.FrameTypeEnum.Select, "UPDATE", "");
         getTargetTable().unparse(
             writer,
             getOperator().getLeftPrec(),
@@ -153,7 +152,7 @@ public class SqlUpdate
                 getOperator().getRightPrec());
         }
         final SqlWriter.Frame setFrame =
-            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
+            writer.startList(SqlWriter.FrameTypeEnum.UpdateSetList, "SET", "");
         Iterator targetColumnIter = getTargetColumnList().getList().iterator();
         Iterator sourceExpressionIter =
             getSourceExpressionList().getList().iterator();

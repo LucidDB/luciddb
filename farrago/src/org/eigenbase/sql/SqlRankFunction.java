@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,10 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -35,7 +38,6 @@ import org.eigenbase.sql.type.*;
 public class SqlRankFunction
     extends SqlAggFunction
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type = null;
@@ -44,8 +46,9 @@ public class SqlRankFunction
 
     public SqlRankFunction(String name)
     {
-        super(name,
-            SqlKind.Function,
+        super(
+            name,
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiInteger,
             null,
             SqlTypeStrategies.otcNiladic,
@@ -73,6 +76,19 @@ public class SqlRankFunction
     {
         return true;
     }
+
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        final SqlParserPos pos = call.getParserPosition();
+        throw SqlUtil.newContextException(
+            pos,
+            EigenbaseResource.instance().FunctionUndefined.ex(
+                call.toString()));
+    }
 }
 
-// End SqlAggFunction.java
+// End SqlRankFunction.java

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,6 @@ SXMutex::SXMutex()
     nShared = 0;
     nExclusive = 0;
     nExclusivePending = 0;
-    exclusiveHolderId = NULL_TXN_ID;
     schedulingPolicy = SCHEDULE_DEFAULT;
 }
 
@@ -40,14 +39,7 @@ SXMutex::~SXMutex()
     assert(!nShared);
     assert(!nExclusive);
     assert(!nExclusivePending);
-    assert(exclusiveHolderId == NULL_TXN_ID);
-}
-
-inline void SXMutex::normalizeTxnId(TxnId &txnId)
-{
-    if (txnId == IMPLICIT_TXN_ID) {
-        txnId = TxnId(uint(getCurrentThreadId()));
-    }
+    assert(exclusiveHolderId.isNull());
 }
 
 void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
@@ -57,14 +49,14 @@ void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
     schedulingPolicy = schedulingPolicyInit;
 }
 
-bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
+bool SXMutex::waitFor(LockMode lockMode, uint iTimeout, TxnId txnId)
 {
     boost::xtime atv;
     if (iTimeout != ETERNITY) {
-        convertTimeout(iTimeout,atv);
+        convertTimeout(iTimeout, atv);
     }
     StrictMutexGuard mutexGuard(mutex);
-    normalizeTxnId(txnId);
+    LockHolderId acquirerId(txnId);
     bool bExclusive = (lockMode == LOCKMODE_X || lockMode == LOCKMODE_X_NOWAIT);
     bool bExclusivePending = (lockMode == LOCKMODE_X)
         && (schedulingPolicy == SCHEDULE_FAVOR_EXCLUSIVE);
@@ -72,7 +64,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
         ++nExclusivePending;
     }
     for (;;) {
-        if (exclusiveHolderId == txnId) {
+        if (exclusiveHolderId == acquirerId) {
             break;
         }
         if (bExclusive) {
@@ -92,7 +84,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
         if (iTimeout == ETERNITY) {
             condition.wait(mutexGuard);
         } else {
-            if (!condition.timed_wait(mutexGuard,atv)) {
+            if (!condition.timed_wait(mutexGuard, atv)) {
                 if (bExclusivePending) {
                     assert(nExclusivePending > 0);
                     --nExclusivePending;
@@ -103,7 +95,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
     }
     if (bExclusive) {
         ++nExclusive;
-        exclusiveHolderId = txnId;
+        exclusiveHolderId = acquirerId;
         if (bExclusivePending) {
             assert(nExclusivePending > 0);
             --nExclusivePending;
@@ -114,22 +106,22 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
     return true;
 }
 
-void SXMutex::release(LockMode lockMode,TxnId txnId)
+void SXMutex::release(LockMode lockMode, TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
     if (lockMode == LOCKMODE_X) {
         assert(nExclusive);
-        normalizeTxnId(txnId);
-        assert(exclusiveHolderId == txnId);
+        LockHolderId releaserId(txnId);
+        assert(exclusiveHolderId == releaserId);
         --nExclusive;
         if (!nExclusive) {
-            exclusiveHolderId = NULL_TXN_ID;
+            exclusiveHolderId.setNull();
             condition.notify_all();
         }
     } else {
         assert(lockMode == LOCKMODE_S);
         assert(nShared);
-        // NOTE:  we can't assert(exclusiveHolderId == NULL_TXN_ID) here,
+        // NOTE:  we can't assert(exclusiveHolderId.isNull()) here,
         // because a txn may take both a shared lock and an exclusive
         // lock simultaneously.
         --nShared;
@@ -154,7 +146,7 @@ bool SXMutex::tryUpgrade(TxnId txnId)
     StrictMutexGuard mutexGuard(mutex);
     assert(nShared);
     assert(!nExclusive);
-    assert(exclusiveHolderId == NULL_TXN_ID);
+    assert(exclusiveHolderId.isNull());
     if (nShared > 1) {
         return false;
     }
@@ -162,8 +154,8 @@ bool SXMutex::tryUpgrade(TxnId txnId)
     // nExclusivePending
     nShared = 0;
     nExclusive = 1;
-    normalizeTxnId(txnId);
-    exclusiveHolderId = txnId;
+    LockHolderId holderId(txnId);
+    exclusiveHolderId = holderId;
     return true;
 }
 

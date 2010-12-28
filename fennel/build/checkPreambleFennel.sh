@@ -7,39 +7,26 @@ set -e
 fennelDir=$(dirname $0)/..
 
 # Check preambles of Eigenbase ('green zone') files.
-# These are all files under fennel except those under
-# fennel/disruptivetech or fennel/lucidera.
-# They must have Eigenbase, Disruptive Tech and LucidEra
+# These are all files under fennel.
+# They must have Eigenbase, SQLstream and Dynamo BI
 # copyright notices.
 
 /usr/bin/find $fennelDir \( -name \*.cpp -o -name \*.h \) |
 grep -v -F \
-'disruptivetech
-lucidera
-build/wshack.cpp
-common/FemGeneratedEnums.h
+'common/FemGeneratedEnums.h
 common/FennelResource.cpp
 common/FennelResource.h
 config.h
+dummy.cpp
+CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp
+calculator/CalcGrammar.h
+calculator/CalcGrammar.tab.cpp
+calculator/CalcGrammar.cpp
+calculator/CalcLexer.cpp
 farrago/FemGeneratedClasses.h
 farrago/FemGeneratedMethods.h
 farrago/JniPseudoUuid.h
 farrago/NativeMethods.h' |
     xargs $fennelDir/build/checkPreamble.sh -fennel -eigenbase
-
-# Check preambles of LucidEra files.
-# These are all files under fennel/lucidera.
-# They must have Eigenbase and LucidEra copyright notices.
-/usr/bin/find $fennelDir/lucidera \( -name \*.cpp -o -name \*.h \) |
-    xargs $fennelDir/build/checkPreamble.sh -fennel -lucidera
-
-# Check preambles of Disruptive Tech files.
-# These are all files under fennel/disruptivetech.
-# They must have Eigenbase and Disruptive Tech copyright notices.
-/usr/bin/find $fennelDir/disruptivetech \( -name \*.cpp -o -name \*.h \) |
-grep -v -F 'disruptivetech/calc/CalcGrammar.cpp
-disruptivetech/calc/CalcGrammar.h
-disruptivetech/calc/CalcLexer.cpp' |
-    xargs $fennelDir/build/checkPreamble.sh -fennel -disruptivetech
 
 # End checkPreambleFennel.sh

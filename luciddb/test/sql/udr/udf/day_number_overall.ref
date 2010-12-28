@@ -28,11 +28,25 @@
 | 14944   |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.day_number_overall(cast(null as date));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.day_number_overall(cast(null as timestamp));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.day_number_overall(DATE'2341');
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2341' at line 1, column 38: not in format 'yyyy-MM-dd' (state=,code=0)
+Error: Illegal DATE literal '2341': not in format 'yyyy-MM-dd' (state=,code=0)
 0: jdbc:luciddb:> values applib.day_number_overall(TIMESTAMP'1990 12:12:12');
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1990 12:12:12' at line 1, column 43: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: Illegal TIMESTAMP literal '1990 12:12:12': not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.day_number_overall
 0: jdbc:luciddb:> create view days (fm, fromDate, fromTs) as
@@ -54,13 +68,13 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '19
 0: jdbc:luciddb:> select fm, applib.day_number_overall(datecol) + applib.day_number_overall(tscol) / fm
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
-+-----+---------+
-| FM  | EXPR$1  |
-+-----+---------+
-| 1   | -30464  |
-| 2   | 18919   |
-| 10  | 15594   |
-+-----+---------+
++-----+----------------+
+| FM  |     EXPR$1     |
++-----+----------------+
+| 1   | -30464.000000  |
+| 2   | 18919.000000   |
+| 10  | 15594.800000   |
++-----+----------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup 
 0: jdbc:luciddb:> drop view days;

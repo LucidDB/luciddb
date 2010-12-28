@@ -1,0 +1,414 @@
+0: jdbc:luciddb:> create foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_NO_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- no substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 123      |          |
+|             |                      | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31  |                      | 0.0              | 0.000             |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.000           | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wrapper substitution
+0: jdbc:luciddb:> create foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java
+. . . . . . . . > options(
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with wrapper substitution only
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|       DATECOL        |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|                      |                      | 99999.0          |                   | varchar     |          |          |
+|                      |                      | 99999.0          |                   | varchar     | 123      |          |
+|                      |                      | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 23:59:59  |                      | 0.0              | 0.000             |             |          |          |
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  | 100.011          | 100.000           | varchar     |          |          |
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'TIMESTAMP:DATE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with overridden server substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+---------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   | TIMESTAMPCOL  | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+---------------+------------------+-------------------+-------------+----------+----------+
+|             |               | 99999.0          |                   | varchar     |          |          |
+|             |               | 99999.0          |                   | varchar     | 123      |          |
+|             |               | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31  |               | 0.0              | 0.000             |             |          |          |
+| 2006-10-31  | 2006-10-31    | 100.011          | 100.000           | varchar     |          |          |
++-------------+---------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP;TIMESTAMP:DATE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with more than one substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++----------------------+---------------+------------------+-------------------+-------------+----------+----------+
+|       DATECOL        | TIMESTAMPCOL  | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++----------------------+---------------+------------------+-------------------+-------------+----------+----------+
+|                      |               | 99999.0          |                   | varchar     |          |          |
+|                      |               | 99999.0          |                   | varchar     | 123      |          |
+|                      |               | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 23:59:59  |               | 0.0              | 0.000             |             |          |          |
+| 2006-10-31 00:00:00  | 2006-10-31    | 100.011          | 100.000           | varchar     |          |          |
++----------------------+---------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- using precision/scale, scale does not match
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP;DECIMAL(22,3):DOUBLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DECIMAL    | 19         | 0           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DECIMAL    | 19         | 3           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1024       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- using precision/scale, scale matches
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP;DECIMAL(30,3):DOUBLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DECIMAL    | 19         | 0           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DOUBLE     |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1024       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- using precision/scale, with no scale
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP;DECIMAL(22):DOUBLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DOUBLE     |            |             | false        |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DECIMAL    | 19         | 3           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1024       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- without specifying precision/scale
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_mapping 'DATE:TIMESTAMP;DECIMAL:DOUBLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_WITH_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DOUBLE     |            |             | false        |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DOUBLE     |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1024       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TEST: TYPE_MAPPING's interaction with TYPE_SUBSTITUTION
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- (1) With TYPE_SUBSTITUTION = false, No TYPE_MAPPING
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_TYPE_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_substitution 'FALSE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+Error: Cannot support JDBC type "NUMBER" (ordinal 2, precision 30, scale 3) found in column "NUMERICCOL2WITHP" of table "" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+Error: Cannot support JDBC type "NUMBER" (ordinal 3, precision 22, scale 0) found in column "NUMERICCOLZEROP" of table "@DATATYPE_TABLE@" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- (2) With TYPE_SUBSTITUTION = false and TYPE_MAPPING specified
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_TYPE_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_substitution 'FALSE',
+. . . . . . . . >     type_mapping 'DECIMAL:DOUBLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+Error: Cannot support JDBC type "CLOB" (ordinal 2005, precision -1, scale 0) found in column "CLOBCOL" of table "" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+Error: Cannot support JDBC type "CLOB" (ordinal 2005, precision 4000, scale 0) found in column "CLOBCOL" of table "@DATATYPE_TABLE@" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- oops, forgot about CLOB/BLOB
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_TYPE_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_substitution 'FALSE',
+. . . . . . . . >     type_mapping 'DECIMAL:DOUBLE;CLOB:VARCHAR(1);BLOB:Varchar(1)'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 1        |          |
+|             |                      | 99999.0          |                   | varchar     | 4        |          |
+| 2006-10-31  |                      | 0.0              | 0.0               |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.0             | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | DATE       |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DOUBLE     |            |             | false        |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DOUBLE     |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1          |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 1        |          |
+|             |                      | 99999.0          |                   | varchar     | 4        |          |
+| 2006-10-31  |                      | 0.0              | 0.0               |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.0             | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- (3) With TYPE_SUBSTITUTION = true and No TYPE_MAPPING
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_TYPE_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_substitution 'TRUE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 123      |          |
+|             |                      | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31  |                      | 0.0              | 0.000             |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.000           | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | DATE       |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DECIMAL    | 19         | 0           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DECIMAL    | 19         | 3           | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 1024       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999            |                   | varchar     |          |          |
+|             |                      | 99999            |                   | varchar     | 123      |          |
+|             |                      | 99999            |                   | varchar     | 456      |          |
+| 2006-10-31  |                      | 0                | 0.000             |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100              | 100.000           | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- (4) With TYPE_SUBSTITUTION = true and TYPE_MAPPING specified
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_TYPE_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     type_substitution 'TRUE',
+. . . . . . . . >     type_mapping 'DECIMAL:DOUBLE;CLOB:VARCHAR(2)'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TYPE_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 12       |          |
+|             |                      | 99999.0          |                   | varchar     | 45       |          |
+| 2006-10-31  |                      | 0.0              | 0.0               |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.0             | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema @SCHEMA@ LIMIT TO table_name like '@DATATYPE_TABLE@' from server ORCL_SERVER_TYPE_SUB into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like '@DATATYPE_TABLE@' order by ORDINAL_POSITION;
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |    COLUMN_NAME    | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | DATECOL           | 1                 | DATE       |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | TIMESTAMPCOL      | 2                 | TIMESTAMP  | 0          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOLZEROP   | 3                 | DOUBLE     |            |             | false        |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | NUMERICCOL2WITHP  | 4                 | DOUBLE     |            |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | VARCHARCOL        | 5                 | VARCHAR    | 4000       |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | CLOBCOL           | 6                 | VARCHAR    | 2          |             | true         |
+| LOCALDB       | TEST         | @DATATYPE_TABLE@   | BLOBCOL           | 7                 | VARCHAR    | 1024       |             | true         |
++---------------+--------------+-------------+-------------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from test.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|   DATECOL   |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|             |                      | 99999.0          |                   | varchar     |          |          |
+|             |                      | 99999.0          |                   | varchar     | 12       |          |
+|             |                      | 99999.0          |                   | varchar     | 45       |          |
+| 2006-10-31  |                      | 0.0              | 0.0               |             |          |          |
+| 2006-10-31  | 2006-10-31 12:00:21  | 100.011          | 100.0             | varchar     |          |          |
++-------------+----------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,9 +38,35 @@ FENNEL_BEGIN_NAMESPACE
  * because an identical copy is stored as part of a careful-write protocol when
  * checkpointing.)
  */
-struct DatabaseHeader : public StoredNode
+struct FENNEL_DB_EXPORT DatabaseHeader
+    : public StoredNode
 {
-    static const MagicNumber MAGIC_NUMBER = 0xb1b7b315d821d90aLL;
+    // NOTE jvs 27-Apr-2007:  We use distinct magic numbers for incompatible
+    // hardware/OS/compiler architectures.  This prevents accidents when
+    // attempting to transport physical backup images across machines.
+    // Currently, for 32-bit x86, Windows and Linux gcc are incompatible
+    // (it may be possible to fix this via pragma/switches, but no
+    // one has investigated it so far).  64-bit Linux is incompatible
+    // with both.  On next bump-up, it would probably be a good idea
+    // to rationalize the numbering scheme so that arch component
+    // is one component and Fennel structural version is another;
+    // the current scheme isn't scalable as we keep adding architectures!
+
+    // Magic number history:
+    // Original value:  0xb1b7b315d821d90aLL;
+#ifndef __MSVC__
+#if __WORDSIZE == 64
+    // Added by jvs for amd64 on 27-May-2007
+    static const MagicNumber MAGIC_NUMBER = 0xa513a9e27bc336acLL;
+#else
+    // Changed by zfong on 3/1/07 (for addition of nextTxnId to checkpoint
+    // memento) from original value above to latest value:
+    static const MagicNumber MAGIC_NUMBER = 0xb0941b203b81f718LL;
+#endif
+#else
+    // Added by jvs for Windows-specific on 27-Apr-2007
+    static const MagicNumber MAGIC_NUMBER = 0x8afe0241a2f7063eLL;
+#endif
 
     /**
      * Data segment version number at last checkpoint.
@@ -57,7 +83,6 @@ struct DatabaseHeader : public StoredNode
      */
     PageId shadowRecoveryPageId;
 
-    // TODO:  typedef
     /**
      * Whenever a database is opened, except during recovery, a new UUID is
      * generated to represent the online lifetime of the database.  The

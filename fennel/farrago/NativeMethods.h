@@ -7,7 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Inaccessible static: awtToolkit */
 #undef net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT
 #define net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT 0L
 #undef net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT
@@ -57,18 +56,26 @@ JNIEXPORT jstring JNICALL Java_net_sf_farrago_fennel_FennelStorage_getAccessorXm
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    executeJavaCmd
- * Signature: (Lnet/sf/farrago/fem/fennel/FemCmd;)J
+ * Signature: (Lnet/sf/farrago/fem/fennel/FemCmd;J)J
  */
 JNIEXPORT jlong JNICALL Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd
-  (JNIEnv *, jclass, jobject);
+  (JNIEnv *, jclass, jobject, jlong);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    tupleStreamGraphGetInputStreams
+ * Signature: (JLjava/lang/String;Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams
+  (JNIEnv *, jclass, jlong, jstring, jobject);
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamGraphOpen
- * Signature: (JJLnet/sf/farrago/fennel/FennelJavaStreamMap;)V
+ * Signature: (JJLnet/sf/farrago/fennel/FennelJavaStreamMap;Lnet/sf/farrago/fennel/FennelJavaErrorTarget;)V
  */
 JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen
-  (JNIEnv *, jclass, jlong, jlong, jobject);
+  (JNIEnv *, jclass, jlong, jlong, jobject, jobject);
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
@@ -96,11 +103,43 @@ JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamResta
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    tupleStreamSetRunnable
+ * Signature: (JZ)V
+ */
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamSetRunnable
+(JNIEnv *, jclass, jlong, jboolean);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamGraphClose
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose
   (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    newExecutionHandle
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_net_sf_farrago_fennel_FennelStorage_newExecutionHandle
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    deleteExecutionHandle
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_deleteExecutionHandle
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    cancelExecution
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_cancelExecution
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-Farrago Source Release 0.6.0pre1
+Farrago Source Release 0.9.3
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -8,10 +8,12 @@ http://farrago.sourceforge.net
 ----------------------------------------------------------------------
 BUILD
 
-See doc/developerJumpStart.html
+http://pub.eigenbase.org/wiki/FarragoBuild
 
 If instead of building you would like to obtain pre-packaged binaries,
 download the full Eigenbase binary release for your platform.
+
+http://www.eigenbase.org/download.html
 
 ------------------------------------------------------------
 RELEASE NOTES
@@ -26,10 +28,14 @@ SPI's, and class libraries) are still in a fluid state and subject to
 frequent review and change.  As interfaces solidify, they will be
 officially frozen in future releases.
 
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
+
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 2003-2006 The Eigenbase Project and others
+Copyright (C) 2003 The Eigenbase Project and others
 
 This distribution of Farrago is licensed under the GNU General Public
 License; see file COPYING for details.

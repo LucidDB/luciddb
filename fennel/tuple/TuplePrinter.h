@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,16 +33,16 @@ FENNEL_BEGIN_NAMESPACE
 class TupleDescriptor;
 class TupleData;
 
-class TuplePrinter
+class FENNEL_TUPLE_EXPORT TuplePrinter
     : public boost::noncopyable,
-    private DataVisitor
+        private DataVisitor
 {
     std::ostream *pStream;
     uint iValue;
 
     void preVisitValue();
     void postVisitValue();
-    
+
     // implement DataVisitor
     virtual void preVisitDocument(std::string);
     virtual void postVisitDocument();
@@ -52,7 +52,8 @@ class TuplePrinter
     virtual void postVisitRow();
     virtual void visitAttribute(std::string);
     virtual void visitString(std::string);
-    virtual void visitChars(char const *, TupleStorageByteLength iChars);
+    virtual void visitChars(char const *, TupleStorageByteLength nChars);
+    virtual void visitUnicodeChars(Ucs2ConstBuffer, uint nChars);
     virtual void visitUnsignedInt(uint64_t);
     virtual void visitSignedInt(int64_t);
     virtual void visitDouble(double);
@@ -63,7 +64,7 @@ class TuplePrinter
     virtual void visitSegByteId(SegByteId);
     virtual void visitFormatted(char const *);
     virtual void visitBytes(void const *v, TupleStorageByteLength iBytes);
-    
+
 public:
     explicit TuplePrinter();
 

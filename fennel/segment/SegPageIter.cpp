@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,10 +39,6 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 SegPageIter::SegPageIter()
 {
-    // TODO:  parameterize
-    nPagesPerBatch = 4;
-    nBatchPrefetches = 3;
-    prefetchQueue.resize(nPagesPerBatch*nBatchPrefetches);
 }
 
 void SegPageIter::mapRange(
@@ -53,104 +49,134 @@ void SegPageIter::mapRange(
     assert(segmentAccessorInit.pSegment);
     assert(segmentAccessorInit.pCacheAccessor);
     segmentAccessor = segmentAccessorInit;
-    iFetch = 0;
-    atEnd = 0;
+    initPrefetchQueue();
     endPageId = endPageIdInit;
-    for (uint nextBatch = 0; nextBatch < nBatchPrefetches; nextBatch++) {
+    for (uint i = 0; i < queueSize; i++) {
         if (atEnd) {
             break;
         }
-        if (nextBatch) {
+        if (i > 0) {
             beginPageIdInit = segmentAccessor.pSegment->getPageSuccessor(
-                prefetchQueue[nextBatch*nPagesPerBatch-1]);
+                prefetchQueue[i - 1]);
         }
-        prefetchBatch(beginPageIdInit,nextBatch);
+        prefetchPage(beginPageIdInit);
     }
+}
+
+void SegPageIter::initPrefetchQueue()
+{
+    segmentAccessor.pCacheAccessor->getPrefetchParams(
+        prefetchPagesMax,
+        prefetchThrottleRate);
+    queueSize = prefetchPagesMax;
+    noPrefetch = (queueSize == 0);
+    // Reset the queue size so we have space to store at least one page
+    if (queueSize < 1) {
+        queueSize = 1;
+    }
+    prefetchQueue.resize(queueSize);
+
+    nFreePageSlots = queueSize;
+    currPageSlot = 0;
+    iFetch = 0;
+    atEnd = 0;
+    throttleCount = 0;
+    forceReject = false;
 }
 
 void SegPageIter::operator ++ ()
 {
     assert(!isSingular());
     assert(**this != endPageId);
-    iFetch++;
-    if (iFetch % nPagesPerBatch) {
+
+    // Move past the page currently at the front of the queue.
+    iFetch = (iFetch + 1) % queueSize;
+    ++nFreePageSlots;
+
+    if (atEnd) {
         return;
     }
-    uint batchNumber = iFetch/nPagesPerBatch - 1;
-    if (!atEnd) {
-        int iPrev = batchNumber*nPagesPerBatch - 1;
-        if (iPrev < 0) {
-            iPrev += nPagesPerBatch*nBatchPrefetches;
-        }
-        prefetchBatch(
-            segmentAccessor.pSegment->getPageSuccessor(prefetchQueue[iPrev]),
-            batchNumber);
+
+    // Pre-fetch a page to replace the page that was at the front
+    // of the queue.
+    int iPrev = currPageSlot - 1;
+    if (iPrev < 0) {
+        iPrev += queueSize;
     }
-    iFetch %= (nPagesPerBatch*nBatchPrefetches);
+    prefetchPage(
+        segmentAccessor.pSegment->getPageSuccessor(prefetchQueue[iPrev]));
 }
 
-void SegPageIter::prefetchBatch(PageId beginPageId,uint batchNumber)
+void SegPageIter::prefetchPage(PageId pageId)
 {
-    uint i,start = batchNumber*nPagesPerBatch;
-    prefetchQueue[start] = beginPageId;
-    if (beginPageId == endPageId) {
+    // Store the page we're about to pre-fetch in the first empty slot
+    // in the queue
+    prefetchQueue[currPageSlot++] = pageId;
+    currPageSlot %= queueSize;
+    --nFreePageSlots;
+
+    if (pageId == endPageId) {
         atEnd = 1;
         return;
     }
 
-    // TODO:  re-enable batching, but using BlockIds rather than PageIds
-    DeviceId deviceId = CompoundId::getDeviceId(beginPageId);
-    BlockNum minBlockNum = CompoundId::getBlockNum(beginPageId);
-    BlockNum maxBlockNum = minBlockNum;
+    // If pre-fetches are turned off, don't bothering issuing the pre-fetch
+    // request.
+    BlockId blockId = NULL_BLOCK_ID;
+    if (!forceReject && !noPrefetch) {
+        blockId = segmentAccessor.pSegment->translatePageId(pageId);
+    }
+    if (!forceReject
+        && (noPrefetch
+            || segmentAccessor.pCacheAccessor->prefetchPage(
+                blockId,
+                segmentAccessor.pSegment->getMappedPageListener(blockId))))
+    {
+        // If the pre-fetch rate was throttled down, then wait until we
+        // reach the desired number of successful pre-fetches before
+        // throttling the rate back up, one page at a time.
+        if (throttleCount > 0) {
+            assert(prefetchPagesMax != 0);
+            if (--throttleCount == 0) {
+                // At a minimum, reenable pre-fetches
+                noPrefetch = false;
 
-    bool canBatch = 1;
-    
-    for (i = 1; i < nPagesPerBatch; i++) {
-        beginPageId = segmentAccessor.pSegment->getPageSuccessor(beginPageId);
-        prefetchQueue[start+i] = beginPageId;
-        if (beginPageId == endPageId) {
-            canBatch = 0;
-            atEnd = 1;
-            break;
-        }
-        if (canBatch) {
-            if (CompoundId::getDeviceId(beginPageId) != deviceId) {
-                // TODO:  batch reads for segments which span
-                // devices?
-                canBatch = 0;
-            } else {
-                BlockNum firstBlockNum = CompoundId::getBlockNum(beginPageId);
-                minBlockNum = std::min(minBlockNum,firstBlockNum);
-                maxBlockNum = std::max(maxBlockNum,firstBlockNum);
+                // If we haven't throttled back to the max pre-fetch
+                // rate, then reset the counter so we can continue
+                // counting successful pre-fetches to allow the rate
+                // to continue throttling up.  In the case where the
+                // pre-fetch rate is a single page, no further throttling
+                // is possible.
+                if (prefetchPagesMax > 1) {
+                    nFreePageSlots++;
+                    if (nFreePageSlots < prefetchPagesMax) {
+                        throttleCount = prefetchThrottleRate;
+                    }
+                }
             }
         }
-    }
-
-    // TODO
-#if 0
-    if (canBatch &&
-        (maxBlockNum + 1 - minBlockNum == nPagesPerBatch))
-    {
-        PageId pageId;
-        CompoundId::setDeviceId(pageId,deviceId);
-        CompoundId::setBlockNum(pageId,minBlockNum);
-        pageId = segment.getPhysicalID(pageId);
-        batchSlots[batchNumber] = RecordMgr::getCache().prefetchBatch(
-            pageId,&segment);
-        if (batchSlots[batchNumber] != -1) return;
-    }
-#endif
-    
-    for (i = 0; i < nPagesPerBatch; i++) {
-        PageId pageId = prefetchQueue[start+i];
-        if (pageId == endPageId) {
-            break;
+    } else {
+        // If pre-fetches aren't already disabled, then set the number of
+        // pre-fetches to the number of outstanding pre-fetches by
+        // disallowing any new pre-fetches until the existing ones are used.
+        // If we're down to doing a single pre-fetch, then turn off
+        // pre-fetches.
+        if (prefetchPagesMax > 0) {
+            if (nFreePageSlots > 0) {
+                nFreePageSlots = 0;
+            }
+            if (iFetch == currPageSlot) {
+                noPrefetch = true;
+            }
+            throttleCount = prefetchThrottleRate;
         }
-        BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
-        segmentAccessor.pCacheAccessor->prefetchPage(
-            blockId,
-            segmentAccessor.pSegment.get());
+        forceReject = false;
     }
+}
+
+void SegPageIter::forcePrefetchReject()
+{
+    forceReject = true;
 }
 
 FENNEL_END_CPPFILE("$Id$");

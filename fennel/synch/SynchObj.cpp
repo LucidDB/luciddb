@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,10 +24,11 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/synch/Thread.h"
+#include "fennel/synch/NullMutex.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void convertTimeout(uint iMilliseconds,boost::xtime &atv)
+void convertTimeout(uint iMilliseconds, boost::xtime &atv)
 {
     boost::xtime_get(&atv,boost::TIME_UTC);
     if (isMAXU(iMilliseconds)) {
@@ -37,12 +38,20 @@ void convertTimeout(uint iMilliseconds,boost::xtime &atv)
         // around as a singleton.
         atv.sec += 36000;
     } else if (iMilliseconds) {
-        long sec = iMilliseconds/1000;
-        long nsec = (iMilliseconds%1000)*1000000;
+        long sec = iMilliseconds / 1000;
+        long nsec = (iMilliseconds % 1000) * 1000000;
         atv.sec += sec;
         atv.nsec += nsec;
     }
 }
+
+// force references to some classes which aren't referenced elsewhere
+#ifdef __MSVC__
+class UnreferencedSynchStructs
+{
+    NullMutex nullMutex;
+};
+#endif
 
 FENNEL_END_CPPFILE("$Id$");
 

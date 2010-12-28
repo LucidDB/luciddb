@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ComparableOperandTypeChecker
     extends SameOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataTypeComparability requiredComparability;
@@ -79,8 +78,9 @@ public class ComparableOperandTypeChecker
         boolean throwOnFailure,
         RelDataType type)
     {
-        if (type.getComparability().getOrdinal()
-            < requiredComparability.getOrdinal()) {
+        if (type.getComparability().ordinal()
+            < requiredComparability.ordinal())
+        {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
             } else {
@@ -102,8 +102,9 @@ public class ComparableOperandTypeChecker
         for (int i = 0; i < nOperands; ++i) {
             RelDataType type = callBinding.getOperandType(i);
             boolean result;
-            if (type.getComparability().getOrdinal()
-                < requiredComparability.getOrdinal()) {
+            if (type.getComparability().ordinal()
+                < requiredComparability.ordinal())
+            {
                 result = false;
             } else {
                 result = true;
@@ -124,9 +125,9 @@ public class ComparableOperandTypeChecker
         String [] array = new String[nOperands];
         Arrays.fill(array, "COMPARABLE_TYPE");
         return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                Arrays.asList(array));
+            op,
+            opName,
+            Arrays.asList(array));
     }
 }
 

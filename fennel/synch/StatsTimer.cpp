@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -82,6 +82,20 @@ uint StatsTimer::getTimerIntervalMillis()
     return intervalInMillis;
 }
 
+void StatsTimer::onThreadStart()
+{
+    if (pTarget) {
+        pTarget->onThreadStart();
+    }
+}
+
+void StatsTimer::onThreadEnd()
+{
+    if (pTarget) {
+        pTarget->onThreadEnd();
+    }
+}
+
 void StatsTimer::onTimerInterval()
 {
     if (!pTarget) {
@@ -92,6 +106,16 @@ void StatsTimer::onTimerInterval()
         sources[i]->writeStats(*pTarget);
     }
     pTarget->endSnapshot();
+}
+
+void StatsTarget::onThreadStart()
+{
+    // by default do nothing
+}
+
+void StatsTarget::onThreadEnd()
+{
+    // by default do nothing
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -1,0 +1,197 @@
+-- constraints for different datatypes and data w/ nulls
+create schema uc;
+set schema 'uc';
+alter session set "etlProcessId"='nulls_uc';
+alter session set "logDir"='@ERRLOGDIR@';
+
+create table null_src(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int
+);
+
+insert into null_src values
+(null, null, null, null, null),
+(1, 10000, 'one', 'ten-thousand', 10000),
+(2, 30, 'two', 'thirty', 60),
+(3, null, 'three', null, null),
+(3, null, 'three2', 'three2', 32),
+(2, 40, 'two', 'forty', 80),
+(null, 10, null, 'ten', null),
+(4, 40, 'four', 'forty', 160);
+
+-- duplicate data with null keys for primary key insert
+alter session set "etlActionId"='insert_pk_null';
+alter session set "errorMax"=5;
+
+create table null_uc_pk(
+  pkey int primary key,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int
+);
+
+insert into null_uc_pk select * from null_src;
+select * from null_uc_pk order by 1,2,3,4,5;
+select * from null_uc_pk where pkey=2 order by 1,2,3,4,5;
+
+-- duplicate data with null keys for single unique constraint insert
+alter session set "etlActionId"='insert_sk_null';
+
+create table null_uc_sk(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int,
+  constraint n_pkey_unique UNIQUE(pkey)
+);
+
+insert into null_uc_sk select * from null_src;
+select * from null_uc_sk order by 1,2,3,4,5;
+select * from null_uc_sk where pkey is null order by 1,2,3,4,5;
+
+-- duplicate data with null keys for primary key merge
+alter session set "etlActionId"='merge_pk_null';
+
+delete from null_src where pkey=2 and colbigint=30;
+insert into null_src values
+(1, 10, 'one', 'ten', 100),
+(5, 50, 'five', 'fifty', 250),
+(null, 50, null, 'fifty', null);
+
+merge into null_uc_pk tgt using null_src src
+  on src.pkey = tgt.pkey
+  when matched then
+    update set colbigint=src.colbigint, colvar=src.colvar, colchar=src.colchar,
+      colint=src.colint 
+  when not matched then
+    insert values (src.pkey, src.colbigint, src.colvar, src.colchar,
+      src.colint);
+
+select * from null_uc_pk order by 1,2,3,4,5;
+select * from null_uc_pk where pkey=2 order by 1,2,3,4,5;
+
+-- duplicate data with null keys for single key constraint merge
+alter session set "etlActionId"='merge_sk_null';
+
+merge into null_uc_sk tgt using null_src src
+  on src.pkey = tgt.pkey
+  when matched then
+    update set colbigint=src.colbigint, colvar=src.colvar, colchar=src.colchar,
+      colint=src.colint 
+  when not matched then
+    insert values (src.pkey, src.colbigint, src.colvar, src.colchar,
+      src.colint);
+
+select * from null_uc_sk order by 1,2,3,4,5;
+select * from null_uc_sk where pkey is null order by 1,2,3,4,5;
+
+-- duplicate data with multiple key constraint
+alter session set "etlActionId"='insert_multikey_null';
+
+create table null_uc_mk(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int,
+  constraint n_pkey_bi_unique UNIQUE(pkey,colbigint)
+);
+
+insert into null_uc_mk select * from null_src;
+select * from null_uc_mk order by 1,2,3,4,5;
+select * from null_uc_mk where pkey is null and colbigint=50;
+
+-- check logs
+select process_id, action_id, error_count, warning_count, "SQL"
+  from errlogs.bcp."Summary"
+  where process_id='nulls_uc'
+  order by 1,2,3,4,5;
+
+-- tests for different datatype keys
+alter session set "etlProcessId"='datatypes_uc';
+alter session set "errorMax"=10;
+
+-- boolean key
+alter session set "etlActionId"='insert_boolkey';
+
+create table boolkey_uc(
+  pkey boolean,
+  var varchar(20),
+  constraint b_pkey_unique UNIQUE(pkey)
+);
+
+insert into boolkey_uc values
+(true, 'true'),
+(false, 'false'),
+(true, 'false'),
+(false, 'true');
+select * from boolkey_uc where pkey=true or pkey=false order by 1,2;
+
+-- varchar with trailing spaces
+alter session set "etlActionId"='insert_varcharkey';
+
+create table varchar_uc(
+  pkey varchar(20),
+  var varchar(20),
+  constraint v_pkey_unique UNIQUE(pkey)
+);
+
+insert into varchar_uc values
+('Abc', 'Abc-trimmed'),
+('  Abc', 'Abc-spaces before'),
+('Abc  ', 'Abc-trailing spaces'),
+(cast('Abc   ' as varchar(100)), 'trailing-100'),
+(trim(' Abc '), 'trimmed');
+select * from varchar_uc order by 1,2;
+select * from varchar_uc where pkey='Abc';
+
+-- char with trailing spaces
+alter session set "etlActionId"='insert_charkey';
+
+create table char_uc(
+  pkey char(20),
+  var varchar(20),
+  constraint c_pkey_unique UNIQUE(pkey)
+);
+
+insert into char_uc values
+('Abc', 'Abc-trimmed'),
+('  Abc', 'Abc-spaces before'),
+('Abc  ', 'Abc-trailing spaces'),
+(cast('Abc   ' as varchar(100)), 'trailing-100'),
+(trim(' Abc '), 'trimmed');
+select * from char_uc order by 1,2;
+select * from char_uc where pkey in ('Abc       ', '  Abc  ') order by 1,2;
+
+-- different kind of integer types
+alter session set "etlActionId"='insert_intkey';
+
+create table bii_uc(
+  ikey int,
+  bikey bigint,
+  var varchar(20),
+  constraint i_unique UNIQUE(ikey),
+  constraint bi_unique  UNIQUE(bikey)
+);
+
+insert into bii_uc values
+(1, 1, '1'),
+(cast(1 as bigint), cast(1 as bigint), '2'),
+(cast(1 as tinyint), cast(1 as tinyint), '3'),
+(cast(1 as smallint), cast(1 as smallint), '4');
+select * from bii_uc order by 1,2,3;
+select * from bii_uc where ikey=1 and bikey=1;
+
+-- check logs
+select process_id, action_id, error_count, warning_count, "SQL"
+  from errlogs.bcp."Summary"
+  where process_id='datatypes_uc'
+  order by 1,2,3,4,5;
+
+-- cleanup
+drop schema uc cascade;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,39 +22,37 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.*;
+import java.util.EnumSet;
+import java.util.Set;
 
 
 /**
  * Enumerates the possible types of {@link SqlNode}.
  *
  * <p>Only commonly-used nodes have their own type; other nodes are of type
- * {@link #Other}. Some of the values, such as {@link #SetQuery}, represent
+ * {@link #OTHER}. Some of the values, such as {@link #SET_QUERY}, represent
  * aggregates.</p>
  *
  * @author jhyde
  * @version $Id$
  * @since Dec 12, 2003
  */
-public class SqlKind
-    extends EnumeratedValues.BasicValue
+public enum SqlKind
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
-    // the basics 0 - 99
+    // the basics
 
     /**
      * Other
      */
-    public static final int OtherORDINAL = 0;
-    public static final SqlKind Other = new SqlKind("Other", OtherORDINAL);
+    OTHER,
 
     /**
      * SELECT statement or sub-query
      */
-    public static final int SelectORDINAL = 1;
-    public static final SqlKind Select = new SqlKind("Select", SelectORDINAL);
+    SELECT,
+
 
     /**
      * JOIN operator or compound FROM clause.
@@ -63,611 +61,490 @@ public class SqlKind
      * join. For example, "FROM x, y, z" is represented as "JOIN(x, JOIN(x,
      * y))".</p>
      */
-    public static final int JoinORDINAL = 2;
-    public static final SqlKind Join = new SqlKind("Join", JoinORDINAL);
+    JOIN,
 
     /**
      * Identifier
      */
-    public static final int IdentifierORDINAL = 3;
-    public static final SqlKind Identifier =
-        new SqlKind("Identifier", IdentifierORDINAL);
+    IDENTIFIER,
 
     /**
      * Literal
      */
-    public static final int LiteralORDINAL = 4;
-    public static final SqlKind Literal =
-        new SqlKind("Literal", LiteralORDINAL);
+    LITERAL,
 
     /**
-     * Function
+     * Function that is not a special function.
+     *
+     * @see #FUNCTION
      */
-    public static final int FunctionORDINAL = 5;
-    public static final SqlKind Function =
-        new SqlKind("Function", FunctionORDINAL);
+    OTHER_FUNCTION,
 
     /**
      * EXPLAIN statement
      */
-    public static final int ExplainORDINAL = 6;
-    public static final SqlKind Explain =
-        new SqlKind("Explain", ExplainORDINAL);
+    EXPLAIN,
 
     /**
      * INSERT statement
      */
-    public static final int InsertORDINAL = 7;
-    public static final SqlKind Insert = new SqlKind("Insert", InsertORDINAL);
+    INSERT,
 
     /**
      * DELETE statement
      */
-    public static final int DeleteORDINAL = 8;
-    public static final SqlKind Delete = new SqlKind("Delete", DeleteORDINAL);
+    DELETE,
 
     /**
      * UPDATE statement
      */
-    public static final int UpdateORDINAL = 9;
-    public static final SqlKind Update = new SqlKind("Update", UpdateORDINAL);
+    UPDATE,
 
     /**
      * Dynamic Param
      */
-    public static final int DynamicParamORDINAL = 10;
-    public static final SqlKind DynamicParam =
-        new SqlKind("DynamicParam", DynamicParamORDINAL);
+    DYNAMIC_PARAM,
 
-    public static final int OrderByORDINAL = 11;
-    public static final SqlKind OrderBy =
-        new SqlKind("OrderBy", OrderByORDINAL);
+    /**
+     * ORDER BY clause
+     */
+    ORDER_BY,
 
     /**
      * Union
      */
-    public static final int UnionORDINAL = 12;
-    public static final SqlKind Union = new SqlKind("Union", UnionORDINAL);
+    UNION,
 
     /**
      * Except
      */
-    public static final int ExceptORDINAL = 13;
-    public static final SqlKind Except = new SqlKind("Except", ExceptORDINAL);
+    EXCEPT,
 
     /**
      * Intersect
      */
-    public static final int IntersectORDINAL = 14;
-    public static final SqlKind Intersect =
-        new SqlKind("Intersect", IntersectORDINAL);
+    INTERSECT,
 
     /**
      * AS operator
      */
-    public static final int AsORDINAL = 15;
-    public static final SqlKind As = new SqlKind("As", AsORDINAL);
+    AS,
 
-    public static final int OverORDINAL = 16;
 
     /**
      * OVER operator
      */
-    public static final SqlKind Over = new SqlKind("Over", OverORDINAL);
-
-    public static final int WindowORDINAL = 17;
+    OVER,
 
     /**
      * Window specification
      */
-    public static final SqlKind Window = new SqlKind("Window", WindowORDINAL);
+    WINDOW,
 
     /**
      * MERGE statement
      */
-    public static final int MergeORDINAL = 18;
-    public static final SqlKind Merge = new SqlKind("Merge", MergeORDINAL);
+    MERGE,
 
     /**
      * TABLESAMPLE operator
      */
-    public static final int TableSampleORDINAL = 19;
-    public static final SqlKind TableSample =
-        new SqlKind("TableSample", TableSampleORDINAL);
+    TABLESAMPLE,
 
     // binary operators
-    // arithmetic 100 - 109
 
     /**
      * Times
      */
-    public static final int TimesORDINAL = 100;
-    public static final SqlKind Times = new SqlKind("Times", TimesORDINAL);
+    TIMES,
 
     /**
      * Divide
      */
-    public static final int DivideORDINAL = 101;
-    public static final SqlKind Divide = new SqlKind("Divide", DivideORDINAL);
+    DIVIDE,
 
     /**
      * Plus
      */
-    public static final int PlusORDINAL = 102;
-    public static final SqlKind Plus = new SqlKind("Plus", PlusORDINAL);
+    PLUS,
 
     /**
      * Minus
      */
-    public static final int MinusORDINAL = 103;
-    public static final SqlKind Minus = new SqlKind("Minus", MinusORDINAL);
+    MINUS,
 
-    // comparison operators 110-119
+    // comparison operators
 
     /**
      * In
      */
-    public static final int InORDINAL = 110;
-    public static final SqlKind In = new SqlKind("In", InORDINAL);
+    IN,
 
     /**
      * LessThan
      */
-    public static final int LessThanORDINAL = 111;
-    public static final SqlKind LessThan =
-        new SqlKind("LessThan", LessThanORDINAL);
+    LESS_THAN,
 
     /**
-     * GreaterThan
+     * Greater Than
      */
-    public static final int GreaterThanORDINAL = 112;
-    public static final SqlKind GreaterThan =
-        new SqlKind("GreaterThan", GreaterThanORDINAL);
+    GREATER_THAN,
 
     /**
-     * LessThanOrEqual
+     * Less Than Or Equal
      */
-    public static final int LessThanOrEqualORDINAL = 113;
-    public static final SqlKind LessThanOrEqual =
-        new SqlKind("LessThanOrEqual", LessThanOrEqualORDINAL);
+    LESS_THAN_OR_EQUAL,
 
     /**
-     * GreaterThanOrEqual
+     * Greater Than Or Equal
      */
-    public static final int GreaterThanOrEqualORDINAL = 114;
-    public static final SqlKind GreaterThanOrEqual =
-        new SqlKind("GreaterThanOrEqual", GreaterThanOrEqualORDINAL);
+    GREATER_THAN_OR_EQUAL,
 
     /**
      * Equals
      */
-    public static final int EqualsORDINAL = 115;
-    public static final SqlKind Equals = new SqlKind("Equals", EqualsORDINAL);
+    EQUALS,
 
     /**
-     * NotEquals
+     * Not Equals
      */
-    public static final int NotEqualsORDINAL = 116;
-    public static final SqlKind NotEquals =
-        new SqlKind("NotEquals", NotEqualsORDINAL);
-
-    /**
-     * Comparison
-     */
-    public static final int ComparisonORDINAL = 119;
-    public static final SqlKind Comparison =
-        new SqlKind("Comparison", ComparisonORDINAL);
+    NOT_EQUALS,
 
     /**
      * Or
      */
-
-    // boolean infix 120-129
-    public static final int OrORDINAL = 120;
-    public static final SqlKind Or = new SqlKind("Or", OrORDINAL);
+    OR,
 
     /**
      * And
      */
-    public static final int AndORDINAL = 121;
-    public static final SqlKind And = new SqlKind("And", AndORDINAL);
+    AND,
 
-    // other infix 130-139
+    // other infix
 
     /**
      * Dot
      */
-    public static final int DotORDINAL = 130;
-    public static final SqlKind Dot = new SqlKind("Dot", DotORDINAL);
+    DOT,
 
     /**
      * Overlaps
      */
-    public static final int OverlapsORDINAL = 131;
-    public static final SqlKind Overlaps =
-        new SqlKind("Overlaps", OverlapsORDINAL);
+    OVERLAPS,
 
     /**
      * Like
      */
-    public static final int LikeORDINAL = 132;
-    public static final SqlKind Like = new SqlKind("Like", LikeORDINAL);
+    LIKE,
 
     /**
      * Similar
      */
-    public static final int SimilarORDINAL = 133;
-    public static final SqlKind Similar =
-        new SqlKind("Similar", SimilarORDINAL);
+    SIMILAR,
 
     /**
      * Between
      */
-    public static final int BetweenORDINAL = 134;
-    public static final SqlKind Between =
-        new SqlKind("Between", BetweenORDINAL);
+    BETWEEN,
 
     /**
      * CASE
      */
-    public static final int CaseORDINAL = 135;
-    public static final SqlKind Case = new SqlKind("CASE", CaseORDINAL);
+    CASE,
 
     // prefix operators
 
     /**
      * Not
      */
-    public static final int NotORDINAL = 140;
-    public static final SqlKind Not = new SqlKind("Not", NotORDINAL);
+    NOT,
 
     /**
      * PlusPrefix
      */
-    public static final int PlusPrefixORDINAL = 141;
-    public static final SqlKind PlusPrefix =
-        new SqlKind("PlusPrefix", PlusPrefixORDINAL);
+    PLUS_PREFIX,
 
     /**
      * MinusPrefix
      */
-    public static final int MinusPrefixORDINAL = 142;
-    public static final SqlKind MinusPrefix =
-        new SqlKind("MinusPrefix", MinusPrefixORDINAL);
+    MINUS_PREFIX,
 
     /**
      * Exists
      */
-    public static final int ExistsORDINAL = 143;
-    public static final SqlKind Exists = new SqlKind("Exists", ExistsORDINAL);
+    EXISTS,
 
     /**
      * Values
      */
-    public static final int ValuesORDINAL = 144;
-    public static final SqlKind Values = new SqlKind("Values", ValuesORDINAL);
+    VALUES,
 
     /**
-     * ExplicitTable, e.g. <code>select * from (TABLE t)</code> or <code>TABLE
-     * t</code>. See also {@link #CollectionTable}.
+     * Explicit table, e.g. <code>select * from (TABLE t)</code> or <code>TABLE
+     * t</code>. See also {@link #COLLECTION_TABLE}.
      */
-    public static final int ExplicitTableORDINAL = 145;
-    public static final SqlKind ExplicitTable =
-        new SqlKind("ExplicitTable", ExplicitTableORDINAL);
+    EXPLICIT_TABLE,
+
+    /**
+     * Scalar query; that is, a subquery used in an expression context, and
+     * returning one row and one column.
+     */
+    SCALAR_QUERY,
 
     /**
      * ProcedureCall
      */
-    public static final int ProcedureCallORDINAL = 146;
-    public static final SqlKind ProcedureCall =
-        new SqlKind("ProcedureCall", ProcedureCallORDINAL);
+    PROCEDURE_CALL,
 
     /**
      * NewSpecification
      */
-    public static final int NewSpecificationORDINAL = 147;
-    public static final SqlKind NewSpecification =
-        new SqlKind("NewSpecification", NewSpecificationORDINAL);
+    NEW_SPECIFICATION,
 
     // postfix operators
 
     /**
      * Descending
      */
-    public static final int DescendingORDINAL = 150;
-    public static final SqlKind Descending =
-        new SqlKind("Descending", DescendingORDINAL);
+    DESCENDING,
 
     /**
-     * IS TRUE
+     * IS TRUE operator.
      */
-    public static final int IsTrueORDINAL = 151;
-    public static final SqlKind IsTrue = new SqlKind("IsTrue", IsTrueORDINAL);
+    IS_TRUE,
 
     /**
-     * IS FALSE
+     * IS FALSE operator.
      */
-    public static final int IsFalseORDINAL = 152;
-    public static final SqlKind IsFalse =
-        new SqlKind("IsFalse", IsFalseORDINAL);
+    IS_FALSE,
 
     /**
-     * IS UNKNOWN
+     * IS UNKNOWN operator.
      */
-    public static final int IsUnknownORDINAL = 153;
-    public static final SqlKind IsUnknown =
-        new SqlKind("IsUnknown", IsUnknownORDINAL);
+    IS_UNKNOWN,
 
     /**
-     * IS NULL
+     * IS NULL operator.
      */
-    public static final int IsNullORDINAL = 154;
-    public static final SqlKind IsNull = new SqlKind("IsNull", IsNullORDINAL);
+    IS_NULL,
 
     /**
      * PRECEDING
      */
-    public static final int PrecedingORDINAL = 155;
-    public static final SqlKind Preceding =
-        new SqlKind("Preceding", PrecedingORDINAL);
+    PRECEDING,
 
     /**
      * FOLLOWING
      */
-    public static final int FollowingORDINAL = 156;
-    public static final SqlKind Following =
-        new SqlKind("Following", FollowingORDINAL);
+    FOLLOWING,
 
-    // functions 160-169
+    // functions
 
     /**
-     * ROW function
+     * ROW function.
      */
-    public static final int RowORDINAL = 160;
-    public static final SqlKind Row = new SqlKind("Row", RowORDINAL);
+    ROW,
 
     /**
-     * CAST
+     * The non-standard constructor used to pass a
+     * COLUMN_LIST parameter to a UDX.
      */
-    public static final int CastORDINAL = 161;
-    public static final SqlKind Cast = new SqlKind("CAST", CastORDINAL);
+    COLUMN_LIST,
 
     /**
-     * TRIM
+     * CAST operator.
      */
-    public static final int TrimORDINAL = 162;
-    public static final SqlKind Trim = new SqlKind("TRIM", TrimORDINAL);
+    CAST,
+
+    /**
+     * TRIM function.
+     */
+    TRIM,
 
     /**
      * Call to a function using JDBC function syntax.
      */
-    public static final int JdbcFnORDINAL = 163;
-    public static final SqlKind JdbcFn = new SqlKind("JdbcFn", JdbcFnORDINAL);
+    JDBC_FN,
 
     /**
-     * MultisetValueConstructor Value Constructor
+     * Multiset Value Constructor.
      */
-    public static final int MultisetValueConstructorORDINAL = 164;
-    public static final SqlKind MultisetValueConstructor =
-        new SqlKind("MultisetValueConstructor",
-            MultisetValueConstructorORDINAL);
+    MULTISET_VALUE_CONSTRUCTOR,
 
     /**
-     * MultisetValueConstructor Query Constructor
+     * Multiset Query Constructor.
      */
-    public static final int MultisetQueryConstructorORDINAL = 165;
-    public static final SqlKind MultisetQueryConstructor =
-        new SqlKind("MultisetQueryConstructor",
-            MultisetQueryConstructorORDINAL);
+    MULTISET_QUERY_CONSTRUCTOR,
 
     /**
      * Unnest
      */
-    public static final int UnnestORDINAL = 166;
-    public static final SqlKind Unnest = new SqlKind("UNNEST", UnnestORDINAL);
+    UNNEST,
 
     /**
      * Lateral
      */
-    public static final int LateralORDINAL = 167;
-    public static final SqlKind Lateral =
-        new SqlKind("LATERAL", LateralORDINAL);
+    LATERAL,
 
     /**
      * Table operator which converts user-defined transform into a relation, for
      * example, <code>select * from TABLE(udx(x, y, z))</code>. See also the
-     * {@link #ExplicitTable} prefix operator.
+     * {@link #EXPLICIT_TABLE} prefix operator.
      */
-    public static final int CollectionTableORDINAL = 168;
-    public static final SqlKind CollectionTable =
-        new SqlKind("TABLE", CollectionTableORDINAL);
+    COLLECTION_TABLE,
 
     /**
      * CURSOR constructor, for example, <code>select * from
      * TABLE(udx(CURSOR(select ...), x, y, z))</code>
      */
-    public static final int CursorConstructorORDINAL = 169;
-    public static final SqlKind CursorConstructor =
-        new SqlKind("CURSOR", CursorConstructorORDINAL);
+    CURSOR,
 
     // internal operators (evaluated in validator) 200-299
 
     /**
      * LiteralChain operator (for composite string literals)
      */
-    public static final int LiteralChainORDINAL = 200;
-    public static final SqlKind LiteralChain =
-        new SqlKind("LiteralChain", LiteralChainORDINAL);
+    LITERAL_CHAIN,
 
     /**
      * Escape operator (always part of LIKE or SIMILAR TO expression)
      */
-    public static final int EscapeORDINAL = 201;
-    public static final SqlKind Escape =
-        new SqlKind("EscapeChain", EscapeORDINAL);
+    ESCAPE,
 
     /**
      * Reinterpret operator (a reinterpret cast)
      */
-    public static final int ReinterpretORDINAL = 202;
-    public static final SqlKind Reinterpret =
-        new SqlKind("Reinterpret", ReinterpretORDINAL);
+    REINTERPRET;
 
-    // aggregates of other kinds, 300-399
+    //~ Static fields/initializers ---------------------------------------------
 
-    /**
-     * <code>SetQuery</code> is an aggregate of set-query node types. <code>
-     * node.isA(Kind.SetQuery)</code> evaluates to <code>true</code> if it
-     * <code>node</code> is an {@link #Except}, {@link #Intersect} or {@link
-     * #Union}.
-     */
-    public static final int SetQueryORDINAL = 300;
-    public static final SqlKind SetQuery =
-        new SqlKind("SetQuery", SetQueryORDINAL);
+    // Most of the static fields are categories, aggregating several kinds into
+    // a set.
 
     /**
-     * <code>Expression</code> is an aggregate of all expression operators.
+     * Category consisting of set-query node types.
+     *
+     * <p>Consists of:
+     * {@link #EXCEPT},
+     * {@link #INTERSECT},
+     * {@link #UNION}.
      */
-    public static final int ExpressionORDINAL = 301;
-    public static final SqlKind Expression =
-        new SqlKind("Expression", ExpressionORDINAL);
+    public static final EnumSet<SqlKind> SET_QUERY =
+        EnumSet.of(UNION, INTERSECT, EXCEPT);
 
     /**
-     * <code>Dml</code> is an aggregate of all DML operators. <code>
-     * node.isA(Kind.Dml)</code> evaluates to <code>true</code> if it <code>
-     * node</code> is an {@link #Insert} or {@link #Delete}.
+     * Category consisting of all expression operators.
+     *
+     * <p>A node is an expression if it is NOT one of the following:
+     * {@link #AS},
+     * {@link #DESCENDING},
+     * {@link #SELECT},
+     * {@link #JOIN},
+     * {@link #OTHER_FUNCTION},
+     * {@link #CAST},
+     * {@link #TRIM},
+     * {@link #LITERAL_CHAIN},
+     * {@link #JDBC_FN},
+     * {@link #PRECEDING},
+     * {@link #FOLLOWING},
+     * {@link #ORDER_BY},
+     * {@link #COLLECTION_TABLE},
+     * {@link #TABLESAMPLE}.
      */
-    public static final int DmlORDINAL = 302;
-    public static final SqlKind Dml = new SqlKind("Dml", DmlORDINAL);
+    public static final Set<SqlKind> EXPRESSION =
+        EnumSet.complementOf(
+            EnumSet.of(
+                AS, DESCENDING, SELECT, JOIN, OTHER_FUNCTION, CAST, TRIM,
+                LITERAL_CHAIN, JDBC_FN, PRECEDING, FOLLOWING, ORDER_BY,
+                COLLECTION_TABLE, TABLESAMPLE));
 
     /**
-     * <code>Query</code> is an aggregate of query node types. <code>
-     * node.isA(Kind.SetQuery)</code> evaluates to <code>true</code> if it
-     * <code>node</code> is a {@link #Except}, {@link #Intersect}, {@link
-     * #Select} or {@link #Union}.
+     * Category consisting of all DML operators.
+     *
+     * <p>Consists of:
+     * {@link #INSERT},
+     * {@link #UPDATE},
+     * {@link #DELETE},
+     * {@link #MERGE},
+     * {@link #PROCEDURE_CALL}.
+     *
+     * <p>NOTE jvs 1-June-2006: For now we treat procedure calls as DML;
+     * this makes it easy for JDBC clients to call execute or
+     * executeUpdate and not have to process dummy cursor results.  If
+     * in the future we support procedures which return results sets,
+     * we'll need to refine this.
      */
-    public static final int QueryORDINAL = 303;
-    public static final SqlKind Query = new SqlKind("Query", QueryORDINAL);
+    public static final EnumSet<SqlKind> DML =
+        EnumSet.of(INSERT, DELETE, UPDATE, MERGE, PROCEDURE_CALL);
 
     /**
-     * Aggregate of SQL statement types {@link #Query}, {@link #Dml}.
+     * Category consisting of query node types.
+     *
+     * <p>Consists of:
+     * {@link #SELECT},
+     * {@link #EXCEPT},
+     * {@link #INTERSECT},
+     * {@link #UNION},
+     * {@link #VALUES},
+     * {@link #ORDER_BY},
+     * {@link #EXPLICIT_TABLE}.
      */
-    public static final int TopLevelORDINAL = 304;
-    public static final SqlKind TopLevel =
-        new SqlKind("TopLevel", TopLevelORDINAL);
+    public static final EnumSet<SqlKind> QUERY =
+        EnumSet.of(
+            SELECT, UNION, INTERSECT, EXCEPT, VALUES, ORDER_BY, EXPLICIT_TABLE);
 
     /**
-     * <code>ScalarQuery</code> is an aggregate of scalar query node types.
+     * Category of all SQL statement types.
+     *
+     * <p>Consists of all types in {@link #QUERY} and {@link #DML}.
      */
-    public static final int ScalarQueryORDINAL = 305;
-    public static final SqlKind ScalarQuery =
-        new SqlKind("ScalarQuery", ScalarQueryORDINAL);
+    public static final Set<SqlKind> TOP_LEVEL;
 
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(
-            new SqlKind[] {  // the basics
-            Other, Select, Join, Identifier, Literal, Function, Explain, Insert, Update, Delete, Union, Except, Intersect, As, Over, Window, Merge, 
-                // arithmetic
-            Times, Divide, Plus, Minus, 
-                // comparisons
-            In, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, Equals, NotEquals, 
-                // boolean
-            Or, And, 
-                // other infix
-            Dot, Overlaps, Like, Similar, Between, Case, 
-                // prefix
-            Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable, 
-                // postfix
-            Descending, IsTrue, IsFalse, IsNull, Preceding, Following, 
-                // row
-            Row, Cast, Trim, 
-                // special
-            MultisetValueConstructor, MultisetQueryConstructor, LiteralChain, Unnest, Lateral, ScalarQuery });
-
-    //~ Constructors -----------------------------------------------------------
-
-    private SqlKind(
-        String name,
-        int ordinal)
-    {
-        super(name, ordinal, null);
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Returns whether this kind is the same as a given kind, or is a member if
-     * the given kind is an aggregate
-     */
-    public boolean isA(SqlKind kind)
-    {
-        // todo: Members of aggregates, see how RexKind does it
-        switch (kind.getOrdinal()) {
-        case TopLevelORDINAL:
-            return this.isA(Query) || this.isA(Dml);
-        case QueryORDINAL:
-            return
-                (this == Select) || (this == Union) || (this == Intersect)
-                || (this == Except) || (this == Values) || (this == OrderBy)
-                || (this == ExplicitTable);
-        case SetQueryORDINAL:
-            return (this == Union) || (this == Intersect) || (this == Except);
-
-        // NOTE jvs 1-June-2006: For now we treat procedure calls as DML;
-        // this makes it easy for JDBC clients to call execute or
-        // executeUpdate and not have to process dummy cursor results.  If
-        // in the future we support procedures which return results sets,
-        // we'll need to refine this.
-        case DmlORDINAL:
-            return
-                (this == Insert) || (this == Delete) || (this == Update)
-                || (this == Merge) || (this == ProcedureCall);
-        case ExpressionORDINAL:
-            return
-                !(
-                    (this == As)
-                    || (this == Descending)
-                    || (this == Select)
-                    || (this == Join)
-                    || (this == Function)
-                    || (this == Cast)
-                    || (this == Trim)
-                    || (this == LiteralChain)
-                    || (this == JdbcFn)
-                    || (this == Preceding)
-                    || (this == Following)
-                    || (this == OrderBy)
-                    || (this == CollectionTable)
-                    || (this == TableSample)
-                 );
-        case FunctionORDINAL:
-            return
-                (this == Function) || (this == Row) || (this == Trim)
-                || (this == Cast) || (this == JdbcFn);
-        case ComparisonORDINAL:
-            return
-                (this == In) || (this == LessThan) || (this == GreaterThan)
-                || (this == LessThanOrEqual) || (this == GreaterThanOrEqual)
-                || (this == Equals) || (this == NotEquals);
-        default:
-            return this == kind;
-        }
+    static {
+        TOP_LEVEL = EnumSet.copyOf(QUERY);
+        TOP_LEVEL.addAll(DML);
     }
 
     /**
-     * Looks up a kind from its ordinal.
+     * Category consisting of regular and special functions.
+     *
+     * <p>Consists of regular functions {@link #OTHER_FUNCTION} and specical
+     * functions {@link #ROW}, {@link #TRIM}, {@link #CAST}, {@link #JDBC_FN}.
      */
-    public static SqlKind get(int ordinal)
-    {
-        return (SqlKind) enumeration.getValue(ordinal);
-    }
+    public static final Set<SqlKind> FUNCTION =
+        EnumSet.of(OTHER_FUNCTION, ROW, TRIM, CAST, JDBC_FN);
 
     /**
-     * Looks up a kind from its name.
+     * Category of comparison operators.
+     *
+     * <p>Consists of:
+     * {@link #IN},
+     * {@link #EQUALS},
+     * {@link #NOT_EQUALS},
+     * {@link #LESS_THAN},
+     * {@link #GREATER_THAN},
+     * {@link #LESS_THAN_OR_EQUAL},
+     * {@link #GREATER_THAN_OR_EQUAL}.
      */
-    public static SqlKind get(String name)
+    public static final Set<SqlKind> COMPARISON =
+        EnumSet.of(
+            IN, EQUALS, NOT_EQUALS,
+            LESS_THAN, GREATER_THAN,
+            GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL);
+
+    /**
+     * Returns whether this {@code SqlKind} belongs to a given category.
+     *
+     * <p>A category is a collection of kinds, not necessarily disjoint. For
+     * example, QUERY is { SELECT, UNION, INTERSECT, EXCEPT, VALUES, ORDER_BY,
+     * EXPLICIT_TABLE }.
+     *
+     * @param category Category
+     * @return Whether this kind belongs to the given cateogry
+     */
+    public final boolean belongsTo(Set<SqlKind> category)
     {
-        return (SqlKind) enumeration.getValue(name);
+        return category.contains(this);
     }
 }
 

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2004 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,10 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import java.sql.*;
-
-import java.text.*;
-
 import java.util.*;
 
 import org.eigenbase.sql.parser.*;
@@ -40,7 +36,6 @@ import org.eigenbase.sql.type.*;
 public class SqlTimestampLiteral
     extends SqlAbstractDateTimeLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlTimestampLiteral(
@@ -49,9 +44,10 @@ public class SqlTimestampLiteral
         boolean hasTimeZone,
         SqlParserPos pos)
     {
-        super(cal,
+        super(
+            cal,
             hasTimeZone,
-            SqlTypeName.Timestamp,
+            SqlTypeName.TIMESTAMP,
             precision,
             SqlParserUtil.TimestampFormatStr,
             pos);
@@ -64,7 +60,8 @@ public class SqlTimestampLiteral
         String format,
         SqlParserPos pos)
     {
-        super(cal, hasTimeZone, SqlTypeName.Timestamp, precision,
+        super(
+            cal, hasTimeZone, SqlTypeName.TIMESTAMP, precision,
             format, pos);
     }
 
@@ -73,29 +70,33 @@ public class SqlTimestampLiteral
     /**
      * Converts this literal to a {@link java.sql.Timestamp} object.
      */
+    /*
     public Timestamp getTimestamp()
     {
         return new Timestamp(getCal().getTimeInMillis());
     }
+    */
 
     /**
      * Converts this literal to a {@link java.sql.Time} object.
      */
+    /*
     public Time getTime()
     {
         long millis = getCal().getTimeInMillis();
         int tzOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
         return new Time(millis - tzOffset);
     }
+    */
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlTimestampLiteral((Calendar) value,
-                precision,
-                hasTimeZone,
-                formatString,
-                pos);
+        return new SqlTimestampLiteral(
+            (Calendar) value,
+            precision,
+            hasTimeZone,
+            formatString,
+            pos);
     }
 
     public String toString()
@@ -108,7 +109,7 @@ public class SqlTimestampLiteral
      */
     public String toFormattedString()
     {
-        String result = new SimpleDateFormat(formatString).format(getTime());
+        String result = getTimestamp().toString(formatString);
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);
@@ -117,12 +118,28 @@ public class SqlTimestampLiteral
             String digits = Long.toString(cal.getTimeInMillis());
             result =
                 result + "."
-                + digits.substring(digits.length() - 3,
+                + digits.substring(
+                    digits.length() - 3,
                     digits.length() - 3 + precision);
         } else {
             assert (0 == cal.get(Calendar.MILLISECOND));
         }
         return result;
+    }
+
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
+        switch (writer.getDialect().getDatabaseProduct()) {
+        case MSSQL:
+            writer.literal("'" + this.toFormattedString() + "'");
+            break;
+        default:
+            writer.literal(this.toString());
+            break;
+        }
     }
 }
 

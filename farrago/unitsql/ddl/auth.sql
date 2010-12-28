@@ -7,8 +7,6 @@
 
 -- Create a security manager and login as this user to perform all grant 
 -- tests. 
--- TODO: grant all appropriate system privileges for this user once
--- these privs are available.
 
 create schema extra;
 create table extra.t(i int not null primary key);
@@ -16,11 +14,25 @@ create table extra.t(i int not null primary key);
 create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
 create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
 
-create user SECMAN_3 authorization 'Unknown' DEFAULT CATALOG sys_boot;
+create user SECMAN_3 identified by 'tiger' DEFAULT CATALOG sys_boot;
 
-create user SECMAN_4 authorization 'Unknown' DEFAULT SCHEMA extra;
+create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 
 grant select on extra.t to secman_4;
+
+-- should fail:  duplicate user
+create user SECMAN_4;
+
+create role R1;
+
+-- should fail:  duplicate role
+create role R1;
+
+-- should fail:  role name conflicts with user name
+create role SECMAN_4;
+
+-- should fail:  user name conflicts with role name
+create user R1;
 
 !closeall
 !connect jdbc:farrago: SECMAN tiger
@@ -42,6 +54,8 @@ on      g."Grantee" = gte."mofId"
 inner join 
         sys_cwm."Core"."ModelElement" me
 on      g."Element" = me."mofId";
+
+create user "MockLoginModuleTestUser" authorization 'Unknown';
 
 -------------------------------------------------------------------------
 -- Test 1: 
@@ -74,6 +88,12 @@ select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U1' or grantee= 'R1_L1'
 order by granted_element;
+
+-- verify password encryption; we use a platform-independent algorithm
+-- so it should always come out the same
+select "encryptedPassword", "passwordEncryptionAlgorithm"
+from sys_fem."Security"."User"
+where "name" = 'SECMAN_3';
 
 -------------------------------------------------------------------------
 -- Test 2: user, roles at two different levels hierarchies
@@ -134,7 +154,7 @@ Grant role R3_L1, R4_L1, R1_L3 to U5, U6, U7;
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
-order by grantee;
+order by grantee, granted_element;
 
 
 -- Alter user to make Role R1_L1 the default
@@ -148,6 +168,48 @@ order by grantee;
 -- should fail:  unknown user
 !closeall
 !connect jdbc:farrago: BOBO tiger
+
+-- should succeed:  local driver, user with wrong password
+!closeall
+!connect jdbc:farrago: "MockLoginModuleTestUser" blah
+
+-- should fail:  spoof remote driver, user with wrong password
+!closeall
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
+
+-- should succeed:  spoof remote driver, user with correct password
+!closeall
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
+
+-- should succeed:  correct catalog password
+!closeall
+!connect jdbc:farrago: SECMAN_3 tiger
+
+-- should fail:  incorrect catalog password
+!closeall
+!connect jdbc:farrago: SECMAN_3 hobbes
+
+-- should succeed:  blank password is equivalent to no password
+!closeall
+!connect jdbc:farrago: SECMAN_4 whatever
+
+-- change password
+create or replace user SECMAN_3 identified by 'cougar';
+
+-- should fail:  old password no longer works
+!closeall
+!connect jdbc:farrago: SECMAN_3 tiger
+
+-- should succeed:  new password works
+!closeall
+!connect jdbc:farrago: SECMAN_3 cougar
+
+-- unset password
+create or replace user SECMAN_3;
+
+-- should succeed:  any password works
+!closeall
+!connect jdbc:farrago: SECMAN_3 puma
 
 -------------------------------------------------------------------------
 -- Test 4:

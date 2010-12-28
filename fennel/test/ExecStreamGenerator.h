@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -69,25 +69,70 @@ public:
     }
 };
 
+class RampPartitionedExecStreamGenerator
+          : public MockProducerExecStreamGenerator
+{
+protected:
+    int partitionSize;
+public:
+
+    RampPartitionedExecStreamGenerator(uint partSize) {
+        partitionSize = partSize;
+    }
+
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        if (iCol == 0) {
+            return iRow / partitionSize;
+        }
+        return iRow;
+    }
+};
 /**
  * @author John V. Sichi
  */
 class PermutationGenerator : public MockProducerExecStreamGenerator
 {
     std::vector<int64_t> values;
+    uint partitionSize;
 
 public:
-    explicit PermutationGenerator(uint nRows)
+    PermutationGenerator(uint nRows)
     {
         values.resize(nRows);
         std::iota(values.begin(), values.end(), 0);
         std::random_shuffle(values.begin(), values.end());
+        partitionSize = 0;
+    }
+
+    PermutationGenerator(uint nRows, uint partSize)
+    {
+        partitionSize = partSize;
+        values.resize(nRows);
+        std::iota(values.begin(), values.end(), 0);
+        int i;
+        assert(nRows % partitionSize == 0);
+        for (i = 0; i < nRows / partitionSize; i++) {
+            int start = i * partitionSize;
+            int end = start + partitionSize - 1;
+            std::random_shuffle(
+                values.begin() + start,
+                values.begin() + end);
+        }
     }
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        // iCol ignored
-        return values[iRow];
+        if (!partitionSize) {
+            // iCol ignored
+            return values[iRow];
+        } else {
+            if (iCol == 0) {
+                return iRow / partitionSize;
+            } else {
+                return values[iRow];
+            }
+        }
     }
 };
 
@@ -102,10 +147,12 @@ public:
  */
 class StairCaseExecStreamGenerator : public MockProducerExecStreamGenerator
 {
+    int s;
     int h;
     int w;
 public:
-    StairCaseExecStreamGenerator(int height, uint width) :
+    StairCaseExecStreamGenerator(int height, uint width, int start = 0)
+        : s(start),
         h(height),
         w(width)
     {
@@ -114,7 +161,7 @@ public:
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return h * (iRow / w);
+        return s + h * (iRow / w);
     }
 };
 
@@ -159,7 +206,7 @@ public:
     RandomColumnGenerator(int max) : rng(42), max(max)
         {}
 
-    int64_t next() 
+    int64_t next()
     {
         return rng(max);
     }
@@ -257,8 +304,8 @@ class CompositeExecStreamGenerator : public MockProducerExecStreamGenerator
 
 public:
     explicit CompositeExecStreamGenerator(
-            vector<shared_ptr<ColumnGenerator<int64_t> > > const &generators)
-        : generators(generators)
+        vector<shared_ptr<ColumnGenerator<int64_t> > > const &generatorsInit)
+        : generators(generatorsInit)
     {
         currentRow = uint(-1);
         currentCol = columnCount() - 1;
@@ -297,11 +344,11 @@ private:
  */
 class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
 {
-    
+
 public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return iRow/2;
+        return iRow / 2;
     }
 };
 
@@ -309,13 +356,13 @@ public:
 class ConstExecStreamGenerator : public MockProducerExecStreamGenerator
 {
     uint constVal;
-    
+
 public:
-    ConstExecStreamGenerator (uint constValInit)
+    ConstExecStreamGenerator(uint constValInit)
     {
         constVal = constValInit;
     }
-    
+
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         return constVal;
@@ -349,7 +396,7 @@ public:
         curr = startInit - offset;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         curr += offset;
         return curr;
@@ -374,7 +421,7 @@ public:
         constvalue = constInit;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         return constvalue;
     }
@@ -398,7 +445,7 @@ public:
         curValue = startValue * numDups;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         return (curValue++ / numDups);
     }
@@ -408,7 +455,7 @@ public:
  * A duplicating repeating column sequence generator.
  *
  * Generates column values in a repeating sequence.  Values are duplicated for
- * each sequence value, and repeat after nSequence values.  E.g., 
+ * each sequence value, and repeat after nSequence values.  E.g.,
  * 0, 0, 0, ..., 1, 1, 1, ... 2, 2, 2, ..., n-1, n-1, n-1, ..., 0, 0, 0, ...
  */
 class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
@@ -416,9 +463,10 @@ class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
     int numDups;
     int numSequence;
     int64_t curValue;
-    
+
 public:
-    explicit DupRepeatingSeqColumnGenerator(int numSequenceInit,
+    explicit DupRepeatingSeqColumnGenerator(
+        int numSequenceInit,
         int numDupsInit)
     {
         assert(numSequenceInit > 0);
@@ -427,8 +475,8 @@ public:
         numDups = numDupsInit;
         curValue = 0;
     }
-    
-    int64_t next() 
+
+    int64_t next()
     {
         return (curValue++ % (numDups * numSequence)) / numDups;
     }
@@ -452,8 +500,8 @@ public:
         nSequence = nSequenceInit;
         curValue = 0;
     }
-    
-    int64_t next() 
+
+    int64_t next()
     {
         return curValue++ % nSequence;
     }
@@ -462,7 +510,7 @@ public:
 /**
  * Mixed Duplicate column generator
  *
- * Generates a mixture of unique rows or duplicate rows of numDups 
+ * Generates a mixture of unique rows or duplicate rows of numDups
  * per value for a column, in sequence, starting at initValue:
  *
  *  0, 1, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7, 8, ...
@@ -476,8 +524,11 @@ class MixedDupColumnGenerator : public ColumnGenerator<int64_t>
     int initialValue;
 
 public:
-    explicit MixedDupColumnGenerator(int numDupsInit, int startValue = 0,
-        int wid = 1) {
+    explicit MixedDupColumnGenerator(
+        int numDupsInit,
+        int startValue = 0,
+        int wid = 1)
+    {
         assert(numDupsInit > 0);
         numDups = numDupsInit;
         curValue = 0;
@@ -485,12 +536,11 @@ public:
         initialValue = nextValue = startValue;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         int res;
 
-        if ((((nextValue-initialValue) / width) % 2)) {
- 
+        if ((((nextValue - initialValue) / width) % 2)) {
             res = nextValue + curValue++ / numDups;
             if (curValue == numDups) {
                 curValue = 0;
@@ -501,6 +551,32 @@ public:
         }
 
         return res;
+    }
+};
+
+/**
+ * Same as StairCaseExecStreamGenerator except for columns
+ */
+class StairCaseColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int s;
+    int h;
+    int w;
+    uint iRow;
+
+public:
+    StairCaseColumnGenerator(int height, uint width, int start = 0)
+        : s(start),
+        h(height),
+        w(width),
+        iRow(0)
+    {
+        // empty
+    }
+
+    int64_t next()
+    {
+        return s + h * (iRow++ / w);
     }
 };
 

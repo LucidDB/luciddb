@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,47 +30,78 @@ import java.sql.*;
  * ResultSet} to a {@link TupleIter}.
  */
 public class ResultSetTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
+    protected ResultSetProvider resultSetProvider;
     protected ResultSet resultSet;
-    private Object row;
-    private boolean endOfStream;
+    protected boolean endOfStream;
+    protected boolean underflow;
+    protected Object row;
 
     //~ Constructors -----------------------------------------------------------
 
-    public ResultSetTupleIter(ResultSet resultSet)
+    public ResultSetTupleIter(ResultSetProvider resultSetProvider)
     {
         // NOTE jvs 4-Mar-2004:  I changed this to not call makeRow() from
         // this constructor, since subclasses aren't initialized yet.  Now
         // it follows the same pattern as CalcTupleIter.
-        this.resultSet = resultSet;
-        endOfStream = false;
+        this.resultSetProvider = resultSetProvider;
+        underflow = endOfStream = false;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public Object fetchNext()
     {
-        // If restart() is called, row may be non-null upon entry to this
-        // method.
-        if (row == null) {
-            moveToNext();
-            if (endOfStream) {
-                return NoDataReason.END_OF_DATA;
-            }
+        underflow = false;              // trying again
+        // here row may not be null, after restart()
+        if (row == null && !endOfStream) {
+            row = getNextRow();
         }
-
+        if (endOfStream) {
+            return NoDataReason.END_OF_DATA;
+        } else if (underflow) {
+            return NoDataReason.UNDERFLOW;
+        }
         Object result = row;
         row = null;
         return result;
     }
 
+    /**
+     * Instantiates the result set from the result set provider, if it has not
+     * been instantiated already.  Typically this method is called on first
+     * fetch.
+     */
+    protected void instantiateResultSet() throws SQLException
+    {
+        if (resultSet == null) {
+            resultSet = resultSetProvider.getResultSet();
+        }
+    }
+
+    protected Object getNextRow() throws TimeoutException
+    {
+        try {
+            instantiateResultSet();
+            if (resultSet.next()) {
+                return makeRow();
+            } else {
+                // remember EOS, some ResultSet impls dislike an extra next()
+                endOfStream = true;
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void restart()
     {
         try {
+            instantiateResultSet();
             if (resultSet.first()) {
                 endOfStream = false;
                 row = makeRow();
@@ -96,26 +127,8 @@ public class ResultSetTupleIter
     protected Object makeRow()
         throws SQLException
     {
+        assert resultSet != null;
         return new Row(resultSet);
-    }
-
-    private void moveToNext()
-    {
-        try {
-            if (endOfStream) {
-                return;
-            }
-            if (resultSet.next()) {
-                row = makeRow();
-            } else {
-                // record endOfStream since some ResultSet implementations don't
-                // like extra calls to next() after it returns false
-                endOfStream = true;
-                row = null;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 

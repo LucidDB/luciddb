@@ -1,0 +1,41 @@
+0: jdbc:luciddb:> SELECT SCHEMA_NAME FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = 'TEST1111';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> CALL APPLIB.EXEC_SQL_IF_NO_ROWS (
+. . . . . . . . >  'SELECT * FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = ''TEST1111''',
+. . . . . . . . >  'CREATE SCHEMA TEST1111'
+. . . . . . . . > );
+0: jdbc:luciddb:> SELECT SCHEMA_NAME FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = 'TEST1111';
++--------------+
+| SCHEMA_NAME  |
++--------------+
+| TEST1111     |
++--------------+
+0: jdbc:luciddb:> CALL APPLIB.EXEC_SQL_IF_NO_ROWS (
+. . . . . . . . >  'SELECT * FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = ''TEST1111''',
+. . . . . . . . >  'CREATE SCHEMA TEST1112'
+. . . . . . . . > );
+0: jdbc:luciddb:> SELECT SCHEMA_NAME FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = 'TEST1112';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> !set force true 
+0: jdbc:luciddb:> CALL APPLIB.EXEC_SQL_IF_NO_ROWS (
+. . . . . . . . >  'SELECT * BAD SQL',
+. . . . . . . . >  'CREATE SCHEMA TEST1112'
+. . . . . . . . > );
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "SQL" at line 1, column 14.
+Was expecting one of:
+    "FROM" ...
+    "," ... (state=,code=0)
+0: jdbc:luciddb:> SELECT SCHEMA_NAME FROM SYS_ROOT.DBA_SCHEMAS WHERE SCHEMA_NAME = 'TEST1112';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> DROP SCHEMA TEST1111;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

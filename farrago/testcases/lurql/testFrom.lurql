@@ -10,6 +10,16 @@ EXPLAIN AND EXECUTE
 select *
 from class ModelElement where name in ('Class', 'Exception');
 
+# Test MATCHES filter
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name matches '.*x.*';
+
+# Test MATCHES filter with NOT
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where not name matches '.*[a-j].*';
+
 # Test IN filter with SQL query.
 EXPLAIN AND EXECUTE
 select *
@@ -26,6 +36,26 @@ EXECUTE
 select *
 from class Attribute where container in
 [select "mofId" from sys_mof.model."Class" where "name"='ModelElement'];
+
+# Test filter based on null (without matches)
+EXECUTE
+select *
+from class ModelElement where name=null;
+
+# Test filter based on null (with matches)
+EXECUTE
+select *
+from class ModelElement where container=null;
+
+# Test filter based on null with IN (no matches for null)
+EXECUTE
+select *
+from class ModelElement where name in (null, 'Exception');
+
+# Test filter based on null with IN (with matches for null)
+EXECUTE
+select *
+from class ModelElement where container in (null, 'Foo');
 
 PARAM_VALUE className
 Exception

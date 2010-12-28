@@ -1,9 +1,0 @@
-6.0
-7
-1	SQLVARCHAR	0	25	"\t"	1	Id
-2	SQLVARCHAR	0	25	"\t"	2	CaseId
-3	SQLVARCHAR	0	25	"\t"	3	CreatedById
-4	SQLVARCHAR	0	24	"\t"	4	CreatedDate
-5	SQLVARCHAR	0	512	"\t"	5	Field
-6	SQLVARCHAR	0	512	"\t"	6	OldValue
-7	SQLVARCHAR	0	512	"\r\n"	7	NewValue

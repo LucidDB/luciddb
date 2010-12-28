@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,15 +32,15 @@ FENNEL_BEGIN_NAMESPACE
  * ByteArrayOutputStream implements the ByteOutputStream interface by writing
  * data to an existing fixed-size array of bytes.
  */
-class ByteArrayOutputStream : public ByteOutputStream
+class FENNEL_COMMON_EXPORT ByteArrayOutputStream : public ByteOutputStream
 {
     PBuffer pBuffer;
     uint cbBuffer;
-    
+
     // implement the ByteOutputStream interface
     virtual void flushBuffer(uint cbRequested);
     virtual void closeImpl();
-    
+
     explicit ByteArrayOutputStream(
         PBuffer pBuffer,
         uint cbBuffer);

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,7 @@ package org.eigenbase.sql.type;
 
 import java.util.*;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -82,15 +80,12 @@ import org.eigenbase.util.*;
 public class CompositeOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
+    //~ Enums ------------------------------------------------------------------
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    public static final Composition AND = new Composition("AND", 0);
-    public static final Composition OR = new Composition("OR", 1);
-    public static final Composition SEQUENCE = new Composition("SEQUENCE", 2);
-
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new Composition[] { AND, OR, SEQUENCE });
+    public enum Composition
+    {
+        AND, OR, SEQUENCE;
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -101,7 +96,7 @@ public class CompositeOperandTypeChecker
 
     public CompositeOperandTypeChecker(
         Composition composition,
-        SqlOperandTypeChecker [] allowedRules)
+        SqlOperandTypeChecker ... allowedRules)
     {
         Util.pre(null != allowedRules, "null != allowedRules");
         Util.pre(allowedRules.length > 1, "Not a composite type");
@@ -118,17 +113,17 @@ public class CompositeOperandTypeChecker
 
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        if (composition == SEQUENCE) {
+        if (composition == Composition.SEQUENCE) {
             throw Util.needToImplement("must override getAllowedSignatures");
         }
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int i = 0; i < allowedRules.length; i++) {
             SqlOperandTypeChecker rule = allowedRules[i];
             if (i > 0) {
                 ret.append(SqlOperator.NL);
             }
             ret.append(rule.getAllowedSignatures(op, opName));
-            if (composition == AND) {
+            if (composition == Composition.AND) {
                 break;
             }
         }
@@ -137,7 +132,7 @@ public class CompositeOperandTypeChecker
 
     public SqlOperandCountRange getOperandCountRange()
     {
-        if (composition == SEQUENCE) {
+        if (composition == Composition.SEQUENCE) {
             return new SqlOperandCountRange(allowedRules.length);
         } else {
             // TODO jvs 2-June-2005:  technically, this is only correct
@@ -163,40 +158,47 @@ public class CompositeOperandTypeChecker
     {
         Util.pre(allowedRules.length >= 1, "allowedRules.length>=1");
 
-        if (composition == SEQUENCE) {
+        if (composition == Composition.SEQUENCE) {
             SqlSingleOperandTypeChecker singleRule =
                 (SqlSingleOperandTypeChecker) allowedRules[iFormalOperand];
-            return
-                singleRule.checkSingleOperandType(
-                    callBinding,
-                    node,
-                    0,
-                    throwOnFailure);
+            return singleRule.checkSingleOperandType(
+                callBinding,
+                node,
+                0,
+                throwOnFailure);
         }
 
         int typeErrorCount = 0;
 
-        boolean throwOnAndFailure = (composition == AND) && throwOnFailure;
+        boolean throwOnAndFailure =
+            (composition == Composition.AND)
+            && throwOnFailure;
 
         for (int i = 0; i < allowedRules.length; i++) {
             SqlSingleOperandTypeChecker rule =
                 (SqlSingleOperandTypeChecker) allowedRules[i];
-            if (!rule.checkSingleOperandType(callBinding,
+            if (!rule.checkSingleOperandType(
+                    callBinding,
                     node,
                     iFormalOperand,
-                    throwOnAndFailure)) {
+                    throwOnAndFailure))
+            {
                 typeErrorCount++;
             }
         }
 
         boolean ret = false;
-        if (composition == AND) {
+        switch (composition) {
+        case AND:
             ret = typeErrorCount == 0;
-        } else if (composition == OR) {
+            break;
+        case OR:
             ret = (typeErrorCount < allowedRules.length);
-        } else {
+            break;
+        default:
+
             //should never come here
-            throw Util.needToImplement(this);
+            throw Util.unexpected(composition);
         }
 
         if (!ret && throwOnFailure) {
@@ -206,7 +208,8 @@ public class CompositeOperandTypeChecker
             for (int i = 0; i < allowedRules.length; i++) {
                 SqlSingleOperandTypeChecker rule =
                     (SqlSingleOperandTypeChecker) allowedRules[i];
-                rule.checkSingleOperandType(callBinding,
+                rule.checkSingleOperandType(
+                    callBinding,
                     node,
                     iFormalOperand,
                     true);
@@ -229,7 +232,7 @@ public class CompositeOperandTypeChecker
         for (int i = 0; i < allowedRules.length; i++) {
             SqlOperandTypeChecker rule = allowedRules[i];
 
-            if (composition == SEQUENCE) {
+            if (composition == Composition.SEQUENCE) {
                 SqlSingleOperandTypeChecker singleRule =
                     (SqlSingleOperandTypeChecker) rule;
                 if (i >= callBinding.getOperandCount()) {
@@ -239,7 +242,8 @@ public class CompositeOperandTypeChecker
                         callBinding,
                         callBinding.getCall().operands[i],
                         0,
-                        false)) {
+                        false))
+                {
                     typeErrorCount++;
                 }
             } else {
@@ -250,10 +254,14 @@ public class CompositeOperandTypeChecker
         }
 
         boolean failed = true;
-        if ((composition == AND) || (composition == SEQUENCE)) {
+        switch (composition) {
+        case AND:
+        case SEQUENCE:
             failed = typeErrorCount > 0;
-        } else if (composition == OR) {
+            break;
+        case OR:
             failed = (typeErrorCount == allowedRules.length);
+            break;
         }
 
         if (failed) {
@@ -261,7 +269,7 @@ public class CompositeOperandTypeChecker
                 //in the case of a composite OR we want to throw an error
                 //describing in more detail what the problem was, hence doing
                 //the loop again
-                if (composition == OR) {
+                if (composition == Composition.OR) {
                     for (int i = 0; i < allowedRules.length; i++) {
                         allowedRules[i].checkOperandTypes(callBinding, true);
                     }
@@ -274,17 +282,6 @@ public class CompositeOperandTypeChecker
             return false;
         }
         return true;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    public static class Composition
-        extends EnumeratedValues.BasicValue
-    {
-        private Composition(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
     }
 }
 

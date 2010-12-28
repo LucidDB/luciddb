@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,6 @@ import org.eigenbase.reltype.*;
 class FtrsTable
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FtrsIndexGuide indexGuide;
@@ -54,7 +53,7 @@ class FtrsTable
         String [] localName,
         RelDataType rowType,
         Properties tableProps,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
     {
         super(localName, null, rowType, tableProps, columnPropMap);
     }
@@ -66,16 +65,15 @@ class FtrsTable
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return
-            new FtrsIndexScanRel(
-                cluster,
-                this,
-                FarragoCatalogUtil.getClusteredIndex(
-                    getPreparingStmt().getRepos(),
-                    getCwmColumnSet()),
-                connection,
-                null,
-                false);
+        return new FtrsIndexScanRel(
+            cluster,
+            this,
+            FarragoCatalogUtil.getClusteredIndex(
+                getPreparingStmt().getRepos(),
+                getCwmColumnSet()),
+            connection,
+            null,
+            false);
     }
 
     public FtrsIndexGuide getIndexGuide()

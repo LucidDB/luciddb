@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 /**
-   
+
 <h3>Overview</h3>
 
 The Fennel execution stream resource governor is responsible for
@@ -45,7 +45,7 @@ resources still available for assignment
 
 <li>System-wide resource knob settings
 
-<li>Minimum versus optimum resource requirements specified by each execution 
+<li>Minimum versus optimum resource requirements specified by each execution
 stream within the stream graph
 
 <li>The level of accuracy of each stream's specified optimum
@@ -117,7 +117,7 @@ following values:
 
 <ul>
 
-<li>EXEC_RESOURCE_ACCURATE - The optimum requirement is accurate. 
+<li>EXEC_RESOURCE_ACCURATE - The optimum requirement is accurate.
 The resource governor will not grant any additional resources beyond the
 specified optimum.
 This is the default that is used when the third parameter is not specified.
@@ -138,7 +138,7 @@ the overall stream graph and the amount required by other streams in the
 graph.
 Greater weight will be given to the streams with unbounded settings.
 Therefore, memory intensive streams that cannot set an optimum requirement
-should use the unbounded setting. 
+should use the unbounded setting.
 Less memory intensive streams that
 cannot set an optimum should use the estimate setting with a reasonable guess
 for the optimum setting.
@@ -258,14 +258,14 @@ then the resource governor assigns each stream its minimum and
 divides up the difference
 between the reference amount and the total minimum using the following formula:
 
-<pre><code>
+\verbatim
 number of pages to allocate to stream X =
     minimum for X +
     (reference amount - total minimum) *
         (sqrt((optimum for X) - (minimum for X)) /
         sum of the sqrt of the differences between the optimum and minimum
             settings for each stream
-</code></pre>
+\endverbatim
 
 <li>If the total optimum cache pages is less than or equal to the reference
 amount and all streams have specified an
@@ -327,7 +327,7 @@ of the entire stream graph's execution.
 
 </ul>
  */
-struct ResourceGovernorDesign 
+struct ResourceGovernorDesign
 {
     // NOTE:  dummy class for doxygen
 };

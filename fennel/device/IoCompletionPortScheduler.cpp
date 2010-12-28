@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 
 #include "fennel/device/RandomAccessDevice.h"
 #include "fennel/device/IoCompletionPortScheduler.h"
@@ -43,7 +43,7 @@ public:
     }
     virtual void run();
 };
-    
+
 IoCompletionPortScheduler::IoCompletionPortScheduler(
     DeviceAccessSchedulerParams const &params)
 {
@@ -57,7 +57,7 @@ IoCompletionPortScheduler::IoCompletionPortScheduler(
     if (!hCompletionPort) {
         throw SysCallExcn("CreateIoCompletionPort failed for scheduler");
     }
-    
+
     for (uint i = 0; i < params.nThreads; ++i) {
         IoCompletionPortThread *pThread = new IoCompletionPortThread(*this);
         pThread->start();
@@ -73,12 +73,12 @@ IoCompletionPortScheduler::~IoCompletionPortScheduler()
     }
 }
 
-void IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
+bool IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
 {
     assert(isStarted());
 
     // TODO:  use ReadFileScatter/WriteFileGather
-    
+
     FileSize cbOffset = request.cbOffset;
     RandomAccessRequest::BindingListMutator bindingMutator(request.bindingList);
     while (bindingMutator) {
@@ -111,6 +111,8 @@ void IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
         cbOffset += pBinding->getBufferSize();
     }
     assert(cbOffset == request.cbOffset + request.cbTransfer);
+
+    return true;
 }
 
 void IoCompletionPortScheduler::stop()
@@ -122,7 +124,7 @@ void IoCompletionPortScheduler::stop()
     // post dummy wakeup notifications; threads will see these and
     // exit
     for (uint i = 0; i < threads.size(); ++i) {
-        if (!PostQueuedCompletionStatus(hCompletionPort,0,0,NULL)) {
+        if (!PostQueuedCompletionStatus(hCompletionPort, 0, 0, NULL)) {
             throw SysCallExcn("PostQueuedCompletionStatus failed");
         }
     }

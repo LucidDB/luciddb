@@ -1,0 +1,53 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- subMult.sql - tests with multiple subqueries in them
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple subqueries that resolve to HHJ
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP
+. . . . . . . . > where 
+. . . . . . . . >   EXISTS (select dept.deptno from dept where dept.deptno=emp.deptno
+. . . . . . . . >     and dept.dname in ('Marketing', 'Development', 'Sales') )
+. . . . . . . . > and
+. . . . . . . . >   deptno IN (select deptno from DEPT where DNAME > 'E')
+. . . . . . . . > order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple subqueries that resolve to XOEXISTS, calculator mode
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP
+. . . . . . . . > where 
+. . . . . . . . >   EXISTS (select dept.deptno from dept where dept.deptno=emp.deptno
+. . . . . . . . >     and dept.dname in ('Development', 'Sales') )
+. . . . . . . . > or
+. . . . . . . . >   (
+. . . . . . . . >     ( deptno IN (select deptno from DEPT where DNAME > 'E') )
+. . . . . . . . >     AND
+. . . . . . . . >     ( deptno IN (select deptno from DEPT where DNAME < 'J') )
+. . . . . . . . >   )
+. . . . . . . . > order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

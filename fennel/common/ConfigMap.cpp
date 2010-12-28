@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 1999-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,7 @@ ConfigMap::~ConfigMap()
 void ConfigMap::readParams(std::istream &paramStream)
 {
     for (;;) {
-        std::string name,value;
+        std::string name, value;
         paramStream >> name;
         if (name == "") {
             break;
@@ -49,7 +49,7 @@ void ConfigMap::readParams(std::istream &paramStream)
         paramVals[name] = value;
     }
 }
-    
+
 void ConfigMap::dumpParams(std::ostream &dumpStream) const
 {
     for (StringMapConstIter pPair = paramVals.begin();
@@ -79,8 +79,18 @@ std::string ConfigMap::getStringParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
         return pPair->second;
     }
 }
@@ -91,8 +101,18 @@ int ConfigMap::getIntParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
         return boost::lexical_cast<int>(pPair->second);
     }
 }
@@ -103,32 +123,66 @@ bool ConfigMap::getBoolParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
-        /* Support true/false? boost only likes 1/0 */
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
+        // boost only likes 1/0, so preprocess true/false
         if (strcasecmp(pPair->second.c_str(), "true") == 0) {
             return true;
-        }
-        else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
+        } else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
             return false;
+        } else {
+            return boost::lexical_cast<bool>(pPair->second);
         }
-        else return boost::lexical_cast<bool>(pPair->second);
     }
 }
 
-// REVIEW:  maybe use a template instead?
 long ConfigMap::getLongParam(
     std::string paramName,
     long defaultVal) const
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
-        // NOTE:  see above
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
+        // REVIEW jvs 25-Nov-2008:  There used to be a note here,
+        // but it didn't actually explain why this doesn't use
+        // boost::lexical_cast; probably an old Boost bug.
         return atol(pPair->second.c_str());
     }
 }
+
+double ConfigMap::getDoubleParam(
+    std::string paramName,
+    double defaultVal) const
+{
+    StringMapConstIter pPair = paramVals.find(paramName);
+    if (pPair == paramVals.end()) {
+        return defaultVal;
+    } else {
+        return strtod(pPair->second.c_str(), NULL);
+    }
+}
+
 
 bool ConfigMap::isParamSet(std::string paramName) const
 {

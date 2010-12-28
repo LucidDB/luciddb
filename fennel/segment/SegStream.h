@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,10 +36,11 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Header stored on each page of a SegStream.
  */
-struct SegStreamNode : public StoredNode
+struct FENNEL_SEGMENT_EXPORT SegStreamNode
+    : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0x99f28198d53750a5LL;
-    
+
     uint cbData;
 };
 
@@ -47,7 +48,7 @@ struct SegStreamNode : public StoredNode
  * Additional header information stored on each page of SegStreams
  * for which CRC's are requested.
  */
-struct SegStreamCrc
+struct FENNEL_SEGMENT_EXPORT SegStreamCrc
 {
     /**
      * The PageId of this page relative to the segment storing the stream.
@@ -70,7 +71,7 @@ typedef SegNodeLock<SegStreamNode> SegStreamLock;
 /**
  * Memento for a position within a SegStream.
  */
-struct SegStreamPosition 
+struct FENNEL_SEGMENT_EXPORT SegStreamPosition
 {
     /**
      * Physical position.
@@ -86,7 +87,8 @@ struct SegStreamPosition
 /**
  * SegStream is a common base for SegInputStream and SegOutputStream.
  */
-class SegStream : virtual public ByteStream
+class FENNEL_SEGMENT_EXPORT SegStream
+    : virtual public ByteStream
 {
 protected:
     /**
@@ -123,7 +125,7 @@ public:
     SharedSegment getSegment() const;
 
     /**
-     * @return segment accessor used by this stream 
+     * @return segment accessor used by this stream
      */
     SegmentAccessor const &getSegmentAccessor() const;
 };
@@ -132,17 +134,18 @@ public:
  * SegStreamMarker refines ByteStreamMarker with a physical stream
  * position, allowing for random-access mark/reset.
  */
-class SegStreamMarker : public ByteStreamMarker
+class FENNEL_SEGMENT_EXPORT SegStreamMarker
+    : public ByteStreamMarker
 {
     friend class SegInputStream;
-    
+
     /**
      * Position for random-access mark/reset.
      */
     SegStreamPosition segPos;
 
     explicit SegStreamMarker(SegStream const &segStream);
-    
+
     // implement ByteStreamMarker
     virtual FileSize getOffset() const;
 };

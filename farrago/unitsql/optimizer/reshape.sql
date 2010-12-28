@@ -9,6 +9,11 @@ set schema 'reshape';
 
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
+-- exclude the constant/cast reduction rules so we can exercise the ReshapeRel
+-- transforming no-op casts
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+    'FarragoReduceExpressionsRule.*');
+
 create table t1(
     t1id int not null,
     t1a char(5) not null,
@@ -190,3 +195,20 @@ explain plan for select * from d1, d3 where d1.a = d3.a;
 
 !set outputformat table
 select * from d1, d2 where d1.a = d2.a;
+
+-- LER-8000 -- Make sure ReshapeRel handles comparing null values against
+-- non-nullable columns
+-- SWZ: 2008-10-07: Modified test to use FTRS table -- repository query plans 
+-- vary with build configuration.
+alter session implementation set default;
+create table n1 (i int primary key, "name" varchar(32) not null, "ordinal" int);
+insert into n1 values (1, 'X', 0), (2, 'Y', 1), (3, 'Z', 0), (4, 'X', 0);
+
+!set outputformat csv
+explain plan for
+select "name" from n1 where "name" is null;
+!set outputformat table
+select "name" from n1 where "name" is null;
+-- make sure data is returned when the query is supposed to return data
+select distinct "name" from n1 where "ordinal" = 0
+    order by "name";

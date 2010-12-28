@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,6 @@ import org.eigenbase.util.*;
 public class QueueIterator
     implements Iterator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final WrappedNull WRAPPED_NULL = new WrappedNull();
@@ -103,7 +102,7 @@ public class QueueIterator
     /**
      * @param n number of producers
      * @param tracer trace to this Logger, or null.
-     * @param queue {@link BlockingQueue} implementation, or null for default
+     * @param queue {@link BlockingQueue}  implementation, or null for default
      */
     public QueueIterator(int n, Logger tracer, BlockingQueue queue)
     {
@@ -123,7 +122,27 @@ public class QueueIterator
         hasNext = true;
     }
 
-    //~ Methods ----------------------------------------------------------------
+    //~ Methods ---------------------------------------------------------------
+
+    public StringBuilder printStatus(StringBuilder b)
+    {
+        b.append(this);
+        if (throwable != null) {
+            b.append(" error: ").append(throwable);
+        }
+        if (hasNext) {
+            if (queue instanceof ArrayBlockingQueue) {
+                // Kludge - expect an ArrayBlockingQueue
+                ArrayBlockingQueue abq = (ArrayBlockingQueue) queue;
+                b.append(" size: ").append(abq.size());
+            } else {
+                b.append("size ?");
+            }
+        } else {
+            b.append(" done");
+        }
+        return b;
+    }
 
     protected void reset(int n)
     {
@@ -194,7 +213,7 @@ public class QueueIterator
         if (next == null) {
             try {
                 if (timeoutMillis <= 0) {
-                    next = queue.peek();
+                    next = queue.poll();
                 } else {
                     next = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
                 }

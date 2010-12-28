@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ public abstract class MedAbstractLocalDataServer
     extends MedAbstractDataServer
     implements FarragoMedLocalDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
@@ -86,6 +85,24 @@ public abstract class MedAbstractLocalDataServer
         throws SQLException
     {
         // by default, no special validation rules
+    }
+
+    // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex,
+        boolean creation)
+        throws SQLException
+    {
+        validateTableDefinition(table, generatedPrimaryKeyIndex);
+    }
+
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        // Assume not; subclasses have to override this
+        // to enable support.
+        return false;
     }
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ import org.eigenbase.util14.*;
  * FennelStandardTypeDescriptor implements the {@link
  * FennelStandardTypeDescriptor} enumerations as kept in fennel. This must be
  * kept in sync with any changes to fennel's <code>
- * FennelStandardTypeDescriptor.h</code>.
+ * FennelStandardTypeDescriptor.h</code>. This class is JDK 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -40,7 +40,6 @@ public abstract class FennelStandardTypeDescriptor
     extends Enum14.BasicValue
     implements FennelStoredTypeDescriptor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -64,6 +63,8 @@ public abstract class FennelStandardTypeDescriptor
     public static final int VARCHAR_ORDINAL = 13;
     public static final int BINARY_ORDINAL = 14;
     public static final int VARBINARY_ORDINAL = 15;
+    public static final int UNICODE_CHAR_ORDINAL = 16;
+    public static final int UNICODE_VARCHAR_ORDINAL = 17;
     public static final int EXTENSION_MIN_ORDINAL = 1000;
 
     /**
@@ -141,24 +142,38 @@ public abstract class FennelStandardTypeDescriptor
      */
     public static final Type_VARBINARY VARBINARY = new Type_VARBINARY();
 
+    /**
+     * Describes a fixed-width UNICODE character string.
+     */
+    public static final Type_UNICODE_CHAR UNICODE_CHAR =
+        new Type_UNICODE_CHAR();
+
+    /**
+     * Describes a variable-width binary string.
+     */
+    public static final Type_UNICODE_VARCHAR UNICODE_VARCHAR =
+        new Type_UNICODE_VARCHAR();
+
     private static final FennelStandardTypeDescriptor [] values =
-        {
-            INT_8,
-            UINT_8,
-            INT_16,
-            UINT_16,
-            INT_32,
-            UINT_32,
-            INT_64,
-            UINT_64,
-            BOOL,
-            REAL,
-            DOUBLE,
-            CHAR,
-            VARCHAR,
-            BINARY,
-            VARBINARY,
-        };
+    {
+        INT_8,
+        UINT_8,
+        INT_16,
+        UINT_16,
+        INT_32,
+        UINT_32,
+        INT_64,
+        UINT_64,
+        BOOL,
+        REAL,
+        DOUBLE,
+        CHAR,
+        VARCHAR,
+        BINARY,
+        VARBINARY,
+        UNICODE_CHAR,
+        UNICODE_VARCHAR,
+    };
 
     public static final Enum14 enumeration = new Enum14(values);
 
@@ -205,8 +220,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isNativeNotBool()
     {
-        return
-            (getOrdinal() <= DOUBLE_ORDINAL) && (getOrdinal() != BOOL_ORDINAL);
+        return (getOrdinal() <= DOUBLE_ORDINAL)
+            && (getOrdinal() != BOOL_ORDINAL);
     }
 
     /**
@@ -237,7 +252,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isApprox()
     {
         if ((getOrdinal() == REAL_ORDINAL)
-            || (getOrdinal() == DOUBLE_ORDINAL)) {
+            || (getOrdinal() == DOUBLE_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -249,7 +265,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isArray()
     {
         if ((getOrdinal() >= CHAR_ORDINAL)
-            && (getOrdinal() <= VARBINARY_ORDINAL)) {
+            && (getOrdinal() <= UNICODE_VARCHAR_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -261,7 +278,9 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isVariableLenArray()
     {
         if ((getOrdinal() == VARCHAR_ORDINAL)
-            || (getOrdinal() == VARBINARY_ORDINAL)) {
+            || (getOrdinal() == VARBINARY_ORDINAL)
+            || (getOrdinal() == UNICODE_VARCHAR_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -273,7 +292,9 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isFixedLenArray()
     {
         if ((getOrdinal() == CHAR_ORDINAL)
-            || (getOrdinal() == BINARY_ORDINAL)) {
+            || (getOrdinal() == BINARY_ORDINAL)
+            || (getOrdinal() == UNICODE_CHAR_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -285,7 +306,10 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isTextArray()
     {
         if ((getOrdinal() == CHAR_ORDINAL)
-            || (getOrdinal() == VARCHAR_ORDINAL)) {
+            || (getOrdinal() == VARCHAR_ORDINAL)
+            || (getOrdinal() == UNICODE_CHAR_ORDINAL)
+            || (getOrdinal() == UNICODE_VARCHAR_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -297,7 +321,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isBinaryArray()
     {
         if ((getOrdinal() == VARBINARY_ORDINAL)
-            || (getOrdinal() == BINARY_ORDINAL)) {
+            || (getOrdinal() == BINARY_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -461,11 +486,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getByte() - d1.getByte());
-        }
     }
 
     /**
@@ -487,11 +507,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getUnsignedByte() - d1.getUnsignedByte());
         }
     }
 
@@ -515,11 +530,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getShort() - d1.getShort());
-        }
     }
 
     /**
@@ -541,11 +551,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return d2.getUnsignedShort() - d1.getUnsignedShort();
         }
     }
 
@@ -569,11 +574,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return d2.getInt() - d1.getInt();
-        }
     }
 
     /**
@@ -595,11 +595,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getUnsignedInt() - d1.getUnsignedInt());
         }
     }
 
@@ -623,11 +618,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getLong() - d1.getLong());
-        }
     }
 
     /**
@@ -649,11 +639,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getUnsignedLong() - d1.getUnsignedLong());
         }
     }
 
@@ -677,11 +662,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getFloat() - d1.getFloat());
-        }
     }
 
     /**
@@ -704,11 +684,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            return (int) (d2.getDouble() - d1.getDouble());
-        }
     }
 
     /**
@@ -730,17 +705,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelBitAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            if (d2.getBoolean() == d1.getBoolean()) {
-                return 0;
-            }
-            if (d2.getBoolean()) {
-                return 1;
-            }
-            return -1;
         }
     }
 
@@ -774,28 +738,42 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
+    }
 
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+    /**
+     * Describes a fixed-width character string.
+     */
+    private static class Type_UNICODE_CHAR
+        extends FennelType
+    {
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
+        private static final long serialVersionUID = 2829309515586470045L;
+
+        Type_UNICODE_CHAR()
         {
-            int c = d2.getLength() - d1.getLength();
-            if (c != 0) {
-                return c;
-            }
-            final String s1 = new String(
-                    d1.getBytes(),
-                    0,
-                    c);
-            final String s2 = new String(
-                    d2.getBytes(),
-                    0,
-                    c);
-            if (s1.equals(s2)) {
-                return 0;
-            }
+            super("U", UNICODE_CHAR_ORDINAL);
+        }
 
-            // arbitrarily mark the first one larger; if this is actually
-            // used, compare hashcodes
-            return -1;
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
+        public int getAlignmentByteCount(int width)
+        {
+            return 2;
+        }
+
+        public int getMinByteCount(int maxWidth)
+        {
+            return maxWidth;
+        }
+
+        public FennelAttributeAccessor newAttributeAccessor()
+        {
+            return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
     }
 
@@ -824,28 +802,37 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
+    }
 
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+    /**
+     * Describes a variable-width UNICODE character string.
+     */
+    private static class Type_UNICODE_VARCHAR
+        extends FennelType
+    {
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
+        private static final long serialVersionUID = -7747093963788655633L;
+
+        Type_UNICODE_VARCHAR()
         {
-            int c = d2.getLength() - d1.getLength();
-            if (c != 0) {
-                return c;
-            }
-            final String s1 = new String(
-                    d1.getBytes(),
-                    0,
-                    c);
-            final String s2 = new String(
-                    d2.getBytes(),
-                    0,
-                    c);
-            if (s1.equals(s2)) {
-                return 0;
-            }
+            super("vU", UNICODE_VARCHAR_ORDINAL);
+        }
 
-            // arbitrarily mark the first one larger; if this is actually
-            // used, compare hashcodes
-            return -1;
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
+        public int getAlignmentByteCount(int width)
+        {
+            return 2;
+        }
+
+        public FennelAttributeAccessor newAttributeAccessor()
+        {
+            return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
     }
 
@@ -879,29 +866,6 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            int c = d2.getLength() - d1.getLength();
-            if (c != 0) {
-                return c;
-            }
-            final String s1 = new String(
-                    d1.getBytes(),
-                    0,
-                    c);
-            final String s2 = new String(
-                    d2.getBytes(),
-                    0,
-                    c);
-            if (s1.equals(s2)) {
-                return 0;
-            }
-
-            // arbitrarily mark the first one larger; if this is actually
-            // used, compare hashcodes
-            return -1;
-        }
     }
 
     /**
@@ -928,29 +892,6 @@ public abstract class FennelStandardTypeDescriptor
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
-        }
-
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
-        {
-            int c = d2.getLength() - d1.getLength();
-            if (c != 0) {
-                return c;
-            }
-            final String s1 = new String(
-                    d1.getBytes(),
-                    0,
-                    c);
-            final String s2 = new String(
-                    d2.getBytes(),
-                    0,
-                    c);
-            if (s1.equals(s2)) {
-                return 0;
-            }
-
-            // arbitrarily mark the first one larger; if this is actually
-            // used, compare hashcodes
-            return -1;
         }
     }
 }

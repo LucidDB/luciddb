@@ -1,5 +1,4 @@
 0: jdbc:luciddb:> -- test STRING builtin functions
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select s1 || '-' || s2, upper(s1),
@@ -74,9 +73,7 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 | irl     |
 +---------+
 0: jdbc:luciddb:> select substring(str from 2 for -2) from foo;
-Error: Could not calculate result column 1 for the following row:
-[boy]
-Messages: The length for substring can not be negative (state=,code=0)
+Error: The length for substring can not be negative (state=,code=0)
 0: jdbc:luciddb:> DROP TABLE FOO;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- New versions of statements
@@ -137,26 +134,38 @@ Messages: The length for substring can not be negative (state=,code=0)
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c1 = B.c1
-. . . . . . . . >   AND A.c1 <> LEFTN(B.c1, 10);
-Error: From line 3, column 15 to line 3, column 29: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
+. . . . . . . . >   AND A.c1 <> APPLIB.LEFTN(B.c1, 10);
++-----+-----+
+| C1  | C1  |
++-----+-----+
++-----+-----+
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s1 = B.s1
-. . . . . . . . >   AND A.s1 <> LEFTN(B.s1, 10);
-Error: From line 3, column 15 to line 3, column 29: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
+. . . . . . . . >   AND A.s1 <> APPLIB.LEFTN(B.s1, 10);
++-----+-----+
+| S1  | S1  |
++-----+-----+
++-----+-----+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Note that LTRIM on a given character should not remove
 0: jdbc:luciddb:> -- any characters that don't match.
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c1 = B.c1
-. . . . . . . . >   AND A.c1 <> LTRIM(B.c1, '@');
-Error: From line 3, column 15 to line 3, column 30: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
+. . . . . . . . >   AND A.c1 <> TRIM(LEADING '@' FROM B.c1);
++-----+-----+
+| C1  | C1  |
++-----+-----+
++-----+-----+
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s1 = B.s1
-. . . . . . . . >   AND A.s1 <> LTRIM(B.s1, '@');
-Error: From line 3, column 15 to line 3, column 30: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
+. . . . . . . . >   AND A.s1 <> TRIM(LEADING '@' FROM B.s1);
++-----+-----+
+| S1  | S1  |
++-----+-----+
++-----+-----+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Just check that our substringing and padding, etc. returns
 0: jdbc:luciddb:> -- the proper number of columns and that CHAR_LENGTH checks it properly.
@@ -319,7 +328,8 @@ Was expecting one of:
     "UNNEST" ...
     "(" ...
     <IDENTIFIER> ...
-    <QUOTED_IDENTIFIER> ... (state=,code=0)
+    <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ... (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check precision of to_char
 0: jdbc:luciddb:> CREATE TABLE bug9210
@@ -357,7 +367,8 @@ Was expecting one of:
     "UNNEST" ...
     "(" ...
     <IDENTIFIER> ...
-    <QUOTED_IDENTIFIER> ... (state=,code=0)
+    <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ... (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- End test

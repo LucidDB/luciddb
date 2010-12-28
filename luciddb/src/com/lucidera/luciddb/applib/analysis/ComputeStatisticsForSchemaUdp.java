@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,14 +23,13 @@ package com.lucidera.luciddb.applib.analysis;
 
 import com.lucidera.luciddb.applib.resource.*;
 import com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp;
-import org.eigenbase.util.StackWriter;
 import java.sql.*;
-import java.io.*;
 
 /**
  * ComputeStatisticsForSchema UDP calls 'analyze table ... ' with 'compute
- * statistics for all columns' for every table and view in the schema.
+ * statistics for all columns' for every table in a schema.
  *
+ * @see EstimateStatisticsForSchemaUdp
  * @author Oscar Gothberg
  * @version $Id$
  */
@@ -38,15 +37,16 @@ import java.io.*;
 public abstract class ComputeStatisticsForSchemaUdp {
 
     /**
+     * Compute statistics for every table in the given schema.
+     *
      * @param schemaName name of schema to compute statistics for
      */
-
-    public static void execute(String schemaName) throws SQLException {
-        
-        // currently doesn't do 'estimate' since that's not supported by luciddb yet. 
-        
+    public static void execute(String schemaName) throws SQLException
+    {
         // build statement, forward it to DoForEntireSchemaUdp
         DoForEntireSchemaUdp.execute(
-            "analyze table %TABLE_NAME% compute statistics for all columns", schemaName, "TABLES");
+            "analyze table %TABLE_NAME% compute statistics for all columns", 
+            schemaName,
+            "TABLES");
     }
 }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,8 +36,11 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.SqlBuilder;
+import org.eigenbase.util.*;
 
 
 /**
@@ -48,10 +51,10 @@ import org.eigenbase.sql.parser.*;
  * @version $Id$
  */
 public class FarragoJdbcEngineConnection
+    extends Unwrappable
     implements FarragoConnection,
         FarragoSessionConnectionSource
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionFactory sessionFactory;
@@ -75,6 +78,12 @@ public class FarragoJdbcEngineConnection
     {
         this(sessionFactory.newSession(url, info));
         this.sessionFactory = sessionFactory;
+        try {
+            initConnection(info);
+        } catch (SQLException e) {
+            close(); // prevent leak
+            throw e;
+        }
     }
 
     private FarragoJdbcEngineConnection(
@@ -113,7 +122,7 @@ public class FarragoJdbcEngineConnection
     public Connection newConnection()
     {
         return new FarragoJdbcEngineConnection(
-                session.cloneSession(null));
+            session.cloneSession(null));
     }
 
     // implement Connection
@@ -203,10 +212,9 @@ public class FarragoJdbcEngineConnection
         try {
             // FarragoSessionStmtContext created without a param def factory
             // because plain Statements cannot use dynamic parameters.
-            return
-                new FarragoJdbcEngineStatement(
-                    this,
-                    session.newStmtContext(null));
+            return new FarragoJdbcEngineStatement(
+                this,
+                session.newStmtContext(null));
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -351,7 +359,9 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        // NOTE jvs 3-May-2008:  We don't currently throw
+        // UnsupportedOperationException
+        return prepareStatement(sql);
     }
 
     // implement Connection
@@ -362,7 +372,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return prepareStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     // implement Connection
@@ -404,7 +414,7 @@ public class FarragoJdbcEngineConnection
     public int getHoldability()
         throws SQLException
     {
-        return 0;
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     public void setReadOnly(boolean readOnly)
@@ -434,15 +444,22 @@ public class FarragoJdbcEngineConnection
         throw new UnsupportedOperationException();
     }
 
+    // implement Connection
     public SQLWarning getWarnings()
         throws SQLException
     {
-        return null;
+        validateSession();
+
+        return session.getWarningQueue().getWarnings();
     }
 
+    // implement Connection
     public void clearWarnings()
         throws SQLException
     {
+        validateSession();
+
+        session.getWarningQueue().clearWarnings();
     }
 
     public Statement createStatement(
@@ -450,12 +467,14 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        if (resultSetType != ResultSet.TYPE_FORWARD_ONLY) {
-            throw new UnsupportedOperationException();
-        }
-        if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
-            throw new UnsupportedOperationException();
-        }
+        // NOTE jvs 3-May-2008:  Rather than throwing
+        // UnsupportedOperationException here and elsewhere when
+        // clients ask for things we don't support, such as
+        // scroll cursors, just ignore the modifiers.  They'll
+        // find out about it if they actually try to use the
+        // feature.  The reason for this is that often client applications
+        // ask for things they never use, so being too strict
+        // prevents them from working.
         return createStatement();
     }
 
@@ -465,7 +484,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return createStatement();
     }
 
     public String nativeSQL(String sql)
@@ -499,9 +518,47 @@ public class FarragoJdbcEngineConnection
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Performs additional setup based on connection property settings.
+     *
+     * @param info connection properties
+     *
+     * @throws SQLException
+     */
+    protected void initConnection(Properties info)
+        throws SQLException
+    {
+        String initialSchema = info.getProperty("schema");
+        if (initialSchema != null) {
+            Statement stmt = this.createStatement();
+            final SqlBuilder buf = new SqlBuilder(SqlDialect.EIGENBASE);
+            buf.append("set schema ");
+            buf.literal(initialSchema);
+            final String sql = buf.getSql();
+            try {
+                stmt.executeUpdate(sql);
+            } finally {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    // allow executeUpdate() exception to propagate
+                    Util.swallow(e, null);
+                }
+            }
+        }
+    }
+
     protected void validateSession()
         throws SQLException
     {
+        // REVIEW: hersker: 5/23/2007: if the session is closed, the
+        // "session" var is null, and the session.wasKilled(), below,
+        // will throw an NPE. Throwing "session closed" seems better.
+        if (isClosed()) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                FarragoResource.instance().JdbcConnSessionClosed.ex());
+        }
+
         // REVIEW: SWZ: 4/19/2006: Some DDL can cause a shutdown.  In that
         // event, the session is closed.  FarragoTestCase doesn't handle
         // this and attempts to use methods that call this validation method.
@@ -552,7 +609,89 @@ public class FarragoJdbcEngineConnection
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
 
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Connection
+    public Struct createStruct(String typeName, Object [] attributes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createStruct");
+    }
+
+    // implement Connection
+    public Array createArrayOf(String typeName, Object [] elements)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createArrayOf");
+    }
+
+    // implement Connection
+    public Properties getClientInfo()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public String getClientInfo(String name)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(String name, String value)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(Properties props)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public boolean isValid(int timeout)
+    {
+        throw new UnsupportedOperationException("isValid");
+    }
+
+    // implement Connection
+    public SQLXML createSQLXML()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createSQLXML");
+    }
+
+    // implement Connection
+    public NClob createNClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createNClob");
+    }
+
+    // implement Connection
+    public Clob createClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createClob");
+    }
+
+    // implement Connection
+    public Blob createBlob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createBlob");
+    }
+
     //~ Inner Classes ----------------------------------------------------------
+
+    //
+    // end JDBC 4 methods
+    //
 
     /**
      * Implementation of {@link FarragoMedDataWrapperInfo} which fleetingly
@@ -587,10 +726,9 @@ public class FarragoJdbcEngineConnection
             final FarragoObjectCache sharedCache = db.getDataWrapperCache();
 
             dataWrapperCache =
-                new FarragoDataWrapperCache(
+                session.newFarragoDataWrapperCache(
                     session,
                     sharedCache,
-                    db.getPluginClassLoader(),
                     session.getRepos(),
                     db.getFennelDbHandle(),
                     null);
@@ -625,10 +763,10 @@ public class FarragoJdbcEngineConnection
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return
-                    dataWrapper.getServerPropertyInfo(locale,
-                        wrapperProps,
-                        serverProps);
+                return dataWrapper.getServerPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps);
             } finally {
                 closeWrapperCache();
             }
@@ -642,11 +780,11 @@ public class FarragoJdbcEngineConnection
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return
-                    dataWrapper.getColumnSetPropertyInfo(locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps);
+                return dataWrapper.getColumnSetPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps);
             } finally {
                 closeWrapperCache();
             }
@@ -661,12 +799,12 @@ public class FarragoJdbcEngineConnection
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return
-                    dataWrapper.getColumnPropertyInfo(locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps,
-                        columnProps);
+                return dataWrapper.getColumnPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps,
+                    columnProps);
             } finally {
                 closeWrapperCache();
             }

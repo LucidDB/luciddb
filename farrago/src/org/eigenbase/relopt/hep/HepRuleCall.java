@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public class HepRuleCall
     extends RelOptRuleCall
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<RelNode> results;
@@ -48,9 +47,11 @@ public class HepRuleCall
     HepRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
-        RelNode [] rels)
+        RelNode [] rels,
+        Map<RelNode, List<RelNode>> nodeChildren,
+        List<RelNode> parents)
     {
-        super(planner, operand, rels);
+        super(planner, operand, rels, nodeChildren, parents);
 
         results = new ArrayList<RelNode>();
     }

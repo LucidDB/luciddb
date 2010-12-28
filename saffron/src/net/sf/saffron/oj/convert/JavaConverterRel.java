@@ -19,22 +19,12 @@
 
 package net.sf.saffron.oj.convert;
 
-import openjava.ptree.ParseTree;
-import openjava.ptree.Variable;
+import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.JavaLoopRel;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRel;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.rel.convert.FactoryConverterRule;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.util.Util;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -42,8 +32,9 @@ import org.eigenbase.util.Util;
  * <code>inConvention</code> to {@link
  * org.eigenbase.relopt.CallingConvention#ARRAY}.
  */
-public class JavaConverterRel extends ConverterRel implements JavaRel,
-    JavaLoopRel
+public class JavaConverterRel
+    extends ConverterRelImpl
+    implements ConverterRel, JavaRel, JavaLoopRel
 {
     /**
      * The convertlet actually does the work.
@@ -78,7 +69,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaConverterRel clone()
     {
         JavaConverterRel clone =
             new JavaConverterRel(getCluster(), getChild(), convertlet);

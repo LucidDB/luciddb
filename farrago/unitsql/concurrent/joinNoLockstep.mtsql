@@ -3,6 +3,7 @@
 @thread t1,t2
 	@repeat 100
 		select emps.empno, emps.name, emps.gender, depts.*
-		from sales.depts, sales.emps where emps.deptno = depts.deptno;
+		from sales.depts, sales.emps where emps.deptno = depts.deptno
+                order by empno;
 	@end
 @end

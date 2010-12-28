@@ -1,0 +1,214 @@
+0: jdbc:luciddb:> -- tests for Penultimate_values UDX
+0: jdbc:luciddb:> create schema pv;
+0: jdbc:luciddb:> set schema 'pv';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table OptyHist(
+. . . . . . . . >   id varchar(20),
+. . . . . . . . >   changeTimestamp timestamp,
+. . . . . . . . >   stage varchar(50),
+. . . . . . . . >   amount decimal(10,2),
+. . . . . . . . >   expectedRevenue decimal(10,2),
+. . . . . . . . >   probability int,
+. . . . . . . . >   isDeleted boolean);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- empty table
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)));
++-----+------------------+--------+---------+------------------+--------------+------------+------------------+
+| ID  | CHANGETIMESTAMP  | STAGE  | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  | UNTIL_TIMESTAMP  |
++-----+------------------+--------+---------+------------------+--------------+------------+------------------+
++-----+------------------+--------+---------+------------------+--------------+------------+------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic table
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false), 
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-29 11:45:00', '2 - Mtg Schd / NDA Signed', 
+. . . . . . . . >    150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', '2 - Mtg Schd / NDA Signed', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)))
+. . . . . . . . > order by id;
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |   UNTIL_TIMESTAMP    |
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified  | 150.00  | 200.00           | 10           |            | 2007-12-29 11:45:00  |
+| BB100  |                      |                |         |                  |              |            | 2007-09-09 05:00:23  |
+| BB200  |                      |                |         |                  |              |            | 2008-01-01 07:27:00  |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified  | 15.00   | 15.00            | 90           | false      | 2007-12-05 00:00:04  |
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with nulls
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   (null, timestamp'1800-01-01 00:00:00', null, 0, null, 0, true),
+. . . . . . . . >   (null, timestamp'6666-06-16 00:59:59', null, null, 0, -1, false),
+. . . . . . . . >   ('AA100', timestamp'2007-10-12 12:23:41', '0 - Prospect', 100, null, null,
+. . . . . . . . >    null),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 15:00:00', '0 - Prospect', null, 100, 60,
+. . . . . . . . >    false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:20', null, 10, null, 50, null);
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)))
+. . . . . . . . > order by id;
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |   UNTIL_TIMESTAMP    |
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+|        |                      |                | 0.00    |                  | 0            | true       | 1800-01-01 00:00:00  |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect   |         | 200.00           | 60           |            | 2007-12-29 11:45:00  |
+| BB100  | 2007-09-09 05:00:20  |                |         |                  | 50           |            | 2007-09-09 05:00:23  |
+| BB200  |                      |                |         |                  |              |            | 2008-01-01 07:27:00  |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified  | 15.00   | 15.00            | 90           | false      | 2007-12-05 00:00:04  |
++--------+----------------------+----------------+---------+------------------+--------------+------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with empty strings and spaces
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('  ', timestamp'1999-10-10 04:29:09', '0 - Prospect', 34229.8, 67, 8,
+. . . . . . . . >    false),
+. . . . . . . . >   ('', timestamp'2020-01-01 00:59:59', '1 - Qualified', 10, 67, 9, true),
+. . . . . . . . >   ('AA100  ', timestamp'2007-12-29 22:45:00', '3 - Data received / Analyzed',
+. . . . . . . . >    150.00, 30000, 90, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:21', '', 20, 90, 50, null),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:01:02', '2 - Mtg Schd / NDA Signed     ',
+. . . . . . . . >    755.05, 20, 99, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)))
+. . . . . . . . > order by id;
++--------+----------------------+----------------------------+-----------+------------------+--------------+------------+----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |  AMOUNT   | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |   UNTIL_TIMESTAMP    |
++--------+----------------------+----------------------------+-----------+------------------+--------------+------------+----------------------+
+|        |                      |                            | 0.00      |                  | 0            | true       | 1800-01-01 00:00:00  |
+|        | 1999-10-10 04:29:09  | 0 - Prospect               | 34229.80  |                  | 8            | false      | 2020-01-01 00:59:59  |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | 150.05    | 100.00           | 20           | false      | 2007-12-29 22:45:00  |
+| BB100  | 2007-09-09 05:00:21  |                            | 20.00     |                  | 50           |            | 2007-09-09 05:00:23  |
+| BB200  |                      |                            |           |                  |              |            | 2008-01-01 07:27:00  |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 755.05    | 15.00            | 99           | false      | 2007-12-05 00:00:04  |
++--------+----------------------+----------------------------+-----------+------------------+--------------+------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select id, stage, applib.days_diff(until_timestamp, changeTimestamp)
+. . . . . . . . >   from table(
+. . . . . . . . >     applib.penultimate_values(
+. . . . . . . . >       cursor(select id, stage, changeTimestamp from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >       row(id),
+. . . . . . . . >       row(stage, changeTimestamp)))
+. . . . . . . . > order by id;
++--------+----------------------------+---------+
+|   ID   |           STAGE            | EXPR$2  |
++--------+----------------------------+---------+
+|        |                            |         |
+|        | 0 - Prospect               | 7387    |
+| AA100  | 2 - Mtg Schd / NDA Signed  | 0       |
+| BB100  |                            | 0       |
+| BB200  |                            |         |
+| DD400  | 1 - Qualified              | 0       |
++--------+----------------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multi-column key
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist
+. . . . . . . . >       order by id, expectedRevenue, changeTimestamp),
+. . . . . . . . >     row(id, expectedRevenue),
+. . . . . . . . >     row(stage, changeTimestamp)))
+. . . . . . . . > order by id, expectedRevenue;
++----------+----------------------+----------------+-----------+------------------+--------------+------------+----------------------+
+|    ID    |   CHANGETIMESTAMP    |     STAGE      |  AMOUNT   | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |   UNTIL_TIMESTAMP    |
++----------+----------------------+----------------+-----------+------------------+--------------+------------+----------------------+
+|          |                      |                |           |                  |              |            | 1800-01-01 00:00:00  |
+|          |                      |                |           | 0.00             |              |            | 6666-06-16 00:59:59  |
+|          | 1999-10-10 04:29:09  | 0 - Prospect   | 34229.80  | 67.00            | 8            | false      | 2020-01-01 00:59:59  |
+| AA100    |                      |                |           |                  |              |            | 2007-10-12 12:23:41  |
+| AA100    | 2007-10-14 00:00:00  | 0 - Prospect   |           | 100.00           | 60           |            | 2007-12-29 11:45:00  |
+| AA100    |                      |                |           | 200.00           |              |            | 2007-12-01 09:00:00  |
+| AA100    |                      |                |           | 30000.00         |              |            | 2007-12-29 22:45:00  |
+| BB100    |                      |                |           |                  |              |            | 2007-09-09 05:00:20  |
+| BB100    | 2007-09-09 05:00:21  |                | 20.00     | 90.00            | 50           |            | 2007-09-09 05:00:23  |
+| BB200    |                      |                |           | 2000.00          |              |            | 2008-01-01 07:27:00  |
+| DD400    | 2007-12-05 00:00:00  | 1 - Qualified  | 10.00     | 15.00            | 80           |            | 2007-12-05 00:00:04  |
+| DD400    |                      |                | 755.05    | 20.00            | 99           |            | 2007-12-05 00:01:02  |
++----------+----------------------+----------------+-----------+------------------+--------------+------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Negative tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- designated_value_and_timestamp is not 2 columns
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp, amount)));
+Error: DESIGNATED_VALUE_AND_TIMESTAMP must have two columns (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- second column of designated_value_and_timestamp is not a timestamp
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, amount)));
+Error: Second column in DESIGNATED_VALUE_AND_TIMESTAMP must have TIMESTAMP datatype; column name: [AMOUNT] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- input table not presorted correctly
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id desc, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)));
+Error: Input cursor must be sorted by the following column(s) in ascending order: [ID, CHANGETIMESTAMP]; out of order column value(s): [BB200, 2008-01-01 07:27:00.0] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp desc),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)));
+Error: Input cursor must be sorted by the following column(s) in ascending order: [ID, CHANGETIMESTAMP]; out of order column value(s): [(null), 1800-01-01 00:00:00.0] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- columns in designated_value_and_timestamp are in grouping_columns
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(amount,id),
+. . . . . . . . >     row(amount, changeTimestamp)));
+Error: GROUPING_COLUMNS must not contain any of the columns in DESIGNATED_VALUE_AND_TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp input column contains a null value
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', null, '3 - Data received / Analyzed', 200, 200, 100, false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.penultimate_values(
+. . . . . . . . >     cursor(select * from OptyHist order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(stage, changeTimestamp)));
+Error: Second column in DESIGNATED_VALUE_AND_TIMESTAMP must not contain NULL values; column name [CHANGETIMESTAMP] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop table OptyHist cascade;
+0: jdbc:luciddb:> drop schema pv cascade;
+0: jdbc:luciddb:> !quit

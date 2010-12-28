@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@ package net.sf.farrago.rng;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.rng.resource.*;
+import net.sf.farrago.ddl.DdlHandler;
 
 import org.eigenbase.util.*;
 import org.eigenbase.resource.*;
@@ -47,7 +48,7 @@ public class FarragoRngPluginFactory
 {
     public static final FarragoRngResource res;
 
-    static 
+    static
     {
         // REVIEW jvs 12-Apr-2005:  FarragoRngResource.instance() has
         // problems loading the bundle from the jar.  Find out why;
@@ -59,7 +60,7 @@ public class FarragoRngPluginFactory
             throw Util.newInternal(ex);
         }
     }
-    
+
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,
@@ -81,11 +82,11 @@ public class FarragoRngPluginFactory
     {
         return new RngModelExtension();
     }
-    
+
     public static class RngPersonality extends DelegatingInvocationHandler
     {
         private final FarragoSessionPersonality defaultPersonality;
-        
+
         RngPersonality(FarragoSessionPersonality defaultPersonality)
         {
             this.defaultPersonality = defaultPersonality;
@@ -109,7 +110,7 @@ public class FarragoRngPluginFactory
         {
             return FarragoRngOperatorTable.rngInstance();
         }
-        
+
         // implement FarragoSessionPersonality
         public OJRexImplementorTable getOJRexImplementorTable(
             FarragoSessionPreparingStmt preparingStmt)
@@ -128,7 +129,7 @@ public class FarragoRngPluginFactory
             }
             return defaultPersonality.supportsFeature(feature);
         }
-        
+
         // NOTE:  we don't specify defineDdlHandlers here to avoid
         // duplication with RngModelExtension below.
     }
@@ -139,7 +140,7 @@ public class FarragoRngPluginFactory
         // implement FarragoSessionModelExtension
         public void defineDdlHandlers(
             FarragoSessionDdlValidator ddlValidator,
-            List handlerList)
+            List<DdlHandler> handlerList)
         {
             handlerList.add(
                 new FarragoRngDdlHandler(ddlValidator));
@@ -147,11 +148,11 @@ public class FarragoRngPluginFactory
 
         // implement FarragoSessionModelExtension
         public void defineResourceBundles(
-            List bundleList)
+            List<ResourceBundle> bundleList)
         {
             bundleList.add(res);
         }
-        
+
         // implement FarragoSessionModelExtension
         public void definePrivileges(
             FarragoSessionPrivilegeMap map)

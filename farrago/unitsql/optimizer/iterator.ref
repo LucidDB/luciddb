@@ -1,130 +1,116 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which abuse the implementation of conversion between Fennel 
-0: jdbc:farrago:> -- and Iterator calling convention.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: many of the union.sql and cartesians.sql queries are good tests
-0: jdbc:farrago:> --       of Fennel/Iterator conversion as well.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Planner will use a single FennelToIteratorConverter instance for both 
-0: jdbc:farrago:> -- references to depts. Make sure we keep them straight.  (Yes this query
-0: jdbc:farrago:> -- is highly contrived.)
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select * from 
-. . . . . . . . >     (select deptno + 1, name from depts) as d,
-. . . . . . . . >     (select deptno as id, name from depts union select empno as id, name from emps) as n
-. . . . . . . . > where
-. . . . . . . . >     d.name = n.name;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                               column0                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t3)], proj#0..3=[{exprs}], $condition=[$t4])                                                                       |
-|   FennelToIteratorConverter                                                                                                                                          |
-|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                 |
-|       IteratorToFennelConverter                                                                                                                                      |
-|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], EXPR$0=[$t3], NAME=[$t1])                                                                |
-|           FennelToIteratorConverter                                                                                                                                  |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])             |
-|       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                            |
-|         FennelSortRel(key=[[0, 1]], discardDuplicates=[true])                                                                                                        |
-|           IteratorToFennelConverter                                                                                                                                  |
-|             IterConcatenateRel(all=[true])                                                                                                                           |
-|               FennelToIteratorConverter                                                                                                                              |
-|                 FennelRenameRel(fieldNames=[[ID, NAME]])                                                                                                             |
-|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-|               FennelToIteratorConverter                                                                                                                              |
-|                 FennelRenameRel(fieldNames=[[ID, NAME]])                                                                                                             |
-|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])                                      |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select * from 
-. . . . . . . . >     (select deptno + 1 as dnoplus, name from depts) as d,
-. . . . . . . . >     (select deptno as id, name from depts union select empno as id, name from emps) as n
-. . . . . . . . > where
-. . . . . . . . >     d.name = n.name
-. . . . . . . . > order by dnoplus;
-+----------+------------+-----+------------+
-| DNOPLUS  |    NAME    | ID  |   NAME0    |
-+----------+------------+-----+------------+
-| 11       | Sales      | 10  | Sales      |
-| 21       | Marketing  | 20  | Marketing  |
-| 31       | Accounts   | 30  | Accounts   |
-+----------+------------+-----+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Planner will use a single IteratorToFennelConverter instance for both
-0: jdbc:farrago:> -- references to depts.  Make sure we keep them straight as well.
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
-. . . . . . . . > from (select deptno + 1 as deptno, name from sales.depts) as t1,
-. . . . . . . . >      (select deptno + 1 as deptno, name from sales.depts) as t2;
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                           column0                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                   |
-|   FennelRenameRel(fieldNames=[[DEPTNO, NAME, DEPTNO2, NAME2]])                                                                                              |
-|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                        |
-|       IteratorToFennelConverter                                                                                                                             |
-|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], DEPTNO=[$t3], NAME=[$t1])                                                       |
-|           FennelToIteratorConverter                                                                                                                         |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])    |
-|       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                   |
-|         IteratorToFennelConverter                                                                                                                           |
-|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], DEPTNO=[$t3], NAME=[$t1])                                                     |
-|             FennelToIteratorConverter                                                                                                                       |
-|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
-. . . . . . . . > from (select deptno + 1 as deptno, name from sales.depts) as t1,
-. . . . . . . . >      (select deptno + 1 as deptno, name from sales.depts) as t2
-. . . . . . . . > order by deptno,deptno2;
-+---------+------------+----------+------------+
-| DEPTNO  |    NAME    | DEPTNO2  |   NAME2    |
-+---------+------------+----------+------------+
-| 11      | Sales      | 11       | Sales      |
-| 11      | Sales      | 21       | Marketing  |
-| 11      | Sales      | 31       | Accounts   |
-| 21      | Marketing  | 11       | Sales      |
-| 21      | Marketing  | 21       | Marketing  |
-| 21      | Marketing  | 31       | Accounts   |
-| 31      | Accounts   | 11       | Sales      |
-| 31      | Accounts   | 21       | Marketing  |
-| 31      | Accounts   | 31       | Accounts   |
-+---------+------------+----------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Similar to previous, but without any underlying Fennel rels.
-0: jdbc:farrago:> -- Simplified from the query given in FRG-82.
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select "View1"."Foo", "View2"."Foo" as "Foo0"
-. . . . . . . . > from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
-. . . . . . . . >      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                             column0                                                                             |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                       |
-|   FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
-|     IteratorToFennelConverter                                                                                                                                   |
-|       IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])  |
-|         IterOneRowRel                                                                                                                                           |
-|     IteratorToFennelConverter                                                                                                                                   |
-|       IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])  |
-|         IterOneRowRel                                                                                                                                           |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select "View1"."Foo", "View2"."Foo" as "Foo0"
-. . . . . . . . > from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
-. . . . . . . . >      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
-+------+-------+
-| Foo  | Foo0  |
-+------+-------+
-|      |       |
-+------+-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> -- $Id$
+> -- Test queries which abuse the implementation of conversion between Fennel 
+> -- and Iterator calling convention.
+> 
+> set schema 'sales';
+> !set outputformat csv
+> 
+> -- NOTE: many of the union.sql and cartesians.sql queries are good tests
+> --       of Fennel/Iterator conversion as well.
+> 
+> -- force usage of Java calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- Planner will use a single FennelToIteratorConverter instance for both 
+> -- references to depts. Make sure we keep them straight.  (Yes this query
+> -- is highly contrived.)
+> explain plan for 
+> select * from 
+>     (select deptno + 1, name from depts) as d,
+>     (select deptno as id, name from depts union select empno as id, name from emps) as n
+> where
+>     d.name = n.name;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], EXPR$0=[$t3], NAME=[$t1])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'    LhxAggRel(groupCount=[2])'
+'      IteratorToFennelConverter'
+'        IterConcatenateRel(all=[true])'
+'          FennelToIteratorConverter'
+'            FennelRenameRel(fieldNames=[[ID, NAME]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'          FennelToIteratorConverter'
+'            FennelRenameRel(fieldNames=[[ID, NAME]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> -- Execute to verify output.
+> select * from 
+>     (select deptno + 1 as dnoplus, name from depts) as d,
+>     (select deptno as id, name from depts union select empno as id, name from emps) as n
+> where
+>     d.name = n.name
+> order by dnoplus;
+'DNOPLUS','NAME','ID','NAME0'
+'11','Sales','10','Sales'
+'21','Marketing','20','Marketing'
+'31','Accounts','30','Accounts'
+> 
+> -- Planner will use a single IteratorToFennelConverter instance for both
+> -- references to depts.  Make sure we keep them straight as well.
+> explain plan for 
+> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
+> from (select deptno + 1 as deptno, name from sales.depts) as t1,
+>      (select deptno + 1 as deptno, name from sales.depts) as t2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[DEPTNO, NAME, DEPTNO2, NAME2]])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], DEPTNO=[$t3], NAME=[$t1])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], DEPTNO=[$t3], NAME=[$t1])'
+'            FennelToIteratorConverter'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> -- Execute to verify output.
+> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
+> from (select deptno + 1 as deptno, name from sales.depts) as t1,
+>      (select deptno + 1 as deptno, name from sales.depts) as t2
+> order by deptno,deptno2;
+'DEPTNO','NAME','DEPTNO2','NAME2'
+'11','Sales','11','Sales'
+'11','Sales','21','Marketing'
+'11','Sales','31','Accounts'
+'21','Marketing','11','Sales'
+'21','Marketing','21','Marketing'
+'21','Marketing','31','Accounts'
+'31','Accounts','11','Sales'
+'31','Accounts','21','Marketing'
+'31','Accounts','31','Accounts'
+> 
+> -- Similar to previous, but without any underlying Fennel rels.
+> -- Simplified from the query given in FRG-82.
+> explain plan for 
+> select "View1"."Foo", "View2"."Foo" as "Foo0"
+> from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
+>      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
+'column0'
+'FennelToIteratorConverter'
+'  FennelCartesianProductRel(leftouterjoin=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])'
+'        FennelToIteratorConverter'
+'          FennelValuesRel(tuples=[[{ 0 }]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])'
+'        FennelToIteratorConverter'
+'          FennelValuesRel(tuples=[[{ 0 }]])'
+> 
+> -- Execute to verify output.
+> select "View1"."Foo", "View2"."Foo" as "Foo0"
+> from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
+>      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
+'Foo','Foo0'
+'',''
+> 
+> -- End iterator.sql
+> 
+> 
+> !quit

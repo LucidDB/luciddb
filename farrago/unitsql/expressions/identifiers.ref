@@ -1,34 +1,36 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries with different identifiers
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test normal identifiers
-0: jdbc:farrago:> create table sales.idtest (
-. . . . . . . . >     obj_count integer primary key,
-. . . . . . . . >     "Desc" varchar(40)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !columns sales.idtest
-+------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
-+------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-+------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !columns IDTEST
+> -- $Id$
+> -- Test queries with different identifiers
+> 
+> -- !set verbose true
+> 
+> -- Test normal identifiers
+> create table sales.idtest (
+>     obj_count integer primary key,
+>     "Desc" varchar(40)
+> );
+> 
+> !columns sales.idtest
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | LOCALDB    | SALES        | IDTEST      | OBJ_COUNT    | 4          | INTEGER    |              | 0           |             |                 | 0         |          |             | 0              | 0                 |                    | 1                 | NO           |                |               |              |                   |
 | LOCALDB    | SALES        | IDTEST      | Desc         | 12         | VARCHAR    | 40           | 0           |             |                 | 1         |          |             | 0              | 0                 | 40                 | 2                 | YES          |                |               |              |                   |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into sales.idtest
-. . . . . . . . > values ( 15, 'lamps' ),
-. . . . . . . . >        ( 20, 'cameras' ),
-. . . . . . . . >        ( 44, 'frogs' );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select Obj_Count, "Desc" from sales.idtest;
+> 
+> !columns IDTEST
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | SALES        | IDTEST      | OBJ_COUNT    | 4          | INTEGER    |              | 0           |             |                 | 0         |          |             | 0              | 0                 |                    | 1                 | NO           |                |               |              |                   |
+| LOCALDB    | SALES        | IDTEST      | Desc         | 12         | VARCHAR    | 40           | 0           |             |                 | 1         |          |             | 0              | 0                 | 40                 | 2                 | YES          |                |               |              |                   |
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+> 
+> insert into sales.idtest
+> values ( 15, 'lamps' ),
+>        ( 20, 'cameras' ),
+>        ( 44, 'frogs' );
+> 
+> select Obj_Count, "Desc" from sales.idtest;
 +------------+----------+
 | OBJ_COUNT  |   Desc   |
 +------------+----------+
@@ -36,105 +38,124 @@
 | 20         | cameras  |
 | 44         | frogs    |
 +------------+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table sales.idtest;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test identifiers with spaces
-0: jdbc:farrago:> create schema "identifier test schema?";
-0: jdbc:farrago:> set schema '"identifier test schema?"';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table "My Table" (
-. . . . . . . . >     "id" integer primary key,
-. . . . . . . . >     "col with spaces" varchar(40),
-. . . . . . . . >     "%#$@!#%$_.,=+()" integer,
-. . . . . . . . >     "import" boolean
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- hmm, !columns does like this
-0: jdbc:farrago:> !columns "My Table"
-Usage: columns <table name>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into "My Table" values
-. . . . . . . . >     ( 1, 'row one', 55, true),
-. . . . . . . . >     ( 2, 'row two', 67, false);
-0: jdbc:farrago:>    
-0: jdbc:farrago:> select * from "My Table";
+> 
+> drop table sales.idtest;
+> 
+> -- Test identifiers with spaces
+> create schema "identifier test schema?";
+> set schema '"identifier test schema?"';
+> 
+> create table "My Table" (
+>     "id" integer primary key,
+>     "col with spaces" varchar(40),
+>     "%#$@!#%$_.,=+()" integer,
+>     "import" boolean
+> );
+> 
+> -- hmm, !columns does like this
+> !columns "My Table"
++------------+--------------------------+-------------+------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  |       TABLE_SCHEM        | TABLE_NAME  |   COLUMN_NAME    | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+--------------------------+-------------+------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | identifier test schema?  | My Table    | id               | 4          | INTEGER    |              | 0           |             |                 | 0         |          |             | 0              | 0                 |                    | 1                 | NO           |                |               |              |                   |
+| LOCALDB    | identifier test schema?  | My Table    | col with spaces  | 12         | VARCHAR    | 40           | 0           |             |                 | 1         |          |             | 0              | 0                 | 40                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | identifier test schema?  | My Table    | %#$@!#%$_.,=+()  | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | identifier test schema?  | My Table    | import           | 16         | BOOLEAN    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
++------------+--------------------------+-------------+------------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+> 
+> insert into "My Table" values
+>     ( 1, 'row one', 55, true),
+>     ( 2, 'row two', 67, false);
+>    
+> select * from "My Table";
 +-----+------------------+------------------+---------+
 | id  | col with spaces  | %#$@!#%$_.,=+()  | import  |
 +-----+------------------+------------------+---------+
 | 1   | row one          | 55               | true    |
 | 2   | row two          | 67               | false   |
 +-----+------------------+------------------+---------+
-0: jdbc:farrago:>  
-0: jdbc:farrago:> select "col with spaces", "%#$@!#%$_.,=+()" from "identifier test schema?"."My Table";
+>  
+> select "col with spaces", "%#$@!#%$_.,=+()" from "identifier test schema?"."My Table";
 +------------------+------------------+
 | col with spaces  | %#$@!#%$_.,=+()  |
 +------------------+------------------+
 | row one          | 55               |
 | row two          | 67               |
 +------------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "id" + "%#$@!#%$_.,=+()", "import" from "My Table";
+> 
+> select "id" + "%#$@!#%$_.,=+()", "import" from "My Table";
 +---------+---------+
 | EXPR$0  | import  |
 +---------+---------+
 | 56      | true    |
 | 69      | false   |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "My * IDs"."id" 
-. . . . . . . . > from (select "id" from "My Table") "My * IDs";
+> 
+> select "My * IDs"."id" 
+> from (select "id" from "My Table") "My * IDs";
 +-----+
 | id  |
 +-----+
 | 1   |
 | 2   |
 +-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test cases where an error is reported 
-0: jdbc:farrago:> select "COL WITH SPACES" from "My Table";
+> 
+> -- Test cases where an error is reported 
+> select "COL WITH SPACES" from "My Table";
 Error: From line 1, column 8 to line 1, column 24: Column 'COL WITH SPACES' not found in any table (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test identifiers with non-ASCII characters
-0: jdbc:farrago:> create table "non-ASCII table \u00bc\uc2bb\u00c3\u00bb" (
-. . . . . . . . >   "normal" integer primary key, 
-. . . . . . . . >   "column \uc234\uc2bd\uc3bc\uc380\uc2b4\uc2bb\uc386\uc2b9\uc388\uc391" integer
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into "non-ASCII table \u00bc\uc2bb\u00c3\u00bb"
-. . . . . . . . > values (6, 7) , (8, 9);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "normal" from "non-ASCII table \u00bc\uc2bb\u00c3\u00bb";
+> 
+> -- Test identifiers with non-ASCII characters
+> create table "non-ASCII table \u00bc\uc2bb\u00c3\u00bb" (
+>   "normal" integer primary key, 
+>   "column \uc234\uc2bd\uc3bc\uc380\uc2b4\uc2bb\uc386\uc2b9\uc388\uc391" integer
+> );
+> 
+> insert into "non-ASCII table \u00bc\uc2bb\u00c3\u00bb"
+> values (6, 7) , (8, 9);
+> 
+> select "normal" from "non-ASCII table \u00bc\uc2bb\u00c3\u00bb";
 +---------+
 | normal  |
 +---------+
 | 6       |
 | 8       |
 +---------+
-0: jdbc:farrago:> select "column \uc234\uc2bd\uc3bc\uc380\uc2b4\uc2bb\uc386\uc2b9\uc388\uc391"
-. . . . . . . . >     as "column non-ASCII"
-. . . . . . . . >     from "non-ASCII table \u00bc\uc2bb\u00c3\u00bb";
+> select "column \uc234\uc2bd\uc3bc\uc380\uc2b4\uc2bb\uc386\uc2b9\uc388\uc391"
+>     as "column non-ASCII"
+>     from "non-ASCII table \u00bc\uc2bb\u00c3\u00bb";
 +-------------------+
 | column non-ASCII  |
 +-------------------+
 | 7                 |
 | 9                 |
 +-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test long identifiers
-0: jdbc:farrago:> create table "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters" (
-. . . . . . . . >     "veryveryverylongcolumnnamewithnofunnycharactersjustalphabeticalandnumbersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890" integer primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters"
-. . . . . . . . > values 54, 89, 32;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters";
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| veryveryverylongcolumnnamewithnofunnycharactersjustalphabeticalandnumbersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890  |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| 32                                                                                                                                                                                                                                                             |
-| 54                                                                                                                                                                                                                                                             |
-| 89                                                                                                                                                                                                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- Test long identifiers
+> create table "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation." (
+>     "longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG0123456" integer primary key);
+> 
+> insert into "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation."
+> values 54, 89, 32;
+> 
+> !outputformat csv
+> select * from "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation.";
+'longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG0123456'
+'32'
+'54'
+'89'
+> 
+> -- fails: table identifier too long
+> create table "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation..." (
+>   "col" integer primary key);
+Error: Length of identifier 'Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation...' must be less than or equal to 128 characters (state=,code=0)
+> 
+> -- fails: column identifier too long
+> create table "longcoltab" (
+>   "longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG01234567" integer primary key);
+Error: Length of identifier 'longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG01234567' must be less than or equal to 128 characters (state=,code=0)
+> 
+> -- fails: schema identifier too long
+> create schema "longschemaname_mahnamahna_quitelongschemaname_mahnamahna_verylongschemaname_mahnamahna_veryveryverylongschemaname_mahnamahna_yeah";
+Error: Length of identifier 'longschemaname_mahnamahna_quitelongschemaname_mahnamahna_verylongschemaname_mahnamahna_veryveryverylongschemaname_mahnamahna_yeah' must be less than or equal to 128 characters (state=,code=0)
+> 
+> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,8 +28,8 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 
-#ifdef __MINGW32__
-#include <../w32api/winsock2.h>
+#ifdef __MSVC__
+#include <winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
@@ -40,7 +40,8 @@ FENNEL_BEGIN_NAMESPACE
  * AttributeAccessorImpl is a common base for all implementations of the
  * AttributeAccessor interface.
  */
-class AttributeAccessorImpl : public AttributeAccessor
+class FENNEL_TUPLE_EXPORT AttributeAccessorImpl
+    : public AttributeAccessor
 {
 public:
     explicit AttributeAccessorImpl();
@@ -71,14 +72,14 @@ public:
         PBuffer pDestData,
         TupleDatum const &value) const
     {
-        memcpy(pDestData,value.pData,value.cbData);
+        memcpy(pDestData, value.pData, value.cbData);
     }
 };
 
 /**
  * FixedWidthAccessor accesses NOT NULL fixed width attributes.
  */
-class FixedWidthAccessor
+class FENNEL_TUPLE_EXPORT FixedWidthAccessor
     : public AttributeAccessorImpl
 {
 public:
@@ -93,7 +94,7 @@ public:
  * FixedWidthNetworkAccessor16 accesses NOT NULL fixed width 16-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor16
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor16
     : public FixedWidthAccessor
 {
 public:
@@ -101,11 +102,11 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint16_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data16 = ntohs(*reinterpret_cast<uint16_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data16));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const
@@ -120,7 +121,7 @@ public:
  * FixedWidthNetworkAccessor32 accesses NOT NULL fixed width 32-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor32
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor32
     : public FixedWidthAccessor
 {
 public:
@@ -128,11 +129,11 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint32_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data32 = ntohl(*reinterpret_cast<uint32_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data32));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const
@@ -147,7 +148,7 @@ public:
  * FixedWidthNetworkAccessor64 accesses NOT NULL fixed width 64-bit attributes
  * in network byte order.
  */
-class FixedWidthNetworkAccessor64
+class FENNEL_TUPLE_EXPORT FixedWidthNetworkAccessor64
     : public FixedWidthAccessor
 {
 public:
@@ -155,11 +156,11 @@ public:
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
         assert(value.cbData == sizeof(uint64_t));
-        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        FixedWidthAccessor::unmarshalValue(tupleAccessor, value);
         value.data64 = ntohll(*reinterpret_cast<uint64_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data64));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const
@@ -224,7 +225,7 @@ public:
 /**
  * BitAccessor accesses NOT NULL bit attributes.
  */
-class BitAccessor
+class FENNEL_TUPLE_EXPORT BitAccessor
     : public AttributeAccessorImpl
 {
 public:
@@ -248,10 +249,10 @@ public:
     void unmarshalValue(
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
-        if (Accessor::unmarshalNullableValue(tupleAccessor,value)) {
+        if (Accessor::unmarshalNullableValue(tupleAccessor, value)) {
             return;
         }
-        return Accessor::unmarshalValue(tupleAccessor,value);
+        return Accessor::unmarshalValue(tupleAccessor, value);
     }
 };
 

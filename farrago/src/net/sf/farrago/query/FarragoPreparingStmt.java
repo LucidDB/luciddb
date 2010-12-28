@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2003-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,13 +26,17 @@ import java.io.*;
 
 import java.net.*;
 
+import java.sql.*;
+
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
@@ -49,6 +53,7 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -79,7 +84,6 @@ public class FarragoPreparingStmt
         RelOptSchemaWithSampling,
         SqlValidatorCatalogReader
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 8-June-2004: this tracer is special in that it controls
@@ -90,16 +94,21 @@ public class FarragoPreparingStmt
     private static final Logger planDumpTracer =
         FarragoTrace.getPlanDumpTracer();
 
+    // REVIEW jvs 11-Oct-2006:  For debugging it would be handier to
+    // use the db-level stmt ID here.
+    private static final AtomicLong idGen = new AtomicLong();
+
     //~ Instance fields --------------------------------------------------------
 
+    private final String sql;
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     protected SqlToRelConverter sqlToRelConverter;
-    private Object savedDeclarer;
+    private OJClass savedDeclarer;
     private FarragoAllocation javaCodeDir;
     protected SqlValidatorImpl sqlValidator;
     private final Set<CwmModelElement> directDependencies;
-    private final Set<CwmModelElement> allDependencies;
+    protected final Set<CwmModelElement> allDependencies;
     private final Set<URL> jarUrlSet;
     protected SqlOperatorTable sqlOperatorTable;
     private final FarragoUserDefinedRoutineLookup routineLookup;
@@ -108,10 +117,13 @@ public class FarragoPreparingStmt
     private SqlIdentifier dmlTarget;
     private PrivilegedAction dmlAction;
     private TableAccessMap tableAccessMap;
-    private ChainedRelMetadataProvider relMetadataProvider;
+    protected ChainedRelMetadataProvider relMetadataProvider;
     private boolean allowPartialImplementation;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
+    private boolean cachingDisabled;
+    private FarragoPreparingStmt parentStmt;
+    private final FarragoSessionStmtContext rootStmtContext;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -140,15 +152,21 @@ public class FarragoPreparingStmt
     /**
      * Creates a new FarragoPreparingStmt object.
      *
+     * @param rootStmtContext the root statement context
      * @param stmtValidator generic stmt validator
+     * @param sql SQL text of statement being prepared
      */
-    public FarragoPreparingStmt(FarragoSessionStmtValidator stmtValidator)
+    public FarragoPreparingStmt(
+        FarragoSessionStmtContext rootStmtContext,
+        FarragoSessionStmtValidator stmtValidator,
+        String sql)
     {
         super(null);
 
         timingTracer = stmtValidator.getTimingTracer();
 
         this.stmtValidator = stmtValidator;
+        this.sql = sql;
         stmtValidator.addAllocation(this);
 
         loadedServerClassNameSet = new HashSet<String>();
@@ -185,6 +203,9 @@ public class FarragoPreparingStmt
         // but not to override the behavior of other providers.
         relMetadataProvider.addProvider(
             new FarragoRelMetadataProvider(getRepos()));
+
+        this.rootStmtContext = rootStmtContext;
+        this.parentStmt = null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -192,7 +213,22 @@ public class FarragoPreparingStmt
     // implement FarragoSessionPreparingStmt: cache everything
     public boolean mayCacheImplementation()
     {
+        if (cachingDisabled) {
+            return false;
+        }
         return true;
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public void disableStatementCaching()
+    {
+        cachingDisabled = true;
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public FarragoSessionStmtContext getRootStmtContext()
+    {
+        return rootStmtContext;
     }
 
     public FarragoSessionStmtValidator getStmtValidator()
@@ -200,10 +236,33 @@ public class FarragoPreparingStmt
         return stmtValidator;
     }
 
+    /**
+     * @return the FarragoPreparingStmt that's the parent of this one
+     */
+    public FarragoPreparingStmt getParentStmt()
+    {
+        return parentStmt;
+    }
+
+    /**
+     * Sets the parent FarragoPreparingStmt corresponding to this statement.
+     * This is used when this is a reentrant statement. The parent corresponds
+     * to the statement that requires the reentrant statement.
+     *
+     * @param parentStmt the parent of this statement
+     */
+    public void setParentStmt(FarragoPreparingStmt parentStmt)
+    {
+        this.parentStmt = parentStmt;
+    }
+
     public void setPlanner(FarragoSessionPlanner planner)
     {
         assert (this.planner == null);
         this.planner = planner;
+        if (rootStmtContext != null) {
+            planner.setCancelFlag(rootStmtContext.getCancelFlag());
+        }
         getSession().getPersonality().definePlannerListeners(planner);
     }
 
@@ -252,7 +311,7 @@ public class FarragoPreparingStmt
             sqlValidator =
                 new FarragoSqlValidator(
                     this,
-                    SqlValidator.Compatible.Default);
+                    SqlConformance.Default);
         }
         return sqlValidator;
     }
@@ -276,7 +335,7 @@ public class FarragoPreparingStmt
 
         definePackageName();
         PreparedResult preparedResult =
-            super.prepareSql(
+            prepareSql(
                 sqlNode,
                 sqlNodeOriginal,
                 getSession().getPersonality().getRuntimeContextClass(
@@ -290,14 +349,22 @@ public class FarragoPreparingStmt
     public void preImplement()
     {
         definePackageName();
-        implementingArgs = new Argument[] {
-                new Argument(
-                    connectionVariable,
-                    getSession().getPersonality().getRuntimeContextClass(
-                        this),
-                    this)
-            };
-        implementingClassDecl = super.init(implementingArgs);
+        initClassDecl();
+    }
+
+    protected void initClassDecl()
+    {
+        if (implementingClassDecl == null) {
+            implementingArgs =
+                new Argument[] {
+                    new Argument(
+                        connectionVariable,
+                        getSession().getPersonality().getRuntimeContextClass(
+                            this),
+                        this)
+                };
+            implementingClassDecl = super.init(implementingArgs);
+        }
     }
 
     protected ClassDeclaration getImplementingClassDecl()
@@ -320,9 +387,14 @@ public class FarragoPreparingStmt
         return resultSetTypeMap;
     }
 
-    protected Map<String,RelDataType> getIterCalcTypeMap()
+    protected Map<String, RelDataType> getIterCalcTypeMap()
     {
         return iterCalcTypeMap;
+    }
+
+    protected List<FarragoTransformDef> getTransformDefs()
+    {
+        return relImplementor.getTransforms();
     }
 
     // implement FarragoSessionPreparingStmt
@@ -387,10 +459,7 @@ public class FarragoPreparingStmt
         // reflection, which would be bad for UDF performance.  What to do?
         // Also, need to implement jar paths.
 
-        // REVIEW jhyde, 2006/6/3: Mystical two-stage copy designed to preserve
-        // order of set?
-        List<URL> jarUrlList = new ArrayList<URL>(jarUrlSet);
-        URL [] urls = jarUrlList.toArray(new URL[jarUrlList.size()]);
+        URL [] urls = jarUrlSet.toArray(new URL[jarUrlSet.size()]);
         URLClassLoader urlClassLoader =
             URLClassLoader.newInstance(
                 urls,
@@ -400,19 +469,42 @@ public class FarragoPreparingStmt
 
     private void definePackageName()
     {
-        // TODO:  once and only once
+        String packageNameUnqualified = "stmt" + idGen.incrementAndGet();
+
+        // NOTE:  we're not actually creating the directory here, because
+        // we might decide we don't actually need any Java compilation;
+        // but we need to know its name during preparation in case it
+        // turns out that we are going to compile something
         packageDir = classesRoot;
         packageDir = new File(packageDir, "net");
         packageDir = new File(packageDir, "sf");
         packageDir = new File(packageDir, "farrago");
         packageDir = new File(packageDir, "dynamic");
-        try {
-            packageDir.mkdirs();
-            packageDir = File.createTempFile("stmt", "", packageDir);
-        } catch (IOException ex) {
-            throw Util.newInternal(ex);
+        packageDir = new File(packageDir, packageNameUnqualified);
+
+        packageName = "net.sf.farrago.dynamic." + packageNameUnqualified;
+    }
+
+    // expose to this package, for FarragoTransformDef
+    protected Class compileClass(
+        String packageName,
+        String className,
+        String source)
+    {
+        return super.compileClass(packageName, className, source);
+    }
+
+    // Override OJPreparingStmt
+    protected BoundMethod compileAndBind(
+        ClassDeclaration decl,
+        ParseTree parseTree,
+        Argument [] arguments)
+    {
+        if (packageDir.exists()) {
+            // Blow away existing package; could be left over from
+            // a previous run.
+            new FarragoFileAllocation(packageDir).closeAllocation();
         }
-        packageName = "net.sf.farrago.dynamic." + packageDir.getName();
 
         // Normally, we want to make sure all generated code gets cleaned up.
         // To disable this for debugging, you can explicitly set
@@ -422,47 +514,27 @@ public class FarragoPreparingStmt
             javaCodeDir = new FarragoFileAllocation(packageDir);
         }
 
-        // createTempFile created a normal file; we want a directory
-        packageDir.delete();
-        packageDir.mkdir();
-    }
+        packageDir.mkdirs();
 
-    // Override OJPreparingStmt
-    protected BoundMethod compileAndBind(
-        ClassDeclaration decl,
-        ParseTree parseTree,
-        Argument [] arguments)
-    {
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
 
-        compileTransforms();
+        streamGraphTracer.finer("compile FarragoTransforms");
+        relImplementor.compileTransforms(getTempPackageName());
 
         return boundMethod;
     }
 
-    /**
-     * Compiles the FarragoTransform implementations associated with this
-     * statement.
-     */
-    private void compileTransforms()
+    protected boolean treeContainsJava(RelNode rootRel)
     {
-        // Compile any FarragoTransform implementations
-        String packageName = getTempPackageName();
-        for (ClassDeclaration transformDecl : relImplementor.getTransforms()) {
-            CompilationUnit compUnit =
-                new CompilationUnit(
-                    packageName,
-                    new String[0],
-                    new ClassDeclarationList(transformDecl));
-
-            Class clazz =
-                super.compileClass(
-                    packageName,
-                    transformDecl.getName(),
-                    compUnit.toString());
-            Util.discard(clazz);
+        // if the topmost node isn't a FennelToIteratorConverter, then
+        // we know we don't have a pure Fennel plan; otherwise, check
+        // the rest of the tree, ignoring the converter, which we'll strip
+        // off later if it turns out we do have a pure Fennel plan
+        if (!(rootRel instanceof FennelToIteratorConverter)) {
+            return true;
         }
+        return super.treeContainsJava(rootRel.getInput(0));
     }
 
     protected FarragoSessionExecutableStmt implement(
@@ -473,26 +545,25 @@ public class FarragoPreparingStmt
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
             RelDataType rowType = preparedExecution.getPhysicalRowType();
-            OJClass ojRowClass =
-                OJUtil.typeToOJClass(
-                    rowType,
-                    getFarragoTypeFactory());
-            Class rowClass;
-            try {
-                String ojRowClassName = ojRowClass.getName();
-                int i = ojRowClassName.lastIndexOf('.');
-                assert (i != -1);
-                ojRowClassName = OJUtil.replaceDotWithDollar(ojRowClassName, i);
-                rowClass =
-                    Class.forName(
-                        ojRowClassName,
-                        true,
-                        javaCompiler.getClassLoader());
-            } catch (ClassNotFoundException ex) {
-                throw Util.newInternal(ex);
+            if (fieldOrigins == null
+                || rowType.getFieldCount() != fieldOrigins.size())
+            {
+                fieldOrigins =
+                    Collections.nCopies(rowType.getFieldCount(), null);
             }
-
             RelDataType dynamicParamRowType = getParamRowType();
+
+            String streamName = null;
+            if (!containsJava) {
+                RelNode rootRel = preparedExecution.getRootRel();
+                if (relImplementor == null) {
+                    relImplementor =
+                        newRelImplementor(rootRel.getCluster().getRexBuilder());
+                }
+                FemExecutionStreamDef streamDef =
+                    relImplementor.visitFennelChild((FennelRel) rootRel, 0);
+                streamName = streamDef.getName();
+            }
 
             String xmiFennelPlan = null;
             Set<FemExecutionStreamDef> streamDefSet =
@@ -500,30 +571,87 @@ public class FarragoPreparingStmt
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
                     getRepos().newFemCmdPrepareExecutionStreamGraph();
+
+                // FIXME jvs 22-Jul-2008:  this does not play well
+                // with statement caching, since different sessions
+                // may have different settings for DOP, but the DOP
+                // is not part of the cache key
+                cmdPrepareStream.setDegreeOfParallelism(
+                    getSession().getSessionVariables().getInteger(
+                        FarragoDefaultSessionPersonality
+                            .DEGREE_OF_PARALLELISM));
+
                 Collection<FemExecutionStreamDef> streamDefs =
                     cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
                 xmiFennelPlan =
-                    JmiUtil.exportToXmiString(
+                    JmiObjUtil.exportToXmiString(
                         Collections.singleton(cmdPrepareStream));
                 streamGraphTracer.fine(xmiFennelPlan);
             }
 
             assert (tableAccessMap != null);
-            executableStmt =
-                new FarragoExecutableJavaStmt(
-                    packageDir,
-                    rowClass,
-                    javaCompiler.getClassLoader(),
-                    (originalRowType == null) ? rowType : originalRowType,
-                    dynamicParamRowType,
-                    preparedExecution.getMethod(),
-                    xmiFennelPlan,
-                    preparedResult.isDml(),
-                    getReferencedObjectIds(),
-                    tableAccessMap,
-                    resultSetTypeMap,
-                    iterCalcTypeMap);
+            if (containsJava) {
+                OJClass ojRowClass =
+                    OJUtil.typeToOJClass(
+                        rowType,
+                        getFarragoTypeFactory());
+                Class rowClass;
+                try {
+                    String ojRowClassName = ojRowClass.getName();
+                    int i = ojRowClassName.lastIndexOf('.');
+                    assert (i != -1);
+                    ojRowClassName =
+                        OJUtil.replaceDotWithDollar(ojRowClassName, i);
+                    rowClass =
+                        Class.forName(
+                            ojRowClassName,
+                            true,
+                            javaCompiler.getClassLoader());
+                } catch (ClassNotFoundException ex) {
+                    throw Util.newInternal(ex);
+                }
+                final RelDataType preparedRowType =
+                    (originalRowType == null) ? rowType : originalRowType;
+                if (fieldOrigins == null
+                    || preparedRowType.getFieldCount() != fieldOrigins.size())
+                {
+                    fieldOrigins =
+                        Collections.nCopies(
+                            preparedRowType.getFieldCount(), null);
+                }
+                executableStmt =
+                    new FarragoExecutableJavaStmt(
+                        packageDir,
+                        rowClass,
+                        javaCompiler.getClassLoader(),
+                        preparedRowType,
+                        fieldOrigins,
+                        dynamicParamRowType,
+                        preparedExecution.getMethod(),
+                        getTransformDefs(),
+                        xmiFennelPlan,
+                        preparedResult.isDml(),
+                        preparedResult.getTableModOp(),
+                        getReferencedObjectTimestampMap(),
+                        tableAccessMap,
+                        resultSetTypeMap,
+                        iterCalcTypeMap,
+                        javaCompiler.getTotalByteCodeSize());
+            } else {
+                executableStmt =
+                    new FarragoExecutableFennelStmt(
+                        rowType,
+                        fieldOrigins,
+                        dynamicParamRowType,
+                        xmiFennelPlan,
+                        streamName,
+                        preparedResult.isDml(),
+                        preparedResult.getTableModOp(),
+                        getReferencedObjectTimestampMap(),
+                        tableAccessMap,
+                        resultSetTypeMap);
+            }
         } else {
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =
@@ -577,11 +705,11 @@ public class FarragoPreparingStmt
 
         // For queries, fill in some more information.
         if (rootRel != null) {
-            // Make sure we have RelMetadataProvider set up.
-            finalizeRelMetadata(rootRel);
-
             if (analyzedSql.optimized) {
-                rootRel = optimize(
+                rootRel = flattenTypes(rootRel, true);
+
+                rootRel =
+                    optimize(
                         rootRel.getRowType(),
                         rootRel);
 
@@ -609,7 +737,8 @@ public class FarragoPreparingStmt
                 Collections.unmodifiableList(columnOrigins);
 
             if (analyzedSql.optimized) {
-                analyzedSql.rowCount = RelMetadataQuery.getRowCount(
+                analyzedSql.rowCount =
+                    RelMetadataQuery.getRowCount(
                         rootRel);
             }
         }
@@ -626,7 +755,8 @@ public class FarragoPreparingStmt
                 public Void visit(SqlCall call)
                 {
                     if (call.getOperator()
-                        instanceof FarragoUserDefinedRoutine) {
+                        instanceof FarragoUserDefinedRoutine)
+                    {
                         FarragoUserDefinedRoutine function =
                             (FarragoUserDefinedRoutine) call.getOperator();
                         addDependency(
@@ -639,13 +769,18 @@ public class FarragoPreparingStmt
         sqlNode.accept(udfInvocationFinder);
     }
 
-    protected Set<String> getReferencedObjectIds()
+    protected Map<String, String> getReferencedObjectTimestampMap()
     {
-        Set<String> set = new HashSet<String>();
+        Map<String, String> map = new HashMap<String, String>();
         for (CwmModelElement refObj : allDependencies) {
-            set.add(refObj.refMofId());
+            String modTime = null;
+            if (refObj instanceof FemAnnotatedElement) {
+                FemAnnotatedElement annotated = (FemAnnotatedElement) refObj;
+                modTime = annotated.getModificationTimestamp();
+            }
+            map.put(refObj.refMofId(), modTime);
         }
-        return set;
+        return map;
     }
 
     // implement FarragoSessionPreparingStmt
@@ -660,10 +795,12 @@ public class FarragoPreparingStmt
         return getSqlToRelConverter().getCluster();
     }
 
-    // override OJPreparingStmt
-    protected RelNode optimize(RelDataType rowType, RelNode rootRel)
+    protected RelNode flattenTypes(
+        RelNode rootRel,
+        boolean restructure)
     {
         boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
@@ -672,20 +809,56 @@ public class FarragoPreparingStmt
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
         }
-        originalRowType = rowType;
-        rootRel = flattenTypes(rootRel, true);
+
+        RelNode newRootRel =
+            getSqlToRelConverter().flattenTypes(rootRel, restructure);
+
+        if (timingTracer != null) {
+            timingTracer.traceTime("end type flattening and view expansion");
+        }
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan after flattening",
-                    rootRel,
+                    newRootRel,
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
         }
+        return newRootRel;
+    }
+
+    protected RelNode decorrelate(
+        SqlNode query,
+        RelNode rootRel)
+    {
+        boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
 
         // Now that all plugins have been seen (flattening above expanded
-        // views), we can finalize the relational expression metadata query
-        // providers to use during optimization.
+        // views), finalize the relational expression metadata query providers
+        // to use during decorrelation.
+        finalizeRelMetadata(rootRel);
+
+        RelNode newRootRel = getSqlToRelConverter().decorrelate(query, rootRel);
+
+        if (dumpPlan) {
+            planDumpTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after decorrelating RelNode",
+                    newRootRel,
+                    false,
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+        }
+        return newRootRel;
+    }
+
+    // override OJPreparingStmt
+    protected RelNode optimize(RelDataType rowType, RelNode rootRel)
+    {
+        boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+        originalRowType = rowType;
+
+        // Since rootRel might have changed, first finalize the relational
+        // expression metadata query providers to use during optimization.
         finalizeRelMetadata(rootRel);
 
         RelTraitSet desiredTraits = getDesiredRootTraitSet(rootRel);
@@ -703,22 +876,24 @@ public class FarragoPreparingStmt
         // Validate that plan satisfies all required trait conversions.  This
         // implicitly validates that a physical implementation was found for
         // every node.
-        RelNode problemRel = null;
         if (!allowPartialImplementation) {
-            problemRel = validatePlan(rootRel, desiredTraits);
-        }
-        if (problemRel != null) {
-            // Dump plan unless we already did above.
-            if (!dumpPlan) {
-                planDumpTracer.severe(
-                    RelOptUtil.dumpPlan(
-                        "Plan without full implementation",
-                        rootRel,
-                        false,
-                        SqlExplainLevel.ALL_ATTRIBUTES));
+            try {
+                validatePlan(rootRel, desiredTraits);
+            } catch (InvalidPlanException e) {
+                // Dump plan unless we already did above.
+                if (!dumpPlan) {
+                    planDumpTracer.severe(
+                        RelOptUtil.dumpPlan(
+                            "Plan without full implementation",
+                            rootRel,
+                            false,
+                            SqlExplainLevel.ALL_ATTRIBUTES));
+                }
+                throw FarragoResource.instance().SessionOptimizerFailed.ex(
+                    e.rel.toString(),
+                    e.getMessage(),
+                    getSql());
             }
-            throw FarragoResource.instance().SessionOptimizerFailed.ex(
-                problemRel.toString());
         }
 
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
@@ -733,28 +908,25 @@ public class FarragoPreparingStmt
         return rootRel;
     }
 
-    private RelNode validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    protected void validatePlan(RelNode rel, RelTraitSet desiredTraits)
+        throws InvalidPlanException
     {
         if (!rel.getTraits().matches(desiredTraits)) {
-            return rel;
+            throw new InvalidPlanException(
+                "Node's traits (" + rel.getTraits()
+                + ") do not match required traits (" + desiredTraits + ")",
+                rel);
         }
         if (rel instanceof ConverterRel) {
             ConverterRel converterRel = (ConverterRel) rel;
-            return
-                validatePlan(
-                    converterRel.getChild(),
-                    converterRel.getInputTraits());
+            validatePlan(
+                converterRel.getChild(),
+                converterRel.getInputTraits());
         } else {
             for (RelNode child : rel.getInputs()) {
-                RelNode problemChild = validatePlan(
-                        child,
-                        rel.getTraits());
-                if (problemChild != null) {
-                    return problemChild;
-                }
+                validatePlan(child, rel.getTraits());
             }
         }
-        return null;
     }
 
     public void finalizeRelMetadata(RelNode rootRel)
@@ -786,35 +958,25 @@ public class FarragoPreparingStmt
         relMetadataProvider = null;
     }
 
-    protected RelNode flattenTypes(RelNode rootRel, boolean restructure)
-    {
-        RelStructuredTypeFlattener typeFlattener =
-            new RelStructuredTypeFlattener(
-                sqlToRelConverter.getRexBuilder());
-        rootRel = typeFlattener.rewrite(rootRel, restructure);
-        return rootRel;
-    }
-
     protected RelDataType getParamRowType()
     {
-        return
-            getFarragoTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return sqlToRelConverter.getDynamicParamCount();
-                    }
+        return getFarragoTypeFactory().createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return sqlToRelConverter.getDynamicParamCount();
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        return "?" + index;
-                    }
+                public String getFieldName(int index)
+                {
+                    return "?" + index;
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return sqlToRelConverter.getDynamicParamType(index);
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return sqlToRelConverter.getDynamicParamType(index);
+                }
+            });
     }
 
     // implement FarragoAllocation
@@ -890,13 +1052,13 @@ public class FarragoPreparingStmt
         return rexNode;
     }
 
-    void setDmlValidation(SqlIdentifier target, PrivilegedAction action)
+    public void setDmlValidation(SqlIdentifier target, PrivilegedAction action)
     {
         dmlTarget = target;
         dmlAction = action;
     }
 
-    void clearDmlValidation()
+    public void clearDmlValidation()
     {
         dmlTarget = null;
         dmlAction = null;
@@ -927,7 +1089,19 @@ public class FarragoPreparingStmt
                     new FarragoRexBuilder(this));
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory(this));
+            if (getSession().getSessionVariables().getBoolean(
+                    FarragoDefaultSessionPersonality
+                    .REDUCE_NON_CORRELATED_SUBQUERIES))
+            {
+                sqlToRelConverter.setSubqueryConverter(
+                    new ScalarSubqueryConverter(this));
+            }
             sqlToRelConverter.enableTableAccessConversion(false);
+
+            // currently the only physical implementation available
+            // for ValuesRel is FennelValuesRel
+            sqlToRelConverter.enableValuesRelCreation(
+                getRepos().isFennelEnabled());
         }
         return sqlToRelConverter;
     }
@@ -976,6 +1150,12 @@ public class FarragoPreparingStmt
         return stmtValidator.getSession();
     }
 
+    // implement FarragoSessionPreparingStmt
+    public String getSql()
+    {
+        return sql;
+    }
+
     // implement RelOptConnection
     public RelOptSchema getRelOptSchema()
     {
@@ -1000,16 +1180,23 @@ public class FarragoPreparingStmt
     // implement RelOptSchema
     public RelOptTable getTableForMember(String [] names)
     {
-        return getTableForMember(names, null);
+        return getTableForMember(names, null, null);
     }
 
     // implement RelOptSchemaWithSampling
-    public RelOptTable getTableForMember(String [] names, String datasetName)
+    public RelOptTable getTableForMember(
+        String [] names,
+        String datasetName,
+        boolean [] usedDataset)
     {
         FarragoSessionResolvedObject<CwmNamedColumnSet> resolved =
             stmtValidator.resolveSchemaObjectName(
                 names,
                 CwmNamedColumnSet.class);
+
+        if (resolved == null) {
+            return null;
+        }
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -1017,7 +1204,7 @@ public class FarragoPreparingStmt
 
         assert (resolved.object instanceof CwmNamedColumnSet);
 
-        CwmNamedColumnSet columnSet = (CwmNamedColumnSet) resolved.object;
+        CwmNamedColumnSet columnSet = resolved.object;
 
         // If they requested a sample, see if there's a sample with that name.
         // Set oldColumnSet to remind us to cast & reorder columns.
@@ -1028,6 +1215,10 @@ public class FarragoPreparingStmt
             if (sampleColumnSet != null) {
                 oldColumnSet = columnSet;
                 columnSet = sampleColumnSet;
+                if (usedDataset != null) {
+                    assert usedDataset.length == 1;
+                    usedDataset[0] = true;
+                }
             }
         }
 
@@ -1196,7 +1387,7 @@ public class FarragoPreparingStmt
             return null;
         }
 
-        CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
+        CwmNamedColumnSet table = resolved.object;
         ModalityType modality = ModalityTypeEnum.MODALITYTYPE_RELATIONAL;
         if (table instanceof FemAbstractColumnSet) {
             modality = ((FemAbstractColumnSet) table).getModality();
@@ -1218,6 +1409,21 @@ public class FarragoPreparingStmt
             }
         }
 
+        // If the session has a label setting, only allow access to local
+        // tables that were created prior to when the label was created.
+        Timestamp labelTimestamp =
+            getSession().getSessionLabelCreationTimestamp();
+        if ((labelTimestamp != null) && (table instanceof FemLocalTable)) {
+            FemAnnotatedElement annotated = (FemAnnotatedElement) table;
+            Timestamp objectCreateTimestamp =
+                Timestamp.valueOf(annotated.getCreationTimestamp());
+            if (objectCreateTimestamp.compareTo(labelTimestamp) > 0) {
+                throw FarragoResource.instance()
+                .ValidatorAccessObjectNonVisibleToLabel.ex(
+                    getRepos().getLocalizedObjectName(table));
+            }
+        }
+
         addDependency(table, action);
 
         if (table.getVisibility() == null) {
@@ -1225,14 +1431,68 @@ public class FarragoPreparingStmt
         }
 
         RelDataType rowType = createTableRowType(table);
+
+        if (table instanceof FemLocalTable) {
+            int nColumnsTotal = rowType.getFieldCount();
+            int nColumnsActual = nColumnsTotal;
+
+            // If table is undergoing ALTER TABLE ADD COLUMN,
+            // hide the new (last) column.
+            DependencySupplier supplier =
+                getRepos().getCorePackage().getDependencySupplier();
+            for (CwmDependency dep : supplier.getSupplierDependency(table)) {
+                if (dep.getNamespace() instanceof FemRecoveryReference) {
+                    FemRecoveryReference recoveryRef =
+                        (FemRecoveryReference) dep.getNamespace();
+                    if (recoveryRef.getRecoveryType()
+                        == RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN)
+                    {
+                        --nColumnsActual;
+                        break;
+                    }
+                }
+            }
+
+            // If a label is set, hide any columns which were created
+            // after the label
+            if (labelTimestamp != null) {
+                while (nColumnsActual > 1) {
+                    FemStoredColumn column =
+                        (FemStoredColumn) table.getFeature().get(
+                            nColumnsActual - 1);
+                    Timestamp columnCreateTimestamp =
+                        Timestamp.valueOf(column.getCreationTimestamp());
+                    if (columnCreateTimestamp.compareTo(labelTimestamp) > 0) {
+                        --nColumnsActual;
+                    } else {
+                        // Once we see the first visible column, everything
+                        // before it is guaranteed to be visible since
+                        // we only allow creation of columns at the end.
+                        break;
+                    }
+                }
+            }
+
+            // Now truncate the row if necessary
+            if (nColumnsActual < nColumnsTotal) {
+                rowType =
+                    getFarragoTypeFactory().createStructType(
+                        RelOptUtil.getFieldTypeList(rowType).subList(
+                            0,
+                            nColumnsActual),
+                        RelOptUtil.getFieldNameList(rowType).subList(
+                            0,
+                            nColumnsActual));
+            }
+        }
+
         SqlAccessType allowedAccess =
             FarragoCatalogUtil.getTableAllowedAccess(table);
-        return
-            newValidatorTable(
-                resolved.getQualifiedName(),
-                rowType,
-                allowedAccess,
-                modality);
+        return newValidatorTable(
+            resolved.getQualifiedName(),
+            rowType,
+            allowedAccess,
+            modality);
     }
 
     /**
@@ -1246,7 +1506,7 @@ public class FarragoPreparingStmt
     protected RelDataType createTableRowType(CwmNamedColumnSet table)
     {
         return getFarragoTypeFactory().createStructTypeFromClassifier(
-                table);
+            table);
     }
 
     /**
@@ -1258,8 +1518,11 @@ public class FarragoPreparingStmt
         SqlAccessType allowedAccess,
         ModalityType modality)
     {
-        return
-            new ValidatorTable(qualifiedName, rowType, allowedAccess, modality);
+        return new ValidatorTable(
+            qualifiedName,
+            rowType,
+            allowedAccess,
+            modality);
     }
 
     // implement SqlValidator.CatalogReader
@@ -1278,13 +1541,20 @@ public class FarragoPreparingStmt
         return getFarragoTypeFactory().createCwmType(cwmType);
     }
 
-    // implement SqlValidator.CatalogReader
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    // implement SqlValidatorCatalogReader
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
         return stmtValidator.getAllSchemaObjectNames(names);
     }
 
-    public void addDependency(CwmModelElement supplier,
+    // implement SqlValidatorCatalogReader
+    public String getSchemaName()
+    {
+        return getSession().getSessionVariables().schemaName;
+    }
+
+    public void addDependency(
+        CwmModelElement supplier,
         PrivilegedAction action)
     {
         if (!isExpandingDefinition()) {
@@ -1296,9 +1566,17 @@ public class FarragoPreparingStmt
             }
         }
         allDependencies.add(supplier);
+
+        // Add the dependency to all of the parent FarragoPreparingStmt's
+        // as well.
+        FarragoPreparingStmt parent = parentStmt;
+        while (parent != null) {
+            parent.addDependency(supplier, action);
+            parent = parent.getParentStmt();
+        }
     }
 
-    void mapResultSetType(
+    public void mapResultSetType(
         String resultSetName,
         RelDataType rowType)
     {
@@ -1317,6 +1595,13 @@ public class FarragoPreparingStmt
         return new Variable(connectionVariable);
     }
 
+    public TypeName getResultSetTupleIterTypeName()
+    {
+        return TypeName.forOJClass(
+            OJClass.forClass(
+                org.eigenbase.runtime.ResultSetTupleIter.class));
+    }
+
     // override OJPreparingStmt
     protected String getCompilerClassName()
     {
@@ -1333,11 +1618,12 @@ public class FarragoPreparingStmt
     protected boolean shouldAlwaysWriteJavaFile()
     {
         Level dynamicLevel = dynamicTracer.getLevel();
-        if ((dynamicLevel == null) || !dynamicTracer.isLoggable(Level.FINE)) {
-            return false;
-        } else {
-            return true;
-        }
+        return (dynamicLevel != null && dynamicTracer.isLoggable(Level.FINE));
+    }
+
+    protected File getPackageDir()
+    {
+        return packageDir;
     }
 
     // override OJPreparingStmt
@@ -1402,9 +1688,9 @@ public class FarragoPreparingStmt
         }
 
         // implement SqlValidatorTable
-        public boolean isMonotonic(String columnName)
+        public SqlMonotonicity getMonotonicity(String columnName)
         {
-            return false;
+            return SqlMonotonicity.NotMonotonic;
         }
 
         // implement SqlValidatorTable
@@ -1463,7 +1749,8 @@ public class FarragoPreparingStmt
             this.inputTable = inputTable;
         }
 
-        public RelNode toRel(RelOptCluster cluster,
+        public RelNode toRel(
+            RelOptCluster cluster,
             RelOptConnection connection)
         {
             final RelNode inputRel = inputTable.toRel(cluster, connection);
@@ -1480,9 +1767,26 @@ public class FarragoPreparingStmt
             }
 
             return CalcRel.createProject(
-                    inputRel,
-                    fieldExprs,
-                    fieldNames);
+                inputRel,
+                fieldExprs,
+                fieldNames);
+        }
+    }
+
+    /**
+     * Exception describing why a plan is invalid.
+     *
+     * <p>Not localized.
+     */
+    protected static class InvalidPlanException
+        extends Exception
+    {
+        private final RelNode rel;
+
+        public InvalidPlanException(String message, RelNode rel)
+        {
+            super(message);
+            this.rel = rel;
         }
     }
 }

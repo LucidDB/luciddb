@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,8 @@ FENNEL_BEGIN_NAMESPACE
  * to pages allocated from a Segment.  The Segment must support the
  * get/setPageSuccessor interface for chaining the pages together.
  */
-class SegOutputStream : public SegStream, public ByteOutputStream
+class FENNEL_SEGMENT_EXPORT SegOutputStream
+    : public SegStream, public ByteOutputStream
 {
 protected:
     /**
@@ -75,19 +76,19 @@ protected:
      * @param node the node being flushed
      */
     virtual void writeExtraHeaders(SegStreamNode &node);
-    
+
 public:
     /**
      * Creates a new SegOutputStream.
      *
      * @param segmentAccessor accessor for the segment in which to store the
      * data
-     * 
+     *
      * @return shared_ptr to new SegOutputStream
      */
     static SharedSegOutputStream newSegOutputStream(
         SegmentAccessor const &segmentAccessor);
-    
+
     /**
      * Gets the first PageId allocated.  For non-linear segments, this is
      * required in order to be able to read the data back via SegInputStream.

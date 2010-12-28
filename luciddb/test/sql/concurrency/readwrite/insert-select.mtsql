@@ -1,0 +1,258 @@
+@nolockstep
+
+@setup
+-- test insert to tables and read from them
+-- it may takes a while to insert to part, orders, customer, lineitem
+-- try reading in the middle of inserting to the above
+-- in write threads, read each table immediately after inserting without
+-- waiting for other table insertions
+
+  set schema 'rwconcur';
+
+  alter system set "expectedConcurrentStatements" = 20;
+
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  set schema 'rwconcur';
+  truncate table Nation;
+  truncate table Region;
+  truncate table Part;
+  truncate table Supplier;
+  truncate table Customer;
+  truncate table PartSupp;
+  truncate table Orders;
+  truncate table LineItem;
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeNation
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into nation select * from "nation";
+    select count(*) from nation;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeRegion
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into region select * from "region";
+    select count(*) from region;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writePart
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into part select * from "part";
+    select count(*) from part;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeSupplier
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into supplier select * from "supplier";
+    select count(*) from supplier;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeCustomer
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into customer select * from "customer";
+    select count(*) from customer;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writePartSupp
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into partsupp select * from "partsupp";
+    select count(*) from partsupp;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeOrders
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into orders select * from "orders";
+    select count(*) from orders;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeLineItem
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into lineitem select * from "lineitem";
+    select count(*) from lineitem;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread readNation
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from nation;
+  @sync
+    select count(*) from nation;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readRegion
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from region;
+  @sync
+    select count(*) from region;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readPart
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from part;
+  @sleep 1000
+    select count(*) from part;  
+  @sync
+    select count(*) from part;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readSupplier
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from supplier;
+  @sync
+    select count(*) from supplier;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readCustomer
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from customer;
+  @sleep 1000
+    select count(*) from customer;
+  @sync
+    select count(*) from customer;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readPartSupp
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from partsupp;
+  @sync
+    select count(*) from partsupp;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readOrders
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from orders;
+  @sleep 2000
+    select count(*) from orders;
+  @sync
+    select count(*) from orders;
+
+@end
+
+-----------------------------------------------------------
+
+@thread readLineItem
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from lineitem;
+  @sleep 5000
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+
+@end
+
+-----------------------------------------------------------

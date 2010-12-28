@@ -4,23 +4,24 @@
 !set verbose true
 
 -- create views in system-owned schema sys_boot.jdbc_metadata
-create schema sys_boot.jdbc_metadata;
+create or replace schema sys_boot.jdbc_metadata;
 set schema 'sys_boot.jdbc_metadata';
 set path 'sys_boot.jdbc_metadata';
 
-create function null_identifier()
+create or replace function null_identifier()
 returns varchar(128)
 contains sql
 deterministic
 return cast(null as varchar(128));
 
-create function null_remarks()
+create or replace function null_remarks()
 returns varchar(1024)
 contains sql
 deterministic
 return cast(null as varchar(1024));
 
-create function convert_cwm_nullable_to_int(cwm_nullability varchar(20))
+create or replace function convert_cwm_nullable_to_int(
+  cwm_nullability varchar(20))
 returns integer
 contains sql
 deterministic
@@ -30,7 +31,8 @@ when cwm_nullability='columnNullable' then 1
 else 2
 end;
 
-create function convert_cwm_nullable_to_string(cwm_nullability varchar(20))
+create or replace function convert_cwm_nullable_to_string(
+  cwm_nullability varchar(20))
 returns varchar(3)
 contains sql
 deterministic
@@ -40,7 +42,8 @@ when cwm_nullability='columnNullable' then 'YES'
 else ''
 end;
 
-create function convert_cwm_param_kind_to_int(cwm_param_kind varchar(10))
+create or replace function convert_cwm_param_kind_to_int(
+  cwm_param_kind varchar(10))
 returns smallint
 contains sql
 deterministic
@@ -52,7 +55,8 @@ when cwm_param_kind='pdk_return' then 5
 else 0
 end;
 
-create function convert_cwm_typename_to_literal_prefix(typename varchar(128))
+create or replace function convert_cwm_typename_to_literal_prefix(
+  typename varchar(128))
 returns varchar(128)
 contains sql
 deterministic
@@ -67,7 +71,8 @@ when typename='TIMESTAMP' then 'TIMESTAMP '''
 else cast(null as varchar(128))
 end;
 
-create function convert_cwm_typename_to_literal_suffix(typename varchar(128))
+create or replace function convert_cwm_typename_to_literal_suffix(
+  typename varchar(128))
 returns varchar(128)
 contains sql
 deterministic
@@ -83,7 +88,8 @@ else cast(null as varchar(128))
 end;
 
 -- NOTE:  currently unused return codes are 0 for statistic, 2 for hashed
-create function convert_cwm_index_attributes_to_type(is_clustered boolean)
+create or replace function convert_cwm_index_attributes_to_type(
+  is_clustered boolean)
 returns smallint
 contains sql
 deterministic
@@ -92,7 +98,7 @@ when is_clustered then 1
 else 3
 end;
 
-create function convert_cwm_statistic_to_int(val numeric)
+create or replace function convert_cwm_statistic_to_int(val numeric)
 returns int
 contains sql
 deterministic
@@ -103,7 +109,7 @@ end;
 
 -- NOTE:  don't include ORDER BY in the view definitions
 
-create view schemas_view_internal as
+create or replace view schemas_view_internal as
     select 
         c."name" as object_catalog,
         s."name" as object_schema,
@@ -116,7 +122,7 @@ create view schemas_view_internal as
         c."mofId" = s."namespace"
 ;
 
-create view tables_view_internal as
+create or replace view tables_view_internal as
     select 
         s.object_catalog as table_cat,
         s.object_schema as table_schem,
@@ -137,7 +143,7 @@ create view tables_view_internal as
         s."mofId" = t."namespace"
 ;
 
-create view catalogs_view as
+create or replace view catalogs_view as
     select 
         c."name" as table_cat
     from 
@@ -145,7 +151,7 @@ create view catalogs_view as
 ;
 grant select on catalogs_view to public;
 
-create view schemas_view as
+create or replace view schemas_view as
     select 
         object_schema as table_schem,
         object_catalog as table_catalog
@@ -155,14 +161,14 @@ create view schemas_view as
 grant select on schemas_view to public;
 
 -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
-create view table_types_view_internal(table_type,uml_class_name) as
+create or replace view table_types_view_internal(table_type,uml_class_name) as
     values 
         (trim('FOREIGN TABLE'),trim('ForeignTable')),
         ('TABLE','LocalTable'),
         ('VIEW','LocalView')
 ;
 
-create view tables_view as
+create or replace view tables_view as
     select 
         table_cat,
         table_schem,
@@ -182,7 +188,7 @@ create view tables_view as
 ;
 grant select on tables_view to public;
 
-create view table_types_view as
+create or replace view table_types_view as
     select distinct
         table_type
     from
@@ -196,7 +202,7 @@ grant select on table_types_view to public;
 -- REVIEW: length/precision/scale/radix
 -- also all of above for attributes and procedure_columns
 
-create view columns_view_internal as
+create or replace view columns_view_internal as
     select 
         t.table_cat,
         t.table_schem,
@@ -212,8 +218,7 @@ create view columns_view_internal as
         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
         c."description" as remarks,
         c."mofId",
-        c."lineageId",
-        c."Histogram"
+        c."lineageId"
     from 
         tables_view_internal t 
     inner join 
@@ -221,7 +226,7 @@ create view columns_view_internal as
     on 
         t."mofId" = c."owner";
 
-create view columns_view as
+create or replace view columns_view as
     select 
         c.table_cat,
         c.table_schem,
@@ -253,7 +258,7 @@ create view columns_view as
         c."type" = t."mofId";
 grant select on columns_view to public;
 
-create view udts_view_internal as
+create or replace view udts_view_internal as
     select
         s.object_catalog as type_cat,
         s.object_schema as type_schem,
@@ -270,7 +275,7 @@ create view udts_view_internal as
 
 -- TODO:  base_type for distinct types
 
-create view udts_view as
+create or replace view udts_view as
     select
         u.type_cat,
         u.type_schem,
@@ -284,7 +289,7 @@ create view udts_view as
 ;
 grant select on udts_view to public;
 
-create view attributes_view_internal as
+create or replace view attributes_view_internal as
     select
         u.type_cat,
         u.type_schem,
@@ -306,7 +311,7 @@ create view attributes_view_internal as
         u."mofId" = a."owner"
 ;
 
-create view attributes_view as
+create or replace view attributes_view as
     select
         a.type_cat,
         a.type_schem,
@@ -342,7 +347,7 @@ grant select on attributes_view to public;
 -- Routine doesn't work (causes assignment of null to NOT NULL).  Must be
 -- a bug in Farrago's MDR namespace support.
 
-create view procedures_view_internal as
+create or replace view procedures_view_internal as
     select
         s.object_catalog as procedure_cat,
         s.object_schema as procedure_schem,
@@ -359,7 +364,7 @@ create view procedures_view_internal as
 -- TODO:  other values for procedure_type once we support procedures
 -- that return result sets
 
-create view procedures_view as
+create or replace view procedures_view as
     select
         p.procedure_cat,
         p.procedure_schem,
@@ -374,7 +379,7 @@ create view procedures_view as
 ;
 grant select on procedures_view to public;
 
-create view procedure_columns_view_internal as
+create or replace view procedure_columns_view_internal as
     select
         p.procedure_cat,
         p.procedure_schem,
@@ -396,7 +401,7 @@ create view procedure_columns_view_internal as
         p."mofId" = rp."behavioralFeature"
 ;
 
-create view procedure_columns_view as
+create or replace view procedure_columns_view as
     select
         pc.procedure_cat,
         pc.procedure_schem,
@@ -426,7 +431,7 @@ grant select on procedure_columns_view to public;
 -- be null for non-numerics; case_sensitive should be null for
 -- non-character; support create_params
 
-create view type_info_view as
+create or replace view type_info_view as
     select
         t."name" as type_name,
         t."typeNumber" as data_type,
@@ -454,7 +459,7 @@ create view type_info_view as
 ;
 grant select on type_info_view to public;
 
-create view primary_keys_view_internal as
+create or replace view primary_keys_view_internal as
     select
         t.table_cat,
         t.table_schem,
@@ -469,7 +474,7 @@ create view primary_keys_view_internal as
         t."mofId" = k."namespace"
 ;
 
-create view primary_keys_view as
+create or replace view primary_keys_view as
     select
         k.table_cat,
         k.table_schem,
@@ -489,7 +494,7 @@ grant select on primary_keys_view to public;
 -- TODO: use an outer join with histograms for index cardinality
 --   or store that statistic in the catalog
 
-create view index_info_internal as
+create or replace view index_info_internal as
     select
         t.table_cat,
         t.table_schem,
@@ -510,7 +515,7 @@ create view index_info_internal as
         t."mofId" = i."spannedClass"
 ;
 
-create view table_row_counts_internal as
+create or replace view table_row_counts_internal as
     select
         t.table_cat,
         t.table_schem,
@@ -527,7 +532,7 @@ create view table_row_counts_internal as
 
 -- NOTE: would be cleaner to have a separate view for page counts 
 --   but MedMdr joins work best when joining simple tables
-create view table_stats_internal as
+create or replace view table_stats_internal as
     select
         t.table_cat,
         t.table_schem,
@@ -551,7 +556,7 @@ create view table_stats_internal as
 
 -- left outer join needed to handle cases where indexes are not associated
 -- with any specific column
-create view index_info_view as
+create or replace view index_info_view as
     select
         i.table_cat,
         i.table_schem,
@@ -562,7 +567,7 @@ create view index_info_view as
         i.type,
         c."ordinal" + 1 as ordinal_position,
         c."name" as column_name,
-        'A' as asc_ord_desc,
+        'A' as asc_or_desc,
         i."CARDINALITY",
         convert_cwm_statistic_to_int(i.pages) as pages,
         i.filter_condition
@@ -592,10 +597,10 @@ union
 ;
 grant select on index_info_view to public;
 
-create view empty_view as
+create or replace view empty_view as
 select * from (values(0)) where false;
 
-create view super_tables_view as
+create or replace view super_tables_view as
     select
         null_identifier() as table_cat,
         null_identifier() as table_schem,
@@ -604,7 +609,7 @@ create view super_tables_view as
     from empty_view;
 grant select on super_tables_view to public;
     
-create view super_types_view as
+create or replace view super_types_view as
     select
         null_identifier() as type_cat,
         null_identifier() as type_schem,
@@ -615,7 +620,64 @@ create view super_types_view as
     from empty_view;
 grant select on super_types_view to public;
 
+create or replace view exported_keys_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on exported_keys_view to public;
+
+create or replace view imported_keys_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on imported_keys_view to public;
+
+create or replace view cross_reference_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on cross_reference_view to public;
+
 -- TODO:  all the rest
 
 -- just a placeholder for now
-create schema localdb.information_schema;
+create or replace schema localdb.information_schema;

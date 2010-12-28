@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="rwconcurrency" basedir="." default="test">
+  <dirname property="rwconcurrency.dir" file="${ant.file.rwconcurrency}" />
+
+  <property name="open.dir" location="${rwconcurrency.dir}/../../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${rwconcurrency.dir}/gen" />
+
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${rwconcurrency.dir}/testlog" />
+
+  <!-- directory of flat files -->
+  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
+  <property name="ff.dir" value="${rwconcurrency.dir}/ff"/>
+
+  <!-- directory of big ref files -->
+  <property name="bigrefsource.url" value="http://file01.lucidera.com/engineering/testdata/TPCH"/>
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <!-- First, create the files used for queries -->
+  <target name="create-db">
+    <condition property="db.created">
+      <available file="${ffsource.dir}/${datasize}" type="dir"/>
+    </condition>
+
+    <if>
+      <istrue value="${db.created}"/>
+      <then/>
+      <else>
+        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
+          dir="${thirdparty.dir}/tpch">
+          <arg line="${datasize}"/>
+        </exec>
+      </else>
+    </if>
+
+    <!-- Generate 10 flatfiles for each table -->
+    <condition property="db.created10">
+      <available file="${ffsource.dir}/${datasize}-10" type="dir"/>
+    </condition>
+    <if>
+      <istrue value="${db.created10}"/>
+      <then/>
+      <else>
+        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
+          dir="${thirdparty.dir}/tpch">
+          <arg line="${datasize} 10"/>
+        </exec>
+      </else>
+    </if>
+
+    <!-- Then, create the files for updates -->
+    <condition property="updateFiles.created">
+      <available file="${ffsource.dir}/${datasize}-1/delete1.tbl" type="file"/>
+    </condition>
+
+    <if>
+      <istrue value="${updateFiles.created}"/>
+      <then/>
+      <else>
+        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
+          dir="${thirdparty.dir}/tpch">
+          <arg line="${datasize} 1 2"/>
+        </exec>
+      </else>
+    </if>
+    
+    <!-- Copy over the query files -->
+    <sync todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}"/>
+    </sync>
+
+    <!-- Copy over the 10 flatfiles for each table -->
+    <copy todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}-10"/>
+    </copy>
+
+    <!-- Then, copy over the files used for updates -->
+    <copy todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}-1"
+        includes="*.tbl,delete*.bcp,lineitemu*.bcp,ordersu*.bcp"/>
+    </copy>
+  </target>
+
+  <target name="gen-sql">
+    <!-- copy over sql.tmpl and template reference files -->
+    <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
+      <fileset dir="${rwconcurrency.dir}">
+        <include name="*.${datasize.param}"/>
+        <include name="*.tmpl"/>
+      </fileset>
+      <compositemapper>
+        <globmapper from="*.${datasize.param}" to="*.ref"/>
+        <globmapper from="*.tmpl" to="*"/>
+      </compositemapper>
+      <filterset>
+        <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
+        <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+      </filterset>
+    </copy>
+
+    <!-- copy over other sql and ref files -->
+    <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
+      <fileset dir="${rwconcurrency.dir}">
+        <include name="*.sql"/>
+        <include name="*.mtsql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql -->
+    <foreach list="100M" param="datasize.param" target="gen-sql"/>
+  </target>
+
+  <target name="test" depends="clean-test,gen-all-sql">
+    <property name="bh.filter.runDuration" value="short,medium,null"/> 
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${ff.dir}"/>
+    <delete file="datasize"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${gensql.dir}"/>
+  </target>
+
+</project>

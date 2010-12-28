@@ -1,111 +1,140 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test DDL on Authorization: 
-0: jdbc:farrago:> -- User, Role, Role Inheritance structure
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------------------------
-0: jdbc:farrago:> -- Basic setup
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create a security manager and login as this user to perform all grant 
-0: jdbc:farrago:> -- tests. 
-0: jdbc:farrago:> -- TODO: grant all appropriate system privileges for this user once
-0: jdbc:farrago:> -- these privs are available.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema extra;
-0: jdbc:farrago:> create table extra.t(i int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create user SECMAN_3 authorization 'Unknown' DEFAULT CATALOG sys_boot;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create user SECMAN_4 authorization 'Unknown' DEFAULT SCHEMA extra;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> grant select on extra.t to secman_4;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> -- $Id$
+> -- Test DDL on Authorization: 
+> -- User, Role, Role Inheritance structure
+> 
+> -------------------------------------------------------------------------
+> -- Basic setup
+> 
+> -- Create a security manager and login as this user to perform all grant 
+> -- tests. 
+> 
+> create schema extra;
+> create table extra.t(i int not null primary key);
+> 
+> create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
+> create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
+> 
+> create user SECMAN_3 identified by 'tiger' DEFAULT CATALOG sys_boot;
+> 
+> create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
+> 
+> grant select on extra.t to secman_4;
+> 
+> -- should fail:  duplicate user
+> create user SECMAN_4;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains user "SECMAN_4" with same name (state=,code=0)
+> 
+> create role R1;
+> 
+> -- should fail:  duplicate role
+> create role R1;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
+> 
+> -- should fail:  role name conflicts with user name
+> create role SECMAN_4;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains user "SECMAN_4" with same name (state=,code=0)
+> 
+> -- should fail:  user name conflicts with role name
+> create user R1;
+Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
+> 
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema authtest;
-0: jdbc:farrago:> set schema 'authtest';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view grant_view as 
-. . . . . . . . > select  me."name" granted_element,  gte."name" grantee,  gto."name" grantor, g."action", 
-. . . . . . . . > g."withGrantOption"
-. . . . . . . . > from 
-. . . . . . . . >         sys_fem."Security"."Grant" g
-. . . . . . . . > inner join
-. . . . . . . . >         sys_fem."Security"."AuthId" gto
-. . . . . . . . > on      g."Grantor" = gto."mofId"
-. . . . . . . . > inner join 
-. . . . . . . . >         sys_fem."Security"."AuthId" gte
-. . . . . . . . > on      g."Grantee" = gte."mofId"
-. . . . . . . . > inner join 
-. . . . . . . . >         sys_cwm."Core"."ModelElement" me
-. . . . . . . . > on      g."Element" = me."mofId";
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------------------------
-0: jdbc:farrago:> -- Test 1: 
-0: jdbc:farrago:> -- Create User U1, 
-0: jdbc:farrago:> -- o grant a role to the user, 
-0: jdbc:farrago:> -- o check the system catalog to ensure that the appropriate records has 
-0: jdbc:farrago:> --   been written.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> Create user U1 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create Role 1 at  level 1
-0: jdbc:farrago:> Create Role R1_L1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Grant the role R1_L1 directly to U1
-0: jdbc:farrago:> Grant Role R1_L1 to U1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Alter user to make Role R1_L1 the default
-0: jdbc:farrago:> -- Alter user default role R1_L1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Check system catalog for the objects and system generated grants
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Check out the role created
-0: jdbc:farrago:> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
-. . . . . . . . > order by "name";
+> 
+> create schema authtest;
+> set schema 'authtest';
+> 
+> create view grant_view as 
+> select  me."name" granted_element,  gte."name" grantee,  gto."name" grantor, g."action", 
+> g."withGrantOption"
+> from 
+>         sys_fem."Security"."Grant" g
+> inner join
+>         sys_fem."Security"."AuthId" gto
+> on      g."Grantor" = gto."mofId"
+> inner join 
+>         sys_fem."Security"."AuthId" gte
+> on      g."Grantee" = gte."mofId"
+> inner join 
+>         sys_cwm."Core"."ModelElement" me
+> on      g."Element" = me."mofId";
+> 
+> create user "MockLoginModuleTestUser" authorization 'Unknown';
+> 
+> -------------------------------------------------------------------------
+> -- Test 1: 
+> -- Create User U1, 
+> -- o grant a role to the user, 
+> -- o check the system catalog to ensure that the appropriate records has 
+> --   been written.
+> 
+> Create user U1 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> 
+> -- Create Role 1 at  level 1
+> Create Role R1_L1;
+> 
+> -- Grant the role R1_L1 directly to U1
+> Grant Role R1_L1 to U1;
+> 
+> -- Alter user to make Role R1_L1 the default
+> -- Alter user default role R1_L1;
+> 
+> -- Check system catalog for the objects and system generated grants
+> 
+> -- Check out the role created
+> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
+> order by "name";
 +--------+
 |  name  |
 +--------+
 | R1_L1  |
 +--------+
-0: jdbc:farrago:> select "name" from sys_fem."Security"."User" where "name" like 'U%'
-. . . . . . . . > order by "name";
+> select "name" from sys_fem."Security"."User" where "name" like 'U%'
+> order by "name";
 +-------+
 | name  |
 +-------+
 | U1    |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- check out the grants created
-0: jdbc:farrago:> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
-. . . . . . . . > from grant_view
-. . . . . . . . > where grantee = 'U1' or grantee= 'R1_L1'
-. . . . . . . . > order by granted_element;
+> 
+> -- check out the grants created
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'U1' or grantee= 'R1_L1'
+> order by granted_element;
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
 | R1_L1            | U1       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------------------------
-0: jdbc:farrago:> -- Test 2: user, roles at two different levels hierarchies
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> -- o U2 -> R2_L1 -> R1_L2 -> R1_L3
-0: jdbc:farrago:> -- o U4 -> ( R1_L1, R2_L1, R3_L1, R4_L1)
-0: jdbc:farrago:> -- o U5, U6, U7 -> (R3_L1, R4_L1, R1_L3)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> Create user U2 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> Create user U3 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> Create user U4 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> Create user U5 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> Create user U6 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> Create user U7 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name" from sys_fem."Security"."User" where "name" like 'U%' 
-. . . . . . . . > order by "name";
+> 
+> -- verify password encryption; we use a platform-independent algorithm
+> -- so it should always come out the same
+> select "encryptedPassword", "passwordEncryptionAlgorithm"
+> from sys_fem."Security"."User"
+> where "name" = 'SECMAN_3';
++-----------------------------------------------+------------------------------+
+|               encryptedPassword               | passwordEncryptionAlgorithm  |
++-----------------------------------------------+------------------------------+
+| 8D5IVPZslzRYhb+JQ7SfJBfWpgdy+PyRDN/9ownV5bs=  | SHA-256                      |
++-----------------------------------------------+------------------------------+
+> 
+> -------------------------------------------------------------------------
+> -- Test 2: user, roles at two different levels hierarchies
+> -- 
+> -- o U2 -> R2_L1 -> R1_L2 -> R1_L3
+> -- o U4 -> ( R1_L1, R2_L1, R3_L1, R4_L1)
+> -- o U5, U6, U7 -> (R3_L1, R4_L1, R1_L3)
+> 
+> Create user U2 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> Create user U3 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> Create user U4 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> Create user U5 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> Create user U6 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> Create user U7 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
+> 
+> select "name" from sys_fem."Security"."User" where "name" like 'U%' 
+> order by "name";
 +-------+
 | name  |
 +-------+
@@ -117,14 +146,14 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | U6    |
 | U7    |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create Role 2, 3 and 4 at level 1
-0: jdbc:farrago:> Create Role R2_L1 WITH ADMIN SECMAN_2;
-0: jdbc:farrago:> Create Role R3_L1 WITH ADMIN SECMAN_2;
-0: jdbc:farrago:> Create Role R4_L1 WITH ADMIN SECMAN_2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
-. . . . . . . . > order by "name";
+> 
+> -- Create Role 2, 3 and 4 at level 1
+> Create Role R2_L1 WITH ADMIN SECMAN_2;
+> Create Role R3_L1 WITH ADMIN SECMAN_2;
+> Create Role R4_L1 WITH ADMIN SECMAN_2;
+> 
+> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
+> order by "name";
 +--------+
 |  name  |
 +--------+
@@ -133,17 +162,17 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | R3_L1  |
 | R4_L1  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Grant the role R2_L1 directly to U2
-0: jdbc:farrago:> Grant Role R2_L1 to U2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Grant  R2_L1 -> R1_L2 -> R1_L3
-0: jdbc:farrago:> Create Role R1_L2;
-0: jdbc:farrago:> Create Role R1_L3;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
-. . . . . . . . > order by "name";
+> 
+> -- Grant the role R2_L1 directly to U2
+> Grant Role R2_L1 to U2;
+> 
+> 
+> -- Grant  R2_L1 -> R1_L2 -> R1_L3
+> Create Role R1_L2;
+> Create Role R1_L3;
+> 
+> select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
+> order by "name";
 +--------+
 |  name  |
 +--------+
@@ -154,29 +183,29 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | R3_L1  |
 | R4_L1  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
-0: jdbc:farrago:> Grant Role R1_L3 to R1_L2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
-. . . . . . . . > from grant_view
-. . . . . . . . > where grantee = 'U2' or grantee = 'R2_L1' or grantee = 'R1_L3'
-. . . . . . . . > order by granted_element;
+> 
+> Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+> Grant Role R1_L3 to R1_L2;
+> 
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'U2' or grantee = 'R2_L1' or grantee = 'R1_L3'
+> order by granted_element;
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
 | R1_L2            | R2_L1    | SECMAN   | INHERIT_ROLE  | true             |
 | R2_L1            | U2       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Grant all level 1 roles to U3 i.e. U3 -> ( R1_L1, R2_L1, R3_L1) 
-0: jdbc:farrago:> grant role R1_L1, R2_L1, R3_L1 to U3;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
-. . . . . . . . > from grant_view
-. . . . . . . . > where grantee = 'U3'
-. . . . . . . . > order by granted_element;
+> 
+> 
+> -- Grant all level 1 roles to U3 i.e. U3 -> ( R1_L1, R2_L1, R3_L1) 
+> grant role R1_L1, R2_L1, R3_L1 to U3;
+> 
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'U3'
+> order by granted_element;
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
@@ -184,51 +213,96 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | R2_L1            | U3       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U3       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Grant to user U5, U6, U7 the roles (R3_L1, R4_L1, R1_L3)
-0: jdbc:farrago:> Grant role R3_L1, R4_L1, R1_L3 to U5, U6, U7;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
-. . . . . . . . > from grant_view
-. . . . . . . . > where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
-. . . . . . . . > order by grantee;
+> 
+> -- Grant to user U5, U6, U7 the roles (R3_L1, R4_L1, R1_L3)
+> Grant role R3_L1, R4_L1, R1_L3 to U5, U6, U7;
+> 
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
+> order by grantee, granted_element;
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
+| R1_L3            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
-| R1_L3            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R1_L3            | U6       | SECMAN   | INHERIT_ROLE  | false            |
-| R4_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
+| R4_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
+| R1_L3            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
-| R1_L3            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Alter user to make Role R1_L1 the default
-0: jdbc:farrago:> -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------------------------
-0: jdbc:farrago:> -- Test 3:
-0: jdbc:farrago:> -- authentication
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  unknown user
-0: jdbc:farrago:> !closeall
+> 
+> 
+> -- Alter user to make Role R1_L1 the default
+> -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
+> 
+> 
+> -------------------------------------------------------------------------
+> -- Test 3:
+> -- authentication
+> 
+> -- should fail:  unknown user
+> !closeall
 sqlline> !connect jdbc:farrago: BOBO tiger
 Error: Login failed for "BOBO": invalid username/password combination (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------------------------
-0: jdbc:farrago:> -- Test 4:
-0: jdbc:farrago:> -- default schemas and catalogs
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> 
+> -- should succeed:  local driver, user with wrong password
+> !closeall
+sqlline> !connect jdbc:farrago: "MockLoginModuleTestUser" blah
+> 
+> -- should fail:  spoof remote driver, user with wrong password
+> !closeall
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
+Error: Login failed for "MockLoginModuleTestUser": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  spoof remote driver, user with correct password
+> !closeall
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
+> 
+> -- should succeed:  correct catalog password
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN_3 tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- default catalog is sys_boot
-0: jdbc:farrago:> select * from jdbc_metadata.table_types_view order by table_type;
+> 
+> -- should fail:  incorrect catalog password
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 hobbes
+Error: Login failed for "SECMAN_3": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  blank password is equivalent to no password
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_4 whatever
+> 
+> -- change password
+> create or replace user SECMAN_3 identified by 'cougar';
+> 
+> -- should fail:  old password no longer works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+Error: Login failed for "SECMAN_3": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  new password works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 cougar
+> 
+> -- unset password
+> create or replace user SECMAN_3;
+> 
+> -- should succeed:  any password works
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 puma
+> 
+> -------------------------------------------------------------------------
+> -- Test 4:
+> -- default schemas and catalogs
+> 
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+> 
+> -- default catalog is sys_boot
+> select * from jdbc_metadata.table_types_view order by table_type;
 +----------------+
 |   TABLE_TYPE   |
 +----------------+
@@ -236,25 +310,25 @@ sqlline> !connect jdbc:farrago: SECMAN_3 tiger
 | TABLE          |
 | VIEW           |
 +----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> 
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN_4 tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- default schema is extra
-0: jdbc:farrago:> select * from t;
+> 
+> -- default schema is extra
+> select * from t;
 +----+
 | I  |
 +----+
 +----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that dropping default schema does not cascade to user
-0: jdbc:farrago:> drop schema extra cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> 
+> -- verify that dropping default schema does not cascade to user
+> drop schema extra cascade;
+> 
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN_4 tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  it's gone now
-0: jdbc:farrago:> select * from t;
+> 
+> -- should fail:  it's gone now
+> select * from t;
 Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

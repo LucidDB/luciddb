@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import net.sf.farrago.util.*;
 public class FarragoSqlTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlTest(String testName)
@@ -54,16 +53,15 @@ public class FarragoSqlTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetUnitsql.get(true),
-                new FarragoSqlTestFactory() {
-                    public FarragoTestCase createSqlTest(String testName)
-                        throws Exception
-                    {
-                        return new FarragoSqlTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetUnitsql.get(true),
+            new FarragoSqlTestFactory() {
+                public FarragoTestCase createSqlTest(String testName)
+                    throws Exception
+                {
+                    return new FarragoSqlTest(testName);
+                }
+            });
     }
 
     protected static Test gatherSuite(
@@ -107,27 +105,8 @@ public class FarragoSqlTest
     protected void runTest()
         throws Exception
     {
-        // mask out source control Id
-        addDiffMask("\\$Id.*\\$");
-
-        // NOTE hersker 2006-06-02:
-        // The following two patterns can be used to mask out the
-        // sqlline JDBC URI and continuation prompts. This is useful
-        // during transition periods when URIs are changed, or when
-        // new drivers are deployed which have their own URIs but
-        // should first pass the existing test suite before their
-        // own .ref files get checked in.
-        //
-        // It is not recommended to use these patterns on an everyday
-        // basis. Real differences in the output are difficult to spot
-        // when diff-ing .ref and .log files which have different
-        // sqlline prompts at the start of each line.
-
-        // mask out sqlline JDBC URI prompt
-        // addDiffMask("\\bjdbc(:[^:>]+)+:");
-
-        // mask out different-length sqlline continuation prompts
-        // addDiffMask("^(\\.\\s?)+");
+        // Apply the diff masks for a .REF file compare
+        setRefFileDiffMasks();
 
         runSqlLineTest(getName());
     }

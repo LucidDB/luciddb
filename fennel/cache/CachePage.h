@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,19 +29,21 @@
 #include "fennel/device/RandomAccessRequest.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/cache/CacheAllocator.h"
+#include "fennel/common/SysCallExcn.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 class Cache;
 class MappedPageListener;
 
-template <class PageT,class VictimPolicyT>
+template <class PageT, class VictimPolicyT>
 class CacheImpl;
 
 /**
  * Embedded link class for PageBucket lists.
  */
-class PageBucketListNode : public IntrusiveListNode 
+class FENNEL_CACHE_EXPORT PageBucketListNode
+    : public IntrusiveListNode
 {
 };
 
@@ -51,7 +53,7 @@ class PageBucketListNode : public IntrusiveListNode
  * be read or written with the getReadableData() and getWritableData() member
  * functions.
  */
-class CachePage
+class FENNEL_CACHE_EXPORT CachePage
     : public PageBucketListNode, private RandomAccessRequestBinding
 {
 public:
@@ -64,12 +66,12 @@ public:
          * The page contents are invalid (either unmapped or newly allocated).
          */
         DATA_INVALID,
-        
+
         /**
          * The last transfer failed (so the page contents are invalid).
          */
         DATA_ERROR,
-        
+
         /**
          * No transfer is in progress, and the page contains valid, unmodified
          * data.
@@ -85,16 +87,16 @@ public:
          * A disk write is in progress (so the page contains valid data).
          */
         DATA_WRITE,
-        
+
         /**
          * A disk read is in progress (so the page does not yet contain valid
          * data).
          */
         DATA_READ
     };
-    
+
 private:
-    template <class PageT,class VictimPolicyT>
+    template <class PageT, class VictimPolicyT>
     friend class CacheImpl;
 
 // ----------------------------------------------------------------------
@@ -104,13 +106,13 @@ private:
      * @see getCache()
      */
     Cache &cache;
-    
+
     /**
      * Mutex protecting this Page's state variables.  This is only held
-     * internally by CacheImpl for very short durations.  
+     * internally by CacheImpl for very short durations.
      */
     StrictMutex mutex;
-    
+
     /**
      * Synchronization object used to implement shared and exclusive locks.
      * This is held for long durations (across cache lock/unlock calls).
@@ -121,11 +123,11 @@ private:
      * Allocated buffer memory, or NULL if page is currently unallocated.
      */
     PBuffer pBuffer;
-    
+
     // NOTE: the data members below should only be accessed while the
     // page mutex is held.  This includes indirect access via accessors such as
     // getBlockId().
-    
+
     /**
      * The BlockId to which this page is currently mapped,
      * or NULL_BLOCK_ID if unmapped.
@@ -177,15 +179,7 @@ private:
     {
         ioCompletionCondition.wait(guard);
     }
-    
-    /**
-     * Waits for pending I/O to complete while holding a try-mutex.
-     */
-    void waitForPendingIO(StrictMutexTryGuard &guard)
-    {
-        ioCompletionCondition.wait(guard);
-    }
-    
+
     /**
      * @return true if an exclusive lock is held on this page by some thread
      */
@@ -205,7 +199,7 @@ private:
 public:
     explicit CachePage(Cache &,PBuffer);
     virtual ~CachePage();
-    
+
     /**
      * @return the cache which manages this page
      */
@@ -230,7 +224,7 @@ public:
     {
         return (dataStatus >= DATA_WRITE);
     }
-    
+
     /**
      * @return is the page data valid?
      */
@@ -269,7 +263,7 @@ public:
         assert(lock.isLocked(LOCKMODE_S) || isExclusiveLockHeld());
         return pBuffer;
     }
-    
+
     /**
      * Obtains a writable pointer to the page contents, marking the page
      * dirty.  The page must be locked in exclusive mode first.  The number
@@ -319,10 +313,38 @@ public:
             return false;
         }
 #ifdef DEBUG
-        getCache().getAllocator().setProtection(
-            pBuffer, getCache().getPageSize(), false);
+        int errorCode;
+        if (getCache().getAllocator().setProtection(
+                pBuffer, getCache().getPageSize(), false, &errorCode))
+        {
+            throw SysCallExcn("memory protection failed", errorCode);
+        }
 #endif
         return lock.tryUpgrade(txnId);
+    }
+
+    /**
+     * Upgrades from LOCKMODE_S (which caller must already have
+     * acquired) to LOCKMODE_X.  This is a WAIT operation if a page transfer
+     * is in progress.  It's assumed that there are no other threads holding
+     * a lock on the same page.
+     */
+    void upgrade(TxnId txnId)
+    {
+        StrictMutexGuard pageGuard(mutex);
+        while (isTransferInProgress()) {
+            waitForPendingIO(pageGuard);
+        }
+#ifdef DEBUG
+        int errorCode;
+        if (getCache().getAllocator().setProtection(
+                pBuffer, getCache().getPageSize(), false, &errorCode))
+        {
+            throw SysCallExcn("memory protection failed", errorCode);
+        }
+#endif
+        bool rc = lock.tryUpgrade(txnId);
+        assert(rc);
     }
 
     /**

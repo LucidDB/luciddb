@@ -6,8 +6,6 @@ usage() {
   echo "checkPreamble.sh [options] file[...]"
   echo "Options:"
   echo " -eigenbase       Require Eigenbase copyright"
-  echo " -disruptivetech  Require Disruptive Tech copyright"
-  echo " -lucidera        Require LucidEra  copyright"
   echo " -fennel          Require Fennel description, 'Fennel is a library of"
   echo "                  data storage and processing components.'"
   echo " -farrago         Require Farrago description, 'Farrago is an"
@@ -47,24 +45,12 @@ BEGIN {
     }
 
     if (zone == "eigenbase") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
-        actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
-        actuals[n]   = "// Copyright (C) year-year Disruptive Tech";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
-        actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
-    }
-    if (zone == "disruptivetech") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
-        actuals[n]   = "// Copyright (C) year-year Disruptive Tech";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
-        actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
-    }
-    if (zone == "lucidera") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
-        actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
-        actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] The Eigenbase Project";
+        actuals[n]   = "// Copyright (C) year The Eigenbase Project";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] SQLstream, Inc.";
+        actuals[n]   = "// Copyright (C) year SQLstream, Inc.";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9] Dynamo BI Corporation";
+        actuals[n]   = "// Copyright (C) year Dynamo BI Corporation";
     }
 
     expects[++n] = "//";
@@ -139,7 +125,7 @@ BEGIN {
             exit -1;
         }
     }
-    if ($0 ~ "// Portions Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] .*") {
+    if ($0 ~ "// Portions Copyright \\(C\\) [0-9][0-9][0-9][0-9] .*") {
         ++offset;
     }
     next;
@@ -156,8 +142,6 @@ while [ $# -gt 0 ]
 do
    case "$1" in
    -eigenbase) zone=eigenbase ; shift ;;
-   -disruptivetech) zone=disruptivetech ; shift ;;
-   -lucidera) zone=lucidera ; shift ;;
    -fennel) component=fennel ; shift ;;
    -farrago) component=farrago ; shift ;;
    -farrago-eigenbase) component=farrago-eigenbase ; shift ;;

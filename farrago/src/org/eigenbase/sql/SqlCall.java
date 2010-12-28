@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlCall
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlOperator operator;
@@ -49,7 +48,7 @@ public class SqlCall
 
     //~ Constructors -----------------------------------------------------------
 
-    protected SqlCall(
+    public SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
         SqlParserPos pos)
@@ -72,11 +71,6 @@ public class SqlCall
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    public boolean isA(SqlKind kind)
-    {
-        return operator.getKind().isA(kind);
-    }
 
     public SqlKind getKind()
     {
@@ -119,8 +113,8 @@ public class SqlCall
     public SqlNode clone(SqlParserPos pos)
     {
         return operator.createCall(
-                SqlNode.cloneArray(operands),
-                pos);
+            pos,
+            SqlNode.cloneArray(operands));
     }
 
     public void unparse(
@@ -130,7 +124,8 @@ public class SqlCall
     {
         if ((leftPrec > operator.getLeftPrec())
             || ((operator.getRightPrec() <= rightPrec) && (rightPrec != 0))
-            || (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression))) {
+            || (writer.isAlwaysUseParentheses() && isA(SqlKind.EXPRESSION)))
+        {
             final SqlWriter.Frame frame = writer.startList("(", ")");
             operator.unparse(writer, operands, 0, 0);
             writer.endList(frame);
@@ -168,13 +163,16 @@ public class SqlCall
         SqlParserPos pos,
         List<SqlMoniker> hintList)
     {
-        final SqlNode [] operands = getOperands();
-        for (int i = 0; i < operands.length; i++) {
-            if (operands[i] instanceof SqlIdentifier) {
-                SqlIdentifier id = (SqlIdentifier) operands[i];
-                String posstring = id.getParserPosition().toString();
-                if (posstring.equals(pos.toString())) {
-                    id.findValidOptions(validator, scope, hintList);
+        for (SqlNode operand : getOperands()) {
+            if (operand instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) operand;
+                SqlParserPos idPos = id.getParserPosition();
+                if (idPos.toString().equals(pos.toString())) {
+                    ((SqlValidatorImpl) validator).lookupNameCompletionHints(
+                        scope,
+                        Arrays.asList(id.names),
+                        pos,
+                        hintList);
                     return;
                 }
             }
@@ -233,10 +231,10 @@ public class SqlCall
         return SqlUtil.getOperatorSignature(operator, signatureList);
     }
 
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
         // Delegate to operator.
-        return operator.isMonotonic(this, scope);
+        return operator.getMonotonicity(this, scope);
     }
 
     /**

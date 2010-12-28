@@ -96,17 +96,22 @@ select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 !metadata getSuperTypes LOCALDB % %
 !metadata getSuperTables LOCALDB % %
 
+-- JDBC is silent on whether it is OK to return empty result sets
+-- for these when foreign keys are not supported, but since many client
+-- tools ask for these, it makes sense to return an empty set instead
+-- of throwing an exception since no keys can be defined without support
+-- for the feature
+
+!importedkeys EMPS
+!exportedkeys DEPTS
+!metadata getCrossReference LOCALDB SALES DEPTS LOCALDB SALES EMPS
+
 -- Implemented but not included since result depends on connection
 -- !metadata getConnection
 -- !metadata hashCode
 
 -- Not supported
--- !metadata getImportKeys
--- !metadata getExportKeys
 -- !metadata getColumnPrivileges
 -- !metadata getTablePrivileges
 -- !metadata getBestRowIdentifier
 -- !metadata getVersionColumns
--- !metadata getCrossReference
--- !importedkeys
--- !exportedkeys

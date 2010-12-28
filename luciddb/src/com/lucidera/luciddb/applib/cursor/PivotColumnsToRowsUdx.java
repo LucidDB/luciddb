@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@ package com.lucidera.luciddb.applib.cursor;
 
 import java.sql.*;
 
+import com.lucidera.luciddb.applib.resource.*;
+
 /**
  * Pivots a table's columns to rows
  *
@@ -40,18 +42,24 @@ public abstract class PivotColumnsToRowsUdx
      */
     public static void execute(
         ResultSet inputSet, PreparedStatement resultInserter) 
-        throws SQLException
+        throws SQLException, ApplibException
     {
         // Validate ParameterMetaData requires two outputs
         assert(resultInserter.getParameterMetaData().getParameterCount() == 2);
 
         ResultSetMetaData rsmd = inputSet.getMetaData();
         int colNum = rsmd.getColumnCount();
-        inputSet.next();
-        for (int i = 1; i <= colNum; i++) {
-            resultInserter.setString(1, rsmd.getColumnLabel(i));
-            resultInserter.setString(2, inputSet.getString(i));
-            resultInserter.executeUpdate();
+        if (inputSet.next()) {
+            for (int i = 1; i <= colNum; i++) {
+                resultInserter.setString(1, rsmd.getColumnLabel(i));
+                resultInserter.setString(2, inputSet.getString(i));
+                resultInserter.executeUpdate();
+            }
+            if (inputSet.next()) {
+                throw ApplibResourceObject.get().MoreThanOneRow.ex();
+            }
+        } else {
+            throw ApplibResourceObject.get().EmptyInput.ex();
         }
     }        
 }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,22 +35,23 @@ FENNEL_BEGIN_NAMESPACE
  * information on each page read.  An invalid page is interpreted as end of
  * stream.
  */
-class CrcSegInputStream : public SegInputStream
+class FENNEL_SEGMENT_EXPORT CrcSegInputStream
+    : public SegInputStream
 {
     PseudoUuid onlineUuid;
-    
+
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     explicit CrcSegInputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid,
         PageId beginPageId);
-    
+
     inline bool lockBufferParanoid();
-    
+
     virtual void lockBuffer();
-    
+
 public:
     /**
      * Creates a new CrcSegInputStream.

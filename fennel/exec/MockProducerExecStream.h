@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,7 +42,10 @@ template <class T>
 class ColumnGenerator
 {
 public:
-    virtual ~ColumnGenerator() {};
+    virtual ~ColumnGenerator()
+    {
+    }
+
     virtual T next() = 0;
 };
 
@@ -54,11 +57,11 @@ typedef boost::shared_ptr<Int64ColumnGenerator> SharedInt64ColumnGenerator;
  * MockProducerExecStreamGenerator defines an interface for generating
  * a data stream.
  */
-class MockProducerExecStreamGenerator
+class FENNEL_EXEC_EXPORT MockProducerExecStreamGenerator
 {
 public:
     virtual ~MockProducerExecStreamGenerator();
-    
+
     /**
      * Generates one data value.
      *
@@ -70,14 +73,15 @@ public:
 
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
-    
+
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
-    
+
 /**
  * MockProducerExecStreamParams defines parameters for MockProducerExecStream.
  */
-struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
+struct FENNEL_EXEC_EXPORT MockProducerExecStreamParams
+    : public SingleOutputExecStreamParams
 {
     /**
      * Number of rows to generate.
@@ -97,9 +101,10 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
      */
     bool saveTuples;
 
-    /** 
-     * When not null, print each generated tuple to this stream, for tracing or for
-     * later comparison.  Allowed only when a generator is provided.
+    /**
+     * When not null, print each generated tuple to this stream, for
+     * tracing or for later comparison.  Allowed only when a generator
+     * is provided.
      */
     std::ostream* echoTuples;
 
@@ -121,7 +126,8 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class MockProducerExecStream : public SingleOutputExecStream
+class FENNEL_EXEC_EXPORT MockProducerExecStream
+    : public SingleOutputExecStream
 {
     uint cbTuple;
     uint64_t nRowsMax;
@@ -140,8 +146,10 @@ public:
     virtual void prepare(MockProducerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
-    
-    std::vector<std::string>& getRowVector() { return savedTuples; }
+
+    const std::vector<std::string>& getRowVector() {
+        return const_cast<const std::vector<std::string>&>(savedTuples);
+    }
 
     /// Returns the number of rows emitted (which does not include rows still
     /// in the output buffer).

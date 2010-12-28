@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,10 +32,10 @@ FENNEL_BEGIN_NAMESPACE
  * LogicalTxnParticipant defines an interface which must be implemented by any
  * object which is to participate in a LogicalTxn.
  */
-class LogicalTxnParticipant
+class FENNEL_TXN_EXPORT LogicalTxnParticipant
 {
     friend class LogicalTxn;
-    
+
     LogicalTxn *pTxn;
 
     bool loggingEnabled;
@@ -66,7 +66,7 @@ public:
      * be used during recovery to find the correct LogicalTxnParticipantFactory
      */
     virtual LogicalTxnClassId getParticipantClassId() const = 0;
-    
+
     /**
      * Called by LogicalTxn the first time an action is logged for this
      * participant.  The participant must implement this by writing a
@@ -92,7 +92,7 @@ public:
     virtual void undoLogicalAction(
         LogicalActionType actionType,
         ByteInputStream &logStream) = 0;
-    
+
     /**
      * Performs redo for one logical action during recovery.  The
      * implementation must consume ALL log data for this action, even if some

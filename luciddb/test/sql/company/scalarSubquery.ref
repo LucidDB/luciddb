@@ -1,0 +1,456 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- company/scalarSubquery.sql: scalar subqueries
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table onerow(i int);
+0: jdbc:luciddb:> insert into onerow values(1);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in select list
+0: jdbc:luciddb:> -- uncorrelated
+0: jdbc:luciddb:> select (select * from ONEROW) from DEPT order by DEPTNO;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
++---------+
+0: jdbc:luciddb:> -- correlated
+0: jdbc:luciddb:> select LNAME, (select DNAME from DEPT where DEPTNO = EMP.DEPTNO)
+. . . . . . . . >  from EMP order by EMPNO;
++-----------+--------------+
+|   LNAME   |    EXPR$1    |
++-----------+--------------+
+| Bush      | Development  |
+| Brown     | Support      |
+| Andrews   | Development  |
+| Webber    | Marketing    |
+| Fratz     | Accounting   |
+| Guy       | Development  |
+| Roy       | Sales        |
+| Williams  | Sales        |
+| Reynolds  | Support      |
+| Nife      | Sales        |
+| Jones     | Development  |
++-----------+--------------+
+0: jdbc:luciddb:> -- correlating variable in select list
+0: jdbc:luciddb:> select LNAME, (select EMPNO from ONEROW) from EMP order by EMPNO;
++-----------+---------+
+|   LNAME   | EXPR$1  |
++-----------+---------+
+| Bush      | 100     |
+| Brown     | 101     |
+| Andrews   | 102     |
+| Webber    | 103     |
+| Fratz     | 104     |
+| Guy       | 105     |
+| Roy       | 106     |
+| Williams  | 107     |
+| Reynolds  | 108     |
+| Nife      | 109     |
+| Jones     | 110     |
++-----------+---------+
+0: jdbc:luciddb:> -- expression on correlating variable in select list
+0: jdbc:luciddb:> select LNAME, (select EMPNO + 5 from ONEROW) from EMP order by EMPNO;
++-----------+---------+
+|   LNAME   | EXPR$1  |
++-----------+---------+
+| Bush      | 105     |
+| Brown     | 106     |
+| Andrews   | 107     |
+| Webber    | 108     |
+| Fratz     | 109     |
+| Guy       | 110     |
+| Roy       | 111     |
+| Williams  | 112     |
+| Reynolds  | 113     |
+| Nife      | 114     |
+| Jones     | 115     |
++-----------+---------+
+0: jdbc:luciddb:> -- agg in subquery
+0: jdbc:luciddb:> select DNAME, (select min(SAL) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . >  from DEPT order by DEPTNO;
++--------------+---------+
+|    DNAME     | EXPR$1  |
++--------------+---------+
+| Accounting   | 50000   |
+| Marketing    | 50000   |
+| Development  | 50000   |
+| Sales        | 50000   |
+| Support      | 50000   |
++--------------+---------+
+0: jdbc:luciddb:> -- non equi-join
+0: jdbc:luciddb:> select DNAME,
+. . . . . . . . >  (select COUNT(distinct LOCID) from EMP where DEPTNO < DEPT.DEPTNO)
+. . . . . . . . >  from DEPT order by DEPTNO;
++--------------+---------+
+|    DNAME     | EXPR$1  |
++--------------+---------+
+| Accounting   | 0       |
+| Marketing    | 1       |
+| Development  | 2       |
+| Sales        | 2       |
+| Support      | 3       |
++--------------+---------+
+0: jdbc:luciddb:> -- subquery returns more than one row (gives error)
+0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . >  from DEPT order by DEPTNO;
+Error: Scalar query returned more than one row (state=,code=0)
+0: jdbc:luciddb:> -- ditto, uncorrelated (gives error)
+0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP)
+. . . . . . . . >  from DEPT order by DEPTNO;
+Error: Scalar query returned more than one row (state=,code=0)
+0: jdbc:luciddb:> -- subquery returns 0 rows, correlated
+0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP
+. . . . . . . . >                where DEPTNO = DEPT.DEPTNO and FNAME = 'Frank')
+. . . . . . . . >  from DEPT order by DEPTNO;
++--------------+---------+
+|    DNAME     | EXPR$1  |
++--------------+---------+
+| Accounting   |         |
+| Marketing    | 103     |
+| Development  |         |
+| Sales        |         |
+| Support      |         |
++--------------+---------+
+0: jdbc:luciddb:> -- subquery returns 0 rows, uncorrelated
+0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP where FNAME = 'ZEBEDEE')
+. . . . . . . . >  from DEPT order by DEPTNO;
++--------------+---------+
+|    DNAME     | EXPR$1  |
++--------------+---------+
+| Accounting   |         |
+| Marketing    |         |
+| Development  |         |
+| Sales        |         |
+| Support      |         |
++--------------+---------+
+0: jdbc:luciddb:> -- scalar subquery in expression
+0: jdbc:luciddb:> select FNAME || ' ' || LNAME || ' works in ' ||
+. . . . . . . . >        (select DNAME from DEPT where DEPTNO = EMP.DEPTNO) from EMP
+. . . . . . . . > where FNAME like 'F%' order by EMPNO;
++----------------------------------+
+|              EXPR$0              |
++----------------------------------+
+| Frank Webber works in Marketing  |
+| Fritz Fratz works in Accounting  |
++----------------------------------+
+0: jdbc:luciddb:> -- scalar subquery in agg
+0: jdbc:luciddb:> select PRODUCTS.NAME, MIN((select LNAME from EMP where EMPNO = SALES.EMPNO))
+. . . . . . . . >  from SALES join PRODUCTS on SALES.PRODID = PRODUCTS.PRODID
+. . . . . . . . >  group by PRODUCTS.NAME
+. . . . . . . . >  order by LOWER(PRODUCTS.NAME);
++---------------+----------+
+|     NAME      |  EXPR$1  |
++---------------+----------+
+| Chicken       | Andrews  |
+| Cookies       | Andrews  |
+| Eggs          | Andrews  |
+| Heater        | Brown    |
+| Iron          | Andrews  |
+| Juice         | Andrews  |
+| Microwave     | Andrews  |
+| Milk          | Andrews  |
+| Plunger       | Andrews  |
+| Refrigerator  | Andrews  |
+| Shampoo       | Andrews  |
+| Soap          | Andrews  |
+| Soda          | Andrews  |
+| Soup          | Andrews  |
+| Telephone     | Andrews  |
+| Towel         | Andrews  |
++---------------+----------+
+0: jdbc:luciddb:> -- scalar subquery with agg in agg
+0: jdbc:luciddb:> select DEPTNO, MIN((select COUNT(distinct PRODID) from SALES
+. . . . . . . . >                     where EMPNO = EMP.EMPNO))
+. . . . . . . . >  from EMP group by DEPTNO order by DEPTNO;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 10      | 15      |
+| 20      | 16      |
+| 30      | 15      |
+| 40      | 16      |
+| 50      | 16      |
++---------+---------+
+0: jdbc:luciddb:> -- distinct in agg, uncorrelated
+0: jdbc:luciddb:> select DEPTNO, (select distinct 5 from EMP) from DEPT order by DEPTNO;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 10      | 5       |
+| 20      | 5       |
+| 30      | 5       |
+| 40      | 5       |
+| 50      | 5       |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in where
+0: jdbc:luciddb:> -- uncorrelated
+0: jdbc:luciddb:> select * from EMP where EMPNO = (select min(EMPNO) from EMP);
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| EMPNO  | FNAME  | LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  | HOBBY  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| 100    | Bill   | Bush   | M    | 30      |          | HQ     | 50000  |             | Piano  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+0: jdbc:luciddb:> -- correlated
+0: jdbc:luciddb:> select * from EMP E1 where EMPNO = (
+. . . . . . . . >   select MIN(EMPNO) from EMP where LNAME = (
+. . . . . . . . >     select MIN(LNAME) from DEPT where DEPTNO = E1.DEPTNO));
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| EMPNO  | FNAME  | LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  | HOBBY  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| 100    | Bill   | Bush   | M    | 30      |          | HQ     | 50000  |             | Piano  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+0: jdbc:luciddb:> -- scalar subquery inside IN subquery
+0: jdbc:luciddb:> select * from EMP E1 where EMPNO in (
+. . . . . . . . >   select EMPNO from EMP where SAL = (
+. . . . . . . . >     select MIN(SAL) from DEPT where DEPTNO = E1.DEPTNO))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> -- scalar subquery on both sides of =
+0: jdbc:luciddb:> select * from DEPT
+. . . . . . . . >  where (select MIN(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . >      < (select MAX(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > --order by *
+. . . . . . . . > order by 1,2,3;
++---------+--------------+--------+
+| DEPTNO  |    DNAME     | LOCID  |
++---------+--------------+--------+
+| 30      | Development  | HQ     |
+| 40      | Sales        | HQ     |
+| 50      | Support      | MP     |
++---------+--------------+--------+
+0: jdbc:luciddb:> -- with EXISTS
+0: jdbc:luciddb:> select * from DEPT
+. . . . . . . . >  where (select MIN(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . >      < (select MAX(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . >     or exists (select 1 from SALES, EMP
+. . . . . . . . >                where SALES.EMPNO = EMP.EMPNO
+. . . . . . . . >                and EMP.DEPTNO = DEPT.DEPTNO
+. . . . . . . . >                having SUM(PRICE) > 420)
+. . . . . . . . >     or exists (select 1 from SALES, EMP
+. . . . . . . . >                where SALES.EMPNO = EMP.EMPNO
+. . . . . . . . >                and EMP.DEPTNO = DEPT.DEPTNO
+. . . . . . . . >                and EMP.SEX = 'M'
+. . . . . . . . >                having COUNT(*) > 90)
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2,3;
++---------+--------------+--------+
+| DEPTNO  |    DNAME     | LOCID  |
++---------+--------------+--------+
+| 20      | Marketing    | SF     |
+| 30      | Development  | HQ     |
+| 40      | Sales        | HQ     |
+| 50      | Support      | MP     |
++---------+--------------+--------+
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select EMP.DEPTNO, EMP.LNAME
+. . . . . . . . > from EMP right join DEPT on EMP.DEPTNO = DEPT.DEPTNO
+. . . . . . . . > where DNAME like 'S%' or (
+. . . . . . . . >   select FNAME from EMP E1 where EMPNO = (
+. . . . . . . . >     select MIN(EMPNO) from EMP
+. . . . . . . . >     where EMP.DEPTNO = DEPT.DEPTNO and EMP.DEPTNO = E1.DEPTNO)) like 'F%'
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2;
++---------+-----------+
+| DEPTNO  |   LNAME   |
++---------+-----------+
+| 10      | Fratz     |
+| 20      | Webber    |
+| 40      | Nife      |
+| 40      | Roy       |
+| 40      | Williams  |
+| 50      | Brown     |
+| 50      | Reynolds  |
++---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in group by
+0: jdbc:luciddb:> -- select (
+0: jdbc:luciddb:> --   select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID),
+0: jdbc:luciddb:> --   COUNT(*)
+0: jdbc:luciddb:> -- from DEPT
+0: jdbc:luciddb:> -- group by (
+0: jdbc:luciddb:> --   select MIN(SEX) from EMP where DEPTNO = DEPT.DEPTNO and LOCID = DEPT.LOCID)
+0: jdbc:luciddb:> -- --order by *;
+0: jdbc:luciddb:> -- order by 1,2;
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select distinct (select COUNT(*) from EMP where DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > from DEPT 
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 2       |
+| 3       |
+| 4       |
++---------+
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- group by for subqueries not supported
+0: jdbc:luciddb:> -- select DEPTNO, (select MIN(SAL) from EMP E2 where E2.DEPTNO = E1.DEPTNO)
+0: jdbc:luciddb:> --  from EMP E1
+0: jdbc:luciddb:> -- group by DEPTNO
+0: jdbc:luciddb:> -- -- order by *;
+0: jdbc:luciddb:> -- order by 1,2;
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- subquery in ORDER BY not supported
+0: jdbc:luciddb:> -- select DEPTNO
+0: jdbc:luciddb:> -- from EMP E1
+0: jdbc:luciddb:> -- group by DEPTNO
+0: jdbc:luciddb:> -- order by (select count(FNAME) from EMP E2 where E2.DEPTNO = E1.DEPTNO), DEPTNO;
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select DEPTNO,
+. . . . . . . . >  MIN((select MIN(SEX) from EMP E2 where E2.MANAGER = E1.EMPNO)),
+. . . . . . . . >  SUM((select COUNT(*) from EMP E2 where E2.MANAGER = E1.EMPNO))
+. . . . . . . . > from EMP E1
+. . . . . . . . > group by DEPTNO
+. . . . . . . . > order by DEPTNO;
++---------+---------+---------+
+| DEPTNO  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 10      | F       | 2       |
+| 20      | M       | 1       |
+| 30      | M       | 6       |
+| 40      |         | 0       |
+| 50      | F       | 1       |
++---------+---------+---------+
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select DEPTNO,
+. . . . . . . . >  SUM(case when exists (
+. . . . . . . . >       select 1 from EMP E2 where E2.DEPTNO = E1.DEPTNO and E2.EMPNO < E1.EMPNO)
+. . . . . . . . >      then 1
+. . . . . . . . >      else 0
+. . . . . . . . >      end),
+. . . . . . . . >  COUNT(*)
+. . . . . . . . > from EMP E1
+. . . . . . . . > group by DEPTNO
+. . . . . . . . > order by DEPTNO;
++---------+---------+---------+
+| DEPTNO  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 10      | 0       | 1       |
+| 20      | 0       | 1       |
+| 30      | 3       | 4       |
+| 40      | 2       | 3       |
+| 50      | 1       | 2       |
++---------+---------+---------+
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in having
+0: jdbc:luciddb:> -- uncorrelated
+0: jdbc:luciddb:> select COUNT(*) from EMP group by DEPTNO
+. . . . . . . . >  having (select i from ONEROW where i = 5) is null
+. . . . . . . . > -- order by *;
+. . . . . . . . > order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 2       |
+| 3       |
+| 4       |
++---------+
+0: jdbc:luciddb:> -- error: uncorrelated non-group sex
+0: jdbc:luciddb:> select COUNT(*) from EMP group by DEPTNO having exists (
+. . . . . . . . >  select 1 from ONEROW where SEX = 'F') order by deptno;
+Error: java.lang.AssertionError: Internal error: Identifier 'EMP.SEX' is not a group expr (state=,code=0)
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select EMP.DEPTNO, COUNT(*)
+. . . . . . . . > from EMP right join DEPT on EMP.DEPTNO = DEPT.DEPTNO
+. . . . . . . . > group by EMP.DEPTNO, DNAME
+. . . . . . . . > having DNAME like 'S%'
+. . . . . . . . >  or COUNT(DNAME) < 3
+. . . . . . . . >  or (
+. . . . . . . . >   select FNAME from EMP E1 where 1 = 0 and EMPNO = (
+. . . . . . . . >     select MIN(EMPNO) from EMP E2
+. . . . . . . . >     where E2.DEPTNO = E1.DEPTNO and EMP.DEPTNO = E1.DEPTNO)) like 'F%'
+. . . . . . . . > order by 1;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 10      | 1       |
+| 20      | 1       |
+| 40      | 3       |
+| 50      | 2       |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in order by (not supported)
+0: jdbc:luciddb:> -- select * from DEPT
+0: jdbc:luciddb:> -- order by
+0: jdbc:luciddb:> --  (select 1 from ONEROW),
+0: jdbc:luciddb:> --  (select MIN(EMPNO) from EMP) asc,
+0: jdbc:luciddb:> --  (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO) desc,
+0: jdbc:luciddb:> --  -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO) desc;
+0: jdbc:luciddb:> -- same thing
+0: jdbc:luciddb:> -- select DEPTNO,
+0: jdbc:luciddb:> --  (select 1 from ONEROW),
+0: jdbc:luciddb:> --  (select MIN(EMPNO) from EMP),
+0: jdbc:luciddb:> --  (select COUNT(DISTINCT sex) from EMP where DEPTNO = DEPT.DEPTNO),
+0: jdbc:luciddb:> --  -(select MAX(EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
+0: jdbc:luciddb:> -- from DEPT order by 2, 3, 4 desc, 5 desc;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- subqueries with setops (no minus)
+0: jdbc:luciddb:> -- uncorrelated
+0: jdbc:luciddb:> -- select DEPTNO, (select 1 from ONEROW intersect
+0: jdbc:luciddb:> --                 select intcol from ONEROW minus
+0: jdbc:luciddb:> --                 (select 2 from ONEROW union
+0: jdbc:luciddb:> --                  select 3 from ONEROW))
+0: jdbc:luciddb:> -- from DEPT 
+0: jdbc:luciddb:> -- --order by *;
+0: jdbc:luciddb:> -- order by 1,2;
+0: jdbc:luciddb:> -- correlated (not implemented correlations through set ops not decorrelated)
+0: jdbc:luciddb:> -- select FNAME, ((select DEPTNO - 1 from DEPT intersect
+0: jdbc:luciddb:> --                 select DEPTNO - 1 from EMP where DEPTNO = E1.DEPTNO) + 2)
+0: jdbc:luciddb:> -- from EMP E1 order by FNAME;
+0: jdbc:luciddb:> -- -- fails, returns more than one row
+0: jdbc:luciddb:> -- select (select 1 from ONEROW union all select i from ONEROW) from ONEROW;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 6863: UPDATE using scalar select in SET statement fails
+0: jdbc:luciddb:> -- create table bug6863 (x integer);
+0: jdbc:luciddb:> -- insert into bug6863 values (1);
+0: jdbc:luciddb:> -- update bug6863 set x = (select 2 from onerow);
+0: jdbc:luciddb:> -- select * from bug6863;
+0: jdbc:luciddb:> -- similar: or exists fails in const-reduction
+0: jdbc:luciddb:> select i from onerow
+. . . . . . . . >  where exists (select 1 from onerow)
+. . . . . . . . >     or exists (select 1 from onerow);
++----+
+| I  |
++----+
+| 1  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 7191: agg in exists in select list doesn't make a agg query
+0: jdbc:luciddb:> select i,
+. . . . . . . . >  case when exists (select min(i) from onerow) then 6 else 0 end
+. . . . . . . . > from onerow;
++----+---------+
+| I  | EXPR$1  |
++----+---------+
+| 1  | 6       |
++----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End scalarSubquery.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

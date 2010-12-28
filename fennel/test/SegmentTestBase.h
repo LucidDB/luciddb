@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * SegmentTestBase is a common base for any test of an implementation of the
  * Segment interface.
  */
-class SegmentTestBase
+class FENNEL_TEST_EXPORT SegmentTestBase
     : virtual public SegStorageTestBase,
         virtual public PagingTestBase
 {
@@ -52,7 +52,7 @@ protected:
      * PageOwnerId to use when allocating pages.
      */
     PageOwnerId objId;
-    
+
 public:
     virtual void openStorage(DeviceMode openMode);
 
@@ -61,15 +61,15 @@ public:
     virtual void unlockPage(CachePage &page,LockMode lockMode);
 
     virtual void prefetchPage(uint iPage);
-    
-    virtual void prefetchBatch(uint,uint);
-    
+
+    virtual void prefetchBatch(uint, uint);
+
     virtual void testAllocate();
-    
+
     virtual void testDeallocate();
-    
+
     virtual void testCheckpoint();
-    
+
     explicit SegmentTestBase();
 
     void testSingleThread();

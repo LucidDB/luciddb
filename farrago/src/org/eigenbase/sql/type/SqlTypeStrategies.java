@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,7 @@
 */
 package org.eigenbase.sql.type;
 
-import java.util.Arrays;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -58,7 +58,7 @@ public abstract class SqlTypeStrategies
      * Operand type-checking strategy for an operator which takes no operands.
      */
     public static final SqlSingleOperandTypeChecker otcNiladic =
-        new FamilyOperandTypeChecker(new SqlTypeFamily[] {});
+        new FamilyOperandTypeChecker();
 
     /**
      * Operand type-checking strategy for an operator with no restrictions on
@@ -86,60 +86,54 @@ public abstract class SqlTypeStrategies
 
     public static final SqlSingleOperandTypeChecker otcBool =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Boolean });
+            SqlTypeFamily.BOOLEAN);
 
     public static final SqlSingleOperandTypeChecker otcBoolX2 =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.Boolean,
-            SqlTypeFamily.Boolean
-            });
+            SqlTypeFamily.BOOLEAN,
+            SqlTypeFamily.BOOLEAN);
 
     public static final SqlSingleOperandTypeChecker otcNumeric =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Numeric });
+            SqlTypeFamily.NUMERIC);
 
     public static final SqlSingleOperandTypeChecker otcNumericX2 =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.Numeric,
-            SqlTypeFamily.Numeric
-            });
+            SqlTypeFamily.NUMERIC,
+            SqlTypeFamily.NUMERIC);
 
     public static final SqlSingleOperandTypeChecker otcExactNumeric =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.ExactNumeric });
+            SqlTypeFamily.EXACT_NUMERIC);
 
     public static final SqlSingleOperandTypeChecker otcExactNumericX2 =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.ExactNumeric,
-            SqlTypeFamily.ExactNumeric
-            });
+            SqlTypeFamily.EXACT_NUMERIC,
+            SqlTypeFamily.EXACT_NUMERIC);
 
     public static final SqlSingleOperandTypeChecker otcBinary =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Binary });
+            SqlTypeFamily.BINARY);
 
     public static final SqlSingleOperandTypeChecker otcString =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.String });
+            SqlTypeFamily.STRING);
 
     public static final SqlSingleOperandTypeChecker otcCharString =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Character });
+            SqlTypeFamily.CHARACTER);
 
     public static final SqlSingleOperandTypeChecker otcDatetime =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Datetime });
+            SqlTypeFamily.DATETIME);
 
     public static final SqlSingleOperandTypeChecker otcInterval =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.DatetimeInterval });
+            SqlTypeFamily.DATETIME_INTERVAL);
 
     public static final SqlSingleOperandTypeChecker otcMultiset =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Multiset });
+            SqlTypeFamily.MULTISET);
 
     /**
      * Operand type-checking strategy where type must be a literal or NULL.
@@ -159,34 +153,40 @@ public abstract class SqlTypeStrategies
      */
     public static final SqlSingleOperandTypeChecker otcPositiveIntLit =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Integer }) {
+            SqlTypeFamily.INTEGER)
+        {
             public boolean checkSingleOperandType(
                 SqlCallBinding callBinding,
                 SqlNode node,
                 int iFormalOperand,
                 boolean throwOnFailure)
             {
-                if (!otcNotNullLit.checkSingleOperandType(callBinding,
+                if (!otcNotNullLit.checkSingleOperandType(
+                        callBinding,
                         node,
                         iFormalOperand,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
 
-                if (!super.checkSingleOperandType(callBinding,
+                if (!super.checkSingleOperandType(
+                        callBinding,
                         node,
                         iFormalOperand,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
 
-                final SqlLiteral arg = ((SqlLiteral) node);
+                final SqlLiteral arg = (SqlLiteral) node;
                 final int value = arg.intValue(true);
                 if (value < 0) {
                     if (throwOnFailure) {
-                        throw EigenbaseResource.instance()
-                        .ArgumentMustBePositiveInteger.ex(
-                            callBinding.getOperator().getName());
+                        throw callBinding.newError(
+                            EigenbaseResource.instance()
+                            .ArgumentMustBePositiveInteger.ex(
+                                callBinding.getOperator().getName()));
                     }
                     return false;
                 }
@@ -249,15 +249,11 @@ public abstract class SqlTypeStrategies
      */
     public static final SqlSingleOperandTypeChecker otcStringSameX2 =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND,
-            new SqlOperandTypeChecker[] {
-                new FamilyOperandTypeChecker(
-                    new SqlTypeFamily[] {
-                        SqlTypeFamily.String,
-                SqlTypeFamily.String
-                    }),
-            otcSameX2
-            });
+            CompositeOperandTypeChecker.Composition.AND,
+            new FamilyOperandTypeChecker(
+                SqlTypeFamily.STRING,
+                SqlTypeFamily.STRING),
+            otcSameX2);
 
     /**
      * Operand type-checking strategy where three operands must all be in the
@@ -265,40 +261,34 @@ public abstract class SqlTypeStrategies
      */
     public static final SqlSingleOperandTypeChecker otcStringSameX3 =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND,
-            new SqlOperandTypeChecker[] {
-                new FamilyOperandTypeChecker(
-                    new SqlTypeFamily[] {
-                        SqlTypeFamily.String,
-                SqlTypeFamily.String,
-                SqlTypeFamily.String
-                    }),
-            otcSameX3
-            });
+            CompositeOperandTypeChecker.Composition.AND,
+            new FamilyOperandTypeChecker(
+                SqlTypeFamily.STRING,
+                SqlTypeFamily.STRING,
+                SqlTypeFamily.STRING),
+            otcSameX3);
 
     public static final SqlSingleOperandTypeChecker otcStringX2Int =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.String,
-            SqlTypeFamily.String,
-            SqlTypeFamily.Integer
-            });
+            SqlTypeFamily.STRING,
+            SqlTypeFamily.STRING,
+            SqlTypeFamily.INTEGER);
 
     public static final SqlSingleOperandTypeChecker otcStringX2IntX2 =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.String,
-            SqlTypeFamily.String,
-            SqlTypeFamily.Integer,
-            SqlTypeFamily.Integer
-            });
+            SqlTypeFamily.STRING,
+            SqlTypeFamily.STRING,
+            SqlTypeFamily.INTEGER,
+            SqlTypeFamily.INTEGER);
 
     public static final SqlSingleOperandTypeChecker otcAny =
-        new FamilyOperandTypeChecker(new SqlTypeFamily[] { SqlTypeFamily.Any });
+        new FamilyOperandTypeChecker(
+            SqlTypeFamily.ANY);
 
     public static final SqlSingleOperandTypeChecker otcAnyX2 =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] { SqlTypeFamily.Any, SqlTypeFamily.Any });
+            SqlTypeFamily.ANY,
+            SqlTypeFamily.ANY);
 
     /**
      * Parameter type-checking strategy type must a nullable time interval,
@@ -306,89 +296,76 @@ public abstract class SqlTypeStrategies
      */
     public static final SqlSingleOperandTypeChecker otcIntervalSameX2 =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND,
-            new SqlOperandTypeChecker[] {
-                new FamilyOperandTypeChecker(
-                    new SqlTypeFamily[] {
-                        SqlTypeFamily.DatetimeInterval,
-                SqlTypeFamily.DatetimeInterval
-                    }),
-            otcSameX2
-            });
+            CompositeOperandTypeChecker.Composition.AND,
+            new FamilyOperandTypeChecker(
+                SqlTypeFamily.DATETIME_INTERVAL,
+                SqlTypeFamily.DATETIME_INTERVAL),
+            otcSameX2);
 
     public static final SqlSingleOperandTypeChecker otcNumericInterval =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.Numeric,
-            SqlTypeFamily.DatetimeInterval
-            });
+            SqlTypeFamily.NUMERIC,
+            SqlTypeFamily.DATETIME_INTERVAL);
 
     public static final SqlSingleOperandTypeChecker otcIntervalNumeric =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.DatetimeInterval,
-            SqlTypeFamily.Numeric
-            });
+            SqlTypeFamily.DATETIME_INTERVAL,
+            SqlTypeFamily.NUMERIC);
 
     public static final SqlSingleOperandTypeChecker otcDatetimeInterval =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.Datetime,
-            SqlTypeFamily.DatetimeInterval
-            });
+            SqlTypeFamily.DATETIME,
+            SqlTypeFamily.DATETIME_INTERVAL);
 
     public static final SqlSingleOperandTypeChecker otcIntervalDatetime =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.DatetimeInterval,
-            SqlTypeFamily.Datetime
-            });
+            SqlTypeFamily.DATETIME_INTERVAL,
+            SqlTypeFamily.DATETIME);
 
+    // TODO: datetime+interval checking missing
+    // TODO: interval+datetime checking missing
     public static final SqlSingleOperandTypeChecker otcPlusOperator =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                otcNumericX2, otcIntervalSameX2, otcDatetimeInterval, otcIntervalDatetime
-                //todo datetime+interval checking missing
-                //todo interval+datetime checking missing
-        });
+            CompositeOperandTypeChecker.Composition.OR,
+            otcNumericX2,
+            otcIntervalSameX2,
+            otcDatetimeInterval,
+            otcIntervalDatetime);
 
     /**
      * Type checking strategy for the "*" operator
      */
     public static final SqlSingleOperandTypeChecker otcMultiplyOperator =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                otcNumericX2,
+            CompositeOperandTypeChecker.Composition.OR,
+            otcNumericX2,
             otcIntervalNumeric,
-            otcNumericInterval
-            });
+            otcNumericInterval);
 
     /**
      * Type checking strategy for the "/" operator
      */
     public static final SqlSingleOperandTypeChecker otcDivisionOperator =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                otcNumericX2,
-            otcIntervalNumeric
-            });
+            CompositeOperandTypeChecker.Composition.OR,
+            otcNumericX2,
+            otcIntervalNumeric);
 
     public static final SqlSingleOperandTypeChecker otcMinusOperator =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] { otcNumericX2, otcIntervalSameX2, otcDatetimeInterval // TODO:  compatibility check
-            });
+            CompositeOperandTypeChecker.Composition.OR,
+
+            // TODO:  compatibility check
+            otcNumericX2,
+            otcIntervalSameX2,
+            otcDatetimeInterval);
 
     public static final SqlSingleOperandTypeChecker otcMinusDateOperator =
         new FamilyOperandTypeChecker(
-            new SqlTypeFamily[] {
-                SqlTypeFamily.Datetime,
-            SqlTypeFamily.Datetime,
-            SqlTypeFamily.DatetimeInterval
-            }) {
+            SqlTypeFamily.DATETIME,
+            SqlTypeFamily.DATETIME,
+            SqlTypeFamily.DATETIME_INTERVAL)
+        {
             public boolean checkOperandTypes(
                 SqlCallBinding callBinding,
                 boolean throwOnFailure)
@@ -398,28 +375,31 @@ public abstract class SqlTypeStrategies
                 }
                 if (!otcSameX2.checkOperandTypes(
                         callBinding,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
                 return true;
             }
         };
 
-    public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
+        public static final SqlSingleOperandTypeChecker otcNumericOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
                 otcNumeric,
-            otcInterval
-            });
+                otcInterval);
+
+        public static final SqlSingleOperandTypeChecker otcDatetimeOrInterval =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcDatetime,
+                otcInterval);
 
     public static final SqlSingleOperandTypeChecker otcNumericOrString =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                otcNumeric,
-            otcString
-            });
+            CompositeOperandTypeChecker.Composition.OR,
+            otcNumeric,
+            otcString);
 
     public static final SqlSingleOperandTypeChecker otcRecordMultiset =
         new SqlSingleOperandTypeChecker() {
@@ -439,9 +419,12 @@ public abstract class SqlTypeStrategies
                     validationError = true;
                 } else if (type.getFieldList().size() != 1) {
                     validationError = true;
-                } else if (!SqlTypeName.Multiset.equals(
-                        type.getFields()[0].getType().getSqlTypeName())) {
-                    validationError = true;
+                } else {
+                    SqlTypeName typeName =
+                        type.getFields()[0].getType().getSqlTypeName();
+                    if (typeName != SqlTypeName.MULTISET) {
+                        validationError = true;
+                    }
                 }
 
                 if (validationError && throwOnFailure) {
@@ -454,12 +437,11 @@ public abstract class SqlTypeStrategies
                 SqlCallBinding callBinding,
                 boolean throwOnFailure)
             {
-                return
-                    checkSingleOperandType(
-                        callBinding,
-                        callBinding.getCall().operands[0],
-                        0,
-                        throwOnFailure);
+                return checkSingleOperandType(
+                    callBinding,
+                    callBinding.getCall().operands[0],
+                    0,
+                    throwOnFailure);
             }
 
             public SqlOperandCountRange getOperandCountRange()
@@ -473,12 +455,12 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    public static final SqlSingleOperandTypeChecker otcMultisetOrRecordTypeMultiset =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                otcMultiset, otcRecordMultiset
-            });
+    public static final SqlSingleOperandTypeChecker
+        otcMultisetOrRecordTypeMultiset =
+            new CompositeOperandTypeChecker(
+                CompositeOperandTypeChecker.Composition.OR,
+                otcMultiset,
+                otcRecordMultiset);
 
     public static final SqlOperandTypeChecker otcMultisetX2 =
         new MultisetOperandTypeChecker();
@@ -492,58 +474,57 @@ public abstract class SqlTypeStrategies
 
     public static final SqlOperandTypeChecker otcRecordToScalarType =
         new SqlSingleOperandTypeChecker() {
-        public boolean checkSingleOperandType(
-            SqlCallBinding callBinding,
-            SqlNode node,
-            int iFormalOperand,
-            boolean throwOnFailure)
-        {
-            assert (0 == iFormalOperand);
-            RelDataType type =
-                callBinding.getValidator().deriveType(
-                    callBinding.getScope(),
-                    node);
-            boolean validationError = false;
-            if (!type.isStruct()) {
-                validationError = true;
-            } else if (type.getFieldList().size() != 1) {
-                validationError = true;
-            } 
-            
-            if (validationError && throwOnFailure) {
-                throw callBinding.newValidationSignatureError();
-            }
-            return !validationError;
-        }
+            public boolean checkSingleOperandType(
+                SqlCallBinding callBinding,
+                SqlNode node,
+                int iFormalOperand,
+                boolean throwOnFailure)
+            {
+                assert (0 == iFormalOperand);
+                RelDataType type =
+                    callBinding.getValidator().deriveType(
+                        callBinding.getScope(),
+                        node);
+                boolean validationError = false;
+                if (!type.isStruct()) {
+                    validationError = true;
+                } else if (type.getFieldList().size() != 1) {
+                    validationError = true;
+                }
 
-        public boolean checkOperandTypes(
-            SqlCallBinding callBinding,
-            boolean throwOnFailure)
-        {
-            return
-                checkSingleOperandType(
+                if (validationError && throwOnFailure) {
+                    throw callBinding.newValidationSignatureError();
+                }
+                return !validationError;
+            }
+
+            public boolean checkOperandTypes(
+                SqlCallBinding callBinding,
+                boolean throwOnFailure)
+            {
+                return checkSingleOperandType(
                     callBinding,
                     callBinding.getCall().operands[0],
                     0,
                     throwOnFailure);
-        }
+            }
 
-        public SqlOperandCountRange getOperandCountRange()
-        {
-            return SqlOperandCountRange.One;
-        }
+            public SqlOperandCountRange getOperandCountRange()
+            {
+                return SqlOperandCountRange.One;
+            }
 
-        public String getAllowedSignatures(SqlOperator op, String opName)
-        {
-            String [] array = new String[1];
-            Arrays.fill(array, "RECORDTYPE(SINGLE FIELD)");
-            return SqlUtil.getAliasedSignature(
+            public String getAllowedSignatures(SqlOperator op, String opName)
+            {
+                String [] array = new String[1];
+                Arrays.fill(array, "RECORDTYPE(SINGLE FIELD)");
+                return SqlUtil.getAliasedSignature(
                     op,
                     opName,
                     Arrays.asList(array));
-        }
-    };
-            
+            }
+        };
+
     // ----------------------------------------------------------------------
     // SqlReturnTypeInference definitions
     // ----------------------------------------------------------------------
@@ -603,8 +584,8 @@ public abstract class SqlTypeStrategies
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
-     * the second operand. If any of the other operands are nullable the returned
-     * type will also be nullable.
+     * the second operand. If any of the other operands are nullable the
+     * returned type will also be nullable.
      */
     public static final SqlReturnTypeInference rtiNullableSecondArgType =
         new SqlTypeTransformCascade(
@@ -632,7 +613,7 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is Boolean.
      */
     public static final SqlReturnTypeInference rtiBoolean =
-        new ExplicitReturnTypeInference(SqlTypeName.Boolean);
+        new ExplicitReturnTypeInference(SqlTypeName.BOOLEAN);
 
     /**
      * Type-inference strategy whereby the result type of a call is Boolean,
@@ -647,13 +628,13 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is Date.
      */
     public static final SqlReturnTypeInference rtiDate =
-        new ExplicitReturnTypeInference(SqlTypeName.Date);
+        new ExplicitReturnTypeInference(SqlTypeName.DATE);
 
     /**
      * Type-inference strategy whereby the result type of a call is Time(0).
      */
     public static final SqlReturnTypeInference rtiTime =
-        new ExplicitReturnTypeInference(SqlTypeName.Time, 0);
+        new ExplicitReturnTypeInference(SqlTypeName.TIME, 0);
 
     /**
      * Type-inference strategy whereby the result type of a call is nullable
@@ -668,7 +649,7 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is Double.
      */
     public static final SqlReturnTypeInference rtiDouble =
-        new ExplicitReturnTypeInference(SqlTypeName.Double);
+        new ExplicitReturnTypeInference(SqlTypeName.DOUBLE);
 
     /**
      * Type-inference strategy whereby the result type of a call is Double with
@@ -683,13 +664,13 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is an Integer.
      */
     public static final SqlReturnTypeInference rtiInteger =
-        new ExplicitReturnTypeInference(SqlTypeName.Integer);
+        new ExplicitReturnTypeInference(SqlTypeName.INTEGER);
 
     /**
      * Type-inference strategy whereby the result type of a call is a Bigint
      */
     public static final SqlReturnTypeInference rtiBigint =
-        new ExplicitReturnTypeInference(SqlTypeName.Bigint);
+        new ExplicitReturnTypeInference(SqlTypeName.BIGINT);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Bigint
@@ -708,7 +689,7 @@ public abstract class SqlTypeStrategies
         new SqlTypeTransformCascade(
             rtiBigint,
             SqlTypeTransforms.forceNullable);
-    
+
     /**
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.
@@ -722,19 +703,25 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy which always returns "VARCHAR(2000)".
      */
     public static final SqlReturnTypeInference rtiVarchar2000 =
-        new ExplicitReturnTypeInference(SqlTypeName.Varchar, 2000);
+        new ExplicitReturnTypeInference(SqlTypeName.VARCHAR, 2000);
 
     /**
      * Type-inference strategy for Histogram agg support
      */
     public static final SqlReturnTypeInference rtiHistogram =
-        new ExplicitReturnTypeInference(SqlTypeName.Varbinary, 4);
+        new ExplicitReturnTypeInference(SqlTypeName.VARBINARY, 8);
 
     /**
      * Type-inference strategy which always returns "CURSOR".
      */
     public static final SqlReturnTypeInference rtiCursor =
-        new ExplicitReturnTypeInference(SqlTypeName.Cursor);
+        new ExplicitReturnTypeInference(SqlTypeName.CURSOR);
+
+    /**
+     * Type-inference strategy which always returns "COLUMN_LIST".
+     */
+    public static final SqlReturnTypeInference rtiColumnList =
+        new ExplicitReturnTypeInference(SqlTypeName.COLUMN_LIST);
 
     /**
      * Type-inference strategy whereby the result type of a call is using its
@@ -749,9 +736,8 @@ public abstract class SqlTypeStrategies
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
-                return
-                    opBinding.getTypeFactory().leastRestrictive(
-                        opBinding.collectOperandTypes());
+                return opBinding.getTypeFactory().leastRestrictive(
+                    opBinding.collectOperandTypes());
             }
         };
 
@@ -774,7 +760,7 @@ public abstract class SqlTypeStrategies
                         RelDataType ret;
                         ret =
                             opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
+                                SqlTypeName.DECIMAL,
                                 p,
                                 0);
                         if (type1.isNullable()) {
@@ -798,68 +784,29 @@ public abstract class SqlTypeStrategies
         new SqlReturnTypeInferenceChain(
             new SqlReturnTypeInference[] {
                 rtiDecimalNoScale,
-            rtiFirstArgType
+                rtiFirstArgType
             });
 
     /**
      * Type-inference strategy whereby the result type of a call is the decimal
      * product of two exact numeric operands where at least one of the operands
-     * is a decimal. Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Then the result type is a decimal
-     * with:
-     *
-     * <ul>
-     * <li>p = p1 + p2</li>
-     * <li>s = s1 + s2</li>
-     * </ul>
-     *
-     * p and s are capped at their maximum values
-     *
-     * @sql.2003 Part 2 Section 6.26
+     * is a decimal.
      */
     public static final SqlReturnTypeInference rtiDecimalProduct =
         new SqlReturnTypeInference() {
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
+                RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
                 RelDataType type1 = opBinding.getOperandType(0);
                 RelDataType type2 = opBinding.getOperandType(1);
-                if (SqlTypeUtil.isExactNumeric(type1)
-                    && SqlTypeUtil.isExactNumeric(type2)) {
-                    if (SqlTypeUtil.isDecimal(type1)
-                        || SqlTypeUtil.isDecimal(type2)) {
-                        int p1 = type1.getPrecision();
-                        int p2 = type2.getPrecision();
-                        int s1 = type1.getScale();
-                        int s2 = type2.getScale();
-
-                        int scale = s1 + s2;
-                        scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
-                        int precision = p1 + p2;
-                        precision =
-                            Math.min(precision,
-                                SqlTypeName.MAX_NUMERIC_PRECISION);
-
-                        RelDataType ret;
-                        ret =
-                            opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
-                                precision,
-                                scale);
-
-                        return ret;
-                    }
-                }
-
-                return null;
+                return typeFactory.createDecimalProduct(type1, type2);
             }
         };
 
     /**
-     * Same as {@link #rtiNullableDecimalProduct} but returns with nullablity if
-     * any of the operands is nullable by using {@link
-     * SqlTypeTransforms#toNullable}
+     * Same as {@link #rtiDecimalProduct} but returns with nullablity if any of
+     * the operands is nullable by using {@link SqlTypeTransforms#toNullable}
      */
     public static final SqlReturnTypeInference rtiNullableDecimalProduct =
         new SqlTypeTransformCascade(
@@ -876,77 +823,30 @@ public abstract class SqlTypeStrategies
         new SqlReturnTypeInferenceChain(
             new SqlReturnTypeInference[] {
                 rtiNullableDecimalProduct,
-            rtiNullableFirstInterval,
-            rtiLeastRestrictive
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive
             });
 
     /**
      * Type-inference strategy whereby the result type of a call is the decimal
      * product of two exact numeric operands where at least one of the operands
-     * is a decimal. Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Let d be the number of whole
-     * digits in the result Then the result type is a decimal with:
-     *
-     * <ul>
-     * <li>d = p1 - s1 + s2</li>
-     * <li>s <= max(6, s1 + p2 + 1)</li>
-     * <li>p = d + s</li>
-     * </ul>
-     *
-     * p and s are capped at their maximum values
-     *
-     * @sql.2003 Part 2 Section 6.26
+     * is a decimal.
      */
     public static final SqlReturnTypeInference rtiDecimalQuotient =
         new SqlReturnTypeInference() {
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
+                RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
                 RelDataType type1 = opBinding.getOperandType(0);
                 RelDataType type2 = opBinding.getOperandType(1);
-                if (SqlTypeUtil.isExactNumeric(type1)
-                    && SqlTypeUtil.isExactNumeric(type2)) {
-                    if (SqlTypeUtil.isDecimal(type1)
-                        || SqlTypeUtil.isDecimal(type2)) {
-                        int p1 = type1.getPrecision();
-                        int p2 = type2.getPrecision();
-                        int s1 = type1.getScale();
-                        int s2 = type2.getScale();
-
-                        int dout =
-                            Math.min(p1 - s1 + s2,
-                                SqlTypeName.MAX_NUMERIC_PRECISION);
-
-                        int scale = Math.max(6, s1 + p2 + 1);
-                        scale =
-                            Math.min(scale,
-                                SqlTypeName.MAX_NUMERIC_PRECISION - dout);
-                        scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
-
-                        int precision = dout + scale;
-                        assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
-                        assert (precision > 0);
-
-                        RelDataType ret;
-                        ret =
-                            opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
-                                precision,
-                                scale);
-
-                        return ret;
-                    }
-                }
-
-                return null;
+                return typeFactory.createDecimalQuotient(type1, type2);
             }
         };
 
     /**
-     * Same as {@link #rtiNullableDecimalQuotient} but returns with nullablity
-     * if any of the operands is nullable by using {@link
-     * SqlTypeTransforms#toNullable}
+     * Same as {@link #rtiDecimalQuotient} but returns with nullablity if any of
+     * the operands is nullable by using {@link SqlTypeTransforms#toNullable}
      */
     public static final SqlReturnTypeInference rtiNullableDecimalQuotient =
         new SqlTypeTransformCascade(
@@ -963,8 +863,20 @@ public abstract class SqlTypeStrategies
         new SqlReturnTypeInferenceChain(
             new SqlReturnTypeInference[] {
                 rtiNullableDecimalQuotient,
-            rtiNullableFirstInterval,
-            rtiLeastRestrictive
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive
+            });
+
+    /**
+     * Type-inference strategy whereby the result type of a call is {@link
+     * #rtiNullableFirstInterval} and {@link #rtiLeastRestrictive}. These rules
+     * are used for integer division.
+     */
+    public static final SqlReturnTypeInference rtiNullableIntegerQuotient =
+        new SqlReturnTypeInferenceChain(
+            new SqlReturnTypeInference[] {
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive
             });
 
     /**
@@ -992,9 +904,11 @@ public abstract class SqlTypeStrategies
                 RelDataType type1 = opBinding.getOperandType(0);
                 RelDataType type2 = opBinding.getOperandType(1);
                 if (SqlTypeUtil.isExactNumeric(type1)
-                    && SqlTypeUtil.isExactNumeric(type2)) {
+                    && SqlTypeUtil.isExactNumeric(type2))
+                {
                     if (SqlTypeUtil.isDecimal(type1)
-                        || SqlTypeUtil.isDecimal(type2)) {
+                        || SqlTypeUtil.isDecimal(type2))
+                    {
                         int p1 = type1.getPrecision();
                         int p2 = type2.getPrecision();
                         int s1 = type1.getScale();
@@ -1004,14 +918,15 @@ public abstract class SqlTypeStrategies
                         assert (scale <= SqlTypeName.MAX_NUMERIC_SCALE);
                         int precision = Math.max(p1 - s1, p2 - s2) + scale + 1;
                         precision =
-                            Math.min(precision,
+                            Math.min(
+                                precision,
                                 SqlTypeName.MAX_NUMERIC_PRECISION);
                         assert (precision > 0);
 
                         RelDataType ret;
                         ret =
                             opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
+                                SqlTypeName.DECIMAL,
                                 precision,
                                 scale);
 
@@ -1053,8 +968,12 @@ public abstract class SqlTypeStrategies
      * <li>result is varying if either input is; otherwise fixed
      * </ul>
      *
-     * @pre input types must be of the same string type
-     * @pre types must be comparable without casting
+     * Pre-requisites:
+     *
+     * <ul>
+     * <li>input types must be of the same string type
+     * <li>types must be comparable without casting
+     * </ul>
      */
     public static final SqlReturnTypeInference rtiDyadicStringSumPrecision =
         new SqlReturnTypeInference() {
@@ -1064,11 +983,10 @@ public abstract class SqlTypeStrategies
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
-                if (!(
-                        SqlTypeUtil.inCharFamily(opBinding.getOperandType(0))
+                if (!(SqlTypeUtil.inCharFamily(opBinding.getOperandType(0))
                         && SqlTypeUtil.inCharFamily(
-                            opBinding.getOperandType(1))
-                     )) {
+                            opBinding.getOperandType(1))))
+                {
                     Util.pre(
                         SqlTypeUtil.sameNamedType(
                             opBinding.getOperandType(0),
@@ -1080,10 +998,13 @@ public abstract class SqlTypeStrategies
                     if (!SqlTypeUtil.isCharTypeComparable(
                             opBinding.collectOperandTypes(),
                             0,
-                            1)) {
-                        throw EigenbaseResource.instance().TypeNotComparable.ex(
-                            opBinding.getOperandType(0).toString(),
-                            opBinding.getOperandType(1).toString());
+                            1))
+                    {
+                        throw opBinding.newError(
+                            EigenbaseResource.instance().TypeNotComparable.ex(
+                                opBinding.getOperandType(0).getFullTypeString(),
+                                opBinding.getOperandType(1)
+                                    .getFullTypeString()));
                     }
 
                     pickedCollation =
@@ -1097,7 +1018,8 @@ public abstract class SqlTypeStrategies
                 SqlTypeName typeName =
                     opBinding.getOperandType(0).getSqlTypeName();
                 if (SqlTypeUtil.isBoundedVariableWidth(
-                        opBinding.getOperandType(1))) {
+                        opBinding.getOperandType(1)))
+                {
                     typeName = opBinding.getOperandType(1).getSqlTypeName();
                 }
 
@@ -1110,11 +1032,14 @@ public abstract class SqlTypeStrategies
                 if (null != pickedCollation) {
                     RelDataType pickedType;
                     if (opBinding.getOperandType(0).getCollation().equals(
-                            pickedCollation)) {
+                            pickedCollation))
+                    {
                         pickedType = opBinding.getOperandType(0);
-                    } else if (opBinding.getOperandType(
+                    } else if (
+                        opBinding.getOperandType(
                             1).getCollation().equals(
-                            pickedCollation)) {
+                                     pickedCollation))
+                    {
                         pickedType = opBinding.getOperandType(1);
                     } else {
                         throw Util.newInternal("should never come here");
@@ -1134,21 +1059,23 @@ public abstract class SqlTypeStrategies
      * Same as {@link #rtiDyadicStringSumPrecision} and using {@link
      * SqlTypeTransforms#toNullable}
      */
-    public static final SqlReturnTypeInference rtiNullableDyadicStringSumPrecision =
-        new SqlTypeTransformCascade(
-            rtiDyadicStringSumPrecision,
-            new SqlTypeTransform[] { SqlTypeTransforms.toNullable });
+    public static final SqlReturnTypeInference
+        rtiNullableDyadicStringSumPrecision =
+            new SqlTypeTransformCascade(
+                rtiDyadicStringSumPrecision,
+                new SqlTypeTransform[] { SqlTypeTransforms.toNullable });
 
     /**
      * Same as {@link #rtiDyadicStringSumPrecision} and using {@link
      * SqlTypeTransforms#toNullable}, {@link SqlTypeTransforms#toVarying}.
      */
-    public static final SqlReturnTypeInference rtiNullableVaryingDyadicStringSumPrecision =
-        new SqlTypeTransformCascade(
-            rtiDyadicStringSumPrecision,
-            new SqlTypeTransform[] {
-                SqlTypeTransforms.toNullable, SqlTypeTransforms.toVarying
-            });
+    public static final SqlReturnTypeInference
+        rtiNullableVaryingDyadicStringSumPrecision =
+            new SqlTypeTransformCascade(
+                rtiDyadicStringSumPrecision,
+                new SqlTypeTransform[] {
+                    SqlTypeTransforms.toNullable, SqlTypeTransforms.toVarying
+                });
 
     /**
      * Type-inference strategy where the expression is assumed to be registered
@@ -1161,9 +1088,8 @@ public abstract class SqlTypeStrategies
                 SqlOperatorBinding opBinding)
             {
                 SqlCallBinding callBinding = (SqlCallBinding) opBinding;
-                return
-                    callBinding.getValidator().getNamespace(
-                        callBinding.getCall()).getRowType();
+                return callBinding.getValidator().getNamespace(
+                    callBinding.getCall()).getRowType();
             }
         };
 
@@ -1188,10 +1114,9 @@ public abstract class SqlTypeStrategies
                     new ExplicitOperatorBinding(opBinding, argElementTypes);
                 RelDataType biggestElementType =
                     rtiLeastRestrictive.inferReturnType(newBinding);
-                return
-                    opBinding.getTypeFactory().createMultisetType(
-                        biggestElementType,
-                        -1);
+                return opBinding.getTypeFactory().createMultisetType(
+                    biggestElementType,
+                    -1);
             }
         };
 
@@ -1215,10 +1140,9 @@ public abstract class SqlTypeStrategies
                 final RelDataTypeField [] fields = multisetType.getFields();
                 assert fields.length > 0;
                 final RelDataType firstColType = fields[0].getType();
-                return
-                    opBinding.getTypeFactory().createMultisetType(
-                        firstColType,
-                        -1);
+                return opBinding.getTypeFactory().createMultisetType(
+                    firstColType,
+                    -1);
             }
         };
 
@@ -1237,12 +1161,11 @@ public abstract class SqlTypeStrategies
                 RelDataType componentType = multisetType.getComponentType();
                 assert componentType != null : "expected a multiset type: "
                     + multisetType;
-                return
-                    opBinding.getTypeFactory().createMultisetType(
-                        opBinding.getTypeFactory().createStructType(
-                            new RelDataType[] { componentType },
-                            new String[] { "EXPR$0" }),
-                        -1);
+                return opBinding.getTypeFactory().createMultisetType(
+                    opBinding.getTypeFactory().createStructType(
+                        new RelDataType[] { componentType },
+                        new String[] { SqlUtil.deriveAliasFromOrdinal(0) }),
+                    -1);
             }
         };
 
@@ -1275,11 +1198,9 @@ public abstract class SqlTypeStrategies
             SqlTypeTransforms.toMultisetElementType);
 
     /**
-     * Returns the field type of a structured type which has only one field.
-     * For example, given 
-     *     <code>RECORD(x INTEGER)</code>
-     * returns 
-     *     <code>INTEGER</code>.
+     * Returns the field type of a structured type which has only one field. For
+     * example, given <code>RECORD(x INTEGER)</code> returns <code>
+     * INTEGER</code>.
      */
     public static final SqlReturnTypeInference rtiRecordToScalarType =
         new SqlReturnTypeInference() {
@@ -1287,26 +1208,25 @@ public abstract class SqlTypeStrategies
                 SqlOperatorBinding opBinding)
             {
                 assert (opBinding.getOperandCount() == 1);
-                
-                final RelDataType recordType =
-                    opBinding.getOperandType(0);
-                
+
+                final RelDataType recordType = opBinding.getOperandType(0);
+
                 boolean isStruct = recordType.isStruct();
                 int fieldCount = recordType.getFieldCount();
-                
-                assert (isStruct && fieldCount == 1);
-                
-                RelDataTypeField fieldType =
-                    recordType.getFieldList().get(0);
-                assert fieldType != null : "expected a record type with one field: "
+
+                assert (isStruct && (fieldCount == 1));
+
+                RelDataTypeField fieldType = recordType.getFieldList().get(0);
+                assert fieldType != null
+                    : "expected a record type with one field: "
                     + recordType;
                 final RelDataType firstColType = fieldType.getType();
-                return
-                    opBinding.getTypeFactory().createTypeWithNullability(
-                        firstColType, true);
+                return opBinding.getTypeFactory().createTypeWithNullability(
+                    firstColType,
+                    true);
             }
         };
-    
+
     // ----------------------------------------------------------------------
     // SqlOperandTypeInference definitions
     // ----------------------------------------------------------------------
@@ -1335,7 +1255,14 @@ public abstract class SqlTypeStrategies
                         break;
                     }
                 }
+
+                // REVIEW jvs 11-Nov-2008:  We can't assert this
+                // because SqlAdvisorValidator produces
+                // unknown types for incomplete expressions.
+                // Maybe we need to distinguish the two kinds of unknown.
+                /*
                 assert !knownType.equals(unknownType);
+                */
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] = knownType;
                 }
@@ -1378,7 +1305,7 @@ public abstract class SqlTypeStrategies
                 RelDataTypeFactory typeFactory = callBinding.getTypeFactory();
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] =
-                        typeFactory.createSqlType(SqlTypeName.Boolean);
+                        typeFactory.createSqlType(SqlTypeName.BOOLEAN);
                 }
             }
         };

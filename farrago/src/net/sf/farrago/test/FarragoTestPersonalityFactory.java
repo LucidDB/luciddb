@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,6 +30,8 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.rules.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -43,7 +45,6 @@ import org.eigenbase.rel.metadata.*;
 public class FarragoTestPersonalityFactory
     implements FarragoSessionPersonalityFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonalityFactory
@@ -70,15 +71,53 @@ public class FarragoTestPersonalityFactory
         {
             chain.addProvider(new FarragoTestRelMetadataProvider());
         }
+
+        // implement FarragoSessionPersonality
+        public FarragoSessionPlanner newPlanner(
+            FarragoSessionPreparingStmt stmt,
+            boolean init)
+        {
+            // NOTE jvs 17-Nov-2008:  This is a hack to trigger
+            // a badly-behaving planner for testing planner abort.
+            if ("BAD_VOLCANO".equals(
+                    stmt.getSession().getSessionVariables().schemaName))
+            {
+                FarragoDefaultPlanner planner = new FarragoDefaultPlanner(stmt);
+                if (init) {
+                    planner.init();
+                    planner.addRule(
+                        PullUpProjectsAboveJoinRule.instanceTwoProjectChildren);
+                }
+                return planner;
+            } else {
+                return super.newPlanner(stmt, init);
+            }
+        }
     }
 
     public static class FarragoTestRelMetadataProvider
         extends ReflectiveRelMetadataProvider
     {
+        FarragoTestRelMetadataProvider()
+        {
+            mapParameterTypes(
+                "isVisibleInExplain",
+                Collections.singletonList((Class) SqlExplainLevel.class));
+        }
+
         public Double getRowCount(AggregateRelBase rel)
         {
             // Lie and say aggregates always returns a million rows.
             return 1000000.0;
+        }
+
+        public Boolean isVisibleInExplain(
+            FennelToIteratorConverter rel,
+            SqlExplainLevel level)
+        {
+            // Hide instances of FennelToIteratorConverter from EXPLAIN PLAN
+            // unless WITH ALL ATTRIBUTES is specified.
+            return level == SqlExplainLevel.ALL_ATTRIBUTES;
         }
     }
 }

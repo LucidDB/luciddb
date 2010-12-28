@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class DdlCreateStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     DdlReplaceOptions replaceOptions;
@@ -52,7 +51,8 @@ public class DdlCreateStmt
      *
      * @param createdElement top-level element created by this stmt
      */
-    public DdlCreateStmt(CwmModelElement createdElement,
+    public DdlCreateStmt(
+        CwmModelElement createdElement,
         DdlReplaceOptions replaceOptions)
     {
         super(createdElement);

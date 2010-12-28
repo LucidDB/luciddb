@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2003 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,16 +22,21 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/AbortExcn.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
+#include "fennel/db/DataFormatExcn.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FileSystem.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/device/RandomAccessFileDevice.h"
 #include "fennel/cache/Cache.h"
+#include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/segment/LinearDeviceSegment.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/segment/VersionedSegment.h"
+#include "fennel/segment/VersionedRandomAllocationSegment.h"
 #include "fennel/common/CompoundId.h"
 #include "fennel/txn/LogicalTxnLog.h"
 #include "fennel/txn/LogicalRecoveryLog.h"
@@ -40,6 +45,10 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#ifdef __MSVC__
+#include <process.h>
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace boost::filesystem;
@@ -47,6 +56,7 @@ using namespace boost::filesystem;
 ParamName Database::paramDatabaseDir = "databaseDir";
 ParamName Database::paramResourceDir = "resourceDir";
 ParamName Database::paramForceTxns = "forceTxns";
+ParamName Database::paramDisableSnapshots = "disableSnapshots";
 ParamName Database::paramDatabasePrefix = "database";
 ParamName Database::paramTempPrefix = "temp";
 ParamName Database::paramShadowLogPrefix = "databaseShadowLog";
@@ -67,25 +77,41 @@ SharedDatabase Database::newDatabase(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    SharedTraceTarget pTraceTarget)
+    SharedTraceTarget pTraceTarget,
+    SharedPseudoUuidGenerator pUuidGenerator)
 {
-    return SharedDatabase(
-        new Database(pCacheInit, configMapInit, openModeInit, pTraceTarget),
-        ClosableObjectDestructor());
+    if (!pUuidGenerator) {
+        pUuidGenerator.reset(new PseudoUuidGenerator());
+    }
+    SharedDatabase pDb =
+        SharedDatabase(
+            new Database(
+                pCacheInit, configMapInit, openModeInit, pTraceTarget,
+                pUuidGenerator),
+            ClosableObjectDestructor());
+    pDb->init();
+    return pDb;
 }
 
 Database::Database(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    SharedTraceTarget pTraceTarget)
-    : TraceSource(pTraceTarget,"database"),
+    SharedTraceTarget pTraceTarget,
+    SharedPseudoUuidGenerator pUuidGeneratorInit)
+    : TraceSource(pTraceTarget, "database"),
       pCache(pCacheInit),
-      configMap(configMapInit)
+      configMap(configMapInit),
+      pUuidGenerator(pUuidGeneratorInit)
 {
     openMode = openModeInit;
+    disableDeallocateOld = false;
+}
 
+void Database::init()
+{
     forceTxns = configMap.getBoolParam(paramForceTxns);
+    disableSnapshots = configMap.getBoolParam(paramDisableSnapshots);
 
     // NOTE:  do this early in case other initialization throws exceptions
     // (and to prevent thread-safety issues later on)
@@ -100,7 +126,7 @@ Database::Database(
         FennelResource::setResourceFileLocation(resourceDir);
     }
     FennelResource::instance();
-    
+
     dataDeviceId = DeviceId(1);
     shadowDeviceId = DeviceId(2);
     txnLogDeviceId = DeviceId(3);
@@ -111,11 +137,11 @@ Database::Database(
 
     header.versionNumber = SegVersionNum(0);
     recoveryRequired = false;
-    
+
     // REVIEW:  Have to do this so that later assignments from header to stored
     // data work correctly.  But it breaks encapsulation.  Find a better way.
     header.magicNumber = DatabaseHeader::MAGIC_NUMBER;
-    
+
     // TODO:  use boost filesystem library for platform-independent path
     // manipulation
     std::string databaseDir = configMap.getStringParam(paramDatabaseDir);
@@ -130,12 +156,8 @@ Database::Database(
     nCheckpoints = nCheckpointsStat = 0;
 
     pSegmentFactory = SegmentFactory::newSegmentFactory(
-        configMap,pTraceTarget);
+        configMap, getSharedTraceTarget());
 
-    if (FileSystem::doesFileExist(tempDeviceName.c_str())) {
-        FileSystem::remove(tempDeviceName.c_str());
-    }
-    
     if (!openMode.create) {
         // TODO:  real excn
         assert(FileSystem::doesFileExist(dataDeviceName.c_str()));
@@ -153,32 +175,40 @@ void Database::prepareForRecovery()
     FENNEL_TRACE(TRACE_WARNING, "recovery required");
     recoveryRequired = true;
     createTempSegment();
-    createDataDevice();
+    LinearDeviceSegmentParams dataDeviceParams;
+    createDataDevice(dataDeviceParams);
     loadHeader(true);
     writeHeader();
     SharedSegment pShadowLogSegment = createShadowLog(openMode);
-    createDataSegment(pShadowLogSegment);
+    createDataSegment(pShadowLogSegment, dataDeviceParams);
 }
 
 void Database::openSegments()
 {
-    FENNEL_TRACE(TRACE_INFO, "opening database");
-    
+#ifdef NDEBUG
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --with-optimization");
+#else
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --without-optimization");
+#endif
+    FENNEL_TRACE(TRACE_INFO, "opening database; process ID = " << getpid());
+
     pCheckpointThread = SharedCheckpointThread(
         new CheckpointThread(*this),
         ClosableObjectDestructor());
-    
+
     createTempSegment();
 
-    header.onlineUuid.generate();
-    
+    pUuidGenerator->generateUuid(header.onlineUuid);
+    FENNEL_TRACE(TRACE_INFO, "online UUID = " << header.onlineUuid);
+
     DeviceMode txnLogMode = openMode;
     txnLogMode.create = true;
     txnLogMode.direct = true;
     createTxnLog(txnLogMode);
 
-    createDataDevice();
-    
+    LinearDeviceSegmentParams dataDeviceParams;
+    createDataDevice(dataDeviceParams);
+
     if (openMode.create) {
         // online UUID will be written out by allocateHeader
         allocateHeader();
@@ -195,13 +225,13 @@ void Database::openSegments()
     shadowMode.direct = true;
 
     SharedSegment pShadowLogSegment = createShadowLog(shadowMode);
-    createDataSegment(pShadowLogSegment);
-    
+    createDataSegment(pShadowLogSegment, dataDeviceParams);
+
     FENNEL_TRACE(
         TRACE_INFO,
         "database opened; page version = "
         << header.versionNumber);
-    
+
     if (!openMode.create) {
         checkpointImpl();
     }
@@ -222,15 +252,28 @@ void Database::closeImpl()
         pCheckpointThread->close();
     }
 
+    // Free any leftover temp pages used for page versioning
+    if (pDataSegment && areSnapshotsEnabled()) {
+        VersionedRandomAllocationSegment *pVersionedRandomSegment =
+            SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+                pDataSegment);
+        pVersionedRandomSegment->freeTempPages();
+    }
+
     // Verify that no garbage temp pages remain allocated.
     if (pTempSegment) {
         assert(pTempSegment->getAllocatedSizeInPages() == 0);
-    }        
-    
+    }
+
     if (isRecoveryRequired()) {
         closeDevices();
     } else {
-        checkpointImpl();
+        // NOTE jvs 14-Nov-2006:  In case we're auto-closing after
+        // a failed startup, skip checkpoint if we don't have
+        // everything we need for it.
+        if (pTxnLog && pDataSegment) {
+            checkpointImpl();
+        }
         closeDevices();
         deleteLogs();
     }
@@ -247,19 +290,32 @@ void Database::closeDevices()
     // REVIEW: have to explicitly close in case someone (like a recovery
     // factory) else still has a segment reference; should probably find a
     // better way to deal with this
-    pDataSegment->close();
-    pDataSegment.reset();
-    pHeaderSegment.reset();
-    pTempSegment->close();
-    pTempSegment.reset();
-
-    // for incomplete recovery, this device may not have been opened yet
-    if (pCache->getDevice(txnLogDeviceId)) {
-        pCache->unregisterDevice(txnLogDeviceId);
+    if (pDataSegment) {
+        pDataSegment->close();
+        pDataSegment.reset();
     }
-    pCache->unregisterDevice(shadowDeviceId);
-    pCache->unregisterDevice(dataDeviceId);
-    pCache->unregisterDevice(tempDeviceId);
+    pHeaderSegment.reset();
+    if (pTempSegment) {
+        pTempSegment->close();
+        pTempSegment.reset();
+    }
+
+    // for incomplete recovery or startup, these devices may not have been
+    // opened yet
+    if (pCache) {
+        if (pCache->getDevice(txnLogDeviceId)) {
+            pCache->unregisterDevice(txnLogDeviceId);
+        }
+        if (pCache->getDevice(shadowDeviceId)) {
+            pCache->unregisterDevice(shadowDeviceId);
+        }
+        if (pCache->getDevice(dataDeviceId)) {
+            pCache->unregisterDevice(dataDeviceId);
+        }
+        if (pCache->getDevice(tempDeviceId)) {
+            pCache->unregisterDevice(tempDeviceId);
+        }
+    }
 }
 
 void Database::deleteLogs()
@@ -272,7 +328,7 @@ void Database::deleteLogs()
     // instead of current_path()
     directory_iterator end_itr;
     for (directory_iterator itr(current_path()); itr != end_itr; ++itr) {
-        std::string filename = itr->leaf();
+        std::string filename = itr->path().filename();
         // TODO jvs 25-June-2005:  encapsulate filename parsing in
         // LogicalRecoveryLog
         if (filename.length() < 4) {
@@ -289,16 +345,16 @@ void Database::deleteLogs()
 }
 
 SharedSegment Database::createTxnLogSegment(
-    DeviceMode txnLogMode,PageId oldestPageId)
+    DeviceMode txnLogMode, PageId oldestPageId)
 {
     SharedRandomAccessDevice pTxnLogDevice(
-        new RandomAccessFileDevice(txnLogDeviceName,txnLogMode));
-    pCache->registerDevice(txnLogDeviceId,pTxnLogDevice);
+        new RandomAccessFileDevice(txnLogDeviceName, txnLogMode));
+    pCache->registerDevice(txnLogDeviceId, pTxnLogDevice);
 
     LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramTxnLogPrefix,txnLogMode,deviceParams);
-    CompoundId::setDeviceId(deviceParams.firstBlockId,txnLogDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    readDeviceParams(paramTxnLogPrefix, txnLogMode, deviceParams);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, txnLogDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     if (forceTxns) {
         deviceParams.nPagesAllocated = 0;
     } else {
@@ -306,7 +362,7 @@ SharedSegment Database::createTxnLogSegment(
         deviceParams.nPagesIncrement = 0;
         deviceParams.nPagesMax = deviceParams.nPagesMin;
     }
-    
+
     SharedSegment pLinearSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
@@ -317,17 +373,17 @@ SharedSegment Database::createTxnLogSegment(
         pTxnLogSegment = pLinearSegment;
     } else {
         pTxnLogSegment = pSegmentFactory->newCircularSegment(
-            pLinearSegment,pCheckpointThread,oldestPageId);
+            pLinearSegment, pCheckpointThread, oldestPageId);
     }
-        
+
     return pTxnLogSegment;
 }
 
 void Database::createTxnLog(DeviceMode txnLogMode)
 {
     SharedSegment pTxnLogSegment = createTxnLogSegment(
-        txnLogMode,NULL_PAGE_ID);
-    SegmentAccessor segmentAccessor(pTxnLogSegment,pCache);
+        txnLogMode, NULL_PAGE_ID);
+    SegmentAccessor segmentAccessor(pTxnLogSegment, pCache);
     pTxnLog = LogicalTxnLog::newLogicalTxnLog(
         segmentAccessor,
         header.onlineUuid,
@@ -338,13 +394,13 @@ void Database::createTxnLog(DeviceMode txnLogMode)
 SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
 {
     SharedRandomAccessDevice pShadowDevice(
-        new RandomAccessFileDevice(shadowDeviceName,shadowLogMode));
-    pCache->registerDevice(shadowDeviceId,pShadowDevice);
+        new RandomAccessFileDevice(shadowDeviceName, shadowLogMode));
+    pCache->registerDevice(shadowDeviceId, pShadowDevice);
 
     LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramShadowLogPrefix,shadowLogMode,deviceParams);
-    CompoundId::setDeviceId(deviceParams.firstBlockId,shadowDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    readDeviceParams(paramShadowLogPrefix, shadowLogMode, deviceParams);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, shadowDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
 
     if (forceTxns) {
         if (shadowLogMode.create) {
@@ -360,7 +416,7 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
         deviceParams.nPagesIncrement = 0;
         deviceParams.nPagesMax = deviceParams.nPagesMin;
     }
-    
+
     SharedSegment pShadowSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
@@ -377,29 +433,39 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
             pCheckpointThread,
             oldestPageId);
     }
-    
+
     return pSegmentFactory->newWALSegment(pShadowSegment);
 }
 
-void Database::createDataDevice()
+void Database::createDataDevice(LinearDeviceSegmentParams &deviceParams)
 {
-    SharedRandomAccessDevice pDataDevice(
-        new RandomAccessFileDevice(dataDeviceName,openMode));
-    pCache->registerDevice(dataDeviceId,pDataDevice);
+    readDeviceParams(paramDatabasePrefix, openMode, deviceParams);
+
+    FileSize initialSize = FileSize(0);
+    if (shouldForceTxns()) {
+        // include +2 for the database header pages
+        initialSize = (deviceParams.nPagesMin + 2) * pCache->getPageSize();
+    }
+
+    pDataDevice =
+        SharedRandomAccessDevice(
+            new RandomAccessFileDevice(
+                dataDeviceName,
+                openMode,
+                initialSize));
+    pCache->registerDevice(dataDeviceId, pDataDevice);
 }
 
 void Database::createDataSegment(
-    SharedSegment pShadowLogSegment)
+    SharedSegment pShadowLogSegment,
+    LinearDeviceSegmentParams &deviceParams)
 {
-    LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramDatabasePrefix,openMode,deviceParams);
-    
     // first data BlockId is located after the two database header pages
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,2);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 2);
 
     deviceParams.nPagesAllocated = MAXU;
-    
+
     SharedSegment pDataDeviceSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
@@ -415,10 +481,22 @@ void Database::createDataSegment(
     pVersionedSegment = SegmentFactory::dynamicCast<VersionedSegment *>(
         pVersionedDataSegment);
 
-    pDataSegment =
-        pSegmentFactory->newRandomAllocationSegment(
-            pVersionedDataSegment,
-            openMode.create);
+    // If recovery is required, defer initializing the data segment for use
+    // until after recovery has completed.
+    if (areSnapshotsEnabled()) {
+        pDataSegment =
+            pSegmentFactory->newVersionedRandomAllocationSegment(
+                pVersionedDataSegment,
+                pTempSegment,
+                openMode.create,
+                recoveryRequired);
+    } else {
+        pDataSegment =
+            pSegmentFactory->newRandomAllocationSegment(
+                pVersionedDataSegment,
+                openMode.create,
+                recoveryRequired);
+    }
 }
 
 void Database::createTempSegment()
@@ -428,20 +506,24 @@ void Database::createTempSegment()
     // issues.
     DeviceMode tempMode = openMode;
     tempMode.create = !FileSystem::doesFileExist(tempDeviceName.c_str());
-    
+
+    LinearDeviceSegmentParams deviceParams;
+    readDeviceParams(paramTempPrefix, tempMode, deviceParams);
+    FileSize initialSize = FileSize(0);
+    if (shouldForceTxns()) {
+        initialSize = deviceParams.nPagesMin * pCache->getPageSize();
+    }
+
     SharedRandomAccessDevice pTempDevice(
-        new RandomAccessFileDevice(tempDeviceName,tempMode));
-    pCache->registerDevice(tempDeviceId,pTempDevice);
+        new RandomAccessFileDevice(tempDeviceName, tempMode, initialSize));
+    pCache->registerDevice(tempDeviceId, pTempDevice);
 
     // This forces the full device size to be used.
     tempMode.create = false;
-    
-    LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramTempPrefix,tempMode,deviceParams);
-    
+
     // no header for temp device
-    CompoundId::setDeviceId(deviceParams.firstBlockId,tempDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, tempDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
 
     SharedSegment pTempDeviceSegment =
         pSegmentFactory->newLinearDeviceSegment(
@@ -480,13 +562,19 @@ SharedCheckpointThread Database::getCheckpointThread() const
     return pCheckpointThread;
 }
 
-SharedSegment Database::getSegmentById(SegmentId segmentId)
+SharedSegment Database::getSegmentById(
+    SegmentId segmentId,
+    SharedSegment pDataSegment)
 {
     if (segmentId == TEMP_SEGMENT_ID) {
         return getTempSegment();
     } else {
         assert(segmentId == DEFAULT_DATA_SEGMENT_ID);
-        return getDataSegment();
+        if (pDataSegment) {
+            return pDataSegment;
+        } else {
+            return getDataSegment();
+        }
     }
 }
 
@@ -503,17 +591,18 @@ SharedLogicalTxnLog Database::getTxnLog() const
 void Database::allocateHeader()
 {
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     pHeaderSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
             deviceParams);
 
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock(segmentAccessor);
-        
+
     PageId pageId;
+    pTxnLog->setNextTxnId(FIRST_TXN_ID);
     pageId = headerPageLock.allocatePage();
     assert(pageId == headerPageId1);
     headerPageLock.getNodeForWrite() = header;
@@ -527,21 +616,27 @@ void Database::allocateHeader()
 void Database::loadHeader(bool recovery)
 {
     LinearDeviceSegmentParams deviceParams;
-    CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
-    CompoundId::setBlockNum(deviceParams.firstBlockId,0);
+    CompoundId::setDeviceId(deviceParams.firstBlockId, dataDeviceId);
+    CompoundId::setBlockNum(deviceParams.firstBlockId, 0);
     deviceParams.nPagesAllocated = 2;
     deviceParams.nPagesMax = 2;
     pHeaderSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
             deviceParams);
-    
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock1(segmentAccessor);
     headerPageLock1.lockShared(headerPageId1);
+    if (!headerPageLock1.checkMagicNumber()) {
+        throw DataFormatExcn();
+    }
 
     DatabaseHeaderPageLock headerPageLock2(segmentAccessor);
     headerPageLock2.lockShared(headerPageId2);
+    if (!headerPageLock2.checkMagicNumber()) {
+        throw DataFormatExcn();
+    }
 
     DatabaseHeader const &header1 = headerPageLock1.getNodeForRead();
     DatabaseHeader const &header2 = headerPageLock2.getNodeForRead();
@@ -557,6 +652,15 @@ void Database::loadHeader(bool recovery)
         // REVIEW:  should assert other fields equal as well?
         header = header1;
     }
+    if (pTxnLog) {
+        TxnId nextTxnId = header.txnLogCheckpointMemento.nextTxnId;
+        pTxnLog->setNextTxnId(nextTxnId);
+    }
+}
+
+TxnId Database::getLastCommittedTxnId()
+{
+    return header.txnLogCheckpointMemento.nextTxnId - 1;
 }
 
 void Database::checkpointImpl(CheckpointType checkpointType)
@@ -583,7 +687,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
             // tests and CHECKPOINT_DISCARD used to implement rollback
             // as part of forceTxns.
             LogicalTxnLogCheckpointMemento crashMemento;
-            pTxnLog->checkpoint(crashMemento,checkpointType);
+            pTxnLog->checkpoint(crashMemento, checkpointType);
         }
         return;
     }
@@ -600,7 +704,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
     writeHeader();
     pVersionedSegment->deallocateCheckpointedLog(checkpointType);
     pTxnLog->deallocateCheckpointedLog(
-        header.txnLogCheckpointMemento,checkpointType);
+        header.txnLogCheckpointMemento, checkpointType);
 
     StrictMutexGuard mutexGuard(mutex);
     // TODO:  provide a counter which records the amount of data flushed by the
@@ -610,7 +714,7 @@ void Database::checkpointImpl(CheckpointType checkpointType)
     condition.notify_all();
 }
 
-void Database::requestCheckpoint(CheckpointType checkpointType,bool async)
+void Database::requestCheckpoint(CheckpointType checkpointType, bool async)
 {
     StrictMutexGuard mutexGuard(mutex);
     uint nCheckpointsBefore = nCheckpoints;
@@ -641,17 +745,17 @@ void Database::writeHeader()
     // NOTE:  use synchronous writes to guarantee that first write completes
     // before second one starts (otherwise a crash could leave both copies
     // corrupted)
-    
-    SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
+
+    SegmentAccessor segmentAccessor(pHeaderSegment, pCache);
     DatabaseHeaderPageLock headerPageLock(segmentAccessor);
-    
+
     headerPageLock.lockExclusive(headerPageId1);
     headerPageLock.getNodeForWrite() = header;
-    pCache->flushPage(headerPageLock.getPage(),false);
-    
+    pCache->flushPage(headerPageLock.getPage(), false);
+
     headerPageLock.lockExclusive(headerPageId2);
     headerPageLock.getNodeForWrite() = header;
-    pCache->flushPage(headerPageLock.getPage(),false);
+    pCache->flushPage(headerPageLock.getPage(), false);
 }
 
 void Database::recoverOnline()
@@ -661,7 +765,7 @@ void Database::recoverOnline()
     // Updated pages are handled by recovery from the log, but newly allocated
     // pages are not.  They will be clean, so they shouldn't really cause any
     // trouble, but their presence could be, at a minimum, confusing.
-    
+
     assert(forceTxns);
     header.shadowRecoveryPageId =
         pVersionedSegment->getOnlineRecoveryPageId();
@@ -670,6 +774,9 @@ void Database::recoverOnline()
 
     // after recovery, flush recovered data pages; no need to discard them
     recoverPhysical(CHECKPOINT_FLUSH_ALL);
+
+    // this will bump up version number to be used by further page writes
+    checkpointImpl(CHECKPOINT_FLUSH_ALL);
 }
 
 void Database::recover(
@@ -679,14 +786,14 @@ void Database::recover(
 
     // REVIEW:  are shadows being correctly logged during recovery?  They have
     // to be, otherwise we can't re-recover after a failed recovery.
-    
+
     // TODO:  encapsulate memento->PageId translation in txn somewhere
     SharedSegment pTxnLogSegment = createTxnLogSegment(
         openMode,
         CompoundId::getPageId(
             header.txnLogCheckpointMemento.logPosition.segByteId));
-    
-    SegmentAccessor logSegmentAccessor(pTxnLogSegment,pCache);
+
+    SegmentAccessor logSegmentAccessor(pTxnLogSegment, pCache);
 
     SharedLogicalRecoveryLog pRecoveryLog =
         LogicalRecoveryLog::newLogicalRecoveryLog(
@@ -701,7 +808,7 @@ void Database::recover(
     pRecoveryLog.reset();
     assert(pTxnLogSegment.unique());
     pTxnLogSegment.reset();
-    
+
     closeDevices();
     deleteLogs();
     FENNEL_TRACE(TRACE_INFO, "recovery completed");
@@ -714,7 +821,7 @@ void Database::recoverPhysical(CheckpointType checkpointType)
     assert(!openMode.create);
     assert(isRecoveryRequired());
     recoveryRequired = false;
-    
+
     FENNEL_TRACE(
         TRACE_INFO,
         "recovery beginning; page version = "
@@ -722,8 +829,10 @@ void Database::recoverPhysical(CheckpointType checkpointType)
 
     if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
         pVersionedSegment->recover(
-            header.shadowRecoveryPageId, header.versionNumber);
-        pVersionedSegment->checkpoint(checkpointType);
+            pDataSegment,
+            header.shadowRecoveryPageId,
+            header.versionNumber);
+        pDataSegment->checkpoint(checkpointType);
         header.versionNumber = pVersionedSegment->getVersionNumber();
         header.shadowRecoveryPageId = NULL_PAGE_ID;
         writeHeader();
@@ -774,12 +883,366 @@ void Database::writeStats(StatsTarget &target)
         "DatabaseCheckpoints", nCheckpointsStat);
     target.writeCounter(
         "DatabaseCheckpointsSinceInit", nCheckpoints);
+    if (pDataSegment) {
+        target.writeCounter(
+            "DatabasePagesAllocated", pDataSegment->getAllocatedSizeInPages());
+        // +2 for the database header pages
+        target.writeCounter(
+            "DatabasePagesOccupiedHighWaterSinceInit",
+            pDataSegment->getNumPagesOccupiedHighWater() + 2);
+        target.writeCounter(
+            "DatabasePagesExtendedSinceInit",
+            pDataSegment->getNumPagesExtended());
+    }
+    if (pTempSegment) {
+        target.writeCounter(
+            "TempPagesAllocated", pTempSegment->getAllocatedSizeInPages());
+        target.writeCounter(
+            "TempPagesOccupiedHighWaterSinceInit",
+            pTempSegment->getNumPagesOccupiedHighWater());
+        target.writeCounter(
+            "TempPagesExtendedSinceInit",
+            pTempSegment->getNumPagesExtended());
+    }
     nCheckpointsStat = 0;
 }
 
 bool Database::shouldForceTxns() const
 {
     return forceTxns;
+}
+
+bool Database::areSnapshotsEnabled() const
+{
+    return (forceTxns && !disableSnapshots);
+}
+
+void Database::deallocateOldPages(TxnId oldestLabelCsn)
+{
+    uint iSegAlloc = 0;
+    ExtentNum extentNum = 0;
+    // REVIEW zfong 3/12/07 - Determine a good value for numPages.  This
+    // corresponds to the number of pages we will deallocate during a single
+    // iteration.  We will be holding the checkpoint mutex for the duration
+    // of an iteration so we don't want to make the value too big.  But at
+    // the same time, we don't want to make it too small either, because it
+    // would then require a large number of iterations to clean out all old
+    // pages.
+    uint numPages = 100;
+
+    // Determine the oldest active txnId.
+    TxnId oldestActiveTxnId = pTxnLog->getOldestActiveTxnId();
+
+    // Take the minimum of the oldest active txnId and the
+    // oldest active label + 1, if there are any active labels.
+    // +1 because txns using that label will have ids bigger than that
+    // label's csn.
+    TxnId oldestTxnId;
+    if (oldestLabelCsn == NULL_TXN_ID) {
+        oldestTxnId = oldestActiveTxnId;
+    } else {
+        oldestTxnId = std::min(oldestActiveTxnId, oldestLabelCsn + 1);
+    }
+
+    // Gather a batch of old pageIds and then deallocate them.  After each
+    // deallocation, issue a checkpoint to flush the modified allocation
+    // node pages.  Continue this in a loop until we've read through all
+    // allocation node pages.
+
+    PageSet oldPageSet;
+    VersionedRandomAllocationSegment *pVersionedRandomSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+    bool morePages = true;
+    do {
+        morePages =
+            pVersionedRandomSegment->getOldPageIds(
+                iSegAlloc,
+                extentNum,
+                oldestTxnId,
+                numPages,
+                oldPageSet);
+
+        // Hold the checkpoint mutex while deallocating old pages, if there
+        // are pages to deallocate.
+        if (!oldPageSet.empty()) {
+            SXMutexSharedGuard actionMutexGuard(
+                pCheckpointThread->getActionMutex());
+            if (disableDeallocateOld) {
+                return;
+            }
+            pVersionedRandomSegment->deallocateOldPages(
+                oldPageSet,
+                oldestTxnId);
+
+            actionMutexGuard.unlock();
+            requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
+            oldPageSet.clear();
+        }
+    } while (morePages);
+}
+
+TxnId Database::initiateBackup(
+    const std::string &backupFilePathname,
+    bool checkSpaceRequirements,
+    FileSize spacePadding,
+    TxnId lowerBoundCsn,
+    const std::string &compressionProgram,
+    FileSize &dataDeviceSize,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel metadata backup");
+
+    // Snapshots must be enabled
+    if (!areSnapshotsEnabled()) {
+        throw FennelExcn(
+            FennelResource::instance().unsupportedOperation("System backup"));
+    }
+
+    // Hold the checkpoint mutex while backing up the header and allocation
+    // node pages
+    SXMutexSharedGuard actionMutexGuard(pCheckpointThread->getActionMutex());
+
+    // Another backup should not have already been initiated
+    assert(!disableDeallocateOld);
+    assert(pBackupRestoreDevice == NULL);
+
+    // The upper bound csn for this backup is the txnId of the last committed,
+    // write txn.  Note that the next txnId to be assigned may be a larger
+    // value because of read-only txns.  But we don't care about read-only
+    // txns.  We just want the txnId that's in sync with what's reflected in
+    // the header.
+    TxnId upperBoundCsn = getLastCommittedTxnId();
+
+    disableDeallocateOld = true;
+    dataDeviceSize = pDataDevice->getSizeInBytes();
+
+    // Use the prefetch setting to determine how many scratch pages to
+    // allocate.  Note that these scratch pages are not being accounted
+    // for in the resource governor and come from the reserve pool that
+    // the resource governor currently sets aside.
+    uint nScratchPages, rate;
+    pCache->getPrefetchParams(nScratchPages, rate);
+
+    scratchAccessor = pSegmentFactory->newScratchSegment(pCache);
+    pBackupRestoreDevice =
+        SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
+             backupFilePathname,
+#ifdef __MSVC__
+             "wb",
+#else
+             "w",
+#endif
+             compressionProgram,
+             nScratchPages,
+             2,
+             scratchAccessor,
+             pCache->getDeviceAccessScheduler(*pDataDevice),
+             pDataDevice);
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+
+    try {
+        pBackupRestoreDevice->backupPage(
+            pHeaderSegment->translatePageId(headerPageId1));
+        pBackupRestoreDevice->backupPage(
+            pHeaderSegment->translatePageId(headerPageId2));
+        // First wait for writes of the header pages to complete before backing
+        // up the allocation node pages.
+        pBackupRestoreDevice->waitForPendingWrites();
+        BlockNum nDataPages =
+            pVRSegment->backupAllocationNodes(
+                pBackupRestoreDevice,
+                checkSpaceRequirements,
+                lowerBoundCsn,
+                upperBoundCsn,
+                aborted);
+
+        // Verify space if specified, now that we know how many data pages
+        // will be backed up
+        if (checkSpaceRequirements) {
+            FileSize spaceAvailable;
+            FileSystem::getDiskFreeSpace(
+                backupFilePathname.c_str(),
+                spaceAvailable);
+            FileSize spaceRequired =
+                nDataPages * pDataSegment->getFullPageSize();
+            // TODO zfong 9/16/08 - Revisit the compression factor after more
+            // testing.  Set conservatively to 5, for now.
+            if (compressionProgram.length() != 0) {
+                spaceRequired /= 5;
+            }
+            spaceRequired += spacePadding;
+            if (spaceAvailable < spaceRequired) {
+                throw FennelExcn(FennelResource::instance().outOfBackupSpace());
+            }
+        }
+    } catch (...) {
+        cleanupBackupRestore(true);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel metadata backup");
+    return upperBoundCsn;
+}
+
+void Database::completeBackup(
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel data page backup");
+    assert(disableDeallocateOld);
+    assert(pBackupRestoreDevice != NULL);
+
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+    try {
+        pVRSegment->backupDataPages(
+            pBackupRestoreDevice,
+            lowerBoundCsn,
+            upperBoundCsn,
+            aborted);
+        cleanupBackupRestore(true);
+    } catch (...) {
+        cleanupBackupRestore(true);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel data page backup");
+}
+
+void Database::abortBackup()
+{
+    FENNEL_TRACE(TRACE_FINE, "Aborting Fennel backup");
+    cleanupBackupRestore(true);
+}
+
+void Database::restoreFromBackup(
+    const std::string &backupFilePathname,
+    FileSize newSize,
+    const std::string &compressionProgram,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel restore");
+
+    // Snapshots must be enabled
+    if (!areSnapshotsEnabled()) {
+        throw FennelExcn(
+            FennelResource::instance().unsupportedOperation("System restore"));
+    }
+
+    // Verify that the last committed csn in the database header matches the
+    // lower bound csn.
+    if (lowerBoundCsn != NULL_TXN_ID) {
+        TxnId headerTxnId = getLastCommittedTxnId();
+        if (headerTxnId != lowerBoundCsn) {
+            throw FennelExcn(
+                FennelResource::instance().mismatchedRestore());
+        }
+    }
+
+    pDataDevice->setSizeInBytes(newSize);
+
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+
+    uint nScratchPages, rate;
+    pCache->getPrefetchParams(nScratchPages, rate);
+
+    scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache);
+    pBackupRestoreDevice =
+        SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
+             backupFilePathname,
+#ifdef __MSVC__
+             "rb",
+#else
+             "r",
+#endif
+             compressionProgram,
+             nScratchPages,
+             0,
+             scratchAccessor,
+             pCache->getDeviceAccessScheduler(*pDataDevice),
+             pDataDevice);
+
+    // Flush and unmap pages from the cache that will be restored, i.e., any
+    // VersionedRandomAllocationSegment or database header pages, including
+    // the header page just read above.  We need to unmap these pages to
+    // ensure that the restore doesn't read old pages.
+    MappedPageListenerPredicate dataPredicate(*pVRSegment);
+    pCache->checkpointPages(dataPredicate, CHECKPOINT_FLUSH_AND_UNMAP);
+    MappedPageListenerPredicate headerPredicate(*pHeaderSegment);
+    pCache->checkpointPages(headerPredicate, CHECKPOINT_FLUSH_AND_UNMAP);
+
+    try {
+        // Restore the rest of the pages, including the database header pages
+        pBackupRestoreDevice->restorePage(
+            pHeaderSegment->translatePageId(headerPageId1));
+        pBackupRestoreDevice->restorePage(
+            pHeaderSegment->translatePageId(headerPageId2));
+        pVRSegment->restoreFromBackup(
+            pBackupRestoreDevice,
+            lowerBoundCsn,
+            upperBoundCsn,
+            aborted);
+        cleanupBackupRestore(false);
+    } catch (...) {
+        cleanupBackupRestore(false);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    // Reload the header pages so future checkpoints will flush the
+    // restored data.  Issue a recover call on the versioned segment
+    // to reset the version number and online uuid to the values that are
+    // now in the header.
+    loadHeader(false);
+    pVersionedSegment->recover(
+        pDataSegment,
+        NULL_PAGE_ID,
+        header.versionNumber,
+        header.onlineUuid);
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel restore");
+}
+
+void Database::cleanupBackupRestore(bool isBackup)
+{
+    if (pBackupRestoreDevice) {
+        pBackupRestoreDevice.reset();
+    }
+    if (scratchAccessor.pSegment) {
+        scratchAccessor.reset();
+    }
+    if (isBackup) {
+        SXMutexSharedGuard actionMutexGuard(
+            pCheckpointThread->getActionMutex());
+        disableDeallocateOld = false;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -1,0 +1,45 @@
+0: jdbc:luciddb:> -- test the drop_schema_if_exists UDP
+0: jdbc:luciddb:> create schema TESTSCHEMA;
+0: jdbc:luciddb:> set schema 'TESTSCHEMA';
+0: jdbc:luciddb:> create table T(col1 varchar(255), col2 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to drop schema with 'RESTRICT'. should fail quietly.
+0: jdbc:luciddb:> call applib.drop_schema_if_exists('TESTSCHEMA', 'RESTRICT');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to provide some other option than 'RESTRICT' or 'CASCADE'. should give a nice error.
+0: jdbc:luciddb:> call applib.drop_schema_if_exists('TESTSCHEMA', 'CASTICT');
+Error: Syntax error: parameter must be either 'RESTRICT' or 'CASCADE'. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- see that the schema and it's table is still there
+0: jdbc:luciddb:> select SCHEMA_NAME from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = 'TESTSCHEMA';
++--------------+
+| SCHEMA_NAME  |
++--------------+
+| TESTSCHEMA   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to drop schema with 'CASCADE'. should work.
+0: jdbc:luciddb:> call applib.drop_schema_if_exists('TESTSCHEMA', 'CASCADE');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- see that the schema is gone.
+0: jdbc:luciddb:> select SCHEMA_NAME from SYS_ROOT.DBA_SCHEMAS where SCHEMA_NAME = 'TESTSCHEMA';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to delete a schema that does not exist. should fail quietly.
+0: jdbc:luciddb:> call applib.drop_schema_if_exists('NON_EXISTING_SCHEMA', 'RESTRICT');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to delete an empty schema with 'RESTRICT'.
+0: jdbc:luciddb:> create schema TESTSCHEMA;
+0: jdbc:luciddb:> call applib.drop_schema_if_exists('TESTSCHEMA', 'RESTRICT');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- see that the schema is gone.
+0: jdbc:luciddb:> select SCHEMA_NAME from SYS_ROOT.DBA_SCHEMAS where SCHEMA_NAME = 'TESTSCHEMA';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,7 @@
 #include "fennel/cache/RandomVictimPolicy.h"
 #include <boost/test/test_tools.hpp>
 
+
 #include <functional>
 
 using namespace fennel;
@@ -48,7 +49,7 @@ void PagingTestBase::threadTerminate()
     g_pRNG.reset();
     ThreadedTestBase::threadTerminate();
 }
-    
+
 uint PagingTestBase::generateRandomNumber(uint iMax)
 {
     return (*g_pRNG)(iMax);
@@ -58,9 +59,9 @@ void PagingTestBase::fillPage(CachePage &page,uint x)
 {
     uint *p = reinterpret_cast<uint *>(page.getWritableData());
     assert(cbPageUsable);
-    uint n = cbPageUsable/sizeof(uint);
+    uint n = cbPageUsable / sizeof(uint);
     for (uint i = 0; i < n; i++) {
-        p[i] = x+i;
+        p[i] = x + i;
     }
     uint r = generateRandomNumber(n);
     p[r] = 0;
@@ -70,10 +71,10 @@ void PagingTestBase::verifyPage(CachePage &page,uint x)
 {
     uint const *p = reinterpret_cast<uint const *>(page.getReadableData());
     assert(cbPageUsable);
-    uint n = cbPageUsable/sizeof(uint);
+    uint n = cbPageUsable / sizeof(uint);
     uint nZeros = 0;
     for (uint i = 0; i < n; i++) {
-        if (p[i] != x+i) {
+        if (p[i] != x + i) {
             assert(!p[i]);
             nZeros++;
         }
@@ -81,7 +82,7 @@ void PagingTestBase::verifyPage(CachePage &page,uint x)
     assert(nZeros < 2);
 }
 
-bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
+bool PagingTestBase::testOp(OpType opType, uint iPage, bool bNice)
 {
     CachePage *pPage = lockPage(opType,iPage);
     LockMode lockMode = getLockMode(opType);
@@ -94,11 +95,11 @@ bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
     if (lockMode == LOCKMODE_S
         || lockMode == LOCKMODE_S_NOWAIT)
     {
-        verifyPage(page,iPage);
+        verifyPage(page, iPage);
     } else {
-        fillPage(page,iPage);
+        fillPage(page, iPage);
     }
-    switch(lockMode) {
+    switch (lockMode) {
     case LOCKMODE_X_NOWAIT:
         lockMode = LOCKMODE_X;
         break;
@@ -111,13 +112,13 @@ bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
     if (bNice) {
         getCache().nicePage(page);
     }
-    unlockPage(page,lockMode);
+    unlockPage(page, lockMode);
     return true;
 }
 
-char const *PagingTestBase::getOpName(OpType opType) 
+char const *PagingTestBase::getOpName(OpType opType)
 {
-    switch(opType) {
+    switch (opType) {
     case OP_ALLOCATE:
         return "allocate";
     case OP_READ_SEQ:
@@ -132,6 +133,8 @@ char const *PagingTestBase::getOpName(OpType opType)
         return "read no-wait";
     case OP_WRITE_NOWAIT:
         return "write no-wait";
+    case OP_WRITE_SKIP:
+        return "write every n pages";
     default:
         permAssert(false);
     }
@@ -139,7 +142,7 @@ char const *PagingTestBase::getOpName(OpType opType)
 
 LockMode PagingTestBase::getLockMode(OpType opType)
 {
-    switch(opType) {
+    switch (opType) {
     case OP_ALLOCATE:
         return LOCKMODE_X;
     case OP_READ_SEQ:
@@ -154,6 +157,8 @@ LockMode PagingTestBase::getLockMode(OpType opType)
         return LOCKMODE_S_NOWAIT;
     case OP_WRITE_NOWAIT:
         return LOCKMODE_X_NOWAIT;
+    case OP_WRITE_SKIP:
+        return LOCKMODE_X;
     default:
         permAssert(false);
     }
@@ -163,7 +168,7 @@ void PagingTestBase::testSequentialOp(OpType opType)
 {
     uint n = 0;
     for (uint i = 0; i < nDiskPages; i++) {
-        if (testOp(opType,i,true)) {
+        if (testOp(opType, i, true)) {
             n++;
         }
     }
@@ -171,29 +176,42 @@ void PagingTestBase::testSequentialOp(OpType opType)
     BOOST_MESSAGE(
         "completed " << n << " " << getOpName(opType) << " ops");
 }
-    
+
 void PagingTestBase::testRandomOp(OpType opType)
 {
     uint n = 0;
     for (uint i = 0; i < nRandomOps; i++) {
         uint iPage = generateRandomNumber(nDiskPages);
         bool bNice = (generateRandomNumber(nRandomOps) == 0);
-        if (testOp(opType,iPage,bNice)) {
+        if (testOp(opType, iPage, bNice)) {
             n++;
         }
     }
     StrictMutexGuard mutexGuard(logMutex);
     BOOST_MESSAGE(
         "completed " << n << " " << getOpName(opType) << " ops");
-    
+
+}
+
+void PagingTestBase::testSkipOp(OpType opType, uint n)
+{
+    uint numOps = 0;
+    for (uint i = 0; i < nDiskPages; i += n) {
+        if (testOp(opType, i, true)) {
+            numOps++;
+        }
+    }
+    StrictMutexGuard mutexGuard(logMutex);
+    BOOST_MESSAGE(
+        "completed " << numOps << " " << getOpName(opType) << " ops");
 }
 
 void PagingTestBase::testScratch()
 {
     for (uint i = 0; i < nRandomOps; i++) {
         CachePage &page = getCache().lockScratchPage();
-        fillPage(page,generateRandomNumber(10000));
-        getCache().unlockPage(page,LOCKMODE_X);
+        fillPage(page, generateRandomNumber(10000));
+        getCache().unlockPage(page, LOCKMODE_X);
     }
     StrictMutexGuard mutexGuard(logMutex);
     BOOST_MESSAGE("completed " << nRandomOps << " random scratch ops");
@@ -220,7 +238,7 @@ void PagingTestBase::testPrefetchBatch()
     uint nPagesPerBatch = 4;
     for (uint i = 0; i < n; i++) {
         uint iPage = generateRandomNumber(nDiskPages - nPagesPerBatch);
-        prefetchBatch(iPage,nPagesPerBatch);
+        prefetchBatch(iPage, nPagesPerBatch);
     }
     // give the prefetches a chance to complete
     snooze(1);
@@ -253,11 +271,16 @@ void PagingTestBase::testRandomWrite()
     testRandomOp(OP_WRITE_RAND);
 }
 
+void PagingTestBase::testSkipWrite(uint n)
+{
+    testSkipOp(OP_WRITE_SKIP, n);
+}
+
 void PagingTestBase::testAllocate()
 {
     permAssert(false);
 }
-    
+
 void PagingTestBase::testDeallocate()
 {
     permAssert(false);
@@ -266,7 +289,7 @@ void PagingTestBase::testDeallocate()
 void PagingTestBase::testCheckpoint()
 {
     DeviceIdPagePredicate pagePredicate(dataDeviceId);
-    getCache().checkpointPages(pagePredicate,CHECKPOINT_FLUSH_ALL);
+    getCache().checkpointPages(pagePredicate, CHECKPOINT_FLUSH_ALL);
 }
 
 void PagingTestBase::testCheckpointGuarded()
@@ -284,13 +307,13 @@ void PagingTestBase::testCheckpointGuarded()
 
 void PagingTestBase::testCacheResize()
 {
-    snooze(nSeconds/3);
-    getCache().setAllocatedPageCount(nMemPages/2);
+    snooze(nSeconds / 3);
+    getCache().setAllocatedPageCount(nMemPages / 2);
     StrictMutexGuard mutexGuard(logMutex);
     BOOST_MESSAGE("shrank cache");
     mutexGuard.unlock();
-    snooze(nSeconds/3);
-    getCache().setAllocatedPageCount(nMemPages-1);
+    snooze(nSeconds / 3);
+    getCache().setAllocatedPageCount(nMemPages - 1);
     mutexGuard.lock();
     BOOST_MESSAGE("expanded cache");
     mutexGuard.unlock();
@@ -298,9 +321,10 @@ void PagingTestBase::testCacheResize()
 
 PagingTestBase::PagingTestBase()
 {
-    nRandomOps = configMap.getIntParam("randomOps",5000);
-    nSecondsBetweenCheckpoints = configMap.getIntParam("checkpointInterval",20);
-    bTestResize = configMap.getIntParam("resizeCache",1);
+    nRandomOps = configMap.getIntParam("randomOps", 5000);
+    nSecondsBetweenCheckpoints =
+        configMap.getIntParam("checkpointInterval", 20);
+    bTestResize = configMap.getIntParam("resizeCache", 1);
     checkpointMutex.setSchedulingPolicy(SXMutex::SCHEDULE_FAVOR_EXCLUSIVE);
 
     threadCounts.resize(OP_MAX,-1);
@@ -317,6 +341,8 @@ PagingTestBase::PagingTestBase()
         "readNoWaitThreads",-1);
     threadCounts[OP_WRITE_NOWAIT] = configMap.getIntParam(
         "writeNoWaitThreads",-1);
+    threadCounts[OP_WRITE_SKIP] = configMap.getIntParam(
+        "writeSkipThreads",-1);
     threadCounts[OP_SCRATCH] = configMap.getIntParam(
         "scratchThreads",-1);
     threadCounts[OP_PREFETCH] = configMap.getIntParam(
@@ -339,9 +365,9 @@ PagingTestBase::PagingTestBase()
     } else {
         threadCounts[OP_RESIZE_CACHE] = 0;
     }
-    
+
     cbPageUsable = 0;
-    
+
     threadInit();
 }
 
@@ -352,10 +378,10 @@ PagingTestBase::~PagingTestBase()
 
 bool PagingTestBase::testThreadedOp(int iOp)
 {
-    SXMutexSharedGuard checkpointSharedGuard(checkpointMutex,false);
+    SXMutexSharedGuard checkpointSharedGuard(checkpointMutex, false);
     assert(iOp < OP_MAX);
     OpType op = static_cast<OpType>(iOp);
-    switch(op) {
+    switch (op) {
     case PagingTestBase::OP_WRITE_SEQ:
         checkpointSharedGuard.lock();
         // fall through
@@ -369,6 +395,10 @@ bool PagingTestBase::testThreadedOp(int iOp)
     case PagingTestBase::OP_READ_RAND:
     case PagingTestBase::OP_READ_NOWAIT:
         testRandomOp(op);
+        break;
+    case PagingTestBase::OP_WRITE_SKIP:
+        checkpointSharedGuard.lock();
+        testSkipOp(op, 5);
         break;
     case PagingTestBase::OP_SCRATCH:
         testScratch();

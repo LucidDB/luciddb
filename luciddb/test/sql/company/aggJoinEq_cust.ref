@@ -121,48 +121,46 @@
 +----------+--------------+----------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT min(EMP.LNAME), min(DEPT.DNAME), min(LOCATION.CITY), min(LOCATION.LOCID)
-. . . . . . . . > , LOCATION.LOCID, DEPT.DEPTNO
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
 . . . . . . . . > group by LOCATION.LOCID, DEPT.DEPTNO
 . . . . . . . . > order by LOCATION.LOCID, DEPT.DEPTNO;
-+----------+--------------+----------------+---------+--------+---------+
-|  EXPR$0  |    EXPR$1    |     EXPR$2     | EXPR$3  | LOCID  | DEPTNO  |
-+----------+--------------+----------------+---------+--------+---------+
-| Andrews  | Development  | San Mateo      | HQ      | HQ     | 30      |
-| Nife     | Sales        | San Mateo      | HQ      | HQ     | 40      |
-| Brown    | Support      | Menlo Park     | MP      | MP     | 50      |
-| Fratz    | Accounting   | San Francisco  | SF      | SF     | 10      |
-| Webber   | Marketing    | San Francisco  | SF      | SF     | 20      |
-+----------+--------------+----------------+---------+--------+---------+
++----------+--------------+----------------+---------+
+|  EXPR$0  |    EXPR$1    |     EXPR$2     | EXPR$3  |
++----------+--------------+----------------+---------+
+| Andrews  | Development  | San Mateo      | HQ      |
+| Nife     | Sales        | San Mateo      | HQ      |
+| Brown    | Support      | Menlo Park     | MP      |
+| Fratz    | Accounting   | San Francisco  | SF      |
+| Webber   | Marketing    | San Francisco  | SF      |
++----------+--------------+----------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(EMP.LNAME), count(CUSTOMERS.LNAME), max(PRODUCTS.NAME), sum(SALES.PRICE)
-. . . . . . . . > , PRODUCTS.PRODID
 . . . . . . . . > from CUSTOMERS, SALES, PRODUCTS, EMP
 . . . . . . . . > where CUSTOMERS.CUSTID=SALES.CUSTID and PRODUCTS.PRODID = SALES.PRODID
 . . . . . . . . > and EMP.EMPNO = SALES.EMPNO
 . . . . . . . . > group by PRODUCTS.PRODID
 . . . . . . . . > order by PRODUCTS.PRODID;
-+---------+---------+---------------+---------+---------+
-| EXPR$0  | EXPR$1  |    EXPR$2     | EXPR$3  | PRODID  |
-+---------+---------+---------------+---------+---------+
-| 76      | 76      | Plunger       | 379.32  | 10000   |
-| 67      | 67      | Soap          | 348.61  | 10001   |
-| 77      | 77      | Shampoo       | 416.65  | 10002   |
-| 51      | 51      | Towel         | 225.22  | 10003   |
-| 57      | 57      | Juice         | 296.48  | 10004   |
-| 67      | 67      | Soup          | 287.55  | 10005   |
-| 58      | 58      | Chicken       | 301.03  | 10006   |
-| 72      | 72      | Cookies       | 342.51  | 10007   |
-| 62      | 62      | Telephone     | 329.23  | 10008   |
-| 61      | 61      | Iron          | 307.79  | 10009   |
-| 68      | 68      | Refrigerator  | 394.59  | 10010   |
-| 36      | 36      | Heater        | 174.09  | 10011   |
-| 47      | 47      | Microwave     | 222.65  | 10012   |
-| 68      | 68      | Soda          | 320.88  | 10013   |
-| 77      | 77      | Milk          | 379.93  | 10014   |
-| 56      | 56      | Eggs          | 271.25  | 10015   |
-+---------+---------+---------------+---------+---------+
++---------+---------+---------------+---------+
+| EXPR$0  | EXPR$1  |    EXPR$2     | EXPR$3  |
++---------+---------+---------------+---------+
+| 76      | 76      | Plunger       | 379.32  |
+| 67      | 67      | Soap          | 348.61  |
+| 77      | 77      | Shampoo       | 416.65  |
+| 51      | 51      | Towel         | 225.22  |
+| 57      | 57      | Juice         | 296.48  |
+| 67      | 67      | Soup          | 287.55  |
+| 58      | 58      | Chicken       | 301.03  |
+| 72      | 72      | Cookies       | 342.51  |
+| 62      | 62      | Telephone     | 329.23  |
+| 61      | 61      | Iron          | 307.79  |
+| 68      | 68      | Refrigerator  | 394.59  |
+| 36      | 36      | Heater        | 174.09  |
+| 47      | 47      | Microwave     | 222.65  |
+| 68      | 68      | Soda          | 320.88  |
+| 77      | 77      | Milk          | 379.93  |
+| 56      | 56      | Eggs          | 271.25  |
++---------+---------+---------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select M.LNAME, count(R.LNAME) from EMP M, EMP R
 . . . . . . . . > where M.EMPNO = R.MANAGER group by M.LNAME order by 2, 1;

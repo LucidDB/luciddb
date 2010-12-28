@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,16 +25,9 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -50,19 +43,20 @@ import org.eigenbase.util.*;
 public class FarragoDbSessionPrivilegeChecker
     implements FarragoSessionPrivilegeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSession session;
 
-    private final Map authMap;
+    private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
+
+    private FemRole publicRole;
 
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
         this.session = session;
-        authMap = new HashMap();
+        authMap = new HashMap<List<FemAuthId>, Set<FemAuthId>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -74,15 +68,15 @@ public class FarragoDbSessionPrivilegeChecker
         FemRole role,
         String action)
     {
-        List authKey = new ArrayList(2);
+        List<FemAuthId> authKey = new ArrayList<FemAuthId>(2);
         authKey.add(user);
         authKey.add(role);
 
         // Find credentials for the given user and role.
-        Set authSet = (Set) authMap.get(authKey);
+        Set<FemAuthId> authSet = authMap.get(authKey);
         if (authSet == null) {
             // Compute all credentials for the given user and role.
-            authSet = new HashSet();
+            authSet = new HashSet<FemAuthId>();
             authMap.put(authKey, authSet);
 
             if (user != null) {
@@ -94,10 +88,7 @@ public class FarragoDbSessionPrivilegeChecker
                 inheritRoles(role, authSet);
             }
 
-            authSet.add(
-                FarragoCatalogUtil.getRoleByName(
-                    session.getRepos(),
-                    FarragoCatalogInit.PUBLIC_ROLE_NAME));
+            authSet.add(getPublicRole());
         }
 
         // Now, let's check their papers...
@@ -112,6 +103,18 @@ public class FarragoDbSessionPrivilegeChecker
             session.getRepos().getLocalizedObjectName(obj));
     }
 
+    private FemRole getPublicRole()
+    {
+        if (publicRole == null) {
+            publicRole =
+                FarragoCatalogUtil.getRoleByName(
+                    session.getRepos(),
+                    FarragoCatalogInit.PUBLIC_ROLE_NAME);
+        }
+
+        return publicRole;
+    }
+
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {
@@ -119,13 +122,11 @@ public class FarragoDbSessionPrivilegeChecker
         // so nothing to do here.
     }
 
-    private void inheritRoles(FemRole role, Set inheritedRoles)
+    private void inheritRoles(FemRole role, Set<FemAuthId> inheritedRoles)
     {
         String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
 
-        Iterator grants = role.getGranteePrivilege().iterator();
-        while (grants.hasNext()) {
-            FemGrant grant = (FemGrant) grants.next();
+        for (FemGrant grant : role.getGranteePrivilege()) {
             if (grant.getAction().equals(inheritAction)) {
                 FemRole inheritedRole = (FemRole) grant.getElement();
 
@@ -140,15 +141,13 @@ public class FarragoDbSessionPrivilegeChecker
 
     private boolean testAccess(
         CwmModelElement obj,
-        Set authSet,
+        Set<FemAuthId> authSet,
         String action)
     {
         SecurityPackage sp = session.getRepos().getSecurityPackage();
-        Iterator grants =
-            sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj).iterator();
         boolean sawCreationGrant = false;
-        while (grants.hasNext()) {
-            FemGrant grant = (FemGrant) grants.next();
+        for (Object o : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj)) {
+            FemGrant grant = (FemGrant) o;
             boolean isCreation =
                 grant.getAction().equals(
                     PrivilegedActionEnum.CREATION.toString());
@@ -157,7 +156,8 @@ public class FarragoDbSessionPrivilegeChecker
                 sawCreationGrant = true;
             }
             if (authSet.contains(grant.getGrantee())
-                && (grant.getAction().equals(action) || isCreation)) {
+                && (grant.getAction().equals(action) || isCreation))
+            {
                 return true;
             }
         }

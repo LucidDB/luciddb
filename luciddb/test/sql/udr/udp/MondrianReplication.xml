@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Schema name="Replicant">
+
+  <Dimension name="Dim1">
+    <Hierarchy hasAll="true" primaryKey="D1_KEY">
+      <Table name="D1"/>
+      <Level name="Level1" column="D1_ATTR" uniqueMembers="true"/>
+    </Hierarchy>
+  </Dimension>
+
+  <Dimension name="Dim2">
+    <Hierarchy hasAll="true" primaryKey="D2_KEY">
+      <Table name="D2"/>
+      <Level name="Level1" column="D2_ATTR" uniqueMembers="false"/>
+    </Hierarchy>
+  </Dimension>
+
+  <Cube name="Fact" defaultMeasure="Measure1">
+    <Table name="F"/>
+    <DimensionUsage name="Dim1" source="Dim1" foreignKey="D1_KEY"/>
+    <DimensionUsage name="Dim2" source="Dim2" foreignKey="D2_KEY"/>
+    <Measure name="Measure1" column="M1" aggregator="sum"
+      formatString="#,###.00"/>
+    <Measure name="Measure2" column="M2" aggregator="sum"/>
+  </Cube>
+</Schema>

@@ -91,6 +91,25 @@ returns int
 contains sql
 return i + j + k;
 
+-- no parameters; parens are required for declaration and call
+-- should fail (parens required)
+create function pi
+returns double
+contains sql
+return 3.141592653589793;
+
+-- ok
+create function pi()
+returns double
+contains sql
+return 3.141592653589793;
+
+-- should fail (parens required)
+values pi;
+
+-- ok
+values pi();
+
 -- test various modifiers
 
 -- should fail:  NO SQL can't be specified for SQL-defined routines
@@ -474,3 +493,96 @@ language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+
+-- should succeed: column list parameter
+create function stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+
+-- should fail : no matching source cursor name
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from nonExistent,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
+-- following 2 should fail : external method not declared as List<String>
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns1';
+
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns2';
+
+-- should fail : external method has wrong type for COLUMN_LIST parameter
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3';
+
+-- should succeed
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset1.*, columnSubset2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+
+-- the following 2 should fail because of references to non-existent cursor
+-- parameters
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset.*, inputCursor2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(inputCursor1.*, columnSubset.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+-- End udf.sql

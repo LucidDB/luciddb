@@ -1,0 +1,32 @@
+0: jdbc:luciddb:> -- Test error conditions for backups
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non-existent archive directory
+0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/badArchive', 'FULL', 'UNCOMPRESSED');
+Error: Directory @TEST_DIR@/badArchive does not exist (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non-writable archive directory
+0: jdbc:luciddb:> call sys_root.backup_database(
+. . . . . . . . >     '@TEST_DIR@/nonWritableArchive', 'FULL', 'UNCOMPRESSED');
+Error: The backup archive directory '@TEST_DIR@/nonWritableArchive' is not writable (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- invalid backup type
+0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FOO', 'UNCOMPRESSED');
+Error: Invalid backup type 'FOO'.  Must be either FULL, INCREMENTAL, or DIFFERENTIAL. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- invalid compression mode
+0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESED');
+Error: Invalid compression mode 'UNCOMPRESED'.  Must be either COMPRESSED or UNCOMPRESSED. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- attempt to backup when a session label is set
+0: jdbc:luciddb:> create label "archiveLabel";
+0: jdbc:luciddb:> alter session set "label" = 'archiveLabel';
+0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESSED');
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> drop label "archiveLabel";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- attempt to use a backup directory that has already been used
+0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/fullArchive', 'FULL', 'UNCOMPRESSED');
+Error: The file 'backup.properties' already exists in the archive directory (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

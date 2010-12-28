@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -93,7 +93,8 @@ int main(int argc, char **argv)
             std::cerr << "not reached\n";
             break;
         case 'e':
-            std::cerr << "throw new std::runtime_error(\"testing AutoBacktrace\")\n";
+            std::cerr
+                << "throw new std::runtime_error(\"testing AutoBacktrace\")\n";
             throw new std::runtime_error("testing AutoBacktrace");
             std::cerr << "not reached\n";
             break;
@@ -109,3 +110,5 @@ int main(int argc, char **argv)
     }
     exit(0);
 }
+
+// End testBacktrace.cpp

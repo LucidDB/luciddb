@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,26 +22,14 @@
 */
 package org.eigenbase.rel.rules;
 
-import java.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
  * PushProjectPastFilterRule implements the rule for pushing a projection past a
  * filter.
- *
- * <p>REVIEW (jhyde, 2006/5/18): Rules of this kind, dealing in {@link
- * ProjectRel}s and {@link FilterRel}s, are deprecated. We should write rules
- * which deal with calcs, which are effectively projects and filters fused
- * together. It is still possible to ask a calc whether it is a pure project or
- * a pure filter, or to split a calc into its pure project and filter parts, if
- * desired. An added advantage is the corpus of code in {@link RexProgram} for
- * performing typical operations on {@link RexNode} expressions, in particular
- * common sub-expression elimination.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -49,37 +37,45 @@ import org.eigenbase.sql.*;
 public class PushProjectPastFilterRule
     extends RelOptRule
 {
+    public static final PushProjectPastFilterRule instance =
+        new PushProjectPastFilterRule();
 
     //~ Instance fields --------------------------------------------------------
 
     /**
      * Expressions that should be preserved in the projection
      */
-    private Set<SqlOperator> preserveExprs;
+    private final PushProjector.ExprCondition preserveExprCondition;
 
     //~ Constructors -----------------------------------------------------------
 
-    //  ~ Constructors ---------------------------------------------------------
-
-    public PushProjectPastFilterRule()
+    /**
+     * Creates a PushProjectPastFilterRule.
+     */
+    private PushProjectPastFilterRule()
     {
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
-        this.preserveExprs = Collections.EMPTY_SET;
+                new RelOptRuleOperand(FilterRel.class, ANY)));
+        this.preserveExprCondition = PushProjector.ExprCondition.FALSE;
     }
 
+    /**
+     * Creates a PushProjectPastFilterRule with an explicit root operand
+     * and condition to preserve operands.
+     *
+     * @param operand root operand, must not be null
+     *
+     * @param id Part of description
+     */
     public PushProjectPastFilterRule(
-        RelOptRuleOperand rule,
-        Set<SqlOperator> preserveExprs,
+        RelOptRuleOperand operand,
+        PushProjector.ExprCondition preserveExprCondition,
         String id)
     {
-        super(rule);
-        this.preserveExprs = preserveExprs;
-        description = "PushProjectPastFilterRule: " + id;
+        super(operand, "PushProjectPastFilterRule: " + id);
+        this.preserveExprCondition = preserveExprCondition;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -103,7 +99,8 @@ public class PushProjectPastFilterRule
         if ((origProj != null)
             && RexOver.containsOver(
                 origProj.getProjectExps(),
-                null)) {
+                null))
+        {
             // Cannot push project through filter if project contains a windowed
             // aggregate -- it will affect row counts. Abort this rule
             // invocation; pushdown will be considered after the windowed
@@ -113,7 +110,8 @@ public class PushProjectPastFilterRule
         }
 
         PushProjector pushProjector =
-            new PushProjector(origProj, origFilter, rel, preserveExprs);
+            new PushProjector(
+                origProj, origFilter, rel, preserveExprCondition);
         ProjectRel topProject = pushProjector.convertProject(null);
 
         if (topProject != null) {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,11 +37,11 @@ class TupleProjection;
  * selected attributes of a tuple, as explained in
  * the <a href="structTupleDesign.html#TupleProjection">design docs</a>.
  */
-class TupleProjectionAccessor 
+class FENNEL_TUPLE_EXPORT TupleProjectionAccessor
 {
     TupleAccessor const *pTupleAccessor;
     std::vector<AttributeAccessor const *> ppAttributeAccessors;
-    
+
 public:
     explicit TupleProjectionAccessor();
 
@@ -50,7 +50,7 @@ public:
         TupleProjection const &tupleProjection);
 
     virtual ~TupleProjectionAccessor();
-    
+
     void unmarshal(TupleData &tuple) const
     {
         unmarshal(tuple.begin());

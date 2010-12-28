@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,17 +26,17 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.*;
-import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
+
 
 /**
  * FarragoJdbcEngineDriver implements the Farrago engine/server side of the
- * {@link java.sql.Driver} interface.  It does not register itself;
- * for that, use {@link FarragoJdbcEngineDriver}.
+ * {@link java.sql.Driver} interface. It does not register itself; for that, use
+ * {@link FarragoJdbcEngineDriver}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -45,7 +45,6 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
     extends FarragoAbstractJdbcDriver
     implements FarragoJdbcServerDriver
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -88,12 +87,12 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
 
         try {
             if (driverUrl.equals(getBaseUrl())
-                || driverUrl.equals(getClientUrl())) {
-                return
-                    new FarragoJdbcEngineConnection(
-                        driverUrl,
-                        driverProps,
-                        newSessionFactory());
+                || driverUrl.equals(getClientUrl()))
+            {
+                return new FarragoJdbcEngineConnection(
+                    driverUrl,
+                    driverProps,
+                    newSessionFactory());
             } else {
                 throw FarragoResource.instance().JdbcInvalidUrl.ex(driverUrl);
             }
@@ -105,21 +104,7 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
     // implement FarragoJdbcServerDriver
     public FarragoSessionFactory newSessionFactory()
     {
-        String libraryName =
-            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
-        try {
-            FarragoPluginClassLoader classLoader =
-                new FarragoPluginClassLoader();
-            Class c =
-                classLoader.loadClassFromLibraryManifest(
-                    libraryName,
-                    "SessionFactoryClassName");
-            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().PluginInitFailed.ex(
-                libraryName,
-                ex);
-        }
+        return FarragoDatabase.newSessionFactory();
     }
 
     /**
@@ -132,6 +117,18 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
     static SQLException newSqlException(Throwable ex)
     {
         return FarragoJdbcUtil.newSqlException(ex, tracer);
+    }
+
+    /**
+     * Creates a new SQLException from the message.
+     *
+     * @param message detail message, the reason for this exception
+     *
+     * @return message as a SQLException
+     */
+    static SQLException newSqlException(String message)
+    {
+        return FarragoJdbcUtil.newSqlException(message, tracer);
     }
 }
 

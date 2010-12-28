@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,12 +27,13 @@
 #include "fennel/common/FennelResource.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/tuple/StoredTypeDescriptor.h"
 
-#ifdef __MINGW32__
+#ifdef __MSVC__
 #include <process.h>
 #endif
 
-#ifndef __MINGW32__
+#ifndef __MSVC__
 #include <signal.h>
 #endif
 
@@ -42,20 +43,49 @@ ParamName JniUtilParams::paramJniHandleTraceFile = "jniHandleTraceFile";
 
 JavaVM *JniUtil::pVm = NULL;
 jmethodID JniUtil::methGetClassName = 0;
+jmethodID JniUtil::methGetInterfaces = 0;
+jmethodID JniUtil::methGetModifiers = 0;
+jclass JniUtil::classModifier = 0;
+jmethodID JniUtil::methIsPublic = 0;
 jmethodID JniUtil::methHasNext = 0;
 jmethodID JniUtil::methNext = 0;
 jmethodID JniUtil::methIterator = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
-jmethodID JniUtil::methBase64Decode;
 jclass JniUtil::classRhBase64;
+jmethodID JniUtil::methRandomUUID;
+jclass JniUtil::classUUID;
 jmethodID JniUtil::methFarragoTransformInit = 0;
 jmethodID JniUtil::methFarragoTransformExecute = 0;
+jmethodID JniUtil::methFarragoTransformSetInputFetchTimeout = 0;
+jmethodID JniUtil::methFarragoTransformPleaseSignalOnMoreData = 0;
 jmethodID JniUtil::methFarragoTransformRestart = 0;
 jclass JniUtil::classFarragoTransformInputBinding = 0;
 jmethodID JniUtil::methFarragoTransformInputBindingCons = 0;
 jmethodID JniUtil::methFarragoRuntimeContextStatementClassForName = 0;
+jmethodID JniUtil::methFarragoRuntimeContextFindFarragoTransform = 0;
+jclass JniUtil::classLong;
+jclass JniUtil::classInteger;
+jclass JniUtil::classShort;
+jclass JniUtil::classDouble;
+jclass JniUtil::classFloat;
+jclass JniUtil::classBoolean;
+jmethodID JniUtil::methLongValueOf = 0;
+jmethodID JniUtil::methIntegerValueOf = 0;
+jmethodID JniUtil::methShortValueOf = 0;
+jmethodID JniUtil::methDoubleValueOf = 0;
+jmethodID JniUtil::methFloatValueOf = 0;
+jmethodID JniUtil::methBooleanValueOf = 0;
+jmethodID JniUtil::methLongValue = 0;
+jmethodID JniUtil::methIntValue = 0;
+jmethodID JniUtil::methShortValue = 0;
+jmethodID JniUtil::methDoubleValue = 0;
+jmethodID JniUtil::methFloatValue = 0;
+jmethodID JniUtil::methBooleanValue = 0;
+jmethodID JniUtil::methBase64Decode;
+jmethodID JniUtil::methUtilGetStackTrace;
+jclass JniUtil::classUtil;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -63,7 +93,10 @@ bool JniUtil::traceHandleCountEnabled = false;
 bool JniUtil::closeHandleCountTraceOnZero = false;
 std::ofstream JniUtil::handleCountTraceStream;
 
-#ifndef __MINGW32__
+JavaThreadTracker JniUtil::threadTracker;
+
+
+#ifndef __MSVC__
 static void debugger_signalHandler(int signum)
 {
     // do nothing
@@ -88,7 +121,7 @@ void JniUtil::initDebug(char const *envVarName)
         snprintf(pidstr, 32, "%d", getpid());
         std::cout << "Waiting for debugger; pid=" << pidstr << std::endl;
         std::cout.flush();
-#ifdef __MINGW32__
+#ifdef __MSVC__
         // A "cont" in gdb will wake this sleep up immediately, which
         // is disturbing but useful.
         _sleep(600000);
@@ -118,7 +151,7 @@ void JniUtil::initDebug(char const *envVarName)
                 // Fall back on sleeping.
                 sleep(60000);
             }
-        }        
+        }
 #endif
     }
 }
@@ -181,8 +214,12 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
 
     // Make sure this jclass is a global ref or the JVM might move it on us.
-    jclass tempRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
-    classRhBase64 = (jclass)pEnv->NewGlobalRef(tempRhBase64);
+    // This is only required for classes on which we need to invoke
+    // static methods.
+    classRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
+    classRhBase64 = (jclass) pEnv->NewGlobalRef(classRhBase64);
+    classUUID = pEnv->FindClass("java/util/UUID");
+    classUUID = (jclass) pEnv->NewGlobalRef(classUUID);
 
     jclass classFennelJavaStreamMap = pEnv->FindClass(
         "net/sf/farrago/fennel/FennelJavaStreamMap");
@@ -193,45 +230,112 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass tempInputBinding =
         pEnv->FindClass(
             "net/sf/farrago/runtime/FarragoTransform$InputBinding");
-    classFarragoTransformInputBinding = 
+    classFarragoTransformInputBinding =
         (jclass)pEnv->NewGlobalRef(tempInputBinding);
 
     jclass classFarragoRuntimeContext = pEnv->FindClass(
         "net/sf/farrago/runtime/FarragoRuntimeContext");
     methGetClassName = pEnv->GetMethodID(
-        classClass,"getName","()Ljava/lang/String;");
+        classClass, "getName", "()Ljava/lang/String;");
+    methGetInterfaces = pEnv->GetMethodID(
+        classClass, "getInterfaces", "()[Ljava/lang/Class;");
+    methGetModifiers = pEnv->GetMethodID(
+        classClass, "getModifiers", "()I");
+
+    jclass tempClassModifier = pEnv->FindClass("java/lang/reflect/Modifier");
+    classModifier = (jclass)pEnv->NewGlobalRef(tempClassModifier);
+    methIsPublic = pEnv->GetStaticMethodID(classModifier, "isPublic", "(I)Z");
+
     methIterator = pEnv->GetMethodID(
-        classCollection,"iterator","()Ljava/util/Iterator;");
+        classCollection, "iterator", "()Ljava/util/Iterator;");
     methHasNext = pEnv->GetMethodID(
-        classIterator,"hasNext","()Z");
+        classIterator, "hasNext", "()Z");
     methNext = pEnv->GetMethodID(
-        classIterator,"next","()Ljava/lang/Object;");
+        classIterator, "next", "()Ljava/lang/Object;");
     methGetJavaStreamHandle = pEnv->GetMethodID(
-        classFennelJavaStreamMap,"getJavaStreamHandle",
+        classFennelJavaStreamMap, "getJavaStreamHandle",
         "(I)J");
     methGetIndexRoot = pEnv->GetMethodID(
-        classFennelJavaStreamMap,"getIndexRoot",
+        classFennelJavaStreamMap, "getIndexRoot",
         "(J)J");
     methToString = pEnv->GetMethodID(
-        classObject,"toString","()Ljava/lang/String;");
+        classObject, "toString", "()Ljava/lang/String;");
+
+    jclass tempClassLong = pEnv->FindClass("java/lang/Long");
+    classLong = (jclass)pEnv->NewGlobalRef(tempClassLong);
+    methLongValueOf =
+        pEnv->GetStaticMethodID(classLong, "valueOf", "(J)Ljava/lang/Long;");
+    methLongValue = pEnv->GetMethodID(classLong, "longValue", "()J");
+
+    jclass tempClassInteger = pEnv->FindClass("java/lang/Integer");
+    classInteger = (jclass)pEnv->NewGlobalRef(tempClassInteger);
+    methIntegerValueOf =
+        pEnv->GetStaticMethodID(
+            classInteger, "valueOf", "(I)Ljava/lang/Integer;");
+    methIntValue = pEnv->GetMethodID(classInteger, "intValue", "()I");
+
+    jclass tempClassShort = pEnv->FindClass("java/lang/Short");
+    classShort = (jclass)pEnv->NewGlobalRef(tempClassShort);
+    methShortValueOf =
+        pEnv->GetStaticMethodID(classShort, "valueOf", "(S)Ljava/lang/Short;");
+    methShortValue = pEnv->GetMethodID(classShort, "shortValue", "()S");
+
+    jclass tempClassDouble = pEnv->FindClass("java/lang/Double");
+    classDouble = (jclass)pEnv->NewGlobalRef(tempClassDouble);
+    methDoubleValueOf =
+        pEnv->GetStaticMethodID(
+            classDouble, "valueOf", "(D)Ljava/lang/Double;");
+    methDoubleValue = pEnv->GetMethodID(classDouble, "doubleValue", "()D");
+
+    jclass tempClassFloat = pEnv->FindClass("java/lang/Float");
+    classFloat = (jclass)pEnv->NewGlobalRef(tempClassFloat);
+    methFloatValueOf =
+        pEnv->GetStaticMethodID(classFloat, "valueOf", "(F)Ljava/lang/Float;");
+    methFloatValue = pEnv->GetMethodID(classFloat, "floatValue", "()F");
+
+    jclass tempClassBoolean = pEnv->FindClass("java/lang/Boolean");
+    classBoolean = (jclass)pEnv->NewGlobalRef(tempClassBoolean);
+    methBooleanValueOf =
+        pEnv->GetStaticMethodID(
+            classBoolean, "valueOf", "(Z)Ljava/lang/Boolean;");
+    methBooleanValue = pEnv->GetMethodID(classBoolean, "booleanValue", "()Z");
+
     methBase64Decode = pEnv->GetStaticMethodID(
-        classRhBase64,"decode","(Ljava/lang/String;)[B");
+        classRhBase64, "decode", "(Ljava/lang/String;)[B");
+    methRandomUUID = pEnv->GetStaticMethodID(
+        classUUID, "randomUUID", "()Ljava/util/UUID;");
+
     methFarragoTransformInit = pEnv->GetMethodID(
-        classFarragoTransform, "init", 
+        classFarragoTransform, "init",
         "(Lnet/sf/farrago/runtime/FarragoRuntimeContext;Ljava/lang/String;[Lnet/sf/farrago/runtime/FarragoTransform$InputBinding;)V");
     methFarragoTransformExecute = pEnv->GetMethodID(
-        classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;)I");
+        classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;J)I");
     methFarragoTransformRestart = pEnv->GetMethodID(
         classFarragoTransform, "restart", "()V");
+    methFarragoTransformSetInputFetchTimeout = pEnv->GetMethodID(
+        classFarragoTransform, "setInputFetchTimeout", "(J)V");
+    methFarragoTransformPleaseSignalOnMoreData = pEnv->GetMethodID(
+        classFarragoTransform, "pleaseSignalOnMoreData", "()V");
     methFarragoTransformInputBindingCons =
         pEnv->GetMethodID(
-            classFarragoTransformInputBinding, "<init>", 
+            classFarragoTransformInputBinding, "<init>",
             "(Ljava/lang/String;I)V");
     methFarragoRuntimeContextStatementClassForName =
         pEnv->GetMethodID(
             classFarragoRuntimeContext,
             "statementClassForName",
             "(Ljava/lang/String;)Ljava/lang/Class;");
+    methFarragoRuntimeContextFindFarragoTransform =
+        pEnv->GetMethodID(
+            classFarragoRuntimeContext,
+            "findFarragoTransform",
+            "(Ljava/lang/String;)Lnet/sf/farrago/runtime/FarragoTransform;");
+
+    jclass tempClassUtil = pEnv->FindClass("org/eigenbase/util/Util");
+    classUtil = (jclass) pEnv->NewGlobalRef(tempClassUtil);
+    methUtilGetStackTrace = pEnv->GetStaticMethodID(
+        classUtil, "getStackTrace",
+        "(Ljava/lang/Throwable;)Ljava/lang/String;");
 
     return jniVersion;
 }
@@ -246,7 +350,7 @@ JNIEnv *JniUtil::getAttachedJavaEnv(bool &needDetach)
         return static_cast<JNIEnv *>(pEnv);
     }
     needDetach = true;
-    rc = pVm->AttachCurrentThread(&pEnv,NULL);
+    rc = pVm->AttachCurrentThread(&pEnv, NULL);
     assert(rc == 0);
     assert(pEnv);
     return static_cast<JNIEnv *>(pEnv);
@@ -262,27 +366,57 @@ std::string JniUtil::getClassName(jclass jClass)
 {
     JniEnvAutoRef pEnv;
     jstring jString = reinterpret_cast<jstring>(
-        pEnv->CallObjectMethod(jClass,methGetClassName));
+        pEnv->CallObjectMethod(jClass, methGetClassName));
     assert(jString);
-    return toStdString(pEnv,jString);
+    return toStdString(pEnv, jString);
 }
 
-std::string JniUtil::toStdString(JniEnvRef pEnv,jstring jString)
+std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
 {
-    const char *pChars = pEnv->GetStringUTFChars(jString,NULL);
+    JniEnvAutoRef pEnv;
+
+    jobjectArray ifaces =
+        reinterpret_cast<jobjectArray>(
+            pEnv->CallObjectMethod(jClass, methGetInterfaces));
+    assert(ifaces);
+
+    for (jsize i = 0, len = pEnv->GetArrayLength(ifaces); i < len; i++) {
+        jclass iface =
+            reinterpret_cast<jclass>(
+                pEnv->GetObjectArrayElement(ifaces, i));
+        assert(iface);
+
+        jint modifiers =
+            pEnv->CallIntMethod(iface, methGetModifiers);
+
+        jboolean isPublic =
+            pEnv->CallStaticBooleanMethod(
+                classModifier, methIsPublic, modifiers);
+
+        if (isPublic) {
+            return getClassName(iface);
+        }
+    }
+
+    return std::string("(none)");
+}
+
+std::string JniUtil::toStdString(JniEnvRef pEnv, jstring jString)
+{
+    const char *pChars = pEnv->GetStringUTFChars(jString, NULL);
     assert(pChars);
-    std::string str(pChars,pEnv->GetStringUTFLength(jString));
-    pEnv->ReleaseStringUTFChars(jString,pChars);
+    std::string str(pChars, pEnv->GetStringUTFLength(jString));
+    pEnv->ReleaseStringUTFChars(jString, pChars);
     return str;
 }
 
-jstring JniUtil::toString(JniEnvRef pEnv,jobject jObject)
+jstring JniUtil::toString(JniEnvRef pEnv, jobject jObject)
 {
     return reinterpret_cast<jstring>(
-        pEnv->CallObjectMethod(jObject,methToString));
+        pEnv->CallObjectMethod(jObject, methToString));
 }
 
-uint JniUtil::lookUpEnum(std::string *pSymbols,std::string const &symbol)
+uint JniUtil::lookUpEnum(std::string *pSymbols, std::string const &symbol)
 {
     for (uint i = 0; ; ++i) {
         assert(pSymbols[i].size());
@@ -292,30 +426,30 @@ uint JniUtil::lookUpEnum(std::string *pSymbols,std::string const &symbol)
     }
 }
 
-jobject JniUtil::getIter(JniEnvRef pEnv,jobject jCollection)
+jobject JniUtil::getIter(JniEnvRef pEnv, jobject jCollection)
 {
-    return pEnv->CallObjectMethod(jCollection,methIterator);
+    return pEnv->CallObjectMethod(jCollection, methIterator);
 }
 
-jobject JniUtil::getNextFromIter(JniEnvRef pEnv,jobject jIter)
+jobject JniUtil::getNextFromIter(JniEnvRef pEnv, jobject jIter)
 {
-    if (!pEnv->CallBooleanMethod(jIter,methHasNext)) {
+    if (!pEnv->CallBooleanMethod(jIter, methHasNext)) {
         return NULL;
     }
-    return pEnv->CallObjectMethod(jIter,methNext);
+    return pEnv->CallObjectMethod(jIter, methNext);
 }
 
 void JniUtil::incrementHandleCount(const char *pType, const void *pHandle)
 {
     ++handleCount;
-    
+
     traceHandleCount("INC", pType, pHandle);
 }
 
 void JniUtil::decrementHandleCount(const char *pType, const void *pHandle)
 {
     --handleCount;
-    
+
     assert(handleCount >= 0);
 
     traceHandleCount("DEC", pType, pHandle);
@@ -328,24 +462,67 @@ void JniUtil::traceHandleCount(
         handleCountTraceStream
             << pAction << " " << pType << ": " << pHandle << std::endl;
 
-        if (handleCount == 0 && closeHandleCountTraceOnZero && 
-            strcmp(pAction, "DEC") == 0) {
+        if (handleCount == 0
+            && closeHandleCountTraceOnZero
+            && strcmp(pAction, "DEC") == 0)
+        {
             traceHandleCountEnabled = false;
             closeHandleCountTraceOnZero = false;
-            
+
             handleCountTraceStream.flush();
-            handleCountTraceStream.close();   
+            handleCountTraceStream.close();
         }
     }
 }
 
+std::string JniUtil::getXmi(const TupleDescriptor &tupleDescriptor)
+{
+    std::ostringstream oss;
+    oss << "<XMI xmi.version = '1.2' "
+        << "xmlns:FEMFennel = 'org.omg.xmi.namespace.FEMFennel'>" << std::endl;
+    oss << "<XMI.content>" << std::endl;
+    oss << "<FEMFennel:TupleDescriptor>" << std::endl;
+    for (uint i = 0; i < tupleDescriptor.size(); ++i) {
+        TupleAttributeDescriptor const &attrDescriptor =
+            tupleDescriptor[i];
+        oss << "<FEMFennel:TupleDescriptor.AttrDescriptor>";
+        oss << "<FEMFennel:TupleAttrDescriptor ";
+        oss << "typeOrdinal='";
+        oss << attrDescriptor.pTypeDescriptor->getOrdinal();
+        oss << "' ";
+        oss << "isNullable='";
+        oss << (attrDescriptor.isNullable ? "true" : "false");
+        oss << "' ";
+        oss << "byteLength='";
+        oss << attrDescriptor.cbStorage;
+        oss << "' ";
+        oss << "/>" << std::endl;
+        oss << "</FEMFennel:TupleDescriptor.AttrDescriptor>";
+    }
+    oss << "</FEMFennel:TupleDescriptor>" << std::endl;
+    oss << "</XMI.content>" << std::endl;
+    oss << "</XMI>" << std::endl;
+    std::string s = oss.str();
+    return s;
+}
 
-JniExceptionChecker::~JniExceptionChecker()
+ThreadTracker &JniUtil::getThreadTracker()
+{
+    return threadTracker;
+}
+
+void JniExceptionChecker::checkExceptions()
 {
     jthrowable excn = pEnv->ExceptionOccurred();
     if (excn) {
+        pEnv->ExceptionClear();
         throw JavaExcn(excn);
     }
+}
+
+JniExceptionChecker::~JniExceptionChecker()
+{
+    checkExceptions();
 }
 
 JniEnvAutoRef::JniEnvAutoRef()
@@ -360,6 +537,11 @@ JniEnvAutoRef::~JniEnvAutoRef()
     }
 }
 
+void JniEnvAutoRef::suppressDetach()
+{
+    needDetach = false;
+}
+
 void JniEnvRef::handleExcn(std::exception &ex)
 {
     JavaExcn *pJavaExcn = dynamic_cast<JavaExcn *>(&ex);
@@ -372,16 +554,35 @@ void JniEnvRef::handleExcn(std::exception &ex)
     if (pFennelExcn) {
         what = pFennelExcn->getMessage();
     } else {
-        what = FennelResource::instance().internalError(ex.what());
+        std::bad_alloc *pBadAllocExcn =
+            dynamic_cast<std::bad_alloc *>(&ex);
+        if (pBadAllocExcn) {
+            // Convert bad_alloc's terrible error mesage into something fit for
+            // human consumption.
+            what = FennelResource::instance().internalError("malloc failed");
+        } else {
+            what = FennelResource::instance().internalError(ex.what());
+        }
     }
     // TODO:  need special-case handling for out-of-memory here
     jclass classSQLException = pEnv->FindClass("java/sql/SQLException");
     jstring jMessage = pEnv->NewStringUTF(what.c_str());
     jmethodID constructor = pEnv->GetMethodID(
-        classSQLException,"<init>","(Ljava/lang/String;)V");
+        classSQLException, "<init>", "(Ljava/lang/String;)V");
     jthrowable t = (jthrowable)
-        pEnv->NewObject(classSQLException,constructor,jMessage);
+        pEnv->NewObject(classSQLException, constructor, jMessage);
     pEnv->Throw(t);
+}
+
+void JniPseudoUuidGenerator::generateUuid(PseudoUuid &pseudoUuid)
+{
+    JniEnvAutoRef pEnv;
+    jobject jUuid = pEnv->CallStaticObjectMethod(
+        JniUtil::classUUID,
+        JniUtil::methRandomUUID);
+    jstring jsUuid = JniUtil::toString(pEnv, jUuid);
+    std::string sUuid = JniUtil::toStdString(pEnv, jsUuid);
+    pseudoUuid.parse(sUuid);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -5,13 +5,11 @@
 VALUES (1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000);
 VALUES (1 / sin(0));
 VALUES (tan(2,0));
--- VALUES (power(0));
-VALUES (pow(0));
+VALUES (power(0));
 VALUES (tan(date '1995-11-12'));
 VALUES (100 / 0);
 VALUES (100 / sin(0));
--- VALUES (to_char(power(10,200) * power(10,200)));
-VALUES (pow(10,200) * pow(10,200));
+VALUES (power(10,200) * power(10,200));
 VALUES (exp(1000));
 
 -- Should get an error for a floating point out of range for some tests.

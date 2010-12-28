@@ -1,0 +1,164 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  insert into lineitem select * from "lineitem";
+  insert into supplier select * from "supplier";
+  insert into orders select * from "orders";
+  insert into nation select * from "nation";
+  create view revenue0 (supplier_no, total_revenue) as
+    select l_suppkey, sum(l_extendedprice * (1 - l_discount))
+    from lineitem, supplier, orders
+    where
+        l_suppkey = s_suppkey and
+        l_orderkey = o_orderkey and
+        l_shipdate >= date'1996-01-01' and
+        l_shipdate < date'1996-04-01'
+    group by l_suppkey;
+
+  select count(*) from lineitem;
+  select count(*) from supplier;
+  select count(*) from orders;
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    truncate table supplier;
+    truncate table orders;
+    truncate table nation;
+    drop view revenue0;
+    create table region  ( r_regionkey  integer primary key,
+                            r_name       varchar(25) not null,
+                            r_comment    varchar(152));
+    alter system deallocate old;
+
+@end
+
+-----------------------------------------------------------
+
+-- this should see result of tpch query 15
+@thread query15
+    set schema 'rwconcur';
+  @sync
+    select
+         s_suppkey,
+         s_name,
+         s_address,
+         s_phone,
+         total_revenue
+    from
+         supplier,
+         revenue0
+    where
+         s_suppkey = supplier_no
+         and total_revenue = (
+                   select
+                          max(total_revenue) + sys_boot.mgmt.sleep(5000)
+                   from
+                          revenue0
+         )
+    order by
+         s_suppkey;
+
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+--slow delete
+@thread deletelineitem
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    delete from lineitem where l_orderkey in
+      (select o_orderkey from orders 
+       where o_orderdate < date '1998-01-01' and
+             o_custkey in
+         (select c_custkey from customer where c_nationkey =
+           (select n_nationkey from nation where n_name = 'ALGERIA')));
+  @sync
+    select * from lineitem where l_orderkey in
+      (select o_orderkey from orders 
+       where o_orderdate < date '1998-01-01' and
+             o_custkey in
+         (select c_custkey from customer where c_nationkey =
+           (select n_nationkey from nation where n_name = 'ALGERIA')));
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- fast delete
+@thread deletesupplier
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    delete from supplier;
+  @sync
+    select * from supplier;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- cannot drop
+@thread dropview
+    set schema 'rwconcur';
+  @sync
+  @sleep 500
+    @err drop view revenue0;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- cannot drop
+@thread droporders
+    set schema 'rwconcur';
+  @sync
+  @sleep 500
+    @err drop table orders cascade;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- can drop
+@thread dropregion
+    set schema 'rwconcur';
+  @sync
+  @sleep 500
+    drop table region cascade;
+  @sync
+    @err select * from region;
+  @sync
+
+@end
+
+------------------------------------------------------------
+@thread deallocate
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    alter system deallocate old;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+

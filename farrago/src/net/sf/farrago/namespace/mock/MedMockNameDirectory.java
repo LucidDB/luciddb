@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,14 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -48,7 +41,6 @@ import org.eigenbase.util.*;
 class MedMockNameDirectory
     extends MedAbstractNameDirectory
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final String COLUMN_NAME = "MOCK_COLUMN";
@@ -83,13 +75,12 @@ class MedMockNameDirectory
             return null;
         }
 
-        return
-            server.newColumnSet(
-                localName,
-                server.getProperties(),
-                typeFactory,
-                server.createMockRowType(typeFactory),
-                Collections.EMPTY_MAP);
+        return server.newColumnSet(
+            localName,
+            server.getProperties(),
+            typeFactory,
+            server.createMockRowType(typeFactory),
+            Collections.EMPTY_MAP);
     }
 
     // implement FarragoMedNameDirectory
@@ -98,10 +89,9 @@ class MedMockNameDirectory
     {
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
             if (foreignName.equals(server.getForeignSchemaName())) {
-                return
-                    new MedMockNameDirectory(
-                        server,
-                        FarragoMedMetadataQuery.OTN_TABLE);
+                return new MedMockNameDirectory(
+                    server,
+                    FarragoMedMetadataQuery.OTN_TABLE);
             }
         }
         return null;
@@ -121,21 +111,23 @@ class MedMockNameDirectory
                 server.getForeignSchemaName(),
                 FarragoMedMetadataQuery.OTN_SCHEMA,
                 "Mock schema",
-                Collections.EMPTY_MAP);
+                new Properties());
         } else {
             sink.writeObjectDescriptor(
                 server.getForeignTableName(),
                 FarragoMedMetadataQuery.OTN_TABLE,
                 "Mock table",
-                Collections.EMPTY_MAP);
-            sink.writeColumnDescriptor(
-                server.getForeignTableName(),
-                COLUMN_NAME,
-                0,
-                server.createMockColumnType(sink.getTypeFactory()),
-                "Mock column",
-                "0",
-                Collections.EMPTY_MAP);
+                new Properties());
+            if (server.extractColumns) {
+                sink.writeColumnDescriptor(
+                    server.getForeignTableName(),
+                    COLUMN_NAME,
+                    0,
+                    server.createMockColumnType(sink.getTypeFactory()),
+                    "Mock column",
+                    "0",
+                    new Properties());
+            }
         }
         return true;
     }

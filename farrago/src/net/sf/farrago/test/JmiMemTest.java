@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006 The Eigenbase Project
+// Copyright (C) 2006 SQLstream, Inc.
+// Copyright (C) 2006 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,12 +30,27 @@ import javax.jmi.reflect.*;
 import junit.framework.*;
 
 import net.sf.farrago.*;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
+import net.sf.farrago.fennel.tuple.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.type.*;
 
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.test.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
+import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
 
 
@@ -53,12 +68,12 @@ import org.netbeans.api.xmi.*;
 public class JmiMemTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String TABLE_NAME = "Chips Ahoy";
 
     private static final String COLUMN_NAME = "Keebler Elves";
+    private static final String COLUMN_NAME_2 = "Cap'n Crunch";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -78,6 +93,101 @@ public class JmiMemTest
     public static Test suite()
     {
         return wrappedSuite(JmiMemTest.class);
+    }
+
+    public void testClassValuedAttributes()
+    {
+        FarragoMemRepos factory = new FarragoMemRepos(repos.getModelGraph());
+
+        FemTableInserterDef inserterDef = factory.newFemTableInserterDef();
+
+        inserterDef.setName(TABLE_NAME);
+
+        FemTupleDescriptor tupleDesc = makeTupleDescriptor(factory);
+        inserterDef.setOutputDesc(tupleDesc);
+
+        FemIndexWriterDef indexWriterDef = factory.newFemIndexWriterDef();
+        indexWriterDef.setIndexId(999L);
+
+        inserterDef.getIndexWriter().add(indexWriterDef);
+
+        // NOTE: SWZ: 12/1/2006: Changed to use addAll to mimic
+        // FarragoPreparingStmt's actual behavior.
+        FemCmdPrepareExecutionStreamGraph cmd =
+            factory.newFemCmdPrepareExecutionStreamGraph();
+        cmd.getStreamDefs().addAll(
+            Collections.singleton(inserterDef));
+
+        String xmi =
+            JmiObjUtil.exportToXmiString(
+                Collections.singleton(cmd));
+
+        Collection<RefBaseObject> c =
+            JmiObjUtil.importFromXmiString(
+                factory.getImpl().getRootPackage(),
+                xmi);
+        assertEquals(
+            1,
+            c.size());
+
+        cmd = (FemCmdPrepareExecutionStreamGraph) c.iterator().next();
+        assertEquals(
+            1,
+            cmd.getStreamDefs().size());
+
+        inserterDef =
+            (FemTableInserterDef) cmd.getStreamDefs().iterator().next();
+        assertEquals(
+            1,
+            inserterDef.getIndexWriter().size());
+
+        indexWriterDef =
+            (FemIndexWriterDef) inserterDef.getIndexWriter().iterator().next();
+        assertEquals(
+            999L,
+            indexWriterDef.getIndexId());
+
+        tupleDesc = (FemTupleDescriptor) inserterDef.getOutputDesc();
+        assertNotNull(tupleDesc);
+
+        List<FemTupleAttrDescriptor> attrDescs = tupleDesc.getAttrDescriptor();
+        assertEquals(2, attrDescs.size());
+
+        FemTupleAttrDescriptor col1 = attrDescs.get(0);
+        assertEquals(
+            FennelStandardTypeDescriptor.INT_32_ORDINAL,
+            col1.getTypeOrdinal());
+
+        FemTupleAttrDescriptor col2 = attrDescs.get(1);
+        assertEquals(
+            FennelStandardTypeDescriptor.VARCHAR_ORDINAL,
+            col2.getTypeOrdinal());
+        assertEquals(128, col2.getByteLength());
+    }
+
+    private FemTupleDescriptor makeTupleDescriptor(FarragoMemRepos factory)
+    {
+        RelDataTypeFactory typeFactory = new FarragoTypeFactoryImpl(factory);
+
+        RelDataType [] types =
+            new RelDataType[] {
+                typeFactory.createSqlType(SqlTypeName.INTEGER),
+                typeFactory.createSqlType(SqlTypeName.VARCHAR, 128),
+            };
+
+        String [] names = new String[] {
+                COLUMN_NAME,
+                COLUMN_NAME_2,
+            };
+
+        RelDataType rowType = typeFactory.createStructType(types, names);
+
+        FemTupleDescriptor tupleDesc =
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                factory,
+                typeFactory,
+                rowType);
+        return tupleDesc;
     }
 
     public void testEarlyBinding()
@@ -149,10 +259,11 @@ public class JmiMemTest
         column.setName(COLUMN_NAME);
         table.getFeature().add(column);
 
-        String xmi = JmiObjUtil.exportToXmiString(
+        String xmi =
+            JmiObjUtil.exportToXmiString(
                 Collections.singleton(table));
 
-        Collection c =
+        Collection<?> c =
             JmiObjUtil.importFromXmiString(
                 factory.getImpl().getRootPackage(),
                 xmi);
@@ -185,21 +296,20 @@ public class JmiMemTest
     {
         // First, export the entire repository from MDR storage.
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        xmiWriter.getConfiguration().setEncoding("UTF-8");
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 
-        // While exporting, hide FemFennelConfig, because JmiMemFactory
-        // can't currently handle the 1-to-1 association
-        // FarragoConfiguresFennel.
-        repos.beginReposTxn(true);
+        repos.beginReposSession();
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.getCurrentConfig().getFennelConfig().refDelete();
+            txn.beginReadTxn();
             xmiWriter.write(
                 outStream,
                 repos.getFarragoPackage(),
                 "1.2");
         } finally {
-            // rollback
-            repos.endReposTxn(true);
+            txn.commit();
+            repos.endReposSession();
         }
         String xmi1 = outStream.toString();
 
@@ -207,7 +317,7 @@ public class JmiMemTest
         FarragoMemFactory factory =
             new FarragoMemFactory(
                 repos.getModelGraph());
-        Collection c =
+        Collection<RefBaseObject> c =
             JmiObjUtil.importFromXmiString(
                 factory.getImpl().getRootPackage(),
                 xmi1);
@@ -219,14 +329,309 @@ public class JmiMemTest
         xmiWriter.write(outStream, c, "1.2");
         String xmi2 = outStream.toString();
 
-        // Now diff:  thanks to the way default XMI id generation works,
-        // the XMI content should come out the same.
-        xmi1 = xmi1.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
-        xmi2 = xmi2.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
-        assertEquals(xmi1, xmi2);
+        // Now diff:  thanks to Enki/Hibernate these don't come out the same
+        // anymore.  Borrow Enki's solution to comparing XMI files.
+        XmiFileComparator.assertEqual(xmi1, xmi2);
+    }
+
+    public void testRefImmediatePackage()
+    {
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+        FemStoredColumn col = factory.newFemStoredColumn();
+
+        RefPackage pkg = col.refImmediatePackage();
+        RefPackage expectedPkg = factory.getMedPackage();
+        assertEquals(expectedPkg, pkg);
+
+        // Traverse our way up to the root package
+        pkg = pkg.refImmediatePackage();
+        expectedPkg = factory.getFemPackage();
+        assertEquals(expectedPkg, pkg);
+
+        pkg = pkg.refImmediatePackage();
+        expectedPkg = factory.getFarragoPackage();
+        assertEquals(expectedPkg, pkg);
+
+        // Farrago is the root package.
+        pkg = pkg.refImmediatePackage();
+        assertNull(pkg);
+    }
+
+    public void testRefIsInstanceOf()
+    {
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+
+        FemLocalTable table = factory.newFemLocalTable();
+        table.setName(TABLE_NAME);
+
+        RefObject cwmTableMofClass =
+            factory.getRelationalPackage().getCwmTable().refMetaObject();
+
+        RefObject femLocalTableClass =
+            factory.getMedPackage().getFemLocalTable().refMetaObject();
+
+        // table is a FemLocalTable which is a subclass of CwmTable
+        assertTrue(table.refIsInstanceOf(cwmTableMofClass, true));
+
+        // table is a FemLocalTale which is not exactly CwmTable
+        assertTrue(!table.refIsInstanceOf(cwmTableMofClass, false));
+
+        assertTrue(table.refIsInstanceOf(femLocalTableClass, true));
+        assertTrue(table.refIsInstanceOf(femLocalTableClass, false));
+
+        FemCmdOpenDatabase cmdOpenDatabase = factory.newFemCmdOpenDatabase();
+        RefObject beginTxnClass =
+            factory.getFennelPackage().getFemCmdBeginTxn().refMetaObject();
+        assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, true));
+        assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, false));
+    }
+
+    public void testClone()
+    {
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+
+        FemLocalView view = factory.newFemLocalView();
+        view.setName(TABLE_NAME);
+        view.setQueryExpression(factory.newCwmQueryExpression());
+
+        RefObject clone = JmiObjUtil.newClone(view);
+
+        SortedMap<String, Object> origAttrs =
+            JmiObjUtil.getAttributeValues(view);
+        SortedMap<String, Object> cloneAttrs =
+            JmiObjUtil.getAttributeValues(clone);
+
+        // Filter out cloned query expression, since that's cloned by
+        // value rather than by reference to avoid composition violation
+        origAttrs.remove("queryExpression");
+        cloneAttrs.remove("queryExpression");
+
+        assertEquals(origAttrs, cloneAttrs);
     }
 
     //~ Inner Classes ----------------------------------------------------------
+
+    private class FarragoMemRepos
+        extends FarragoMemFactory
+        implements FarragoRepos
+    {
+        public FarragoMemRepos(JmiModelGraph modelGraph)
+        {
+            super(modelGraph);
+        }
+
+        public MDRepository getMdrRepos()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public EnkiMDRepository getEnkiMdrRepos()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public JmiModelGraph getModelGraph()
+        {
+            return getImpl().getJmiModelGraph();
+        }
+
+        public JmiModelView getModelView()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public FarragoPackage getTransientFarragoPackage()
+        {
+            return (FarragoPackage) getImpl().getRootPackage();
+        }
+
+        public CwmCatalog getSelfAsCatalog()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public int getIdentifierPrecision()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public FemFarragoConfig getCurrentConfig()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getDefaultCharsetName()
+        {
+            return SaffronProperties.instance().defaultCharset.get();
+        }
+
+        public String getDefaultCollationName()
+        {
+            return SaffronProperties.instance().defaultCollation.get();
+        }
+
+        public boolean isFennelEnabled()
+        {
+            return true;
+        }
+
+        public String getLocalizedObjectName(CwmModelElement modelElement)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getLocalizedObjectName(String name)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getLocalizedObjectName(
+            CwmModelElement modelElement,
+            RefClass refClass)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getLocalizedObjectName(
+            String qualifierName,
+            String objectName,
+            RefClass refClass)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getLocalizedClassName(RefClass refClass)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public CwmCatalog getCatalog(String catalogName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public CwmTaggedValue getTag(CwmModelElement element, String tagName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void setTagValue(
+            CwmModelElement element,
+            String tagName,
+            String tagValue)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getTagValue(CwmModelElement element, String tagName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public FemTagAnnotation getTagAnnotation(
+            FemAnnotatedElement element,
+            String tagName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void setTagAnnotationValue(
+            FemAnnotatedElement element,
+            String tagName,
+            String tagValue)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getTagAnnotationValue(
+            FemAnnotatedElement element,
+            String tagName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void addResourceBundles(List<ResourceBundle> bundles)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void beginReposSession()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void beginReposTxn(boolean writable)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void endReposTxn(boolean rollback)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void endReposSession()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public Object getMetadataFactory(String prefix)
+        {
+            return getImpl();
+        }
+
+        public FarragoSequenceAccessor getSequenceAccessor(String mofId)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String expandProperties(String value)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public <T extends RefObject> Collection<T> allOfClass(Class<T> clazz)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public <T extends RefObject> Collection<T> allOfType(Class<T> clazz)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public List<FarragoReposIntegrityErr> verifyIntegrity(RefObject refObj)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public FarragoModelLoader getModelLoader()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void closeAllocation()
+        {
+        }
+
+        // implement FarragoRepos
+        public FarragoReposTxnContext newTxnContext()
+        {
+            return newTxnContext(false);
+        }
+
+        // implement FarragoRepos
+        public FarragoReposTxnContext newTxnContext(boolean manageReposSession)
+        {
+            return new FarragoReposTxnContext(this, manageReposSession);
+        }
+    }
 
     private class FarragoMemFactory
         extends FarragoMetadataFactoryImpl
@@ -256,6 +661,11 @@ public class JmiMemTest
         protected RefPackageImpl newRootPackage()
         {
             return new RefPackageImpl(FarragoPackage.class);
+        }
+
+        public JmiModelGraph getJmiModelGraph()
+        {
+            return getModelGraph();
         }
     }
 }

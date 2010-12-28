@@ -1,0 +1,65 @@
+<project name="bh" default="mbean">
+  <target name="mbean">
+    <test-suite name="mbean">
+
+      <init-hook>
+        <test-suite name="init">
+          <custom-task>
+            <junit-utility testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+              methodnames="startLucidDb"/>
+          </custom-task>
+        </test-suite>
+      </init-hook>
+
+      <test name="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testPingServer"/>
+      </test>
+
+      <test name="testForeignSources" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testForeignSources"/>
+      </test>
+
+      <test name="testObjectsInUse" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testObjectsInUse"/>
+      </test>
+
+      <test name="testPerfCounters" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testPerfCounters"/>
+      </test>
+
+      <test name="testSessions" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSessions"/>
+      </test>
+
+      <test name="testSqlStatements" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSqlStatements"/>
+      </test>
+
+      <test name="testSystemParameters" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSystemParameters"/>
+      </test>
+
+      <test name="testStorageManagement" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testStorageManagement"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <custom-task>
+            <junit-utility testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+              methodnames="shutdownLucidDb"/>
+          </custom-task>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

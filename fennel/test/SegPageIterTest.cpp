@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2005 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 1999 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,30 +36,48 @@ class SegPageIterTest : virtual public SegStorageTestBase
 public:
     explicit SegPageIterTest()
     {
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testUnboundedIter);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testBoundedIter);
-        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testWithLock);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testUnboundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testBoundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testWithLock);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testHighPrefetchRejects);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest, testLowPrefetchRejects);
     }
 
     void testUnboundedIter()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 0);
     }
-    
+
     void testBoundedIter()
     {
         testIter(
             Segment::getLinearPageId(3),
             Segment::getLinearPageId(51),
-            false);
+            false,
+            0);
     }
 
     void testWithLock()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,true);
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, true, 0);
     }
 
-    void testIter(PageId beginPageId,PageId endPageId,bool bLock)
+    void testHighPrefetchRejects()
+    {
+        // High pre-fetch reject rate.  This will force frequent downward
+        // throttles.
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 3);
+    }
+
+    void testLowPrefetchRejects()
+    {
+        // Low pre-fetch reject rate.  This will allow the rate to throttle
+        // back up once it's throttled down.
+        testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 123);
+    }
+
+    void testIter(
+        PageId beginPageId, PageId endPageId, bool bLock, int rejectRate)
     {
         openStorage(DeviceMode::createNew);
 
@@ -67,15 +85,18 @@ public:
         closeStorage();
         openStorage(DeviceMode::load);
 
-        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SegmentAccessor segmentAccessor(pLinearSegment, pCache);
         SegPageLock pageLock(segmentAccessor);
         SegPageIter iter;
-        iter.mapRange(segmentAccessor,beginPageId,endPageId);
+        iter.mapRange(segmentAccessor, beginPageId, endPageId);
         PageId pageId = beginPageId;
-        for (;;) {
+        for (uint i = 0; ; i++) {
             BOOST_CHECK_EQUAL(pageId,*iter);
             if (pageId == endPageId) {
                 break;
+            }
+            if (rejectRate > 0 && !(i % rejectRate)) {
+                iter.forcePrefetchReject();
             }
             if (bLock) {
                 pageLock.lockShared(pageId);

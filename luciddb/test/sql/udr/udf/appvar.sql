@@ -6,6 +6,10 @@ set path 'udftest';
 -- use xmlattr format so we can distinguish nulls from blanks
 !set outputformat xmlattr
 
+-- for this test, enable code cache to make sure that changes
+-- in variables do not get ignored due to stale plan cache
+alter system set "codeCacheMaxBytes" = max;
+
 -- create a context
 call applib.create_var('context1', null, 'very explicit');
 
@@ -27,6 +31,10 @@ values (applib.get_var('context1', 'var1'));
 !set outputformat csv
 explain plan for values (applib.get_var('context1', 'var1'));
 !set outputformat xmlattr
+
+-- test null values
+values (applib.get_var(cast(null as varchar(10)), 'var1'));
+values (applib.get_var('context1', cast(null as varchar(10))));
 
 -- delete variable
 call applib.delete_var('context1', 'var1');

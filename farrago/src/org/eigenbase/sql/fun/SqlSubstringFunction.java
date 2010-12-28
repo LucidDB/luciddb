@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2002 SQLstream, Inc.
+// Copyright (C) 2005 Dynamo BI Corporation
+// Portions Copyright (C) 2003 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package org.eigenbase.sql.fun;
+
+import java.math.*;
 
 import java.util.*;
 
@@ -40,13 +42,16 @@ import org.eigenbase.sql.validate.*;
 public class SqlSubstringFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates the SqlSubstringFunction.
+     */
     SqlSubstringFunction()
     {
-        super("SUBSTRING",
-            SqlKind.Function,
+        super(
+            "SUBSTRING",
+            SqlKind.OTHER_FUNCTION,
             SqlTypeStrategies.rtiNullableVaryingFirstArgType,
             null,
             null,
@@ -69,17 +74,17 @@ public class SqlSubstringFunction
 
     public String getAllowedSignatures(String opName)
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int i = 0; i < SqlTypeName.stringTypes.length; i++) {
             if (i > 0) {
                 ret.append(NL);
             }
             ArrayList<SqlTypeName> list = new ArrayList<SqlTypeName>();
             list.add(SqlTypeName.stringTypes[i]);
-            list.add(SqlTypeName.Integer);
+            list.add(SqlTypeName.INTEGER);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));
             ret.append(NL);
-            list.add(SqlTypeName.Integer);
+            list.add(SqlTypeName.INTEGER);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
         return ret.toString();
@@ -99,7 +104,8 @@ public class SqlSubstringFunction
                 callBinding,
                 call.operands[0],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
         if (2 == n) {
@@ -107,7 +113,8 @@ public class SqlSubstringFunction
                     callBinding,
                     call.operands[1],
                     0,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
         } else {
@@ -119,22 +126,24 @@ public class SqlSubstringFunction
                         callBinding,
                         call.operands[1],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
                         call.operands[2],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
 
                 if (!SqlTypeUtil.isCharTypeComparable(
-                        validator,
-                        scope,
-                        call.operands,
-                        throwOnFailure)) {
+                        callBinding,
+                        callBinding.getCall().getOperands(),
+                        throwOnFailure))
+                {
                     return false;
                 }
             } else {
@@ -142,14 +151,16 @@ public class SqlSubstringFunction
                         callBinding,
                         call.operands[1],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
                         call.operands[2],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
             }
@@ -186,6 +197,29 @@ public class SqlSubstringFunction
         }
 
         writer.endFunCall(frame);
+    }
+
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
+    {
+        // SUBSTRING(x FROM 0 FOR constant) has same monotonicity as x
+        if (call.operands.length == 3) {
+            final SqlMonotonicity mono0 =
+                call.operands[0].getMonotonicity(scope);
+            if ((mono0 != SqlMonotonicity.NotMonotonic)
+                && (call.operands[1].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant)
+                && (call.operands[1] instanceof SqlLiteral)
+                && ((SqlLiteral) call.operands[1]).bigDecimalValue().equals(
+                    BigDecimal.ZERO)
+                && (call.operands[2].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant))
+            {
+                return mono0.unstrict();
+            }
+        }
+        return super.getMonotonicity(call, scope);
     }
 }
 
