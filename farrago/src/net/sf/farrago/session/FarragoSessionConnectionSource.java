@@ -42,6 +42,15 @@ public interface FarragoSessionConnectionSource
      * @return new connection
      */
     public Connection newConnection();
+
+    /**
+     * Creates a new connection with session variables preset.
+     *
+     * @param sessionVariables session variables to set for new connection
+     *
+     * @return new connection
+     */
+    public Connection newConnection(FarragoSessionVariables sessionVariables);
 }
 
 // End FarragoSessionConnectionSource.java

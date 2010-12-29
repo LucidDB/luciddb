@@ -1026,6 +1026,32 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Gets the creator of an object.
+     *
+     * @param repos repository storing the object
+     *
+     * @param obj object of interest
+     *
+     * @return creator
+     */
+    public static FemAuthId getCreator(FarragoRepos repos, CwmModelElement obj) 
+    {
+        SecurityPackage sp = repos.getSecurityPackage();
+        for (FemGrant grant
+                 : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj))
+        {
+            if (!grant.getAction().equals(
+                    PrivilegedActionEnum.CREATION.toString()))
+            {
+                continue;
+            }
+            return grant.getGrantee();
+        }
+        throw Util.newInternal(
+            "No creator found for " + repos.getLocalizedObjectName(obj));
+    }
+    
+    /**
      * Determines the allowed access for a table
      *
      * @param table Repository table

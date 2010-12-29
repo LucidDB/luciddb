@@ -501,6 +501,12 @@ public class FarragoUserDefinedRoutine
                 method,
                 routine.getDataAccess() != RoutineDataAccessEnum.RDA_NO_SQL,
                 returnType);
+        if (routine.isImpersonateDefiner()) {
+            implementor.setImpersonatedUser(
+                FarragoCatalogUtil.getCreator(
+                    stmtValidator.getRepos(),
+                    routine).getName());
+        }
         Expression varResult =
             implementor.implementFarrago(farragoTranslator, call, args);
 
