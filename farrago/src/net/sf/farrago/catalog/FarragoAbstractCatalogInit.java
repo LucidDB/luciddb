@@ -124,6 +124,10 @@ public abstract class FarragoAbstractCatalogInit
                 // to revalidate this object.
                 modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
 
+                if (!FarragoCatalogUtil.needsCreationGrant(modelElement)) {
+                    continue;
+                }
+                
                 // Define this as a system-owned object.
                 FemGrant grant =
                     FarragoCatalogUtil.newCreationGrant(

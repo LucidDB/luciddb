@@ -964,6 +964,36 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Determines whether an element automatically gets a
+     * creation grant indicating its owner.
+     *
+     * @param obj element to check
+     *
+     * @return true if a creation grant should be instantiated
+     */
+    public static boolean needsCreationGrant(CwmModelElement obj) 
+    {
+        if ((obj instanceof CwmOperation)
+            || (obj instanceof CwmDependency)
+            || (obj instanceof CwmSqlindex)
+            || (obj instanceof CwmSqlindexColumn)
+            || (obj instanceof CwmSqlindexColumn)
+            || (obj instanceof FemAbstractTypedElement)
+            || (obj instanceof CwmUniqueConstraint)
+            || (obj instanceof FemUserDefinedOrdering)
+            || (obj instanceof FemSqlmultisetType)
+            || (obj instanceof FemSqlrowType)
+            || (obj instanceof FemKeyComponent))
+        {
+            // piddling second-class object
+            return false;
+        } else {
+            // for everything else, assume we need one
+            return true;
+        }
+    }
+
+    /**
      * Creates a new grant representing ownership of an object by its creator.
      *
      * @param repos repository storing the objects

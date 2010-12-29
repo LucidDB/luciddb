@@ -774,7 +774,7 @@ public class DdlValidator
     private void updateObjectTimestamp(CwmModelElement element)
     {
         boolean isNew = isNewObject(element);
-        if (isNew) {
+        if (isNew && FarragoCatalogUtil.needsCreationGrant(element)) {
             // Retrieve and cache the system and current user FemAuthId
             // objects rather than looking them up every time.
             if (systemUserAuthId == null) {
