@@ -165,6 +165,10 @@ ${farrago.test.jvmargs}
   <property name="farrago.catalog.src.dir"
     location="${farrago.catalog.dir}/java"/>
 
+  <!-- directory in which catalog transient sources are generated -->
+  <property name="farrago.catalog.transient.dir"
+    location="${farrago.catalog.dir}/transient"/>
+
   <!-- directory in which SQL parser source code is stored -->
   <property name="farrago.parser.sql.dir"
     location="${farrago.src.dir}/org/eigenbase/sql/parser"/>
@@ -424,6 +428,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.transient.dir}"/>
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
@@ -524,7 +529,6 @@ ${farrago.test.jvmargs}
         classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
-      <echo message="FOOOF:  ${assertions.jvmarg}"/>
       <bh
         dir="@{dir}"
         testfile="@{basedir}/@{testscript}"

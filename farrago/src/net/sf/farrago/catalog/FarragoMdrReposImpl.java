@@ -39,6 +39,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.trans.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
 
@@ -63,7 +64,7 @@ public class FarragoMdrReposImpl
     /**
      * Root package in transient repository.
      */
-    private final FarragoPackage transientFarragoPackage;
+    private FarragoPackage transientFarragoPackage;
 
     /**
      * Fennel package in repository.
@@ -84,8 +85,6 @@ public class FarragoMdrReposImpl
      * MofId for current instance of FemFarragoConfig.
      */
     private final String currentConfigMofId;
-
-    protected FarragoMemFactory memFactory;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -146,9 +145,7 @@ public class FarragoMdrReposImpl
 
         // Create special in-memory storage for transient objects
         try {
-            memFactory = new FarragoMemFactory(getModelGraph());
-
-            transientFarragoPackage = memFactory.getFarragoPackage();
+            transientFarragoPackage = createTransientPackage();
             fennelPackage = transientFarragoPackage.getFem().getFennel();
         } catch (Throwable ex) {
             throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
@@ -162,6 +159,32 @@ public class FarragoMdrReposImpl
 
     //~ Methods ----------------------------------------------------------------
 
+    protected FarragoPackage createTransientPackage() throws Exception
+    {
+        // NOTE: to use the old JMI mem factory instead, override this method
+        // to just return new
+        // FarragoMemFactory(getModelGraph()).getFarragoPackage();
+        Properties transientProps = new Properties();
+        transientProps.put(
+            MDRepositoryFactory.ENKI_IMPL_TYPE,
+            MdrProvider.ENKI_TRANSIENT.toString());
+        transientProps.put(
+            TransientMDRepository.PROPERTY_WEAK,
+            Boolean.toString(true));
+        EnkiMDRepository transientRepos = MdrUtil.loadRepository(
+            null, transientProps);
+        ModelPackage modelPackage = (ModelPackage)
+            transientRepos.createExtent(
+                FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
+                null);
+        MofPackage metaPackage = FarragoReposUtil.getMetaPackage(
+            modelPackage, FarragoReposUtil.FARRAGO_PACKAGE_NAME);
+        return (FarragoPackage)
+            transientRepos.createExtent(
+                "FarragoTransientCatalog",
+                metaPackage);
+    }
+    
     private void checkModelTimestamp(String extentName)
     {
         String prefix = "TIMESTAMP = ";
@@ -236,8 +259,8 @@ public class FarragoMdrReposImpl
         tracer.fine("Closing catalog");
         if (transientFarragoPackage != null) {
             transientFarragoPackage.refDelete();
+            transientFarragoPackage = null;
         }
-        memFactory = null;
 
         modelLoader.close();
         modelLoader = null;
