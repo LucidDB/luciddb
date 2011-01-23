@@ -47,16 +47,19 @@ public class FarragoDbSessionPrivilegeChecker
 
     private final FarragoSession session;
 
-    private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
+    private final Map<List<Object>, Set<FemAuthId>> authMap;
 
     private FemRole publicRole;
+
+    private final Set<String> visibleObjects;
 
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
         this.session = session;
-        authMap = new HashMap<List<FemAuthId>, Set<FemAuthId>>();
+        authMap = new HashMap<List<Object>, Set<FemAuthId>>();
+        visibleObjects = new LinkedHashSet<String>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -69,9 +72,10 @@ public class FarragoDbSessionPrivilegeChecker
         String action,
         boolean requireGrantOption)
     {
-        List<FemAuthId> authKey = new ArrayList<FemAuthId>(2);
+        List<Object> authKey = new ArrayList<Object>(3);
         authKey.add(user);
         authKey.add(role);
+        authKey.add((action == null) ? "VISIBILITY" : "ACCESS");
 
         // Find credentials for the given user and role.
         Set<FemAuthId> authSet = authMap.get(authKey);
@@ -82,6 +86,11 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (user != null) {
                 authSet.add(user);
+                if (action == null) {
+                    // For visibility test, include all applicable roles
+                    // for user (regardless of which is active, if any)
+                    authSet.addAll(FarragoCatalogUtil.getApplicableRoles(user));
+                }
             }
 
             if (role != null) {
@@ -95,6 +104,12 @@ public class FarragoDbSessionPrivilegeChecker
         // Now, let's check their papers...
         if (testAccess(obj, authSet, action, requireGrantOption)) {
             // It's all good.
+            visibleObjects.add(obj.refMofId());
+            return;
+        }
+
+        if (action == null) {
+            // No failure, just track visibility.
             return;
         }
 
@@ -134,7 +149,17 @@ public class FarragoDbSessionPrivilegeChecker
     public void checkAccess()
     {
         // This implementation does all the work immediately in requestAccess,
-        // so nothing to do here.
+        // so nothing to do here except clear the accumulated references.
+        visibleObjects.clear();
+    }
+
+    // implement FarragoSessionPrivilegeChecker
+    public Set<String> checkVisibility()
+    {
+        Set<String> set =
+            new LinkedHashSet<String>(visibleObjects);
+        visibleObjects.clear();
+        return set;
     }
 
     private boolean testAccess(
@@ -160,7 +185,8 @@ public class FarragoDbSessionPrivilegeChecker
             }
 
             if (authSet.contains(grant.getGrantee())
-                && (grant.getAction().equals(action) || isCreation))
+                && ((action == null)
+                    || grant.getAction().equals(action) || isCreation))
             {
                 return true;
             }

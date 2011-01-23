@@ -21,9 +21,10 @@
 */
 package net.sf.farrago.session;
 
+import java.util.*;
+
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
-
 
 /**
  * This interface specifies the privilege check service methods. The caller
@@ -39,15 +40,17 @@ public interface FarragoSessionPrivilegeChecker
 
     /**
      * Submits a request for access to a catalog object. Actual checking of the
-     * request may be deferred until the next call to checkAccess. It is legal
-     * to specify neither, one, or both of user and role; even when both are
-     * null, privileges granted to PUBLIC still apply.
+     * request may be deferred until the next call to checkAccess or
+     * checkVisibility. It is legal to specify neither, one, or both of user
+     * and role; even when both are null, privileges granted to PUBLIC still
+     * apply.
      *
      * @param obj object to be accessed
      * @param user the requesting user, or null for none
      * @param role the requesting role, or null for none
      * @param action the action to be performed on obj (see {@link
-     * PrivilegedActionEnum} for base set)
+     * PrivilegedActionEnum} for base set), or null for a visibility
+     * check (any privilege is good enough)
      * @param requireGrantOption whether the privilege needs to
      * have been granted WITH GRANT OPTION
      */
@@ -59,10 +62,19 @@ public interface FarragoSessionPrivilegeChecker
         boolean requireGrantOption);
 
     /**
-     * Checks access for all requests that have been submitted, and clears the
-     * request list.
+     * Checks access for all requests that have been submitted (throwing
+     * an exception if any fail), and clears the
+     * request list if all pass.
      */
     public void checkAccess();
+
+    /**
+     * Checks object visibility for all requests that have been submitted,
+     * and clears the request list.
+     *
+     * @return set of MOFID's for visible objects
+     */
+    public Set<String> checkVisibility();
 }
 
 // End FarragoSessionPrivilegeChecker.java
