@@ -48,6 +48,10 @@ drop schema mtest cascade;
 select * from table(sys_boot.mgmt.browse_foreign_schemas('HSQLDB_DEMO'))
 order by schema_name;
 
+select * from table(sys_boot.mgmt.browse_foreign_tables('HSQLDB_DEMO', 'SALES'));
+
+select * from table(sys_boot.mgmt.browse_foreign_columns('HSQLDB_DEMO', 'SALES'));
+
 -- specialize the JDBC foreign wrapper for a particular DBMS;
 -- note that the url setting is intended to be interpreted as a template
 create foreign data wrapper hsqldb_wrapper

@@ -122,6 +122,38 @@
 | SALES               |              |
 +---------------------+--------------+
 > 
+> select * from table(sys_boot.mgmt.browse_foreign_tables('HSQLDB_DEMO', 'SALES'));
++-------------+--------------+
+| TABLE_NAME  | DESCRIPTION  |
++-------------+--------------+
+| BITFLIP     |              |
+| DEPT        |              |
+| EMP         |              |
+| SALGRADE    |              |
++-------------+--------------+
+> 
+> select * from table(sys_boot.mgmt.browse_foreign_columns('HSQLDB_DEMO', 'SALES'));
++-------------+--------------+----------+--------------+------------+-------------+--------------+---------------------+--------------+----------------+
+| TABLE_NAME  | COLUMN_NAME  | ORDINAL  | COLUMN_TYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  | FORMATTED_DATATYPE  | DESCRIPTION  | DEFAULT_VALUE  |
++-------------+--------------+----------+--------------+------------+-------------+--------------+---------------------+--------------+----------------+
+| BITFLIP     | B1           | 0        | BOOLEAN      | 1          | 0           | true         | BOOLEAN             |              |                |
+| BITFLIP     | B2           | 1        | BOOLEAN      | 1          | 0           | false        | BOOLEAN             |              |                |
+| DEPT        | DEPTNO       | 0        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| DEPT        | DNAME        | 1        | VARCHAR      | 1024       | 0           | true         | VARCHAR(1024)       |              |                |
+| DEPT        | LOC          | 2        | VARCHAR      | 1024       | 0           | true         | VARCHAR(1024)       |              |                |
+| EMP         | EMPNO        | 0        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| EMP         | ENAME        | 1        | VARCHAR      | 1024       | 0           | true         | VARCHAR(1024)       |              |                |
+| EMP         | JOB          | 2        | VARCHAR      | 1024       | 0           | true         | VARCHAR(1024)       |              |                |
+| EMP         | MGR          | 3        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| EMP         | HIREDATE     | 4        | DATE         | 0          | 0           | true         | DATE                |              |                |
+| EMP         | SAL          | 5        | DECIMAL      | 19         | 0           | true         | DECIMAL(19, 0)      |              |                |
+| EMP         | COMM         | 6        | DECIMAL      | 19         | 0           | true         | DECIMAL(19, 0)      |              |                |
+| EMP         | DEPTNO       | 7        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| SALGRADE    | GRADE        | 0        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| SALGRADE    | LOSAL        | 1        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
+| SALGRADE    | HISAL        | 2        | INTEGER      | 10         | 0           | true         | INTEGER             |              |                |
++-------------+--------------+----------+--------------+------------+-------------+--------------+---------------------+--------------+----------------+
+> 
 > -- specialize the JDBC foreign wrapper for a particular DBMS;
 > -- note that the url setting is intended to be interpreted as a template
 > create foreign data wrapper hsqldb_wrapper

@@ -1018,7 +1018,11 @@ returns table(
   table_name varchar(128),
   column_name varchar(128),
   ordinal integer,
-  column_type varchar(128),
+  datatype varchar(128),
+  "PRECISION" integer,
+  dec_digits integer,
+  is_nullable boolean,
+  formatted_datatype varchar(128),
   description varchar(4096),
   default_value varchar(128))
 language java

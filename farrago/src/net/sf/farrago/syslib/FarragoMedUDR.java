@@ -315,12 +315,23 @@ public abstract class FarragoMedUDR
                         Properties properties)
                 {
                     try {
-                        resultInserter.setString(1, tableName);
-                        resultInserter.setString(2, columnName);
-                        resultInserter.setInt(3, ordinal);
-                        resultInserter.setString(4, type.toString());
-                        resultInserter.setString(5, remarks);
-                        resultInserter.setString(6, defaultValue);
+                        int c = 0;
+                        resultInserter.setString(++c, tableName);
+                        resultInserter.setString(++c, columnName);
+                        resultInserter.setInt(++c, ordinal);
+                        resultInserter.setString(
+                                ++c, type.getSqlIdentifier().toString());
+                        resultInserter.setInt(++c, type.getPrecision());
+                        try {
+                            resultInserter.setInt(++c, type.getScale());
+                        } catch (AssertionError ex) {
+                            // some datatypes do not support scale
+                            resultInserter.setInt(c, 0);
+                        }
+                        resultInserter.setBoolean(++c, type.isNullable());
+                        resultInserter.setString(++c, type.toString());
+                        resultInserter.setString(++c, remarks);
+                        resultInserter.setString(++c, defaultValue);
                         resultInserter.executeUpdate();
                     } catch (SQLException ex) {
                         throw
