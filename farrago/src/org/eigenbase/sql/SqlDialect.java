@@ -166,6 +166,8 @@ public class SqlDialect
             return DatabaseProduct.LUCIDDB;
         } else if (upperProductName.indexOf("SQL SERVER") >= 0) {
             return DatabaseProduct.MSSQL;
+        } else if (upperProductName.indexOf("PARACCEL") >= 0) {
+            return DatabaseProduct.PARACCEL;
         } else if (productName.equals("Oracle")) {
             return DatabaseProduct.ORACLE;
         } else if (upperProductName.indexOf("POSTGRE") >= 0) {
@@ -494,6 +496,7 @@ public class SqlDialect
         HSQLDB("Hsqldb", null),
         VERTICA("Vertica", "\""),
         SQLSTREAM("SQLstream", "\""),
+        PARACCEL("Paraccel", "\""),
         /**
          * Placeholder for the unknown database.
          *
