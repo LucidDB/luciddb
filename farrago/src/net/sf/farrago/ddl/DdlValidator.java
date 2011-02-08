@@ -658,7 +658,10 @@ public class DdlValidator
                     // Set some mandatory but irrelevant attributes.
                     CwmStructuralFeature feature = (CwmStructuralFeature) obj;
 
-                    feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+                    if (feature.getChangeability() == null) {
+                        feature.setChangeability(
+                            ChangeableKindEnum.CK_CHANGEABLE);
+                    }
                 }
             } else {
                 RefFeatured container = obj.refImmediateComposite();

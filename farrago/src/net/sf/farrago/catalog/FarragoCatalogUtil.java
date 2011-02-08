@@ -875,9 +875,9 @@ public abstract class FarragoCatalogUtil
      * object returned.
      *
      * @param repos repository containing the objects
-     * @param grantorName the creator of this grant
-     * @param granteeId the receipient of this grant
-     * @param roleName the role to be granted
+     * @param grantorAuthId the creator of this grant
+     * @param granteeAuthId the receipient of this grant
+     * @param grantedRole the role to be granted
      *
      * @return new grant object
      */

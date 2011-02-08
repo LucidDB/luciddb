@@ -31,6 +31,7 @@ import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ojrex.*;
@@ -92,7 +93,8 @@ public class FarragoUserDefinedRoutine
             FarragoCatalogUtil.isTableFunction(routine)
             ? new TableFunctionReturnTypeInference(
                 returnType,
-                getRoutineParamNames(routine))
+                getRoutineParamNames(routine),
+                isPassthrough(routine))
             : new ExplicitReturnTypeInference(returnType),
             new ExplicitOperandTypeInference(paramTypes),
             new AssignableOperandTypeChecker(paramTypes),
@@ -123,6 +125,19 @@ public class FarragoUserDefinedRoutine
             list.add(param.getName());
         }
         return list;
+    }
+
+    private static boolean isPassthrough(FemRoutine femRoutine)
+    {
+        if (femRoutine.getFeature().size() != 2) {
+            // for now we only support a single passthrough cursor
+            // with nothing else in the output; ignore the last feature
+            // since it is the dummy return
+            return false;
+        }
+        CwmStructuralFeature col =
+            ((CwmStructuralFeature) femRoutine.getFeature().get(0));
+        return ChangeableKindEnum.CK_FROZEN.equals(col.getChangeability());
     }
 
     public FarragoPreparingStmt getPreparingStmt()

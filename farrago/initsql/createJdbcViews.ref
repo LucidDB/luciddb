@@ -110,7 +110,7 @@
 > create or replace function filter_user_visible_objects(
 >   input_set cursor,
 >   id_columns select from input_set)
-> returns table(input_set.*)
+> returns table(input_set.* passthrough)
 > language java
 > parameter style system defined java
 > no sql

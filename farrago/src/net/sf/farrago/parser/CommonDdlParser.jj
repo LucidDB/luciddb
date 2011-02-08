@@ -2033,6 +2033,7 @@ void TableFunctionColumnListElement(FemRoutine function) :
 {
     FemViewColumn column = getRepos().newFemViewColumn();
     SqlIdentifier inputCursorName;
+    boolean passthrough = false;
 }
 {
     LOOKAHEAD(2) BasicColumnDefinition(function, column)
@@ -2040,12 +2041,18 @@ void TableFunctionColumnListElement(FemRoutine function) :
     }
     |
     inputCursorName = SimpleIdentifier() <DOT> <STAR>
+    [ <PASSTHROUGH> { passthrough = true; } ]
     {
         farragoParser.getDdlValidator().setSqlDefinition(
             column,
             new SqlIdentifier("CURSOR", getPos()));
         function.getFeature().add(column);
         column.setName(inputCursorName.getSimple());
+        if (passthrough) {
+            // we use FROZEN to indicate PASSTHROUGH
+            // (i.e. the UDX cannot change the values)
+            column.setChangeability(ChangeableKindEnum.CK_FROZEN);
+        }
     }
 }
 

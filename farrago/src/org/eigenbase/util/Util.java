@@ -1215,7 +1215,7 @@ public class Util
      * used in finally blocks when it's necessary to avoid throwing an exception
      * which might mask a real exception.
      *
-     * @param stream stream to close
+     * @param jar jar to close
      */
     public static void squelchJar(JarFile jar)
     {
