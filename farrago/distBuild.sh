@@ -95,17 +95,13 @@ set -v
 OPEN_DIR=$(cd ..; pwd)
 FARRAGO_DIR=$OPEN_DIR/farrago
 DIST_DIR=$FARRAGO_DIR/dist
+TMP_DIR=$DIST_DIR/tmp
 FENNEL_DIR=$OPEN_DIR/fennel
 THIRDPARTY_DIR=$OPEN_DIR/thirdparty
 
 # create staging directory
-TMP_DIR=$DIST_DIR/tmp
-rm -rf $TMP_DIR
-mkdir $TMP_DIR
-
 # get help from ant to figure out where to build release image
-cd $DIST_DIR
-ant createReleaseDir
+ant dist
 
 # derive staging sub-directories
 RELEASE_DIR=`echo $TMP_DIR/*`
@@ -243,13 +239,15 @@ else
     rm -f $BIN_DIR/*.bat
 fi
 
+cd $DIST_DIR
 # archive the whole thing up
-cd $TMP_DIR
 if [ $cygwin = "true" ]; then
+    cd $TMP_DIR
     zip -r -y ../farrago.zip .
+    cd $DIST_DIR
 else
-    tar cv * | bzip2 -c >../farrago.tar.bz2
+    ant package
 fi
+ant removeReleaseDir
 
 cd $FARRAGO_DIR
-rm -rf $TMP_DIR

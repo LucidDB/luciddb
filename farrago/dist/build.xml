@@ -15,7 +15,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,7 +23,7 @@
 
 <!-- Farrago ant script for creating distributions -->
 
-<project name="farragoDistribution" basedir="." default="mustSpecify">
+<project name="farragoDistribution" basedir="." default="jar">
 
   <import file="./../buildMacros.xml"/>
 
@@ -33,17 +33,28 @@
   <fail unless="product.version.major"/>
   <fail unless="product.version.minor"/>
   <fail unless="product.version.point"/>
-  <property 
-    name="release.spec" 
-    value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
+  <condition property="release.spec"
+    value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"
+    else="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}">
+    <equals arg1="${product.build.number}" arg2="0"/>
+  </condition>
 
   <!-- Directories and filenames for distribution jar file. -->
   <property name="dist.dir" location="${farrago.dir}/dist"/>
+  <property name="dist.tmp.dir" location="${dist.dir}/tmp"/>
+  <property name="release.dir" location="${dist.tmp.dir}/${release.spec}"/>
+  <property name="release.file" location="${dist.dir}/${release.spec}.tar.bz2"/>
   <property name="dist.plugin.dir" location="${dist.dir}/plugin"/>
   <property name="dist.jar.file" location="${dist.dir}/farrago.jar"/>
 
   <target name="createReleaseDir">
-    <mkdir dir="${dist.dir}/tmp/${release.spec}"/>
+    <delete dir="${dist.tmp.dir}" failonerror="no"/>
+    <mkdir dir="${dist.tmp.dir}"/>
+    <mkdir dir="${release.dir}"/>
+  </target>
+
+  <target name="removeReleaseDir">
+    <delete dir="${dist.tmp.dir}"/>
   </target>
 
   <target name="jar">
@@ -85,6 +96,11 @@
       </webinf>
       <lib dir="${thirdparty.dir}/vjdbc/lib" excludes="j2ee_api.jar,junit.jar"/>
     </war>
+  </target>
+
+  <!-- Package the build for distribution -->
+  <target name="package">
+    <tar destfile="${release.file}" compression="bzip2" basedir="${dist.tmp.dir}"/>
   </target>
 
   <!-- TODO jvs 26-June-2005:  this isn't used yet -->
