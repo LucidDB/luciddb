@@ -283,15 +283,15 @@ public class FennelWindowRel
             valueList.toArray(new Object[valueList.size()]));
     }
 
-    private void getExplainTerms(List<String> termList, List<Object> valueList)
+    protected void getExplainTerms(List<String> terms, List<Object> values)
     {
-        termList.add("child");
-        inputProgram.collectExplainTerms("in-", termList, valueList);
-        outputProgram.collectExplainTerms("out-", termList, valueList);
+        terms.add("child");
+        inputProgram.collectExplainTerms("in-", terms, values);
+        outputProgram.collectExplainTerms("out-", terms, values);
         for (int i = 0; i < windows.length; i++) {
             Window window = windows[i];
-            termList.add("window#" + i);
-            valueList.add(window.toString());
+            terms.add("window#" + i);
+            values.add(window.toString());
         }
     }
 
