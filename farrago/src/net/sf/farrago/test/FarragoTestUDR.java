@@ -157,6 +157,28 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static String executeSql(String sql)
+        throws SQLException
+    {
+        Connection conn =
+            DriverManager.getConnection(
+                "jdbc:default:connection");
+        Statement stmt = conn.createStatement();
+        if (stmt.execute(sql)) {
+            ResultSet rs = stmt.getResultSet();
+            rs.next();
+            return rs.getString(1);
+        } else {
+            return Integer.toString(stmt.getUpdateCount());
+        }
+    }
+
+    public static void executeSqlVoid(String sql)
+        throws SQLException
+    {
+        executeSql(sql);
+    }
+
     public static String generateUnicodeString()
     {
         return ConversionUtil.TEST_UNICODE_STRING;

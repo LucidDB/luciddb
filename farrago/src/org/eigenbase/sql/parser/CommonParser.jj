@@ -4289,6 +4289,7 @@ TOKEN :
     | < PARTIAL: "PARTIAL" >
     | < PARTITION: "PARTITION" >
     | < PASCAL: "PASCAL" >
+    | < PASSTHROUGH: "PASSTHROUGH" >
     | < PATH: "PATH" >
     | < PERCENT_RANK: "PERCENT_RANK" >
     | < PERCENTILE_CONT: "PERCENTILE_CONT" >
@@ -4644,6 +4645,7 @@ String CommonNonReservedKeyWord() :
         | <PARAMETER_SPECIFIC_SCHEMA>
         | <PARTIAL>
         | <PASCAL>
+        | <PASSTHROUGH>
         | <PATH>
         | <PLACING>
         | <PLAN>
@@ -4891,7 +4893,7 @@ TOKEN :
     "\""
     (   (~["\"","\n","\r"])
         | ("\"\"")
-        )*
+        )+
     "\""
     >
     |

@@ -107,6 +107,29 @@
 > else cast (val as int)
 > end;
 > 
+> create or replace function filter_user_visible_objects(
+>   input_set cursor,
+>   id_columns select from input_set)
+> returns table(input_set.* passthrough)
+> language java
+> parameter style system defined java
+> no sql
+> not deterministic
+> external name 
+> 'class net.sf.farrago.syslib.FarragoManagementUDR.filterUserVisibleObjects';
+> 
+> create or replace function filter_user_visible_objects_typed(
+>   input_set cursor,
+>   class_name varchar(128),
+>   id_columns select from input_set)
+> returns table(input_set.*)
+> language java
+> parameter style system defined java
+> no sql
+> not deterministic
+> external name 
+> 'class net.sf.farrago.syslib.FarragoManagementUDR.filterUserVisibleObjectsTyped';
+> 
 > -- NOTE:  don't include ORDER BY in the view definitions
 > 
 > create or replace view schemas_view_internal as
@@ -181,7 +204,9 @@
 >         self_referencing_col_name,
 >         ref_generation
 >     from
->         tables_view_internal t,
+>         table(filter_user_visible_objects(
+>           cursor(select * from tables_view_internal),
+>           row("mofId","mofClassName"))) t,
 >         table_types_view_internal tt
 >     where
 >         t."mofClassName"=tt.uml_class_name
@@ -218,7 +243,9 @@
 >         c."description" as remarks,
 >         c."mofId",
 >         c."lineageId",
->         nullif(e."body",'NULL') as default_value
+>         nullif(e."body",'NULL') as default_value,
+>         t."mofId" as table_mofid,
+>         t."mofClassName" as table_class_name
 >     from 
 >         tables_view_internal t 
 >     inner join 
@@ -255,7 +282,9 @@
 >         null_identifier() as scope_table,
 >         null_identifier() as source_data_type
 >     from 
->         columns_view_internal c 
+>         table(filter_user_visible_objects(
+>           cursor(select * from columns_view_internal),
+>           row(table_mofid,table_class_name))) c
 >     inner join 
 >         sys_cwm."Relational"."SQLDataType" t 
 >     on 
@@ -268,7 +297,8 @@
 >         s.object_schema as type_schem,
 >         u."name" as type_name,
 >         u."typeNumber" as data_type,
->         u."mofId"
+>         u."mofId",
+>         u."mofClassName"
 >     from
 >         schemas_view_internal s
 >     inner join
@@ -289,7 +319,9 @@
 >         null_remarks() as remarks,
 >         cast (null as smallint) as base_type
 >     from
->         udts_view_internal u
+>         table(filter_user_visible_objects(
+>           cursor(select * from udts_view_internal),
+>           row("mofId","mofClassName"))) u
 > ;
 > grant select on udts_view to public;
 > 
@@ -306,7 +338,9 @@
 >         a."ordinal" + 1 as ordinal_position,
 >         convert_cwm_nullable_to_string(a."isNullable") as is_nullable,
 >         a."type",
->         a."mofId"
+>         a."mofId",
+>         u."mofId" as udt_mofid,
+>         u."mofClassName" as udt_class_name
 >     from
 >         udts_view_internal u
 >     inner join
@@ -339,7 +373,9 @@
 >         null_identifier() as scope_table,
 >         null_identifier() as source_data_type
 >     from
->         attributes_view_internal a
+>         table(filter_user_visible_objects(
+>           cursor(select * from attributes_view_internal),
+>           row(udt_mofid,udt_class_name))) a
 >     inner join
 >         sys_cwm."Relational"."SQLDataType" t 
 >     on
@@ -356,7 +392,8 @@
 >         s.object_catalog as procedure_cat,
 >         s.object_schema as procedure_schem,
 >         r."name" as procedure_name,
->         r."mofId"
+>         r."mofId",
+>         r."mofClassName"
 >     from
 >         schemas_view_internal s
 >     inner join
@@ -379,7 +416,9 @@
 >         null_remarks() as remarks,
 >         cast(1 as smallint) as procedure_type
 >     from
->         procedures_view_internal p
+>         table(filter_user_visible_objects(
+>           cursor(select * from procedures_view_internal),
+>           row("mofId", "mofClassName"))) p
 > ;
 > grant select on procedures_view to public;
 > 
@@ -396,7 +435,9 @@
 >         case when rp."kind"='pdk_return' then 0
 >              else rp."ordinal" + 1 end as column_ordinal,
 >         rp."type",
->         rp."mofId"
+>         rp."mofId",
+>         p."mofId" as procedure_mofid,
+>         p."mofClassName" as procedure_class_name
 >     from
 >         procedures_view_internal p
 >     inner join
@@ -422,7 +463,9 @@
 >         null_remarks() as remarks,
 >         pc.column_ordinal
 >     from
->         procedure_columns_view_internal pc
+>         table(filter_user_visible_objects(
+>           cursor(select * from procedure_columns_view_internal),
+>           row(procedure_mofid, procedure_class_name))) pc
 >     inner join
 >         sys_cwm."Relational"."SQLDataType" t 
 >     on 
@@ -469,7 +512,9 @@
 >         t.table_schem,
 >         t.table_name,
 >         k."name" as pk_name,
->         k."mofId"
+>         k."mofId",
+>         t."mofId" as table_mofid,
+>         t."mofClassName" as table_class_name
 >     from
 >         tables_view_internal t
 >     inner join 
@@ -487,7 +532,9 @@
 >         c."ordinal" + 1 as key_seq,
 >         k.pk_name
 >     from
->         primary_keys_view_internal k
+>         table(filter_user_visible_objects(
+>           cursor(select * from primary_keys_view_internal),
+>           row(table_mofid, table_class_name))) k
 >     inner join
 >         sys_fem."SQL2003"."KeyComponent" c
 >     on
@@ -510,7 +557,9 @@
 >         0 as "CARDINALITY",
 >         i."pageCount" as pages,
 >         cast(null as varchar(128)) as filter_condition,
->         i."mofId"
+>         i."mofId",
+>         t."mofId" as table_mofid,
+>         t."mofClassName" as table_class_name
 >     from 
 >         tables_view_internal t
 >     inner join
@@ -525,7 +574,8 @@
 >         t.table_schem,
 >         t.table_name,
 >         acs."rowCount" as "CARDINALITY",
->         t."mofId"
+>         t."mofId",
+>         t."mofClassName"
 >     from 
 >         tables_view_internal t
 >     inner join
@@ -543,7 +593,8 @@
 >         t.table_name,
 >         t."CARDINALITY",
 >         sum(i."pageCount") as pages,
->         t."mofId"
+>         t."mofId",
+>         t."mofClassName"
 >     from 
 >         table_row_counts_internal t
 >     inner join
@@ -552,6 +603,7 @@
 >         t."mofId" = i."spannedClass"
 >     group by 
 >         t."mofId",
+>         t."mofClassName",
 >         t.table_cat,
 >         t.table_schem,
 >         t.table_name,
@@ -576,7 +628,9 @@
 >         convert_cwm_statistic_to_int(i.pages) as pages,
 >         i.filter_condition
 >     from 
->         index_info_internal i
+>         table(filter_user_visible_objects(
+>           cursor(select * from index_info_internal),
+>           row(table_mofid, table_class_name))) i
 >     left outer join
 >         sys_fem."MED"."LocalIndexColumn" c
 >     on
@@ -597,7 +651,9 @@
 >         convert_cwm_statistic_to_int(t.pages) as pages,
 >         cast(null as varchar(128)) as filter_condition
 >     from
->         table_stats_internal t
+>         table(filter_user_visible_objects(
+>           cursor(select * from table_stats_internal),
+>           row("mofId", "mofClassName"))) t
 > ;
 > grant select on index_info_view to public;
 > 

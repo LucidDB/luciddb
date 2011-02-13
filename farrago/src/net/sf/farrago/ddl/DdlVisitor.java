@@ -73,6 +73,11 @@ public class DdlVisitor
     }
 
     // visitor dispatch
+    public void visit(DdlSetRoleStmt stmt)
+    {
+    }
+
+    // visitor dispatch
     public void visit(DdlSetSchemaStmt stmt)
     {
     }

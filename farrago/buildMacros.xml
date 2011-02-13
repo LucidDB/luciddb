@@ -57,6 +57,10 @@ ${farrago.test.jvmargs}
   <!-- determine Farrago home based on location of this buildfile -->
   <dirname property="farrago.dir" file="${ant.file.farragoBuildMacros}"/>
 
+  <!-- import local property overrides; these take precedence over
+  later definitions in this file -->
+  <property file="${farrago.dir}/customBuild.properties"/>
+
   <!-- Alias for farrago.dir to match runtime properties convention -->
   <property name="FARRAGO_HOME" location="${farrago.dir}"/>
 
@@ -160,6 +164,10 @@ ${farrago.test.jvmargs}
   <!-- directory in which catalog sources are generated -->
   <property name="farrago.catalog.src.dir"
     location="${farrago.catalog.dir}/java"/>
+
+  <!-- directory in which catalog transient sources are generated -->
+  <property name="farrago.catalog.transient.dir"
+    location="${farrago.catalog.dir}/transient"/>
 
   <!-- directory in which SQL parser source code is stored -->
   <property name="farrago.parser.sql.dir"
@@ -420,6 +428,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.transient.dir}"/>
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
@@ -599,12 +608,13 @@ ${farrago.test.jvmargs}
 
   <!-- Customization for javac task -->
   <presetdef name="farrago.javaCompile">
-    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"/>
+    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"
+      includeantruntime="no" />
   </presetdef>
 
   <!-- Customization for javac task for compiling client-side code -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" 
+    <javac debug="on" deprecation="on" includeantruntime="no"
       source="${farrago.client.javasrc.version}" 
       target="${farrago.client.javasrc.version}"/>
   </presetdef>

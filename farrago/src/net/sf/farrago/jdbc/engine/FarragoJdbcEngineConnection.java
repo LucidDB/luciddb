@@ -125,6 +125,13 @@ public class FarragoJdbcEngineConnection
             session.cloneSession(null));
     }
 
+    // implement FarragoSessionConnectionSource
+    public Connection newConnection(FarragoSessionVariables sessionVariables)
+    {
+        return new FarragoJdbcEngineConnection(
+            session.cloneSession(sessionVariables));
+    }
+
     // implement Connection
     public void setAutoCommit(boolean autoCommit)
         throws SQLException

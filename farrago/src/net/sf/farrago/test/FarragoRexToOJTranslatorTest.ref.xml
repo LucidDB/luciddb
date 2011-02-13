@@ -637,7 +637,7 @@ ExecutableStmt.Oj_inner_1 oj_var5 = new ExecutableStmt.Oj_inner_1();
 ExecutableStmt.Oj_inner_1 oj_var6 = new ExecutableStmt.Oj_inner_1();
 
 oj_var0.assignFrom( ID$0$PUBLIC__KEY );
-connection.pushRoutineInvocation( oj_var2, false );
+connection.pushRoutineInvocation( oj_var2, false, null );
 java.lang.String oj_var4;
 try {
     oj_var4 = net.sf.farrago.test.FarragoTestUDR.decryptPublicKey( (byte[]) oj_var0.getNullableData() );

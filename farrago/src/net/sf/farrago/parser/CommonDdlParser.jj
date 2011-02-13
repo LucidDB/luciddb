@@ -298,6 +298,13 @@ DdlStmt DdlStmt() :
                 {
                     ddlStmt = new DdlSetPathStmt(expr);
                 }
+                | <ROLE> (
+                    expr = Expression(ExprContext.ACCEPT_NONQUERY)
+                    | <NONE> { expr = null; }
+                    )
+                {
+                    ddlStmt = new DdlSetRoleStmt(expr);
+                }
             )
         )
         |
@@ -822,8 +829,9 @@ FemRole RoleDefinition() :
         role.setName(roleName.getSimple());
     }
     [ <WITH> <ADMIN> grantor = SimpleIdentifier() {
-            // Create a grant to represent an inheritant of this role and make the
-            // grantor specified in this statement as the grantee of that grant.
+            // Create a grant to represent an inheritant of this role and make
+            // the grantor specified in this statement as the grantee of that
+            // grant.
             FemGrant grant = FarragoCatalogUtil.newElementGrant(
                 getRepos(),
                 farragoParser.getStmtValidator().getSession()
@@ -2025,6 +2033,7 @@ void TableFunctionColumnListElement(FemRoutine function) :
 {
     FemViewColumn column = getRepos().newFemViewColumn();
     SqlIdentifier inputCursorName;
+    boolean passthrough = false;
 }
 {
     LOOKAHEAD(2) BasicColumnDefinition(function, column)
@@ -2032,12 +2041,18 @@ void TableFunctionColumnListElement(FemRoutine function) :
     }
     |
     inputCursorName = SimpleIdentifier() <DOT> <STAR>
+    [ <PASSTHROUGH> { passthrough = true; } ]
     {
         farragoParser.getDdlValidator().setSqlDefinition(
             column,
             new SqlIdentifier("CURSOR", getPos()));
         function.getFeature().add(column);
         column.setName(inputCursorName.getSimple());
+        if (passthrough) {
+            // we use FROZEN to indicate PASSTHROUGH
+            // (i.e. the UDX cannot change the values)
+            column.setChangeability(ChangeableKindEnum.CK_FROZEN);
+        }
     }
 }
 
@@ -2960,28 +2975,25 @@ List PrivilegedActionList() :
     }
 }
 
-//
-// This method is common between the two grant statements
-// (i.e. GRANT privilege and GRANT ROLE).
-//
-void GrantOptions(DdlGrantStmt stmt) :
+void GrantedBy(DdlGrantStmt stmt) :
 {
     SqlIdentifier grantor;
 }
 {
-
-    [
-        <WITH> <GRANT> <OPTION>
-        {
-            stmt.setGrantOption(true);
-        }
-    ]
     [
         <GRANTED> <BY>
         (
-            <CURRENT_ROLE> {stmt.setCurrentRoleOption(true);}
+            <CURRENT_ROLE>
+            {
+                stmt.setGrantorReference(
+                    DdlGrantStmt.GrantorReference.CURRENT_ROLE);
+            }
             |
-            <CURRENT_USER> {stmt.setCurrentUserOption(true);}
+            <CURRENT_USER>
+            {
+                stmt.setGrantorReference(
+                    DdlGrantStmt.GrantorReference.CURRENT_USER);
+            }
         )
     ]
 }
@@ -3027,7 +3039,13 @@ DdlStmt GrantPrivStmt() :
             stmt.setHierarchyOption(true);
         }
     ]
-    GrantOptions(stmt)
+    [
+        <WITH> <GRANT> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    GrantedBy(stmt)
     {
         return stmt;
     }
@@ -3049,7 +3067,13 @@ DdlStmt GrantRoleStmt() :
     {
         stmt.setGranteeList(granteeList);
     }
-    GrantOptions(stmt)
+    [
+        <WITH> <ADMIN> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    GrantedBy(stmt)
     {
         return stmt;
     }

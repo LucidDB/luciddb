@@ -288,6 +288,16 @@
   <result D="40"/>
 </resultset>
 > 
+> -- most operators can be pushed down to remote server
+> select ename
+> from hsqldb_demo.sales.emp
+> where substring(ename,2,2)='LA'
+> and cast(empno as double)=case when deptno=5000 then 2.3 else 7782.0 end
+> order by 1;
+<resultset>
+  <result ENAME="CLARK"/>
+</resultset>
+> 
 > -- FRG-339
 > select count(*)
 > from hsqldb_demo.sales.bitflip
@@ -576,6 +586,21 @@
 'FROM "SALES"."DEPT") AS "LEFT_INPUT"'
 'LEFT JOIN (SELECT *'
 'FROM "SALES"."EMP") AS "RIGHT_INPUT" ON "LEFT_INPUT"."DEPTNO" = "RIGHT_INPUT"."DEPTNO"])'
+> 
+> explain plan for
+> select ename
+> from hsqldb_demo.sales.emp
+> where substring(ename,2,2)='LA'
+> and cast(empno as double)=case when deptno=5000 then 2.3 else 7782.0 end
+> order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      ResultSetToFarragoIteratorConverter'
+'        MedJdbcQueryRel(foreignSql=[SELECT "ENAME"'
+'FROM "SALES"."EMP"'
+'WHERE SUBSTRING("ENAME" FROM 2 FOR 2) = 'LA' AND CAST("EMPNO" AS DOUBLE) = CASE WHEN "DEPTNO" = 5000 THEN 2.3 ELSE 7782.0 END])'
 > 
 > explain plan for
 > select count(*)

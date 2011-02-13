@@ -824,6 +824,34 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Finds all applicable roles for a given authorization ID.
+     *
+     * @param authId authorization ID (user or role) to start from
+     *
+     * @return all applicable roles, inherited recursively
+     */
+    public static Set<FemRole> getApplicableRoles(FemAuthId authId)
+    {
+        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
+
+        Set<FemRole> inheritedRoles = new HashSet<FemRole>();
+        
+        for (FemGrant grant : authId.getGranteePrivilege()) {
+            if (grant.getAction().equals(inheritAction)) {
+                FemRole inheritedRole = (FemRole) grant.getElement();
+
+                // sanity check:  DDL validation is supposed to prevent
+                // cycles
+                assert (!inheritedRoles.contains(inheritedRole));
+                inheritedRoles.add(inheritedRole);
+                inheritedRoles.addAll(getApplicableRoles(inheritedRole));
+            }
+        }
+
+        return inheritedRoles;
+    }
+
+    /**
      * Looks up a role by name in a catalog.
      *
      * @param repos repos storing catalog
@@ -841,43 +869,26 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a new grant on a ROLE with specified role name and associate it
-     * to the grantor and grantee auth ids respectively. By default, the admin
+     * Creates a new grant of a role and associates it
+     * with the grantor and grantee auth ids respectively. By default, the admin
      * option is set to false. The caller will have to set it on the grant
      * object returned.
      *
      * @param repos repository containing the objects
-     * @param grantorName the creator of this grant
-     * @param granteeName the receipient of this grant
-     * @param roleName the role name of the authorization id to be granted by
-     * this new grant
+     * @param grantorAuthId the creator of this grant
+     * @param granteeAuthId the receipient of this grant
+     * @param grantedRole the role to be granted
      *
      * @return new grant object
      */
     public static FemGrant newRoleGrant(
         FarragoRepos repos,
-        String grantorName,
-        String granteeName,
-        String roleName)
+        FemAuthId grantorAuthId,
+        FemAuthId granteeAuthId,
+        FemAuthId grantedRole)
     {
-        FemAuthId grantorAuthId;
-        FemAuthId granteeAuthId;
-        FemAuthId grantedRole;
-
         // create a creation grant and set its properties
-        FemGrant grant;
-
-        // Find the authId by name for grantor and grantee
-        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
-        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
-
-        // Find the Fem role by name
-        grantedRole = FarragoCatalogUtil.getAuthIdByName(repos, roleName);
-        if (grantedRole == null) {
-            // TODO: throw res.instance().newRoleNameInvalid(roleName);
-        }
-
-        grant =
+        FemGrant grant =
             newElementGrant(
                 repos,
                 grantorAuthId,
@@ -953,6 +964,36 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Determines whether an element automatically gets a
+     * creation grant indicating its owner.
+     *
+     * @param obj element to check
+     *
+     * @return true if a creation grant should be instantiated
+     */
+    public static boolean needsCreationGrant(CwmModelElement obj) 
+    {
+        if ((obj instanceof CwmOperation)
+            || (obj instanceof CwmDependency)
+            || (obj instanceof CwmSqlindex)
+            || (obj instanceof CwmSqlindexColumn)
+            || (obj instanceof CwmSqlindexColumn)
+            || (obj instanceof FemAbstractTypedElement)
+            || (obj instanceof CwmUniqueConstraint)
+            || (obj instanceof FemUserDefinedOrdering)
+            || (obj instanceof FemSqlmultisetType)
+            || (obj instanceof FemSqlrowType)
+            || (obj instanceof FemKeyComponent))
+        {
+            // piddling second-class object
+            return false;
+        } else {
+            // for everything else, assume we need one
+            return true;
+        }
+    }
+
+    /**
      * Creates a new grant representing ownership of an object by its creator.
      *
      * @param repos repository storing the objects
@@ -1014,6 +1055,32 @@ public abstract class FarragoCatalogUtil
         return grant;
     }
 
+    /**
+     * Gets the creator of an object.
+     *
+     * @param repos repository storing the object
+     *
+     * @param obj object of interest
+     *
+     * @return creator
+     */
+    public static FemAuthId getCreator(FarragoRepos repos, CwmModelElement obj) 
+    {
+        SecurityPackage sp = repos.getSecurityPackage();
+        for (FemGrant grant
+                 : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj))
+        {
+            if (!grant.getAction().equals(
+                    PrivilegedActionEnum.CREATION.toString()))
+            {
+                continue;
+            }
+            return grant.getGrantee();
+        }
+        throw Util.newInternal(
+            "No creator found for " + repos.getLocalizedObjectName(obj));
+    }
+    
     /**
      * Determines the allowed access for a table
      *

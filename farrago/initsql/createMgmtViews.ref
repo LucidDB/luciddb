@@ -466,13 +466,16 @@
 > -- Indexes
 > --
 > 
+> -- TODO:  "creator" should never have been here; eliminate it
+> -- in a release after LucidDB 0.9.4
 > create or replace view dba_indexes_internal as
 >     select
 >         cast(t.table_cat as varchar(128)) as catalog_name,
 >         cast(t.table_schem as varchar(128)) as schema_name,
 >         cast(i."name" as varchar(128)) as index_name,
->         cast(ai."name" as varchar(128)) as creator,
+>         cast(null as varchar(128)) as creator,
 >         cast(i."creationTimestamp" as timestamp) as creation_timestamp,
+>         cast(i."modificationTimestamp" as timestamp) as modification_timestamp,
 >         cast(t.table_name as varchar(128)) as table_name,
 >         i."isUnique" as is_unique,
 >         i."isClustered" as is_clustered,
@@ -485,16 +488,6 @@
 >         sys_fem."MED"."LocalIndex" i
 >     on
 >         t."mofId" = i."spannedClass"
->     inner join
->         sys_fem."Security"."Grant" g
->     on
->         i."mofId" = g."Element"
->     inner join
->         sys_fem."Security"."AuthId" ai
->     on
->         g."Grantee" = ai."mofId"
->     where
->         g."action" = 'CREATION'
 > ;
 > 
 > create or replace view dba_index_columns_internal as

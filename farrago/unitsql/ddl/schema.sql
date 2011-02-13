@@ -25,6 +25,9 @@ drop schema s cascade;
 -- should fail with duplicate name
 create schema sales;
 
+-- should fail due to invalid identifier
+create schema "";
+
 -- set a nonexistent schema:  should succeed
 set schema 'erehwon';
 

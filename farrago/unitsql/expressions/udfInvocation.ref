@@ -216,6 +216,13 @@ Error: Object definition contains recursive cycle (state=,code=0)
 > no sql
 > external name 'class net.sf.farrago.test.FarragoTestUDR.self';
 > 
+> create function self_passthrough(c cursor)
+> returns table(c.* passthrough)
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+> 
 > -- UDX with input
 > create function stringify(c cursor, delimiter varchar(128))
 > returns table(v varchar(65535))
@@ -1075,6 +1082,50 @@ Error: From line 2, column 5 to line 7, column 18: Duplicate column name 'NAME' 
 > -- select *
 > -- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 > 
+> !set outputformat csv
+> 
+> -- no passthrough
+> explain plan for
+> select name from table(self(cursor(select * from sales.depts)))
+> where deptno=10;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[10]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'    IteratorToFennelConverter'
+'      FarragoJavaUdxRel(invocation=[CAST(SELF(CAST($0):CURSOR)):RecordType(INTEGER DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> -- with passthrough
+> explain plan for
+> select name from table(self_passthrough(cursor(select * from sales.depts)))
+> where deptno=10;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'    IteratorToFennelConverter'
+'      FarragoJavaUdxRel(invocation=[CAST(SELF_PASSTHROUGH(CAST($0):CURSOR)):RecordType(INTEGER DEPTNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'        FennelToIteratorConverter'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
+> 
+> !set outputformat table
+> 
+> select name from table(self(cursor(select * from sales.depts)))
+> where deptno=10;
++--------+
+|  NAME  |
++--------+
+| Sales  |
++--------+
+> 
+> select name from table(self_passthrough(cursor(select * from sales.depts)))
+> where deptno=10;
++--------+
+|  NAME  |
++--------+
+| Sales  |
++--------+
 > 
 > set path 'crypto2';
 > 

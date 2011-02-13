@@ -17,7 +17,7 @@ else
         --with-libraries=date_time,filesystem,regex,system,thread,test \
         --without-icu
 fi
-echo "using stlport : 5.1.6 : ${STLPORT_LOCATION}/stlport : ${STLPORT_LOCATION}/lib ;" >> ${BOOST_DIR}/tools/build/v2/user-config.jam
+echo "using stlport : 5.2.1 : ${STLPORT_LOCATION}/stlport : ${STLPORT_LOCATION}/lib ;" >> ${BOOST_DIR}/tools/build/v2/user-config.jam
 
 if test "${TARGET_OS}" = "win32"
 then

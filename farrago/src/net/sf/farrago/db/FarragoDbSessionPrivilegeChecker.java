@@ -47,16 +47,19 @@ public class FarragoDbSessionPrivilegeChecker
 
     private final FarragoSession session;
 
-    private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
+    private final Map<List<Object>, Set<FemAuthId>> authMap;
 
     private FemRole publicRole;
+
+    private final Set<String> visibleObjects;
 
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
         this.session = session;
-        authMap = new HashMap<List<FemAuthId>, Set<FemAuthId>>();
+        authMap = new HashMap<List<Object>, Set<FemAuthId>>();
+        visibleObjects = new LinkedHashSet<String>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -66,11 +69,13 @@ public class FarragoDbSessionPrivilegeChecker
         CwmModelElement obj,
         FemUser user,
         FemRole role,
-        String action)
+        String action,
+        boolean requireGrantOption)
     {
-        List<FemAuthId> authKey = new ArrayList<FemAuthId>(2);
+        List<Object> authKey = new ArrayList<Object>(3);
         authKey.add(user);
         authKey.add(role);
+        authKey.add((action == null) ? "VISIBILITY" : "ACCESS");
 
         // Find credentials for the given user and role.
         Set<FemAuthId> authSet = authMap.get(authKey);
@@ -81,26 +86,51 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (user != null) {
                 authSet.add(user);
+                if (action == null) {
+                    // For visibility test, include all applicable roles
+                    // for user (regardless of which is active, if any)
+                    authSet.addAll(FarragoCatalogUtil.getApplicableRoles(user));
+                }
             }
 
             if (role != null) {
                 authSet.add(role);
-                inheritRoles(role, authSet);
+                authSet.addAll(FarragoCatalogUtil.getApplicableRoles(role));
             }
 
             authSet.add(getPublicRole());
         }
 
         // Now, let's check their papers...
-        if (testAccess(obj, authSet, action)) {
+        if (testAccess(obj, authSet, action, requireGrantOption)) {
             // It's all good.
+            visibleObjects.add(obj.refMofId());
+            return;
+        }
+
+        if (action == null) {
+            // No failure, just track visibility.
             return;
         }
 
         // Verboten!
-        throw FarragoResource.instance().ValidatorAccessDenied.ex(
-            session.getRepos().getLocalizedObjectName(action),
-            session.getRepos().getLocalizedObjectName(obj));
+        if (requireGrantOption) {
+            if (obj instanceof FemRole) {
+                // Special-case language for failed GRANT ROLE
+                assert(action.equals(
+                        PrivilegedActionEnum.INHERIT_ROLE.toString()));
+                throw FarragoResource.instance().ValidatorNoAdminOption.ex(
+                    session.getRepos().getLocalizedObjectName(obj));
+            } else {
+                throw FarragoResource.instance().ValidatorNoGrantOption.ex(
+                    session.getRepos().getLocalizedObjectName(action),
+                    session.getRepos().getLocalizedObjectName(obj));
+            }
+        } else {
+            throw FarragoResource.instance().ValidatorAccessDenied.ex(
+                session.getRepos().getLocalizedObjectName(action),
+                session.getRepos().getLocalizedObjectName(obj));
+        }
     }
 
     private FemRole getPublicRole()
@@ -119,30 +149,24 @@ public class FarragoDbSessionPrivilegeChecker
     public void checkAccess()
     {
         // This implementation does all the work immediately in requestAccess,
-        // so nothing to do here.
+        // so nothing to do here except clear the accumulated references.
+        visibleObjects.clear();
     }
 
-    private void inheritRoles(FemRole role, Set<FemAuthId> inheritedRoles)
+    // implement FarragoSessionPrivilegeChecker
+    public Set<String> checkVisibility()
     {
-        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
-
-        for (FemGrant grant : role.getGranteePrivilege()) {
-            if (grant.getAction().equals(inheritAction)) {
-                FemRole inheritedRole = (FemRole) grant.getElement();
-
-                // sanity check:  DDL validation is supposed to prevent
-                // cycles
-                assert (!inheritedRoles.contains(inheritedRole));
-                inheritedRoles.add(inheritedRole);
-                inheritRoles(inheritedRole, inheritedRoles);
-            }
-        }
+        Set<String> set =
+            new LinkedHashSet<String>(visibleObjects);
+        visibleObjects.clear();
+        return set;
     }
 
     private boolean testAccess(
         CwmModelElement obj,
         Set<FemAuthId> authSet,
-        String action)
+        String action,
+        boolean requireGrantOption)
     {
         SecurityPackage sp = session.getRepos().getSecurityPackage();
         boolean sawCreationGrant = false;
@@ -154,9 +178,15 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (isCreation) {
                 sawCreationGrant = true;
+            } else {
+                if (requireGrantOption && !grant.isWithGrantOption()) {
+                    continue;
+                }
             }
+
             if (authSet.contains(grant.getGrantee())
-                && (grant.getAction().equals(action) || isCreation))
+                && ((action == null)
+                    || grant.getAction().equals(action) || isCreation))
             {
                 return true;
             }
@@ -167,7 +197,7 @@ public class FarragoDbSessionPrivilegeChecker
             // We didn't see a creation grant.  The only way that's possible is
             // that obj is currently in the process of being created.  In that
             // case, whatever object is referencing it must have the same
-            // creator,  so no explicit privilege is required.
+            // creator, so no explicit privilege is required.
             return true;
         }
     }

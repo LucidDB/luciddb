@@ -214,6 +214,13 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.self';
 
+create function self_passthrough(c cursor)
+returns table(c.* passthrough)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.self';
+
 -- UDX with input
 create function stringify(c cursor, delimiter varchar(128))
 returns table(v varchar(65535))
@@ -676,6 +683,25 @@ select * from table(
 -- select *
 -- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 
+!set outputformat csv
+
+-- no passthrough
+explain plan for
+select name from table(self(cursor(select * from sales.depts)))
+where deptno=10;
+
+-- with passthrough
+explain plan for
+select name from table(self_passthrough(cursor(select * from sales.depts)))
+where deptno=10;
+
+!set outputformat table
+
+select name from table(self(cursor(select * from sales.depts)))
+where deptno=10;
+
+select name from table(self_passthrough(cursor(select * from sales.depts)))
+where deptno=10;
 
 set path 'crypto2';
 

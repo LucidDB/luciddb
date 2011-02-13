@@ -161,6 +161,13 @@ select deptno as d
 from hsqldb_demo.sales.dept
 order by d;
 
+-- most operators can be pushed down to remote server
+select ename
+from hsqldb_demo.sales.emp
+where substring(ename,2,2)='LA'
+and cast(empno as double)=case when deptno=5000 then 2.3 else 7782.0 end
+order by 1;
+
 -- FRG-339
 select count(*)
 from hsqldb_demo.sales.bitflip
@@ -312,6 +319,13 @@ explain plan for
 select *
 from hsqldb_demo.sales.dept left outer join hsqldb_demo.sales.emp
 on dept.deptno=emp.deptno;
+
+explain plan for
+select ename
+from hsqldb_demo.sales.emp
+where substring(ename,2,2)='LA'
+and cast(empno as double)=case when deptno=5000 then 2.3 else 7782.0 end
+order by 1;
 
 explain plan for
 select count(*)

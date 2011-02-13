@@ -33,6 +33,9 @@
       </init-hook>
 
       <test name="readRowsTest">
+        <test-metadata>
+          <os>lin</os>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/impexp/gen/readRowsFromFile.sql"/>
       </test>
     	

@@ -48,6 +48,10 @@ class FarragoUdrInvocationFrame
     boolean allowSql;
 
     Connection connection;
+
+    String invokingUser;
+
+    String invokingRole;
 }
 
 // End FarragoUdrInvocationFrame.java

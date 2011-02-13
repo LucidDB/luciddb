@@ -159,6 +159,7 @@ public class FarragoDefaultHeuristicPlanner
         builder.addGroupBegin();
         builder.addRuleInstance(PushFilterPastSetOpRule.instance);
         builder.addRuleInstance(PushFilterPastProjectRule.instance);
+        builder.addRuleInstance(PushFilterPastTableFunctionRule.instance);
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(

@@ -314,14 +314,8 @@ public abstract class FarragoReposUtil
             if (metaPackageExtentName != null) {
                 ModelPackage modelPackage =
                     (ModelPackage) mdrRepos.getExtent(metaPackageExtentName);
-                MofPackage metaPackage = null;
-                for (Object o : modelPackage.getMofPackage().refAllOfClass()) {
-                    MofPackage result = (MofPackage) o;
-                    if (result.getName().equals(metaPackageName)) {
-                        metaPackage = result;
-                        break;
-                    }
-                }
+                MofPackage metaPackage =
+                    getMetaPackage(modelPackage, metaPackageName);
                 extent = mdrRepos.createExtent(extentName, metaPackage);
             } else {
                 if (((EnkiMDRepository) mdrRepos).isExtentBuiltIn(extentName)) {
@@ -357,6 +351,29 @@ public abstract class FarragoReposUtil
         }
     }
 
+    /**
+     * Finds a named meta package.
+     *
+     * @param modelPackage model package to search
+     *
+     * @param metaPackageName meta package name to search for
+     *
+     * @return meta package, or null if not found
+     */
+    public static MofPackage getMetaPackage(
+        ModelPackage modelPackage, String metaPackageName)
+    {
+        MofPackage metaPackage = null;
+        for (Object o : modelPackage.getMofPackage().refAllOfClass()) {
+            MofPackage result = (MofPackage) o;
+            if (result.getName().equals(metaPackageName)) {
+                metaPackage = result;
+                break;
+            }
+        }
+        return metaPackage;
+    }
+    
     private static void mainExportSubModel(String [] args)
         throws Exception
     {

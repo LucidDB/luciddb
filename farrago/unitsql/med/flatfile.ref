@@ -891,7 +891,11 @@ Warning: Statement execution encountered recoverable exceptions; errors: 12; war
 > 
 > -- this should fail
 > select * from flatfile_server.""."example";
-Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..example' not found (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "\"" at line 1, column 31.
+Was expecting one of:
+    <IDENTIFIER> ...
+    <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ... (state=,code=0)
 > 
 > -- mapped option
 > create or replace server mapped_server

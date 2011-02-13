@@ -33,10 +33,6 @@
 
 #include <boost/test/test_tools.hpp>
 
-#include <fstream.h>
-#include <strstream.h>
-#include <iomanip.h>
-
 using namespace fennel;
 
 bool verbose = false;

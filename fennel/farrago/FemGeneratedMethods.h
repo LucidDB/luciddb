@@ -240,7 +240,7 @@ ProxyAggInvocation::meth_getInputAttributeIndex = pEnv->GetMethodID(jClass,"getI
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemAggStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyAggStreamDef>));
-ProxyAggStreamDef::meth_getAggInvocation = pEnv->GetMethodID(jClass,"getAggInvocation","()Ljava/util/Collection;");
+ProxyAggStreamDef::meth_getAggInvocation = pEnv->GetMethodID(jClass,"getAggInvocation","()Ljava/util/List;");
 ProxyAggStreamDef::meth_getGroupingPrefixSize = pEnv->GetMethodID(jClass,"getGroupingPrefixSize","()I");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBarrierStreamDef");

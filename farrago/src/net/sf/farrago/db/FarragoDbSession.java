@@ -1559,6 +1559,13 @@ public class FarragoDbSession
         }
 
         // implement DdlVisitor
+        public void visit(DdlSetRoleStmt stmt)
+        {
+            SqlIdentifier id = stmt.getRoleName();
+            sessionVariables.currentRoleName = id.getSimple();
+        }
+
+        // implement DdlVisitor
         public void visit(DdlSetSchemaStmt stmt)
         {
             SqlIdentifier id = stmt.getSchemaName();

@@ -116,10 +116,13 @@ public interface FarragoSessionRuntimeContext
      * @param udrContext context holder for routine invocation instance within
      * statement being executed
      * @param allowSql whether SQL execution should be allowed in this routine
+     * @param impersonatedUser name of user to impersonate, or null for
+     * no impersonation
      */
     public void pushRoutineInvocation(
         FarragoSessionUdrContext udrContext,
-        boolean allowSql);
+        boolean allowSql,
+        String impersonatedUser);
 
     /**
      * Pops a routine invocation from the context stack.

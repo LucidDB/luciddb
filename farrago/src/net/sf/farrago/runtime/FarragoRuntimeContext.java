@@ -898,7 +898,8 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public void pushRoutineInvocation(
         FarragoSessionUdrContext udrContext,
-        boolean allowSql)
+        boolean allowSql,
+        String impersonatedUser)
     {
         // TODO jvs 19-Jan-2005: set system properties sqlj.defaultconnection
         // and sqlj.runtime per SQL:2003 13:12.1.2.  Also other
@@ -907,6 +908,12 @@ public class FarragoRuntimeContext
         FarragoUdrInvocationFrame frame = new FarragoUdrInvocationFrame();
         frame.context = this;
         frame.allowSql = allowSql;
+        frame.invokingUser = sessionVariables.currentUserName;
+        frame.invokingRole = sessionVariables.currentRoleName;
+        if (impersonatedUser != null) {
+            sessionVariables.currentUserName = impersonatedUser;
+            sessionVariables.currentRoleName = "";
+        }
         udrContext.setSession(session);
         frame.udrContext = udrContext;
 
@@ -936,6 +943,8 @@ public class FarragoRuntimeContext
                 mdrRepos.reattachSession(frame.reposSession);
             }
         }
+        sessionVariables.currentUserName = frame.invokingUser;
+        sessionVariables.currentRoleName = frame.invokingRole;
     }
 
     // implement FarragoSessionRuntimeContext
@@ -1071,7 +1080,8 @@ public class FarragoRuntimeContext
         if (frame.connection == null) {
             FarragoSessionConnectionSource connectionSource =
                 frame.context.session.getConnectionSource();
-            frame.connection = connectionSource.newConnection();
+            frame.connection = connectionSource.newConnection(
+                frame.context.sessionVariables);
             // TODO jvs 19-Jan-2005:  we're also supposed to make
             // sure the new connection has autocommit turned off.  Need
             // to do that without disturbing the session.  And could
