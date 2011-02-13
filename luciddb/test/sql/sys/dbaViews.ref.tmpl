@@ -363,15 +363,15 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select grantee, action,
 . . . . . . . . > case
-. . . . . . . . >   when r.role is not null then r.role
+. . . . . . . . >   when r.inherited_role_name is not null then r.inherited_role_name
 . . . . . . . . >   when grant_type = 'Role' then grantee
 . . . . . . . . > end as role_name,
 . . . . . . . . > grant_type
 . . . . . . . . > from sys_root.dba_element_grants
-. . . . . . . . > left outer join sys_root.dba_user_roles r
-. . . . . . . . > on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
+. . . . . . . . > left outer join sys_root.dba_inherited_roles r
+. . . . . . . . > on action = 'INHERIT_ROLE' and r.inherited_role_mof_id = element_mof_id
 . . . . . . . . > where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-. . . . . . . . > r.role = 'TUV' and grant_type = 'User';
+. . . . . . . . > r.inherited_role_name = 'TUV' and grant_type = 'User';
 +--------------+---------------+------------+-------------+
 |   GRANTEE    |    ACTION     | ROLE_NAME  | GRANT_TYPE  |
 +--------------+---------------+------------+-------------+
@@ -395,14 +395,15 @@
 +------------------+----------+-------------+
 0: jdbc:luciddb:> drop function mult;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_user_roles
-0: jdbc:luciddb:> select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-. . . . . . . . > role='TUV';
-+--------------+-------+
-|     NAME     | ROLE  |
-+--------------+-------+
-| BOBBYTABLES  | TUV   |
-+--------------+-------+
+0: jdbc:luciddb:> -- dba_inherited_roles
+0: jdbc:luciddb:> select inheritor_name, inherited_role_name from sys_root.dba_inherited_roles 
+. . . . . . . . > where inheritor_name='BOBBYTABLES' and
+. . . . . . . . > inherited_role_name='TUV';
++-----------------+----------------------+
+| INHERITOR_NAME  | INHERITED_ROLE_NAME  |
++-----------------+----------------------+
+| BOBBYTABLES     | TUV                  |
++-----------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop user bobbytables;
 0: jdbc:luciddb:> select name from sys_root.dba_users where name = 'BOBBYTABLES';
@@ -421,12 +422,13 @@
 | GRANTEE  |
 +----------+
 +----------+
-0: jdbc:luciddb:> select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-. . . . . . . . > role='TUV';
-+-------+-------+
-| NAME  | ROLE  |
-+-------+-------+
-+-------+-------+
+0: jdbc:luciddb:> select inheritor_name, inherited_role_name from sys_root.dba_inherited_roles 
+. . . . . . . . > where inheritor_name='BOBBYTABLES' and
+. . . . . . . . > inherited_role_name='TUV';
++-----------------+----------------------+
+| INHERITOR_NAME  | INHERITED_ROLE_NAME  |
++-----------------+----------------------+
++-----------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_jars
 0: jdbc:luciddb:> select name, url, deployment_state from sys_root.dba_jars where name = 'APPLIBJAR';
@@ -513,10 +515,10 @@ sqlline> !connect jdbc:luciddb: sa ""
 +-------------+--------------+
 +-------------+--------------+
 0: jdbc:luciddb:> select * from sys_root.dba_auth_ids where false;
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
-| NAME  | REMARKS  | CLASS_NAME  | CREATION_TIMESTAMP  | MODIFICATION_TIMESTAMP  | MOF_ID  | LINEAGE_ID  |
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
++-------+----------+-------------+---------------------+--------------------------+---------+-------------+
+| NAME  | REMARKS  | CLASS_NAME  | CREATION_TIMESTAMP  | LAST_MODIFIED_TIMESTAMP  | MOF_ID  | LINEAGE_ID  |
++-------+----------+-------------+---------------------+--------------------------+---------+-------------+
++-------+----------+-------------+---------------------+--------------------------+---------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 0: jdbc:luciddb:> -- yield reliable results depending on whether or not Blackhawk creates a

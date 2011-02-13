@@ -2,10 +2,7 @@
 > set schema 'localdb.sys_root';
 > set path 'localdb.sys_root';
 > 
-> -- FIXME jvs 17-Sept-2006:  None of these views should be granted
-> -- to public; they're for the DBA only.  Full security will involve
-> -- corresponding user_ views which show just the subset accessible
-> -- to CURRENT_USER
+> create or replace role dba;
 > 
 > create or replace function convert_nullable_int_to_boolean(n integer)
 > returns boolean
@@ -16,6 +13,7 @@
 >   when n=1 then true
 >   else unknown
 > end;
+> grant execute on specific function convert_nullable_int_to_boolean to dba;
 > 
 > create or replace view dba_schemas as
 >   select
@@ -35,7 +33,7 @@
 >     si."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_schemas to public;
+> grant select on dba_schemas to dba;
 > 
 > create or replace view dba_tables as
 >   select
@@ -57,7 +55,7 @@
 >     dti."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_tables to public;
+> grant select on dba_tables to dba;
 > 
 > create or replace view dba_columns as
 >   select
@@ -82,7 +80,7 @@
 >     ci."type" = dt."mofId"
 > ;
 > 
-> grant select on dba_columns to public;
+> grant select on dba_columns to dba;
 > 
 > create or replace view dba_column_stats as
 >   select
@@ -102,7 +100,7 @@
 >     sys_boot.mgmt.histograms_view_internal
 > ;
 > 
-> grant select on dba_column_stats to public;
+> grant select on dba_column_stats to dba;
 > 
 > create or replace view dba_column_histograms as
 >   select
@@ -117,7 +115,7 @@
 >     sys_boot.mgmt.histogram_bars_view
 > ;
 > 
-> grant select on dba_column_histograms to public;
+> grant select on dba_column_histograms to dba;
 > 
 > create or replace view dba_views as
 >   select
@@ -139,7 +137,7 @@
 >     vi."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_views to public;
+> grant select on dba_views to dba;
 > 
 > create or replace view dba_stored_tables as
 >   select
@@ -164,7 +162,7 @@
 >     sti."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_stored_tables to public;
+> grant select on dba_stored_tables to dba;
 > 
 > create or replace view dba_unclustered_indexes as
 >     select
@@ -172,7 +170,7 @@
 >         i.schema_name,
 >         i.index_name,
 >         i.creation_timestamp,
->         i.modification_timestamp,
+>         i.modification_timestamp as last_modified_timestamp,
 >         i.table_name,
 >         i.is_unique,
 >         i.remarks,
@@ -184,7 +182,7 @@
 >         i.is_clustered is false
 > ;
 > 
-> grant select on dba_unclustered_indexes to public;
+> grant select on dba_unclustered_indexes to dba;
 > 
 > create or replace view dba_routines as
 >   select
@@ -212,7 +210,7 @@
 >     ri."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_routines to public;
+> grant select on dba_routines to dba;
 > 
 > create or replace view dba_functions as
 >   select 
@@ -221,7 +219,7 @@
 >   where routine_type='FUNCTION'
 > ;
 >     
-> grant select on dba_functions to public;
+> grant select on dba_functions to dba;
 > 
 > create or replace view dba_routine_parameters as
 >   select
@@ -245,7 +243,7 @@
 >   where parameter_name <> 'RETURN'
 > ;
 > 
-> grant select on dba_routine_parameters to public;
+> grant select on dba_routine_parameters to dba;
 > 
 > create or replace view dba_function_parameters as
 >   select
@@ -274,7 +272,7 @@
 >   where routine_type = 'FUNCTION'
 > ;
 > 
-> grant select on dba_function_parameters to public;
+> grant select on dba_function_parameters to dba;
 > 
 > create or replace view dba_foreign_wrappers as
 >   select
@@ -295,7 +293,7 @@
 >     fwi."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_foreign_wrappers to public;
+> grant select on dba_foreign_wrappers to dba;
 > 
 > create or replace view dba_foreign_wrapper_options as 
 >   select
@@ -313,7 +311,7 @@
 >     dw."foreign" = true
 > ;
 > 
-> grant select on dba_foreign_wrapper_options to public;
+> grant select on dba_foreign_wrapper_options to dba;
 > 
 > create or replace view dba_foreign_servers as
 >   select
@@ -335,7 +333,7 @@
 >     fsi."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_foreign_servers to public;
+> grant select on dba_foreign_servers to dba;
 > 
 > create or replace view dba_foreign_server_options as
 >   select
@@ -353,7 +351,7 @@
 >     fsi."mofId" = so."StoredElement"
 > ;
 > 
-> grant select on dba_foreign_server_options to public;
+> grant select on dba_foreign_server_options to dba;
 > 
 > create or replace view dba_foreign_tables as
 >   select
@@ -376,7 +374,7 @@
 >     fti."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_foreign_tables to public;
+> grant select on dba_foreign_tables to dba;
 > 
 > create or replace view dba_foreign_table_options as
 >   select
@@ -394,7 +392,7 @@
 >     fti."mofId" = so."StoredElement"
 > ;
 > 
-> grant select on dba_foreign_table_options to public;
+> grant select on dba_foreign_table_options to dba;
 > 
 > create or replace view dba_system_parameters as
 > select col_name as param_name, col_value as param_value from 
@@ -409,7 +407,7 @@
 > ('mofId', 'mofClassName', 'FarragoConfig', 'FennelConfig', 'name')
 > ;
 > 
-> grant select on dba_system_parameters to public;
+> grant select on dba_system_parameters to dba;
 > 
 > create or replace view dba_sessions as
 > select 
@@ -431,7 +429,7 @@
 > label_name as current_label_name
 > from sys_boot.mgmt.sessions_view;
 > 
-> grant select on dba_sessions to public;
+> grant select on dba_sessions to dba;
 > 
 > create or replace view dba_sql_statements as
 > select
@@ -442,37 +440,37 @@
 > parameters as parameter_values
 > from sys_boot.mgmt.statements_view;
 > 
-> grant select on dba_sql_statements to public;
+> grant select on dba_sql_statements to dba;
 > 
 > create or replace view dba_repository_properties as
 > select * from sys_boot.mgmt.repository_properties_view;
 > 
-> grant select on dba_repository_properties to public;
+> grant select on dba_repository_properties to dba;
 > 
 > create or replace view dba_repository_integrity_violations as
 > select * from table(sys_boot.mgmt.repository_integrity_violations());
 > 
-> grant select on dba_repository_integrity_violations to public;
+> grant select on dba_repository_integrity_violations to dba;
 > 
 > create or replace view dba_objects_in_use as
 > select * from sys_boot.mgmt.objects_in_use_view;
 > 
-> grant select on dba_objects_in_use to public;
+> grant select on dba_objects_in_use to dba;
 > 
 > create or replace view dba_threads
 > as select * from table(sys_boot.mgmt.threads());
 > 
-> grant select on dba_threads to public;
+> grant select on dba_threads to dba;
 > 
 > create or replace view dba_thread_stack_entries
 > as select * from table(sys_boot.mgmt.thread_stack_entries());
 > 
-> grant select on dba_thread_stack_entries to public;
+> grant select on dba_thread_stack_entries to dba;
 > 
 > create or replace view dba_performance_counters
 > as select * from table(sys_boot.mgmt.performance_counters());
 > 
-> grant select on dba_performance_counters to public;
+> grant select on dba_performance_counters to dba;
 > 
 > create or replace view dba_system_info
 > as 
@@ -480,7 +478,7 @@
 > union all
 > (select * from dba_performance_counters);
 > 
-> grant select on dba_system_info to public;
+> grant select on dba_system_info to dba;
 > 
 > -- NOTE jvs 17-Sept-2006:  This view is intentionally NOT prefixed
 > -- with dba_ because it shows information about the current session only
@@ -509,7 +507,7 @@
 >     lbl."Grantee" = ai."mofId"
 > ;
 > 
-> grant select on dba_labels to public;
+> grant select on dba_labels to dba;
 > 
 > create or replace view dba_system_backups as
 >   select
@@ -521,7 +519,7 @@
 >     cast("mofId" as varchar(128)) as mof_id
 >   from sys_fem.med."SystemBackup";
 > 
-> grant select on dba_system_backups to public;
+> grant select on dba_system_backups to dba;
 > 
 > create or replace view dba_auth_ids as
 >   select
@@ -529,12 +527,12 @@
 >     cast("description" as varchar(65535)) as remarks,
 >     cast("mofClassName" as varchar(128)) as class_name,
 >     cast("creationTimestamp" as timestamp) as creation_timestamp,
->     cast("modificationTimestamp" as timestamp) as modification_timestamp,
+>     cast("modificationTimestamp" as timestamp) as last_modified_timestamp,
 >     cast("mofId" as varchar(128)) as mof_id,
 >     cast("lineageId" as varchar(128)) as lineage_id
 >   from sys_fem."Security"."AuthId";
 > 
-> grant select on dba_auth_ids to public;
+> grant select on dba_auth_ids to dba;
 > 
 > create or replace view dba_users as
 >   select
@@ -542,24 +540,27 @@
 >     cast("encryptedPassword" as varchar(128)) as password,
 >     cast("passwordEncryptionAlgorithm" as varchar(128)) as password_encryption_algorithm,
 >     cast("description" as varchar(65535)) as remarks,
->     cast("mofClassName" as varchar(128)) as class_name,
 >     cast("creationTimestamp" as timestamp) as creation_timestamp,
->     cast("modificationTimestamp" as timestamp) as modification_timestamp,
+>     cast("modificationTimestamp" as timestamp) as last_modified_timestamp,
 >     cast("mofId" as varchar(128)) as mof_id,
 >     cast("lineageId" as varchar(128)) as lineage_id
 >   from
 >     sys_fem."Security"."User";
 > 
-> grant select on dba_users to public;
+> grant select on dba_users to dba;
 > 
 > create or replace view dba_roles as
 >   select
->     *
->   from sys_root.dba_auth_ids
->   where
->     class_name = 'Role';
+>     cast("name" as varchar(128)) as name,
+>     cast("description" as varchar(65535)) as remarks,
+>     cast("creationTimestamp" as timestamp) as creation_timestamp,
+>     cast("modificationTimestamp" as timestamp) as last_modified_timestamp,
+>     cast("mofId" as varchar(128)) as mof_id,
+>     cast("lineageId" as varchar(128)) as lineage_id
+>   from 
+>     sys_fem."Security"."Role";
 > 
-> grant select on dba_roles to public;
+> grant select on dba_roles to dba;
 > 
 > create or replace view dba_element_grants as
 >   select
@@ -595,21 +596,21 @@
 >     si."mofId" = me."namespace"
 > ;
 > 
-> grant select on dba_element_grants to public;
+> grant select on dba_element_grants to dba;
 > 
-> create or replace view dba_user_roles as
+> create or replace view dba_inherited_roles as
 >   select
->     users.name as name,
->     roles.name as role,
+>     inheritor.name as inheritor_name,
+>     roles.name as inherited_role_name,
 >     g."withGrantOption" as with_grant_option,
->     cast(g."Grantee" as varchar(128)) as user_mof_id,
->     cast(g."Element" as varchar(128)) as role_mof_id
+>     cast(g."Grantee" as varchar(128)) as inheritor_mof_id,
+>     cast(g."Element" as varchar(128)) as inherited_role_mof_id
 >   from
 >     sys_fem."Security"."Grant" as g
 >   inner join
->     sys_root.dba_auth_ids as users
+>     sys_root.dba_auth_ids as inheritor
 >   on
->     users.mof_id = g."Grantee"
+>     inheritor.mof_id = g."Grantee"
 >   inner join
 >     sys_root.dba_auth_ids as roles
 >   on
@@ -618,7 +619,7 @@
 >     g."action" = 'INHERIT_ROLE'
 > ;
 > 
-> grant select on dba_user_roles to public;
+> grant select on dba_inherited_roles to dba;
 > 
 > create or replace view dba_jars as
 >   select
@@ -633,12 +634,12 @@
 >     end as deployment_state,
 >     cast("description" as varchar(65535)) as remarks,
 >     cast("creationTimestamp" as timestamp) as creation_timestamp,
->     cast("modificationTimestamp" as timestamp) as modification_timestamp,
+>     cast("modificationTimestamp" as timestamp) as last_modified_timestamp,
 >     cast("mofId" as varchar(128)) as mof_id,
 >     cast("lineageId" as varchar(128)) as lineage_id
 >   from sys_fem."SQL2003"."Jar";
 > 
-> grant select on dba_jars to public;
+> grant select on dba_jars to dba;
 > 
 > -- Flush all entries from the global code cache
 > create or replace procedure flush_code_cache()
@@ -647,6 +648,7 @@
 >   reads sql data
 >   external name 
 >   'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
+> grant execute on specific procedure flush_code_cache to dba;
 > 
 > -- Kill a session by its ID (see dba_sessions)
 > create or replace procedure kill_session(in id bigint)
@@ -654,6 +656,7 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+> grant execute on specific procedure kill_session to dba;
 > 
 > create or replace procedure kill_session(in id bigint, in cancel_only boolean)
 > language java
@@ -661,6 +664,7 @@
 > no sql
 > specific kill_session_cancel
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+> grant execute on specific procedure kill_session_cancel to dba;
 > 
 > -- Kill a statement by its ID (see dba_sql_statements)
 > create or replace procedure kill_statement(in id bigint)
@@ -668,6 +672,7 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+> grant execute on specific procedure kill_statement to dba;
 > 
 > create or replace procedure kill_statement(in id bigint, in cancel_only boolean)
 > language java
@@ -675,6 +680,7 @@
 > no sql
 > specific kill_statement_cancel
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+> grant execute on specific procedure kill_statement_cancel to dba;
 > 
 > -- Kill all statements whose sql_stmt text contains the input string
 > -- (similar to Unix killall)
@@ -683,6 +689,7 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+> grant execute on specific procedure kill_all_matching_statements to dba;
 > 
 > create or replace procedure kill_all_matching_statements(
 >     in s varchar(256), in cancel_only boolean)
@@ -691,6 +698,7 @@
 > no sql
 > specific kill_all_matching_statements_cancel
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+> grant execute on specific procedure kill_all_matching_statements_cancel to dba;
 > 
 > -- retrieves a long catalog string attribute in chunks
 > create or replace function retrieve_repository_lob_text(
@@ -704,6 +712,7 @@
 > no sql
 > external name 
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
+> grant execute on specific function retrieve_repository_lob_text to dba;
 > 
 > -- Exports the complete contents of the catalog to an XMI file
 > create or replace procedure export_catalog_xmi(in filename varchar(65535))
@@ -711,6 +720,7 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
+> grant execute on specific procedure export_catalog_xmi to dba;
 > 
 > -- Export schema to file UDP, field delimiter and file extension can be 
 > -- specified by user
@@ -730,6 +740,7 @@
 > specific export_schema_to_file
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+> grant execute on specific procedure export_schema_to_file to dba;
 > 
 > -- Export schema to file UDP with field delimiter, file extention and
 > -- datetime formats
@@ -752,7 +763,7 @@
 > specific export_schema_to_file_2
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
-> 
+> grant execute on specific procedure export_schema_to_file_2 to dba;
 > 
 > -- Export schema to csv files UDP. Standard version always creates bcp files
 > -- and deletes incomplete files for a failed table export. 
@@ -770,6 +781,7 @@
 > specific export_schema_with_options
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
+> grant execute on specific procedure export_schema_with_options to dba;
 > 
 > create or replace procedure export_schema_to_csv(
 >   in cat varchar(128),
@@ -783,6 +795,7 @@
 > specific export_schema_standard
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
+> grant execute on specific procedure export_schema_standard to dba;
 > 
 > -- Export foreign schema to csv files UDP. Standard version always creates bcp
 > -- files and deletes incomplete files for a failed table export.
@@ -800,6 +813,7 @@
 > specific export_foreign_schema_with_options
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
+> grant execute on specific procedure export_foreign_schema_with_options to dba;
 > 
 > create or replace procedure export_foreign_schema_to_csv(
 >   in serv varchar(128),
@@ -813,6 +827,7 @@
 > specific export_foreign_schema_standard
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
+> grant execute on specific procedure export_foreign_schema_standard to dba;
 > 
 > -- Incremental export for local schema, gets rows where 
 > -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
@@ -833,6 +848,8 @@
 > specific export_schema_incremental_with_options
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
+> grant execute on specific procedure export_schema_incremental_with_options
+> to dba;
 > 
 > create or replace procedure export_schema_incremental_to_csv(
 >   in cat varchar(128),
@@ -848,6 +865,7 @@
 > specific export_schema_incremental_standard
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
+> grant execute on specific procedure export_schema_incremental_standard to dba;
 > 
 > -- Incremental export for foreign schema, gets rows where 
 > -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
@@ -868,6 +886,7 @@
 > specific export_foreign_schema_incremental_with_options
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';
+> grant execute on specific procedure export_foreign_schema_incremental_with_options to dba;
 > 
 > create or replace procedure export_foreign_schema_incremental_to_csv(
 >   in serv varchar(128),
@@ -883,6 +902,7 @@
 > specific export_foreign_schema_incremental_standard
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';
+> grant execute on specific procedure export_foreign_schema_incremental_standard to dba;
 > 
 > -- Export csv files for tables combined from two schemas.  The tables in the 
 > -- two schemas must have the same structure. Data from the original schema 
@@ -906,6 +926,7 @@
 > specific export_merged_schema_with_options
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
+> grant execute on specific procedure export_merged_schema_with_options to dba;
 > 
 > create or replace procedure export_merged_schemas_to_csv(
 >   in orig_catalog varchar(128),
@@ -922,6 +943,7 @@
 > specific export_merged_schema_standard
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
+> grant execute on specific procedure export_merged_schema_standard to dba;
 > 
 > -- Export result of a single query to a file
 > -- NOTE:  query must be quoted as a string literal (TODO:  UDX or
@@ -935,6 +957,7 @@
 > reads sql data
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+> grant execute on specific procedure export_query_to_file to dba;
 > 
 > -- Export result of a single query to a file, with control over field
 > -- delimiter, datafile extension, and date/time formatting
@@ -953,6 +976,7 @@
 > specific export_query_to_file_2
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+> grant execute on specific procedure export_query_to_file_2 to dba;
 > 
 > -- Export result of a single query to a file, with control over field
 > -- delimiter, datafile extension, date/time formatting, and whether
@@ -973,6 +997,7 @@
 > specific export_query_to_file_3
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+> grant execute on specific procedure export_query_to_file_3 to dba;
 > 
 > -- Tests that a connection can be established to a particular
 > -- SQL/MED local or foreign data server.
@@ -983,6 +1008,7 @@
 >   no sql
 >   external name 
 >   'class net.sf.farrago.syslib.FarragoMedUDR.testServer';
+> grant execute on specific procedure test_data_server to dba;
 > 
 > -- Tests that a connection can be established for all SQL/MED servers
 > -- instantiated from a particular data wrapper.
@@ -993,6 +1019,7 @@
 >   no sql
 >   external name 
 >   'class net.sf.farrago.syslib.FarragoMedUDR.testAllServersForWrapper';
+> grant execute on specific procedure test_all_servers_for_wrapper to dba;
 > 
 > create or replace procedure backup_database(
 >     in archive_directory varchar(65535),
@@ -1003,6 +1030,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.backupDatabaseWithoutSpaceCheck';
+> grant execute on specific procedure backup_database to dba;
 > 
 > create or replace procedure backup_database_if_space_available(
 >     in archive_directory varchar(65535),
@@ -1014,6 +1042,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoManagementUDR.backupDatabaseWithSpaceCheck';
+> grant execute on specific procedure backup_database_if_space_available to dba;
 > 
 > create or replace procedure restore_database(
 >     in archive_directory varchar(65535))
@@ -1021,6 +1050,7 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.restoreDatabase';
+> grant execute on specific procedure restore_database to dba;
 > 
 > create or replace procedure restore_database_without_catalog(
 >     in archive_directory varchar(65535))
@@ -1028,11 +1058,13 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.restoreDatabaseWithoutCatalog';
+> grant execute on specific procedure restore_database_without_catalog to dba;
 > 
 > create or replace procedure change_default_character_set_to_unicode()
 > language java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.setUnicodeAsDefault';
+> grant execute on specific procedure change_default_character_set_to_unicode to dba;
 > 
 > create or replace procedure shutdown_database(
 >     in kill_sessions boolean, in jvm_shutdown_delay_millis bigint)
@@ -1040,12 +1072,14 @@
 > parameter style java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.shutdownDatabase';
+> grant execute on specific procedure shutdown_database to dba;
 > 
 > create or replace function get_current_sessionid()
 > returns integer
 > language java
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.getCurrentSessionId';
+> grant execute on specific function get_current_sessionid to public;
 > 
 > -- the following are aliases from sys_boot.mgmt
 > -- returns a create statement for every item in a given schema
@@ -1059,6 +1093,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSchema';
+> grant execute on specific function generate_ddl_for_schema to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_schema(
@@ -1072,6 +1107,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSchema';
+> grant execute on specific function generate_ddl_for_schema2 to dba;
 > 
 > -- ddl dumps everything in current catalog
 > create or replace function generate_ddl_for_catalog()
@@ -1083,6 +1119,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForCatalog';
+> grant execute on specific function generate_ddl_for_catalog to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_catalog(catalog_name varchar(128))
@@ -1094,6 +1131,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForCatalog';
+> grant execute on specific function generate_ddl_for_catalog2 to dba;
 > 
 > -- ddl for tables and views
 > create or replace function generate_ddl_for_table(
@@ -1107,6 +1145,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForTable';
+> grant execute on specific function generate_ddl_for_table to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_table(
@@ -1121,6 +1160,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForTable';
+> grant execute on specific function generate_ddl_for_table2 to dba;
 > 
 > -- ddl for generic procedures and functions (returns all matches)
 > create or replace function generate_ddl_for_routine(
@@ -1134,6 +1174,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForRoutine';
+> grant execute on specific function generate_ddl_for_routine to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_routine(
@@ -1148,6 +1189,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForRoutine';
+> grant execute on specific function generate_ddl_for_routine2 to dba;
 > 
 > -- used when specific name is desired
 > create or replace function generate_ddl_for_specific_routine(
@@ -1161,6 +1203,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSpecificRoutine';
+> grant execute on specific function generate_ddl_for_specific_routine to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_specific_routine(
@@ -1175,6 +1218,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForSpecificRoutine';
+> grant execute on specific function generate_ddl_for_specific_routine2 to dba;
 > 
 > -- ddl for jars
 > create or replace function generate_ddl_for_jar(
@@ -1188,6 +1232,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForJar';
+> grant execute on specific function generate_ddl_for_jar to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_jar(
@@ -1202,6 +1247,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForJar';
+> grant execute on specific function generate_ddl_for_jar2 to dba;
 > 
 > -- ddl for servers
 > create or replace function generate_ddl_for_server(server_name varchar(128))
@@ -1213,6 +1259,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForServer';
+> grant execute on specific function generate_ddl_for_server to dba;
 > 
 > -- ddl for wrappers
 > create or replace function generate_ddl_for_wrapper(wrapper_name varchar(128))
@@ -1224,6 +1271,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForWrapper';
+> grant execute on specific function generate_ddl_for_wrapper to dba;
 > 
 > -- ddl for indexes
 > create or replace function generate_ddl_for_index(
@@ -1237,6 +1285,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForIndex';
+> grant execute on specific function generate_ddl_for_index to dba;
 > 
 > -- use other catalogs
 > create or replace function generate_ddl_for_index(
@@ -1251,6 +1300,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForIndex';
+> grant execute on specific function generate_ddl_for_index2 to dba;
 > 
 > -- ddl for users
 > create or replace function generate_ddl_for_user(user_name varchar(128))
@@ -1262,6 +1312,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForUser';
+> grant execute on specific function generate_ddl_for_user to dba;
 > 
 > -- ddl for roles
 > create or replace function generate_ddl_for_role(role_name varchar(128))
@@ -1273,6 +1324,7 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForRole';
+> grant execute on specific function generate_ddl_for_role to dba;
 > 
 > -- ddl for labels
 > create or replace function generate_ddl_for_label(label_name varchar(128))
@@ -1284,5 +1336,6 @@
 > no sql
 > external name
 > 'class net.sf.farrago.syslib.FarragoDdlViewUDR.generateForLabel';
+> grant execute on specific function generate_ddl_for_label to dba;
 > 
 > !quit

@@ -197,15 +197,15 @@ grant role tuv to bobbytables;
 
 select grantee, action,
 case
-  when r.role is not null then r.role
+  when r.inherited_role_name is not null then r.inherited_role_name
   when grant_type = 'Role' then grantee
 end as role_name,
 grant_type
 from sys_root.dba_element_grants
-left outer join sys_root.dba_user_roles r
-on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
+left outer join sys_root.dba_inherited_roles r
+on action = 'INHERIT_ROLE' and r.inherited_role_mof_id = element_mof_id
 where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-r.role = 'TUV' and grant_type = 'User';
+r.inherited_role_name = 'TUV' and grant_type = 'User';
 
 create or replace function mult(n1 int, n2 int)
 returns int
@@ -219,17 +219,19 @@ from sys_root.dba_element_grants
 where granted_element = 'MULT' and action = 'EXECUTE' and class_name='Routine';
 drop function mult;
 
--- dba_user_roles
-select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-role='TUV';
+-- dba_inherited_roles
+select inheritor_name, inherited_role_name from sys_root.dba_inherited_roles 
+where inheritor_name='BOBBYTABLES' and
+inherited_role_name='TUV';
 
 drop user bobbytables;
 select name from sys_root.dba_users where name = 'BOBBYTABLES';
 drop role tuv;
 select name from sys_root.dba_roles where name = 'TUV';
 select grantee from sys_root.dba_element_grants where grantee in ('TUV', 'BOBBYTABLES');
-select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-role='TUV';
+select inheritor_name, inherited_role_name from sys_root.dba_inherited_roles 
+where inheritor_name='BOBBYTABLES' and
+inherited_role_name='TUV';
 
 -- dba_jars
 select name, url, deployment_state from sys_root.dba_jars where name = 'APPLIBJAR';
