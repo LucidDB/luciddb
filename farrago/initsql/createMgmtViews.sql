@@ -34,9 +34,6 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.statements';
 create or replace view statements_view as
   select * from table(statements());
 
--- todo:  grant this only to a privileged user
-grant select on statements_view to public;
-
 create or replace function sessions()
 returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean, label_name varchar(128))
 language java
@@ -47,9 +44,6 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sessions';
 create or replace view sessions_view as
   select * from table(sessions());
 
--- todo:  grant this only to a privileged user
-grant select on sessions_view to public;
-
 create or replace function objects_in_use()
 returns table(session_id bigint, stmt_id bigint, mof_id varchar(128))
 language java
@@ -59,9 +53,6 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 
 create or replace view objects_in_use_view as
   select * from table(objects_in_use());
-
--- TODO: grant this only to a privileged user
-grant select on objects_in_use_view to public;
 
 create or replace function threads()
 returns table(
@@ -130,7 +121,6 @@ create or replace procedure flush_code_cache()
   'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
 
 -- lets an administrator kill a running session
--- TODO: grant this only to a privileged user
 create or replace procedure kill_session(in id bigint)
   language java
   parameter style java
@@ -147,7 +137,6 @@ create or replace procedure kill_session(in id bigint, in cancel_only boolean)
 -- lets an administrator kill an executing statement
 -- (like unix "kill -KILL")
 -- param ID: globally-unique statement id
--- TODO: grant this only to a privileged user
 create or replace procedure kill_statement(in id bigint)
   language java
   parameter style java
@@ -165,7 +154,6 @@ create or replace procedure kill_statement(in id bigint, in cancel_only boolean)
 -- (like unix pkill)
 -- Works around lack of scalar subqueries, which makes kill_statement(id) hard to use
 -- param SQL: a string
--- TODO: grant this only to a privileged user
 create or replace procedure kill_statement_match(in s varchar(256))
   language java
   parameter style java
@@ -259,7 +247,6 @@ external name
 create or replace view session_parameters_view as
   select * from table(session_parameters());
 
--- todo:  grant this only to a privileged user
 grant select on session_parameters_view to public;
 
 --
