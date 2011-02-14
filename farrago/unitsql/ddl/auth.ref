@@ -426,4 +426,9 @@ Error: No default schema specified; execute SET SCHEMA or use fully qualified na
 > set role 'goofball';
 Error: Invalid or inaccessible role name "goofball" in SET ROLE statement (state=,code=0)
 > 
+> !closeall
+sqlline> -- should fail:  cannot log in as _SYSTEM ever
+sqlline> !connect jdbc:farrago: _SYSTEM ""
+Error: Login failed for "_SYSTEM": invalid username/password combination (state=,code=0)
+> 
 > !quit

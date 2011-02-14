@@ -308,3 +308,7 @@ select * from t;
 
 -- should fail:  no such role
 set role 'goofball';
+
+!closeall
+-- should fail:  cannot log in as _SYSTEM ever
+!connect jdbc:farrago: _SYSTEM ""
