@@ -171,7 +171,7 @@ ${farrago.test.jvmargs}
 
   <!-- files containing release properties -->
   <property name="release.properties.src"
-    location="${farrago.src.dir}/FarragoRelease.properties"/>
+    location="${farrago.dist.dir}/FarragoRelease.properties"/>
 
   <property name="release.properties"
     location="${farrago.classes.dir}/FarragoRelease.properties"/>
