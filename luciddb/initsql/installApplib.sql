@@ -735,7 +735,7 @@ no sql
 external name 'applib.applibJar:org.eigenbase.applib.cursor.FlattenRecursiveHierarchyUdx.executeAllLevels';
 
 -- Generate CRC udx
-create or replace function generate_crc(c cursor)
+create or replace function applib.generate_crc(c cursor)
 returns table(c.*, crc_value bigint)
 language java
 parameter style system defined java
@@ -744,7 +744,7 @@ no sql
 external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateCrcUdx.execute';
 
 -- Generate CRC UDX with specified column set used to calculate CRC
-create or replace function generate_crc(
+create or replace function applib.generate_crc(
   c cursor,
   r select from c,
   exclude boolean)
@@ -757,7 +757,7 @@ specific generate_crc_for_column_subset
 external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateCrcUdx.execute';
 
 -- Generate sequence
-create or replace function generate_sequence(
+create or replace function applib.generate_sequence(
   input_table cursor,
   start_number bigint,
   increment bigint)
@@ -770,7 +770,7 @@ deterministic
 no sql
 external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
 
-create or replace function generate_sequence_partitioned(
+create or replace function applib.generate_sequence_partitioned(
   input_table cursor,
   partitioning_columns select from input_table,
   start_number bigint,
@@ -830,7 +830,7 @@ modifies sql data
 external name 'applib.applibJar:org.eigenbase.applib.util.CreateIndexesUdp.execute';
 
 -- Pivot columns to rows
-create or replace function pivot_columns_to_rows(c cursor)
+create or replace function applib.pivot_columns_to_rows(c cursor)
 returns table(col_name varchar(65535), col_value varchar(65535))
 language java
 parameter style system defined java
@@ -847,7 +847,7 @@ no sql
 external name 'applib.applibJar:org.eigenbase.applib.cursor.TopNUdx.execute';
 
 -- collapse rows
-create or replace function collapse_rows(c cursor, delimiter varchar(1))
+create or replace function applib.collapse_rows(c cursor, delimiter varchar(1))
 returns table(
   parent_value varchar(65535), 
   concatenated_child_values varchar(65535),
@@ -947,7 +947,7 @@ no sql
 external name 'applib.applibJar:org.eigenbase.applib.string.SplitStringUdx.splitMultiColumnWithSequence(java.sql.ResultSet,java.util.List,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 
 -- enforce row constraints, default message catalog
-create or replace function enforce_row_constraints(c cursor, r select from c)
+create or replace function applib.enforce_row_constraints(c cursor, r select from c)
 returns table(c.*)
 language java
 parameter style system defined java
@@ -957,7 +957,7 @@ specific enforce_row_constraints_default_msg_jar
 external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 
 -- enforce row constraints with msg jar
-create or replace function enforce_row_constraints(
+create or replace function applib.enforce_row_constraints(
   c cursor,
   r select from c,
   msgJarName varchar(128))
@@ -970,7 +970,7 @@ specific enforce_row_constraints_with_msg_jar
 external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 
 -- enforce row constraints with tag for logging
-create or replace function enforce_row_constraints(
+create or replace function applib.enforce_row_constraints(
   c cursor,
   r select from c,
   msgJarName varchar(128),
@@ -983,7 +983,7 @@ no sql
 specific enforce_row_constraints_with_tag
 external name 'applib.applibJar:org.eigenbase.applib.util.EnforceRowConstraintsUdx.execute';
 
-create or replace function penultimate_values(
+create or replace function applib.penultimate_values(
   input_table cursor,
   grouping_columns select from input_table,
   designated_value_and_timestamp select from input_table)
@@ -996,7 +996,7 @@ deterministic
 no sql
 external name 'applib.applibJar:org.eigenbase.applib.cursor.PenultimateValuesUdx.execute';
 
-create or replace function contiguous_value_intervals(
+create or replace function applib.contiguous_value_intervals(
   input_table cursor,
   partitioning_columns select from input_table,
   timestamp_column select from input_table)
@@ -1018,7 +1018,7 @@ external name 'applib.applibJar:org.eigenbase.applib.cursor.ContiguousValueInter
 ----
 
 -- UDP for granting a user select privileges for all tables and views in a schema
-create or replace procedure grant_select_for_schema(
+create or replace procedure applib.grant_select_for_schema(
 in schemaname varchar(255), 
 in username varchar(255))
 language java
@@ -1027,7 +1027,7 @@ reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute';
 
 -- UDP for executing a sql statement for each table and view in an entire schema
-create or replace procedure do_for_entire_schema(
+create or replace procedure applib.do_for_entire_schema(
 in sqlString varchar(65535),
 in schemaName varchar(255),
 in objTypeStr varchar(128))
@@ -1037,7 +1037,7 @@ reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.util.DoForEntireSchemaUdp.execute';
 
 -- UDP for computing statistics for all tables in a schema
-create or replace procedure compute_statistics_for_schema(
+create or replace procedure applib.compute_statistics_for_schema(
 in schemaName varchar(255))
 language java
 parameter style java
@@ -1045,7 +1045,7 @@ reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
 
 -- UDP for estimating statistics for all tables in a schema
-create or replace procedure estimate_statistics_for_schema(
+create or replace procedure applib.estimate_statistics_for_schema(
 in schemaName varchar(255))
 language java
 specific estimate_statistics_for_schema_no_samplingrate
@@ -1054,7 +1054,7 @@ reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
 
 -- UDP for estimating statistics for all tables in a schema with a fixed sampling rate
-create or replace procedure estimate_statistics_for_schema(
+create or replace procedure applib.estimate_statistics_for_schema(
 in schemaName varchar(255),
 in samplingRate float)
 language java
@@ -1064,7 +1064,7 @@ reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.analysis.EstimateStatisticsForSchemaUdp.execute(java.lang.String, java.lang.Double)';
 
 -- UDP for dropping a schema if it exists
-create or replace procedure drop_schema_if_exists(
+create or replace procedure applib.drop_schema_if_exists(
 in schemaname varchar(255),
 in restrict_or_cascade varchar(255))
 language java
@@ -1094,7 +1094,7 @@ no sql
 external name 'applib.applibJar:org.eigenbase.applib.mondrian.ClearPentahoMondrianCacheUdp.execute';
 
 -- UDP for conditionally executing a SQL statement based on input set 
-create or replace procedure exec_sql_if_no_rows( 
+create or replace procedure applib.exec_sql_if_no_rows( 
 in evalSQL varchar(65535),
 in execSQL varchar(65535))
 language java 
@@ -1132,7 +1132,7 @@ deterministic
 no sql
 external name 'applib.applibJar:org.eigenbase.applib.impexp.RemoteRowsUDX.execute';
 
-create or replace procedure create_table_from_source_table(
+create or replace procedure applib.create_table_from_source_table(
 in sourceTable varchar(1024),
 in schemaName varchar(128),
 in tableName varchar(128),
@@ -1142,7 +1142,7 @@ parameter style java
 reads sql data
 external name 'applib.applibJar:org.eigenbase.applib.util.CreateTbFromSrcTbUdp.execute';
 
-create or replace procedure create_table_as(
+create or replace procedure applib.create_table_as(
 in schemaName varchar(128),
 in tableName varchar(128),
 in selectStmt varchar(65535),
