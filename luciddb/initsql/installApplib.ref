@@ -784,6 +784,50 @@
 > no sql
 > external name 'applib.applibJar:org.eigenbase.applib.cursor.GenerateSequenceUdx.execute(java.sql.ResultSet, java.util.List, java.lang.Long, java.lang.Long, java.sql.PreparedStatement)';
 > 
+> -- Show candidate indexes for possible creation
+> 
+> create or replace function applib.show_idx_candidates(
+>   schema_name varchar(128),
+>   table_name varchar(128),
+>   threshold integer)
+> returns table(
+>   catalog_name varchar(128),
+>   schema_name varchar(128),
+>   table_name varchar(128),
+>   column_name varchar(128))
+> language java
+> specific show_idx_candidates
+> parameter style system defined java
+> deterministic
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.util.ShowIndexCandidatesUdx.execute';
+> 
+> -- other catalogs version
+> 
+> create or replace function applib.show_idx_candidates(
+>   catalog_name varchar(128),
+>   schema_name varchar(128),
+>   table_name varchar(128),
+>   threshold integer)
+> returns table(
+>   catalog_name varchar(128),
+>   schema_name varchar(128),
+>   table_name varchar(128),
+>   column_name varchar(128))
+> language java
+> specific show_idx_candidates2
+> parameter style system defined java
+> deterministic
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.util.ShowIndexCandidatesUdx.execute';
+> 
+> -- Create indexes
+> create or replace procedure applib.create_indexes(
+>   index_table_sql varchar(65535))
+> language java
+> parameter style java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.util.CreateIndexesUdp.execute';
 > 
 > -- Pivot columns to rows
 > create or replace function pivot_columns_to_rows(c cursor)

@@ -1,0 +1,39 @@
+> create schema idx_cand_test;
+> set schema 'idx_cand_test';
+> create table t1 (
+>   c1 int,
+>   c2 int,
+>   c3 int
+> );
+> 
+> insert into t1 values (1, 2, 3), (4, 5, 6), (7, 8, 9), (10, 11, 12),
+> (13, 14, 15), (16, 17, 18), (19, 20, 21), (25, 23, 24), (25, 26, 27),
+> (25, 26, 27);
+> 
+> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 90));
++---------------+----------------+-------------+--------------+
+| CATALOG_NAME  |  SCHEMA_NAME   | TABLE_NAME  | COLUMN_NAME  |
++---------------+----------------+-------------+--------------+
+| LOCALDB       | IDX_CAND_TEST  | T1          | C2           |
+| LOCALDB       | IDX_CAND_TEST  | T1          | C3           |
++---------------+----------------+-------------+--------------+
+> call applib.create_indexes('select * from table(applib.show_idx_candidates(''IDX_CAND_TEST'', ''T1'', 90))');
+> -- empty set test
+> call applib.create_indexes('select * from table(applib.show_idx_candidates(''IDX_CAND_TEST'', ''T1'', 90))');
+> select * from table(applib.show_idx_candidates('IDX_CAND_TEST', 'T1', 90));
++---------------+--------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  | COLUMN_NAME  |
++---------------+--------------+-------------+--------------+
++---------------+--------------+-------------+--------------+
+> select index_name from sys_root.dba_unclustered_indexes
+>   where schema_name = 'IDX_CAND_TEST' and table_name = 'T1';
++-----------------+
+|   INDEX_NAME    |
++-----------------+
+| AUTOCREATED_C2  |
+| AUTOCREATED_C3  |
++-----------------+
+> 
+> drop schema idx_cand_test cascade;
+> 
+> !quit
