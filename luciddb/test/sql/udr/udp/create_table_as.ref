@@ -1,59 +1,62 @@
-0: jdbc:luciddb:> -- test the create_table_as UDP
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- setup a schema and couples of tables for testing.
-0: jdbc:luciddb:> create or replace schema "SS";
-0: jdbc:luciddb:> set schema 'SS';
-0: jdbc:luciddb:> create table DDB26(COL int);
-0: jdbc:luciddb:> insert into DDB26 values(1);
-0: jdbc:luciddb:> insert into DDB26 values(2);
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- Test to make sure datatypes/precisions match
-0: jdbc:luciddb:> call applib.create_table_as(null,'DDB26_T1','select * from "SS"."DDB26"',true);
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'DDB26%' and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
+> -- test the create_table_as UDP
+> 
+> -- null schema without set schema first, no null exception
+> call applib.create_table_as(null, 'ddb26_t1', 'select * from nothing', true);
+Error: Input [targetSchemaName] is required! (state=,code=0)
+> -- setup a schema and couples of tables for testing.
+> create or replace schema "SS";
+> set schema 'SS';
+> create table DDB26(COL int);
+> insert into DDB26 values(1);
+> insert into DDB26 values(2);
+> 
+> -- Test to make sure datatypes/precisions match
+> call applib.create_table_as(null,'DDB26_T1','select * from "SS"."DDB26"',true);
+> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'DDB26%' and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
 | DDB26       | COL          | INTEGER   |            | true         |
 | DDB26_T1    | COL          | INTEGER   |            | true         |
 +-------------+--------------+-----------+------------+--------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> call applib.create_table_as('APPLIB','DDB26_T1','select * from "SS"."DDB26"',false);
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'APPLIB' order by TABLE_NAME,COLUMN_NAME;
+> 
+> call applib.create_table_as('APPLIB','DDB26_T1','select * from "SS"."DDB26"',false);
+> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'APPLIB' order by TABLE_NAME,COLUMN_NAME;
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
 | DDB26_T1    | COL          | INTEGER   |            | true         |
 +-------------+--------------+-----------+------------+--------------+
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
+> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
 | DDB26_T1    | COL          | INTEGER   |            | true         |
 +-------------+--------------+-----------+------------+--------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from DDB26_T1;
+> 
+> select * from DDB26_T1;
 +------+
 | COL  |
 +------+
 | 1    |
 | 2    |
 +------+
-0: jdbc:luciddb:> select * from SS.DDB26_T1;
+> select * from SS.DDB26_T1;
 +------+
 | COL  |
 +------+
 | 1    |
 | 2    |
 +------+
-0: jdbc:luciddb:> SELECT * FROM APPLIB.DDB26_T1;
+> SELECT * FROM APPLIB.DDB26_T1;
 +------+
 | COL  |
 +------+
 +------+
-0: jdbc:luciddb:> -- Test for select statements from tables, UDXs, and remote tables 
-0: jdbc:luciddb:> --UDXs
-0: jdbc:luciddb:> call applib.create_table_as('SS','DDB26_UDX','select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1))',true);
-0: jdbc:luciddb:> select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1)) order by TIME_KEY_SEQ;
+> -- Test for select statements from tables, UDXs, and remote tables 
+> --UDXs
+> call applib.create_table_as('SS','DDB26_UDX','select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1))',true);
+> select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1)) order by TIME_KEY_SEQ;
 +---------------+-------------+
 | TIME_KEY_SEQ  |  TIME_KEY   |
 +---------------+-------------+
@@ -68,7 +71,7 @@
 | 9             | 2010-01-09  |
 | 10            | 2010-01-10  |
 +---------------+-------------+
-0: jdbc:luciddb:> select * from SS.DDB26_UDX order by TIME_KEY_SEQ;
+> select * from SS.DDB26_UDX order by TIME_KEY_SEQ;
 +---------------+-------------+
 | TIME_KEY_SEQ  |  TIME_KEY   |
 +---------------+-------------+
@@ -83,47 +86,47 @@
 | 9             | 2010-01-09  |
 | 10            | 2010-01-10  |
 +---------------+-------------+
-0: jdbc:luciddb:> -- Test datatype decimal
-0: jdbc:luciddb:> CREATE TABLE DecimalTb(
-. . . . . . . . > col decimal(5,4)
-. . . . . . . . > );
-0: jdbc:luciddb:> insert into DecimalTb values(5.0015);
-0: jdbc:luciddb:> call applib.create_table_as(null,'DDB26_DecimalTb','select * from SS.DecimalTb',true);
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from DecimalTb order by col;
+> -- Test datatype decimal
+> CREATE TABLE DecimalTb(
+> col decimal(5,4)
+> );
+> insert into DecimalTb values(5.0015);
+> call applib.create_table_as(null,'DDB26_DecimalTb','select * from SS.DecimalTb',true);
+> 
+> select * from DecimalTb order by col;
 +---------+
 |   COL   |
 +---------+
 | 5.0015  |
 +---------+
-0: jdbc:luciddb:> select * from "DDB26_DecimalTb" order by col;
+> select * from "DDB26_DecimalTb" order by col;
 +---------+
 |   COL   |
 +---------+
 | 5.0015  |
 +---------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> drop table DecimalTb;
-0: jdbc:luciddb:> drop table "DDB26_DecimalTb";
-0: jdbc:luciddb:> --remote tables
-0: jdbc:luciddb:> --TODO: Need to undertand the concept remote table.
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- invalid input parameters.
-0: jdbc:luciddb:> call applib.create_table_as('SS','','select * from "SS"."DDB26"',true);
+> 
+> drop table DecimalTb;
+> drop table "DDB26_DecimalTb";
+> --remote tables
+> --TODO: Need to undertand the concept remote table.
+> 
+> -- invalid input parameters.
+> call applib.create_table_as('SS','','select * from "SS"."DDB26"',true);
 Error: Input [targetTableName] is required! (state=,code=0)
-0: jdbc:luciddb:> call applib.create_table_as('SS','DDB26_E','',true);
+> call applib.create_table_as('SS','DDB26_E','',true);
 Error: Input [selectStmt] is required! (state=,code=0)
-0: jdbc:luciddb:> -- target table is exsiting in specific schema.
-0: jdbc:luciddb:> call applib.create_table_as(null,'DDB26_T1','select * from "SS"."DDB26"',true);
+> -- target table is exsiting in specific schema.
+> call applib.create_table_as(null,'DDB26_T1','select * from "SS"."DDB26"',true);
 Error: The table or view ["SS"."DDB26_T1"] is existing in database! (state=,code=0)
-0: jdbc:luciddb:> -- illegal select statement.
-0: jdbc:luciddb:> call applib.create_table_as('SS','DDB26_E','Selet * from "SS"."DDB26"',true);
+> -- illegal select statement.
+> call applib.create_table_as('SS','DDB26_E','Selet * from "SS"."DDB26"',true);
 Error: Non-query expression encountered in illegal context (state=,code=0)
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- do cleanup
-0: jdbc:luciddb:> drop table DDB26_T1;
-0: jdbc:luciddb:> drop table APPLIB.DDB26_T1;
-0: jdbc:luciddb:> drop table DDB26_UDX;
-0: jdbc:luciddb:> drop schema SS CASCADE;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> !quit
+> 
+> -- do cleanup
+> drop table DDB26_T1;
+> drop table APPLIB.DDB26_T1;
+> drop table DDB26_UDX;
+> drop schema SS CASCADE;
+> 
+> !quit

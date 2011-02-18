@@ -91,6 +91,11 @@ public abstract class CreateTbFromSelectStmtUdp
                 schema =
                     FarragoUdrRuntime.getSession().getSessionVariables()
                     .schemaName;
+                // haven't called set schema before:
+                if (schema == null) {
+                  throw ApplibResource.instance().InputIsRequired.ex(
+                      "targetSchemaName");
+                }
             }
 
             // verify whehter the targe table is exsiting in specific schema.
