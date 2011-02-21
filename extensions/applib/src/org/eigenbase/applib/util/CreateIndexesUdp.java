@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Applib is a library of SQL-invocable routines for Eigenbase applications.
-// Copyright (C) 2006 The Eigenbase Project
-// Copyright (C) 2006 SQLstream, Inc.
-// Copyright (C) 2006 DynamoBI Corporation
+// Copyright (C) 2011 The Eigenbase Project
+// Copyright (C) 2011 SQLstream, Inc.
+// Copyright (C) 2011 DynamoBI Corporation
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by

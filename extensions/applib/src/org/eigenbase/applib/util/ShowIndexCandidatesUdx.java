@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Applib is a library of SQL-invocable routines for Eigenbase applications.
-// Copyright (C) 2006 The Eigenbase Project
-// Copyright (C) 2006 SQLstream, Inc.
-// Copyright (C) 2006 DynamoBI Corporation
+// Copyright (C) 2011 The Eigenbase Project
+// Copyright (C) 2011 SQLstream, Inc.
+// Copyright (C) 2011 DynamoBI Corporation
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by
@@ -100,15 +100,16 @@ public abstract class ShowIndexCandidatesUdx
             ps.execute();
 
             // get candidate columns:
-            sb.append("select column_name from sys_root.dba_column_stats st " +
-                    "left outer join sys_root.dba_unclustered_indexes ui ON " +
-                    "st.catalog_name = ui.catalog_name and " +
-                    "st.schema_name = ui.schema_name and " +
-                    "st.table_name = ui.table_name and " +
-                    "st.column_name = ui.index_column_names " +
-                    "where st.catalog_name=? and st.schema_name=? and " +
-                    "st.table_name=? and ui.mof_id is null " +
-                    "and 100.0 * st.distinct_value_count / st.sample_size >=?");
+            sb.append(
+                    "select st.column_name from sys_root.dba_column_stats st " +
+                    "where st.column_name not in (" +
+                        "select ic.column_name from " +
+                        "sys_root.dba_unclustered_indexes ui " +
+                        "inner join sys_boot.mgmt.dba_index_columns_internal " +
+                        "ic ON ui.mof_id = ic.mof_id) " +
+                    "and st.catalog_name=? and st.schema_name=? and " +
+                    "st.table_name=? and " +
+                    "100.0 * st.distinct_value_count / st.sample_size <=?");
             ps = conn.prepareStatement(sb.getSqlAndClear());
             ps.setString(1, catalog);
             ps.setString(2, schema);
