@@ -25,12 +25,13 @@
 +---------------+--------------+-------------+--------------+
 0: jdbc:luciddb:> select index_name from sys_root.dba_unclustered_indexes
 . . . . . . . . >   where schema_name = 'IDX_CAND_TEST' and table_name = 'T1';
-+-----------------+
-|   INDEX_NAME    |
-+-----------------+
-| AUTOCREATED_C2  |
-| AUTOCREATED_C3  |
-+-----------------+
++------------------------+
+|       INDEX_NAME       |
++------------------------+
+| AUTOCREATED_C3         |
+| AUTOCREATED_C2         |
+| SYS$DELETION_INDEX$T1  |
++------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema idx_cand_test cascade;
 0: jdbc:luciddb:> 
