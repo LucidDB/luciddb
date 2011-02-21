@@ -50,6 +50,13 @@ public class AggregatingSelectScope
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AggregatingSelectScope
+     *
+     * @param selectScope Parent scope
+     * @param select Enclosing SELECT node
+     * @param distinct Whether SELECT is DISTINCT
+     */
     AggregatingSelectScope(
         SqlValidatorScope selectScope,
         SqlSelect select,
@@ -181,6 +188,22 @@ public class AggregatingSelectScope
     public void validateExpr(SqlNode expr)
     {
         checkAggregateExpr(expr, true);
+    }
+
+    /**
+     * Adds a GROUP BY expression.
+     *
+     * <p>This method is used when the GROUP BY list is validated, and
+     * expressions are expanded, in which case they are not structurally
+     * identical to the unexpanded form.  We leave the previous expression in
+     * the list (in case there are occurrences of the expression's unexpanded
+     * form in the parse tree.
+     *
+     * @param expr Expression
+     */
+    public void addGroupExpr(SqlNode expr)
+    {
+        groupExprList.add(expr);
     }
 }
 

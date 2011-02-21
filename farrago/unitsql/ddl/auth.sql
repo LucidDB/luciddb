@@ -18,7 +18,29 @@ create user SECMAN_3 identified by 'tiger' DEFAULT CATALOG sys_boot;
 
 create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 
+create role rf;
+
+create role rg;
+
 grant select on extra.t to secman_4;
+
+-- Redundant grant to make sure they get coalesced correctly in the catalog
+grant select on extra.t to secman_4;
+
+grant role rf to secman_4;
+
+-- test role grant upgrade, and verify that there is no downgrade
+grant role rg to secman_4;
+grant role rg to secman_4 with admin option;
+grant role rg to secman_4;
+
+-- test privilege grant upgrade, and verify that there is not downgrade
+grant select on extra.t to secman_2;
+grant select on extra.t to secman_2 with grant option;
+grant select on extra.t to secman_2;
+
+-- should fail:  unknown grantee
+grant select on extra.t to nobody;
 
 -- should fail:  duplicate user
 create user SECMAN_4;
@@ -34,8 +56,17 @@ create role SECMAN_4;
 -- should fail:  user name conflicts with role name
 create user R1;
 
+-- should fail:  can't grant user to role
+grant role SECMAN_4 to R1;
+
 !closeall
 !connect jdbc:farrago: SECMAN tiger
+
+-- should fail:  grantor has no rights
+grant select on extra.t to secman_3;
+
+-- should fail:  same reason
+grant role r1 to secman_3;
 
 create schema authtest;
 set schema 'authtest';
@@ -72,6 +103,9 @@ Create Role R1_L1;
 -- Grant the role R1_L1 directly to U1
 Grant Role R1_L1 to U1;
 
+-- Redundant grant to make sure they get coalesced correctly in the catalog
+Grant Role R1_L1 to U1;
+
 -- Alter user to make Role R1_L1 the default
 -- Alter user default role R1_L1;
 
@@ -87,6 +121,18 @@ order by "name";
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U1' or grantee= 'R1_L1'
+order by granted_element;
+
+-- check out another one
+select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+from grant_view
+where grantee = 'SECMAN_4'
+order by granted_element;
+
+-- and one more
+select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+from grant_view
+where grantee = 'SECMAN_2'
 order by granted_element;
 
 -- verify password encryption; we use a platform-independent algorithm
@@ -131,8 +177,17 @@ Create Role R1_L3;
 select "name" from sys_fem."Security"."Role" where "name" like 'R%_L%'
 order by "name";
 
-Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+Grant Role R1_L2 to R2_L1 WITH ADMIN OPTION;
 Grant Role R1_L3 to R1_L2;
+
+-- should fail:  role cycle
+grant role R1_L2 to R1_L3;
+
+-- should fail:  unknown grantee
+Grant Role R1_L3 to BOZOS;
+
+-- should fail:  unknown role
+Grant Role BOZOS to R1_L3;
 
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
@@ -155,7 +210,6 @@ select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
 order by grantee, granted_element;
-
 
 -- Alter user to make Role R1_L1 the default
 -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
@@ -211,6 +265,13 @@ create or replace user SECMAN_3;
 !closeall
 !connect jdbc:farrago: SECMAN_3 puma
 
+
+!closeall
+!connect jdbc:farrago: SECMAN_2 tiger
+
+-- should succeed because secman_2 has grant option
+grant select on extra.t to secman_3;
+
 -------------------------------------------------------------------------
 -- Test 4:
 -- default schemas and catalogs
@@ -227,6 +288,15 @@ select * from jdbc_metadata.table_types_view order by table_type;
 -- default schema is extra
 select * from t;
 
+-- should fail: grantor has access but no GRANT OPTION
+grant select on extra.t to secman;
+
+-- should fail:  grantor has role but no ADMIN OPTION
+grant role rf to secman;
+
+-- should succeed:  grantor has ADMIN OPTION
+grant role rg to secman;
+
 -- verify that dropping default schema does not cascade to user
 drop schema extra cascade;
 
@@ -235,3 +305,10 @@ drop schema extra cascade;
 
 -- should fail:  it's gone now
 select * from t;
+
+-- should fail:  no such role
+set role 'goofball';
+
+!closeall
+-- should fail:  cannot log in as _SYSTEM ever
+!connect jdbc:farrago: _SYSTEM ""

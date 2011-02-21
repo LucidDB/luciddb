@@ -124,4 +124,28 @@ CREATE ORDERING FOR ddlgen.playing_card
 ORDER FULL BY RELATIVE
 WITH SPECIFIC FUNCTION ddlgen.compare_cards_spades_trump;
 
+CREATE FUNCTION ddlgen.self(c CURSOR)
+RETURNS TABLE(c.*)
+LANGUAGE JAVA
+PARAMETER STYLE SYSTEM DEFINED JAVA
+NO SQL
+EXTERNAL NAME 'class net.sf.farrago.test.FarragoTestUDR.self';
+
+CREATE FUNCTION ddlgen.self_passthrough(c CURSOR)
+RETURNS TABLE(c.* PASSTHROUGH)
+LANGUAGE JAVA
+PARAMETER STYLE SYSTEM DEFINED JAVA
+NO SQL
+EXTERNAL NAME 'class net.sf.farrago.test.FarragoTestUDR.self';
+
+CREATE FUNCTION ddlgen.stringify_columns(
+    c CURSOR,
+    cl SELECT FROM c,
+    delimiter VARCHAR(128))
+RETURNS TABLE(v VARCHAR(65535))
+LANGUAGE JAVA
+PARAMETER STYLE SYSTEM DEFINED JAVA
+NO SQL
+EXTERNAL NAME 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+
 -- End ddlgen.sql

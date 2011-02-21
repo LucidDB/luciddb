@@ -40,7 +40,7 @@ them early-bound also.)
 
 <!-- ====================================================================== -->
 
-<message id="10" name="TestQuery">
+<message name="TestQuery">
 <text>
 select s
 from class NamedColumnSet where name=?tableName then (
@@ -49,10 +49,10 @@ from class NamedColumnSet where name=?tableName then (
 </text>
 </message>
 
-<message id="20" name="TestSecurityRoleCycleCheck">
+<message name="SecurityRoleCycleCheck">
 <text>
 select r
-from class Role where name=?granteeName then (
+from class Role where name=?grantedRoleName then (
     recursively (
         follow origin end Grantee where action = ''INHERIT_ROLE'' then (
             follow origin end Privilege as r

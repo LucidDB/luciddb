@@ -23,8 +23,12 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
@@ -66,40 +70,102 @@ public class DdlGrantRoleStmt
     {
         FarragoRepos repos = ddlValidator.getRepos();
 
-        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
+        List<FemRole> grantedRoles = new ArrayList<FemRole>();
+        for (SqlIdentifier roleId : roleList) {
+            FemRole grantedRole =
+                FarragoCatalogUtil.getRoleByName(
+                    repos, roleId.getSimple());
+            if (grantedRole == null) {
+                throw FarragoResource.instance().ValidatorInvalidRole.ex(
+                    repos.getLocalizedObjectName(roleId.getSimple()));
+            }
+            grantedRoles.add(grantedRole);
+        }
 
-        // TODO: Check that for all roles to be granted  (a) the grantor must be
-        // the owner. Or (b) the owner has been granted with Admin Option. Need
-        // model change!
+        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
+        FemUser user = null;
+        FemRole role = null;
+        if (grantorAuthId instanceof FemUser) {
+            user = (FemUser) grantorAuthId;
+        } else {
+            role = (FemRole) grantorAuthId;
+        }
+        FarragoSessionPrivilegeChecker privChecker =
+            ddlValidator.getStmtValidator().getPrivilegeChecker();
+        for (FemRole grantedRole : grantedRoles) {
+            privChecker.requestAccess(
+                grantedRole,
+                user,
+                role,
+                PrivilegedActionEnum.INHERIT_ROLE.toString(),
+                true);
+        }
+        privChecker.checkAccess();
 
         for (SqlIdentifier granteeId : granteeList) {
-            // REVIEW: SWZ: 2008-07-29: getAuthIdByName most certainly does not
-            // create an AuthId if it does not exist.  An optimization here
-            // would be to modify newRoleGrant to accept AuthId instances
-            // instead of re-doing the lookup for granteeId for each role in the
-            // roleList.
-
-            // Find the repository element id for the grantee,  create one if
-            // it does not exist
+            // Find the repository element id for the grantee.
             FemAuthId granteeAuthId =
                 FarragoCatalogUtil.getAuthIdByName(
                     repos,
                     granteeId.getSimple());
+            if (granteeAuthId == null) {
+                throw FarragoResource.instance().ValidatorInvalidGrantee.ex(
+                    repos.getLocalizedObjectName(granteeId.getSimple()));
+            }
 
-            // for each role in the list, we instantiate a repository
-            // element. Note that this makes it easier to revoke the privs on
-            // the individual basis.
-            for (SqlIdentifier roleId : roleList) {
+            // For each role in the list, we instantiate a repository element
+            // for the grant. Note that this makes it easier to revoke the
+            // privs on an individual basis.
+            for (FemRole grantedRole : grantedRoles) {
+                // we could probably gang all of these up into a single
+                // LURQL query, but for now execute one check per
+                // granted role
+                checkCycle(
+                    ddlValidator.getInvokingSession(),
+                    grantedRole,
+                    granteeAuthId);
+
                 // create a privilege object and set its properties
-                FemGrant grant =
-                    FarragoCatalogUtil.newRoleGrant(
-                        repos,
-                        grantorAuthId.getName(),
-                        granteeId.getSimple(),
-                        roleId.getSimple());
+                FemGrant grant = findExistingGrant(
+                    repos,
+                    grantedRole,
+                    grantorAuthId,
+                    granteeAuthId,
+                    PrivilegedActionEnum.INHERIT_ROLE.toString());
+                if (grant == null) {
+                    grant =
+                        FarragoCatalogUtil.newRoleGrant(
+                            repos,
+                            grantorAuthId,
+                            granteeAuthId,
+                            grantedRole);
+                }
+                // Note that for an existing grant without admin option, we
+                // upgrade in place.
+                if (grantOption) {
+                    grant.setWithGrantOption(true);
+                }
+            }
+        }
+    }
 
-                // set the privilege name (i.e. action) and properties
-                grant.setWithGrantOption(grantOption);
+    private void checkCycle(
+        FarragoSession session, FemAuthId grantedRole, FemAuthId granteeRole)
+    {
+        String lurql =
+            FarragoInternalQuery.instance().SecurityRoleCycleCheck.str();
+        Map<String, String> argMap = new HashMap<String, String>();
+        argMap.put("grantedRoleName", grantedRole.getName());
+        Collection<RefObject> result =
+            session.executeLurqlQuery(
+                lurql,
+                argMap);
+        for (RefObject o : result) {
+            FemRole role = (FemRole) o;
+            if (role.getName().equals(granteeRole.getName())) {
+                throw FarragoResource.instance().ValidatorRoleCycle.ex(
+                    session.getRepos().getLocalizedObjectName(grantedRole),
+                    session.getRepos().getLocalizedObjectName(granteeRole));
             }
         }
     }

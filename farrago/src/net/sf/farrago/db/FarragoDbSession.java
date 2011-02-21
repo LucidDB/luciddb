@@ -319,6 +319,7 @@ public class FarragoDbSession
                 }
                 // Regardless of whether JAAS is configured, if the user
                 // has a password set in the catalog, enforce it.
+                boolean loginFailed = false;
                 if (femUser.getEncryptedPassword() != null) {
                     String plaintext = info.getProperty("password");
                     String cyphertext;
@@ -331,10 +332,17 @@ public class FarragoDbSession
                         cyphertext = null;
                     }
                     if (!femUser.getEncryptedPassword().equals(cyphertext)) {
-                        throw FarragoResource
-                            .instance().SessionLoginFailed.ex(
-                                repos.getLocalizedObjectName(sessionUser));
+                        loginFailed = true;
                     }
+                } else if (FarragoCatalogInit.LOGIN_DISABLED.equals(
+                        femUser.getPasswordEncryptionAlgorithm()))
+                {
+                    loginFailed = true;
+                }
+                if (loginFailed) {
+                    throw FarragoResource
+                        .instance().SessionLoginFailed.ex(
+                            repos.getLocalizedObjectName(sessionUser));
                 }
             }
 
@@ -1556,6 +1564,13 @@ public class FarragoDbSession
         {
             SqlIdentifier id = stmt.getCatalogName();
             sessionVariables.catalogName = id.getSimple();
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlSetRoleStmt stmt)
+        {
+            SqlIdentifier id = stmt.getRoleName();
+            sessionVariables.currentRoleName = id.getSimple();
         }
 
         // implement DdlVisitor

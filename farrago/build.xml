@@ -51,10 +51,6 @@ ${farrago.test.jvmargs}
   <!-- import settings defined by initBuild.sh with highest precedence -->
   <property file="initBuild.properties"/>
 
-  <!-- import local property overrides; these take precedence over
-  later definitions in this file -->
-  <property file="customBuild.properties"/>
-
   <!-- Definitions for Farrago build properties and macros -->
   <import file="buildMacros.xml"/>
 
@@ -82,13 +78,13 @@ ${farrago.test.jvmargs}
   <property name="lurql.parser.dir"
     location="${farrago.src.dir}/org/eigenbase/lurql/parser"/>
 
-  <!-- The version of ANT we require. -->
-  <property name="required.ant.version" value="1.7.0"/>
-
-  <!-- ant.version not set in subant targets in 1.7.0, see issues.apache.org 42263 -->
-  <!-- using ant.version causes saffron cruisecontrol to fail, thus, a workaround -->
   <condition property="is.correct.ant.version">
-    <antversion atleast="${required.ant.version}"/>
+    <or>
+      <antversion exactly="1.7.0"/>
+      <antversion exactly="1.7.1"/>
+      <antversion exactly="1.8.0"/>
+      <antversion atleast="1.8.2"/>
+    </or>
   </condition>
 
   <!-- Files -->
@@ -184,6 +180,7 @@ ${farrago.test.jvmargs}
   <path id="farrago.build.classpath">
     <pathelement path="${farrago.build.3p.classpath}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.transient.dir}"/>
   </path>
   <property name="farrago.build.classpath" refid="farrago.build.classpath"/>
 
@@ -197,6 +194,7 @@ ${farrago.test.jvmargs}
   <!-- sourcepath for debugging -->
   <path id="farrago.sourcepath">
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.transient.dir}"/>
     <pathelement location="${farrago.src.dir}"/>
     <pathelement location="${sqlline.dir}/src"/>
     <pathelement location="${junit.dir}/src.jar"/>
@@ -602,17 +600,27 @@ ${farrago.test.jvmargs}
     depends="configureTrace, convertExtMetamodel, configureCatalogCache">
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
+    <mkdir dir="${farrago.catalog.transient.dir}"/>
     <farrago.synthesizeMetamodel
       extMofBasename="ExtModel"
       extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_generateMetamodelCode"/>
+    <farrago.mdrFork target="forked_generateTransientRepository"/>
     <farrago.javaCompile
       fork="true"
       memoryMaximumSize="512m"
       srcdir="${farrago.catalog.src.dir}"
       destdir="${farrago.catalog.src.dir}"
       classpathref="farrago.3p.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+    <farrago.javaCompile
+      fork="true"
+      memoryMaximumSize="512m"
+      srcdir="${farrago.catalog.transient.dir}"
+      destdir="${farrago.catalog.transient.dir}"
+      classpathref="farrago.model.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
 
@@ -646,6 +654,23 @@ ${farrago.test.jvmargs}
     </delete>
   </target>
 
+  <target name="forked_generateTransientRepository" 
+          depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider/>
+    <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <mapJava
+        file="${FarragoMetamodel.xmi}"
+        extent="FarragoMetamodel"
+        dir="${farrago.catalog.transient.dir}"
+        generatorClass="org.eigenbase.enki.trans.codegen.TransientGenerator"
+        generatorOptions="jmiInterfaces=false" />
+    </mdr>
+
+    <delete quiet="true">
+      <fileset dir="." includes="mdr.bt?"/>
+    </delete>
+  </target>
+
   <target name="forked_configureMetamodelSchema" depends="farrago.mdr_taskdef">
     <farrago.setReposProvider/>
 
@@ -667,11 +692,9 @@ ${farrago.test.jvmargs}
         </fileset>
       </applyTablePrefix>
     </mdr>
-
     <property 
         file="${farrago.ReposStorage.propfile}"
         prefix="gensch"/>
-
     <echo>
       Configuring repository schema at:
       ${gensch.net.sf.farrago.dev.connection.schema.url}
@@ -682,7 +705,7 @@ ${farrago.test.jvmargs}
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
         classpathref="farrago.3p.classpath">
-      <!-- Ant will alphaebtize if these are in the same fileset. 
+      <!-- Ant will alphabetize if these are in the same fileset. 
            Keep provider.sql first, since it logically belongs first. -->
       <fileset dir="${farrago.catalog.sql.dir}">
         <include name="**/provider.sql"/>
@@ -867,6 +890,7 @@ ${farrago.test.jvmargs}
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
+    <delete dir="${farrago.catalog.transient.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>
     <delete file="${FarragoMdrBuildTrace.log}"/>
@@ -1178,6 +1202,7 @@ ${farrago.test.jvmargs}
     <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
+    <antcall target="checkJavadoc"/>
   </target>
 
   <target name="gen-test-resources"> 
@@ -1575,7 +1600,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
       <doclet
@@ -1628,7 +1653,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
     </javadoc>

@@ -658,7 +658,10 @@ public class DdlValidator
                     // Set some mandatory but irrelevant attributes.
                     CwmStructuralFeature feature = (CwmStructuralFeature) obj;
 
-                    feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+                    if (feature.getChangeability() == null) {
+                        feature.setChangeability(
+                            ChangeableKindEnum.CK_CHANGEABLE);
+                    }
                 }
             } else {
                 RefFeatured container = obj.refImmediateComposite();
@@ -774,7 +777,7 @@ public class DdlValidator
     private void updateObjectTimestamp(CwmModelElement element)
     {
         boolean isNew = isNewObject(element);
-        if (isNew) {
+        if (isNew && FarragoCatalogUtil.needsCreationGrant(element)) {
             // Retrieve and cache the system and current user FemAuthId
             // objects rather than looking them up every time.
             if (systemUserAuthId == null) {

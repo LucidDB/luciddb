@@ -28,6 +28,8 @@
 #include "fennel/calculator/SqlStringAscii.h"
 #include "fennel/calculator/SqlState.h"
 
+#include <ctype.h>
+
 FENNEL_BEGIN_NAMESPACE
 
 int

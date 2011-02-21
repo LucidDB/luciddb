@@ -45,14 +45,18 @@ public class TableFunctionReturnTypeInference
 
     private Set<RelColumnMapping> columnMappings;
 
+    private final boolean isPassthrough;
+
     //~ Constructors -----------------------------------------------------------
 
     public TableFunctionReturnTypeInference(
         RelDataType unexpandedOutputType,
-        List<String> paramNames)
+        List<String> paramNames,
+        boolean isPassthrough)
     {
         super(unexpandedOutputType);
         this.paramNames = paramNames;
+        this.isPassthrough = isPassthrough;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -177,9 +181,7 @@ public class TableFunctionReturnTypeInference
         columnMapping.iInputColumn = iInputColumn;
         columnMapping.iInputRel = iCursor;
 
-        // we don't have any metadata on transformation effect,
-        // so assume the worst
-        columnMapping.isDerived = true;
+        columnMapping.isDerived = isPassthrough ? false : true;
         columnMappings.add(columnMapping);
 
         // As a special case, system fields are implicitly NOT NULL.

@@ -59,6 +59,12 @@ public class FarragoCatalogInit
     public static final String SA_USER_NAME = "sa";
 
     /**
+     * Encryption algorithm string used to indicate that login is
+     * completely disabled for an account.
+     */
+    public static final String LOGIN_DISABLED = "LOGIN_DISABLED";
+
+    /**
      * Default jdbc connection timeout in milliseconds
      */
     public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 86400000;
@@ -158,6 +164,7 @@ public class FarragoCatalogInit
         // Create the System Internal User
         FemUser systemUser = repos.newFemUser();
         systemUser.setName(SYSTEM_USER_NAME);
+        systemUser.setPasswordEncryptionAlgorithm(LOGIN_DISABLED);
 
         // Create the System admin user, this is the only system created
         // authenticatable user (via login)

@@ -590,34 +590,6 @@ public:
     virtual void generateUuid(PseudoUuid &pseudoUuid);
 };
 
-// NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux
-// when using multiple JNI libs.  This has to be included in each
-// JNI_OnLoad as a workaround (and it must be a macro, not a function).
-// Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.
-#define FENNEL_JNI_ONLOAD_COMMON() \
-{ \
-  _STL::num_get< \
-    char, \
-    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
-      12; \
-  _STL::num_get<char, const char*>::id._M_index          = 13; \
-  _STL::num_put< \
-    char, \
-    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
-      14; \
-  _STL::num_put<char, char*>::id._M_index                = 15; \
-  _STL::time_get< \
-    char, \
-    _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
-      16; \
-  _STL::time_get<char, const char*>::id._M_index         = 17; \
-  _STL::time_put< \
-    char, \
-    _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index = \
-      18; \
-  _STL::time_put<char, char*>::id._M_index               = 19; \
-}
-
 FENNEL_END_NAMESPACE
 
 #endif

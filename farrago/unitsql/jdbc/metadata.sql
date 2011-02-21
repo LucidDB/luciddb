@@ -115,3 +115,20 @@ select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 -- !metadata getTablePrivileges
 -- !metadata getBestRowIdentifier
 -- !metadata getVersionColumns
+
+-- check visibility of objects to unprivileged users
+
+create user joe;
+grant select on sales.emps to joe;
+
+!closeall
+!connect jdbc:farrago: JOE tiger
+
+-- should only see EMPS
+!tables
+
+-- should work
+!columns EMPS
+
+-- should see nothing
+!columns DEPTS

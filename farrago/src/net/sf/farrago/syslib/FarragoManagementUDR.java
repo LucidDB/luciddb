@@ -859,6 +859,59 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Implements a UDX for filtering out metadata descriptor rows
+     * for objects to which the current user does not have at least
+     * one privilege granted (either directly or indirectly via some
+     * role applicable to that user).  This method can deal
+     * with variably-typed objects.
+     *
+     * @param inputSet input rows
+     *
+     * @param idColumnNames array containing two string elements (name
+     * of input column with MOFID, name of input column with
+     * MOF class name)
+     *
+     * @param resultInserter
+     */
+    public static void filterUserVisibleObjects(
+        ResultSet inputSet, List<String> idColumnNames,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoVisibilityFilter filter = new FarragoVisibilityFilter(
+            inputSet, null, idColumnNames, resultInserter);
+        filter.execute();
+    }
+
+    /**
+     * Implements a UDX for filtering out metadata descriptor rows
+     * for objects to which the current user does not have at least
+     * one privilege granted (either directly or indirectly via some
+     * role applicable to that user).  This method requires
+     * all objects to have the same concrete type.
+     *
+     * @param inputSet input rows
+     *
+     * @param className MOF class name of concrete type
+     *
+     * @param idColumnNames array containing one string element (name
+     * of input column with MOFID)
+     *
+     * @param resultInserter
+     */
+    public static void filterUserVisibleObjectsTyped(
+        ResultSet inputSet,
+        String className,
+        List<String> idColumnNames,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoVisibilityFilter filter = new FarragoVisibilityFilter(
+            inputSet, className, idColumnNames, resultInserter);
+        filter.execute();
+    }
+
+    /**
      * Sets a filter on the optimizer rules to be used in the current session.
      *
      * @param regex regular expression for rule names to be excluded

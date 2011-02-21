@@ -2,6 +2,7 @@
 > -- Test aggregate queries
 > 
 > set schema 'sales';
+> set path 'sales';
 > 
 > --------------------------
 > -- Test Sort Aggregates --
@@ -1408,6 +1409,34 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 '30'
 > 
 > drop table depts2;
+> 
+> -- LDB-231. UDF with SPECIFIC is not recognized as structurally equivalent, so 
+> -- gives "Expression '...' is not being grouped" error.
+> create function int_to_hex_string(i int)
+> returns varchar(12)
+> language java
+> specific java_lang_integer_to_hex_string
+> no sql
+> external name 'class java.lang.Integer.toHexString';
+> 
+> select int_to_hex_string(deptno)
+> from emps
+> group by int_to_hex_string(deptno)
+> order by 1;
+'EXPR$0'
+'14'
+'28'
+'a'
+> 
+> select distinct int_to_hex_string(deptno), deptno
+> from emps
+> order by deptno;
+'EXPR$0','DEPTNO'
+'a','10'
+'14','20'
+'28','40'
+> 
+> drop function java_lang_integer_to_hex_string;
 > 
 > -- End agg.sql
 > 

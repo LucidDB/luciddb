@@ -58,6 +58,8 @@ public class FarragoOJRexStaticMethodImplementor
 
     private final String methodName;
 
+    private String impersonatedUser;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -102,6 +104,17 @@ public class FarragoOJRexStaticMethodImplementor
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Sets a user to impersonate during execution.
+     *
+     * @param impersonatedUser user to impersonate during execution,
+     * or null for no impersonation
+     */
+    public void setImpersonatedUser(String impersonatedUser)
+    {
+        this.impersonatedUser = impersonatedUser;
+    }
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -166,6 +179,12 @@ public class FarragoOJRexStaticMethodImplementor
                         Literal.makeLiteral(invocationId),
                         serverMofIdExpr)));
 
+        Expression impersonatedUserExpr;
+        if (impersonatedUser == null) {
+            impersonatedUserExpr = Literal.constantNull();
+        } else {
+            impersonatedUserExpr = Literal.makeLiteral(impersonatedUser);
+        }
         translator.addStatement(
             new ExpressionStatement(
                 new MethodCall(
@@ -173,7 +192,8 @@ public class FarragoOJRexStaticMethodImplementor
                     "pushRoutineInvocation",
                     new ExpressionList(
                         contextHolder,
-                        Literal.makeLiteral(allowSql)))));
+                        Literal.makeLiteral(allowSql),
+                        impersonatedUserExpr))));
 
         TryStatement tryStmt = new TryStatement(null, null, null);
 
