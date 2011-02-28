@@ -1309,6 +1309,28 @@ public abstract class SqlTypeStrategies
                 }
             }
         };
+
+    /**
+     * Operand type-inference strategy where an unknown operand type is assumed
+     * to be VARCHAR(1024).  This is not something which should be used in most
+     * cases (especially since the precision is arbitrary), but for IS [NOT]
+     * NULL, we don't really care about the type at all, so it's reasonable to
+     * use something that every other type can be cast to.
+     */
+    public static final SqlOperandTypeInference otiVarchar1024 =
+        new SqlOperandTypeInference() {
+            public void inferOperandTypes(
+                SqlCallBinding callBinding,
+                RelDataType returnType,
+                RelDataType [] operandTypes)
+            {
+                RelDataTypeFactory typeFactory = callBinding.getTypeFactory();
+                for (int i = 0; i < operandTypes.length; ++i) {
+                    operandTypes[i] =
+                        typeFactory.createSqlType(SqlTypeName.VARCHAR, 1024);
+                }
+            }
+        };
 }
 
 // End SqlTypeStrategies.java

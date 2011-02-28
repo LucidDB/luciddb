@@ -780,6 +780,19 @@ public class FarragoQueryTest
         }
     }
 
+    /**
+     * Tests the fix for LDB-240.
+     */
+    public void testIsNullWithDynamicParam()
+        throws Exception
+    {
+        String sql =
+            "select * from sales.depts where deptno is null and ? is null";
+        preparedStmt = connection.prepareStatement(sql);
+        preparedStmt.setInt(1, 1);
+        preparedStmt.executeQuery();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class TxnListener
