@@ -428,7 +428,7 @@ public class SqlStdOperatorTable
             SqlKind.OTHER,
             30,
             SqlTypeStrategies.rtiBoolean,
-            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otiVarchar1024,
             SqlTypeStrategies.otcAny);
 
     public static final SqlPostfixOperator isNullOperator =
@@ -437,7 +437,7 @@ public class SqlStdOperatorTable
             SqlKind.IS_NULL,
             30,
             SqlTypeStrategies.rtiBoolean,
-            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otiVarchar1024,
             SqlTypeStrategies.otcAny);
 
     public static final SqlPostfixOperator isNotTrueOperator =

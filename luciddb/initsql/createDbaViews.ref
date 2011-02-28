@@ -180,6 +180,7 @@
 >         sys_boot.mgmt.dba_indexes_internal i
 >     where
 >         i.is_clustered is false
+>         and index_name not like 'SYS$DELETION_INDEX%'
 > ;
 > 
 > grant select on dba_unclustered_indexes to dba;
