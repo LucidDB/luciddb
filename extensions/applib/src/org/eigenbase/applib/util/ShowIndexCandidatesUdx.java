@@ -106,15 +106,20 @@ public abstract class ShowIndexCandidatesUdx
                         "select ic.column_name from " +
                         "sys_root.dba_unclustered_indexes ui " +
                         "inner join sys_boot.mgmt.dba_index_columns_internal " +
-                        "ic ON ui.mof_id = ic.mof_id) " +
+                        "ic ON ui.mof_id = ic.mof_id " +
+                        "where ui.catalog_name=? and ui.schema_name=? and " +
+                        "ui.table_name=?) " +
                     "and st.catalog_name=? and st.schema_name=? and " +
                     "st.table_name=? and " +
                     "100.0 * st.distinct_value_count / st.sample_size <=?");
             ps = conn.prepareStatement(sb.getSqlAndClear());
-            ps.setString(1, catalog);
-            ps.setString(2, schema);
-            ps.setString(3, table);
-            ps.setInt(4, threshold);
+            int c = 0;
+            for (int i = 0; i < 2; i++) {
+                ps.setString(++c, catalog);
+                ps.setString(++c, schema);
+                ps.setString(++c, table);
+            }
+            ps.setInt(++c, threshold);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
