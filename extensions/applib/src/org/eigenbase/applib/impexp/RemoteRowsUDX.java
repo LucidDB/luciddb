@@ -135,28 +135,14 @@ public class RemoteRowsUDX
 
         // 1. check column raw count
         if (  header_from_cursor.size() != header_from_file.size()) {
-		throw new Exception(HEADER_PREFIX + 
-			"Header Size Mismatch: " +
-			"cursor = " + header_from_cursor.size() +
-			" from source = " + header_from_file.size() );
-		
-	}
-            // 2. check the length of every field.
-            int col_raw_count = header_from_cursor.size();
-            for (int i = 0; i < col_raw_count; i++) {
-                String type_of_field_from_cursor =
-                    (String) header_from_cursor.get(i);
-                String type_of_field_from_file =
-                    (String) header_from_file.get(i);
-                if (type_of_field_from_cursor.equals(type_of_field_from_file)) {
-                    is_matched = true;
-                } else {
-                    is_matched = false;
-                    break;
-                }
-            }
-
-        return is_matched;
+    		throw new Exception(HEADER_PREFIX + 
+    			"Header Size Mismatch: " +
+    			"cursor = " + header_from_cursor.size() +
+    			" from source = " + header_from_file.size() );
+        }
+        //TODO: Check datatypes
+        
+        return true;
     }
 
     /**
@@ -176,9 +162,6 @@ public class RemoteRowsUDX
         List<String> ret = new ArrayList<String>(columnCount);
         for (int i = 0; i < columnCount; i++) {
             String type = rs_in.getMetaData().getColumnTypeName(i + 1);
-            if (type.indexOf("CHAR") != -1) {
-                type = "STRING";
-            }
             ret.add(type);
         }
         return ret;
