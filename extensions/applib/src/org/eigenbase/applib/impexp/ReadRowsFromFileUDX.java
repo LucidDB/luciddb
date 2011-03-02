@@ -30,7 +30,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.zip.*;
 
-
 /**
  * Purpose: Allow serialized rows to be read from a file and output in a table
  * function.<br>
@@ -68,9 +67,9 @@ public class ReadRowsFromFileUDX
                 throw new Exception("Bad File Location! Please check!");
             }
         } else if (url.trim().startsWith(PREFIX_FOUR)) {
-	   URL myURL = new URL(url);
-	   URLConnection uc = myURL.openConnection();
-           ret = uc.getInputStream(); 
+            URL myURL = new URL(url);
+            URLConnection uc = myURL.openConnection();
+            ret = uc.getInputStream();
         } else {
             throw new Exception(
                 "Please use [file://] or [classpath://] as a prefix to input url");
