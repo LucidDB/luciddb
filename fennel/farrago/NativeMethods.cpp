@@ -70,7 +70,6 @@ extern "C" JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm,void *reserved)
 {
     JniUtil::initDebug("FENNEL_JNI_DEBUG");
-    FENNEL_JNI_ONLOAD_COMMON();
     jint version = JniUtil::init(vm);
     JniEnvAutoRef pEnv;
     try {
