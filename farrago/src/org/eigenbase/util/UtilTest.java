@@ -804,6 +804,29 @@ public class UtilTest
     }
 
     /**
+     * Unit test for {@link Util#parseLocale(String)} method.
+     */
+    public void testParseLocale() {
+        Locale[] locales = {
+            Locale.CANADA,
+            Locale.CANADA_FRENCH,
+            Locale.getDefault(),
+            Locale.US,
+            Locale.TRADITIONAL_CHINESE,
+        };
+        for (Locale locale : locales) {
+            assertEquals(locale, Util.parseLocale(locale.toString()));
+        }
+        // Example locale names in Locale.toString() javadoc.
+        String[] localeNames = {
+            "en", "de_DE", "_GB", "en_US_WIN", "de__POSIX", "fr__MAC"
+        };
+        for (String localeName : localeNames) {
+            assertEquals(localeName, Util.parseLocale(localeName).toString());
+        }
+    }
+
+    /**
      * Runs the test suite.
      */
     public static void main(String [] args)

@@ -1500,6 +1500,29 @@ public class Util
     }
 
     /**
+     * Parses a locale string.
+     *
+     * <p>The inverse operation of {@link java.util.Locale#toString()}.
+     *
+     * @param localeString Locale string, e.g. "en" or "en_US"
+     * @return Java locale object
+     */
+    public static Locale parseLocale(String localeString) {
+        String[] strings = localeString.split("_");
+        switch (strings.length) {
+        case 1:
+            return new Locale(strings[0]);
+        case 2:
+            return new Locale(strings[0], strings[1]);
+        case 3:
+            return new Locale(strings[0], strings[1], strings[2]);
+        default:
+            throw newInternal(
+                "bad locale string '" + localeString + "'");
+        }
+    }
+
+    /**
      * Runs an external application.
      *
      * @param cmdarray command and arguments, see {@link ProcessBuilder}
