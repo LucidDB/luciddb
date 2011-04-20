@@ -136,6 +136,7 @@ ${farrago.test.jvmargs}
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
     <exclude name="runner/**/*.sql"/>
+
     <exclude name="med/scott.sql" unless="oracle.test"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"

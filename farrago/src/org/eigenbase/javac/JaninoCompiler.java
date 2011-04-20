@@ -106,8 +106,7 @@ public class JaninoCompiler
             new AccountingClassLoader(
                 parentClassLoader,
                 sourceFinder,
-                null,
-                DebuggingInformation.NONE);
+                null);
         try {
             classLoader.loadClass(args.fullClassName);
         } catch (ClassNotFoundException ex) {
@@ -181,14 +180,12 @@ public class JaninoCompiler
         public AccountingClassLoader(
             ClassLoader parentClassLoader,
             ResourceFinder sourceFinder,
-            String optionalCharacterEncoding,
-            EnumeratorSet debuggingInformation)
+            String optionalCharacterEncoding)
         {
             super(
                 parentClassLoader,
                 sourceFinder,
-                optionalCharacterEncoding,
-                debuggingInformation);
+                optionalCharacterEncoding);
         }
 
         int getTotalByteCodeSize()
@@ -197,7 +194,7 @@ public class JaninoCompiler
         }
 
         // override JavaSourceClassLoader
-        protected Map generateBytecodes(String name)
+        public Map generateBytecodes(String name)
             throws ClassNotFoundException
         {
             Map map = super.generateBytecodes(name);
