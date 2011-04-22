@@ -68,27 +68,25 @@ abstract public class FennelTupleResultSet
     protected FennelTupleAccessor accessor = null;
     protected FennelTupleData data = null;
     protected boolean tupleComputed = false;
-    protected final int tupleAlignment;
-    protected final int tupleAlignmentMask;
+    protected final FennelTupleAccessor.TupleAlignment tupleAlignment;
 
     //~ Constructors -----------------------------------------------------------
 
     public FennelTupleResultSet(
         FennelTupleDescriptor desc,
         ResultSetMetaData metaData,
-        int tupleAlignment)
+        FennelTupleAccessor.TupleAlignment tupleAlignment)
     {
         this.desc = desc;
         this.metaData = metaData;
         this.tupleAlignment = tupleAlignment;
-        this.tupleAlignmentMask = tupleAlignment - 1;
     }
 
     public FennelTupleResultSet(
         FennelTupleDescriptor desc,
         ResultSetMetaData metaData)
     {
-        this(desc, metaData, FennelTupleAccessor.TUPLE_ALIGN_JVM);
+        this(desc, metaData, FennelTupleAccessor.getNativeTupleAlignment());
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,8 +97,10 @@ abstract public class FennelTupleResultSet
     protected boolean computeTuple()
     {
         assert (desc != null) : "ResultSet FennelTupleDescriptor null";
-        accessor = new FennelTupleAccessor(tupleAlignment);
-        accessor.compute(desc, FennelTupleAccessor.TUPLE_FORMAT_NETWORK);
+        accessor = new FennelTupleAccessor();
+        accessor.compute(
+            desc, FennelTupleAccessor.TupleFormat.TUPLE_FORMAT_NETWORK,
+            tupleAlignment);
         data = new FennelTupleData(desc);
         assert data.getDatumCount() == accessor.size()
             : "ResultSet metadata mismatch";
@@ -118,7 +118,7 @@ abstract public class FennelTupleResultSet
     {
         // TODO jvs 26-May-2007:  Unify with FennelTupleAccessor.
         int pos = buf.position();
-        int pad = pos & tupleAlignmentMask;
+        int pad = pos & (tupleAlignment.getAlignmentMask());
         if (pad > 0) {
             buf.position(pos + pad);
         }

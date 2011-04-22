@@ -335,10 +335,8 @@ public class FennelTupleTest
     public void testTupleAlignment()
     {
         FennelTupleAccessor def = new FennelTupleAccessor();
-        FennelTupleAccessor by4 =
-            new FennelTupleAccessor(FennelTupleAccessor.TUPLE_ALIGN4);
-        FennelTupleAccessor by8 =
-            new FennelTupleAccessor(FennelTupleAccessor.TUPLE_ALIGN8);
+        FennelTupleAccessor by4 = new FennelTupleAccessor();
+        FennelTupleAccessor by8 = new FennelTupleAccessor();
         //        FennelTupleAccessor by5 = new FennelTupleAccessor(5);
 
         FennelTupleDescriptor desc = new FennelTupleDescriptor();
@@ -356,8 +354,12 @@ public class FennelTupleTest
                 32));
 
         def.compute(desc);
-        by4.compute(desc);
-        by8.compute(desc);
+        by4.compute(
+            desc, FennelTupleAccessor.TupleFormat.TUPLE_FORMAT_STANDARD,
+            FennelTupleAccessor.TupleAlignment.TUPLE_ALIGN4);
+        by8.compute(
+            desc, FennelTupleAccessor.TupleFormat.TUPLE_FORMAT_STANDARD,
+            FennelTupleAccessor.TupleAlignment.TUPLE_ALIGN8);
 
         int defsize = def.getMaxByteCount();
         int by4size = by4.getMaxByteCount();

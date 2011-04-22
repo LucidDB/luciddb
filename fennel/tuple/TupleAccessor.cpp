@@ -52,7 +52,7 @@ const bool TupleAccessor::BOOL_FALSE = false;
  */
 static const MagicNumber TUPLE_MAGIC_NUMBER = 0x9897ab509de7dcf5LL;
 
-TupleAccessor::TupleAccessor()
+TupleAccessor::TupleAccessor() : alignment(TUPLE_ALIGN_NATIVE)
 {
     pTupleBuf = NULL;
 }
@@ -83,7 +83,7 @@ void TupleAccessor::clear()
 // algorithm, e.g. bit field ordering
 
 void TupleAccessor::compute(
-    TupleDescriptor const &tuple,TupleFormat formatInit)
+    TupleDescriptor const &tuple, TupleFormat formatInit, TupleAlign alignment)
 {
     clear();
     format = formatInit;
@@ -376,8 +376,8 @@ void TupleAccessor::compute(
     // now round the entire row width up to the next alignment boundary;
     // this only affects the end of the row, which is why it is done
     // AFTER computing cbMaxStorage based on the unaligned cbMinStorage
-    cbMinStorage = alignRoundUp(cbMinStorage);
-    cbMaxStorage = alignRoundUp(cbMaxStorage);
+    cbMinStorage = alignRoundUp(cbMinStorage, alignment);
+    cbMaxStorage = alignRoundUp(cbMaxStorage, alignment);
 
     // if aligned variable-width fields are present, permute the marshalling
     // order so that they come before unaligned variable-width fields
@@ -427,7 +427,7 @@ uint TupleAccessor::getBufferByteCount(PConstBuffer pBuf) const
             cb = ntohs(cb);
         }
         // round up for alignment padding
-        return alignRoundUp(cb);
+        return alignRoundUp(cb, alignment);
     }
 }
 
@@ -445,7 +445,7 @@ uint TupleAccessor::getByteCount(TupleData const &tuple) const
             }
         }
         // round up for alignment padding
-        return alignRoundUp(cb);
+        return alignRoundUp(cb, alignment);
     }
 }
 
