@@ -83,10 +83,11 @@ void TupleAccessor::clear()
 // algorithm, e.g. bit field ordering
 
 void TupleAccessor::compute(
-    TupleDescriptor const &tuple, TupleFormat formatInit, TupleAlign alignment)
+    TupleDescriptor const &tuple, TupleFormat formatInit, TupleAlign align)
 {
     clear();
     format = formatInit;
+    alignment = align;
 
     // these vectors keep track of the logical 0-based indices of the
     // attributes belonging to the various attribute storage classes
