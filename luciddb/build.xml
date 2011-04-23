@@ -1160,8 +1160,8 @@ ${farrago.test.jvmargs}
     </copy>
     <copy 
       file="${luciddb.dir}/license/README" 
-      todir="${dist.dir}/${lucidera.release.spec}"
-      overwrite="true" />
+      tofile="${dist.dir}/${lucidera.release.spec}/README"
+      force="true" overwrite="true" />
 
     <copy todir="${release.install.dir}" overwrite="true"
       file="${luciddb.dir}/initsql/catalog.sql"/>
