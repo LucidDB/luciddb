@@ -1,5 +1,7 @@
 -- test the create_table_as UDP
 
+-- null schema without set schema first, no null exception
+call applib.create_table_as(null, 'ddb26_t1', 'select * from nothing', true);
 -- setup a schema and couples of tables for testing.
 create or replace schema "SS";
 set schema 'SS';

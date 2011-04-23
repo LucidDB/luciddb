@@ -1,0 +1,7 @@
+#!/bin/bash
+# $Id: //open/dy/dev/luciddb/lucidDbServer#2 $
+# Run LucidDB as a standalone RMI server
+
+source ./defineFirewaterDbRuntime.sh
+
+java ${SERVER_JAVA_ARGS} net.sf.firewater.session.FirewaterServer

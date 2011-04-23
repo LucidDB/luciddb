@@ -32,6 +32,10 @@
         </test-suite>
       </init-hook>
 
+      <test name="showIndexCandidates">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/showIndexCandidates.sql" />
+      </test>
+
       <test name="generateSequence">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/generateSequence.sql" />
       </test>
