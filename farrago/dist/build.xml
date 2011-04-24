@@ -86,6 +86,9 @@
         <include name="**/*.class"/>
         <include name="META-INF/enki/**"/>
       </fileset>
+      <fileset dir="${farrago.catalog.transient.dir}">
+        <include name="**/*.class"/>
+      </fileset>
       <fileset dir="${dist.dir}">
         <include name="FarragoRelease.properties"/>
       </fileset>
