@@ -164,25 +164,28 @@ public class FarragoMdrReposImpl
         // NOTE: to use the old JMI mem factory instead, override this method
         // to just return new
         // FarragoMemFactory(getModelGraph()).getFarragoPackage();
-        Properties transientProps = new Properties();
-        transientProps.put(
-            MDRepositoryFactory.ENKI_IMPL_TYPE,
-            MdrProvider.ENKI_TRANSIENT.toString());
-        transientProps.put(
-            TransientMDRepository.PROPERTY_WEAK,
-            Boolean.toString(true));
-        EnkiMDRepository transientRepos = MdrUtil.loadRepository(
-            null, transientProps);
-        ModelPackage modelPackage = (ModelPackage)
-            transientRepos.createExtent(
-                FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
-                null);
-        MofPackage metaPackage = FarragoReposUtil.getMetaPackage(
-            modelPackage, FarragoReposUtil.FARRAGO_PACKAGE_NAME);
-        return (FarragoPackage)
-            transientRepos.createExtent(
-                "FarragoTransientCatalog",
-                metaPackage);
+        return FarragoMemFactory(getModelGraph()).getFarragoPackage();
+
+        // FRG-417 Issues with packaging... revert until addressed
+        //Properties transientProps = new Properties();
+        //transientProps.put(
+        //    MDRepositoryFactory.ENKI_IMPL_TYPE,
+        //    MdrProvider.ENKI_TRANSIENT.toString());
+        //transientProps.put(
+        //    TransientMDRepository.PROPERTY_WEAK,
+        //    Boolean.toString(true));
+        //EnkiMDRepository transientRepos = MdrUtil.loadRepository(
+        //    null, transientProps);
+        //ModelPackage modelPackage = (ModelPackage)
+        //    transientRepos.createExtent(
+        //        FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
+        //        null);
+        //MofPackage metaPackage = FarragoReposUtil.getMetaPackage(
+        //    modelPackage, FarragoReposUtil.FARRAGO_PACKAGE_NAME);
+        //return (FarragoPackage)
+        //    transientRepos.createExtent(
+        //        "FarragoTransientCatalog",
+        //        metaPackage);
     }
     
     private void checkModelTimestamp(String extentName)
