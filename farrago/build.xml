@@ -1578,9 +1578,6 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <packageset dir="${farrago.catalog.src.dir}">
         <include name="**"/>
       </packageset>
-      <packageset dir="${farrago.catalog.transient.dir}">
-        <include name="**"/>
-      </packageset>
       <packageset dir="${farrago.src.dir}">
         <include name="**"/>
       </packageset>
@@ -1632,9 +1629,6 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       classpathref="farrago.javadoc.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
       <packageset dir="${farrago.catalog.src.dir}">
-        <include name="**"/>
-      </packageset>
-      <packageset dir="${farrago.catalog.transient.dir}">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.src.dir}">

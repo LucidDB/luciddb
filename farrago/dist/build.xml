@@ -86,10 +86,6 @@
         <include name="**/*.class"/>
         <include name="META-INF/enki/**"/>
       </fileset>
-      <!-- FRG-417: add this back in once resolved
-      <fileset dir="${farrago.catalog.transient.dir}">
-        <include name="**/*.class"/>
-      </fileset> -->
       <fileset dir="${dist.dir}">
         <include name="FarragoRelease.properties"/>
       </fileset>
