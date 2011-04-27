@@ -124,7 +124,7 @@ mkdir $BIN_DIR
 
 # copy thirdparty libs
 cd $THIRDPARTY_DIR
-cp janino/lib/janino.jar $LIB_DIR
+cp janino/janino.jar $LIB_DIR
 cp janino/src/org/codehaus/janino/doc-files/new_bsd_license.txt $LIB_DIR/janino.license.txt
 cp resgen/lib/eigenbase-resgen.jar $LIB_DIR
 cp resgen/lib/eigenbase-xom.jar $LIB_DIR
