@@ -10,6 +10,9 @@ if [ ! -e "$MAIN_DIR/bin/classpath.gen" ]; then
     exit -1
 fi
 
+# If you are trying to give additional memory usable by queries
+# see this doc: http://pub.eigenbase.org/wiki/LucidDbBufferPoolSizing
+# Upping Java Heap will unlikely help queries on "large" datasets
 JAVA_ARGS="-Xms256m -Xmx256m -XX:MaxPermSize=128m -cp `cat $MAIN_DIR/bin/classpath.gen` \
   -Dnet.sf.farrago.home=$MAIN_DIR \
   -Dorg.eigenbase.util.AWT_WORKAROUND=off \
