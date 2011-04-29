@@ -158,7 +158,7 @@ cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
 cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
 cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
-cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
+cp vjdbc/lib/commons-dbcp-1.4.jar $LIB_DIR
 cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
