@@ -161,28 +161,11 @@ public class FarragoMdrReposImpl
 
     protected FarragoPackage createTransientPackage() throws Exception
     {
-        // NOTE: to use the old JMI mem factory instead, override this method
-        // to just return new
-        // FarragoMemFactory(getModelGraph()).getFarragoPackage();
-        Properties transientProps = new Properties();
-        transientProps.put(
-            MDRepositoryFactory.ENKI_IMPL_TYPE,
-            MdrProvider.ENKI_TRANSIENT.toString());
-        transientProps.put(
-            TransientMDRepository.PROPERTY_WEAK,
-            Boolean.toString(true));
-        EnkiMDRepository transientRepos = MdrUtil.loadRepository(
-            null, transientProps);
-        ModelPackage modelPackage = (ModelPackage)
-            transientRepos.createExtent(
-                FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
-                null);
-        MofPackage metaPackage = FarragoReposUtil.getMetaPackage(
-            modelPackage, FarragoReposUtil.FARRAGO_PACKAGE_NAME);
-        return (FarragoPackage)
-            transientRepos.createExtent(
-                "FarragoTransientCatalog",
-                metaPackage);
+        // NOTE: this uses the JMI Memory only implementation
+        // which is slow, but has caused issues with performance
+        // Pending resolution of FRG-417 this should revert to implementation
+        // in Eigenchange 14049 
+        return new FarragoMemFactory(getModelGraph()).getFarragoPackage();
     }
     
     private void checkModelTimestamp(String extentName)
