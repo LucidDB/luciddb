@@ -350,9 +350,14 @@ public abstract class FarragoAbstractServer
      */
     public void runConsole()
     {
+        Thread shutdownHook = null;
+        if (shouldRegisterShutdownHook()) {
+            shutdownHook = new FarragoServerShutdownHook();
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        }
+
         FarragoResource res = FarragoResource.instance();
 
-        // TODO:  install signal handlers also
         InputStreamReader inReader = new InputStreamReader(System.in);
         LineNumberReader lineReader = new LineNumberReader(inReader);
         cmdloop:
@@ -378,7 +383,24 @@ public abstract class FarragoAbstractServer
                 break cmdloop;
             }
         }
+        if (shutdownHook != null) {
+            // We already took care of shutdown ourselves
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
         System.exit(0);
+    }
+
+    protected boolean shouldRegisterShutdownHook()
+    {
+        return true;
+    }
+
+    private class FarragoServerShutdownHook extends Thread
+    {
+        public void run()
+        {
+            stopHard();
+        }
     }
 }
 

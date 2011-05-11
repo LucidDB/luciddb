@@ -23,6 +23,7 @@
 package net.sf.farrago.parser;
 
 import java.io.*;
+import java.util.*;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
@@ -44,6 +45,13 @@ import org.eigenbase.util.*;
 public abstract class FarragoAbstractParser
     implements FarragoSessionParser
 {
+    private enum ParseMethod
+    {
+        SQL_STMT,
+        SQL_EXPRESSION,
+        DEPLOYMENT_DESCRIPTOR
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     protected FarragoSessionStmtValidator stmtValidator;
@@ -124,6 +132,20 @@ public abstract class FarragoAbstractParser
         String sql,
         boolean expectStatement)
     {
+        return parseSqlTextImpl(
+            stmtValidator,
+            ddlValidator,
+            sql,
+            expectStatement
+            ? ParseMethod.SQL_STMT : ParseMethod.SQL_EXPRESSION);
+    }
+
+    private Object parseSqlTextImpl(
+        FarragoSessionStmtValidator stmtValidator,
+        FarragoSessionDdlValidator ddlValidator,
+        String sql,
+        ParseMethod parseMethod)
+    {
         parsingComplete = false;
         this.stmtValidator = stmtValidator;
         this.ddlValidator = ddlValidator;
@@ -134,10 +156,14 @@ public abstract class FarragoAbstractParser
         sourceString = sql;
 
         try {
-            if (expectStatement) {
+            switch (parseMethod) {
+            case SQL_STMT:
                 return parserImpl.FarragoSqlStmtEof();
-            } else {
+            case SQL_EXPRESSION:
                 return parserImpl.SqlExpressionEof();
+            case DEPLOYMENT_DESCRIPTOR:
+            default:
+                return parserImpl.DeploymentDescriptorEof();
             }
         } catch (EigenbaseContextException ex) {
             ex.setOriginalStatement(sql);
@@ -174,6 +200,17 @@ public abstract class FarragoAbstractParser
         } finally {
             parsingComplete = true;
         }
+    }
+
+    // implement FarragoSessionParser
+    public Map<String, List<String>> parseDeploymentDescriptor(String src)
+    {
+        return (Map<String, List<String>>)
+            parseSqlTextImpl(
+                stmtValidator,
+                ddlValidator,
+                src,
+                ParseMethod.DEPLOYMENT_DESCRIPTOR);
     }
 
     // implement FarragoSessionParser

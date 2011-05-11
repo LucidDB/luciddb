@@ -31,6 +31,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -148,6 +149,13 @@ public class DdlValidator
     private Set<RefObject> deleteQueue;
 
     /**
+     * Set of MOFID's for objects for which the RESTRICT check needs
+     * to be deferred until after drop triggers (e.g.
+     * for the undeployment actions in DROP JAR) have been executed.
+     */
+    private Set<String> deferredRestrictMofIds;
+
+    /**
      * Thread binding to prevent cross-talk.
      */
     private Thread activeThread;
@@ -184,6 +192,7 @@ public class DdlValidator
     private FemAuthId currentUserAuthId;
 
     private boolean usePreviewDelete;
+    private boolean enableMassDeletion;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -202,13 +211,16 @@ public class DdlValidator
         if (getRepos().getEnkiMdrRepos().supportsPreviewRefDelete()) {
             usePreviewDelete = true;
         }
-
+        enableMassDeletion =
+            getInvokingSession().getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
         schedulingMap = new LinkedHashMap<String, SchedulingDetail>();
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
         revalidateQueue = new LinkedHashSet<CwmModelElement>();
+        deferredRestrictMofIds = new LinkedHashSet<String>();
 
         parserContextMap = new HashMap<Object, SqlParserPos>();
         parserOffsetMap = new HashMap<RefObject, SqlParserPos>();
@@ -682,6 +694,17 @@ public class DdlValidator
             }
         }
 
+        // Process deferred RESTRICT
+        for (String mofId : deferredRestrictMofIds) {
+            RefBaseObject obj = getRepos().getEnkiMdrRepos().getByMofId(mofId);
+            if (obj != null) {
+                // Object did not get deleted by a trigger.
+                throw FarragoResource.instance().ValidatorDropRestrict.ex(
+                    getRepos().getLocalizedObjectName(
+                        ddlStmt.getModelElement()));
+            }
+        }
+
         // Now mark objects as visible and update their timestamps; we defer
         // this until here so that storage handlers above can use object
         // visibility attribute to distinguish new objects.
@@ -705,8 +728,11 @@ public class DdlValidator
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        getRepos().getEnkiMdrRepos().delete(deletionList);
-
+        if (enableMassDeletion) {
+            getRepos().getEnkiMdrRepos().delete(deletionList);
+        } else {
+            delete(deletionList);
+        }
         // verify repository integrity post-delete
         for (
             Map.Entry<RefObject, ValidatedOp> mapEntry
@@ -720,6 +746,20 @@ public class DdlValidator
         }
     }
 
+    public void enableMassDeletion(boolean enable)
+    {
+         enableMassDeletion = enable;
+    }
+
+    private void delete(Collection<RefObject> objects)
+    {
+        if (objects.isEmpty()) {
+            return;
+        }
+        for (RefObject object : objects) {
+            object.refDelete();
+        }
+    }
     private void checkJmiConstraints(RefObject obj)
     {
         JmiObjUtil.setMandatoryPrimitiveDefaults(obj);
@@ -1322,6 +1362,13 @@ public class DdlValidator
         }
         if (!isDropRestrict()) {
             deleteQueue.add(otherEnd);
+            return;
+        }
+
+        if (ddlStmt.getModelElement() instanceof FemJar) {
+            // Special case for jars:  defer the restrict check until
+            // after we have executed the undeployment actions.
+            deferredRestrictMofIds.add(otherEnd.refMofId());
             return;
         }
 

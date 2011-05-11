@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005 The Eigenbase Project
+// Copyright (C) 2010 The Eigenbase Project
 // Copyright (C) 2010 SQLstream, Inc.
-// Copyright (C) 2005 Dynamo BI Corporation
+// Copyright (C) 2010 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,22 +27,21 @@ import net.sf.farrago.fem.med.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
-
-/*
- * LcsRowScanRel is the relational expression corresponding to a scan on a
- * column store table.
+/**
+ * LcsRowAggRel is the relational expression corresponding to on-the-fly
+ * aggregation during a scan of a column store table.  Currently
+ * only a single COUNT(*) with no GROUP BY is supported.
  *
- * @author Zelaine Fong
+ * @author John Sichi
  * @version $Id$
  */
-public class LcsRowScanRel
+public class LcsRowAggRel
     extends LcsRowScanRelBase
 {
-    //~ Constructors -----------------------------------------------------------
-
     /**
-     * Creates a new LcsRowScanRel object.
+     * Creates a new LcsRowAggRel object.
      *
      * @param cluster RelOptCluster for this rel
      * @param children children inputs into the row scan
@@ -55,7 +54,7 @@ public class LcsRowScanRel
      * @param resCols residual filter columns
      * @param inputSelectivity estimate of input selectivity
      */
-    public LcsRowScanRel(
+    public LcsRowAggRel(
         RelOptCluster cluster,
         RelNode [] children,
         LcsTable lcsTable,
@@ -78,13 +77,11 @@ public class LcsRowScanRel
             inputSelectivity);
     }
 
-    //~ Methods ----------------------------------------------------------------
-
     // implement RelNode
-    public LcsRowScanRel clone()
+    public LcsRowAggRel clone()
     {
-        LcsRowScanRel clone =
-            new LcsRowScanRel(
+        LcsRowAggRel clone =
+            new LcsRowAggRel(
                 getCluster(),
                 RelOptUtil.clone(inputs),
                 lcsTable,
@@ -97,6 +94,13 @@ public class LcsRowScanRel
         clone.inheritTraitsFrom(this);
         return clone;
     }
+
+    // override LcsRowScanRelBase
+    protected RelDataType deriveRowType()
+    {
+        // returned count is always BIGINT NOT NULL
+        return RelOptUtil.createDmlRowType(getCluster().getTypeFactory());
+    }
 }
 
-// End LcsRowScanRel.java
+// End LcsRowAggRel.java

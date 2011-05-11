@@ -558,13 +558,15 @@ SqlNode SqlQueryEof() :
     SqlNode query;
 }
 {
-    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY) (<EOF>) { return query; }
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
+    <EOF>
+    { return query; }
 }
 
 /**
- * Parses an SQL statement followed by the end-of-file symbol.
+ * Parses an SQL statement.
  */
-SqlNode SqlStmtEof() :
+SqlNode SqlStmt() :
 {
     SqlNode stmt;
 }
@@ -584,7 +586,20 @@ SqlNode SqlStmtEof() :
         |
         stmt = SqlProcedureCall()
     )
-    (<EOF>)
+    {
+        return stmt;
+    }
+}
+
+/**
+ * Parses an SQL statement followed by the end-of-file symbol.
+ */
+SqlNode SqlStmtEof() :
+{
+    SqlNode stmt;
+}
+{
+    stmt = SqlStmt() <EOF>
     {
         return stmt;
     }
@@ -4767,6 +4782,7 @@ TOKEN :
     | < CONCAT: "||" >
     | < DOUBLE_PERIOD: ".." >
     | < QUOTE: "'" >
+    | < DOUBLE_QUOTE: "\"" >
 }
 
 

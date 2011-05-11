@@ -30,25 +30,31 @@ import java.sql.*;
 
 import java.util.*;
 
+import java.util.jar.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-
+import org.eigenbase.sql.parser.*;
 
 /**
  * DdlRoutineHandler defines DDL handler methods for user-defined routines and
@@ -61,6 +67,12 @@ import org.eigenbase.util.*;
 public class DdlRoutineHandler
     extends DdlHandler
 {
+    public static final int NOT_DEPLOYED = 0;
+    public static final int DEPLOYMENT_PENDING = 1;
+    public static final int DEPLOYED = 2;
+    public static final int DEPLOYED_PARTIAL = 3;
+    public static final int UNDEPLOYMENT_PENDING = 4;
+
     //~ Constructors -----------------------------------------------------------
 
     public DdlRoutineHandler(FarragoSessionDdlValidator validator)
@@ -796,6 +808,234 @@ public class DdlRoutineHandler
                     repos.getLocalizedObjectName(typeDef)));
         }
     }
+
+    public void executeCreation(FemJar jar)
+    {
+        String url = jar.getUrl().trim();
+        String expandedUrl = FarragoProperties.instance().expandProperties(url);
+        if (expandedUrl.startsWith(
+            FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+        {
+            throw validator.newPositionalError(
+                jar,
+                res.CannotDoDeploymentOnClass
+                   . ex(repos.getLocalizedObjectName(jar)));
+        }
+
+        if (jar.getDeploymentState() != DEPLOYMENT_PENDING) {
+            return;
+        }
+        String jarName = getQualifiedJarName(jar);
+        String jarSchema = getJarSchema(jarName);
+
+        FarragoSession session = validator.getStmtValidator().getSession();
+        session.getSessionVariables().set(
+            FarragoDefaultSessionPersonality.SQLJ_THISJAR,
+            jarName);
+        List<String> deployFiles = getAllDeployFiles(expandedUrl);
+        if (deployFiles.size() > 0) {
+            for (String deployFile : deployFiles) {
+                List<String> deploySQLs = getDeploySqlStatements(
+                    expandedUrl,
+                    deployFile,
+                    "INSTALL");
+                if (deploySQLs.size() > 0) {
+                    int deployState = executeDeployDescriptor(
+                        jar,
+                        session,
+                        jarSchema,
+                        deploySQLs,
+                        deployFile);
+                    jar.setDeploymentState(deployState);
+                }
+            }
+        }
+    }
+
+    public void executeDrop(FemJar jar)
+    {
+        String url = jar.getUrl().trim();
+        String expandedUrl = FarragoProperties.instance().expandProperties(url);
+        if (expandedUrl
+                  .startsWith(FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX2))
+        {
+            throw validator.newPositionalError(
+                jar,
+                res.CannotDoDeploymentOnClass
+                   .ex(repos.getLocalizedObjectName(jar)));
+        }
+        if (jar.getDeploymentState() != UNDEPLOYMENT_PENDING) {
+            return;
+        }
+        // Disable mass deletion for this DROP so that it
+        // doesn't interfere with nested DDL transactions.
+        validator.enableMassDeletion(false);
+        //  Also disable it for the nested transactions themselves.
+        FarragoSession session = validator.getStmtValidator().getSession();
+        boolean savedMassDeletion = session.getSessionVariables().getBoolean(
+            FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION);
+        String jarName = getQualifiedJarName(jar);
+        String jarSchema = getJarSchema(jarName);
+        try {
+            session.getSessionVariables().setBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
+                false);
+            List<String> deployFiles = getAllDeployFiles(expandedUrl);
+            // Undeployment goes in reverse order of files
+            Collections.reverse(deployFiles);
+            if (deployFiles.size() > 0) {
+                for (String deployFile : deployFiles) {
+                    List<String> deploySQLs = getDeploySqlStatements(
+                        expandedUrl,
+                        deployFile,
+                        "REMOVE");
+                    if (deploySQLs.size() > 0) {
+                        int deployState = executeDeployDescriptor(
+                            jar,
+                            session,
+                            jarSchema,
+                            deploySQLs,
+                            deployFile);
+                        jar.setDeploymentState(deployState);
+                    }
+                }
+            }
+        } finally {
+            session.getSessionVariables().setBoolean(
+                FarragoDefaultSessionPersonality.USE_ENKI_MASS_DELETION,
+                savedMassDeletion);
+        }
+    }
+
+    private String getQualifiedJarName(FemJar jar)
+    {
+        SqlIdentifier jarId = FarragoCatalogUtil.getQualifiedName(jar);
+        SqlPrettyWriter pw = new SqlPrettyWriter(
+            SqlDialect.create(
+                validator.getStmtValidator()
+                .getSession()
+                .getDatabaseMetaData()));
+        String fqjn = pw.format(jarId);
+        return fqjn;
+    }
+
+    private String getJarSchema(String qualifiedJarName)
+    {
+        String schema = "";
+        try {
+            SqlParser sqlParser = new SqlParser(qualifiedJarName);
+            SqlIdentifier tableId = (SqlIdentifier) sqlParser.parseExpression();
+            String[] ss = tableId.names;
+            schema = ss[1];
+        } catch (Exception ex) {
+        }
+        return schema;
+    }
+
+    private int executeDeployDescriptor(
+        FemJar jar,
+        FarragoSession session,
+        String defaultSchema,
+        List<String> sqls,
+        String deployFile)
+    {
+        Connection conn = null;
+        Statement stmt = null;
+        SqlBuilder sb = new SqlBuilder(SqlDialect.EIGENBASE);
+        sb.append("SET SCHEMA ");
+        sb.literal(sb.getDialect().quoteIdentifier(defaultSchema));
+        String setDefaultSchema = sb.getSql();
+        String lastSql = "";
+        try {
+            conn = session.getConnectionSource().newConnection();
+            stmt = conn.createStatement();
+            stmt.executeUpdate(setDefaultSchema);
+            for (String sql : sqls) {
+                lastSql = sql;
+                stmt.executeUpdate(sql);
+            }
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().DeploymentActionFailed.ex(
+                repos.getLocalizedObjectName(jar),
+                lastSql,
+                ex);
+        } finally {
+            Util.squelchStmt(stmt);
+            Util.squelchConnection(conn);
+        }
+        return DEPLOYED;
+    }
+
+    private List<String> getAllDeployFiles(String jarUrl)
+    {
+        List<String> retValue = new ArrayList<String>();
+        try {
+            JarFile jarfile = getJarFile(jarUrl);
+            Manifest manifest = jarfile.getManifest();
+            if (manifest != null) {
+                Map map = manifest.getEntries();
+                for (Iterator it = map.keySet().iterator(); it.hasNext();) {
+                    String entryName = (String) it.next();
+                    Attributes attrs = (Attributes) map.get(entryName);
+                    for (Iterator it2 =
+                                    attrs.keySet().iterator(); it2.hasNext();)
+                    {
+                        Attributes.Name attrName = (Attributes.Name) it2.next();
+                        String attrValue = attrs.getValue(attrName);
+                        if ("SQLJDeploymentDescriptor".equals(
+                            attrName.toString())
+                            && "TRUE".equals(attrValue))
+                        {
+                            retValue.add(entryName);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            throw FarragoResource.instance().PluginManifestSqljInvalid.ex(
+                jarUrl,
+                ex);
+        }
+        return retValue;
+    }
+
+    private List<String> getDeploySqlStatements(
+        String jarUrl,
+        String deployFile,
+        String operation)
+    {
+        JarFile jarfile = null;
+        try {
+            jarfile = getJarFile(jarUrl);
+            JarEntry entry = jarfile.getJarEntry(deployFile);
+            if (entry != null) {
+                InputStream in = jarfile.getInputStream(entry);
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(in));
+                String src = Util.readAllAsString(br);
+                Map<String, List<String>> map =
+                    validator.getParser().parseDeploymentDescriptor(src);
+                return map.get(operation);
+            }
+        } catch (Exception ex) {
+            throw FarragoResource.instance().PluginDeploymentFileInvalid.ex(
+                deployFile,
+                jarUrl,
+                ex);
+        } finally {
+            Util.squelchJar(jarfile);
+        }
+        return new ArrayList<String>();
+    }
+
+    private JarFile getJarFile(String jarUrl)
+        throws MalformedURLException, IOException
+    {
+        URL url = new URL(jarUrl);
+        JarFile jf = new JarFile(url.getFile());
+        return jf;
+    }
+
 }
 
 // End DdlRoutineHandler.java

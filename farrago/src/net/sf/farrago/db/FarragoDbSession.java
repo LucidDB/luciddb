@@ -1486,7 +1486,7 @@ public class FarragoDbSession
     }
 
     /**
-     * @return true if a metamodel dump has been requested
+     * @return true if a shutdown has been requested
      */
     public boolean shutdownRequested()
     {

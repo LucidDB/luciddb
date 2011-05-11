@@ -528,9 +528,9 @@ public class RexLiteral
 
     public boolean isAlwaysTrue()
     {
-        Util.pre(
-            typeName == SqlTypeName.BOOLEAN,
-            "typeName.getOrdinal() == SqlTypeName.Boolean_ordinal");
+        if (typeName != SqlTypeName.BOOLEAN) {
+            return false;
+        }
         return booleanValue(this);
     }
 

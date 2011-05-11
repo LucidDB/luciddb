@@ -41,201 +41,26 @@ public class RexSqlStandardConvertletTable
 
         // Register convertlets
 
-        registerOp(
-            SqlStdOperatorTable.greaterThanOrEqualOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.greaterThanOrEqualOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
+        registerEquivOp(SqlStdOperatorTable.greaterThanOrEqualOperator);
+        registerEquivOp(SqlStdOperatorTable.greaterThanOperator);
+        registerEquivOp(SqlStdOperatorTable.lessThanOrEqualOperator);
+        registerEquivOp(SqlStdOperatorTable.lessThanOperator);
+        registerEquivOp(SqlStdOperatorTable.equalsOperator);
+        registerEquivOp(SqlStdOperatorTable.notEqualsOperator);
+        registerEquivOp(SqlStdOperatorTable.andOperator);
+        registerEquivOp(SqlStdOperatorTable.orOperator);
+        registerEquivOp(SqlStdOperatorTable.inOperator);
+        registerEquivOp(SqlStdOperatorTable.likeOperator);
+        registerEquivOp(SqlStdOperatorTable.notLikeOperator);
+        registerEquivOp(SqlStdOperatorTable.plusOperator);
+        registerEquivOp(SqlStdOperatorTable.minusOperator);
+        registerEquivOp(SqlStdOperatorTable.multiplyOperator);
+        registerEquivOp(SqlStdOperatorTable.divideOperator);
 
-        registerOp(
-            SqlStdOperatorTable.greaterThanOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.greaterThanOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
+        registerEquivOp(SqlStdOperatorTable.notOperator);
 
-        registerOp(
-            SqlStdOperatorTable.lessThanOrEqualOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.lessThanOrEqualOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.lessThanOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.lessThanOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.equalsOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.equalsOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.notEqualsOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.notEqualsOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.inOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.inOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.andOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.andOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.orOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.orOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.likeOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.likeOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.notLikeOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertBinaryOp(
-                        SqlStdOperatorTable.notLikeOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.notOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertPrefixOp(
-                        SqlStdOperatorTable.notOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.isNotNullOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertPostfixOp(
-                        SqlStdOperatorTable.isNotNullOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
-
-        registerOp(
-            SqlStdOperatorTable.isNullOperator,
-            new RexSqlConvertlet() {
-                public SqlNode convertCall(
-                    RexToSqlNodeConverter converter,
-                    RexCall call)
-                {
-                    return convertPostfixOp(
-                        SqlStdOperatorTable.isNullOperator,
-                        converter,
-                        (RexCall) call);
-                }
-            });
+        registerEquivOp(SqlStdOperatorTable.isNotNullOperator);
+        registerEquivOp(SqlStdOperatorTable.isNullOperator);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -256,45 +81,20 @@ public class RexSqlStandardConvertletTable
         RexCall call)
     {
         if (get(call) == null) {
-            // No convertlet was suitable.
-            throw Util.needToImplement(call);
+            return null;
         }
 
         final SqlOperator op = call.getOperator();
         final RexNode [] operands = call.getOperands();
 
         final SqlNode [] exprs = convertExpressionList(converter, operands);
+        if (exprs == null) {
+            return null;
+        }
         return new SqlCall(
             op,
             exprs,
             SqlParserPos.ZERO);
-    }
-
-    /**
-     * Converts an expression from {@link RexNode} to {@link SqlNode} format.
-     *
-     * @param converter Converter
-     * @param expr Expression to translate
-     *
-     * @return Converted expression
-     */
-    private SqlNode convertExpression(
-        RexToSqlNodeConverter converter,
-        RexNode expr)
-    {
-        if (expr instanceof RexLiteral) {
-            return converter.convertLiteral((RexLiteral) expr);
-        }
-
-        if (expr instanceof RexInputRef) {
-            return converter.convertInputRef((RexInputRef) expr);
-        }
-
-        if (expr instanceof RexCall) {
-            return convertCall(converter, (RexCall) expr);
-        }
-
-        throw Util.needToImplement(expr);
     }
 
     private SqlNode [] convertExpressionList(
@@ -304,46 +104,40 @@ public class RexSqlStandardConvertletTable
         final SqlNode [] exprs = new SqlNode[nodes.length];
         for (int i = 0; i < nodes.length; i++) {
             RexNode node = nodes[i];
-            exprs[i] = convertExpression(converter, node);
+            exprs[i] = converter.convertNode(node);
+            if (exprs[i] == null) {
+                return null;
+            }
         }
         return exprs;
     }
 
-    private SqlNode convertBinaryOp(
-        SqlOperator operator,
-        RexToSqlNodeConverter converter,
-        RexCall call)
+    /**
+     * Creates and registers a convertlet for an operator in which
+     * the SQL and Rex representations are structurally equivalent.
+     *
+     * @param op operator instance
+     */
+    protected void registerEquivOp(final SqlOperator op)
     {
-        SqlNode op0 = convertExpression(converter, call.operands[0]);
-        SqlNode op1 = convertExpression(converter, call.operands[1]);
-        return new SqlCall(
-            operator,
-            new SqlNode[] { op0, op1 },
-            SqlParserPos.ZERO);
-    }
-
-    private SqlNode convertPrefixOp(
-        SqlOperator operator,
-        RexToSqlNodeConverter converter,
-        RexCall call)
-    {
-        SqlNode op0 = convertExpression(converter, call.operands[0]);
-        return new SqlCall(
-            operator,
-            new SqlNode[] { op0 },
-            SqlParserPos.ZERO);
-    }
-
-    private SqlNode convertPostfixOp(
-        SqlOperator operator,
-        RexToSqlNodeConverter converter,
-        RexCall call)
-    {
-        SqlNode op0 = convertExpression(converter, call.operands[0]);
-        return new SqlCall(
-            operator,
-            new SqlNode[] { op0 },
-            SqlParserPos.ZERO);
+        registerOp(
+            op,
+            new RexSqlConvertlet() {
+                public SqlNode convertCall(
+                    RexToSqlNodeConverter converter,
+                    RexCall call)
+                {
+                    SqlNode [] operands =
+                        convertExpressionList(converter, call.operands);
+                    if (operands == null) {
+                        return null;
+                    }
+                    return new SqlCall(
+                        op,
+                        operands,
+                        SqlParserPos.ZERO);
+                }
+            });
     }
 }
 

@@ -41,6 +41,7 @@ import java.sql.*;
 import java.text.*;
 
 import java.util.*;
+import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
@@ -1074,6 +1075,24 @@ public class Util
             sb.append(buf, 0, n);
         }
         return sb.toString();
+    }
+
+    /**
+     * Closes a Jar, ignoring any I/O exception. This should only be
+     * used in finally blocks when it's necessary to avoid throwing an exception
+     * which might mask a real exception.
+     *
+     * @param jar jar to close
+     */
+    public static void squelchJar(JarFile jar)
+    {
+        try {
+            if (jar != null) {
+                jar.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
     }
 
     /**

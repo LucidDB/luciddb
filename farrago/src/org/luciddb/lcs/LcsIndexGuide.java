@@ -876,7 +876,12 @@ public class LcsIndexGuide
         Integer [] projectedColumns,
         Integer [] residualColumns)
     {
-        FemLcsRowScanStreamDef scanStream = repos.newFemLcsRowScanStreamDef();
+        FemLcsRowScanStreamDef scanStream;
+        if (rel instanceof LcsRowAggRel) {
+            scanStream = repos.newFemLcsAggStreamDef();
+        } else {
+            scanStream = repos.newFemLcsRowScanStreamDef();
+        }
 
         defineScanStream(scanStream, rel, false);
 

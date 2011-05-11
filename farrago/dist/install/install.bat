@@ -31,6 +31,6 @@ goto end
 
 :need_java
     echo "The JAVA_HOME environment variable must be set to the location"
-    echo "of a version 1.5 JVM."
+    echo "of a version 1.6 or higher JVM."
 
 :end

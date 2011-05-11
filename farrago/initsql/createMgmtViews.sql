@@ -176,6 +176,12 @@ create or replace procedure kill_statement_match(
   specific kill_statement_match_cancel
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
+create or replace procedure shutdown_database(in kill_sessions boolean, in jvm_shutdown_delay_millis bigint)
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoManagementUDR.shutdownDatabase';
+
 -- sets a filter on the optimizer rules to be used in the current session
 create or replace procedure set_opt_rule_desc_exclusion_filter(
     in regex varchar(2000))

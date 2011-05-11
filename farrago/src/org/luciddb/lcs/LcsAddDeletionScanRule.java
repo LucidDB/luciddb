@@ -157,6 +157,18 @@ public class LcsAddDeletionScanRule
                     origRowScan.isFullScan,
                     origRowScan.residualColumns,
                     origRowScan.inputSelectivity);
+        } else if (origRowScan instanceof LcsRowAggRel) {
+            newRowScan =
+                new LcsRowAggRel(
+                    origRowScan.getCluster(),
+                    newInputs,
+                    origRowScan.lcsTable,
+                    origRowScan.clusteredIndexes,
+                    origRowScan.getConnection(),
+                    origRowScan.projectedColumns,
+                    origRowScan.isFullScan,
+                    origRowScan.residualColumns,
+                    origRowScan.inputSelectivity);
         } else {
             LcsSamplingRowScanRel sampleRel =
                 (LcsSamplingRowScanRel) origRowScan;

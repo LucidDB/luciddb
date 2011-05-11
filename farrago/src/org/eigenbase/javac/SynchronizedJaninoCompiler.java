@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2007 The Eigenbase Project
-// Copyright (C) 2007 SQLstream, Inc.
-// Copyright (C) 2007 Dynamo BI Corporation
+// Copyright (C) 2010 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2010 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,32 +19,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.rex;
-
-import org.eigenbase.sql.*;
-
+package org.eigenbase.javac;
 
 /**
- * Converts a {@link RexNode} expression into a {@link SqlNode} expression.
+ * SynchronizedJaninoCompiler exists as a fallback in case Janino has
+ * more multi-threading bugs.  We hope never to have to use it, but
+ * if necessary:
+ * <code>alter system set "javaCompilerClassName" =
+ * 'org.eigenbase.javac.SynchronizedJaninoCompiler';</code>
  *
- * @author Sunny Choi
+ * @author John Sichi
  * @version $Id$
  */
-public interface RexSqlConvertlet
+public class SynchronizedJaninoCompiler extends JaninoCompiler
 {
-    //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Converts a {@link RexCall} to a {@link SqlNode} expression.
-     *
-     * @param converter to use in translating
-     * @param call RexCall to translate
-     *
-     * @return SqlNode, or null if translation was unavailable
-     */
-    SqlNode convertCall(
-        RexToSqlNodeConverter converter,
-        RexCall call);
+    // override JaninoCompiler
+    public void compile()
+    {
+        synchronized (SynchronizedJaninoCompiler.class) {
+            super.compile();
+        }
+    }
 }
 
-// End RexSqlConvertlet.java
+// End SynchronizedJaninoCompiler.java

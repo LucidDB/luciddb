@@ -104,7 +104,7 @@ public class FarragoJdbcEngineConnection
     // implement FarragoConnection
     public long getFarragoSessionId()
     {
-        if ((session == null) || session.isClosed()) {
+        if (session == null) {
             return 0;
         }
         return session.getSessionInfo().getId();
@@ -114,7 +114,7 @@ public class FarragoJdbcEngineConnection
     public boolean isClosed()
         throws SQLException
     {
-        return (session == null);
+        return (session == null) || session.isClosed();
     }
 
     // implement FarragoSessionConnectionSource

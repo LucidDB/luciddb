@@ -202,6 +202,8 @@ public class RexBuilder
         SqlOperator op,
         RexNode ... exprs)
     {
+        // TODO jvs 12-Jun-2010:  Find a better place for this;
+        // it surely does not belong here.
         if (op == SqlStdOperatorTable.andOperator
             && exprs.length == 2
             && exprs[0].equals(exprs[1]))

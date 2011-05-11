@@ -24,6 +24,7 @@
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lcs/LcsClusterAppendExecStream.h"
 #include "fennel/lcs/LcsRowScanExecStream.h"
+#include "fennel/lcs/LcsCountAggExecStream.h"
 #include "fennel/lbm/LbmEntry.h"
 #include "fennel/ldbtest/SamplingExecStreamGenerator.h"
 #include "fennel/btree/BTreeBuilder.h"
@@ -130,6 +131,9 @@ protected:
      * testing exception cases
      *
      * @param compressed testing compressed bitmap optimization
+     *
+     * @param pCountParams if non-null, perform only a count; otherwise
+     * (default) fetch and compare actual rows
      */
     void testFilterCols(
         uint nRows,
@@ -138,7 +142,8 @@ protected:
         TupleProjection proj,
         uint skipRows,
         uint expectedNumRows,
-        bool compressed);
+        bool compressed,
+        LcsCountAggExecStreamParams *pCountParams = NULL);
 
     void setSearchKey(
         char lowerDirective,
@@ -225,6 +230,7 @@ public:
             LcsRowScanExecStreamTest, testCompressedFiltering);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testBernoulliSampling);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testSystemSampling);
+        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testCount);
     }
 
     void testCaseSetUp();
@@ -236,6 +242,7 @@ public:
     void testCompressedFiltering();
     void testBernoulliSampling();
     void testSystemSampling();
+    void testCount();
 };
 
 void LcsRowScanExecStreamTest::loadClusters(
@@ -634,6 +641,22 @@ void LcsRowScanExecStreamTest::testCompressedFiltering()
     testFilterCols(nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true);
 }
 
+void LcsRowScanExecStreamTest::testCount()
+{
+    uint nRows = 50000;
+    uint nCols = 12;
+    uint nClusters = 3;
+
+    loadClusters(nRows, nCols, nClusters, true);
+
+    // scan 500*NDUPS+500 rows and columns
+    TupleProjection proj;
+    proj.push_back(LCS_RID_COLUMN_ID);
+    LcsCountAggExecStreamParams countParams;
+    testFilterCols(
+        nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true,
+        &countParams);
+}
 
 /**
  * Create an empty cluster with 1 column.  Try reading a rid from it
@@ -777,14 +800,18 @@ void LcsRowScanExecStreamTest::testFilterCols(
     TupleProjection proj,
     uint skipRows,
     uint expectedNumRows,
-    bool compressed)
+    bool compressed,
+    LcsCountAggExecStreamParams *pCountParams)
 {
     // setup input rid stream
 
     ValuesExecStreamParams valuesParams;
     boost::shared_array<FixedBuffer> pBuffer;
     ExecStreamEmbryo valuesStreamEmbryo;
-    LcsRowScanExecStreamParams scanParams;
+
+    LcsRowScanExecStreamParams rowScanParams;
+    LcsRowScanExecStreamParams &scanParams =
+        pCountParams ? *pCountParams : rowScanParams;
 
     scanParams.hasExtraFilter = true;
     scanParams.samplingMode = SAMPLING_OFF;
@@ -934,8 +961,13 @@ void LcsRowScanExecStreamTest::testFilterCols(
     scanParams.residualFilterCols.push_back(2*nCols);
 
     ExecStreamEmbryo scanStreamEmbryo;
-    scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
-    scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+    if (pCountParams) {
+        scanStreamEmbryo.init(new LcsCountAggExecStream(), *pCountParams);
+        scanStreamEmbryo.getStream()->setName("CountAggExecStream");
+    } else {
+        scanStreamEmbryo.init(new LcsRowScanExecStream(), rowScanParams);
+        scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+    }
     SharedExecStream pOutputStream;
 
     std::vector<ExecStreamEmbryo> sources;
@@ -947,8 +979,13 @@ void LcsRowScanExecStreamTest::testFilterCols(
     pOutputStream =
         prepareConfluenceGraph(sources, scanStreamEmbryo);
 
-    // setup generators for result stream
+    if (pCountParams) {
+        RampExecStreamGenerator countResultGenerator(expectedNumRows);
+        verifyOutput(*pOutputStream, 1, countResultGenerator);
+        return;
+    }
 
+    // setup generators for result stream
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
     offset = (int) ceil(2000.0 / skipRows) * skipRows;
     for (uint i = 0; i < proj.size(); i++) {

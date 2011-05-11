@@ -100,6 +100,10 @@ FENNEL_DIR=$OPEN_DIR/fennel
 THIRDPARTY_DIR=$OPEN_DIR/thirdparty
 
 # create staging directory
+# FRG-402 Setup ant if not already present
+cd $FARRAGO_DIR
+. ./farragoenv.sh $THIRDPARTY_DIR
+
 # get help from ant to figure out where to build release image
 ant dist
 
@@ -201,7 +205,7 @@ fi
 
 # create farrago libs
 cd $DIST_DIR
-ant jar
+ant allJars 
 
 # copy farrago libs
 cd $FARRAGO_DIR

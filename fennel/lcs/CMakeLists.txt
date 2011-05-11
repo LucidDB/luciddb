@@ -16,6 +16,7 @@ LcsClusterReader.cpp
 LcsClusterReplaceExecStream.cpp
 LcsClusterVerifier.cpp
 LcsColumnReader.cpp
+LcsCountAggExecStream.cpp
 LcsHash.cpp
 LcsRowScanBaseExecStream.cpp
 LcsRowScanExecStream.cpp
