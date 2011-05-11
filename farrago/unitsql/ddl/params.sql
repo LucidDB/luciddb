@@ -11,7 +11,8 @@ alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 alter system set "calcVirtualMachine" = 'turing';
 
 -- should work
-alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
+alter system set "calcVirtualMachine" = 'CALCVM_'
+                                         'AUTO';
 
 -- should work
 alter system set "cachePagesMax" = 1001;
@@ -73,7 +74,7 @@ alter system set "deviceSchedulerType" = 'foo';
 
 -- should work
 select * from sys_boot.mgmt.session_parameters_view
-  where param_name in 
+  where param_name in
     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
      'validateDdlOnPrepare',
      'cacheStatements', 'reduceNonCorrelatedSubqueries')
@@ -102,7 +103,10 @@ alter session set "squeezeJdbcNumeric" = 'true';
 -- should work
 alter session set "logDir" = 'testlog';
 alter session set "etlProcessId" = 1234;
-alter session set "etlActionId" = 'LoadAccount';
+alter session set "etlActionId" = 'Load'  /* comment */ 'Acc' // end of line comment
+  ''
+  'ount'
+  '';
 alter session set "errorMax" = 1000;
 alter session set "errorLogMax" = 1000;
 
@@ -117,12 +121,16 @@ alter session set "errorLogMax" = -1;
 
 -- should work
 select * from sys_boot.mgmt.session_parameters_view
-  where param_name in 
+  where param_name in
     ('logDir', 'etlProcessId', 'etlActionId', 'errorMax', 'errorLogMax')
   order by 1;
 
 -- should work
 alter session set "etlActionId" = null;
+
+-- should not work
+alter session set "etlActionId" = null || null;
+alter session set "etlActionId" = cast(null as varchar(5));
 
 -- should not work
 alter system set "prefetchPagesMax" = -10;
@@ -140,3 +148,5 @@ select * from t;
 drop schema param cascade;
 
 alter system set "prefetchPagesMax" = 12;
+
+-- End params.sql

@@ -894,7 +894,6 @@ public abstract class FarragoManagementUDR
             timer.schedule(task, jvmShutdownDelayInMillis);
         }
     }
-
 }
 
 // End FarragoManagementUDR.java

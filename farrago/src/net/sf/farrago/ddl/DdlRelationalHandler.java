@@ -132,6 +132,12 @@ public class DdlRelationalHandler
                     index.refClass()));
         }
 
+        CwmClass abstractTable = index.getSpannedClass();
+        if (!(abstractTable instanceof FemLocalTable)) {
+            throw res.ValidatorIndexLocalTableOnly.ex(
+                repos.getLocalizedObjectName(index),
+                repos.getLocalizedObjectName(abstractTable));
+        }
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {
@@ -366,10 +372,6 @@ public class DdlRelationalHandler
             throw res.ValidatorInvalidViewDynamicParam.ex();
         }
 
-        if (analyzedSql.hasTopLevelOrderBy) {
-            throw res.ValidatorInvalidViewOrderBy.ex();
-        }
-
         // Derive column information from result set metadata
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
@@ -400,6 +402,15 @@ public class DdlRelationalHandler
         }
         view.getQueryExpression().setBody(analyzedSql.canonicalString.getSql());
         analyzedSql.setModality(view);
+
+        // check if top level order by is permissible for the view based on
+        // modality of the view.
+        if (analyzedSql.hasTopLevelOrderBy
+            && view.getModality() != ModalityTypeEnum.MODALITYTYPE_STREAM)
+        {
+            // ORDER BY is not allowed for relational views.
+            throw res.ValidatorInvalidViewOrderBy.ex();
+        }
 
         validator.createDependency(view, analyzedSql.dependencies);
     }

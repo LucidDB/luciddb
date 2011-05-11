@@ -72,13 +72,16 @@ ${farrago.test.jvmargs}
 
   <property file="${farrago.dir}/initBuild.properties" />
   <property file="${luciddb.dir}/customBuild.properties" />
+  <!-- inherit Farrago custom build properties, but only if not already set 
+       by LucidDB -->
+  <property file="${farrago.dir}/customBuild.properties" />
 
   <!-- directory in which classes are built -->
   <property name="classes.dir" location="${luciddb.dir}/classes" />
 
   <property name="luciddb.test.dir" location="${luciddb.dir}/test" />
   <property name="luciddb.plugin.dir" location="${luciddb.dir}/plugin" />
-  <property name="applib.dir" location="${open.dir}/extensions/applib" />
+  <property name="applib.dir" location="${luciddb.plugin.dir}/applib" />
   <property name="mbean.dir" location="${luciddb.plugin.dir}/mbean" />
 
   <!-- directory in which catalog data is stored -->
@@ -165,6 +168,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
     <pathelement path="${luciddb.plugin.dir}/luciddb-mbean.jar"/>
+    <pathelement path="${luciddb.plugin.dir}/applib.jar"/>
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
@@ -183,6 +187,24 @@ ${farrago.test.jvmargs}
     <pathelement location="${farrago.classes.dir}"/>
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
+
+  <path id="applib.build.classpath">
+    <pathelement path="${applib.dir}"/>
+    <pathelement path="${farrago.classes.dir}"/>
+    <pathelement path="${farrago.catalog.src.dir}"/>
+    <pathelement path="${resgen.dir}/lib/eigenbase-resgen.jar"/>
+    <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
+    <pathelement path="${mdrlibs.dir}/jmi.jar"/>
+    <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement path="${openjava.dir}/openjava.jar"/>
+  </path>
+  <property name="applib.build.classpath" refid="applib.build.classpath"/>
+
+  <path id="applib.run.classpath">
+    <pathelement path="${farrago.run.classpath}"/>
+    <pathelement path="${applib.dir}"/>
+  </path>
+  <property name="applib.run.classpath" refid="applib.run.classpath"/>
 
   <path id="mbean.build.classpath">
     <pathelement path="${mbean.dir}"/>
@@ -216,14 +238,14 @@ ${farrago.test.jvmargs}
     <xslt basedir="testlog" destdir="testlog" style="bh-xml.xsl" includes="**/bh.xml">
       <mapper type="regexp" from="^(.*)bh" to="\1/TEST-bh.xml" />
     </xslt>
-    <!-- If test is failed, let it exit (i.e., BUILD FAILED) -->
+    <!-- If test is failed, let it exit(ie.,BUILD FAILED)-->
     <length file="${luciddb.dir}/testlog/bh/bh.debug" property="bh.testres.filesize"/>
       <if>
         <equals arg1="${bh.testres.filesize}" arg2="0" />
           <then>
           </then>
       <else>
-         <fail message="Some tests failed."/>
+         <fail message="Some tests were failed."/>
       </else>
       </if>
   </target>
@@ -477,7 +499,7 @@ ${farrago.test.jvmargs}
       <include name="**/*.java" />
       <exclude name="**/mbean/**/*.java"/>
     </farrago.javaCompile>
-    <antcall target="copyApplibPlugin"/>
+    <antcall target="buildApplibPlugin"/>
     <antcall target="buildMBeanPlugin"/>
     <antcall target="buildClientJar"/>
     <farrago.javaCompile
@@ -681,11 +703,17 @@ ${farrago.test.jvmargs}
 
   <target name="makePluginDirs">
     <mkdir dir="${luciddb.plugin.dir}"/>
+    <mkdir dir="${luciddb.plugin.dir}/applib"/>
     <mkdir dir="${luciddb.plugin.dir}/mbean"/>
   </target>
 
   <!-- task for generating resources -->
   <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
+    <classpath refid="applib.run.classpath"/>
+  </taskdef>
+
+  <!-- task for generating resources -->
+  <taskdef name="resgen-mbean" classname="org.eigenbase.resgen.ResourceGenTask">
     <classpath refid="mbean.run.classpath"/>
   </taskdef>
 
@@ -714,7 +742,9 @@ ${farrago.test.jvmargs}
         <include
           name="org/luciddb/jdbc/LucidDbClientDriver.class"/>
         <include
-          name="org/luciddb/jdbc/LucidDbRmiDriver.class"/>
+          name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
+        <include
+          name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
         <include
           name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
         <include
@@ -735,10 +765,52 @@ ${farrago.test.jvmargs}
     </jar>
   </target>
 
-  <!-- copy applib plugin jar from extensions -->
-  <target name="copyApplibPlugin">
-    <copy file="${applib.dir}/plugin/eigenbase-applib.jar"
-      todir="${luciddb.plugin.dir}"/>
+  <!-- create applib plugin jar -->
+  <target name="buildApplibPlugin"
+    depends="makePluginDirs,checkApplibPluginUptodate"
+    unless="plugin.applib.uptodate">
+    <antcall target="generateApplibResource"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${applib.dir}"
+      classpathref="applib.build.classpath">
+      <include name="**/applib/**/*.java"/>
+      <exclude name="**/ApplibException.java"/>
+    </farrago.javaCompile>
+    <jar jarfile="${luciddb.plugin.dir}/applib.jar">
+      <fileset dir="${applib.dir}">
+        <include name="**/applib/**/*"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="generateApplibResource">
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${applib.dir}"
+      classpathref="applib.build.classpath">
+      <include name="**/ApplibException.java"/>
+    </farrago.javaCompile>
+    <resgen
+      srcdir="${luciddb.dir}/src"
+      destdir="${luciddb.dir}/src"
+      resdir="${applib.dir}"
+      style="functor"
+      locales="en_US">
+      <include name="com/lucidera/luciddb/applib/resource/ApplibResource.xml"/>
+    </resgen>
+  </target>
+
+  <target name="checkApplibPluginUptodate">
+    <uptodate property="plugin.applib.uptodate"
+      targetfile="${luciddb.plugin.dir}/applib.jar">
+      <srcfiles dir="${luciddb.dir}/src">
+        <include name="**/applib/**/*.java"/>
+        <include name="**/applib/**/*.xml"/>
+      </srcfiles>
+    </uptodate>
   </target>
 
   <!-- create mbean plugin jar -->
@@ -819,6 +891,7 @@ ${farrago.test.jvmargs}
   </target>
 
 <!--     <antcall target="cleanClientJar"/> -->
+<!--     <antcall target="cleanApplib"/> -->
 <!--     <antcall target="cleanMBean"/> -->
 <!--     <antcall target="cleanJdbcPlugins"/> -->
 
@@ -829,6 +902,17 @@ ${farrago.test.jvmargs}
 
   <target name="cleanClientJar">
     <delete file="${luciddb.plugin.dir}/LucidDbClient.jar" quiet="true"/>
+  </target>
+
+  <target name="cleanApplib">
+    <delete dir="${applib.dir}" quiet="true"/>
+    <delete quiet="true">
+      <fileset dir="${luciddb.dir}/src">
+        <include name="**/ApplibResource.java"/>
+        <include name="**/ApplibResource_en_US.java"/>
+      </fileset>
+    </delete>
+    <delete file="${luciddb.plugin.dir}/applib.jar" quiet="true"/>
   </target>
 
   <target name="cleanMBean">

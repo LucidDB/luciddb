@@ -27,6 +27,7 @@ import java.math.*;
 import java.nio.*;
 
 import java.util.*;
+import java.util.List;
 
 import openjava.mop.*;
 
@@ -38,7 +39,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -74,13 +74,6 @@ public class RexToOJTranslator
      */
     private RexProgram program;
 
-    /**
-     * Statement lists being built up for ROW or CASE expression. For CASE
-     * expressions, each WHEN, THEN or ELSE has one statementList. For ROW
-     * expressions, each value in a row has one statementList.
-     */
-    private StatementList [] stmtLists;
-
     private final Stack<RexProgram> programStack = new Stack<RexProgram>();
 
     //~ Constructors -----------------------------------------------------------
@@ -109,21 +102,6 @@ public class RexToOJTranslator
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Returns the StatementList corresponding to a subexpression of a CASE or
-     * ROW expression.
-     */
-    public StatementList getSubStmtList(int i)
-    {
-        if (stmtLists == null) {
-            return null;
-        }
-        if (i < stmtLists.length) {
-            return stmtLists[i];
-        }
-        return null;
-    }
 
     protected Expression setTranslation(Expression expr)
     {
@@ -346,52 +324,39 @@ public class RexToOJTranslator
     // implement RexVisitor
     public Expression visitCall(RexCall call)
     {
-        RexNode [] operands = call.getOperands();
-        Expression [] exprs = new Expression[operands.length];
-        StatementList [] savedStmtLists = stmtLists;
-
-        // TODO jvs 16-Oct-2006:  make this properly extensible
-        boolean needSub =
-            (call.getOperator() instanceof SqlCaseOperator)
-            || (call.getOperator() instanceof SqlNewOperator)
-            || (call.getOperator() instanceof SqlRowOperator);
-        if (needSub) {
-            stmtLists = new StatementList[operands.length];
-        }
-        for (int i = 0; i < operands.length; i++) {
-            RexNode operand = operands[i];
-            if (needSub) {
-                stmtLists[i] = new StatementList();
-                RexToOJTranslator subTranslator = push(stmtLists[i]);
-                exprs[i] = subTranslator.translateRexNode(operand);
-            } else {
-                exprs[i] = translateRexNode(operand);
-            }
-        }
-        Expression callExpr = convertCall(call, exprs);
-        if (needSub) {
-            stmtLists = savedStmtLists;
-        }
+        final Expression callExpr = convertCallAndOperands(call);
         return setTranslation(callExpr);
+    }
+
+    protected Expression convertCallAndOperands(
+        RexCall call)
+    {
+        List<Expression> exprs = new ArrayList<Expression>();
+        for (RexNode operand : call.getOperands()) {
+            exprs.add(translateRexNode(operand));
+        }
+        return convertCall(call, exprs);
     }
 
     /**
      * Converts a call after its operands have already been translated.
      *
      * @param call call to be translated
-     * @param operandExprs translated operands
+     * @param operandExprList translated operands
      *
      * @return converted call
      */
     protected Expression convertCall(
         RexCall call,
-        Expression [] operandExprs)
+        List<Expression> operandExprList)
     {
         OJRexImplementor implementor = implementorTable.get(call.getOperator());
         if (implementor == null) {
             throw Util.needToImplement(call);
         }
-        return implementor.implement(this, call, operandExprs);
+        final Expression[] operandExprs2 =
+            operandExprList.toArray(new Expression[operandExprList.size()]);
+        return implementor.implement(this, call, operandExprs2);
     }
 
     // implement RexVisitor

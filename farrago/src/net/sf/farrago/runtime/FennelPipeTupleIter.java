@@ -23,6 +23,7 @@ package net.sf.farrago.runtime;
 
 import java.nio.*;
 
+import java.util.concurrent.*;
 import java.util.logging.*;
 
 import net.sf.farrago.trace.*;
@@ -51,8 +52,12 @@ public class FennelPipeTupleIter
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final int QUEUE_LENGTH = 16;
+
     protected static final Logger tracer =
         FarragoTrace.getFennelPipeIteratorTracer();
+
+    private static final int BUFFER_SIZE = 65536;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -60,9 +65,10 @@ public class FennelPipeTupleIter
     // (this object)
 
     /**
-     * buffers from the writer, not yet read
+     * free Buffers
      */
-    private final ArrayQueue<ByteBuffer> moreBuffers;
+    private ArrayBlockingQueue<ByteBuffer> freeBuffers;
+    private ArrayBlockingQueue<ByteBuffer> rowBuffers;
 
     private ByteBuffer dummyBuffer;
 
@@ -76,14 +82,22 @@ public class FennelPipeTupleIter
     public FennelPipeTupleIter(FennelTupleReader tupleReader)
     {
         super(tupleReader);
+        freeBuffers = new ArrayBlockingQueue<ByteBuffer>(QUEUE_LENGTH);
+        for (int i = 0; i < QUEUE_LENGTH; i++) {
+            ByteBuffer bb = ByteBuffer.wrap(new byte[BUFFER_SIZE]);
+            bb.order(ByteOrder.nativeOrder());
+            bb.clear();
+            freeBuffers.offer(bb);
+        }
 
-        // start with an empty buffer queue
-        moreBuffers = new ArrayQueue<ByteBuffer>(2);
-
+        // Allocate one more slot than number of buffers to fit dummyBuffer.
+        rowBuffers = new ArrayBlockingQueue<ByteBuffer>(QUEUE_LENGTH + 1);
         // An empty buffer which will cause us to fetch new rows the first time
         // our consumer tries to fetch. TODO: Add a new state 'have not yet
         // checked whether we have more data'.
-        dummyBuffer = getByteBuffer(0);
+        dummyBuffer = ByteBuffer.wrap(new byte[0]);
+        dummyBuffer.order(ByteOrder.nativeOrder());
+        dummyBuffer.clear();
         dummyBuffer.limit(0);
         byteBuffer = dummyBuffer;
         bufferAsArray = byteBuffer.array();
@@ -96,12 +110,8 @@ public class FennelPipeTupleIter
      */
     private void enqueue(ByteBuffer bb)
     {
-        synchronized (moreBuffers) {
-            moreBuffers.offer(bb);
-            if (moreBuffers.size() == 1) { // was empty
-                moreBuffers.notify(); // REVIEW mb: Use Semaphore instead?
-            }
-        }
+        boolean success = rowBuffers.offer(bb);
+        assert (success);
     }
 
     /**
@@ -110,18 +120,15 @@ public class FennelPipeTupleIter
      */
     private ByteBuffer dequeue()
     {
-        Object head = null;
-        synchronized (moreBuffers) {
-            head = moreBuffers.poll();
-            while (head == null) {
-                try {
-                    moreBuffers.wait();
-                } catch (InterruptedException e) {
-                }
-                head = moreBuffers.poll();
+        ByteBuffer head = null;
+        while (head == null) {
+            try {
+                head = rowBuffers.take();
+            } catch (InterruptedException ie) {
+                assert (false);
             }
         }
-        return (ByteBuffer) head;
+        return head;
     }
 
     // override FennelAbstractTupleIter to trace
@@ -151,7 +158,15 @@ public class FennelPipeTupleIter
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer(this + " reader waits");
         }
+        ByteBuffer prevBuffer = byteBuffer;
         byteBuffer = dequeue(); // get next buffer; may block
+        if (prevBuffer != dummyBuffer) {
+            prevBuffer.order(ByteOrder.nativeOrder());
+            prevBuffer.clear();
+            boolean success = freeBuffers.offer(prevBuffer);
+            assert (success);
+        }
+
         int n = byteBuffer.limit();
         if (n > 0) {
             bufferAsArray = byteBuffer.array();
@@ -169,14 +184,20 @@ public class FennelPipeTupleIter
      */
     public ByteBuffer getByteBuffer(int size)
     {
-        // REVIEW mb 8/22/05 Why not call ByteBuffer.allocateDirect(size) ?
-        // Why can't C++ peer call it directly?
-        // Or else recycle buffer with a free list.
-        byte [] b = new byte[size];
-        ByteBuffer bb = ByteBuffer.wrap(b);
-        bb.order(ByteOrder.nativeOrder());
-        bb.clear();
-        return bb;
+        assert (size <= BUFFER_SIZE);
+
+        if (size == 0) {
+            return dummyBuffer;
+        }
+
+        ByteBuffer head = null;
+        head = freeBuffers.poll();
+        if (head != null) {
+            // Important to set correct limit here. Otherwise memcpy() in
+            // upstream C++ XO caused SEGV
+            head.limit(size);
+        }
+        return head;
     }
 
     /**
@@ -199,15 +220,7 @@ public class FennelPipeTupleIter
         try {
             bb.limit(bblen);
             bb.position(0);
-            if (!bb.hasArray()) {
-                // argh, have to wrap a copy of the new data
-                tracer.fine("copies buffer");
-                byte [] b = new byte[bblen];
-                bb.rewind();
-                bb.get(b);
-                bb = ByteBuffer.wrap(b);
-            }
-
+            assert (bb.hasArray());
             if (tracer.isLoggable(Level.FINER)) {
                 tracer.finer(this + " writer waits");
             }
@@ -220,6 +233,7 @@ public class FennelPipeTupleIter
             tracer.throwing(null, null, e);
             throw e;
         }
+        return;
     }
 }
 

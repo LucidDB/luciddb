@@ -66,7 +66,8 @@ public class FarragoDbSessionPrivilegeChecker
         CwmModelElement obj,
         FemUser user,
         FemRole role,
-        String action)
+        String action,
+        boolean requireGrantOption)
     {
         List<FemAuthId> authKey = new ArrayList<FemAuthId>(2);
         authKey.add(user);
@@ -85,22 +86,36 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (role != null) {
                 authSet.add(role);
-                inheritRoles(role, authSet);
+                authSet.addAll(FarragoCatalogUtil.getApplicableRoles(role));
             }
 
             authSet.add(getPublicRole());
         }
 
         // Now, let's check their papers...
-        if (testAccess(obj, authSet, action)) {
+        if (testAccess(obj, authSet, action, requireGrantOption)) {
             // It's all good.
             return;
         }
 
         // Verboten!
-        throw FarragoResource.instance().ValidatorAccessDenied.ex(
-            session.getRepos().getLocalizedObjectName(action),
-            session.getRepos().getLocalizedObjectName(obj));
+        if (requireGrantOption) {
+            if (obj instanceof FemRole) {
+                // Special-case language for failed GRANT ROLE
+                assert (action.equals(
+                        PrivilegedActionEnum.INHERIT_ROLE.toString()));
+                throw FarragoResource.instance().ValidatorNoAdminOption.ex(
+                    session.getRepos().getLocalizedObjectName(obj));
+            } else {
+                throw FarragoResource.instance().ValidatorNoGrantOption.ex(
+                    session.getRepos().getLocalizedObjectName(action),
+                    session.getRepos().getLocalizedObjectName(obj));
+            }
+        } else {
+            throw FarragoResource.instance().ValidatorAccessDenied.ex(
+                session.getRepos().getLocalizedObjectName(action),
+                session.getRepos().getLocalizedObjectName(obj));
+        }
     }
 
     private FemRole getPublicRole()
@@ -122,27 +137,11 @@ public class FarragoDbSessionPrivilegeChecker
         // so nothing to do here.
     }
 
-    private void inheritRoles(FemRole role, Set<FemAuthId> inheritedRoles)
-    {
-        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
-
-        for (FemGrant grant : role.getGranteePrivilege()) {
-            if (grant.getAction().equals(inheritAction)) {
-                FemRole inheritedRole = (FemRole) grant.getElement();
-
-                // sanity check:  DDL validation is supposed to prevent
-                // cycles
-                assert (!inheritedRoles.contains(inheritedRole));
-                inheritedRoles.add(inheritedRole);
-                inheritRoles(inheritedRole, inheritedRoles);
-            }
-        }
-    }
-
     private boolean testAccess(
         CwmModelElement obj,
         Set<FemAuthId> authSet,
-        String action)
+        String action,
+        boolean requireGrantOption)
     {
         SecurityPackage sp = session.getRepos().getSecurityPackage();
         boolean sawCreationGrant = false;
@@ -154,7 +153,12 @@ public class FarragoDbSessionPrivilegeChecker
 
             if (isCreation) {
                 sawCreationGrant = true;
+            } else {
+                if (requireGrantOption && !grant.isWithGrantOption()) {
+                    continue;
+                }
             }
+
             if (authSet.contains(grant.getGrantee())
                 && (grant.getAction().equals(action) || isCreation))
             {
@@ -167,7 +171,7 @@ public class FarragoDbSessionPrivilegeChecker
             // We didn't see a creation grant.  The only way that's possible is
             // that obj is currently in the process of being created.  In that
             // case, whatever object is referencing it must have the same
-            // creator,  so no explicit privilege is required.
+            // creator, so no explicit privilege is required.
             return true;
         }
     }

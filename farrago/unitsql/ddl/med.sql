@@ -16,7 +16,7 @@ language java;
 create server mof_server
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
@@ -26,7 +26,7 @@ description 'a server';
 create server mof_server
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
@@ -35,7 +35,7 @@ options(
 create server localdb
 foreign data wrapper test_mdr
 options(
-    extent_name 'MOF', 
+    extent_name 'MOF',
     schema_name 'Model',
     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
@@ -96,6 +96,9 @@ options(class_name 'Exception');
 
 -- test same query as above, but against inferred foreign table
 select "name" from mof_schema.mof_exception_inferred order by 1;
+
+-- creating an index on a foreign table should fail
+create index xyz on mof_schema.mof_exception_inferred("name");
 
 -- create a view against foreign table
 create view mof_schema.foreign_exception_names as
@@ -304,6 +307,22 @@ select * from demo_schema.dept_nosub;
 -- should succeed: query against said view
 select * from demo_schema.dept_nosub_view order by dno;
 
+-- should succeed: chained string literals
+create foreign table demo_schema.dept_chained_literals(
+    dno integer options (
+      foo 'bar'
+          ''
+          'baz'),
+    dname char(20),
+    loc char(20))
+server hsqldb_nosub
+options (
+    schema_name 'SALES',
+    table_name 'DE' // trailing line comment
+         'PT')
+description 'a '
+            'foreign '   'table';
+
 -- test lenient option
 create server hsqldb_orig
 foreign data wrapper sys_jdbc
@@ -354,7 +373,7 @@ create foreign table demo_schema.dept_extra_col(
 server hsqldb_demo
 options(schema_name 'SALES', table_name 'DEPT');
 
--- test trusting mode (skip type check when local catalog already has type 
+-- test trusting mode (skip type check when local catalog already has type
 -- info)
 create server hsqldb_trusting
 foreign data wrapper sys_jdbc
@@ -414,3 +433,4 @@ select deptno from hsqldb_opts1.sales.dept order by deptno;
 
 select dname from hsqldb_opts1.sales.dept order by dname;
 
+-- End med.sql

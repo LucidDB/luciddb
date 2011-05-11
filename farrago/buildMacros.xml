@@ -371,7 +371,9 @@ ${farrago.test.jvmargs}
 
   <!-- third-party libraries -->
   <path id="farrago.3p.nojdbc.classpath">
-    <fileset dir="${enki.dir}" includes="*.jar"/>
+    <fileset dir="${enki.dir}" includes="*.jar">
+      <exclude name="**/commons-dbcp-1.2.1.jar"/>
+    </fileset>
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
     <pathelement location="${mdrlibs.dir}/nbmdr.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrapi.jar"/>
@@ -388,6 +390,8 @@ ${farrago.test.jvmargs}
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
     <pathelement location="${janino.dir}/janino.jar"/>
+    <pathelement location="${janino.dir}/commons-compiler-2.6.2.jar"/>
+    <pathelement location="${janino.dir}/commons-compiler-jdk-2.6.2.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
@@ -395,7 +399,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.4.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
     <!-- REVIEW jvs 22-Sept-2009:  do we need ALL of these? -->
@@ -604,15 +608,14 @@ ${farrago.test.jvmargs}
 
   <!-- Customization for javac task -->
   <presetdef name="farrago.javaCompile">
-    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"
-      includeantruntime="no" />
+    <javac debug="on" deprecation="on" includeantruntime="no" 
+      compiler="javac1.6" />
   </presetdef>
 
   <!-- Customization for javac task for compiling client-side code -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" includeantruntime="no"
-      source="${farrago.client.javasrc.version}" 
-      target="${farrago.client.javasrc.version}"/>
+    <javac debug="on" deprecation="on" includeantruntime="no" 
+      compiler="javac1.6" />
   </presetdef>
 
   <!-- Customization for java task -->

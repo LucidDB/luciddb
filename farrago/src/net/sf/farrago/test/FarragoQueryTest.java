@@ -288,65 +288,6 @@ public class FarragoQueryTest
         }
     }
 
-    /**
-     * Tests execution of a LURQL query to check role cycle. If role_2 has been
-     * granted to role_1, then role_1 can't be granted to role_2. This query
-     * expanded all the roles inherited by a specified input role, the test then
-     * scans through the inherited roles to ensure that a second specified role
-     * (to be granted to the first specified role) does not exist.
-     */
-    public void testCheckSecurityRoleCyleLurqlQuery()
-        throws Exception
-    {
-        // CREATE ROLE ROLE_1, ROLE_2
-        // GRANT ROLE_2 TO ROLE_1
-        // Simulate GRANT ROLE ROLE_1 TO ROLE_2. This should fail.
-
-        stmt.execute("CREATE ROLE ROLE_1");
-        stmt.execute("CREATE ROLE ROLE_2");
-        stmt.execute("GRANT ROLE ROLE_2 TO ROLE_1");
-
-        // NOTE: now we want to simulate GRANT ROLE ROLE_1 TO ROLE_2.
-        // So the grantee is ROLE_2, and the granted role is ROLE_1.
-        // For the cycle check, we need to look for paths in the
-        // opposite direction, so we reverse the two roles in the
-        // call below.
-        String lurql =
-            FarragoInternalQuery.instance().TestSecurityRoleCycleCheck.str();
-        assertTrue(checkLurqlSecurityRoleCycle(lurql, "ROLE_1", "ROLE_2"));
-    }
-
-    private boolean checkLurqlSecurityRoleCycle(
-        String lurql,
-        String granteeName,
-        String grantedRoleName)
-        throws Exception
-    {
-        repos.beginReposSession();
-        repos.beginReposTxn(false);
-        try {
-            Map<String, String> argMap = new HashMap<String, String>();
-            argMap.put("granteeName", granteeName);
-            FarragoJdbcEngineConnection farragoConnection =
-                (FarragoJdbcEngineConnection) connection;
-            FarragoSession session = farragoConnection.getSession();
-            Collection<RefObject> result =
-                session.executeLurqlQuery(
-                    lurql,
-                    argMap);
-            for (RefObject o : result) {
-                FemRole role = (FemRole) o;
-                if (role.getName().equals(grantedRoleName)) {
-                    return true;
-                }
-            }
-            return false;
-        } finally {
-            repos.endReposTxn(false);
-            repos.endReposSession();
-        }
-    }
-
     public void testAbandonedResultSet()
         throws Exception
     {

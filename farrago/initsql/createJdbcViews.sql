@@ -228,7 +228,7 @@ create or replace view columns_view_internal as
     left outer join
         sys_cwm."Core"."Expression" e
     on 
-        e."mofId" = c."initialValue";
+        c."initialValue" = e."mofId";
 
 create or replace view columns_view as
     select 

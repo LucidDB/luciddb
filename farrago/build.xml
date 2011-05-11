@@ -78,6 +78,9 @@ ${farrago.test.jvmargs}
   <property name="lurql.parser.dir"
     location="${farrago.src.dir}/org/eigenbase/lurql/parser"/>
 
+  <!-- directory to build distribution files -->
+  <property name="farrago.dist.dir" location="${farrago.dir}/dist"/>
+
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.7.0"/>
 
@@ -129,6 +132,10 @@ ${farrago.test.jvmargs}
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
     <exclude name="runner/**/*.sql"/>
+
+    <!-- TODO doesn't work with NetBeans -->
+    <exclude name="ddl/sqldeploymentdescriptor.sql"/>
+
     <exclude name="med/scott.sql" unless="oracle.test"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
@@ -162,6 +169,12 @@ ${farrago.test.jvmargs}
   <!-- newline for use in constructing strings -->
   <property name="nl" value="${line.separator}"/>
 
+  <!-- files containing release properties -->
+  <property name="release.properties.src"
+    location="${farrago.dist.dir}/FarragoRelease.properties"/>
+
+  <property name="release.properties"
+    location="${farrago.classes.dir}/FarragoRelease.properties"/>
 
   <!-- Classpaths -->
 
@@ -1571,7 +1584,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc/"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
       <doclet
@@ -1624,7 +1637,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
-      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://dist.codehaus.org/janino/javadoc/"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
       <link href="${enki.dir}/javadoc"/>
     </javadoc>
@@ -2014,6 +2027,38 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       </jvmargs>
     </farrago.antFork>
     <delete file="${FarragoTrace.log}.lck" quiet="true"/>
+  </target>
+
+  <target name="dist">
+    <copy file="${release.properties.src}" tofile="${release.properties}" 
+          overwrite="true"/>
+    <p4counter property="p4.change" name="change"/>
+    <propertyfile file="${release.properties}">
+      <entry key="product.build.number" value="${p4.change}"/>
+    </propertyfile>
+    <antcall target="releaseProps"/>
+    <copy file="${release.properties}" todir="${farrago.dist.dir}"/>
+    <delete>
+      <fileset dir="${farrago.dist.dir}">
+        <include name="farrago*.bz2"/>
+      </fileset>
+    </delete>
+    <ant dir="dist" target="createReleaseDir"/>
+  </target>
+
+  <target name="releaseProps">
+    <loadproperties srcfile="${release.properties}">
+      <filterchain>
+        <linecontains>
+          <contains value="product."/>
+        </linecontains>
+      </filterchain>
+    </loadproperties>
+    <condition property="product.version.string"
+      value="${product.version.major}.${product.version.minor}.${product.version.point}"
+      else="${product.version.major}.${product.version.minor}.${product.version.point}.${product.build.number}">
+      <equals arg1="${product.build.number}" arg2="0"/>
+    </condition>
   </target>
 
 </project>

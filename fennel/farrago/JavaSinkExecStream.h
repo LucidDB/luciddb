@@ -67,7 +67,7 @@ class FENNEL_FARRAGO_EXPORT JavaSinkExecStream
     jmethodID methByteBuffer_array;
 
     /// sends data to the java peer
-    void sendData(PConstBuffer src, uint size);
+    bool sendData(PConstBuffer src, uint size);
 
     /// copies into a java ByteBuffer
     void stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size);

@@ -32,6 +32,7 @@ using boost::unit_test::test_unit;
 
 ConfigMap TestBase::configMap;
 bool TestBase::runAll = false;
+std::string TestBase::runSingle;
 
 ParamName TestBase::paramTestSuiteName = "testSuiteNameBoost";
 ParamName TestBase::paramTraceFileName = "testTraceFileName";
@@ -99,8 +100,7 @@ TestBase::~TestBase()
 /// format: [-v] [-t TEST | -all] {param=val}* [CONFIGFILE | -]
 /// Normally, the test program runs the default test cases.
 /// With the option "-all", runs the extra test cases as well.
-/// With the option "-t TEST", runs only the test cases matching pattern TEST.
-/// Note that -t functionality comes from Boost itself starting with v1.42.
+/// With the option "-t TEST", runs only the single test case named TEST.
 /// CONFIGFILE is read to load configuration parameters.
 /// Configuration parameters can also be set ad hoc, from the command line,
 /// as pairs name=val. These take precedence.
@@ -119,6 +119,11 @@ void TestBase::readParams(int argc, char **argv)
                 configMap.readParams(std::cin);
             } else if (arg == "-all") {
                 runAll = true;
+            } else if (arg == "-t") {   // -t TEST
+                permAssert(i + 1 < argc);
+                runSingle = argv[++i];
+            } else if (arg[1] == 't') { // allow -tTEST
+                runSingle = arg.substr(2);
             }
         } else {
             int i = arg.find("=");
@@ -157,11 +162,23 @@ TestSuite *TestBase::releaseTestSuite()
     // release self-reference now that all test cases have been registered
     pTestObj.reset();
 
-    TestSuite* pTestSuite = &(boost::unit_test::framework::master_test_suite());
+    TestSuite* pTestSuite = BOOST_TEST_SUITE(testName.c_str());
 
-    defaultTests.addAllToTestSuite(pTestSuite);
-    if (runAll) {
-        extraTests.addAllToTestSuite(pTestSuite);
+    if (runSingle.size()) {
+        test_unit *p =  defaultTests.findTest(runSingle);
+        if (!p) {
+            p = extraTests.findTest(runSingle);
+        }
+        if (!p) {
+            std::cerr << "test " << runSingle << " not found\n";
+            exit(2);
+        }
+        pTestSuite->add(p);
+    } else {
+        defaultTests.addAllToTestSuite(pTestSuite);
+        if (runAll) {
+            extraTests.addAllToTestSuite(pTestSuite);
+        }
     }
     return pTestSuite;
 }

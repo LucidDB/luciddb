@@ -290,6 +290,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot create or drop {0} on existing TEMPORARY {1}</text>
 </exception>
 
+<exception id="420285" name="ValidatorIndexLocalTableOnly">
+<text>Cannot create {0} on {1}; only local tables can be indexed</text>
+</exception>
+
 <exception id="420290" name="ValidatorBadDefaultParam"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Cannot reference dynamic parameter in DEFAULT clause for {0}</text>
@@ -402,6 +406,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420520" name="ValidatorSetCatalogInvalidExpr">
 <text>Invalid catalog name {0} in SET CATALOG statement</text>
+</exception>
+
+<exception id="420525" name="ValidatorSetRoleInvalidExpr">
+<text>Invalid or inaccessible role name {0} in SET ROLE statement</text>
+</exception>
+
+<exception id="420526" name="ValidatorRoleCycle">
+<text>Cycle in grant of {0} to {1}</text>
 </exception>
 
 <exception id="420530" name="ValidatorSetSchemaInvalidExpr">
@@ -584,6 +596,18 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} is not applicable to {1}</text>
 </exception>
 
+<exception id="420885" name="ValidatorInvalidGrantee">
+<text>Unknown grantee {0}</text>
+</exception>
+
+<exception id="420887" name="ValidatorInvalidRole">
+<text>Unknown role {0}</text>
+</exception>
+
+<exception id="420889" name="ValidatorInvalidGrantor">
+<text>Invalid grantor</text>
+</exception>
+
 <exception id="420890" name="ValidatorImportMustBeForeign">
 <text>Cannot import from local {0}</text>
 </exception>
@@ -606,6 +630,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420940" name="ValidatorAccessDenied">
 <text>Privilege {0} required for access to {1}</text>
+</exception>
+
+<exception id="420945" name="ValidatorNoGrantOption">
+<text>Privilege {0} WITH GRANT OPTION required for access to {1}</text>
+</exception>
+
+<exception id="420946" name="ValidatorNoAdminOption">
+<text>Role membership WITH ADMIN OPTION required for granting {0}</text>
 </exception>
 
 <exception id="420950" name="ValidatorMultipleClusterForColumn">

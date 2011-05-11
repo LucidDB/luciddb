@@ -28,7 +28,9 @@ OPTIONS (
     extent_name 'MOF',
     schema_name 'Model',
     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
-    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
+    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
+    explicit_unicode_string u&'a tab\0009, ''quotes'' and \\backslash',
+    implicit_unicode_string 'a (c)©, ''quotes'' and \backslash')
 DESCRIPTION 'a server';
 
 CREATE FOREIGN TABLE ddlgen.mof_exception(
@@ -123,5 +125,13 @@ end;
 CREATE ORDERING FOR ddlgen.playing_card
 ORDER FULL BY RELATIVE
 WITH SPECIFIC FUNCTION ddlgen.compare_cards_spades_trump;
+
+-- User-defined transform that returns TABLE. (Dtbug 2191.)
+create function self(c cursor)
+  returns table(a int, b varchar(20), c.*, d boolean)
+  language java
+  parameter style system defined java
+  no sql
+  external name 'class net.sf.farrago.test.FarragoTestUDR.self';
 
 -- End ddlgen.sql

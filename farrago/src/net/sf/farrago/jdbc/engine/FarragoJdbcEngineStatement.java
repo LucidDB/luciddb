@@ -69,7 +69,7 @@ public class FarragoJdbcEngineStatement
      * @param connection the connection creating this statement
      * @param stmtContext underlying FarragoSessionStmtContext
      */
-    FarragoJdbcEngineStatement(
+    public FarragoJdbcEngineStatement(
         FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext)
     {

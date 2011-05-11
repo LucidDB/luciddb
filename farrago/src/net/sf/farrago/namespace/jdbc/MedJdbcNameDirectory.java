@@ -55,7 +55,7 @@ public class MedJdbcNameDirectory
 
     //~ Instance fields --------------------------------------------------------
 
-    final protected MedJdbcDataServer server;
+    protected final MedJdbcDataServer server;
 
     String schemaName;
 
@@ -121,6 +121,8 @@ public class MedJdbcNameDirectory
      *
      * @param typeFactory typeFactory to use for type mapping
      * @param foreignName foreign table name
+     * @param foreignTableProps Properties to use for data location and access;
+     *     may add nuance to foreignName
      * @param localName fully qualified local table name
      * @param rowType expected row type
      * @param tableAlreadyMapped if true, foreignName has already been mapped to
@@ -134,7 +136,7 @@ public class MedJdbcNameDirectory
     FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String foreignName,
-        Properties foreignTableProps,   // may add nuance to foreignName
+        Properties foreignTableProps,
         String [] localName,
         RelDataType rowType,
         boolean tableAlreadyMapped)
@@ -233,22 +235,22 @@ public class MedJdbcNameDirectory
 
         SqlDialect dialect = SqlDialect.create(server.getDatabaseMetaData());
         SqlSelect select =
-            newSelectStarQuery(foreignQualifiedName, foreignTableProps);
+            createSelectStarQuery(foreignQualifiedName, foreignTableProps);
 
         if (server.skipTypeCheck && (rowType != null)) {
             // tolerant mode:
             // skip type check when row type already defined in catalog
             origRowType = rowType;
             mdRowType = rowType;
-            return new MedJdbcColumnSet(
-                this,
+            return createColumnSet(
                 foreignQualifiedName,
                 localName,
                 select,
                 dialect,
                 rowType,
                 origRowType,
-                mdRowType);
+                mdRowType,
+                foreignTableProps);
         }
 
         // fetch row type from foreign server
@@ -344,19 +346,64 @@ public class MedJdbcNameDirectory
             }
         }
 
-        return new MedJdbcColumnSet(
-            this,
+        return createColumnSet(
             foreignQualifiedName,
             localName,
             select,
             dialect,
             rowType,
             origRowType,
-            mdRowType);
+            mdRowType,
+            foreignTableProps);
     }
 
-    protected SqlSelect newSelectStarQuery(
-        String[] qualifiedName, Properties tableProps)
+    /**
+     * Creates a column set for a foreign table.
+     *
+     * @param foreignName name of this ColumnSet as it is known on the foreign
+     *     server; may be null if no meaningful name exists
+     * @param localName name of this ColumnSet as it will be known within the
+     *     Farrago system
+     * @param select Parse tree of query to execute over JDBC
+     * @param dialect Dialect of SQL used to access the remote DBMS
+     * @param rowType Row type
+     * @param origRowType ??
+     * @param srcRowType ??
+     * @param foreignTableProps Table properties
+     * @return Column set
+     */
+    protected FarragoMedColumnSet createColumnSet(
+        String[] foreignName,
+        String[] localName,
+        SqlSelect select,
+        SqlDialect dialect,
+        RelDataType rowType,
+        RelDataType origRowType,
+        RelDataType srcRowType,
+        Properties foreignTableProps)
+    {
+        return new MedJdbcColumnSet(
+            this,
+            foreignName,
+            localName,
+            select,
+            dialect,
+            rowType,
+            origRowType,
+            srcRowType);
+    }
+
+    /**
+     * Creates a query that reads all records from a given table.
+     *
+     * @param qualifiedName Fully-qualified table name
+     * @param tableProps Properties of table
+     * @return "SELECT * FROM table" query
+     * @throws SQLException
+     */
+    protected SqlSelect createSelectStarQuery(
+        String[] qualifiedName,
+        Properties tableProps)
         throws SQLException
     {
         return createSelectNode(
@@ -368,21 +415,20 @@ public class MedJdbcNameDirectory
     }
 
     protected SqlSelect createSelectNode(
-        SqlNodeList selectList, String[] foreignQualifiedName)
-        throws SQLException
+        SqlNodeList selectList,
+        String[] qualifiedName)
     {
-        SqlSelect select =
+        return
             SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 selectList,
-                new SqlIdentifier(foreignQualifiedName, SqlParserPos.ZERO),
+                new SqlIdentifier(qualifiedName, SqlParserPos.ZERO),
                 null,
                 null,
                 null,
                 null,
                 null,
                 SqlParserPos.ZERO);
-        return select;
     }
 
 

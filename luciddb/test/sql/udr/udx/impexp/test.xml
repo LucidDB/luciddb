@@ -33,9 +33,6 @@
       </init-hook>
 
       <test name="readRowsTest">
-        <test-metadata>
-          <os>lin</os>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/impexp/gen/readRowsFromFile.sql"/>
       </test>
     	
@@ -43,10 +40,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/impexp/gen/writeRowsToFile.sql"/>
       </test>
     	
-      <test name="remoteRowsTest">
+      <!-- test name="remoteRowsTest">
         <junit testclass="com.lucidera.luciddb.test.udr.TestRemoteRowsUDX"
             methodnames="testRemoteRowsUDX"/>
-      </test>
+      </test -->
 
       <cleanup-hook>
         <test-suite name="cleanup">

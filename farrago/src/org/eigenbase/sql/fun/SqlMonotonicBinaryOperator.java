@@ -88,9 +88,7 @@ public class SqlMonotonicBinaryOperator
             assert getName().equals("*");
             if (call.operands[1] instanceof SqlLiteral) {
                 SqlLiteral literal = (SqlLiteral) call.operands[1];
-                switch (literal.bigDecimalValue().compareTo(
-                        BigDecimal.ZERO))
-                {
+                switch (literal.signum()) {
                 case -1:
 
                     // mono0 * negative constant --> reverse mono0
@@ -121,9 +119,7 @@ public class SqlMonotonicBinaryOperator
             assert getName().equals("*");
             if (call.operands[0] instanceof SqlLiteral) {
                 SqlLiteral literal = (SqlLiteral) call.operands[0];
-                switch (literal.bigDecimalValue().compareTo(
-                        BigDecimal.ZERO))
-                {
+                switch (literal.signum()) {
                 case -1:
 
                     // negative constant * mono1 --> reverse mono1

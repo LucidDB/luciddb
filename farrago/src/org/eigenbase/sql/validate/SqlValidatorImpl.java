@@ -4475,7 +4475,8 @@ public class SqlValidatorImpl
             {
                 String alias = id.getSimple();
                 final SqlValidatorNamespace selectNs = getNamespace(select);
-                final RelDataType rowType = selectNs.getRowType();
+                final RelDataType rowType =
+                    selectNs.getRowTypeSansSystemColumns();
                 int ordinal = SqlValidatorUtil.lookupField(rowType, alias);
                 if (ordinal >= 0) {
                     return nthSelectItem(

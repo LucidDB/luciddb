@@ -17,7 +17,7 @@ Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" al
 > create server mof_server
 > foreign data wrapper test_mdr
 > options(
->     extent_name 'MOF', 
+>     extent_name 'MOF',
 >     schema_name 'Model',
 >     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
@@ -27,7 +27,7 @@ Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" al
 > create server mof_server
 > foreign data wrapper test_mdr
 > options(
->     extent_name 'MOF', 
+>     extent_name 'MOF',
 >     schema_name 'Model',
 >     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
@@ -37,7 +37,7 @@ Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" al
 > create server localdb
 > foreign data wrapper test_mdr
 > options(
->     extent_name 'MOF', 
+>     extent_name 'MOF',
 >     schema_name 'Model',
 >     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
@@ -127,6 +127,10 @@ Error: Constraint definition not allowed on foreign table "MOF_SCHEMA"."TEST" (s
 | NameNotFound     |
 | NameNotResolved  |
 +------------------+
+> 
+> -- creating an index on a foreign table should fail
+> create index xyz on mof_schema.mof_exception_inferred("name");
+Error: Cannot create index "MOF_SCHEMA"."XYZ" on foreign table "MOF_SCHEMA"."MOF_EXCEPTION_INFERRED"; only local tables can be indexed (state=,code=0)
 > 
 > -- create a view against foreign table
 > create view mof_schema.foreign_exception_names as
@@ -512,6 +516,22 @@ Error: Cannot support JDBC type "VARCHAR" (ordinal 12, precision 2147483647, sca
 | 40   | OPERATIONS            | BOSTON                |
 +------+-----------------------+-----------------------+
 > 
+> -- should succeed: chained string literals
+> create foreign table demo_schema.dept_chained_literals(
+>     dno integer options (
+>       foo 'bar'
+>           ''
+>           'baz'),
+>     dname char(20),
+>     loc char(20))
+> server hsqldb_nosub
+> options (
+>     schema_name 'SALES',
+>     table_name 'DE' // trailing line comment
+>          'PT')
+> description 'a '
+>             'foreign '   'table';
+> 
 > -- test lenient option
 > create server hsqldb_orig
 > foreign data wrapper sys_jdbc
@@ -583,7 +603,7 @@ Error: Number of fields in foreign table: '2'. Number of fields in external data
 > options(schema_name 'SALES', table_name 'DEPT');
 Error: Number of fields in foreign table: '4'. Number of fields in external data source: 3'. (state=,code=0)
 > 
-> -- test trusting mode (skip type check when local catalog already has type 
+> -- test trusting mode (skip type check when local catalog already has type
 > -- info)
 > create server hsqldb_trusting
 > foreign data wrapper sys_jdbc
@@ -669,5 +689,6 @@ Error: Column not found: 4 (state=S0022,code=-28)
 | SALES       |
 +-------------+
 > 
+> -- End med.sql
 > 
 > !quit

@@ -18,7 +18,30 @@
 > 
 > create user SECMAN_4 identified by '' DEFAULT SCHEMA extra;
 > 
+> create role rf;
+> 
+> create role rg;
+> 
 > grant select on extra.t to secman_4;
+> 
+> -- Redundant grant to make sure they get coalesced correctly in the catalog
+> grant select on extra.t to secman_4;
+> 
+> grant role rf to secman_4;
+> 
+> -- test role grant upgrade, and verify that there is no downgrade
+> grant role rg to secman_4;
+> grant role rg to secman_4 with admin option;
+> grant role rg to secman_4;
+> 
+> -- test privilege grant upgrade, and verify that there is not downgrade
+> grant select on extra.t to secman_2;
+> grant select on extra.t to secman_2 with grant option;
+> grant select on extra.t to secman_2;
+> 
+> -- should fail:  unknown grantee
+> grant select on extra.t to nobody;
+Error: Unknown grantee "NOBODY" (state=,code=0)
 > 
 > -- should fail:  duplicate user
 > create user SECMAN_4;
@@ -38,8 +61,20 @@ Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" al
 > create user R1;
 Error: DDL validation error near line 1, column 13: Target catalog "SYS_BOOT" already contains role "R1" with same name (state=,code=0)
 > 
+> -- should fail:  can't grant user to role
+> grant role SECMAN_4 to R1;
+Error: Unknown role "SECMAN_4" (state=,code=0)
+> 
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
+> 
+> -- should fail:  grantor has no rights
+> grant select on extra.t to secman_3;
+Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "EXTRA"."T" (state=,code=0)
+> 
+> -- should fail:  same reason
+> grant role r1 to secman_3;
+Error: Role membership WITH ADMIN OPTION required for granting role "R1" (state=,code=0)
 > 
 > create schema authtest;
 > set schema 'authtest';
@@ -76,6 +111,9 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 > -- Grant the role R1_L1 directly to U1
 > Grant Role R1_L1 to U1;
 > 
+> -- Redundant grant to make sure they get coalesced correctly in the catalog
+> Grant Role R1_L1 to U1;
+> 
 > -- Alter user to make Role R1_L1 the default
 > -- Alter user default role R1_L1;
 > 
@@ -107,6 +145,30 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 +------------------+----------+----------+---------------+------------------+
 | R1_L1            | U1       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
+> 
+> -- check out another one
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'SECMAN_4'
+> order by granted_element;
++------------------+-----------+----------+---------------+------------------+
+| GRANTED_ELEMENT  |  GRANTEE  | GRANTOR  |    action     | withGrantOption  |
++------------------+-----------+----------+---------------+------------------+
+| RF               | SECMAN_4  | sa       | INHERIT_ROLE  | false            |
+| RG               | SECMAN_4  | sa       | INHERIT_ROLE  | true             |
+| T                | SECMAN_4  | sa       | SELECT        | false            |
++------------------+-----------+----------+---------------+------------------+
+> 
+> -- and one more
+> select  granted_element,  grantee,  grantor, "action", "withGrantOption"
+> from grant_view
+> where grantee = 'SECMAN_2'
+> order by granted_element;
++------------------+-----------+----------+---------+------------------+
+| GRANTED_ELEMENT  |  GRANTEE  | GRANTOR  | action  | withGrantOption  |
++------------------+-----------+----------+---------+------------------+
+| T                | SECMAN_2  | sa       | SELECT  | true             |
++------------------+-----------+----------+---------+------------------+
 > 
 > -- verify password encryption; we use a platform-independent algorithm
 > -- so it should always come out the same
@@ -184,8 +246,20 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | R4_L1  |
 +--------+
 > 
-> Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+> Grant Role R1_L2 to R2_L1 WITH ADMIN OPTION;
 > Grant Role R1_L3 to R1_L2;
+> 
+> -- should fail:  role cycle
+> grant role R1_L2 to R1_L3;
+Error: Cycle in grant of role "R1_L2" to role "R1_L3" (state=,code=0)
+> 
+> -- should fail:  unknown grantee
+> Grant Role R1_L3 to BOZOS;
+Error: Unknown grantee "BOZOS" (state=,code=0)
+> 
+> -- should fail:  unknown role
+> Grant Role BOZOS to R1_L3;
+Error: Unknown role "BOZOS" (state=,code=0)
 > 
 > select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 > from grant_view
@@ -234,7 +308,6 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 | R3_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
-> 
 > 
 > -- Alter user to make Role R1_L1 the default
 > -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
@@ -294,6 +367,13 @@ sqlline> !connect jdbc:farrago: SECMAN_3 cougar
 > !closeall
 sqlline> !connect jdbc:farrago: SECMAN_3 puma
 > 
+> 
+> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_2 tiger
+> 
+> -- should succeed because secman_2 has grant option
+> grant select on extra.t to secman_3;
+> 
 > -------------------------------------------------------------------------
 > -- Test 4:
 > -- default schemas and catalogs
@@ -321,6 +401,17 @@ sqlline> !connect jdbc:farrago: SECMAN_4 tiger
 +----+
 +----+
 > 
+> -- should fail: grantor has access but no GRANT OPTION
+> grant select on extra.t to secman;
+Error: Privilege "SELECT" WITH GRANT OPTION required for access to table "EXTRA"."T" (state=,code=0)
+> 
+> -- should fail:  grantor has role but no ADMIN OPTION
+> grant role rf to secman;
+Error: Role membership WITH ADMIN OPTION required for granting role "RF" (state=,code=0)
+> 
+> -- should succeed:  grantor has ADMIN OPTION
+> grant role rg to secman;
+> 
 > -- verify that dropping default schema does not cascade to user
 > drop schema extra cascade;
 > 
@@ -330,5 +421,9 @@ sqlline> !connect jdbc:farrago: SECMAN_4 tiger
 > -- should fail:  it's gone now
 > select * from t;
 Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
+> 
+> -- should fail:  no such role
+> set role 'goofball';
+Error: Invalid or inaccessible role name "goofball" in SET ROLE statement (state=,code=0)
 > 
 > !quit

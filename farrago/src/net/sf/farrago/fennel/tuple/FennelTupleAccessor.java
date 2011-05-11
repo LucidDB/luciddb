@@ -38,15 +38,42 @@ import java.util.*;
  */
 public final class FennelTupleAccessor
 {
+    public enum TupleFormat {
+        TUPLE_FORMAT_STANDARD,
+        TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED,
+        TUPLE_FORMAT_NETWORK
+    }
+
+    public enum TupleAlignment {
+        TUPLE_ALIGN4(4), TUPLE_ALIGN8(8);
+
+        private final int alignment;
+
+        TupleAlignment(int align)
+        {
+            alignment = align;
+        }
+
+        public final int getAlignmentMask()
+        {
+            return alignment - 1;
+        }
+
+        public final int getAlignment()
+        {
+            return alignment;
+        }
+    }
+
     //~ Static fields/initializers ---------------------------------------------
 
     /**
      * format of the constructed buffer. FIXME: not supported; is this
      * necessary?
-     */
     public static final int TUPLE_FORMAT_STANDARD = 0;
     public static final int TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED = 1;
     public static final int TUPLE_FORMAT_NETWORK = 2;
+     */
 
     // stored values offsets are (unsigned) short
     static final int STOREDVALUEOFFSETSIZE = 2;
@@ -54,12 +81,12 @@ public final class FennelTupleAccessor
     /**
      * Specifies 4-byte alignment.
      */
-    public static final int TUPLE_ALIGN4 = 4;
+    //public static final int TUPLE_ALIGN4 = 4;
 
     /**
      * Specifies 8-byte alignment.
      */
-    public static final int TUPLE_ALIGN8 = 8;
+    //public static final int TUPLE_ALIGN8 = 8;
 
     /**
      * Specifies alignment matching the data model of this JVM; fallback is to
@@ -69,9 +96,9 @@ public final class FennelTupleAccessor
      * for a 32-bit JVM. Plus this System property is undocumented, although
      * it's also available on JRockit.
      */
-    public static final int TUPLE_ALIGN_JVM =
-        "64".equals(System.getProperty("sun.arch.data.model")) ? TUPLE_ALIGN8
-        : TUPLE_ALIGN4;
+    //public static final int TUPLE_ALIGN_JVM =
+    //  "64".equals(System.getProperty("sun.arch.data.model")) ? TUPLE_ALIGN8
+    //  : TUPLE_ALIGN4;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -133,12 +160,12 @@ public final class FennelTupleAccessor
     /**
      * actual format of this accessor.
      */
-    private int format;
+    private TupleFormat format;
 
     /**
      * tuple byte alignment.
      */
-    private int tupleAlignment;
+    private TupleAlignment tupleAlignment;
 
     /**
      * mask derived from tupleAlignment
@@ -168,21 +195,28 @@ public final class FennelTupleAccessor
     //~ Constructors -----------------------------------------------------------
 
     /**
+     * Specifies alignment matching the data model of this JVM; fallback
+     * is to assume 4-byte if relevant system property is undefined.
+     * TODO jvs
+     * 26-May-2007: we really ought to be calling Fennel to get this
+     * instead, since e.g. on Sun CPU architectures, 64-bit alignment is
+     * required evenfor a 32-bit JVM. Plus this System property is
+     * undocumented, although it's also available on JRockit.
+     */
+    public static TupleAlignment getNativeTupleAlignment()
+    {
+        if ("64".equals(System.getProperty("sun.arch.data.model"))) {
+            return TupleAlignment.TUPLE_ALIGN8;
+        }
+        return TupleAlignment.TUPLE_ALIGN4;
+    }
+
+    /**
      * default construction.
      */
     public FennelTupleAccessor()
     {
-        this(TUPLE_ALIGN_JVM, false);
-    }
-
-    /**
-     * Creates tuple accessor with specified byte alignmnent.
-     *
-     * @param alignment must be multiple of 4
-     */
-    public FennelTupleAccessor(int alignment)
-    {
-        this(alignment, false);
+        this(false);
     }
 
     /**
@@ -195,25 +229,9 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor(boolean setNativeOrder)
     {
-        this(TUPLE_ALIGN_JVM, setNativeOrder);
-    }
-
-    /**
-     * Creates tuple accessor with specified byte alignmnent and a flag
-     * indicating whether byte ordering should be set to native order after
-     * slicing.
-     *
-     * @param alignment must be multiple of 4
-     * @param setNativeOrder if true, set byte ordering to native order after
-     * slicing
-     */
-    public FennelTupleAccessor(int alignment, boolean setNativeOrder)
-    {
-        assert ((alignment % 4) == 0) : "alignment (" + alignment
-            + ") not multiple of 4";
-        this.tupleAlignment = alignment;
+        this.tupleAlignment = getNativeTupleAlignment();
+        tupleAlignmentMask = tupleAlignment.getAlignmentMask();
         this.setNativeOrder = setNativeOrder;
-        tupleAlignmentMask = tupleAlignment - 1;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -225,7 +243,7 @@ public final class FennelTupleAccessor
     {
         int lobits = val & tupleAlignmentMask;
         if (lobits != 0) {
-            val += (tupleAlignment - lobits);
+            val += (tupleAlignment.getAlignment() - lobits);
         }
         return val;
     }
@@ -317,11 +335,16 @@ public final class FennelTupleAccessor
      *
      * @param tuple the tuple to be accessed
      * @param format how to store tuple
+     * @param align the byte alignement to use on tuple boundaries
      */
-    public void compute(FennelTupleDescriptor tuple, int format)
+    public void compute(
+        FennelTupleDescriptor tuple, TupleFormat format,
+        TupleAlignment align)
     {
         clear();
         this.format = format;
+        tupleAlignment = align;
+        tupleAlignmentMask = tupleAlignment.getAlignmentMask();
 
         // these vectors keep track of the logical 0-based indices of the
         // attributes belonging to the various attribute storage classes
@@ -527,10 +550,22 @@ public final class FennelTupleAccessor
      * any other method. Assumes the default format parameter.
      *
      * @param tuple the tuple to be accessed
+     * @param format how to store tuple
+     */
+    public void compute(FennelTupleDescriptor tuple, TupleFormat format)
+    {
+        compute(tuple, format, tupleAlignment);
+    }
+
+    /**
+     * Precomputes access for a particular tuple format. Must be called before
+     * any other method. Assumes the default format parameter.
+     *
+     * @param tuple the tuple to be accessed
      */
     public void compute(FennelTupleDescriptor tuple)
     {
-        compute(tuple, TUPLE_FORMAT_STANDARD);
+        compute(tuple, TupleFormat.TUPLE_FORMAT_STANDARD);
     }
 
     /**

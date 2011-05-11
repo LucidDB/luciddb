@@ -70,7 +70,6 @@ create or replace view dba_columns as
     column_size as "PRECISION",
     dec_digits,
     sys_root.convert_nullable_int_to_boolean(nullable) as is_nullable,
-    default_value,
     remarks,
     cast(ci."mofId" as varchar(128)) as mof_id,
     cast(ci."lineageId" as varchar(128)) as lineage_id
@@ -531,125 +530,6 @@ create or replace view dba_system_backups as
     cast("mofId" as varchar(128)) as mof_id
   from sys_fem.med."SystemBackup";
 
-grant select on dba_system_backups to public;
-
-create or replace view dba_auth_ids as
-  select
-    cast("name" as varchar(128)) as name,
-    cast("description" as varchar(65535)) as remarks,
-    cast("mofClassName" as varchar(128)) as class_name,
-    cast("creationTimestamp" as timestamp) as creation_timestamp,
-    cast("modificationTimestamp" as timestamp) as modification_timestamp,
-    cast("mofId" as varchar(128)) as mof_id,
-    cast("lineageId" as varchar(128)) as lineage_id
-  from sys_fem."Security"."AuthId";
-
-grant select on dba_auth_ids to public;
-
-create or replace view dba_users as
-  select
-    cast("name" as varchar(128)) as name,
-    cast("encryptedPassword" as varchar(128)) as password,
-    cast("passwordEncryptionAlgorithm" as varchar(128)) as password_encryption_algorithm,
-    cast("description" as varchar(65535)) as remarks,
-    cast("mofClassName" as varchar(128)) as class_name,
-    cast("creationTimestamp" as timestamp) as creation_timestamp,
-    cast("modificationTimestamp" as timestamp) as modification_timestamp,
-    cast("mofId" as varchar(128)) as mof_id,
-    cast("lineageId" as varchar(128)) as lineage_id
-  from
-    sys_fem."Security"."User";
-
-grant select on dba_users to public;
-
-create or replace view dba_roles as
-  select
-    *
-  from sys_root.dba_auth_ids
-  where
-    class_name = 'Role';
-
-grant select on dba_roles to public;
-
-create or replace view dba_element_grants as
-  select
-    si.object_catalog as granted_catalog,
-    si.object_schema as granted_schema,
-    me."name" as granted_element,
-    cast(gte."name" as varchar(128)) as grantee,
-    cast(gto."name" as varchar(128)) as grantor,
-    cast(g."action" as varchar(128)) as action,
-    gte."mofClassName" as grant_type,
-    me."mofClassName" as class_name, 
-    g."withGrantOption" as with_grant_option,
-    cast(gte."mofId" as varchar(128)) as grantee_mof_id,
-    cast(gto."mofId" as varchar(128)) as grantor_mof_id,
-    cast(me."mofId" as varchar(128)) as element_mof_id
-  from
-    sys_fem."Security"."Grant" as g
-  inner join
-    sys_fem."Security"."AuthId" as gto
-  on
-    g."Grantor" = gto."mofId"
-  inner join
-    sys_fem."Security"."AuthId" as gte
-  on
-    g."Grantee" = gte."mofId"
-  inner join
-    sys_cwm."Core"."ModelElement" as me
-  on
-    g."Element" = me."mofId"
-  left outer join
-    sys_boot.jdbc_metadata.schemas_view_internal as si 
-  on
-    si."mofId" = me."namespace"
-;
-
-grant select on dba_element_grants to public;
-
-create or replace view dba_user_roles as
-  select
-    users.name as name,
-    roles.name as role,
-    g."withGrantOption" as with_grant_option,
-    cast(g."Grantee" as varchar(128)) as user_mof_id,
-    cast(g."Element" as varchar(128)) as role_mof_id
-  from
-    sys_fem."Security"."Grant" as g
-  inner join
-    sys_root.dba_auth_ids as users
-  on
-    users.mof_id = g."Grantee"
-  inner join
-    sys_root.dba_auth_ids as roles
-  on
-    roles.mof_id = g."Element"
-  where
-    g."action" = 'INHERIT_ROLE'
-;
-
-grant select on dba_user_roles to public;
-
-create or replace view dba_jars as
-  select
-    cast("name" as varchar(128)) as name,
-    cast("url" as varchar(128)) as url,
-    case
-      when "deploymentState" = 0 then 'NOT_DEPLOYED'
-      when "deploymentState" = 1 then 'DEPLOYMENT_PENDING'
-      when "deploymentState" = 2 then 'DEPLOYED'
-      when "deploymentState" = 3 then 'DEPLOYED_PARTIAL'
-      when "deploymentState" = 4 then 'UNDEPLOYMENT_PENDING'
-    end as deployment_state,
-    cast("description" as varchar(65535)) as remarks,
-    cast("creationTimestamp" as timestamp) as creation_timestamp,
-    cast("modificationTimestamp" as timestamp) as modification_timestamp,
-    cast("mofId" as varchar(128)) as mof_id,
-    cast("lineageId" as varchar(128)) as lineage_id
-  from sys_fem."SQL2003"."Jar";
-
-grant select on dba_jars to public;
-
 -- Flush all entries from the global code cache
 create or replace procedure flush_code_cache()
   language java
@@ -1043,13 +923,6 @@ create or replace procedure change_default_character_set_to_unicode()
 language java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.setUnicodeAsDefault';
-
-create or replace procedure shutdown_database(
-    in kill_sessions boolean, in jvm_shutdown_delay_millis bigint)
-language java
-parameter style java
-no sql
-external name 'class net.sf.farrago.syslib.FarragoManagementUDR.shutdownDatabase';
 
 create or replace function get_current_sessionid()
 returns integer

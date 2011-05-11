@@ -95,21 +95,17 @@ set -v
 OPEN_DIR=$(cd ..; pwd)
 FARRAGO_DIR=$OPEN_DIR/farrago
 DIST_DIR=$FARRAGO_DIR/dist
+TMP_DIR=$DIST_DIR/tmp
 FENNEL_DIR=$OPEN_DIR/fennel
 THIRDPARTY_DIR=$OPEN_DIR/thirdparty
 
 # create staging directory
-TMP_DIR=$DIST_DIR/tmp
-rm -rf $TMP_DIR
-mkdir $TMP_DIR
-
 # FRG-402 Setup ant if not already present
 cd $FARRAGO_DIR
 . ./farragoenv.sh $THIRDPARTY_DIR
 
 # get help from ant to figure out where to build release image
-cd $DIST_DIR
-ant createReleaseDir
+ant dist
 
 # derive staging sub-directories
 RELEASE_DIR=`echo $TMP_DIR/*`
@@ -166,7 +162,7 @@ cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
 cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
 cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
-cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
+cp vjdbc/lib/commons-dbcp-1.4.jar $LIB_DIR
 cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
@@ -247,13 +243,15 @@ else
     rm -f $BIN_DIR/*.bat
 fi
 
+cd $DIST_DIR
 # archive the whole thing up
-cd $TMP_DIR
 if [ $cygwin = "true" ]; then
+    cd $TMP_DIR
     zip -r -y ../farrago.zip .
+    cd $DIST_DIR
 else
-    tar cv * | bzip2 -c >../farrago.tar.bz2
+    ant package
 fi
+ant removeReleaseDir
 
 cd $FARRAGO_DIR
-rm -rf $TMP_DIR

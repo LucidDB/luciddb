@@ -17,7 +17,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style java
 . . . . . . . . > reads sql data
-. . . . . . . . > external name 'applib.applibJar:org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_routines & routine parameters
 0: jdbc:luciddb:> select catalog_name, schema_name, invocation_name, specific_name, 
@@ -26,12 +26,12 @@
 . . . . . . . . > from sys_root.dba_routines
 . . . . . . . . > where schema_name='DBAVTEST'
 . . . . . . . . > order by 1,2,3,4;
-+---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
-| CATALOG_NAME  | SCHEMA_NAME  |     INVOCATION_NAME      |      SPECIFIC_NAME       |                                         EXTERNAL_NAME                                         | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |     DATA_ACCESS     |
-+---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
-| LOCALDB       | DBAVTEST     | ADDING                   | ADDING                   |                                                                                               | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL    |
-| LOCALDB       | DBAVTEST     | GRANT_SELECT_FOR_SCHEMA  | GRANT_SELECT_FOR_SCHEMA  | "LOCALDB"."APPLIB"."APPLIBJAR":org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute  | PROCEDURE     | false              | RPS_JAVA         | false             | RDA_READS_SQL_DATA  |
-+---------------+--------------+--------------------------+--------------------------+-----------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| CATALOG_NAME  | SCHEMA_NAME  |     INVOCATION_NAME      |      SPECIFIC_NAME       |                                            EXTERNAL_NAME                                             | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |     DATA_ACCESS     |
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| LOCALDB       | DBAVTEST     | ADDING                   | ADDING                   |                                                                                                      | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL    |
+| LOCALDB       | DBAVTEST     | GRANT_SELECT_FOR_SCHEMA  | GRANT_SELECT_FOR_SCHEMA  | "LOCALDB"."APPLIB"."APPLIBJAR":com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute  | PROCEDURE     | false              | RPS_JAVA         | false             | RDA_READS_SQL_DATA  |
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select creation_timestamp < current_timestamp, 
 . . . . . . . . >   creation_timestamp <= last_modified_timestamp
@@ -214,7 +214,7 @@
 +---------------------+--------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_tables, dba_views, dba_stored_tables
-0: jdbc:luciddb:> create table dbavtest.table1(col1 int, col2 int default 3);
+0: jdbc:luciddb:> create table dbavtest.table1(col1 int, col2 int);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view dbavtest.empview as 
 . . . . . . . . > select * from dbavtest.emps;
@@ -263,36 +263,36 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_columns
 0: jdbc:luciddb:> select catalog_name, table_name, column_name, ordinal_position, datatype,
-. . . . . . . . >   "PRECISION", dec_digits, is_nullable, default_value
+. . . . . . . . >   "PRECISION", dec_digits, is_nullable
 . . . . . . . . > from sys_root.dba_columns
 . . . . . . . . > where schema_name='DBAVTEST'
 . . . . . . . . > order by 2,4;
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
-| CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  | DEFAULT_VALUE  |
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
-| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |                |
-| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |                |
-| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         | 3              |
-+---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+----------------+
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
+| CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
+| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
+| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         |
++---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_unclustered_indexes
 0: jdbc:luciddb:> create table dbavtest.table2(col1 int, col2 int, col3 int, col4 int, col5 int,
@@ -314,125 +314,6 @@
 | LOCALDB       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TABLE2                | TABLE2      | COL6,COL2           | true       |
 | LOCALDB       | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TABLE2$COL5_COL1_COL3  | TABLE2      | COL5,COL1,COL3      | true       |
 +---------------+------------------------------------------------------------+-------------+---------------------+------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_users
-0: jdbc:luciddb:> select name from sys_root.dba_users where name = 'BOBBYTABLES';
-+-------+
-| NAME  |
-+-------+
-+-------+
-0: jdbc:luciddb:> create user bobbytables;
-0: jdbc:luciddb:> select name from sys_root.dba_users where name = 'BOBBYTABLES';
-+--------------+
-|     NAME     |
-+--------------+
-| BOBBYTABLES  |
-+--------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_roles
-0: jdbc:luciddb:> select name from sys_root.dba_roles where name = 'TUV';
-+-------+
-| NAME  |
-+-------+
-+-------+
-0: jdbc:luciddb:> create role tuv;
-0: jdbc:luciddb:> select name from sys_root.dba_roles where name = 'TUV';
-+-------+
-| NAME  |
-+-------+
-| TUV   |
-+-------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_element_grants
-0: jdbc:luciddb:> create table dbavtest.luvtuv(gluv int);
-0: jdbc:luciddb:> grant select on dbavtest.luvtuv to tuv;
-0: jdbc:luciddb:> select granted_schema, granted_element, grantee, action,
-. . . . . . . . >   grant_type
-. . . . . . . . > from sys_root.dba_element_grants
-. . . . . . . . > where granted_schema = 'DBAVTEST' and granted_element = 'LUVTUV' and
-. . . . . . . . > grantee = 'TUV' and action = 'SELECT' and grant_type = 'Role';
-+-----------------+------------------+----------+---------+-------------+
-| GRANTED_SCHEMA  | GRANTED_ELEMENT  | GRANTEE  | ACTION  | GRANT_TYPE  |
-+-----------------+------------------+----------+---------+-------------+
-| DBAVTEST        | LUVTUV           | TUV      | SELECT  | Role        |
-+-----------------+------------------+----------+---------+-------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> grant role tuv to bobbytables;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select grantee, action,
-. . . . . . . . > case
-. . . . . . . . >   when r.role is not null then r.role
-. . . . . . . . >   when grant_type = 'Role' then grantee
-. . . . . . . . > end as role_name,
-. . . . . . . . > grant_type
-. . . . . . . . > from sys_root.dba_element_grants
-. . . . . . . . > left outer join sys_root.dba_user_roles r
-. . . . . . . . > on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
-. . . . . . . . > where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-. . . . . . . . > r.role = 'TUV' and grant_type = 'User';
-+--------------+---------------+------------+-------------+
-|   GRANTEE    |    ACTION     | ROLE_NAME  | GRANT_TYPE  |
-+--------------+---------------+------------+-------------+
-| BOBBYTABLES  | INHERIT_ROLE  | TUV        | User        |
-+--------------+---------------+------------+-------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create or replace function mult(n1 int, n2 int)
-. . . . . . . . > returns int
-. . . . . . . . > language sql
-. . . . . . . . > contains sql
-. . . . . . . . > return n1 * n2;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> grant execute on specific function mult to tuv;
-0: jdbc:luciddb:> select granted_element, action, class_name
-. . . . . . . . > from sys_root.dba_element_grants
-. . . . . . . . > where granted_element = 'MULT' and action = 'EXECUTE' and class_name='Routine';
-+------------------+----------+-------------+
-| GRANTED_ELEMENT  |  ACTION  | CLASS_NAME  |
-+------------------+----------+-------------+
-| MULT             | EXECUTE  | Routine     |
-+------------------+----------+-------------+
-0: jdbc:luciddb:> drop function mult;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_user_roles
-0: jdbc:luciddb:> select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-. . . . . . . . > role='TUV';
-+--------------+-------+
-|     NAME     | ROLE  |
-+--------------+-------+
-| BOBBYTABLES  | TUV   |
-+--------------+-------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> drop user bobbytables;
-0: jdbc:luciddb:> select name from sys_root.dba_users where name = 'BOBBYTABLES';
-+-------+
-| NAME  |
-+-------+
-+-------+
-0: jdbc:luciddb:> drop role tuv;
-0: jdbc:luciddb:> select name from sys_root.dba_roles where name = 'TUV';
-+-------+
-| NAME  |
-+-------+
-+-------+
-0: jdbc:luciddb:> select grantee from sys_root.dba_element_grants where grantee in ('TUV', 'BOBBYTABLES');
-+----------+
-| GRANTEE  |
-+----------+
-+----------+
-0: jdbc:luciddb:> select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-. . . . . . . . > role='TUV';
-+-------+-------+
-| NAME  | ROLE  |
-+-------+-------+
-+-------+-------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- dba_jars
-0: jdbc:luciddb:> select name, url, deployment_state from sys_root.dba_jars where name = 'APPLIBJAR';
-+------------+---------------------------------------------------+-----------------------+
-|    NAME    |                        URL                        |   DEPLOYMENT_STATE    |
-+------------+---------------------------------------------------+-----------------------+
-| APPLIBJAR  | file:${FARRAGO_HOME}/plugin/eigenbase-applib.jar  | NOT_DEPLOYED          |
-+------------+---------------------------------------------------+-----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test creator field
 0: jdbc:luciddb:> create user lala authorization 'Unknown' Default schema DBAVTEST;
@@ -510,11 +391,6 @@ sqlline> !connect jdbc:luciddb: sa ""
 | PARAM_NAME  | PARAM_VALUE  |
 +-------------+--------------+
 +-------------+--------------+
-0: jdbc:luciddb:> select * from sys_root.dba_auth_ids where false;
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
-| NAME  | REMARKS  | CLASS_NAME  | CREATION_TIMESTAMP  | MODIFICATION_TIMESTAMP  | MOF_ID  | LINEAGE_ID  |
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
-+-------+----------+-------------+---------------------+-------------------------+---------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 0: jdbc:luciddb:> -- yield reliable results depending on whether or not Blackhawk creates a

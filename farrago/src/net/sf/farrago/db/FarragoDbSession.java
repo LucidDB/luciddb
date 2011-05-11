@@ -494,18 +494,35 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public synchronized FarragoSessionStmtValidator newStmtValidator()
+    public synchronized final FarragoSessionStmtValidator newStmtValidator()
+    {
+        return newStmtValidator(
+            getDatabase().getCodeCache(),
+            getDatabase().getDataWrapperCache());
+    }
+
+    /**
+     * Creates a new SQL statement validator with explicit caches.
+     * Exposed for testing purposes only; user code should call
+     * {@link #newStmtValidator()}.
+     *
+     * @param codeCache Code cache
+     * @param dataWrapperCache Data wrapper cache
+     * @return new validator
+     */
+    public synchronized FarragoSessionStmtValidator newStmtValidator(
+        FarragoObjectCache codeCache,
+        FarragoObjectCache dataWrapperCache)
     {
         return new FarragoStmtValidator(
             getRepos(),
             getDatabase().getFennelDbHandle(),
             this,
-            getDatabase().getCodeCache(),
-            getDatabase().getDataWrapperCache(),
+            codeCache,
+            dataWrapperCache,
             getSessionIndexMap(),
             getDatabase().getDdlLockManager());
     }
-
 
     // implement FarragoSession
     public synchronized FarragoSessionPrivilegeChecker newPrivilegeChecker()
@@ -1025,9 +1042,11 @@ public class FarragoDbSession
         return optRuleDescExclusionFilter;
     }
 
-    protected FarragoSessionRuntimeParams newRuntimeContextParams()
+    protected FarragoSessionRuntimeParams newRuntimeContextParams(
+        FarragoSessionStmtContext stmtContext)
     {
         FarragoSessionRuntimeParams params = new FarragoSessionRuntimeParams();
+        params.stmtContext = stmtContext;
         params.session = this;
         params.repos = getRepos();
         params.codeCache = getDatabase().getCodeCache();
@@ -1556,6 +1575,13 @@ public class FarragoDbSession
         {
             SqlIdentifier id = stmt.getCatalogName();
             sessionVariables.catalogName = id.getSimple();
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlSetRoleStmt stmt)
+        {
+            SqlIdentifier id = stmt.getRoleName();
+            sessionVariables.currentRoleName = id.getSimple();
         }
 
         // implement DdlVisitor

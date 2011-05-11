@@ -23,6 +23,8 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
@@ -71,17 +73,29 @@ public class DdlGrantPrivStmt
     {
         FarragoRepos repos = ddlValidator.getRepos();
 
-        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
-
-        // TODO:
-        // Generate a lurql query to ensure that the grantor
-        // (a) Has GRANT OPTION on all the privileges specified in this
-        // grant. or
-        // (b) Is the owner of the object?
-        // All at once at this point before we proceed with granting.
-
         // Initialize the privilege lookup table.
         validatePrivileges(ddlValidator);
+
+        FemAuthId grantorAuthId = determineGrantor(ddlValidator);
+        FemUser user = null;
+        FemRole role = null;
+        if (grantorAuthId instanceof FemUser) {
+            user = (FemUser) grantorAuthId;
+        } else {
+            role = (FemRole) grantorAuthId;
+        }
+
+        FarragoSessionPrivilegeChecker privChecker =
+            ddlValidator.getStmtValidator().getPrivilegeChecker();
+        for (SqlIdentifier id : privList) {
+            privChecker.requestAccess(
+                grantedObject,
+                user,
+                role,
+                id.getSimple(),
+                true);
+        }
+        privChecker.checkAccess();
 
         for (SqlIdentifier id : granteeList) {
             // Find the repository element id for the grantee
@@ -89,25 +103,41 @@ public class DdlGrantPrivStmt
                 FarragoCatalogUtil.getAuthIdByName(
                     repos,
                     id.getSimple());
+            if (granteeAuthId == null) {
+                throw FarragoResource.instance().ValidatorInvalidGrantee.ex(
+                    repos.getLocalizedObjectName(id.getSimple()));
+            }
 
             // For each privilege in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // an individual basis.
             for (SqlIdentifier privId : privList) {
-                // Create a privilege object and set its properties.
-                FemGrant grant = repos.newFemGrant();
+                // Duplicate check
+                FemGrant grant = findExistingGrant(
+                    repos,
+                    grantedObject,
+                    grantorAuthId,
+                    granteeAuthId,
+                    privId.getSimple());
+                if (grant == null) {
+                    // Create the grant object and set its properties.
+                    grant = repos.newFemGrant();
 
-                // Set the privilege name (i.e. action) and properties.
-                grant.setAction(privId.getSimple());
-                grant.setWithGrantOption(grantOption);
+                    // Set the privilege name (i.e. action) and properties.
+                    grant.setAction(privId.getSimple());
 
-                // TODO: to grant.setHierarchyOption(hierarchyOption);
+                    // Associate the privilege with the grantor, grantee,
+                    // and object.
+                    grant.setGrantor(grantorAuthId);
+                    grant.setGrantee(granteeAuthId);
+                    grant.setElement(grantedObject);
+                }
 
-                // Associate the privilege with the grantor, grantee,
-                // and object.
-                grant.setGrantor(grantorAuthId);
-                grant.setGrantee(granteeAuthId);
-                grant.setElement(grantedObject);
+                // Note that for an existing grant without grant option, we
+                // upgrade in place.
+                if (grantOption) {
+                    grant.setWithGrantOption(true);
+                }
             }
         }
     }
@@ -143,6 +173,8 @@ public class DdlGrantPrivStmt
                 // throw an exception, because this is an illegal privilege
                 // REVIEW jvs 13-Aug-2005:  maybe report all illegal
                 // privileges at once instead of just the first one?
+                // Goes for other stuff above too such as existence
+                // of grantee.
                 throw FarragoResource.instance().ValidatorInvalidGrant.ex(
                     privId.getSimple(),
                     grantedObject.getName());

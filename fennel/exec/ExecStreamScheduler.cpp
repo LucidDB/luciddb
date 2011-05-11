@@ -191,18 +191,46 @@ void ExecStreamScheduler::traceStreamBuffers(
     }
 }
 
-void ExecStreamScheduler::traceStreamBufferContents(
-    ExecStream &stream,
+// An abstract functor applied to a const row in a const stream buffer.
+class ExecStreamBufTupleFunctor
+{
+public:
+    virtual ~ExecStreamBufTupleFunctor() {}
+
+    // applies the functor to a row,
+    // represented as a pair (TupleDescriptor, TupleData).
+    virtual void operator()(const TupleDescriptor&, const TupleData&) {}
+
+    // applies the functor to the next CT unread rows in the buffer
+    void foreachUnreadRow(ExecStreamBufAccessor&, int ct = INT_MAX);
+
+    // applies the functor to each row in a buffer range,
+    // but no more than CT rows
+    void foreachRow(
+        ExecStreamBufAccessor&,
+        PConstBuffer start, PConstBuffer end, int ct = INT_MAX);
+};
+
+void ExecStreamBufTupleFunctor::foreachUnreadRow(
+    ExecStreamBufAccessor& bufAccessor, int ct)
+{
+    PConstBuffer start = bufAccessor.getConsumptionStart();
+    PConstBuffer end =  bufAccessor.getConsumptionEnd();
+    foreachRow(bufAccessor, start, end, ct);
+}
+
+// apply to each row in buffer from START to END, but stop after CT rows
+void ExecStreamBufTupleFunctor::foreachRow(
     ExecStreamBufAccessor &bufAccessor,
-    TraceLevel traceLevel)
+    PConstBuffer start, PConstBuffer end, int ct)
 {
     TupleDescriptor const &tupleDesc = bufAccessor.getTupleDesc();
     TupleData tupleData(tupleDesc);
     TupleAccessor &tupleAccessor = bufAccessor.getScratchTupleAccessor();
 
-    for (PConstBuffer pTuple = bufAccessor.getConsumptionStart();
-         pTuple != bufAccessor.getConsumptionEnd();
-         pTuple += tupleAccessor.getCurrentByteCount())
+    for (PConstBuffer pTuple = start;
+         ct > 0 && pTuple != end;
+         ct--, pTuple += tupleAccessor.getCurrentByteCount())
     {
         tupleAccessor.setCurrentTupleBuf(pTuple);
         // while we're here, we might as well sanity-check the content
@@ -210,11 +238,67 @@ void ExecStreamScheduler::traceStreamBufferContents(
             <= bufAccessor.getConsumptionEnd());
         tupleAccessor.unmarshal(tupleData);
         // TODO:  sanity-check individual data values?
-        std::ostringstream oss;
-        TuplePrinter tuplePrinter;
-        tuplePrinter.print(oss, tupleDesc, tupleData);
-        stream.trace(traceLevel, oss.str());
+        (*this)(tupleDesc, tupleData);
     }
+}
+
+// a functor that prints a row to an ostream
+class PrintTupleFunctor : public ExecStreamBufTupleFunctor
+{
+    std::ostream& os;
+    bool endline;
+public:
+    PrintTupleFunctor(std::ostream& os, bool endline = false)
+        : os(os), endline(endline) {}
+    virtual void operator()(const TupleDescriptor&, const TupleData&);
+};
+
+void PrintTupleFunctor::operator()
+    (const TupleDescriptor& desc, const TupleData& data)
+{
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(os, desc, data);
+    if (endline) {
+        os << std::endl;
+    }
+}
+
+// a functor that trace a row
+class TraceTupleFunctor : public ExecStreamBufTupleFunctor
+{
+    TraceSource& traceSource;
+    TraceLevel traceLevel;
+public:
+    TraceTupleFunctor(TraceSource& s, TraceLevel n)
+        : traceSource(s), traceLevel(n) {}
+    virtual void operator()(const TupleDescriptor&, const TupleData&);
+};
+
+void TraceTupleFunctor::operator()
+    (const TupleDescriptor& desc, const TupleData& data)
+{
+    std::ostringstream oss;
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(oss, desc, data);
+    traceSource.trace(traceLevel, oss.str());
+}
+
+// public methods
+void ExecStreamScheduler::printStreamBufferContents(
+    std::ostream& os,
+    ExecStreamBufAccessor &bufAccessor)
+{
+    PrintTupleFunctor f(os, true);
+    f.foreachUnreadRow(bufAccessor);
+}
+
+void ExecStreamScheduler::traceStreamBufferContents(
+    ExecStream &stream,
+    ExecStreamBufAccessor &bufAccessor,
+    TraceLevel traceLevel)
+{
+    TraceTupleFunctor f(stream, traceLevel);
+    f.foreachUnreadRow(bufAccessor);
 }
 
 void ExecStreamScheduler::checkAbort() const

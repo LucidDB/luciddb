@@ -339,10 +339,8 @@ public abstract class OJPreparingStmt
         // For transformation from DML -> DML, use result of rewrite
         // (e.g. UPDATE -> MERGE).  For anything else (e.g. CALL -> SELECT),
         // use original kind.
-        SqlKind kind;
-        if (sqlQuery.isA(SqlKind.DML)) {
-            kind = sqlQuery.getKind();
-        } else {
+        SqlKind kind = sqlQuery.getKind();
+        if (!kind.belongsTo(SqlKind.DML)) {
             kind = sqlNodeOriginal.getKind();
         }
         return implement(
@@ -412,6 +410,27 @@ public abstract class OJPreparingStmt
             }
         }
         return false;
+    }
+
+    public void halfImplement(
+        RelNode rootRel,
+        ClassDeclaration decl)
+    {
+        Class runtimeContextClass = null;
+        final Argument [] arguments = {
+            new Argument(
+                connectionVariable,
+                runtimeContextClass,
+                connection)
+        };
+        assert containsJava;
+        javaCompiler = createCompiler();
+        JavaRelImplementor relImplementor =
+            getRelImplementor(rootRel.getCluster().getRexBuilder());
+        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
+        BoundMethod boundMethod;
+        boundMethod = compileAndBind(decl, expr, arguments);
+        Util.discard(boundMethod);
     }
 
     /**
@@ -841,6 +860,8 @@ public abstract class OJPreparingStmt
                     "while writing java file '" + javaFile + "'");
             }
         }
+
+        EigenbaseTrace.getDynamicHandler().get().apply(javaFile, source);
 
         javaCompiler.compile();
         try {

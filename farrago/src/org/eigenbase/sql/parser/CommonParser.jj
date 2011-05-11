@@ -1370,7 +1370,7 @@ SqlNode TableRef() :
     [
         <TABLESAMPLE> { pos = getPos(); }
         (
-            <SUBSTITUTE> <LPAREN> sample = StringLiteral(true) <RPAREN>
+            <SUBSTITUTE> <LPAREN> sample = StringLiteral() <RPAREN>
             {
                 String sampleName = SqlLiteral.stringValue(sample);
                 SqlSampleSpec sampleSpec = SqlSampleSpec.createNamed(sampleName);
@@ -1391,7 +1391,7 @@ SqlNode TableRef() :
                 }
             )
             <LPAREN> samplePercentage = UnsignedNumericLiteral() <RPAREN>
-            [ 
+            [
                 <REPEATABLE> <LPAREN> repeatableSeed = IntLiteral() <RPAREN>
                 {
                     isRepeatable = true;
@@ -1415,13 +1415,13 @@ SqlNode TableRef() :
                 // values greater than ~99.999997% are treated as 1.0
                 float fRate = rate.divide(ONE_HUNDRED).floatValue();
                 if (fRate > 0.0f && fRate < 1.0f) {
-                    SqlSampleSpec tableSampleSpec = 
-                    isRepeatable 
+                    SqlSampleSpec tableSampleSpec =
+                    isRepeatable
                         ? SqlSampleSpec.createTableSample(
                             isBernoulli, fRate, repeatableSeed)
                         : SqlSampleSpec.createTableSample(isBernoulli, fRate);
-    
-                    SqlLiteral tableSampleLiteral = 
+
+                    SqlLiteral tableSampleLiteral =
                         SqlLiteral.createSample(tableSampleSpec, pos);
                     tableRef = SqlStdOperatorTable.sampleFunction.createCall(
                         pos.plus(getPos()), tableRef, tableSampleLiteral);
@@ -1782,8 +1782,8 @@ SqlWindow WindowSpecification() :
 
 SqlNode WindowRange() :
 {
-    SqlLiteral literal;
-    SqlParserPos pos=null;
+    SqlNode literal;
+    SqlParserPos pos = null;
     SqlParserPos endPos;
 }
 {
@@ -1812,18 +1812,18 @@ SqlNode WindowRange() :
         }
     )
     |
-    literal = StrictLiteral()
+    literal = Literal()
     (
         <PRECEDING>
         {
             return SqlStdOperatorTable.windowOperator.createPreceding(
-                literal, getPos());
+                SqlLiteral.unchain(literal), getPos());
         }
         |
         <FOLLOWING>
         {
             return SqlStdOperatorTable.windowOperator.createFollowing(
-                literal, getPos());
+                SqlLiteral.unchain(literal), getPos());
         }
     )
 }
@@ -2372,7 +2372,7 @@ SqlNode Literal() :
     {
         return e;
     }
-    | e = StringLiteral(false)
+    | e = StringLiteral()
     {
         return e;
     }
@@ -2387,40 +2387,6 @@ SqlNode Literal() :
     | e = IntervalLiteral()
     {
         return e;
-    }
-}
-
-
-/**
- * Parses a literal expression, not allowing a continued string literal.
- * Always returns an SqlLiteral. (Some places in the DDL parser expect a simple
- * SqlLiteral.)
- */
-SqlLiteral StrictLiteral() :
-{
-    SqlLiteral lit;
-    SqlNode e;
-}
-{
-    lit = NumericLiteral()
-    {
-        return lit;
-    }
-    | e = StringLiteral(true)
-    {
-        return (SqlLiteral) e;
-    }
-    | lit = SpecialLiteral()
-    {
-        return lit;
-    }
-    | lit = DateTimeLiteral()
-    {
-        return lit;
-    }
-    | lit = IntervalLiteral()
-    {
-        return lit;
     }
 }
 
@@ -2484,15 +2450,17 @@ SqlLiteral SpecialLiteral() :
 }
 
 /**
- * Parses a string literal. Optionally parses a literal continued onto several
+ * Parses a string literal. The literal may be continued onto several
  * lines.  For a simple literal, the result is an SqlLiteral.  For a continued
  * literal, the result is an SqlCall expression, which concatenates 2 or more
  * string literals; the validator reduces this.
  *
- * @param strict when false, allow continued literals; when true, forbid them.
- * @return a literal expression. When strict, returns an SqlLiteral.
+ * @see SqlLiteral#unchain(SqlNode)
+ * @see SqlLiteral#stringValue(SqlNode)
+ *
+ * @return a literal expression
  */
-SqlNode StringLiteral(boolean strict) :
+SqlNode StringLiteral() :
 {
     String p;
     int nfrags = 0;

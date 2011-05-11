@@ -249,7 +249,7 @@ public class RexSqlStandardConvertletTable
                     RexToSqlNodeConverter converter,
                     RexCall call)
                 {
-                    assert(op instanceof SqlCaseOperator);
+                    assert (op instanceof SqlCaseOperator);
                     SqlNode [] operands =
                         convertExpressionList(converter, call.operands);
                     if (operands == null) {

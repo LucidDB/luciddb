@@ -97,6 +97,10 @@ public class SqlIntervalLiteral
         writer.keyword(interval.intervalQualifier.toString());
     }
 
+    public int signum() {
+        return ((IntervalValue) value).signum();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -161,6 +165,17 @@ public class SqlIntervalLiteral
         public int getSign()
         {
             return sign;
+        }
+
+        public int signum() {
+            for (int i = 0; i < intervalStr.length(); i++) {
+                char ch = intervalStr.charAt(i);
+                if (ch >= '1' && ch <= '9') {
+                    // If non zero return sign.
+                    return getSign();
+                }
+            }
+            return 0;
         }
 
         public String toString()

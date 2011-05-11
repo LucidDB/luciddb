@@ -19,7 +19,6 @@
     <orderEntry type="library" name="mdr" level="project" />
     <orderEntry type="library" name="resgen" level="project" />
     <orderEntry type="library" name="junit" level="project" />
-    <orderEntry type="library" name="tools" level="project" />
     <orderEntry type="library" name="rmiJdbc" level="project" />
     <orderEntry type="library" name="csvjdbc" level="project" />
     <orderEntry type="library" name="janino" level="project" />

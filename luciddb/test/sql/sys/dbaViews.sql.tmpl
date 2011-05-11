@@ -17,7 +17,7 @@ in username varchar(255))
 language java
 parameter style java
 reads sql data
-external name 'applib.applibJar:org.eigenbase.applib.security.GrantSelectForSchemaUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
 
 -- dba_routines & routine parameters
 select catalog_name, schema_name, invocation_name, specific_name, 
@@ -130,7 +130,7 @@ where foreign_server_name='DBATEST_FF_SERVER'
 order by 1,2;
 
 -- dba_tables, dba_views, dba_stored_tables
-create table dbavtest.table1(col1 int, col2 int default 3);
+create table dbavtest.table1(col1 int, col2 int);
 
 create view dbavtest.empview as 
 select * from dbavtest.emps;
@@ -156,7 +156,7 @@ order by 1;
 
 -- dba_columns
 select catalog_name, table_name, column_name, ordinal_position, datatype,
-  "PRECISION", dec_digits, is_nullable, default_value
+  "PRECISION", dec_digits, is_nullable
 from sys_root.dba_columns
 where schema_name='DBAVTEST'
 order by 2,4;
@@ -173,66 +173,6 @@ select catalog_name, index_name, table_name, index_column_names, is_unique
     from sys_root.dba_unclustered_indexes
     where schema_name = 'DBAVTEST'
     order by 2;
-
--- dba_users
-select name from sys_root.dba_users where name = 'BOBBYTABLES';
-create user bobbytables;
-select name from sys_root.dba_users where name = 'BOBBYTABLES';
-
--- dba_roles
-select name from sys_root.dba_roles where name = 'TUV';
-create role tuv;
-select name from sys_root.dba_roles where name = 'TUV';
-
--- dba_element_grants
-create table dbavtest.luvtuv(gluv int);
-grant select on dbavtest.luvtuv to tuv;
-select granted_schema, granted_element, grantee, action,
-  grant_type
-from sys_root.dba_element_grants
-where granted_schema = 'DBAVTEST' and granted_element = 'LUVTUV' and
-grantee = 'TUV' and action = 'SELECT' and grant_type = 'Role';
-
-grant role tuv to bobbytables;
-
-select grantee, action,
-case
-  when r.role is not null then r.role
-  when grant_type = 'Role' then grantee
-end as role_name,
-grant_type
-from sys_root.dba_element_grants
-left outer join sys_root.dba_user_roles r
-on action = 'INHERIT_ROLE' and r.role_mof_id = element_mof_id
-where grantee = 'BOBBYTABLES' and action = 'INHERIT_ROLE' and
-r.role = 'TUV' and grant_type = 'User';
-
-create or replace function mult(n1 int, n2 int)
-returns int
-language sql
-contains sql
-return n1 * n2;
-
-grant execute on specific function mult to tuv;
-select granted_element, action, class_name
-from sys_root.dba_element_grants
-where granted_element = 'MULT' and action = 'EXECUTE' and class_name='Routine';
-drop function mult;
-
--- dba_user_roles
-select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-role='TUV';
-
-drop user bobbytables;
-select name from sys_root.dba_users where name = 'BOBBYTABLES';
-drop role tuv;
-select name from sys_root.dba_roles where name = 'TUV';
-select grantee from sys_root.dba_element_grants where grantee in ('TUV', 'BOBBYTABLES');
-select name, role from sys_root.dba_user_roles where name='BOBBYTABLES' and
-role='TUV';
-
--- dba_jars
-select name, url, deployment_state from sys_root.dba_jars where name = 'APPLIBJAR';
 
 -- test creator field
 create user lala authorization 'Unknown' Default schema DBAVTEST;
@@ -261,7 +201,6 @@ select * from sys_root.dba_thread_stack_entries where false;
 select * from sys_root.dba_performance_counters where false;
 select * from sys_root.dba_system_info where false;
 select * from sys_root.user_session_parameters where false;
-select * from sys_root.dba_auth_ids where false;
 
 -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
 -- yield reliable results depending on whether or not Blackhawk creates a

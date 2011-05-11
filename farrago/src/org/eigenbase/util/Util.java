@@ -195,61 +195,18 @@ public class Util
         Object s0,
         Object s1)
     {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
+        if (s0 == s1) {
+            return true;
+        } else if (s0 == null) {
             return false;
         } else {
             return s0.equals(s1);
         }
     }
 
-    /**
-     * Returns whether two arrays are equal or are both null.
-     */
-    public static final boolean equal(
-        Object [] s0,
-        Object [] s1)
-    {
-        if (s0 == null) {
-            return s1 == null;
-        } else if (s1 == null) {
-            return false;
-        } else if (s0.length != s1.length) {
-            return false;
-        } else {
-            for (int i = 0; i < s0.length; i++) {
-                Object o0 = s0[i];
-                Object o1 = s1[i];
-                if (!equal(o0, o1)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     public static StatementList clone(StatementList e)
     {
         return (StatementList) e.makeCopy();
-    }
-
-    public static String [] clone(String [] a)
-    {
-        String [] a2 = new String[a.length];
-        for (int i = 0; i < a.length; i++) {
-            a2[i] = a[i];
-        }
-        return a2;
-    }
-
-    public static int [] clone(int [] a)
-    {
-        int [] b = new int[a.length];
-        for (int i = 0; i < a.length; i++) {
-            b[i] = a[i];
-        }
-        return b;
     }
 
     /**
@@ -588,11 +545,6 @@ public class Util
         return sb.toString();
     }
 
-    //      static final boolean isBlank(String s)
-    //      {
-    //          return s == null || s.equals("");
-    //      }
-
     /**
      * Creates a file-protocol URL for the given file.
      */
@@ -739,36 +691,6 @@ public class Util
             list.add(iter.next());
         }
         return list;
-    }
-
-    /**
-     * @deprecated use {@link Vector#toArray} on Java2
-     */
-    public static Object [] toArray(Vector v)
-    {
-        Object [] objects = new Object[v.size()];
-        v.copyInto(objects);
-        return objects;
-    }
-
-    /**
-     * Equivalent to {@link Vector#toArray(Object[])}.
-     */
-    public static Object [] toArray(
-        Vector v,
-        Object [] a)
-    {
-        int elementCount = v.size();
-        if (a.length < elementCount) {
-            a = (Object []) Array.newInstance(
-                a.getClass().getComponentType(),
-                elementCount);
-        }
-        v.copyInto(a);
-        if (a.length > elementCount) {
-            a[elementCount] = null;
-        }
-        return a;
     }
 
     static boolean isStatic(java.lang.reflect.Member member)
@@ -1110,61 +1032,6 @@ public class Util
     }
 
     /**
-     * Searches recursively for a {@link SqlIdentifier}.
-     *
-     * @param node in which to look in
-     *
-     * @return null if no Identifier was found.
-     */
-    public static SqlNodeDescriptor findIdentifier(SqlNode node)
-    {
-        BacktrackVisitor<Void> visitor =
-            new BacktrackVisitor<Void>() {
-                public Void visit(SqlIdentifier id)
-                {
-                    throw new FoundOne(id);
-                }
-            };
-        try {
-            node.accept(visitor);
-        } catch (FoundOne e) {
-            return new SqlNodeDescriptor(
-                (SqlNode) e.getNode(),
-                visitor.getCurrentParent(),
-                visitor.getCurrentOffset());
-        }
-        return null;
-    }
-
-    /**
-     * Generates a unique name
-     *
-     * @param names Array of existing names
-     * @param length Number of existing names
-     * @param s Suggested name
-     *
-     * @return Name which does not match any of the names in the first <code>
-     * length</code> positions of the <code>names</code> array.
-     */
-    public static String uniqueFieldName(
-        String [] names,
-        int length,
-        String s)
-    {
-        if (!contains(names, length, s)) {
-            return s;
-        }
-        int n = length;
-        while (true) {
-            s = "EXPR_" + n;
-            if (!contains(names, length, s)) {
-                return s;
-            }
-            ++n;
-        }
-    }
-
-    /**
      * Returns whether an array of strings contains a given string among the
      * first <code>length</code> entries.
      *
@@ -1215,7 +1082,7 @@ public class Util
      * used in finally blocks when it's necessary to avoid throwing an exception
      * which might mask a real exception.
      *
-     * @param stream stream to close
+     * @param jar jar to close
      */
     public static void squelchJar(JarFile jar)
     {
@@ -1649,6 +1516,29 @@ public class Util
             buf.append('0');
         }
         buf.append(seconds);
+    }
+
+    /**
+     * Parses a locale string.
+     *
+     * <p>The inverse operation of {@link java.util.Locale#toString()}.
+     *
+     * @param localeString Locale string, e.g. "en" or "en_US"
+     * @return Java locale object
+     */
+    public static Locale parseLocale(String localeString) {
+        String[] strings = localeString.split("_");
+        switch (strings.length) {
+        case 1:
+            return new Locale(strings[0]);
+        case 2:
+            return new Locale(strings[0], strings[1]);
+        case 3:
+            return new Locale(strings[0], strings[1], strings[2]);
+        default:
+            throw newInternal(
+                "bad locale string '" + localeString + "'");
+        }
     }
 
     /**
@@ -2204,109 +2094,115 @@ public class Util
         }
     }
 
+    // Experimental support for functional programming follows...
+
     /**
-     * Describes a node, its parent and if and where in the parent a node lives.
-     * If parent is null, the offset value is not valid.
+     * Function of arity 0.
+     *
+     * @param <R> Result type.
      */
-    public static class SqlNodeDescriptor
+    interface Function0<R> {
+        /**
+         * Applies the function.
+         *
+         * @return Result value.
+         */
+        R apply();
+    }
+
+    /**
+     * Function of arity 1.
+     *
+     * @param <R> Result type.
+     * @param <T0> Type of parameter 0.
+     */
+    public interface Function1<R, T0> {
+        /**
+         * Applies the function.
+         *
+         * @param p0 Parameter 0.
+         * @return Result value.
+         */
+        R apply(T0 p0);
+    }
+
+    /**
+     * Function of arity 2.
+     *
+     * @param <R> Result type.
+     * @param <T0> Type of parameter 0.
+     * @param <T1> Type of parameter 1.
+     */
+    public interface Function2<R, T0, T1> {
+        /**
+         * Applies the function.
+         *
+         * @param p0 Parameter 0.
+         * @param p1 Parameter 1.
+         * @return Result value.
+         */
+        R apply(T0 p0, T1 p1);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public static class Functions
     {
-        private final SqlNode node;
-        private final SqlNode parent;
-        private final Integer parentOffset;
-
-        public SqlNodeDescriptor(
-            SqlNode node,
-            SqlNode parent,
-            Integer parentOffset)
-        {
-            assert ((null == parent) || (parent instanceof SqlCall)
-                || (parent instanceof SqlNodeList));
-            this.node = node;
-            this.parent = parent;
-            this.parentOffset = parentOffset;
+        /**
+         * Returns a function of arity 0 that does nothing.
+         *
+         * @param <R> Return type
+         * @return Function that does nothing.
+         */
+        public static <R> Function0<R> ignore0() {
+            return Ignore.INSTANCE;
         }
 
-        public SqlNode getNode()
-        {
-            return node;
+        /**
+         * Returns a function of arity 1 that does nothing.
+         *
+         * @param <R> Return type
+         * @param <T0> Type of parameter 0
+         * @return Function that does nothing.
+         */
+        public static <R, T0> Function1<R, T0> ignore1() {
+            return Ignore.INSTANCE;
         }
 
-        public SqlNode getParent()
-        {
-            return parent;
-        }
-
-        public Integer getParentOffset()
-        {
-            return parentOffset;
+        /**
+         * Returns a function of arity 2 that does nothing.
+         *
+         * @param <R> Return type
+         * @param <T0> Type of parameter 0
+         * @param <T1> Type of parameter 1
+         * @return Function that does nothing.
+         */
+        public static <R, T0, T1> Function2<R, T0, T1> ignore2() {
+            return Ignore.INSTANCE;
         }
     }
 
-    private static class BacktrackVisitor<R>
-        extends SqlBasicVisitor<R>
+    private static final class Ignore<R, T0, T1>
+        implements
+        Function0<R>,
+        Function1<R, T0>,
+        Function2<R, T0, T1>
     {
-        /**
-         * Used to keep track of the current SqlNode parent of a visiting node.
-         * A value of null mean no parent. NOTE: In case of extending
-         * SqlBasicVisitor, remember that parent value might not be set
-         * depending on if and how visit(SqlCall) and visit(SqlNodeList) is
-         * implemented.
-         */
-        protected SqlNode currentParent = null;
-
-        /**
-         * Only valid if currentParrent is a SqlCall or SqlNodeList Describes
-         * the offset within the parent
-         */
-        protected int currentOffset;
-
-        public SqlNode getCurrentParent()
+        public R apply()
         {
-            return currentParent;
+            return null;
         }
 
-        public Integer getCurrentOffset()
+        public R apply(T0 p0)
         {
-            return currentOffset;
+            return null;
         }
 
-        public R visit(SqlNodeList nodeList)
+        public R apply(T0 p0, T1 p1)
         {
-            R result = null;
-            for (int i = 0; i < nodeList.size(); i++) {
-                currentParent = nodeList;
-                currentOffset = i;
-                SqlNode node = nodeList.get(i);
-                result = node.accept(this);
-            }
-            currentParent = null;
-            return result;
+            return null;
         }
 
-        public R visit(final SqlCall call)
-        {
-            ArgHandler<R> argHandler =
-                new ArgHandler<R>() {
-                    public R result()
-                    {
-                        return null;
-                    }
-
-                    public R visitChild(
-                        SqlVisitor<R> visitor,
-                        SqlNode expr,
-                        int i,
-                        SqlNode operand)
-                    {
-                        currentParent = call;
-                        currentOffset = i;
-                        return operand.accept(BacktrackVisitor.this);
-                    }
-                };
-            call.getOperator().acceptCall(this, call, false, argHandler);
-            currentParent = null;
-            return argHandler.result();
-        }
+        static final Ignore INSTANCE = new Ignore();
     }
 }
 

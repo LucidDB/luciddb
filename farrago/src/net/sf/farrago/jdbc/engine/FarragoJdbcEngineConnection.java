@@ -42,7 +42,6 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.SqlBuilder;
 import org.eigenbase.util.*;
 
-
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
  * interface for the Farrago JDBC engine driver.
@@ -58,7 +57,7 @@ public class FarragoJdbcEngineConnection
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionFactory sessionFactory;
-    private FarragoSession session;
+    protected FarragoSession session;
 
     //~ Constructors -----------------------------------------------------------
 
