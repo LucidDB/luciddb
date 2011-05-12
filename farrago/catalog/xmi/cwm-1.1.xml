@@ -188,16 +188,36 @@
             </Model:Reference>
           </Model:Namespace.contents>
         </Model:Class>
-        <Model:Class xmi.id='a49' name='Attribute' annotation='An Attribute describes a named slot within a classifier that may hold a value.' isRoot='false' isLeaf='false' isAbstract='false' visibility='public_vis' isSingleton='false' supertypes='a39'>
+        <Model:Association xmi.id='a50' name='initialValue' annotation='An Expression specifying the value of the attribute upon initialization.  It is meant to be evaluated at the time the object is initialized.  (Note that an explicit constructor may supersede an initial value.)' isRoot='true' isLeaf='true' isAbstract='false' visibility='public_vis' isDerived='false'>
           <Model:Namespace.contents>
-            <Model:Attribute xmi.id='a50' name='initialValue' annotation='An Expression specifying the value of the attribute upon initialization. It is meant to be evaluated at the time the object is initialized. (Note that an explicit constructor may supersede an initial value.)' scope='instance_level' visibility='public_vis' isChangeable='true' isDerived='false' type='a51'>
-              <Model:StructuralFeature.multiplicity>
+            <Model:AssociationEnd xmi.id='a2800' name='attribute' annotation='' isNavigable='true' aggregation='none' isChangeable='true' type='a49'>
+              <Model:AssociationEnd.multiplicity>
                 <XMI.field>1</XMI.field> <!-- lower -->
+                <XMI.field>-1</XMI.field> <!-- upper -->
+                <XMI.field>false</XMI.field> <!-- is_ordered -->
+                <XMI.field>true</XMI.field> <!-- is_unique -->
+              </Model:AssociationEnd.multiplicity>
+            </Model:AssociationEnd>
+            <Model:AssociationEnd xmi.id='a3800' name='value' annotation='' isNavigable='true' aggregation='none' isChangeable='true' type='a51'>
+              <Model:AssociationEnd.multiplicity>
+                <XMI.field>0</XMI.field> <!-- lower -->
                 <XMI.field>1</XMI.field> <!-- upper -->
                 <XMI.field>false</XMI.field> <!-- is_ordered -->
-                <XMI.field>false</XMI.field> <!-- is_unique -->
+                <XMI.field>true</XMI.field> <!-- is_unique -->
+              </Model:AssociationEnd.multiplicity>
+            </Model:AssociationEnd>
+          </Model:Namespace.contents>
+        </Model:Association>
+        <Model:Class xmi.id='a49' name='Attribute' annotation='An Attribute describes a named slot within a classifier that may hold a value.' isRoot='false' isLeaf='false' isAbstract='false' visibility='public_vis' isSingleton='false' supertypes='a39'>
+          <Model:Namespace.contents>
+            <Model:Reference xmi.id='a5000' name='initialValue' annotation='An Expression specifying the value of the attribute upon initialization. It is meant to be evaluated at the time the object is initialized. (Note that an explicit constructor may supersede an initial value.)' scope='instance_level' visibility='public_vis' isChangeable='true' type='a51' referencedEnd='a3800'>
+              <Model:StructuralFeature.multiplicity>
+                <XMI.field>0</XMI.field> <!-- lower -->
+                <XMI.field>1</XMI.field> <!-- upper -->
+                <XMI.field>false</XMI.field> <!-- is_ordered -->
+                <XMI.field>true</XMI.field> <!-- is_unique -->
               </Model:StructuralFeature.multiplicity>
-            </Model:Attribute>
+            </Model:Reference>
           </Model:Namespace.contents>
         </Model:Class>
         <Model:Class xmi.id='a13' name='Constraint' annotation='A constraint is a semantic condition or restriction expressed in text.&#10;&#10;&#10;&#10;In the metamodel, a Constraint is a BooleanExpression on an associated ModelElement(s) which must be true for the model to be well formed. This restriction can be stated in natural language, or in different kinds of languages with well-defined semantics. Certain Constraints are predefined, others may be user defined. Note that a Constraint is an assertion, not an executable mechanism.&#10;&#10;&#10;&#10;The specification is written as an expression in a designated constraint language. The language can be specially designed for writing constraints (such as OCL), a programming language, mathematical notation, or natural language. If constraints are to be enforced by a model editor tool, then the tool must understand the syntax and semantics of the constraint language. Because the choice of language is arbitrary, constraints can be used as an extension mechanism.&#10;&#10;&#10;&#10;The constraint concept allows new semantics to be specified linguistically for a model element. In the metamodel a Constraint directly attached to a ModelElement describes semantic restrictions that this ModelElement must obey.&#10;&#10;' isRoot='false' isLeaf='false' isAbstract='false' visibility='public_vis' isSingleton='false' supertypes='a4'>
