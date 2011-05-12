@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005 The Eigenbase Project
-// Copyright (C) 2005 SQLstream, Inc.
-// Copyright (C) 2005 Dynamo BI Corporation
-// Portions Copyright (C) 2003 John V. Sichi
+// Copyright (C) 2010 The Eigenbase Project
+// Copyright (C) 2010 SQLstream, Inc.
+// Copyright (C) 2010 Dynamo BI Corporation
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -100,7 +99,7 @@ public abstract class FarragoTestCase
     /**
      * Flag used to allow individual test methods to be called from IntelliJ.
      */
-    private static boolean individualTest;
+    private static boolean individualTest = false;
 
     /**
      * Saved copy of Farrago configuration parameters.

@@ -11,7 +11,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test to make sure datatypes, precision match
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T1_TARGET', null);
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T1%' and schema_name = 'S' order by TABLE_NAME,COLUMN_NAME;
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T1%' and schema_name = 'S';
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
@@ -21,7 +21,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test to make sure it works with tables and views
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T2"', null, 'T2_TARGET', null);
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T2%' and schema_name = 'S' order by TABLE_NAME,COLUMN_NAME;
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'T2%' and schema_name = 'S';
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
@@ -31,7 +31,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test adding additional columns
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T3_TARGET', 'desc varchar(255)');
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S' order by TABLE_NAME,COLUMN_NAME;
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
@@ -42,7 +42,7 @@
 0: jdbc:luciddb:> --The source table input, if a simple table name, should try and access tables in the default schema
 0: jdbc:luciddb:> drop table "T3_TARGET";
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"T1"', null, 'T3_TARGET', 'desc varchar(255)');
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S' order by TABLE_NAME,COLUMN_NAME;
+0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name in ('T1','T3_TARGET')  and schema_name = 'S';
 +-------------+--------------+-----------+------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DATATYPE  | PRECISION  | IS_NULLABLE  |
 +-------------+--------------+-----------+------------+--------------+
@@ -51,52 +51,24 @@
 | T3_TARGET   | DESC         | VARCHAR   | 255        | true         |
 +-------------+--------------+-----------+------------+--------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --Test datatype decimal(precision, scale)
-0: jdbc:luciddb:> CREATE TABLE "DecimalTb"(
-. . . . . . . . > col decimal(5,4)
-. . . . . . . . > );
-0: jdbc:luciddb:> insert into "DecimalTb" values(5.0015);
-0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"DecimalTb"', null, 'DDB26_DecimalTb', null);
-0: jdbc:luciddb:> select TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,DATATYPE,"PRECISION",DEC_DIGITS 
-. . . . . . . . > from SYS_ROOT.DBA_COLUMNS where SCHEMA_NAME='S' and TABLE_NAME like '%DecimalTb' order by TABLE_NAME,ORDINAL_POSITION;
-+------------------+--------------+-------------------+-----------+------------+-------------+
-|    TABLE_NAME    | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  |
-+------------------+--------------+-------------------+-----------+------------+-------------+
-| DDB26_DecimalTb  | COL          | 1                 | DECIMAL   | 5          | 4           |
-| DecimalTb        | COL          | 1                 | DECIMAL   | 5          | 4           |
-+------------------+--------------+-------------------+-----------+------------+-------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into "DDB26_DecimalTb" values(5.0015);
-0: jdbc:luciddb:> select * from "DecimalTb" order by col;
-+---------+
-|   COL   |
-+---------+
-| 5.0015  |
-+---------+
-0: jdbc:luciddb:> select * from "DDB26_DecimalTb" order by col;
-+---------+
-|   COL   |
-+---------+
-| 5.0015  |
-+---------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> drop table "DecimalTb";
-0: jdbc:luciddb:> drop table "DDB26_DecimalTb";
 0: jdbc:luciddb:> -- test to make sure that it works with remote tables
 0: jdbc:luciddb:> --TODO: NOT UNDERSTAND REMOTE TABLES.
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test to make sure errors are thrown when:
 0: jdbc:luciddb:> --table already exists 
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T1_TARGET', null);
-Error: The table or view ["S"."T1_TARGET"] is existing in database! (state=,code=0)
+Error: java.lang.Exception: [ErrorInfo]: The table[S.T1_TARGET] is existing.
+[Create Table SQL:] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --additional columns clause contains another column already in the table
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T4_TARGET', 'col1 varchar(25)');
-Error: DDL validation error near line 1, column 50: Duplicate definition for column "COL1" within table "S"."T4_TARGET"; earlier definition was near line 1, column 33 (state=,code=0)
+Error: java.lang.Exception: [ErrorInfo]: DDL validation error near line 1, column 49: Duplicate definition for column "COL1" within table "S"."T4_TARGET"; earlier definition was near line 1, column 32
+[Create Table SQL:] Create Table "S"."T4_TARGET" ( COL1 VARCHAR(50),col1 varchar(25) ) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --additional columns clause is invalid 
 0: jdbc:luciddb:> call applib.create_table_from_source_table ( '"S"."T1"', null, 'T5_TARGET', 'desc vachar(50)');
-Error: DDL validation error near line 1, column 50: Reference to unknown datatype "VACHAR" (state=,code=0)
+Error: java.lang.Exception: [ErrorInfo]: DDL validation error near line 1, column 49: Reference to unknown datatype "VACHAR"
+[Create Table SQL:] Create Table "S"."T5_TARGET" ( COL1 VARCHAR(50),desc vachar(50) ) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- do cleanup
 0: jdbc:luciddb:> drop view "T2";

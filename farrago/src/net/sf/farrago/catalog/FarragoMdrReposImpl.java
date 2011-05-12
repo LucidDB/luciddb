@@ -86,6 +86,8 @@ public class FarragoMdrReposImpl
      */
     private final String currentConfigMofId;
 
+    protected FarragoMemFactory memFactory;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -145,9 +147,20 @@ public class FarragoMdrReposImpl
 
         // Create special in-memory storage for transient objects
         try {
-            transientFarragoPackage = createTransientPackage();
+            Properties storeProps = modelLoader.getStorageProperties();
+            String storeType =
+                storeProps.getProperty(MDRepositoryFactory.ENKI_IMPL_TYPE);
+            if (MdrProvider.NETBEANS_MDR.toString().equals(storeType)) {
+                // Netbeans branch
+                memFactory = new FarragoMemFactory(getModelGraph());
+                transientFarragoPackage = memFactory.getFarragoPackage();
+            } else {
+                // Enki/Hibernate branch
+                transientFarragoPackage = createTransientPackage();
+            }
             fennelPackage = transientFarragoPackage.getFem().getFennel();
         } catch (Throwable ex) {
+            ex.printStackTrace();
             throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
         } finally {
             // End session started in modelLoader.loadModel
@@ -184,7 +197,7 @@ public class FarragoMdrReposImpl
                 "FarragoTransientCatalog",
                 metaPackage);
     }
-    
+
     private void checkModelTimestamp(String extentName)
     {
         String prefix = "TIMESTAMP = ";
@@ -261,6 +274,7 @@ public class FarragoMdrReposImpl
             transientFarragoPackage.refDelete();
             transientFarragoPackage = null;
         }
+        memFactory = null;
 
         modelLoader.close();
         modelLoader = null;

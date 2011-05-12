@@ -88,6 +88,12 @@ public class FarragoReleaseProperties
         new IntegerProperty(this, "product.version.point", 0);
 
     /**
+     * Build number for the product.
+     */
+    public final IntegerProperty productBuildNumber =
+        new IntegerProperty(this, "product.build.number", 0);
+
+    /**
      * Name of the JDBC driver as reported via java.sql.DatabaseMetaData.
      */
     public final StringProperty jdbcDriverName =
@@ -132,6 +138,26 @@ public class FarragoReleaseProperties
         new IntegerProperty(this, "jdbc.url.http.port.default", 8033);
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Constructs a dot-separated version string for the product, built from
+     * the major, minor and point versions, and if defined, the build number.
+     * @return String containing major.minor.point or major.minor.point.build
+     */
+    public String getVersionString()
+    {
+        StringBuilder result = new StringBuilder();
+        result.append(productVersionMajor.get());
+        result.append(".");
+        result.append(productVersionMinor.get());
+        result.append(".");
+        result.append(productVersionPoint.get());
+        if (productBuildNumber.get() > 0) {
+            result.append(".");
+            result.append(productBuildNumber.get());
+        }
+        return result.toString();
+    }
 
     /**
      * @return the {@link org.eigenbase.util.Glossary#SingletonPattern

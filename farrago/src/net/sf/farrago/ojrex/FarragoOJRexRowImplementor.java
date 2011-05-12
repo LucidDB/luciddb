@@ -58,7 +58,9 @@ public class FarragoOJRexRowImplementor
         Variable variable = translator.createScratchVariable(rowType);
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < operands.length; ++i) {
-            StatementList methodBody = translator.getSubStmtList(i);
+            final FarragoRexToOJTranslator.Frame methodBodyFrame =
+                translator.getSubFrame(i);
+            final StatementList methodBody = methodBodyFrame.stmtList;
             final RelDataTypeField field = fields[i];
             translator.convertCastOrAssignmentWithStmtList(
                 methodBody,

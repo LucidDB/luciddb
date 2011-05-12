@@ -5,7 +5,7 @@ set schema 'functest';
 set path 'functest';
 
 create or replace jar functest.myApplib
-library 'file:${FARRAGO_HOME}/plugin/eigenbase-applib.jar'
+library 'file:${FARRAGO_HOME}/plugin/applib.jar'
 options(0);
 
 create or replace function functest.get_var(
@@ -16,7 +16,7 @@ language java
 deterministic
 not dynamic_function
 no sql
-external name 'functest.myApplib:org.eigenbase.applib.variable.AppVarApi.executeGet';
+external name 'functest.myApplib:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 
 -- use xmlattr format so we can distinguish nulls from blanks
 !set outputformat xmlattr
@@ -50,7 +50,7 @@ language java
 deterministic
 dynamic_function
 no sql
-external name 'functest.myApplib:org.eigenbase.applib.variable.AppVarApi.executeGet';
+external name 'functest.myApplib:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 
 -- get values again with dynamic_function specified
 values (functest.get_var('ctx', 'var1'));

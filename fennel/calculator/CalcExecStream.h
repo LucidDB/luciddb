@@ -90,6 +90,12 @@ class FENNEL_CALCULATOR_EXPORT CalcExecStream
      */
     bool stopOnCalcError;
 
+protected:
+    /**
+     * To give subclasses access to the last row written.
+     */
+    PConstBuffer lastInBuffer;
+
 public:
     virtual void prepare(CalcExecStreamParams const &params);
     virtual void open(bool restart);

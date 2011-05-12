@@ -44,6 +44,11 @@ public class FarragoSessionRuntimeParams
     //~ Instance fields --------------------------------------------------------
 
     /**
+     * Embracing statement context
+     */
+    public FarragoSessionStmtContext stmtContext;
+
+    /**
      * Controlling session.
      */
     public FarragoSession session;

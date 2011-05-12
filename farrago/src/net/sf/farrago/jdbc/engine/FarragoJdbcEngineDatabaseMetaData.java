@@ -143,12 +143,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         throws SQLException
     {
         FarragoReleaseProperties props = FarragoReleaseProperties.instance();
-        return ""
-            + props.productVersionMajor.get()
-            + "."
-            + props.productVersionMinor.get()
-            + "."
-            + props.productVersionPoint.get();
+        return props.getVersionString();
     }
 
     // implement DatabaseMetaData

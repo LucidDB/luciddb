@@ -1,0 +1,388 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl"
+ href="http://eigenbase.sourceforge.net/resgen/Resource.xsl" ?>
+<!-- 
+  $Id$
+  LucidDB is a DBMS optimized for business intelligence.
+  Copyright (C) 2005-2007 The Eigenbase Project
+  Copyright (C) 2005-2007 LucidEra, Inc.
+  Portions Copyright (C) 2003-2007 John V. Sichi
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later Eigenbase-approved version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+  -->
+
+<resourceBundle
+  static="false"
+  locale="en_US"
+  exceptionClassName="com.lucidera.luciddb.applib.resource.ApplibException">
+
+<!-- ====================================================================== -->
+ General Notes:
+ 1) Do not quote object names in this file.  Instead, make a
+    call to getLocalizedObjectName.
+ 2) Where possible, do not include class names such as table.  Again,
+    make a call to getLocalizedObjectName.
+ 3) Do not start messages with substitutions which may have lower-case
+    replacements.  (At least not in English.)
+ 4) TODO:  link to style guide
+<!-- ====================================================================== -->
+
+<exception id="800000" name="TimeDimInvalidStartDate">
+<text>Invalid start date</text>
+</exception>
+
+<exception id="800001" name="TimeDimInvalidFiscalStartMonth">
+<text>Fiscal start month should be a value between 1 and 12</text>
+</exception>
+
+<exception id="800010" name="TimeDimInvalidEndDate">
+<text>Invalid end date</text>
+  </exception>
+
+<exception id="800020" name="TimeDimStartDayMustPrecedeEndDay">
+<text>Start day must precede end day</text>
+</exception>
+
+<exception id="800030" name="TimeDimInvalidDayOfWeek">
+<text>Day of week must be between 0 and 6</text>
+</exception>
+
+<exception id="800040" name="TimeDimInvalidMonthOfYear">
+<text>Month of year must be between 0 and 11</text>
+</exception>
+
+<exception id="900000" name="ReplacedCharSpecifyOneChar">
+<text>Replaced character must be a single character</text>
+</exception>
+
+<exception id="900010" name="ReplacementCharSpecifyOneChar">
+<text>Replacement character must be a single character</text>
+</exception>
+
+<exception id="900020" name="InvalidYearFmtMask">
+<text>Invalid format mask for year</text>
+</exception>
+
+<exception id="900030" name="InvalidMonthFmtMask">
+<text>Invalid format mask for month</text>
+</exception>
+
+<exception id="900030" name="InvalidDayFmtMask">
+<text>Invalid format mask for day</text>
+</exception>
+
+<exception id="900040" name="InvalidMonthInputString">
+<text>Invalid month input string</text>
+</exception>
+
+<exception id="900050" name="InvalidDigitInputString">
+<text>Invalid digit input string: caMask={0} caIn={1}</text>
+</exception>
+
+<exception id="900060" name="InvalidPhoneNumber">
+<text>This is not a phone number</text>
+</exception>
+
+<exception id="900070" name="IncompletePhoneNumber">
+<text>The phone number is incomplete</text>
+</exception>
+
+<exception id="900080" name="InvalidNaPhoneNumber">
+<text>Incorrect North American phone number</text>
+</exception>
+
+<exception id="900090" name="PhoneCountryCodeSpecifyDigits">
+<text>Country code must consist of digits only</text>
+</exception>
+
+<exception id="900100" name="PhoneAreaCodeSpecifyDigits">
+<text>Area code must consist of digits only</text>
+</exception>
+
+<exception id="900110" name="PhoneLocalNumberSpecifyDigits">
+<text>Local number must consist of digits only</text>
+</exception>
+
+<exception id="900120" name="PhoneExtSpecifyDigits">
+<text>Phone extension must consist of digits only</text>
+</exception>
+
+<exception id="900130" name="PhoneNumberAndMaskMismatch">
+<text>Input phone number must contain equal number of digits as mask</text>
+</exception>
+
+<exception id="900140" name="InvalidPhoneOutputFmt">
+<text>Invalid phone output format</text>
+</exception>
+
+<exception id="900150" name="InvalidFirstMonth">
+<text>First month must be between 1 and 12</text>
+</exception>
+
+<exception id="900160" name="LenSpecifyNonNegative">
+<text>Length must be non-negative</text>
+</exception>
+
+<exception id="900170" name="MinNotSmallerThanMax">
+<text>Min value must be less than max value</text>
+</exception> 
+
+<exception id="900180" name="RepSpecifyNonNegative">
+<text>Repetition amount must be non-negative</text>
+</exception>
+
+<exception id="900190" name="DayNumOverallParseError">
+<text>toDayNumberOverall: internal parse error</text>
+</exception>
+
+<exception id="900200" name="CleanPhoneDigitUnmappable">
+<text>CleanPhoneUdf: Character not mappable to a digit</text>
+</exception>
+
+<exception id="900210" name="InStrInvalidArgument">
+<text>InStrUdf: invalid argument: inStr={0} subStr={1} startPos={2} nthAppearance={3}</text>
+</exception>
+
+<exception id="900220" name="AppVarWriteFailed">
+<text>Application variable persistence error while writing context ''{0}'', variable ''{1}''</text>
+</exception>
+
+<exception id="900225" name="AppVarReadFailed">
+<text>Application variable persistence error while reading context ''{0}'', variable ''{1}''</text>
+</exception>
+
+<exception id="900230" name="AppVarIdRequired">
+<text>Application variable id required for get/set request</text>
+</exception>
+
+<exception id="900240" name="AppVarContextUndefined">
+<text>Application variable context ''{0}'' has not been created</text>
+</exception>
+
+<exception id="900250" name="AppVarUndefined">
+<text>Application variable ''{1}'' has not been created in context ''{0}''</text>
+</exception>
+
+<exception id="900300" name="CannotGetMetaData">
+<text>Cannot get metadata from input table</text>
+</exception>
+
+<exception id="900310" name="WrongNumberInputColumns">
+<text>Input table must have two columns, not ''{0}''</text>
+</exception>
+
+<exception id="900320" name="CannotReadInput">
+<text>Cannot read from input</text>
+</exception>
+
+<exception id="900330" name="NullChild">
+<text>This parent ''{0}'' must have non-null child</text>
+</exception>
+
+<exception id="900340" name="CannotWriteOutput">
+<text>Cannot write to output</text>
+</exception>
+
+<exception id="900345" name="GraphHasCycle">
+<text>Graph has cycle(s) of ''{0}'' vertices; first 20 in loop(s): ''{1}''</text>
+</exception>
+
+<exception id="900350" name="InputOutputColumnError">
+<text>Database access error while getting number of input and output columns</text>
+</exception>
+
+<exception id="900360" name="DatabaseAccessError">
+<text>Database access error ''{0}''</text>
+</exception>
+
+<exception id="900370" name="WriteIoError">
+<text>I/O error while writing to output stream ''{0}''</text>
+</exception>
+
+<exception id="900380" name="InvalidDateString">
+<text>Date format ''{0}'' could not be applied to string ''{1}''</text>
+</exception>
+
+<exception id="900400" name="NoSuchSchema">
+<text>Schema ''{0}'' could not be found</text>
+</exception>
+
+<exception id="900410" name="IllegalTimeUnitIdentifier">
+<text>The string ''{0}'' is not a legal time unit. Legal time units are: ''YEAR'', ''MONTH'', ''WEEK'', ''DAY'', ''HOUR'', ''MINUTE'', ''SECOND'', ''MILLISECOND''</text>
+</exception>
+
+<exception id="900411" name="IdOrEffectiveFromTimestampsNotOrdered">
+<text>To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order.</text>
+</exception>
+
+<exception id="900420" name="ParameterMustBeEitherRestrictOrCascade">
+<text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
+</exception>
+
+<exception id="900430" name="InvalidCheckColumns">
+<text>Check constraint column(s) could not be found or are not of type VARCHAR: {0}</text>
+</exception>
+
+<exception id="900431" name="RowConstraintsFatal">
+<text>Row constraint UDX failed with FATAL error code: {0}
+Message: {1}</text>
+</exception>
+
+<exception id="900432" name="MessageCatalogLoadFailed">
+<text>Failed to load message catalog jar ''{0}'', resource bundle ''{1}'' at ''{2}''
+Message: {3}</text>
+</exception>
+
+<exception id="900433" name="NoSuchMessageCatalogJar">
+<text>Message Catalog Jar ''{0}'' could not be found at ''{1}''</text>
+</exception>
+
+<exception id="900500" name="InputMustBeSingleColumn">
+<text>Input cursor must be one single column.</text>
+</exception>
+
+<exception id="900501" name="SplitColNameMustBeSingleColumn">
+<text>Can only split a single column at a time.</text>
+</exception>
+
+<exception id="900510" name="SeparatorMustBeOneCharacter">
+<text>Split separator must be a single character.</text>
+</exception>
+
+<exception id="900511" name="EscapeCharMustBeOneCharacter">
+<text>Escape symbol must be a single character.</text>
+</exception>
+
+<exception id="900520" name="IncrementByMustNotBeZero">
+<text>INCREMENT_BY cannot be zero (but it was).</text>
+</exception>
+
+<exception id="900600" name="MondrianReplicationFailed">
+<text>Failed while replicating Mondrian schema.</text>
+</exception>
+
+<exception id="900610" name="SqlStatementExecutionFailed">
+<text>Failed while executing SQL statement:  [{0}]</text>
+</exception>
+
+<exception id="900620" name="MondrianSchemaMismatch">
+<text>Schema qualifier {0} specified for table {1} does not match local_schema_name parameter {2}</text>
+</exception>
+
+<exception id="900630" name="InputRowsNotSorted">
+<text>Input cursor must be sorted by the following column(s) in ascending order: [{0}]; out of order column value(s): [{1}] </text>
+</exception>
+
+<exception id="900631" name="InvalidColumnDatatype">
+<text>Input column(s) [{0}] have invalid datatype; Datatype(s) should be: [{1}]</text>
+</exception>
+
+<exception id="900640" name="PenValDesignatedColsMustBeTwoCols">
+<text>DESIGNATED_VALUE_AND_TIMESTAMP must have two columns</text>
+</exception>
+
+<exception id="900641" name="PenValDesignatedTsColInvalidType">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must have TIMESTAMP datatype; column name: [{0}]</text>
+</exception>
+
+<exception id="900642" name="PenValGroupColsMustNotContainDesCols">
+<text>GROUPING_COLUMNS must not contain any of the columns in DESIGNATED_VALUE_AND_TIMESTAMP</text>
+</exception>
+
+<exception id="900643" name="PenValTsColMustNotBeNull">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must not contain NULL values; column name [{0}]</text>
+</exception>
+
+<exception id="900644" name="PenValIncomparableKeys">
+<text>Key values must be the same size to be compared</text>
+</exception>
+
+<exception id="900650" name="CVIInvalidTsCol">
+<text>TIMESTAMP_COLUMN must be one column and of type TIMESTAMP</text>
+</exception>
+
+<exception id="900651" name="CVIInvalidInputTable">
+<text>Input table must consist of the PARTITIONING_COLUMNS, a TIMESTAMP_COLUMN, and one clumping column</text>
+</exception>
+
+<exception id="900652" name="CVIInOutNumColsMismatch">
+<text>Number of columns of output table must be five plus number of columns of input table</text>
+</exception>
+
+<exception id="900653" name="CVITsInPartition">
+<text>Timestamp column must not be in partition columns</text>
+</exception>
+
+<exception id="900654" name="CVITsMustNotBeNull">
+<text>Timestamp column must not be NULL</text>
+</exception>
+
+<exception id="900655" name="EmptyInput">
+<text>Input contains no rows</text>
+</exception>
+
+<exception id="900655" name="MoreThanOneRow">
+<text>Input contains more than one row</text>
+</exception>
+
+<!-- ====================================================================== -->
+ Messages
+<!-- ====================================================================== -->
+
+<message name="PhoneLocalCountryCode">
+<text>1</text>
+</message>
+
+<message name="PhoneLocalAreaCode">
+<text>650</text>
+</message>
+
+<message name="PhoneLocalNumberLength">
+<text>7</text>
+</message>
+
+<message name="PhoneOutsideLineAccess">
+<text></text>
+</message>
+
+<message name="PhoneDomesticDialCode">
+<text>1</text>
+</message>
+
+<message name="PhoneInternationalDialCode">
+<text>011</text>
+</message>
+
+<message name="CalendarQuarter">
+<text>Q{0}CY{1}</text>
+</message>
+
+<message name="FiscalYearQuarter">
+<text>Q{0}FY{1}</text>
+</message>
+
+<message name="LocalDateFormat">
+<text>yyyy-MM-dd</text>
+</message>
+
+<message name="UtcDateFormat">
+<text>yyyy-MM-dd</text>
+</message>
+
+<!-- End of last error section ============================================ -->
+
+</resourceBundle>
+
+<!-- End FarragoResource.xml -->

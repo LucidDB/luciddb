@@ -10,7 +10,7 @@
 <!ENTITY open_default.build.home     "/home/cruise/open">
 <!ENTITY open_integration.build.home "/home/cruise/open/bootstrap/build">
 
-<!ENTITY buildresultsbase "http://cruisehost.eigenbase.org/cruisecontrol/buildresults">
+<!ENTITY buildresultsbase "http://cruisehost.eigenbase.org:8081/cruisecontrol/buildresults">
 <!ENTITY mailhost         "mail.coastside.net">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Eigenbase Build Monkey">
@@ -23,11 +23,11 @@
 <!ENTITY emailmapper      "/home/cruise/open/bootstrap/p4email.txt">
 
 <!ENTITY scp_user         "cruise">
-<!ENTITY scp_host         "kerastion.eigenbase.org">
+<!ENTITY scp_host         "apoptosis.lucidera.com">
 <!ENTITY scp_options      "">
 <!ENTITY scp_filesep      "/">
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
-<!ENTITY rsync_dest       "cruise@kerastion.eigenbase.org:web/artifacts">
+<!ENTITY rsync_dest       "cruise@apoptosis.lucidera.com:web/artifacts">
 
 <!ENTITY build_interval   "3600">
 
@@ -43,6 +43,7 @@
 
 
 <cruisecontrol>
+	&saffronProject;
 	&fennelProject;
 	&farragoProject;
 </cruisecontrol>

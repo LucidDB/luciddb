@@ -255,7 +255,7 @@ create or replace view columns_view_internal as
     left outer join
         sys_cwm."Core"."Expression" e
     on 
-        e."mofId" = c."initialValue";
+        c."initialValue" = e."mofId";
 
 create or replace view columns_view as
     select 
@@ -399,7 +399,7 @@ create or replace view procedures_view_internal as
     inner join
         sys_cwm."Behavioral"."BehavioralFeature" r
     on
-        s."mofId" = r."namespace"
+        r."namespace" = s."mofId"
 ;
 
 -- TODO:  other values for procedure_type once we support procedures
@@ -415,10 +415,10 @@ create or replace view procedures_view as
         null_identifier() as reserved3,
         null_remarks() as remarks,
         cast(1 as smallint) as procedure_type
-    from
-        table(filter_user_visible_objects(
-          cursor(select * from procedures_view_internal),
-          row("mofId", "mofClassName"))) p
+    from procedures_view_internal p
+--        table(filter_user_visible_objects(
+--          cursor(select * from procedures_view_internal),
+--          row("mofId", "mofClassName"))) p
 ;
 grant select on procedures_view to public;
 

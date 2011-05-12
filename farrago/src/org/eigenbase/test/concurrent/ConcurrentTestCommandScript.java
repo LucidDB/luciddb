@@ -549,6 +549,12 @@ public class ConcurrentTestCommandScript
     public void printResults(BufferedWriter out) throws IOException
     {
         final Map<Integer, String[]> results = collectResults();
+        if (verbose) {
+            out.write(
+                String.format(
+                    "script execution started at %tc (%d)%n",
+                    new Timestamp(scriptStartTime), scriptStartTime));
+        }
         printThreadResults(out, results.get(SETUP_THREAD_ID));
         for (Integer id : results.keySet()) {
             if (id < 0) {
@@ -1172,12 +1178,11 @@ public class ConcurrentTestCommandScript
                 order++;
 
             } else if (FETCH.equals(command)) {
-                trace("@fetch");
-                String millisStr =
-                    vars.expand(line.substring(FETCH_LEN).trim());
+                String arg = vars.expand(line.substring(FETCH_LEN).trim());
+                trace("@fetch", arg);
                 long millis = 0L;
-                if (millisStr.length() > 0) {
-                    millis = Long.parseLong(millisStr);
+                if (arg.length() > 0) {
+                    millis = Long.parseLong(arg);
                     assert (millis >= 0L) : "Fetch timeout must be >= 0";
                 }
 
@@ -1513,7 +1518,7 @@ public class ConcurrentTestCommandScript
 
     // Matches shell wilcards and other special characters: when a command
     // contains some of these, it needs a shell to run it.
-    private final Pattern shellWildcardPattern = Pattern.compile("[*?$]");
+    private final Pattern shellWildcardPattern = Pattern.compile("[*?$|<>&]");
 
     // REVIEW mb 2/24/09 (Mardi Gras) Should this have a timeout?
     private class ShellCommand extends AbstractCommand
@@ -1595,8 +1600,7 @@ public class ConcurrentTestCommandScript
         {
             assert (timeout >= 0);
             if (timeout > 0) {
-                // TODO: add support for millisecond timeouts to
-                // FarragoJdbcEngineStatement
+                // FIX: call setQueryTimeoutMillis() when available.
                 assert (timeout >= 1000) : "timeout too short";
                 int t = (int) (timeout / 1000);
                 stmt.setQueryTimeout(t);
@@ -1987,6 +1991,13 @@ public class ConcurrentTestCommandScript
                 if (nth > 0) {
                     printSeparator();
                     out.println();
+                }
+                if (verbose) {
+                    out.printf(
+                        "fetch started at %tc %d, %s at %tc %d%n",
+                        startTime, startTime,
+                        (timedOut ? "timeout" : "eos"),
+                        endTime, endTime);
                 }
                 if (totaled) {
                     long dt = endTime - startTime;

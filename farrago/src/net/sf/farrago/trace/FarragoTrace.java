@@ -199,6 +199,8 @@ public abstract class FarragoTrace
      * The tracer "net.sf.farrago.dynamic" controls whether dynamically
      * generated Java code is preserved for debugging (otherwise it is deleted
      * automatically).
+     *
+     * @see org.eigenbase.trace.EigenbaseTrace#getDynamicHandler()
      */
     public static Logger getDynamicTracer()
     {

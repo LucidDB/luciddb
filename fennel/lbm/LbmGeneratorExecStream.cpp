@@ -718,7 +718,7 @@ PBuffer LbmGeneratorExecStream::flushBuffer(LcsRid addRid)
                 // to add that rid (or one that follows and is within the
                 // same rid range) into that entry
                 if (bitmapTable[flushIdx].pBitmap->inRange(addRid)) {
-                    flushIdx = ++flushIdx % nBitmapEntries;
+                    flushIdx = (flushIdx + 1) % nBitmapEntries;
                     continue;
                 }
                 if (!flushEntry(flushIdx)) {
@@ -728,10 +728,10 @@ PBuffer LbmGeneratorExecStream::flushBuffer(LcsRid addRid)
             bitmapTable[flushIdx].bufferPtr = NULL;
             break;
         }
-        flushIdx = ++flushIdx % nBitmapEntries;
+        flushIdx = (flushIdx + 1) % nBitmapEntries;
     } while (true);
 
-    flushIdx = ++flushIdx % nBitmapEntries;
+    flushIdx = (flushIdx + 1) % nBitmapEntries;
     return retPtr;
 }
 

@@ -540,15 +540,9 @@ public class FarragoJdbcTest
         throws Exception
     {
         // cleanup
-        String sql = "drop schema cancel_test cascade";
-        try {
-            stmt.execute(sql);
-        } catch (SQLException ex) {
-            // ignore
-            Util.swallow(ex, tracer);
-        }
+        quietlyDropSchema("cancel_test");
 
-        sql = "create schema cancel_test";
+        String sql = "create schema cancel_test";
         stmt.execute(sql);
         sql =
             "create foreign table cancel_test.m(id int not null) "
@@ -604,14 +598,9 @@ public class FarragoJdbcTest
         throws Exception
     {
         // cleanup
-        String sql = "drop schema cancel_test cascade";
-        try {
-            stmt.execute(sql);
-        } catch (SQLException ex) {
-            // ignore
-        }
+        quietlyDropSchema("cancel_test");
 
-        sql = "create schema cancel_test";
+        String sql = "create schema cancel_test";
         stmt.execute(sql);
         sql =
             "create function cancel_test.ramp(n int) returns table(i int) "
@@ -708,9 +697,13 @@ public class FarragoJdbcTest
                             + " will cancel " + stmt);
                         stmt.cancel();
                     } catch (SQLException ex) {
-                        Assert.fail(
+                        // if the statement already completed, that's ok too
+                        // the test might simply cancel too late
+                        Assert.assertEquals(
                             "Cancel request failed:  "
-                            + ex.getMessage());
+                            + ex.getMessage(),
+                            "statement closed",
+                            ex.getMessage());
                     }
                 }
             };
@@ -3573,7 +3566,7 @@ public class FarragoJdbcTest
 
     protected void quietlyDropSchema(String schemaName)
     {
-        String sql = "drop schema "
+       String sql = "drop schema "
             + schemaName
             + " cascade";
         try {

@@ -432,4 +432,24 @@ Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP
 | true    |
 +---------+
 > 
+> -- Tests monotonicity evaluation for x * interval constant.
+> select age, age * interval '1' second, age * interval '1' year from sales.emps;
++------+---------+---------+
+| AGE  | EXPR$1  | EXPR$2  |
++------+---------+---------+
+| 25   | +25     | +25     |
+| 80   | +80     | +80     |
+| 50   | +50     | +50     |
+|      |         |         |
++------+---------+---------+
+> select age, interval '1' second * age, interval '1' year * age from sales.emps;
++------+---------+---------+
+| AGE  | EXPR$1  | EXPR$2  |
++------+---------+---------+
+| 25   | +25     | +25     |
+| 80   | +80     | +80     |
+| 50   | +50     | +50     |
+|      |         |         |
++------+---------+---------+
+> 
 > !quit

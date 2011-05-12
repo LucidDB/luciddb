@@ -4398,11 +4398,12 @@ unitTestPointerCache()
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         double d = outF * 3.3 + 1;
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF++].pData))) - d)
+            output[outF].pData))) - d)
             > 0.000001)
         {
             fail("pointercache2", __LINE__);
         }
+        ++outF;
     }
 
     // OK, now be mean and yank the literals right out from under
@@ -4432,11 +4433,12 @@ unitTestPointerCache()
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         double d = outF * 3.3 + 1;
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(
-            output[outF++].pData)))
+            output[outF].pData)))
              - d) > 0.000001)
         {
             fail("pointercache4", __LINE__);
         }
+        ++outF;
     }
 
     cout << "Calculator Warnings: " << c.warnings() << endl;

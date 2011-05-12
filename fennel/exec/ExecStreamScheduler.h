@@ -28,6 +28,7 @@
 #include "fennel/common/TraceSource.h"
 
 #include <boost/utility.hpp>
+#include <ostream>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -114,12 +115,20 @@ public:
     virtual ~ExecStreamScheduler();
 
     /**
-     * Traces the contents of a stream buffer.
+     * Print the contents of a stream buffer, one row per line.
+     *
+     * @param os print to this ostream
+     * @param bufAccessor accessor for stream buffer
+     */
+    virtual void printStreamBufferContents(
+        std::ostream& os,
+        ExecStreamBufAccessor &bufAccessor);
+
+    /**
+     * Trace the contents of a stream buffer.
      *
      * @param stream stream whose buffer is being traced
-     *
      * @param bufAccessor accessor for stream buffer
-     *
      * @param traceLevel level at which contents should be traced
      */
     virtual void traceStreamBufferContents(

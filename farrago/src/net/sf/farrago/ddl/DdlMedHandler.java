@@ -92,12 +92,14 @@ public class DdlMedHandler
         if (columnList.isEmpty()) {
             // derive column information
             RelDataType rowType = medColumnSet.getRowType();
-            RelDataTypeField [] fields = rowType.getFields();
-            for (int i = 0; i < fields.length; ++i) {
-                FemStoredColumn column = repos.newFemStoredColumn();
-                columnList.add(column);
-                convertFieldToCwmColumn(fields[i], column, columnSet);
-                validateAttribute(column);
+            if (rowType != null) {
+                RelDataTypeField [] fields = rowType.getFields();
+                for (int i = 0; i < fields.length; ++i) {
+                    FemStoredColumn column = repos.newFemStoredColumn();
+                    columnList.add(column);
+                    convertFieldToCwmColumn(fields[i], column, columnSet);
+                    validateAttribute(column);
+                }
             }
         }
 

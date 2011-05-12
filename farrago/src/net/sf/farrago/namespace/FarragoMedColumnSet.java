@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.validate.*;
 
 
@@ -39,6 +40,37 @@ public interface FarragoMedColumnSet
     extends RelOptTable,
         SqlValidatorTable
 {
+    /**
+     * Returns the fully-qualified name by which this ColumnSet is known within
+     * the Farrago system.
+     *
+     * @return the fully-qualified name by which this ColumnSet is known by
+     *     within the Farrago system
+     */
+    public String [] getLocalName();
+
+    /**
+     * Returns the fully-qualified name by which this ColumnSet is known on the
+     * foreign server.
+     *
+     * @return the fully-qualified name by which this ColumnSet is known on the
+     *     foreign server
+     */
+    public String [] getForeignName();
+
+    /**
+     * Returns the name of this ColumnSet.
+     *
+     * @return the name of this ColumnSet
+     */
+    public String getName();
+
+    /**
+     * Sets the row type of this ColumnSet.
+     *
+     * @param rowType Row type
+     */
+    void setRowType(RelDataType rowType);
 }
 
 // End FarragoMedColumnSet.java
