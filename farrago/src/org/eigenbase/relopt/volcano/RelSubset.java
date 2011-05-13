@@ -259,10 +259,6 @@ public class RelSubset
             Set<String> variablesUsed = RelOptUtil.getVariablesUsed(rel);
             assert set.variablesUsed.containsAll(variablesUsed);
         }
-        propagateCostImprovements(
-            (VolcanoPlanner)(rel.getCluster().getPlanner()),
-            rel,
-            new HashSet<RelSubset>());
     }
 
     /**

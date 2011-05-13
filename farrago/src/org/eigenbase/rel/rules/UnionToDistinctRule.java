@@ -58,7 +58,7 @@ public class UnionToDistinctRule
         UnionRel unionAll =
             new UnionRel(
                 union.getCluster(),
-                union.getInputs(),
+                union.getInputs().clone(),
                 true);
         call.transformTo(RelOptUtil.createDistinctRel(unionAll));
     }
