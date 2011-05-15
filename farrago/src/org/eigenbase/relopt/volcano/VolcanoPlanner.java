@@ -644,9 +644,9 @@ SUBSET_LOOP:
         }
         final RelSubset subset = registerImpl(rel, set);
 
-//        if (tracer.isLoggable(Level.FINE)) {
+        if (tracer.isLoggable(Level.FINE)) {
             validate();
-//        }
+        }
 
         return subset;
     }
