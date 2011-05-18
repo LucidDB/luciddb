@@ -50,7 +50,7 @@ import org.eigenbase.sql.fun.*;
 public class FirewaterColumnSet extends MedJdbcColumnSet
 {
     private final FirewaterPartitioning partitioning;
-    public final String dm_key;
+    private final String partition_column;
 
     public FirewaterColumnSet(
         MedJdbcNameDirectory directory,
@@ -60,14 +60,14 @@ public class FirewaterColumnSet extends MedJdbcColumnSet
         SqlDialect dialect,
         RelDataType rowType,
         FirewaterPartitioning partitioning,
-        String dm_key)
+        String partition_column)
     {
         super(
             directory, foreignName, localName, select, dialect,
             rowType, rowType, rowType);
 
         this.partitioning = partitioning;
-        this.dm_key = dm_key;
+        this.partition_column = partition_column;
     }
 
     // implement RelOptTable

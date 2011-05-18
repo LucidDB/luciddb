@@ -60,8 +60,8 @@ public class FirewaterDataServer
     public static final String DEFAULT_PARTITIONING =
         FirewaterPartitioning.HASH.toString();
 
-    public static final String PROP_DM_KEY = "DM_KEY";
-    public static final String DEFAULT_DM_KEY = "";
+    public static final String PROP_PARTITION_COLUMN = "PARTITION_COLUMN";
+    public static final String DEFAULT_PARTITION_COLUMN = "";
 
     private static final Logger tracer
         = FarragoTrace.getClassTracer(FirewaterDataServer.class);
@@ -112,7 +112,8 @@ public class FirewaterDataServer
             throw FirewaterSessionFactory.res.InvalidPartitioning.ex(
                 partitioningString);
         }
-        String dm_key = tableProps.getProperty(PROP_DM_KEY, DEFAULT_DM_KEY);
+        String partition_column = tableProps.getProperty(
+            PROP_PARTITION_COLUMN, DEFAULT_PARTITION_COLUMN);
         return new FirewaterColumnSet(
             directory,
             localName,
@@ -121,7 +122,7 @@ public class FirewaterDataServer
             dialect,
             rowType,
             partitioning,
-            dm_key);
+            partition_column);
     }
 
     // implement FarragoMedLocalDataServer

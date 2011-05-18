@@ -70,15 +70,15 @@ public class FirewaterPushDistinctRule extends RelOptRule {
         tracer.info("ONMATCH CALLED\n\n");
         String count_key = agg.getChild().getRowType().getFields()[0].getName();
 
-        boolean is_dm_key = false;
-        // TODO: figure out how to get dm key from node, either by
+        boolean is_partition_column = false;
+        // TODO: figure out how to get partition column from node, either by
         // getting a column set, server, or table props, and comparing
         // it to count_key
         // commented code below to help me remember later.
         /*MedJdbcQueryRel otherRel =
             (MedJdbcQueryRel) call.rels[2];
         MedJdbcColumnSet columnSet = otherRel.getColumnSet();
-        // here we'd get columnSet.dm_key;
+        // here we'd get columnSet.partition_column;
         MedJdbcDataServer server = columnSet.getDirectory().getServer();
         FarragoRepos repos =
             FarragoRelUtil.getPreparingStmt(tableRel).getRepos();
@@ -87,7 +87,7 @@ public class FirewaterPushDistinctRule extends RelOptRule {
         //Properties tableProps =
         //    FarragoCatalogUtil.getStorageOptionsAsProperties(repos, (FemLocalTable)table);
 
-        if (!is_dm_key)
+        if (!is_partition_column)
             return;
 
         /*
@@ -104,7 +104,6 @@ public class FirewaterPushDistinctRule extends RelOptRule {
                 tracer.info(f.getName() + ";" + f.getIndex() + ";");
         }
         */
-        tracer.info("Done, converting");
 
         RelNode fennelInput = mergeTraitsAndConvert(agg.getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
