@@ -29,7 +29,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
-
 /**
  * Workspace for constructing a {@link RexProgram}.
  *
@@ -802,7 +801,9 @@ public class RexProgramBuilder
                 ref,
                 outputFields[i].getName());
         }
-        return progBuilder.getProgram(normalize);
+        RexProgram mergedProg = progBuilder.getProgram(normalize);
+        assert mergedProg.isValid(true);
+        return mergedProg;
     }
 
     private List<RexLocalRef> registerProjectsAndCondition(RexProgram program)
@@ -826,6 +827,7 @@ public class RexProgramBuilder
         if (topCondition != null) {
             final RexNode topExpr = exprList.get(topCondition.getIndex());
             final RexLocalRef expanded = (RexLocalRef) topExpr.accept(shuttle);
+
             addCondition(registerInput(expanded));
         }
         return projectRefList;
