@@ -1152,4 +1152,23 @@
 > reads sql data
 > external name 'applib.applibJar:org.eigenbase.applib.util.CreateTbFromSelectStmtUdp.execute';
 > 
+> create or replace procedure applib.execute_script(
+>     engine_name varchar(255), 
+>     script varchar(65535))
+> language java
+> parameter style java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdp';
+> 
+> create or replace function applib.get_scripting_engines()
+> returns table(script_engine varchar(65535),
+> engine_version varchar(65535),
+> engine_language varchar(65535),
+> language_version varchar(65535),
+> engine_alias varchar(65535))
+> language java
+> parameter style system defined java
+> no sql
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.getScriptingEngines';
+> 
 > !quit
