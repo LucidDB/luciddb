@@ -377,6 +377,7 @@ ${farrago.test.jvmargs}
   <path id="farrago.3p.nojdbc.classpath">
     <fileset dir="${enki.dir}" includes="*.jar">
       <exclude name="**/commons-dbcp-1.2.1.jar"/>
+      <exclude name="**/commons-pool-1.3.jar"/>
     </fileset>
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
     <pathelement location="${mdrlibs.dir}/nbmdr.jar"/>
@@ -398,11 +399,11 @@ ${farrago.test.jvmargs}
     <pathelement location="${janino.dir}/commons-compiler-jdk-2.6.2.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
-    <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
+    <pathelement location="${thirdparty.dir}/commons-transaction-1.2.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.5.6.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.4.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
@@ -501,7 +502,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
     <pathelement
-      location="${thirdparty.dir}/jakarta-regexp-1.4.jar"/>
+      location="${thirdparty.dir}/jakarta-regexp-1.5.jar"/>
     <pathelement
       location="${thirdparty.dir}/xmlbeans/lib/xbean.jar"/>
     <pathelement
