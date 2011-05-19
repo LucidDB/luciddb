@@ -1171,4 +1171,58 @@
 > no sql
 > external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.getScriptingEngines';
 > 
+> -- executes parameter-less function "func_name" with String return type.
+> create or replace function applib.execute_function(
+>     engine_name varchar(255), 
+>     script varchar(65535),
+>     func_name varchar(255))
+> returns varchar(65535)
+> language java
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> 
+> -- executes default function "execute"
+> create or replace function applib.execute_function(
+>     engine_name varchar(255), 
+>     script varchar(65535))
+> returns varchar(65535)
+> language java
+> specific execute_function
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> 
+> -- executes an object/class method with no params, returns String
+> create or replace function applib.execute_method(
+>     engine_name varchar(255), 
+>     script varchar(65535),
+>     obj_name varchar(255),
+>     method_name varchar(255))
+> returns varchar(65535)
+> language java
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
+> 
+> -- procedure to create other execute_function-style methods in applib
+> create or replace procedure applib.make_script_udf(func_name varchar(255),
+>   col_names varchar(65535))
+> language java
+> parameter style java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.MakeScriptFuncUdp.execute';
+> 
+> -- executes a script as a UDX, with the resultInserter sent to the script
+> -- able to take on as many columns as the input_set.
+> create or replace function applib.execute_transform(
+>     engine_name varchar(255), 
+>     script varchar(65535),
+>     input_set cursor)
+> returns table(input_set.*)
+> language java
+> parameter style system defined java
+> modifies sql data
+> external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdx';
+> 
 > !quit

@@ -1,21 +1,23 @@
 /*
 // $Id$
 // Applib is a library of SQL-invocable routines for Eigenbase applications.
-// Copyright (C) 2011 Dynamo Business Intelligence Corporation
-
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 2 of the License, or (at your option)
-// any later version approved by Dynamo Business Intelligence Corporation.
-
-// This program is distributed in the hope that it will be useful,
+// Copyright (C) 2011 The Eigenbase Project
+// Copyright (C) 2011 SQLstream, Inc.
+// Copyright (C) 2011 DynamoBI Corporation
+//
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation; either version 2.1 of the License, or (at
+// your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 package org.eigenbase.applib.script;
@@ -67,7 +69,6 @@ public abstract class ExecuteScriptUdr
       String funcName)
     throws SQLException, FileNotFoundException, ScriptException,
                     NoSuchMethodException
-
   {
     ScriptEngine engine = getEngineAndEval(engineName, script);
     Invocable inv = (Invocable) engine;
@@ -105,6 +106,74 @@ public abstract class ExecuteScriptUdr
     Object obj = engine.get(objName);
     Object result = inv.invokeMethod(obj, methodName);
     return (result == null) ? "" : result.toString();
+  }
+
+  /**
+   * Executes a function defined in a given script, passing it an argument
+   * array and returning the result as a string.
+   *
+   * @param engineName - script engine to use
+   * @param script - either a string to evaluate or a filename to load and eval.
+   * @param funcName - function to call.
+   * @param args - arguments passed to function.
+   * @return Returns the result of the function call as a String.
+   */
+  public static String executeGeneralUdf(
+      String engineName,
+      String script,
+      String funcName,
+      Object ...args)
+    throws SQLException, FileNotFoundException, ScriptException,
+                    NoSuchMethodException
+  {
+    ScriptEngine engine = getEngineAndEval(engineName, script);
+    Invocable inv = (Invocable) engine;
+    Object result = inv.invokeFunction(funcName, args);
+    return (result == null) ? "" : result.toString();
+  }
+
+  /**
+   * Executes a script as a UDX, making the two variables inputSet and
+   * resultInserter available globally for the script.
+   *
+   * @param engineName - script engine to use
+   * @param script - either a string to evaluate or a filename to load and eval.
+   * @param inputSet - made available to the script.
+   * @param resultInserter - made available to the script.
+   */
+  public static void executeUdx(
+      String engineName,
+      String script,
+      ResultSet inputSet,
+      PreparedStatement resultInserter)
+    throws SQLException, FileNotFoundException, ScriptException,
+                    NoSuchMethodException
+  {
+    ScriptEngine engine = getScriptEngine(engineName);
+    engine.put("inputSet", inputSet);
+    engine.put("resultInserter", resultInserter);
+    evalScript(engine, script);
+  }
+
+  /**
+   * Gets a list of available scripting engines for LucidDB to use.
+   */
+  public static void getScriptingEngines(PreparedStatement resultInserter)
+    throws SQLException
+  {
+    ScriptEngineManager manager = new ScriptEngineManager();
+    for (ScriptEngineFactory factory : manager.getEngineFactories()) {
+      for (String name : factory.getNames()) {
+        int c = 0;
+        resultInserter.setString(++c, factory.getEngineName());
+        resultInserter.setString(++c, factory.getEngineVersion());
+        resultInserter.setString(++c, factory.getLanguageName());
+        resultInserter.setString(++c, factory.getLanguageVersion());
+        resultInserter.setString(++c, name);
+        resultInserter.executeUpdate();
+      }
+      resultInserter.executeUpdate();
+    }
   }
 
   // Helper functions
@@ -159,24 +228,6 @@ public abstract class ExecuteScriptUdr
       engine.eval(new BufferedReader(new FileReader(file)));
     } else {
       engine.eval(parsed);
-    }
-  }
-
-  public static void getScriptingEngines(PreparedStatement resultInserter)
-    throws SQLException
-  {
-    ScriptEngineManager manager = new ScriptEngineManager();
-    for (ScriptEngineFactory factory : manager.getEngineFactories()) {
-      for (String name : factory.getNames()) {
-        int c = 0;
-        resultInserter.setString(++c, factory.getEngineName());
-        resultInserter.setString(++c, factory.getEngineVersion());
-        resultInserter.setString(++c, factory.getLanguageName());
-        resultInserter.setString(++c, factory.getLanguageVersion());
-        resultInserter.setString(++c, name);
-        resultInserter.executeUpdate();
-      }
-      resultInserter.executeUpdate();
     }
   }
 
