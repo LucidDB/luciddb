@@ -1178,6 +1178,7 @@ create or replace function applib.execute_function(
     func_name varchar(255))
 returns varchar(65535)
 language java
+specific execute_function
 parameter style system defined java
 modifies sql data
 external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
@@ -1188,7 +1189,7 @@ create or replace function applib.execute_function(
     script varchar(65535))
 returns varchar(65535)
 language java
-specific execute_function
+specific execute_function2
 parameter style system defined java
 modifies sql data
 external name 'applib.applibJar:org.eigenbase.applib.script.ExecuteScriptUdr.executeUdf';
