@@ -47,13 +47,14 @@
 			<arg value="-rf"/>
 			<arg value="${integration.build.home}/thirdparty"/>
 		</exec>
+		<mkdir dir="${integration.build.home}/thirdparty"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ${srcdir}/thirdparty to ${integration.build.home}/"/>
+		<echo message="Copying ./thirdparty to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="${srcdir}/thirdparty"/>
-			<arg value="${integration.build.home}"/>
+			<arg value="./thirdparty/"/>
+			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
 

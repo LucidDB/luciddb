@@ -40,7 +40,6 @@ public class RestartableCollectionTupleIter
 
     private final Collection collection;
     private Iterator iterator;
-    private volatile MoreDataListener listener;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -54,23 +53,15 @@ public class RestartableCollectionTupleIter
             collection = Collections.singleton(obj);
         }
         iterator = collection.iterator();
-        listener = null;
     }
 
     public RestartableCollectionTupleIter(Collection collection)
     {
         this.collection = collection;
         iterator = collection.iterator();
-        listener = null;
     }
 
     //~ Methods ----------------------------------------------------------------
-    // implement TupleIter
-    public boolean addListener(MoreDataListener c)
-    {
-        listener = c;
-        return true;
-    }
 
     // implement TupleIter
     public Object fetchNext()
@@ -86,10 +77,6 @@ public class RestartableCollectionTupleIter
     public void restart()
     {
         iterator = collection.iterator();
-        MoreDataListener listener = this.listener;
-        if (listener != null) {
-            listener.onMoreData();
-        }
     }
 
     // implement TupleIter

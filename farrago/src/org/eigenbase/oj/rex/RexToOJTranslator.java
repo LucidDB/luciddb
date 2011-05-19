@@ -42,7 +42,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
-
 /**
  * Converts expressions in logical format ({@link RexNode}) into OpenJava code.
  *

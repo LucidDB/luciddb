@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Id$ -->
 <!-- Delegating build script used by Cruise Control to build saffron. -->
 <project name="build-saffron" default="build">
 	<property environment="env"/>
@@ -50,7 +49,7 @@
 	</target>
 
 	<target name="integration-build"
-	        depends="integration-copy,integration-thirdparty,integration-farrago,integration-fennel">
+	        depends="integration-copy,integration-thirdparty,integration-farrago">
 		<antcall target="do-build">
 			<param name="build.home" location="${integration.build.home}"/>
 		</antcall>
@@ -63,15 +62,15 @@
 	</target>
 
 	<target name="integration-copy" depends="sync">
-		<mkdir dir="${integration.build.home}"/>
 		<delete dir="${integration.build.home}/saffron"/>
+		<mkdir dir="${integration.build.home}/saffron"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ${srcdir}/saffron to ${integration.build.home}/"/>
+		<echo message="Copying ./saffron to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="${srcdir}/saffron"/>
-			<arg value="${integration.build.home}"/>
+			<arg value="./saffron/"/>
+			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
 
@@ -90,20 +89,11 @@
 		</ant>
 	</target>
 
-	<target name="integration-fennel">
-		<!-- just set up a clean fennel: we'll build it ourselves -->
-		<ant antfile="build-fennel.xml" target="integration-copy" inheritAll="false">
-		    <propertyset>
-		        <propertyref prefix="open_"/>
-		    </propertyset>
-		</ant>
-	</target>
-
 
 	<!-- helper targets -->
 	<target name="do-test">
-		<property name="build.home" location="${default.build.home}"/> 
-		<property name="build.type" value="normal.build"/> 
+		<property name="build.home" location="${default.build.home}"/>
+		<property name="build.type" value="normal.build"/>
 		<ant dir="${build.home}/saffron" target="test" inheritAll="false">
 			<property name="${build.type}" value="yes"/>
 		</ant>

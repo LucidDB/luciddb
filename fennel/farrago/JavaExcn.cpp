@@ -48,14 +48,14 @@ jthrowable JavaExcn::getJavaException() const
     return javaException;
 }
 
-void JavaExcn::throwSelf()
-{
-    throw *this;
-}
-
 const std::string& JavaExcn::getStackTrace() const
 {
     return msg;
+}
+
+void JavaExcn::throwSelf()
+{
+    throw *this;
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -658,6 +658,8 @@ public abstract class OJPreparingStmt
         ParseTree parseTree,
         Argument [] arguments)
     {
+        tracer.info("source " + parseTree.toFlattenString());
+        tracer.info("decl " + decl.toFlattenString());
         if (tracer.isLoggable(Level.FINE)) {
             tracer.log(
                 Level.FINE,

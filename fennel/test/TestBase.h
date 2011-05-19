@@ -110,12 +110,6 @@ protected:
     static bool runAll;
 
     /**
-     * Run only the test case of this name.
-     * (static, since set by readParams())
-     */
-    static std::string runSingle;
-
-    /**
      * Collects a group of named test-case definitions.
      * Preserves the order; allows lookup by name.
      */
@@ -249,8 +243,7 @@ bool init_unit_test() \
     TestBase::configMap.setStringParam(paramKey, paramVal); \
     UserTestClass *pTestObj = new UserTestClass(); \
     TestBase::configMap.disableTracing(); \
-    boost::unit_test::framework::master_test_suite().add( \
-        pTestObj->releaseTestSuite()); \
+    pTestObj->releaseTestSuite(); \
     return true; \
 } \
 \

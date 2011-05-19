@@ -9,11 +9,11 @@ insert into DDB26 values(2);
 
 -- Test to make sure datatypes/precisions match
 call applib.create_table_as(null,'DDB26_T1','select * from "SS"."DDB26"',true);
-select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'DDB26%' and schema_name = 'SS';
+select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name like 'DDB26%' and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
 
 call applib.create_table_as('APPLIB','DDB26_T1','select * from "SS"."DDB26"',false);
-select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'APPLIB';
-select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'SS';
+select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'APPLIB' order by TABLE_NAME,COLUMN_NAME;
+select TABLE_NAME,COLUMN_NAME,DATATYPE,"PRECISION",IS_NULLABLE from sys_root.dba_columns where table_name = 'DDB26_T1'  and schema_name = 'SS' order by TABLE_NAME,COLUMN_NAME;
 
 select * from DDB26_T1;
 select * from SS.DDB26_T1;
@@ -21,9 +21,20 @@ SELECT * FROM APPLIB.DDB26_T1;
 -- Test for select statements from tables, UDXs, and remote tables 
 --UDXs
 call applib.create_table_as('SS','DDB26_UDX','select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1))',true);
-select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1));
-select * from SS.DDB26_UDX;
+select TIME_KEY_SEQ,TIME_KEY from table(APPLIB.FISCAL_TIME_DIMENSION(2010,1,1,2010,1,10,1)) order by TIME_KEY_SEQ;
+select * from SS.DDB26_UDX order by TIME_KEY_SEQ;
+-- Test datatype decimal
+CREATE TABLE DecimalTb(
+col decimal(5,4)
+);
+insert into DecimalTb values(5.0015);
+call applib.create_table_as(null,'DDB26_DecimalTb','select * from SS.DecimalTb',true);
 
+select * from DecimalTb order by col;
+select * from "DDB26_DecimalTb" order by col;
+
+drop table DecimalTb;
+drop table "DDB26_DecimalTb";
 --remote tables
 --TODO: Need to undertand the concept remote table.
 

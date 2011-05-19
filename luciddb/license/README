@@ -57,8 +57,7 @@ http://pub.eigenbase.org/wiki/FarragoHttpClient
 ------------------------------------------------------------
 LEGAL
 
-Copyright (C) 2005 LucidEra Inc
-Copyright (C) 1999 The Eigenbase Project and others
+Copyright (C) 1999-2010 The Eigenbase Project and others
 
 LucidDB and the LucidDB logo are trademarks of LucidEra, Inc.
 
@@ -72,6 +71,35 @@ please visit http://www.eigenbase.org/download.html.
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.9.2 include
+
+- require Java 6
+- Mac port (FNL-85)
+- Win64 port (FNL-87) 
+- SQL/J deployment descriptor execution (FRG-387)
+- support Salesforce foreign data wrapper (packaged separately)
+- support Pentaho Data Integration HTTP-based bulk loader (packaged separately)
+- add APPLIB.CREATE_TABLE_AS procedure (LDB-215)
+- add APPLIB.CREATE_TABLE_FROM_SOURCE_TABLE procedure (LDB-214)
+- add APPLIB.WRITE_ROWS_TO_FILE UDX (LDB-218)
+- add APPLIB.READ_ROWS_FROM_FILE UDX (LDB-217)
+- add APPLIB.REMOTE_ROWS UDX (LDB-216)
+- add APPLIB.EXEC_SQL_IF_NO_ROWS UDP (LDB-197)
+- add APPLIB.CLEAR_PENTAHO_MONDRIAN_CACHE procedure (LDB-219)
+- add SYS_ROOT.GET_CURRENT_SESSIONID function (LDB-209)
+- daemon-friendly shutdown, SYS_ROOT.SHUTDOWN_DATABASE procedure (FRG-381)
+- fix code cache leak in repeated execution of identical SQL (FNL-89)
+- fix bug with connection timeout not being honored for http (FRG-395)
+- eliminate synchronization bottleneck around Janino compiler (FRG-257)
+- optimize count(*) when index-only scans enabled (LDB-201)
+- fix spurious warning "non-existent transaction lock" (FRG-398)
+- fix RAND function (LDB-169)
+- fix EXPLAIN PLAN over client driver (FRG-393)
+- improve error message for interval field value precision mismatch (FRG-397)
+- miscellaneous JDBC foreign data wrapper fixes (FRG-308, FRG-339)
+- eliminate RmiJdbc from LucidDB packaging (LDB-158)
+- set MaxPermSize in startup scripts (LDB-212)
 
 Changes since 0.9.1 include
 

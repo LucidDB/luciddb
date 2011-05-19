@@ -20,7 +20,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:org.eigenbase.applib.test.GetColumnTypesUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table(
 . . . . . . . . >   get_column_types(
@@ -104,7 +104,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:org.eigenbase.applib.cursor.PivotColumnsToRowsUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view farrago_params as
 . . . . . . . . > select * from table(

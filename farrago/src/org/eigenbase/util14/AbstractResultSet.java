@@ -27,12 +27,12 @@ import java.io.*;
 import java.math.*;
 
 import java.sql.*;
+import java.sql.Date;
 
-import java.util.Map;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.util.*;
 
-import org.eigenbase.jdbc4.Unwrappable;
+import org.eigenbase.jdbc4.*;
+
 
 /**
  * <code>AbstractResultSet</code> provides a abstract implementation for a
@@ -509,7 +509,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Date getDate(int columnIndex)
+    public java.sql.Date getDate(int columnIndex)
         throws SQLException
     {
         return toDate(getRaw(columnIndex), null);
@@ -522,7 +522,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Date getDate(String columnName)
+    public java.sql.Date getDate(String columnName)
         throws SQLException
     {
         return getDate(findColumn(columnName));
@@ -537,7 +537,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Date getDate(int columnIndex, Calendar cal)
+    public Date getDate(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
         return toDate(getRaw(columnIndex), cal.getTimeZone());
@@ -552,7 +552,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Date getDate(String columnName, Calendar cal)
+    public Date getDate(String columnName, java.util.Calendar cal)
         throws SQLException
     {
         return getDate(
@@ -595,7 +595,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Time getTime(int columnIndex, Calendar cal)
+    public Time getTime(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
         return toTime(getRaw(columnIndex), cal.getTimeZone());
@@ -610,7 +610,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Time getTime(String columnName, Calendar cal)
+    public Time getTime(String columnName, java.util.Calendar cal)
         throws SQLException
     {
         return getTime(
@@ -651,7 +651,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Timestamp getTimestamp(int columnIndex, Calendar cal)
+    public Timestamp getTimestamp(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
         return toTimestamp(getRaw(columnIndex), DateTimeUtil.getTimeZone(cal));
@@ -667,7 +667,7 @@ abstract public class AbstractResultSet
      *
      * @return the column value; if the value is SQL NULL, the result is null
      */
-    public Timestamp getTimestamp(String columnName, Calendar cal)
+    public Timestamp getTimestamp(String columnName, java.util.Calendar cal)
         throws SQLException
     {
         return getTimestamp(
@@ -879,7 +879,7 @@ abstract public class AbstractResultSet
      *
      * @return A java.lang.Object holding the column value.
      */
-    public Object getObject(int columnIndex, Map map)
+    public Object getObject(int columnIndex, java.util.Map map)
         throws SQLException
     {
         throw new UnsupportedOperationException(
@@ -904,7 +904,7 @@ abstract public class AbstractResultSet
      *
      * @return A java.lang.Object holding the column value.
      */
-    public Object getObject(String columnName, Map map)
+    public Object getObject(String columnName, java.util.Map map)
         throws SQLException
     {
         return getObject(

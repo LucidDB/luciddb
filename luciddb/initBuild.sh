@@ -138,14 +138,19 @@ fi
 
 set -v
 
-# Build catalog then run tests
+# set up Farrago build environment
 cd ${luciddb_dir}/../farrago
 . farragoenv.sh `pwd`/../thirdparty
+
+# build applib
+cd ${luciddb_dir}/../extensions/applib
+ant clean jar
 
 # set up Fennel's LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=
 . ${luciddb_dir}/../fennel/fennelenv.sh ${luciddb_dir}/../fennel
 
+# Build catalog then run tests
 cd ${luciddb_dir}
 ${run_ant} clean
 if $without_tests ; then

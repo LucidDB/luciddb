@@ -64,15 +64,15 @@
 	</target>
 
 	<target name="integration-copy" depends="sync">
-		<mkdir dir="${integration.build.home}"/> 
 		<delete dir="${integration.build.home}/farrago"/>
+		<mkdir dir="${integration.build.home}/farrago"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ${srcdir}/farrago to ${integration.build.home}/"/>
+		<echo message="Copying ./farrago to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="${srcdir}/farrago"/>
-			<arg value="${integration.build.home}"/>
+			<arg value="./farrago/"/>
+			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
 
