@@ -1,0 +1,52 @@
+0: jdbc:luciddb:> -- tests ability to run code from file or from a string
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| SYS_BOOT            |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| INFORMATION_SCHEMA  |
+| APPLIB              |
+| SYS_ROOT            |
+| HELLO               |
++---------------------+
+0: jdbc:luciddb:> call applib.execute_script('js', 'importPackage(java.sql) /* There is also an importClass() function. */
+. . . . . . . . >   var conn = DriverManager.getConnection("jdbc:default:connection")
+. . . . . . . . >   var ps = conn.prepareStatement("create or replace schema boohoo")
+. . . . . . . . >   ps.execute()
+. . . . . . . . >   conn.close()
+. . . . . . . . > ');
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| SYS_BOOT            |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| INFORMATION_SCHEMA  |
+| APPLIB              |
+| SYS_ROOT            |
+| HELLO               |
+| BOOHOO              |
++---------------------+
+0: jdbc:luciddb:> call applib.execute_script('js', '${FARRAGO_HOME}/test/sql/scripting/execute_script.js');
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas;
++---------------------+
+|     SCHEMA_NAME     |
++---------------------+
+| SYS_BOOT            |
+| JDBC_METADATA       |
+| MGMT                |
+| SQLJ                |
+| INFORMATION_SCHEMA  |
+| APPLIB              |
+| SYS_ROOT            |
+| HELLO               |
+| BOOHOO              |
+| BOOHOO2             |
++---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

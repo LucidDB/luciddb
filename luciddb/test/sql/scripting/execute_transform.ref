@@ -1,0 +1,38 @@
+0: jdbc:luciddb:> -- do our own generate_sequence
+0: jdbc:luciddb:> create schema hello;
+0: jdbc:luciddb:> set schema 'hello';
+0: jdbc:luciddb:> create table firing (step varchar(100), dirty_seq int, relative_seq int);
+0: jdbc:luciddb:> insert into firing values ('Ready', 0, 2), ('Aim', 0, 0), ('Fire', 0, 1),
+. . . . . . . . > ('Drag', 1, 0), ('Bury', 2, 0), ('Kill', 0, 1);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.generate_sequence(
+. . . . . . . . >     cursor(select step, dirty_seq, relative_seq from firing),
+. . . . . . . . >     0, 1));
++--------+------------+---------------+----------+
+|  STEP  | DIRTY_SEQ  | RELATIVE_SEQ  | SEQ_NUM  |
++--------+------------+---------------+----------+
+| Ready  | 0          | 2             | 0        |
+| Aim    | 0          | 0             | 1        |
+| Fire   | 0          | 1             | 2        |
+| Drag   | 1          | 0             | 3        |
+| Bury   | 2          | 0             | 4        |
+| Kill   | 0          | 1             | 5        |
++--------+------------+---------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select step, dirty_seq, relative_seq, expr$0 as seq_num
+. . . . . . . . > from table(applib.execute_transform('js',
+. . . . . . . . >     '${FARRAGO_HOME}/test/sql/scripting/gen_sequence.js',
+. . . . . . . . >     cursor(select * from firing, (values(0)))));
++--------+------------+---------------+----------+
+|  STEP  | DIRTY_SEQ  | RELATIVE_SEQ  | SEQ_NUM  |
++--------+------------+---------------+----------+
+| Ready  | 0          | 2             | 0        |
+| Aim    | 0          | 0             | 1        |
+| Fire   | 0          | 1             | 2        |
+| Drag   | 1          | 0             | 3        |
+| Bury   | 2          | 0             | 4        |
+| Kill   | 0          | 1             | 5        |
++--------+------------+---------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

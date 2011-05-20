@@ -1,0 +1,13 @@
+0: jdbc:luciddb:> select * from table(applib.get_scripting_engines()) where engine_language = 'ECMAScript';
++----------------+-----------------+------------------+-------------------+---------------+
+| SCRIPT_ENGINE  | ENGINE_VERSION  | ENGINE_LANGUAGE  | LANGUAGE_VERSION  | ENGINE_ALIAS  |
++----------------+-----------------+------------------+-------------------+---------------+
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | js            |
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | rhino         |
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | JavaScript    |
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | javascript    |
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | ECMAScript    |
+| Mozilla Rhino  | 1.6 release 2   | ECMAScript       | 1.6               | ecmascript    |
++----------------+-----------------+------------------+-------------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

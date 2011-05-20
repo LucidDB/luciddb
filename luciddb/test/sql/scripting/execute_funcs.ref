@@ -1,0 +1,38 @@
+0: jdbc:luciddb:> -- function execution can be used to save the user from having to
+0: jdbc:luciddb:> -- modify an existing program to call itself.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values(applib.execute_function('js', 'function execute() {'
+. . . . . . . . > '    return "I love cookies.";'
+. . . . . . . . > '  }'));
++------------------+
+|      EXPR$0      |
++------------------+
+| I love cookies.  |
++------------------+
+0: jdbc:luciddb:> values(applib.execute_function('js', 'function foo() {'
+. . . . . . . . > '    var fn = function() {'
+. . . . . . . . > '      return "I really love cookies with functions inside.";'
+. . . . . . . . > '    };'
+. . . . . . . . > '    return fn();'
+. . . . . . . . > '  }', 'foo'));
++-----------------------------------------------+
+|                    EXPR$0                     |
++-----------------------------------------------+
+| I really love cookies with functions inside.  |
++-----------------------------------------------+
+0: jdbc:luciddb:> values(applib.execute_method('js', 'var myObj = {'
+. . . . . . . . > '    "C" : "o",'
+. . . . . . . . > '    "o" : "k",'
+. . . . . . . . > '    "i" : "e",'
+. . . . . . . . > '    "s" : "!",'
+. . . . . . . . > '    "love" : function() {'
+. . . . . . . . > '      return this.s;'
+. . . . . . . . > '    }'
+. . . . . . . . > '  }', 'myObj', 'love'));
++---------+
+| EXPR$0  |
++---------+
+| !       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
