@@ -122,14 +122,30 @@ public abstract class ExecuteScriptUdr
       String engineName,
       String script,
       String funcName,
-      Object ...args)
+      String ...args)
     throws SQLException, FileNotFoundException, ScriptException,
                     NoSuchMethodException
   {
     ScriptEngine engine = getEngineAndEval(engineName, script);
     Invocable inv = (Invocable) engine;
-    Object result = inv.invokeFunction(funcName, args);
+    Object result = inv.invokeFunction(funcName, (Object)args);
     return (result == null) ? "" : result.toString();
+  }
+
+  /**
+   * Possible helper function for the above, but neither are in use right now
+   * since LucidDB cannot pass arrays unless they're from a cursor.
+   */
+  public static String executeGeneralUdf(
+      String engineName,
+      String script,
+      String funcName,
+      java.util.List<String> args)
+    throws SQLException, FileNotFoundException, ScriptException,
+                    NoSuchMethodException
+  {
+    return executeGeneralUdf(
+        engineName, script, funcName, args.toArray(new String[args.size()]));
   }
 
   /**
