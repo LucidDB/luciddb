@@ -967,6 +967,19 @@ create or replace view browse_connect_empty_options as
 select '' as option_name, '' as option_value
 from sys_boot.jdbc_metadata.empty_view;
 
+-- A table function that returns same as the browse_connect_empty_options
+-- view. Workaround for dtbug 2387, "UDX with cursor inputs hangs". Remove when
+-- that bug is fixed.
+create or replace function browse_connect_empty_options_udx()
+returns table(
+  option_name varchar(128),
+  option_value varchar(128))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoMedUDR.browseEmptyOptions';
+
 -- Returns foreign schemas accessible via a given foreign server.
 create or replace function browse_foreign_schemas(
   foreign_server_name varchar(128))
@@ -1413,3 +1426,5 @@ CREATE or replace FUNCTION isForeign(
         required boolean) 
     language java parameter style system defined java no sql
     external name 'class net.sf.farrago.syslib.FarragoMedInfo.isForeign';
+
+-- End createMgmtViews.sql

@@ -784,6 +784,32 @@ public abstract class FarragoTestUDR
             resultInserter.executeUpdate();
         } while (true);
     }
+
+    /**
+     * Sums the number of rows from two inputs, and writes to an output.
+     *
+     * @param inputSet1 first set of input rows
+     * @param inputSet2 second set of input rows
+     * @param resultInserter used to return the resulting output
+     *
+     * @throws SQLException
+     */
+    public static void countTwoInputs(
+        ResultSet inputSet1,
+        ResultSet inputSet2,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        int n = 0;
+        while (inputSet1.next()) {
+            ++n;
+        }
+        while (inputSet2.next()) {
+            ++n;
+        }
+        resultInserter.setInt(1, n);
+        resultInserter.executeUpdate();
+    }
 }
 
 // End FarragoTestUDR.java

@@ -406,6 +406,13 @@ public abstract class FarragoMedUDR
         dir.queryMetadata(query, sink);
     }
 
+    public static void browseEmptyOptions(
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        // insert no rows, return immediately
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class BrowseSchemaSink
