@@ -34,5 +34,6 @@
 | Bury   | 2          | 0             | 4        |
 | Kill   | 0          | 1             | 5        |
 +--------+------------+---------------+----------+
+0: jdbc:luciddb:> drop schema hello cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

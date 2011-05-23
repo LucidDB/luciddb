@@ -14,3 +14,4 @@ select step, dirty_seq, relative_seq, expr$0 as seq_num
 from table(applib.execute_transform('js',
     '${FARRAGO_HOME}/test/sql/scripting/gen_sequence.js',
     cursor(select * from firing, (values(0)))));
+drop schema hello cascade;
