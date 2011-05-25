@@ -80,52 +80,6 @@ public:
             // SQL99 Part 2 Section 6.22 General Rule 2.c.
             CastInstruction<RESULT_T, SOURCE_T>::mResult->toNull();
         } else {
-            // TODO: Update Boost library to fix the following
-            // TODO: problem:
-            // TODO: See lists.boost.org/MailArchives/boost/msg63700.php
-            // TODO: for details. In short, exceptions are thrown
-            // TODO: for cases where data is lost and the target is
-            // TODO: unsigned, but not thrown for lost data to signed.
-            // TODO: Also some problems with approx being cast to exact.
-
-            // HACK: Add some extra tests before numeric_cast to try
-            // HACK: to catch some of the more henious and obvious errors.
-
-            SOURCE_T src = CastInstruction<RESULT_T, SOURCE_T>::mOp1->value();
-            bool thr = false;
-            bool resultSigned = numeric_limits<RESULT_T>::is_signed;
-            bool sourceSigned = numeric_limits<SOURCE_T>::is_signed;
-
-            // Note: min() for approx type is the smallest positive
-            // number, not the most negative number.
-            RESULT_T min =
-                numeric_limits<RESULT_T>::is_integer
-                ? numeric_limits<RESULT_T>::min()
-                : - numeric_limits<RESULT_T>::max();
-            RESULT_T max = numeric_limits<RESULT_T>::max();
-
-            if (resultSigned == sourceSigned) {
-                // Both signed or both unsigned (including approx)
-                if (max < src || min > src) {
-                    thr = true;
-                }
-            } else if (resultSigned && !sourceSigned) {
-                // Unsigned to signed
-                if (max < src) {
-                    thr = true;
-                }
-            } else {
-                // Signed to unsigned
-                // RESULT_T is unsigned, SOURCE is signed
-                if (max < src || min > src) {
-                    thr = true;
-                }
-            }
-            if (thr) {
-                throw CalcMessage(SqlState::instance().code22003(), pc - 1);
-            }
-            // HACK: End. (Phew.)
-
             try {
                 CastInstruction<RESULT_T, SOURCE_T>::mResult->value(
                     boost::numeric_cast<RESULT_T>(
