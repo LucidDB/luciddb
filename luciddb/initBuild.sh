@@ -164,7 +164,7 @@ if $without_dist_build ; then
     echo Skipping distribution build.
 else
     cd ${luciddb_dir}/../farrago
-    cp -f ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
+    cp -n ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
     cd ${luciddb_dir}
     ./distBuild.sh --without-init-build ${FARRAGO_DIST_FLAGS}
 fi
