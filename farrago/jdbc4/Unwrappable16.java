@@ -38,7 +38,7 @@ import java.sql.*;
 public abstract class Unwrappable implements Wrapper
 {
     // implement Wrapper
-    public boolean isWrapperFor(Class iface)
+    public boolean isWrapperFor(Class<?> iface)
     {
         return false;
     }
