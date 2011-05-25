@@ -386,9 +386,9 @@ public class SqlJdbcFunctionCall
      */
     private static final String [] allStringFunctions =
     {
-        "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
-        "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
-        "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
+        "ASCII", "CHAR", "DIFFERENCE", "LOWER",
+        "LEFT", "TRIM", "REPEAT", "REPLACE",
+        "RIGHT", "SPACE", "SUBSTRING", "UPPER", "INITCAP", "OVERLAY"
     };
 
     /**
