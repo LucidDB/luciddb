@@ -122,8 +122,8 @@ public class FarragoJdbcMetaDataImpl
         case Types.DECIMAL:
             return "java.math.BigDecimal";
         case Types.DISTINCT:
-            // TODO
-            return "";
+            // REVIEW: is this correct
+            return "java.lang.Object";
         case Types.DOUBLE:
             return "java.lang.Double";
         case Types.FLOAT:
@@ -137,8 +137,8 @@ public class FarragoJdbcMetaDataImpl
         case Types.LONGVARCHAR:
             return "java.lang.String";
         case Types.NULL:
-            // TODO
-            return "";
+            // REVIEW: is this correct
+            return "java.lang.Object";
         case Types.NUMERIC:
             return "java.math.BigDecimal";
         case Types.OTHER:
@@ -146,8 +146,7 @@ public class FarragoJdbcMetaDataImpl
         case Types.REAL:
             return "java.lang.Float";
         case Types.REF:
-            // TODO
-            return "";
+            return "java.sql.Ref";
         case Types.SMALLINT:
             return "java.lang.Short";
         case Types.STRUCT:
@@ -249,8 +248,8 @@ public class FarragoJdbcMetaDataImpl
         case Types.DOUBLE:
             return 22;
         default:
-
             // TODO:  adjust for numeric formatting, etc.
+            // REVIEW: scientific notation? what types of numeric formatting?
             return precision;
         }
     }
@@ -308,18 +307,18 @@ public class FarragoJdbcMetaDataImpl
 
     public boolean isFieldCaseSensitive(int fieldOrdinal)
     {
-        // TODO
-        return false;
+        RelDataType type = getFieldType(fieldOrdinal);
+        return SqlTypeUtil.inCharFamily(type);
     }
 
     public boolean isFieldSearchable(int fieldOrdinal)
     {
-        return true;
+        RelDataType type = getFieldType(fieldOrdinal);
+        return RelDataTypeComparability.None != type.getComparability();
     }
 
     public boolean isFieldSigned(int fieldOrdinal)
     {
-        // TODO
         RelDataType type = getFieldType(fieldOrdinal);
         if (SqlTypeUtil.isNumeric(type)) {
             return true;
