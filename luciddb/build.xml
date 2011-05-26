@@ -87,9 +87,17 @@ ${farrago.test.jvmargs}
   <!-- directory in which catalog XMI files are stored -->
   <property name="xmi.dir" location="${catalog.dir}/xmi" />
 
-  <!-- FIXME jvs 2-Jun-2007:  delete this file and generate it instead -->
+  <!-- jvs 2-Jun-2007:  delete this file and generate it instead -->
   <!-- should not have burned-in version info like this anywhere -->
-  <property name="release.properties.source" location="${xmi.dir}/FarragoRelease.properties" />
+  <!-- ks 26-May-2011:  burned-in version useful for dev, generated version -->
+  <!-- necessary for releases. -->
+  <condition property="release.properties.source.file"
+    value="${luciddb.dir}/src/FarragoRelease.properties"
+    else="${xmi.dir}/FarragoRelease.properties">
+    <available file="${luciddb.dir}/src/FarragoRelease.properties" />
+  </condition>
+  <property name="release.properties.source"
+    location="${release.properties.source.file}" />
 
   <!-- directory in which catalog data is backed up -->
   <property name="catalog.backup.dir" location="${catalog.dir}/backup" />
