@@ -1,6 +1,8 @@
 > -- $Id$
 > -- Test mock namespace plugin
 > 
+> !set outputformat csv
+> 
 > create server mock_foreign_server
 > foreign data wrapper sys_mock_foreign;
 > 
@@ -10,7 +12,7 @@
 > create server mock_foreign_metadata_server
 > foreign data wrapper sys_mock_foreign
 > options (
-> foreign_schema_name 'MOCK_SCHEMA', 
+> foreign_schema_name 'MOCK_SCHEMA',
 > foreign_table_name 'MOCK_TABLE',
 > executor_impl 'JAVA',
 > row_count '3');
@@ -18,7 +20,7 @@
 > create server mock_foreign_dynamic_server
 > foreign data wrapper sys_mock_foreign
 > options (
-> foreign_schema_name 'MOCK_SCHEMA', 
+> foreign_schema_name 'MOCK_SCHEMA',
 > foreign_table_name 'MOCK_TABLE',
 > row_count_sql 'select current_row_count from mock_schema.dynamic_row_count');
 > 
@@ -59,7 +61,7 @@
 >     id int not null)
 > server mock_foreign_server
 > options (
->     executor_impl 'JAVA', 
+>     executor_impl 'JAVA',
 >     udx_specific_name 'mock_schema.ramp',
 >     row_count '3');
 > 
@@ -67,7 +69,7 @@
 >     id int not null)
 > server mock_foreign_server
 > options (
->     executor_impl 'JAVA', 
+>     executor_impl 'JAVA',
 >     udx_specific_name 'mock_schema.longer_ramp',
 >     row_count '3');
 > 
@@ -104,83 +106,56 @@ Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 > insert into mock_empty_table values (5);
 > 
 > select * from mock_fennel_table;
-+-----+
-| ID  |
-+-----+
-| 0   |
-| 0   |
-| 0   |
-+-----+
+'ID'
+'0'
+'0'
+'0'
 > 
 > select * from mock_java_table;
-+-----+
-| ID  |
-+-----+
-| 0   |
-| 0   |
-| 0   |
-+-----+
+'ID'
+'0'
+'0'
+'0'
 > 
 > select * from mock_java_table_with_warning;
 Warning: slow down:  mock turtle crossing (state=,code=0)
-+-----+
-| ID  |
-+-----+
-+-----+
+'ID'
 > 
 > select * from mock_ramp_udx_table;
-+-----+
-| ID  |
-+-----+
-| 0   |
-| 1   |
-| 2   |
-+-----+
+'ID'
+'0'
+'1'
+'2'
 > 
 > select * from mock_longer_ramp_udx_table;
-+-----+
-| ID  |
-+-----+
-| 0   |
-| 1   |
-| 2   |
-| 3   |
-| 4   |
-| 5   |
-+-----+
+'ID'
+'0'
+'1'
+'2'
+'3'
+'4'
+'5'
 > 
 > select * from mock_empty_table;
-+-----+
-| ID  |
-+-----+
-+-----+
+'ID'
 > 
 > select * from mock_implicit_metadata_table;
-+--------------+
-| MOCK_COLUMN  |
-+--------------+
-| 0            |
-| 0            |
-| 0            |
-+--------------+
+'MOCK_COLUMN'
+'0'
+'0'
+'0'
 > 
 > select * from mock_explicit_metadata_table;
-+-----+
-| ID  |
-+-----+
-| 0   |
-| 0   |
-| 0   |
-+-----+
+'ID'
+'0'
+'0'
+'0'
 > 
 > select * from mock_foreign_metadata_server.mock_schema.mock_table;
-+--------------+
-| MOCK_COLUMN  |
-+--------------+
-| 0            |
-| 0            |
-| 0            |
-+--------------+
+'MOCK_COLUMN'
+'0'
+'0'
+'0'
 > 
 > -- should fail:  unknown schema name
 > select * from mock_foreign_metadata_server.bach_schema.mock_table;
@@ -190,7 +165,6 @@ Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA
 > select * from mock_foreign_metadata_server.mock_schema.bach_table;
 Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA_SERVER.MOCK_SCHEMA.BACH_TABLE' not found (state=,code=0)
 > 
-> !set outputformat csv
 > explain plan for select * from mock_fennel_table;
 'column0'
 'FennelToIteratorConverter'
@@ -207,7 +181,6 @@ Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA
 > explain plan for insert into mock_empty_table values (5);
 'column0'
 'MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_EMPTY_TABLE]])'
-> !set outputformat table
 > 
 > create schema mock_local_schema;
 > 
@@ -218,13 +191,10 @@ Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA
 > into mock_local_schema;
 > 
 > select * from mock_local_schema.mock_table;
-+--------------+
-| MOCK_COLUMN  |
-+--------------+
-| 0            |
-| 0            |
-| 0            |
-+--------------+
+'MOCK_COLUMN'
+'0'
+'0'
+'0'
 > 
 > -- should fail:  no metadata
 > import foreign schema mock_schema
@@ -254,13 +224,10 @@ Error: Target schema "LOCALDB"."MOCK_LOCAL_SCHEMA" already contains foreign tabl
 > into mock_limit_schema;
 > 
 > select * from mock_limit_schema.mock_table;
-+--------------+
-| MOCK_COLUMN  |
-+--------------+
-| 0            |
-| 0            |
-| 0            |
-+--------------+
+'MOCK_COLUMN'
+'0'
+'0'
+'0'
 > 
 > -- should fail:  no such table
 > import foreign schema mock_schema
@@ -287,11 +254,8 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 > insert into mock_schema.dynamic_row_count values(7);
 > 
 > select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
-+---------+
-| EXPR$0  |
-+---------+
-| 7       |
-+---------+
+'EXPR$0'
+'7'
 > 
 > -- now change the current_row_count value and verify that we get
 > -- a corresponding number of rows back from the mock
@@ -303,11 +267,8 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 > call sys_boot.mgmt.flush_code_cache();
 > 
 > select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
-+---------+
-| EXPR$0  |
-+---------+
-| 21      |
-+---------+
+'EXPR$0'
+'21'
 > 
 > 
 > -- test browse connect functionality
@@ -316,14 +277,33 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 > language java
 > options(browse_connect_description 'Go Ask The Mock Turtle');
 > 
-> -- note that none of the system wrappers should have 
+> -- note that none of the system wrappers should have
 > -- browse_connect_description set, so don't need ORDER BY here
 > select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
-+-----------------------+-----------------------------+
-| FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
-+-----------------------+-----------------------------+
-| MOCK_BROWSE           | Go Ask The Mock Turtle      |
-+-----------------------+-----------------------------+
+'FOREIGN_WRAPPER_NAME','BROWSE_CONNECT_DESCRIPTION'
+'MOCK_BROWSE','Go Ask The Mock Turtle'
+> 
+> -- query the available options for the mock wrapper
+> select * from table(
+>   sys_boot.mgmt.browse_wrapper(
+>     'MOCK_BROWSE',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','false','-1','JAVA'
+'0','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','false','0','JAVA'
+'0','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','false','1','FENNEL'
+'1','FOO','UNLOCALIZED_FOO_DESCRIPTION','false','-1',''
+> 
+> -- non-existent wrapper
+> select * from table(
+>   sys_boot.mgmt.browse_wrapper(
+>     'BAD_WRAPPER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+Error: DDL validation error: Reference to unknown data wrapper "BAD_WRAPPER" (state=,code=0)
 > 
 > -- query for available options with no proposed settings (empty_view)
 > select * from table(
@@ -331,15 +311,12 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 >     'MOCK_BROWSE',
 >     cursor(table sys_boot.mgmt.browse_connect_empty_options)))
 > order by option_ordinal, option_choice_ordinal;
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
-| OPTION_ORDINAL  |     OPTION_NAME      |             OPTION_DESCRIPTION              | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
-| 0               | FOREIGN_SCHEMA_NAME  | Name of foreign schema to simulate          | false               | -1                     |                      |
-| 1               | FOREIGN_TABLE_NAME   | UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION  | false               | -1                     |                      |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | -1                     | JAVA                 |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 0                      | JAVA                 |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 1                      | FENNEL               |
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','FOREIGN_SCHEMA_NAME','Name of foreign schema to simulate','false','-1',''
+'1','FOREIGN_TABLE_NAME','UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION','false','-1',''
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','-1','JAVA'
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','0','JAVA'
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','1','FENNEL'
 > 
 > -- query for available options with some proposed settings and verify
 > -- that the proposals override the defaults
@@ -350,35 +327,70 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 >         values ('FOREIGN_SCHEMA_NAME', 'Larry'),
 >                ('EXECUTOR_IMPL', 'FENNEL'))))
 > order by option_ordinal, option_choice_ordinal;
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
-| OPTION_ORDINAL  |     OPTION_NAME      |             OPTION_DESCRIPTION              | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
-| 0               | FOREIGN_SCHEMA_NAME  | Name of foreign schema to simulate          | false               | -1                     | Larry                |
-| 1               | FOREIGN_TABLE_NAME   | UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION  | false               | -1                     |                      |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | -1                     | FENNEL               |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 0                      | JAVA                 |
-| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 1                      | FENNEL               |
-+-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','FOREIGN_SCHEMA_NAME','Name of foreign schema to simulate','false','-1','Larry'
+'1','FOREIGN_TABLE_NAME','UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION','false','-1',''
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','-1','FENNEL'
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','0','JAVA'
+'2','EXECUTOR_IMPL','UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION','true','1','FENNEL'
 > 
 > -- query for available schemas in a configured server
 > select * from table(sys_boot.mgmt.browse_foreign_schemas(
 >     'MOCK_FOREIGN_DYNAMIC_SERVER'))
 > order by schema_name;
-+--------------+--------------+
-| SCHEMA_NAME  | DESCRIPTION  |
-+--------------+--------------+
-| MOCK_SCHEMA  | Mock schema  |
-+--------------+--------------+
+'SCHEMA_NAME','DESCRIPTION'
+'MOCK_SCHEMA','Mock schema'
 > 
 > -- query for available schemas in an unconfigured server (should be none)
 > select * from table(sys_boot.mgmt.browse_foreign_schemas(
 >     'SYS_MOCK_FOREIGN_DATA_SERVER'))
 > order by schema_name;
-+--------------+--------------+
-| SCHEMA_NAME  | DESCRIPTION  |
-+--------------+--------------+
-+--------------+--------------+
+'SCHEMA_NAME','DESCRIPTION'
 > 
+> -- query for table options
+> select * from table(sys_boot.mgmt.browse_table(
+>     'MOCK_FOREIGN_DYNAMIC_SERVER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','Prop1','UNLOCALIZED_Prop1_DESCRIPTION','false','-1',''
+'1','Prop2','UNLOCALIZED_Prop2_DESCRIPTION','true','-1',''
+'2','Prop3','UNLOCALIZED_Prop3_DESCRIPTION','false','-1','x'
+'2','Prop3','UNLOCALIZED_Prop3_DESCRIPTION','false','0','x'
+'2','Prop3','UNLOCALIZED_Prop3_DESCRIPTION','false','1','y'
+> 
+> -- query for table options (non-existent server)
+> select * from table(sys_boot.mgmt.browse_table(
+>     'NON_EXISTENT_SERVER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+Error: DDL validation error: Reference to unknown data server "NON_EXISTENT_SERVER" (state=,code=0)
+> 
+> -- query for column options
+> select * from table(sys_boot.mgmt.browse_column(
+>     'MOCK_FOREIGN_DYNAMIC_SERVER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+'OPTION_ORDINAL','OPTION_NAME','OPTION_DESCRIPTION','IS_OPTION_REQUIRED','OPTION_CHOICE_ORDINAL','OPTION_CHOICE_VALUE'
+'0','ColProp1','UNLOCALIZED_ColProp1_DESCRIPTION','false','-1',''
+'1','ColProp2','UNLOCALIZED_ColProp2_DESCRIPTION','true','-1',''
+'2','ColProp3','UNLOCALIZED_ColProp3_DESCRIPTION','false','-1','x'
+'2','ColProp3','UNLOCALIZED_ColProp3_DESCRIPTION','false','0','x'
+'2','ColProp3','UNLOCALIZED_ColProp3_DESCRIPTION','false','1',''
+'2','ColProp3','UNLOCALIZED_ColProp3_DESCRIPTION','false','2','y'
+> 
+> -- query for table options (non-existent server)
+> select * from table(sys_boot.mgmt.browse_column(
+>     'NON_EXISTENT_SERVER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options),
+>     'en_US'))
+> order by option_ordinal, option_choice_ordinal;
+Error: DDL validation error: Reference to unknown data server "NON_EXISTENT_SERVER" (state=,code=0)
 > 
 > -- test create or replace niceties
 > 
@@ -418,7 +430,7 @@ Error: Let's pretend something bad happened. (state=,code=0)
 > create server mock_no_columns_server
 > foreign data wrapper sys_mock_foreign
 > options (
-> foreign_schema_name 'MOCK_SCHEMA', 
+> foreign_schema_name 'MOCK_SCHEMA',
 > foreign_table_name 'MOCK_TABLE',
 > extract_columns 'false',
 > executor_impl 'JAVA',
@@ -434,5 +446,6 @@ Error: Let's pretend something bad happened. (state=,code=0)
 > select * from mock_no_columns_schema.mock_table;
 Error: From line 1, column 15 to line 1, column 47: Table 'MOCK_NO_COLUMNS_SCHEMA.MOCK_TABLE' not found (state=,code=0)
 > 
+> -- End mock.sql
 > 
 > !quit

@@ -1,0 +1,39 @@
+<html>
+
+<head>
+<title>Package net.sf.farrago.service</title>
+</head>
+
+<body>
+
+Contains services.
+
+<p>A service is a method call that can be accessed from any JDBC
+client. Generally a service is implemented by calling a UDX
+(user-defined transform) on the server, and often that UDX is in the
+{@code net.sf.farrago.syslib} package.
+
+<p>All classes in this package have very lightweight
+dependencies. Usually they just depend on JDBC. Sometimes they contain
+definitions that are used on the server; but they must not depend on
+server classes.
+
+<table border="1" width="100%">
+  <tr>
+    <th>Revision</th>
+    <td>$Id$</td>
+  </tr>
+  <tr>
+    <th>Copyright</th>
+    <td>Copyright (C) 2011 The Eigenbase Project
+    <br>Copyright (C) 2011 SQLstream, Inc.
+    <br>Copyright (C) 2011 Dynamo BI Corporation</td>
+  </tr>
+  <tr>
+    <th>Author</th>
+    <td>Julian Hyde</td>
+  </tr>
+</table>
+
+</body>
+</html>

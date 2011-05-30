@@ -245,7 +245,10 @@ public class SqlBuilder
      */
     public SqlBuilder literal(String s)
     {
-        buf.append(dialect.quoteStringLiteral(s));
+        buf.append(
+            s == null
+            ? "null"
+            : dialect.quoteStringLiteral(s));
         return this;
     }
 
@@ -257,7 +260,10 @@ public class SqlBuilder
      */
     public SqlBuilder literal(Timestamp timestamp)
     {
-        buf.append(dialect.quoteTimestampLiteral(timestamp));
+        buf.append(
+            timestamp == null
+            ? "null"
+            : dialect.quoteTimestampLiteral(timestamp));
         return this;
     }
 
